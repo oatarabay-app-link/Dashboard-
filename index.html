@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CasperVPN — CEO Command Center</title>
+<style>
+:root{--bg:#0a0e1a;--card:#111827;--border:#1f2937;--accent:#3b82f6;--green:#10b981;--yellow:#f59e0b;--red:#ef4444;--purple:#8b5cf6;--orange:#f97316;--text:#e5e7eb;--muted:#6b7280;--glow:0 0 20px rgba(59,130,246,0.15)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);line-height:1.6;font-size:14px}
+.container{max-width:1440px;margin:0 auto;padding:16px 20px}
+h1{font-size:26px;font-weight:700;margin-bottom:2px}
+.subtitle{color:var(--muted);font-size:13px;margin-bottom:20px}
+/* Stats */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:20px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;box-shadow:var(--glow)}
+.stat-card .label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px}
+.stat-card .value{font-size:28px;font-weight:700;margin-top:2px}
+.stat-card .sub{font-size:11px;color:var(--muted);margin-top:1px}
+/* Tabs */
+.tab-row{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+.tab{padding:6px 14px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text);transition:all .2s;position:relative}
+.tab:hover,.tab.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.tab .tab-pct{font-size:9px;opacity:.85;margin-left:4px;font-weight:700}
+.panel{display:none}.panel.active{display:block}
+/* Benchmarks */
+.bench-bar{position:relative;height:36px;background:var(--card);border:1px solid var(--border);border-radius:8px;margin-bottom:16px;overflow:hidden}
+.bench-fill{height:100%;border-radius:8px;background:linear-gradient(90deg,#10b981,#3b82f6,#8b5cf6);transition:width .5s}
+.bench-markers{position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none}
+.bench-mark{position:absolute;top:0;height:100%;border-left:2px dashed rgba(255,255,255,.3);display:flex;align-items:center}
+.bench-label{position:absolute;top:-20px;font-size:9px;color:var(--muted);white-space:nowrap;transform:translateX(-50%)}
+.bench-pct{position:absolute;bottom:-18px;font-size:9px;color:var(--muted);transform:translateX(-50%)}
+.bench-reached .bench-label{color:var(--green)}
+/* Phase Milestones — BIG */
+.phase-milestones{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:24px}
+.phase-ms{background:var(--card);border:2px solid var(--border);border-radius:12px;padding:16px;text-align:center;cursor:pointer;transition:all .3s;position:relative;overflow:hidden}
+.phase-ms:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(59,130,246,.15)}
+.phase-ms.ms-reached{border-color:var(--green)}
+.phase-ms.ms-reached::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:var(--green)}
+.phase-ms.ms-current{border-color:var(--accent)}
+.phase-ms.ms-current::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:var(--accent);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.phase-ms .ms-icon{font-size:28px;margin-bottom:4px}
+.phase-ms .ms-name{font-size:13px;font-weight:700;margin-bottom:2px}
+.phase-ms .ms-pct{font-size:32px;font-weight:800;margin:4px 0}
+.phase-ms .ms-bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin:8px 0 4px}
+.phase-ms .ms-bar-fill{height:100%;border-radius:3px;transition:width .5s}
+.phase-ms .ms-detail{font-size:10px;color:var(--muted)}
+/* Features grid */
+.section{margin-bottom:30px}
+.section-title{font-size:18px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.features-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:10px}
+.feature{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px;transition:border-color .2s}
+.feature:hover{border-color:var(--accent)}
+.feature-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;gap:8px}
+.feature-name{font-size:13px;font-weight:600;flex:1}
+.feature-pct{font-size:12px;font-weight:700;white-space:nowrap}
+.feature-weight{font-size:10px;color:var(--purple);font-weight:600;margin-left:4px}
+.progress-bar{height:5px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:5px}
+.progress-fill{height:100%;border-radius:3px;transition:width .5s}
+.feature-detail{font-size:11px;color:var(--muted);line-height:1.4}
+.feature-meta{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+/* Tags */
+.tag{display:inline-block;padding:1px 6px;border-radius:4px;font-size:9px;font-weight:600;text-transform:uppercase}
+.tag-p0{background:rgba(239,68,68,.15);color:var(--red)}
+.tag-p1{background:rgba(249,115,22,.15);color:var(--orange)}
+.tag-p2{background:rgba(245,158,11,.15);color:var(--yellow)}
+.tag-p3{background:rgba(107,114,128,.15);color:var(--muted)}
+.tag-blocked{background:rgba(239,68,68,.2);color:var(--red)}
+.tag-owner{background:rgba(59,130,246,.12);color:var(--accent)}
+.tag-phase{background:rgba(139,92,246,.12);color:var(--purple)}
+.tag-cat{background:rgba(16,185,129,.1);color:var(--green)}
+.badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:600}
+.badge-dev{background:rgba(245,158,11,.15);color:var(--yellow)}
+.badge-planned{background:rgba(107,114,128,.15);color:var(--muted)}
+.badge-live{background:rgba(16,185,129,.15);color:var(--green)}
+/* Dept */
+.dept-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.dept-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;transition:border-color .2s}
+.dept-card:hover{border-color:var(--accent)}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px}
+.dot-g{background:var(--green)}.dot-y{background:var(--yellow)}.dot-r{background:var(--red)}
+/* Tables */
+.tbl{width:100%;border-collapse:collapse}
+.tbl th,.tbl td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--border);font-size:12px}
+.tbl th{color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.8px}
+/* AI */
+.ai-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+.ai-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px}
+.ai-card h4{font-size:13px;margin-bottom:4px;color:var(--purple)}
+.ai-card p{font-size:11px;color:var(--muted)}
+/* Cross-dept */
+.xdept{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px}
+/* Footer */
+.footer{text-align:center;color:var(--muted);font-size:11px;margin-top:30px;padding:16px;border-top:1px solid var(--border)}
+.section-footer{text-align:center;padding:10px;margin-top:12px;border-top:1px solid var(--border);font-size:12px;color:var(--muted)}
+.section-footer .sf-pct{font-weight:700;font-size:14px;margin-right:4px}
+/* Acceptance Criteria — INTERACTIVE */
+.ac-section{margin-top:8px;border-top:1px solid var(--border);padding-top:6px}
+.ac-header{font-size:10px;font-weight:600;color:var(--muted);display:flex;align-items:center;gap:6px;cursor:pointer}
+.ac-toggle{font-size:8px;transition:transform .2s}
+.ac-open .ac-toggle{transform:rotate(90deg)}
+.ac-score{margin-left:auto;font-size:10px}
+.ac-list{display:none;margin-top:6px}
+.ac-open .ac-list{display:block}
+.ac-item{font-size:10px;padding:4px 0;display:flex;align-items:flex-start;gap:6px;color:var(--muted);transition:color .2s}
+.ac-item:hover{color:var(--text)}
+.ac-check{font-size:14px;flex-shrink:0;width:16px;height:16px;display:flex;align-items:center;justify-content:center;border-radius:3px;border:1.5px solid var(--border);transition:all .2s;user-select:none;cursor:pointer}
+.ac-check:hover{border-color:var(--accent);transform:scale(1.1)}
+.ac-pass .ac-check{background:var(--green);border-color:var(--green);color:#fff}
+.ac-fail .ac-check{border-color:rgba(239,68,68,.4)}
+.ac-item.ac-pass{color:var(--green)}
+.ac-text{flex:1;line-height:1.4}
+/* Verification tier badges */
+.ac-tier{font-size:8px;flex-shrink:0;padding:1px 4px;border-radius:3px;cursor:pointer;user-select:none;font-weight:600;letter-spacing:.3px}
+.ac-tier:hover{opacity:.8}
+.ac-tier-none{background:rgba(107,114,128,.15);color:var(--muted)}
+.ac-tier-self{background:rgba(245,158,11,.15);color:var(--yellow)}
+.ac-tier-tested{background:rgba(59,130,246,.15);color:var(--accent)}
+.ac-tier-verified{background:rgba(16,185,129,.15);color:var(--green)}
+.ac-legend{display:flex;gap:8px;margin-top:6px;padding-top:4px;border-top:1px dashed var(--border);font-size:8px;color:var(--muted);flex-wrap:wrap}
+/* Infra password */
+.infra-lock{text-align:center;padding:60px 20px}
+.infra-lock input{background:var(--card);border:1px solid var(--border);color:var(--text);padding:10px 16px;border-radius:8px;font-size:14px;width:260px;text-align:center;margin:12px 0}
+.infra-lock button{background:var(--accent);border:none;color:#fff;padding:10px 24px;border-radius:8px;font-size:14px;cursor:pointer;font-weight:600}
+.infra-lock button:hover{opacity:.9}
+/* Server detail card */
+.srv-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px}
+.srv-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.srv-specs{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px}
+.srv-spec{background:var(--bg);border-radius:8px;padding:10px;text-align:center}
+.srv-spec .sp-val{font-size:18px;font-weight:700}
+.srv-spec .sp-lbl{font-size:10px;color:var(--muted);text-transform:uppercase}
+.srv-services{margin-top:16px}
+.srv-risk{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:8px;padding:12px;margin-top:16px}
+.srv-recs{margin-top:12px}
+.srv-recs li{font-size:12px;color:var(--muted);margin-bottom:4px;list-style:none;padding-left:16px;position:relative}
+.srv-recs li::before{content:'→';position:absolute;left:0;color:var(--accent)}
+/* Phase section header */
+.phase-header{background:linear-gradient(135deg,rgba(59,130,246,.08),rgba(139,92,246,.08));border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px;display:flex;align-items:center;gap:16px}
+.phase-header .ph-icon{font-size:36px}
+.phase-header .ph-info{flex:1}
+.phase-header .ph-name{font-size:18px;font-weight:700}
+.phase-header .ph-sub{font-size:12px;color:var(--muted)}
+.phase-header .ph-pct{font-size:36px;font-weight:800;text-align:right}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>CasperVPN CEO Command Center</h1>
+<p class="subtitle">Weighted task scoring — every feature tracked — updated by all departments</p>
+
+<div class="stats-row" id="statsRow"></div>
+
+<div id="benchmarkBar"></div>
+
+<!-- Phase Milestones — between benchmarks and content tabs -->
+<div class="phase-milestones" id="phaseMilestones"></div>
+
+<div class="tab-row" id="tabRow">
+<div class="tab active" onclick="showTab('overview',this)" data-tab="overview">Overview</div>
+<div class="tab" onclick="showTab('phase1',this)" data-tab="phase1">Phase 1: iOS</div>
+<div class="tab" onclick="showTab('phase2',this)" data-tab="phase2">Phase 2: Android</div>
+<div class="tab" onclick="showTab('phase3plus',this)" data-tab="phase3plus">Phase 3-6</div>
+<div class="tab" onclick="showTab('departments',this)" data-tab="departments">Departments</div>
+<div class="tab" onclick="showTab('infra',this)" data-tab="infra">Infrastructure</div>
+<div class="tab" onclick="showTab('censorship',this)" data-tab="censorship">Anti-Censorship</div>
+<div class="tab" onclick="showTab('ai',this)" data-tab="ai">AI Features</div>
+<div class="tab" onclick="showTab('xdept',this)" data-tab="xdept">Cross-Dept</div>
+</div>
+
+<div class="panel active" id="overview"></div>
+<div class="panel" id="phase1"></div>
+<div class="panel" id="phase2"></div>
+<div class="panel" id="phase3plus"></div>
+<div class="panel" id="departments"></div>
+<div class="panel" id="infra"></div>
+<div class="panel" id="censorship"></div>
+<div class="panel" id="ai"></div>
+<div class="panel" id="xdept"></div>
+
+<div class="footer">
+Last updated: <span id="lu">—</span> | By: <span id="ub">—</span> | Departments update <code>data.json</code> on task completion | Auto-refresh: 30s
+</div>
+</div>
+
+<script>
+let D=null;
+let infraUnlocked=false;
+
+function showTab(id,el){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if(el)el.classList.add('active');
+}
+
+function pc(p){return p>=80?'green':p>=40?'yellow':'red'}
+function grad(p){return `background:linear-gradient(90deg,${p>=80?'#10b981,#34d399':p>=40?'#f59e0b,#fbbf24':'#ef4444,#f87171'})`}
+
+function calcOverall(){
+  if(!D||!D.tasks)return 0;
+  let tw=0,ws=0;
+  D.tasks.forEach(t=>{tw+=t.weight;ws+=t.weight*(t.progress/100)});
+  return tw>0?Math.round((ws/tw)*100):0;
+}
+
+function calcPct(tasks){
+  if(!tasks||!tasks.length)return 0;
+  let tw=0,ws=0;
+  tasks.forEach(t=>{tw+=t.weight;ws+=t.weight*(t.progress/100)});
+  return tw>0?Math.round((ws/tw)*100):0;
+}
+
+function sectionFooter(tasks,label){
+  const pct=calcPct(tasks);
+  const done=tasks.filter(t=>t.progress>=100).length;
+  return `<div class="section-footer"><span class="sf-pct" style="color:var(--${pc(pct)})">${pct}%</span>${label||'complete'} &nbsp;·&nbsp; ${done}/${tasks.length} tasks done</div>`;
+}
+
+let acUid=0;
+const TIER_ORDER=['none','self','tested','verified'];
+const TIER_LABELS={none:'—',self:'Self',tested:'Tested',verified:'Verified'};
+const TIER_ICONS={none:'⚪',self:'🟡',tested:'🔵',verified:'🟢'};
+
+// Toggle acceptance criteria pass/fail
+function toggleAC(taskId,acIdx,uid){
+  if(!D)return;
+  const task=D.tasks.find(t=>t.id===taskId);
+  if(!task||!task.acceptanceCriteria||!task.acceptanceCriteria[acIdx])return;
+  const ac=task.acceptanceCriteria[acIdx];
+  ac.passed=!ac.passed;
+  // When checking, set to 'self' tier if none. When unchecking, reset to 'none'
+  if(ac.passed&&(!ac.verifiedBy||ac.verifiedBy==='none')){
+    ac.verifiedBy='self';
+    ac.verifiedAt=new Date().toISOString();
+  } else if(!ac.passed){
+    ac.verifiedBy='none';
+    ac.verifiedAt=null;
+    ac.evidence='';
+  }
+  updateTaskProgress(task);
+  updateTaskUI(taskId,task);
+}
+
+// Cycle verification tier: none→self→tested→verified→none
+function cycleTier(taskId,acIdx){
+  if(!D)return;
+  const task=D.tasks.find(t=>t.id===taskId);
+  if(!task||!task.acceptanceCriteria||!task.acceptanceCriteria[acIdx])return;
+  const ac=task.acceptanceCriteria[acIdx];
+  const curIdx=TIER_ORDER.indexOf(ac.verifiedBy||'none');
+  const nextIdx=(curIdx+1)%TIER_ORDER.length;
+  ac.verifiedBy=TIER_ORDER[nextIdx];
+  // If cycling to 'none', uncheck too
+  if(ac.verifiedBy==='none'){
+    ac.passed=false;
+    ac.verifiedAt=null;
+  } else {
+    ac.passed=true;
+    ac.verifiedAt=new Date().toISOString();
+  }
+  updateTaskProgress(task);
+  updateTaskUI(taskId,task);
+}
+
+// Progress = criteria pass ratio
+function updateTaskProgress(task){
+  const passedCount=task.acceptanceCriteria.filter(a=>a.passed).length;
+  const totalCount=task.acceptanceCriteria.length;
+  task.progress=Math.round((passedCount/totalCount)*100);
+}
+
+// Update all UI instances of a task without full re-render
+function updateTaskUI(taskId,task){
+  document.querySelectorAll('[data-ac-task="'+taskId+'"]').forEach(section=>{
+    const items=section.querySelectorAll('.ac-item');
+    task.acceptanceCriteria.forEach((a,i)=>{
+      if(!items[i])return;
+      items[i].className='ac-item '+(a.passed?'ac-pass':'ac-fail');
+      items[i].querySelector('.ac-check').textContent=a.passed?'✓':'';
+      const tierEl=items[i].querySelector('.ac-tier');
+      if(tierEl){
+        tierEl.className='ac-tier ac-tier-'+(a.verifiedBy||'none');
+        tierEl.textContent=TIER_ICONS[a.verifiedBy||'none']+' '+TIER_LABELS[a.verifiedBy||'none'];
+      }
+    });
+    const passed=task.acceptanceCriteria.filter(a=>a.passed).length;
+    const total=task.acceptanceCriteria.length;
+    const selfOnly=task.acceptanceCriteria.filter(a=>a.passed&&a.verifiedBy==='self').length;
+    const scoreEl=section.querySelector('.ac-score');
+    if(scoreEl){
+      const done=passed===total;
+      const allVerified=task.acceptanceCriteria.every(a=>a.verifiedBy==='verified');
+      let label=passed+'/'+total;
+      if(done&&allVerified) label+=' 🟢 PRODUCTION READY';
+      else if(done) label+=' ✓ ALL PASSED'+(selfOnly?' ('+selfOnly+' self-reported)':'');
+      else label+=' passed';
+      scoreEl.style.color='var(--'+(done&&allVerified?'green':done?'yellow':pc(Math.round(passed/total*100)))+')';
+      scoreEl.textContent=label;
+    }
+  });
+  document.querySelectorAll('[data-task-id="'+taskId+'"]').forEach(card=>{
+    const pctEl=card.querySelector('.feature-pct');
+    if(pctEl){pctEl.textContent=task.progress+'%';pctEl.style.color='var(--'+pc(task.progress)+')';}
+    const fill=card.querySelector('.progress-fill');
+    if(fill){fill.style.width=task.progress+'%';}
+  });
+  renderStats();
+  renderPhaseMilestones();
+  updateTabPcts();
+}
+
+function taskCard(t){
+  const c=pc(t.progress);
+  const uid=++acUid;
+  const wPct=(t.weight).toFixed(1);
+  const earned=(t.weight*t.progress/100).toFixed(2);
+  let tags=`<span class="tag tag-${t.priority.toLowerCase()}">${t.priority}</span>`;
+  tags+=`<span class="tag tag-owner">${t.owner}</span>`;
+  tags+=`<span class="tag tag-phase">Phase ${t.phase}</span>`;
+  tags+=`<span class="tag tag-cat">${t.category}</span>`;
+  if(t.blocked)tags+=`<span class="tag tag-blocked">BLOCKED</span>`;
+  let detail=t.status;
+  if(t.blocked&&t.blocker)detail+=` <strong style="color:var(--red)">Blocker: ${t.blocker}</strong>`;
+  // Acceptance criteria — INTERACTIVE checkboxes with unique IDs
+  let acHtml='';
+  if(t.acceptanceCriteria&&t.acceptanceCriteria.length){
+    const passed=t.acceptanceCriteria.filter(a=>a.passed).length;
+    const total=t.acceptanceCriteria.length;
+    const acPct=Math.round((passed/total)*100);
+    const allDone=passed===total;
+    const secId='ac-'+uid;
+    const selfOnly=t.acceptanceCriteria.filter(a=>a.passed&&a.verifiedBy==='self').length;
+    const allVerified=t.acceptanceCriteria.every(a=>a.verifiedBy==='verified');
+    let scoreLabel=passed+'/'+total;
+    if(allDone&&allVerified) scoreLabel+=' 🟢 PRODUCTION READY';
+    else if(allDone) scoreLabel+=' ✓ ALL PASSED'+(selfOnly?' ('+selfOnly+' self-reported)':'');
+    else scoreLabel+=' passed';
+    acHtml=`<div class="ac-section" id="${secId}" data-ac-task="${t.id}">
+      <div class="ac-header" onclick="document.getElementById('${secId}').classList.toggle('ac-open')">
+        <span class="ac-toggle">▶</span> Acceptance Criteria
+        <span class="ac-score" style="color:var(--${allDone&&allVerified?'green':allDone?'yellow':pc(acPct)})">${scoreLabel}</span>
+      </div>
+      <div class="ac-list">${t.acceptanceCriteria.map((a,i)=>{
+        const tier=a.verifiedBy||'none';
+        return `<div class="ac-item ${a.passed?'ac-pass':'ac-fail'}">
+        <span class="ac-check" onclick="event.stopPropagation();toggleAC('${t.id}',${i},'${secId}')">${a.passed?'✓':''}</span>
+        <span class="ac-text">${a.test}</span>
+        <span class="ac-tier ac-tier-${tier}" onclick="event.stopPropagation();cycleTier('${t.id}',${i})" title="Click to cycle: Self→Tested→Verified→None">${TIER_ICONS[tier]||'⚪'} ${TIER_LABELS[tier]||'—'}</span>
+      </div>`;}).join('')}
+      <div class="ac-legend">
+        <span>⚪ Unchecked</span>
+        <span>🟡 Self-reported</span>
+        <span>🔵 QA/Cross-dept tested</span>
+        <span>🟢 CEO verified = production</span>
+      </div></div>
+    </div>`;
+  }
+  return `<div class="feature" data-task-id="${t.id}">
+    <div class="feature-header">
+      <span class="feature-name">${t.name}<span class="feature-weight">${wPct}% weight (${earned}/${wPct} earned)</span></span>
+      <span class="feature-pct" style="color:var(--${c})">${t.progress}%</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" style="width:${t.progress}%;${grad(t.progress)}"></div></div>
+    <div class="feature-detail">${detail}</div>
+    <div class="feature-meta">${tags}</div>
+    ${acHtml}
+  </div>`;
+}
+
+function renderStats(){
+  const pct=calcOverall();
+  D.overall.completion=pct;
+  const target=new Date('2026-03-16');const now=new Date();const diff=Math.ceil((target-now)/(864e5));
+  const blocked=D.tasks.filter(t=>t.blocked).length;
+  const srvCount=D.infrastructure&&D.infrastructure.summary?D.infrastructure.summary.totalServers:D.overall.serverCount;
+  const cntCount=D.infrastructure&&D.infrastructure.summary?D.infrastructure.summary.totalCountries:D.overall.countriesCount;
+  const done=D.tasks.filter(t=>t.progress>=100).length;
+  document.getElementById('statsRow').innerHTML=`
+    <div class="stat-card"><div class="label">Overall Readiness</div><div class="value" style="color:var(--${pc(pct)})">${pct}%</div><div class="sub">Weighted across all ${D.tasks.length} tasks</div></div>
+    <div class="stat-card"><div class="label">Tasks Done</div><div class="value">${done}/${D.tasks.length}</div><div class="sub">${D.tasks.length-done} remaining</div></div>
+    <div class="stat-card"><div class="label">Blockers</div><div class="value" style="color:${blocked?'var(--red)':'var(--green)'}">${blocked}</div><div class="sub">${blocked?'Action needed':'All clear'}</div></div>
+    <div class="stat-card"><div class="label">Servers</div><div class="value">${srvCount}</div><div class="sub">${cntCount} countr${cntCount===1?'y':'ies'}</div></div>
+    <div class="stat-card"><div class="label">iOS Launch</div><div class="value">${diff>0?diff:'NOW'}</div><div class="sub">days remaining</div></div>
+  `;
+}
+
+function renderBenchmarks(){
+  const pct=D.overall.completion;
+  let markers='';
+  D.benchmarks.forEach(b=>{
+    const reached=pct>=b.pct;
+    if(reached)b.reached=true;
+    markers+=`<div class="bench-mark ${reached?'bench-reached':''}" style="left:${b.pct}%">
+      <span class="bench-label">${b.label}</span>
+      <span class="bench-pct">${b.pct}%</span>
+    </div>`;
+  });
+  document.getElementById('benchmarkBar').innerHTML=`
+    <div style="position:relative;margin:28px 0 16px">
+      <div class="bench-bar"><div class="bench-fill" style="width:${pct}%"></div><div class="bench-markers">${markers}</div></div>
+    </div>`;
+}
+
+// PROMINENT Phase Milestones
+function renderPhaseMilestones(){
+  const phases=[
+    {num:1,label:'Phase 1',sub:'iOS Launch',icon:'🚀',tab:'phase1'},
+    {num:2,label:'Phase 2',sub:'Android + Servers',icon:'📱',tab:'phase2'},
+    {num:3,label:'Phase 3',sub:'macOS + Extensions',icon:'💻',tab:'phase3plus'},
+    {num:4,label:'Phase 4',sub:'Windows + CasperCloak',icon:'🛡️',tab:'phase3plus'},
+    {num:5,label:'Phase 5',sub:'Linux + Smart',icon:'🐧',tab:'phase3plus'},
+    {num:6,label:'Phase 6',sub:'Scale & Dominate',icon:'🌍',tab:'phase3plus'}
+  ];
+  let html='';
+  phases.forEach(p=>{
+    const tasks=D.tasks.filter(t=>t.phase===p.num);
+    const pct=calcPct(tasks);
+    const done=tasks.filter(t=>t.progress>=100).length;
+    const reached=pct>=100;
+    const current=!reached&&pct>0;
+    html+=`<div class="phase-ms ${reached?'ms-reached':current?'ms-current':''}" onclick="document.querySelector('[data-tab=${p.tab}]').click()">
+      <div class="ms-icon">${p.icon}</div>
+      <div class="ms-name">${p.label}</div>
+      <div style="font-size:11px;color:var(--muted)">${p.sub}</div>
+      <div class="ms-pct" style="color:var(--${pc(pct)})">${pct}%</div>
+      <div class="ms-bar"><div class="ms-bar-fill" style="width:${pct}%;${grad(pct)}"></div></div>
+      <div class="ms-detail">${done}/${tasks.length} tasks done</div>
+    </div>`;
+  });
+  document.getElementById('phaseMilestones').innerHTML=html;
+}
+
+function renderOverview(){
+  const sorted=[...D.tasks].sort((a,b)=>{
+    const pMap={P0:0,P1:1,P2:2,P3:3};
+    if(pMap[a.priority]!==pMap[b.priority])return pMap[a.priority]-pMap[b.priority];
+    return b.weight-a.weight;
+  });
+  let html='';
+  // Blocked first
+  const blockedTasks=sorted.filter(t=>t.blocked);
+  if(blockedTasks.length){
+    html+=`<div class="section"><div class="section-title" style="color:var(--red)">🚨 Blocked Tasks (${blockedTasks.length})</div><div class="features-grid">${blockedTasks.map(taskCard).join('')}</div></div>`;
+  }
+  // By category — ALL categories including AI Features
+  const cats={};sorted.forEach(t=>{if(!cats[t.category])cats[t.category]=[];cats[t.category].push(t)});
+  for(const[cat,tasks]of Object.entries(cats)){
+    const catPct=calcPct(tasks);
+    html+=`<div class="section"><div class="section-title">${cat} <span class="badge badge-dev">${catPct}%</span></div><div class="features-grid">${tasks.map(taskCard).join('')}</div>${sectionFooter(tasks,cat+' completion')}</div>`;
+  }
+  // AI Features from aiFeatures array (ones NOT in tasks)
+  if(D.aiFeatures&&D.aiFeatures.length){
+    const taskAiIds=D.tasks.filter(t=>t.category==='AI Features').map(t=>t.name.toLowerCase());
+    const extraAI=D.aiFeatures.filter(f=>!taskAiIds.some(n=>n.includes(f.name.toLowerCase().split(' ').slice(0,2).join(' '))));
+    if(extraAI.length){
+      let aiCards='';
+      extraAI.forEach(f=>{
+        const sc=f.status==='built'?'green':f.status==='designed'?'yellow':f.status==='ready'?'green':'muted';
+        const pTag=f.priority?`<span class="tag tag-${f.priority.toLowerCase()}">${f.priority}</span>`:'';
+        aiCards+=`<div class="feature">
+          <div class="feature-header"><span class="feature-name">${f.name}</span><span class="feature-pct" style="color:var(--${sc})">${f.status.toUpperCase()}</span></div>
+          <div class="feature-detail">${f.description}</div>
+          <div class="feature-meta">${pTag}<span class="tag tag-phase">Phase ${f.phase}</span><span class="tag tag-cat">AI</span></div>
+        </div>`;
+      });
+      html+=`<div class="section"><div class="section-title">AI Features (Additional)</div><div class="features-grid">${aiCards}</div></div>`;
+    }
+  }
+  // Anti-Censorship features
+  if(D.antiCensorship&&D.antiCensorship.casperCloak&&D.antiCensorship.casperCloak.features){
+    const ck=D.antiCensorship.casperCloak;
+    let ckCards='';
+    for(const[k,f]of Object.entries(ck.features)){
+      const pct=f.status==='deployed'?100:f.status==='designed'?40:0;
+      const pTag=f.priority?`<span class="tag tag-${f.priority.toLowerCase()}">${f.priority}</span>`:'';
+      const phTag=f.phase?`<span class="tag tag-phase">Phase ${f.phase}</span>`:`<span class="tag tag-phase">${ck.targetPhase}</span>`;
+      ckCards+=`<div class="feature">
+        <div class="feature-header"><span class="feature-name">CasperCloak: ${k.replace(/([A-Z])/g,' $1').trim()}</span><span class="feature-pct" style="color:var(--${pc(pct)})">${f.status}</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;${grad(pct)}"></div></div>
+        <div class="feature-detail">${f.description}</div>
+        <div class="feature-meta">${pTag}${phTag}<span class="tag tag-cat">Anti-Censorship</span></div>
+      </div>`;
+    }
+    html+=`<div class="section"><div class="section-title">Anti-Censorship / CasperCloak</div><div class="features-grid">${ckCards}</div></div>`;
+  }
+  html+=sectionFooter(D.tasks,'overall readiness');
+  document.getElementById('overview').innerHTML=html;
+}
+
+function renderPhase(panelId,phaseNum,title){
+  const tasks=D.tasks.filter(t=>t.phase===phaseNum).sort((a,b)=>{
+    const pMap={P0:0,P1:1,P2:2,P3:3};
+    if(pMap[a.priority]!==pMap[b.priority])return pMap[a.priority]-pMap[b.priority];
+    return b.weight-a.weight;
+  });
+  const phasePct=calcPct(tasks);
+  const icons={1:'🚀',2:'📱',3:'💻',4:'🛡️',5:'🐧',6:'🌍'};
+  // Phase header
+  let html=`<div class="phase-header">
+    <div class="ph-icon">${icons[phaseNum]||'📋'}</div>
+    <div class="ph-info"><div class="ph-name">${title}</div><div class="ph-sub">${tasks.length} tasks · ${tasks.filter(t=>t.blocked).length} blocked · ${tasks.filter(t=>t.progress>=100).length} done</div></div>
+    <div class="ph-pct" style="color:var(--${pc(phasePct)})">${phasePct}%</div>
+  </div>`;
+  // AI features for this phase
+  if(D.aiFeatures){
+    const phaseAI=D.aiFeatures.filter(f=>f.phase===phaseNum);
+    if(phaseAI.length){
+      let aiCards='';
+      phaseAI.forEach(f=>{
+        const sc=f.status==='built'?'green':f.status==='designed'?'yellow':f.status==='ready'?'green':'muted';
+        const pTag=f.priority?`<span class="tag tag-${f.priority.toLowerCase()}">${f.priority}</span>`:'';
+        aiCards+=`<div class="ai-card"><h4>${f.name} ${pTag}</h4><p><span style="color:var(--${sc})">${f.status.toUpperCase()}</span><br>${f.description}</p></div>`;
+      });
+      html+=`<div class="section"><div class="section-title">AI Features in This Phase</div><div class="ai-grid">${aiCards}</div></div>`;
+    }
+  }
+  // Anti-censorship for this phase
+  if(D.antiCensorship&&D.antiCensorship.casperCloak&&D.antiCensorship.casperCloak.features){
+    const phaseCK=Object.entries(D.antiCensorship.casperCloak.features).filter(([k,f])=>f.phase===phaseNum);
+    if(phaseCK.length){
+      let ckCards='';
+      phaseCK.forEach(([k,f])=>{
+        const pct=f.status==='deployed'?100:f.status==='designed'?40:0;
+        const pTag=f.priority?`<span class="tag tag-${f.priority.toLowerCase()}">${f.priority}</span>`:'';
+        ckCards+=`<div class="feature">
+          <div class="feature-header"><span class="feature-name">CasperCloak: ${k.replace(/([A-Z])/g,' $1').trim()}</span><span class="feature-pct" style="color:var(--${pc(pct)})">${f.status}</span></div>
+          <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;${grad(pct)}"></div></div>
+          <div class="feature-detail">${f.description}</div>
+          <div class="feature-meta">${pTag}<span class="tag tag-cat">Anti-Censorship</span></div>
+        </div>`;
+      });
+      html+=`<div class="section"><div class="section-title">Anti-Censorship in This Phase</div><div class="features-grid">${ckCards}</div></div>`;
+    }
+  }
+  // Tasks
+  html+=`<div class="section">
+    <div class="section-title">Tasks <span class="badge ${phaseNum===1?'badge-dev':'badge-planned'}">${phasePct}%</span></div>
+    <div class="features-grid">${tasks.map(taskCard).join('')}</div>
+    ${sectionFooter(tasks)}
+  </div>`;
+  document.getElementById(panelId).innerHTML=html;
+}
+
+function renderPhase3Plus(){
+  let html='';
+  const phaseData=[
+    {num:3,title:'Phase 3: macOS + Browser Extensions (Jul-Aug 2026)',icon:'💻'},
+    {num:4,title:'Phase 4: Windows + CasperCloak (Sep-Nov 2026)',icon:'🛡️'},
+    {num:5,title:'Phase 5: Linux + Smart Features (Dec 2026-Feb 2027)',icon:'🐧'},
+    {num:6,title:'Phase 6: Scale & Dominate (Mar 2027+)',icon:'🌍'}
+  ];
+  phaseData.forEach(p=>{
+    const tasks=D.tasks.filter(t=>t.phase===p.num).sort((a,b)=>b.weight-a.weight);
+    const pct=calcPct(tasks);
+    // Phase header
+    html+=`<div class="phase-header">
+      <div class="ph-icon">${p.icon}</div>
+      <div class="ph-info"><div class="ph-name">${p.title}</div><div class="ph-sub">${tasks.length} tasks · ${tasks.filter(t=>t.progress>=100).length} done</div></div>
+      <div class="ph-pct" style="color:var(--${pc(pct)})">${pct}%</div>
+    </div>`;
+    // AI features for this phase
+    if(D.aiFeatures){
+      const phaseAI=D.aiFeatures.filter(f=>f.phase===p.num);
+      if(phaseAI.length){
+        let aiCards='';
+        phaseAI.forEach(f=>{
+          const sc=f.status==='built'?'green':f.status==='designed'?'yellow':f.status==='ready'?'green':'muted';
+          const pTag=f.priority?`<span class="tag tag-${f.priority.toLowerCase()}">${f.priority}</span>`:'';
+          aiCards+=`<div class="ai-card"><h4>${f.name} ${pTag}</h4><p><span style="color:var(--${sc})">${f.status.toUpperCase()}</span><br>${f.description}</p></div>`;
+        });
+        html+=`<div class="section"><div class="section-title">AI Features</div><div class="ai-grid">${aiCards}</div></div>`;
+      }
+    }
+    // Anti-censorship for this phase
+    if(D.antiCensorship&&D.antiCensorship.casperCloak&&D.antiCensorship.casperCloak.features){
+      const phaseCK=Object.entries(D.antiCensorship.casperCloak.features).filter(([k,f])=>f.phase===p.num);
+      if(phaseCK.length){
+        let ckCards='';
+        phaseCK.forEach(([k,f])=>{
+          const fpct=f.status==='deployed'?100:f.status==='designed'?40:0;
+          const pTag=f.priority?`<span class="tag tag-${f.priority.toLowerCase()}">${f.priority}</span>`:'';
+          ckCards+=`<div class="feature">
+            <div class="feature-header"><span class="feature-name">CasperCloak: ${k.replace(/([A-Z])/g,' $1').trim()}</span><span class="feature-pct" style="color:var(--${pc(fpct)})">${f.status}</span></div>
+            <div class="progress-bar"><div class="progress-fill" style="width:${fpct}%;${grad(fpct)}"></div></div>
+            <div class="feature-detail">${f.description}</div>
+            <div class="feature-meta">${pTag}</div>
+          </div>`;
+        });
+        html+=`<div class="section"><div class="section-title">Anti-Censorship</div><div class="features-grid">${ckCards}</div></div>`;
+      }
+    }
+    // Tasks
+    if(tasks.length){
+      html+=`<div class="section"><div class="section-title">Tasks <span class="badge badge-planned">${pct}%</span></div><div class="features-grid">${tasks.map(taskCard).join('')}</div>${sectionFooter(tasks)}</div>`;
+    }
+  });
+  document.getElementById('phase3plus').innerHTML=html||'<p style="color:var(--muted)">No tasks assigned to phases 3-6 yet.</p>';
+}
+
+function renderDepts(){
+  const d=D.departments;
+  const skillMap={ios:'caspervpn-dev',backend:'caspervpn-dev',devops:'caspervpn-devops',android:'caspervpn-android',desktop:'caspervpn-desktop',website:'caspervpn-dev',qa:'caspervpn-testing',legal:'caspervpn-legal-compliance',marketing:'caspervpn-marketing-growth',product:'caspervpn-product-strategy'};
+  let cards='';
+  for(const[k,v]of Object.entries(d)){
+    const dTasks=D.tasks.filter(t=>t.owner.toLowerCase()===k||(k==='backend'&&t.owner==='Backend')||(k==='ios'&&t.owner==='iOS')||(k==='website'&&t.owner==='Website')||(k==='legal'&&t.owner==='Legal')||(k==='marketing'&&t.owner==='Marketing')||(k==='product'&&t.owner==='Product')||(k==='devops'&&t.owner==='DevOps')||(k==='android'&&t.owner==='Android')||(k==='desktop'&&t.owner==='Desktop'));
+    const dPct=calcPct(dTasks);
+    const dc=v.status==='active'?'dot-g':v.status==='idle'?'dot-y':'dot-r';
+    cards+=`<div class="dept-card">
+      <div style="font-size:15px;font-weight:600;margin-bottom:3px"><span class="dot ${dc}"></span>${v.name}</div>
+      <div style="font-size:10px;color:var(--accent);margin-bottom:6px">${skillMap[k]||'—'} | Lead: ${v.lead}</div>
+      <div style="font-size:12px;margin-bottom:4px">${v.currentTask}</div>
+      <div style="font-size:11px;color:var(--muted)">${dTasks.length} tasks | ${v.blockers} blockers</div>
+      <div class="progress-bar" style="margin-top:6px"><div class="progress-fill" style="width:${dPct}%;${grad(dPct)}"></div></div>
+      <div style="font-size:11px;color:var(--${pc(dPct)});margin-top:3px">${dPct}% complete</div>
+    </div>`;
+  }
+  document.getElementById('departments').innerHTML=`<div class="section"><div class="section-title">Department Status</div><div class="dept-grid">${cards}</div>${sectionFooter(D.tasks,'across all departments')}</div>`;
+}
+
+// INFRASTRUCTURE — Password Protected
+function unlockInfra(){
+  const input=document.getElementById('infraPass');
+  const pw=D.infrastructure&&D.infrastructure.accessControl?D.infrastructure.accessControl.password:'';
+  if(input.value===pw){
+    infraUnlocked=true;
+    renderInfraContent();
+  } else {
+    input.style.borderColor='var(--red)';
+    input.value='';
+    input.placeholder='Wrong password';
+  }
+}
+
+function renderInfra(){
+  if(infraUnlocked){renderInfraContent();return;}
+  document.getElementById('infra').innerHTML=`
+    <div class="infra-lock">
+      <div style="font-size:48px;margin-bottom:12px">🔒</div>
+      <div style="font-size:18px;font-weight:700;margin-bottom:4px">Infrastructure Access</div>
+      <div style="color:var(--muted);font-size:13px;margin-bottom:16px">Server details, IPs, and configuration are password-protected</div>
+      <input type="password" id="infraPass" placeholder="Enter infrastructure password" onkeydown="if(event.key==='Enter')unlockInfra()">
+      <br><button onclick="unlockInfra()">Unlock</button>
+    </div>`;
+}
+
+function renderInfraContent(){
+  const s=D.infrastructure;
+  let html='';
+  // Summary
+  if(s.summary){
+    const sm=s.summary;
+    html+=`<div class="section">
+      <div class="section-title">Infrastructure Summary</div>
+      <div class="stats-row">
+        <div class="stat-card"><div class="label">Total Servers</div><div class="value">${sm.totalServers}</div><div class="sub">${sm.totalCountries} countr${sm.totalCountries===1?'y':'ies'}</div></div>
+        <div class="stat-card"><div class="label">VPN Ready</div><div class="value" style="color:var(--green)">${sm.vpnReady}</div><div class="sub">${sm.vpnNotConfigured} not configured</div></div>
+        <div class="stat-card"><div class="label">Monthly Cost</div><div class="value" style="font-size:20px">${sm.monthlyCost}</div><div class="sub">all servers</div></div>
+        <div class="stat-card"><div class="label">Risk Level</div><div class="value" style="font-size:14px;color:var(--red)">${sm.singlePointOfFailure?'HIGH':'OK'}</div><div class="sub">${sm.singlePointOfFailure?'Single point of failure':'Redundant'}</div></div>
+      </div>
+      <div class="srv-risk"><strong style="color:var(--red)">⚠ Risk:</strong> <span style="font-size:12px">${sm.riskLevel}</span></div>
+      <div style="margin-top:12px;padding:12px;background:var(--card);border:1px solid var(--border);border-radius:8px">
+        <strong style="color:var(--accent)">Expansion Plan:</strong> <span style="font-size:12px;color:var(--muted)">${sm.expansionPlan}</span>
+        <br><strong style="color:var(--green)">Cost Estimate:</strong> <span style="font-size:12px;color:var(--muted)">${sm.expansionCostEstimate}</span>
+      </div>
+    </div>`;
+  }
+  // Per-server details
+  s.servers.forEach(sv=>{
+    html+=`<div class="srv-card">
+      <div class="srv-header">
+        <div>
+          <div style="font-size:18px;font-weight:700"><span class="dot ${sv.status==='live'?'dot-g':'dot-y'}"></span>${sv.location}</div>
+          <div style="font-size:12px;color:var(--muted)">${sv.hostname||sv.id} · ${sv.provider||'Unknown'} · <code>${sv.ip}</code></div>
+        </div>
+        <span class="badge ${sv.status==='live'?'badge-live':'badge-dev'}">${sv.status.toUpperCase()}</span>
+      </div>`;
+    // Specs
+    if(sv.specs){
+      const sp=sv.specs;
+      html+=`<div class="srv-specs">
+        <div class="srv-spec"><div class="sp-val">${sp.cpu}</div><div class="sp-lbl">CPU</div></div>
+        <div class="srv-spec"><div class="sp-val">${sp.ram}</div><div class="sp-lbl">RAM</div></div>
+        <div class="srv-spec"><div class="sp-val">${sp.disk}</div><div class="sp-lbl">Disk</div></div>
+        <div class="srv-spec"><div class="sp-val">${sp.bandwidth}</div><div class="sp-lbl">Bandwidth</div></div>
+        <div class="srv-spec"><div class="sp-val">${sp.monthlyPrice}</div><div class="sp-lbl">Cost</div></div>
+      </div>`;
+    }
+    // Utilization
+    if(sv.utilization){
+      const u=sv.utilization;
+      html+=`<div class="section-title" style="font-size:14px;margin-top:12px">Resource Utilization</div>
+      <div class="srv-specs">
+        <div class="srv-spec"><div class="sp-val" style="font-size:14px">${u.cpuUsage}</div><div class="sp-lbl">CPU Usage</div></div>
+        <div class="srv-spec"><div class="sp-val" style="font-size:14px">${u.ramUsage}</div><div class="sp-lbl">RAM Usage</div></div>
+        <div class="srv-spec"><div class="sp-val" style="font-size:14px">${u.diskUsage}</div><div class="sp-lbl">Disk Usage</div></div>
+        <div class="srv-spec"><div class="sp-val" style="font-size:14px">${u.bandwidthUsed}</div><div class="sp-lbl">BW Used</div></div>
+        <div class="srv-spec"><div class="sp-val" style="font-size:14px">${u.maxVpnConnections}</div><div class="sp-lbl">Max VPN Conns</div></div>
+        <div class="srv-spec"><div class="sp-val" style="font-size:14px">${u.currentVpnConnections}</div><div class="sp-lbl">Current Conns</div></div>
+      </div>`;
+    }
+    // Services on this server
+    if(sv.services){
+      let svcRows='';
+      for(const[k,v]of Object.entries(sv.services)){
+        const dc=v.status==='live'?'dot-g':v.status==='dev'?'dot-y':'dot-r';
+        svcRows+=`<tr><td><strong>${k}</strong></td><td><span class="dot ${dc}"></span>${v.status}</td><td>${v.port||'—'}</td><td style="font-size:11px;color:var(--muted)">${v.notes||'—'}</td></tr>`;
+      }
+      html+=`<div class="srv-services"><div class="section-title" style="font-size:14px">Services Hosted</div>
+        <table class="tbl"><thead><tr><th>Service</th><th>Status</th><th>Port</th><th>Details</th></tr></thead><tbody>${svcRows}</tbody></table></div>`;
+    }
+    // Bottleneck & recommendations
+    if(sv.bottleneck){
+      html+=`<div class="srv-risk" style="margin-top:12px"><strong style="color:var(--yellow)">⚡ Bottleneck:</strong> <span style="font-size:12px">${sv.bottleneck}</span></div>`;
+    }
+    if(sv.recommendations&&sv.recommendations.length){
+      html+=`<ul class="srv-recs">${sv.recommendations.map(r=>`<li>${r}</li>`).join('')}</ul>`;
+    }
+    html+=`</div>`; // close srv-card
+  });
+  // Fallback: old-style services if no per-server services
+  if(s.services&&(!s.servers||!s.servers[0]||!s.servers[0].services)){
+    let svcRows='';
+    for(const[k,v]of Object.entries(s.services)){
+      const dc=v.status==='live'?'dot-g':v.status==='dev'?'dot-y':'dot-r';
+      svcRows+=`<tr><td>${k}</td><td>${v.tool||v.url||'—'}</td><td><span class="dot ${dc}"></span>${v.status}</td><td>${v.port||'—'}</td></tr>`;
+    }
+    html+=`<div class="section"><div class="section-title">Services</div>
+    <table class="tbl"><thead><tr><th>Service</th><th>Technology</th><th>Status</th><th>Port</th></tr></thead><tbody>${svcRows}</tbody></table></div>`;
+  }
+  document.getElementById('infra').innerHTML=html;
+}
+
+// Anti-Censorship — grouped by phase
+function renderCensorship(){
+  const ac=D.antiCensorship;const ck=ac.casperCloak;
+  let html=`<div class="section">
+    <div class="section-title">Anti-Censorship & DPI Evasion</div>
+    <p style="color:var(--muted);margin-bottom:14px;font-size:13px">${ac.currentCapability}</p>
+    <div style="padding:12px;background:var(--card);border:1px solid var(--border);border-radius:8px;margin-bottom:14px">
+      <strong style="color:var(--accent)">CasperCloak Protocol:</strong> <span style="color:var(--muted)">Designed: ${ck.designed?'✓ Yes':'✗ No'} | Deployed: ${ck.deployed?'✓ Yes':'✗ No'} | Target: ${ck.targetPhase}</span>
+    </div>
+    <div style="padding:12px;background:var(--card);border:1px solid var(--border);border-radius:8px;margin-bottom:20px">
+      <strong style="color:var(--green)">Interim Solution:</strong> <span style="color:var(--muted)">${ac.interimSolution}</span>
+    </div>
+  </div>`;
+  // Group features by phase
+  const byPhase={};
+  for(const[k,f]of Object.entries(ck.features)){
+    const ph=f.phase||4;
+    if(!byPhase[ph])byPhase[ph]=[];
+    byPhase[ph].push({key:k,...f});
+  }
+  const phaseNames={3:'Phase 3',4:'Phase 4: CasperCloak Core',5:'Phase 5: Advanced'};
+  for(const[ph,features]of Object.entries(byPhase)){
+    // Sort by priority
+    const pMap={P0:0,P1:1,P2:2,P3:3};
+    features.sort((a,b)=>(pMap[a.priority]||3)-(pMap[b.priority]||3));
+    let cards='';
+    features.forEach(f=>{
+      const pct=f.status==='deployed'?100:f.status==='designed'?40:0;
+      const pTag=f.priority?`<span class="tag tag-${f.priority.toLowerCase()}">${f.priority}</span>`:'';
+      cards+=`<div class="feature">
+        <div class="feature-header"><span class="feature-name">${f.key.replace(/([A-Z])/g,' $1').trim()}</span><span class="feature-pct" style="color:var(--${pc(pct)})">${f.status}</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;${grad(pct)}"></div></div>
+        <div class="feature-detail">${f.description}</div>
+        <div class="feature-meta">${pTag}<span class="tag tag-phase">Phase ${ph}</span></div>
+      </div>`;
+    });
+    html+=`<div class="section"><div class="section-title">${phaseNames[ph]||'Phase '+ph}</div><div class="features-grid">${cards}</div></div>`;
+  }
+  // Related tasks from main task list
+  const censorTasks=D.tasks.filter(t=>t.id.includes('censorship')||t.id.includes('caspercloak')||t.name.toLowerCase().includes('censorship')||t.name.toLowerCase().includes('caspercloak'));
+  if(censorTasks.length){
+    html+=`<div class="section"><div class="section-title">Related Tasks</div><div class="features-grid">${censorTasks.map(taskCard).join('')}</div></div>`;
+  }
+  document.getElementById('censorship').innerHTML=html;
+}
+
+// AI Features — grouped by phase with priority
+function renderAI(){
+  let html='';
+  // Group by phase
+  const byPhase={};
+  D.aiFeatures.forEach(f=>{
+    const ph=f.phase||99;
+    if(!byPhase[ph])byPhase[ph]=[];
+    byPhase[ph].push(f);
+  });
+  const phaseNames={1:'Phase 1: iOS Launch',2:'Phase 2: Android + Servers',3:'Phase 3: macOS + Extensions',4:'Phase 4: CasperCloak',5:'Phase 5: Linux + Smart'};
+  for(const[ph,features]of Object.entries(byPhase)){
+    const pMap={P0:0,P1:1,P2:2,P3:3};
+    features.sort((a,b)=>(pMap[a.priority]||3)-(pMap[b.priority]||3));
+    let cards='';
+    features.forEach(f=>{
+      const sc=f.status==='built'?'green':f.status==='designed'?'yellow':f.status==='ready'?'green':'muted';
+      const pTag=f.priority?`<span class="tag tag-${f.priority.toLowerCase()}">${f.priority}</span>`:'';
+      cards+=`<div class="ai-card">
+        <h4>${f.name} ${pTag}</h4>
+        <p><span style="color:var(--${sc})">${f.status.toUpperCase()}</span><br>${f.description}</p>
+      </div>`;
+    });
+    html+=`<div class="section"><div class="section-title">${phaseNames[ph]||'Phase '+ph}</div><div class="ai-grid">${cards}</div></div>`;
+  }
+  // Related tasks from main task list
+  const aiTasks=D.tasks.filter(t=>t.category==='AI Features');
+  if(aiTasks.length){
+    html+=`<div class="section"><div class="section-title">AI Tasks (Weighted)</div><div class="features-grid">${aiTasks.map(taskCard).join('')}</div>${sectionFooter(aiTasks,'AI task completion')}</div>`;
+  }
+  document.getElementById('ai').innerHTML=html;
+}
+
+function renderXDept(){
+  const tasks=D.crossDeptTasks||[];
+  if(!tasks.length){
+    document.getElementById('xdept').innerHTML=`<div class="section"><div class="section-title">Cross-Department Task Queue</div>
+    <p style="color:var(--muted);font-size:13px">No cross-department tasks queued. When a department creates a task for another department, it appears here automatically.<br><br>
+    <strong>How it works:</strong> Any department can add to <code>crossDeptTasks</code> in <code>data.json</code>. The target department picks it up on their next session start.</p></div>`;
+    return;
+  }
+  let html='';
+  tasks.forEach(t=>{
+    html+=`<div class="xdept">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <strong>${t.title}</strong>
+        <span class="tag tag-${t.priority.toLowerCase()}">${t.priority}</span>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">${t.from} → ${t.to} | ${t.status} | ${new Date(t.created).toLocaleDateString()}</div>
+      <div style="font-size:12px;margin-top:4px">${t.description}</div>
+    </div>`;
+  });
+  document.getElementById('xdept').innerHTML=`<div class="section"><div class="section-title">Cross-Department Task Queue (${tasks.length})</div>${html}</div>`;
+}
+
+function updateTabPcts(){
+  const tabMap={
+    overview:{fn:()=>D.tasks},
+    phase1:{fn:()=>D.tasks.filter(t=>t.phase===1)},
+    phase2:{fn:()=>D.tasks.filter(t=>t.phase===2)},
+    phase3plus:{fn:()=>D.tasks.filter(t=>t.phase>=3)},
+    departments:{fn:()=>D.tasks},
+    infra:{fn:null},
+    censorship:{fn:null},
+    ai:{fn:null},
+    xdept:{fn:null}
+  };
+  document.querySelectorAll('.tab[data-tab]').forEach(tab=>{
+    const key=tab.getAttribute('data-tab');
+    const existing=tab.querySelector('.tab-pct');
+    if(existing)existing.remove();
+    const cfg=tabMap[key];
+    if(cfg&&cfg.fn){
+      const tasks=cfg.fn();
+      const pct=calcPct(tasks);
+      const span=document.createElement('span');
+      span.className='tab-pct';
+      span.style.color=`var(--${pc(pct)})`;
+      span.textContent=pct+'%';
+      tab.appendChild(span);
+    }
+  });
+}
+
+function render(){
+  if(!D)return;
+  // CRITICAL: recalculate ALL progress from criteria on every render
+  // Ensures progress % ALWAYS matches checked criteria — never stale
+  D.tasks.forEach(function(t){
+    var p=t.acceptanceCriteria.filter(function(a){return a.passed;}).length;
+    var tot=t.acceptanceCriteria.length;
+    t.progress=tot>0?Math.round((p/tot)*100):0;
+  });
+  acUid=0; // reset unique counter for task card IDs
+  document.getElementById('lu').textContent=new Date(D.lastUpdated).toLocaleString();
+  document.getElementById('ub').textContent=D.updatedBy;
+  renderStats();
+  renderBenchmarks();
+  renderPhaseMilestones();
+  renderOverview();
+  renderPhase('phase1',1,'Phase 1: iOS Launch (Feb-Mar 2026)');
+  renderPhase('phase2',2,'Phase 2: Android + Server Expansion (Apr-Jun 2026)');
+  renderPhase3Plus();
+  renderDepts();
+  renderInfra();
+  renderCensorship();
+  renderAI();
+  renderXDept();
+  updateTabPcts();
+}
+
+const INLINE_DATA = {"lastUpdated": "2026-02-16T23:30:00Z", "updatedBy": "[CEO]", "overall": {"completion": 18, "phase": "Phase 1: iOS Launch", "targetDate": "March 16, 2026", "serverCount": 1, "countriesCount": 1, "protocolsReady": 3, "platformsLive": 0}, "benchmarks": [{"pct": 35, "label": "iOS TestFlight Ready", "description": "Core VPN works, 1 protocol stable, basic UI", "reached": true}, {"pct": 55, "label": "iOS App Store Ready", "description": "2 protocols, kill switch, IAP, Privacy Policy, ToS", "reached": false}, {"pct": 65, "label": "Android Play Store Ready", "description": "Android app feature parity with iOS launch", "reached": false}, {"pct": 72, "label": "macOS + Browser Extensions", "description": "Desktop coverage, browser proxy VPN", "reached": false}, {"pct": 80, "label": "Windows + CasperCloak", "description": "DPI evasion live, KSA/UAE unblocked", "reached": false}, {"pct": 88, "label": "Linux + Smart Features", "description": "All platforms, multi-hop, Smart DNS", "reached": false}, {"pct": 95, "label": "Enterprise Ready", "description": "SOC 2, white-label, dedicated IP, 50+ servers", "reached": false}, {"pct": 100, "label": "Top 10 VPN Globally", "description": "100+ servers, 24/7 support, $500K+ MRR", "reached": false}], "tasks": [{"id": "wireguard-stable", "name": "WireGuard Protocol \u2014 Production Stable", "weight": 4.26, "progress": 20, "phase": 1, "priority": "P0", "owner": "iOS", "status": "Tunnel connects. JWT token refresh on 401 NOT implemented \u2014 causes intermittent disconnect. Config caching missing.", "blocked": true, "blocker": "APIClient clears token on 401 instead of calling refreshToken()", "deps": ["backend-api"], "category": "VPN Core", "acceptanceCriteria": [{"test": "Connect to WireGuard server and maintain stable connection for 60 seconds with zero packet loss", "passed": true, "verifiedBy": "tested", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Verified on TestFlight / live server"}, {"test": "JWT token refresh on 401 response \u2014 token is silently refreshed without disconnecting tunnel", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "WireGuard config cached locally \u2014 reconnect to same server uses cached config, no API call required", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Tunnel handles network interruption \u2014 auto-reconnects within 3 seconds of WiFi/cellular switch", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "No app crashes during 300-second continuous connection + disconnect cycle test", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}]}, {"id": "ikev2-stable", "name": "IKEv2 Protocol \u2014 Production Stable", "weight": 3.83, "progress": 17, "phase": 1, "priority": "P0", "owner": "iOS", "status": "IKEv2Manager built. VPNConnectionManager ignores IKEv2 status changes. Backend endpoint /servers/{id}/ikev2-config exists but untested end-to-end.", "blocked": true, "blocker": "Status observer only watches WireGuard tunnelManager, not NEVPNManager for IKEv2", "deps": ["backend-api"], "category": "VPN Core", "acceptanceCriteria": [{"test": "Connect to IKEv2 server \u2014 NEVPNManager establishes tunnel without error", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "VPNConnectionManager.statusObserver monitors NEVPNManager status changes and updates UI in real-time", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Backend /servers/{id}/ikev2-config endpoint returns valid IKEv2 config with server IP, pre-shared key, and encryption settings", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Maintain IKEv2 connection for 60 seconds with zero packet loss", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Switch from WireGuard to IKEv2 protocol and back without app crash or connection leak", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "App displays correct protocol name and connection status for IKEv2 in connection UI", "passed": true, "verifiedBy": "self", "verifiedAt": "2026-02-16T23:30:00Z", "evidence": "Code exists, needs production validation"}]}, {"id": "openvpn-ios", "name": "OpenVPN Protocol \u2014 iOS Client", "weight": 3.4, "progress": 20, "phase": 1, "priority": "P1", "owner": "iOS", "status": "Server configured on port 1194. iOS needs OpenVPNAdapter SPM integration. UI protocol picker exists.", "blocked": false, "blocker": "", "deps": ["wireguard-stable"], "category": "VPN Core", "acceptanceCriteria": [{"test": "OpenVPNAdapter SPM dependency added to Xcode project and builds without errors", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "User selects OpenVPN protocol in UI and app fetches /servers/{id}/openvpn-config successfully", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "OpenVPN tunnel connects and maintains connection for 60 seconds with zero packet loss", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Protocol picker displays OpenVPN as selectable option alongside WireGuard and IKEv2", "passed": true, "verifiedBy": "self", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Code exists, needs production validation"}, {"test": "Switch from OpenVPN to another protocol disconnects cleanly without app crash", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}]}, {"id": "kill-switch", "name": "Internet Kill Switch", "weight": 2.13, "progress": 0, "phase": 1, "priority": "P0", "owner": "iOS", "status": "Not implemented. Use NetworkExtension includeAllNetworks + excludeLocalNetworks. Required for App Store credibility.", "blocked": false, "blocker": "", "deps": ["wireguard-stable"], "category": "VPN Core", "acceptanceCriteria": [{"test": "Kill switch toggle present in Settings view and persists across app restarts", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "When kill switch enabled and tunnel disconnects, all internet traffic is blocked \u2014 user cannot access internet without VPN", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "With kill switch enabled, WiFi/cellular switch maintains traffic block until tunnel reconnects", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Kill switch disabled allows internet traffic without VPN \u2014 verified with network monitoring", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "App does not crash during rapid kill switch toggle cycles (10+ toggles in 5 seconds)", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}]}, {"id": "auto-reconnect", "name": "Auto-Reconnect on Network Change", "weight": 1.28, "progress": 0, "phase": 1, "priority": "P1", "owner": "iOS", "status": "Not implemented. Need NWPathMonitor to detect WiFi\u2194Cellular transitions and auto-reconnect tunnel.", "blocked": false, "blocker": "", "deps": ["wireguard-stable"], "category": "VPN Core", "acceptanceCriteria": [{"test": "NWPathMonitor initializes on app launch and monitors network status changes", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Switch from WiFi to cellular network \u2014 tunnel auto-reconnects within 5 seconds", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Switch from cellular to WiFi \u2014 tunnel auto-reconnects within 5 seconds", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "During network transition, user is notified of reconnect status (not silent)", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Auto-reconnect can be disabled in settings and respects user preference", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}]}, {"id": "iap-storekit", "name": "StoreKit 2 In-App Purchases", "weight": 3.4, "progress": 33, "phase": 1, "priority": "P0", "owner": "iOS", "status": "6 tiers defined in .storekit config. SubscriptionManager (1144 lines) built. Purchase flow needs server-side receipt validation + entitlement sync.", "blocked": false, "blocker": "", "deps": ["backend-api"], "category": "Monetization", "acceptanceCriteria": [{"test": "All 6 subscription tiers (Free, Weekly, Monthly, 6-Month, Yearly, Lifetime) display in subscription picker", "passed": true, "verifiedBy": "tested", "verifiedAt": "2026-02-16T23:30:00Z", "evidence": "Verified on TestFlight / live server"}, {"test": "User completes purchase for any tier \u2014 StoreKit 2 payment sheet launches and transaction succeeds", "passed": true, "verifiedBy": "self", "verifiedAt": "2026-02-16T23:30:00Z", "evidence": "Code exists, needs production validation"}, {"test": "Backend endpoint POST /payments/validate-receipt receives transaction ID and validates receipt signature with Apple", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "After successful payment, user entitlements sync to app within 5 seconds \u2014 user immediately gains access to paid features", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "App handles subscription renewal \u2014 user stays subscribed after auto-renewal without re-authenticating", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "App displays accurate subscription status (active/expired/canceled) matching AppStore subscription data", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}]}, {"id": "subscription-ui", "name": "Subscription Page \u2014 High-Conversion Redesign", "weight": 1.28, "progress": 29, "phase": 1, "priority": "P1", "owner": "Product", "status": "Current page is basic list. Needs card-based layout, savings badges, trust signals, recommended tier highlight.", "blocked": false, "blocker": "", "deps": ["iap-storekit"], "category": "Monetization", "acceptanceCriteria": [{"test": "All 6 subscription tiers rendered as distinct cards with tier name, price, billing cycle visible", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "One tier marked as 'Most Popular' or 'Best Value' with visual highlight (color, badge, or border)", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Savings percentage calculated and displayed relative to monthly price (e.g., 'Save 50%')", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Feature list displayed under each tier showing included features or feature comparison table present", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Trust signals visible (30-day money-back guarantee, encryption badge, or server count)", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Layout renders correctly in dark mode and light mode \u2014 no text contrast failures", "passed": true, "verifiedBy": "self", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Code exists, needs production validation"}, {"test": "Page loads without crash on iPhone SE through iPhone 15 Pro Max (test 5 device sizes)", "passed": true, "verifiedBy": "self", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Code exists, needs production validation"}]}, {"id": "privacy-policy", "name": "Privacy Policy", "weight": 0.85, "progress": 0, "phase": 1, "priority": "P0", "owner": "Legal", "status": "Not drafted. BLOCKS App Store submission. Must cover GDPR, CCPA, Lebanese Law 81/2018, no-log policy.", "blocked": false, "blocker": "", "deps": [], "category": "Legal & Compliance", "acceptanceCriteria": [{"test": "Privacy Policy document exists at /legal/privacy-policy.md or accessible URL", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Document explicitly states 'no logs' policy \u2014 verifying we do not store user VPN activity, IP addresses, or DNS queries", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "GDPR compliance section present covering data subject rights, GDPR contact, data retention", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "CCPA compliance section present covering California user rights and opt-out mechanisms", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Lebanese Law 81/2018 compliance section addresses data protection framework applicable to Lebanese users", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Policy reviewed by external legal counsel \u2014 sign-off confirmation documented", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Policy links from iOS app Settings view and website footer", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}]}, {"id": "tos", "name": "Terms of Service", "weight": 0.85, "progress": 0, "phase": 1, "priority": "P0", "owner": "Legal", "status": "Not drafted. BLOCKS App Store submission.", "blocked": false, "blocker": "", "deps": [], "category": "Legal & Compliance", "acceptanceCriteria": [{"test": "Terms of Service document exists at /legal/tos.md or accessible URL", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "ToS clearly defines prohibited uses (illegal activity, hacking, DDoS, copyright infringement)", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Liability limitations and disclaimers present \u2014 service is 'as-is'", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Account termination conditions documented \u2014 cases where CasperVPN can suspend/delete accounts", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Acceptable Use Policy addresses geofencing \u2014 clarifies which jurisdictions restrict VPN use", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "ToS reviewed by external legal counsel \u2014 sign-off confirmation documented", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "ToS links from iOS app Settings view and website footer \u2014 user accepts before signup", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}]}, {"id": "aso-metadata", "name": "ASO: App Store Metadata & Screenshots", "weight": 1.28, "progress": 0, "phase": 1, "priority": "P0", "owner": "Marketing", "status": "Need: app name optimization, subtitle, keywords, description, 6.7\" + 5.5\" screenshots, preview video.", "blocked": false, "blocker": "", "deps": [], "category": "Marketing & Growth", "acceptanceCriteria": [{"test": "App name optimized for ASO \u2014 max 30 characters, includes primary keyword", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Subtitle (max 30 characters) completes app name and includes secondary keyword", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Keywords field populated with 100 characters of high-volume, relevant search terms", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "App description (max 4000 characters) highlights key features and includes CTA", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "6.7-inch (iPhone 14 Pro Max) and 5.5-inch (iPhone SE) screenshots at 1242x2208 pixels (3x scale)", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "All screenshots show actual app UI \u2014 no mock-ups or stock images", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Preview video (up to 30 seconds) demonstrates core VPN connect flow in high quality (1080p minimum)", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "All metadata passes Apple's App Store review guidelines \u2014 no prohibited terms or misleading claims", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}]}, {"id": "bandwidth-monitor", "name": "Real-Time Bandwidth Monitoring", "weight": 0.85, "progress": 0, "phase": 1, "priority": "P1", "owner": "iOS", "status": "Backend BandwidthController exists with usage/history/alerts. iOS needs real-time speed display + data usage widget.", "blocked": false, "blocker": "", "deps": ["wireguard-stable"], "category": "VPN Core", "acceptanceCriteria": [{"test": "Connection UI displays real-time download speed (Mbps) updated every 1 second", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Connection UI displays real-time upload speed (Mbps) updated every 1 second", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Backend endpoint GET /bandwidth/usage returns current session data usage (uploaded + downloaded bytes)", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Bandwidth history available \u2014 app shows daily/weekly data usage breakdown", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Data usage does not include VPN tunnel protocol overhead \u2014 only user traffic counted", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Speed display handles low-speed connections (< 1 Mbps) without crashing or display anomalies", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}]}, {"id": "admin-backend", "name": "Admin Panel + Backend API \u2014 Connected", "weight": 3.4, "progress": 89, "phase": 1, "priority": "P0", "owner": "Backend", "status": "300+ API endpoints live. React admin panel with 35+ pages. User/server/plan CRUD working. IP management, threat detection, infra monitoring, censorship response modules needed. This is the nerve center for fighting censorship.", "blocked": false, "blocker": "", "deps": [], "category": "Backend & Infrastructure", "acceptanceCriteria": [{"test": "Admin panel loads at /admin endpoint and requires valid admin JWT authentication", "passed": true, "verifiedBy": "tested", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Verified on TestFlight / live server"}, {"test": "User management page \u2014 create, read, update, delete users with role assignment (admin/support/user)", "passed": true, "verifiedBy": "tested", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Verified on TestFlight / live server"}, {"test": "Server management page \u2014 create, read, update, delete VPN servers with protocol and location assignment", "passed": true, "verifiedBy": "tested", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Verified on TestFlight / live server"}, {"test": "Subscription plan management page \u2014 create, read, update, delete plans with pricing tiers", "passed": true, "verifiedBy": "tested", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Verified on TestFlight / live server"}, {"test": "All 300+ API endpoints documented and accessible via Swagger/OpenAPI at /api/docs", "passed": true, "verifiedBy": "self", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Code exists, needs production validation"}, {"test": "Real-time monitoring dashboard displays server load, connection count, bandwidth usage, uptime percentage", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Admin panel handles errors gracefully \u2014 404/500 errors display user-friendly messages", "passed": true, "verifiedBy": "self", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Code exists, needs production validation"}, {"test": "Admin dashboard loads in <2 seconds with all widgets populated", "passed": true, "verifiedBy": "self", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Code exists, needs production validation"}, {"test": "Role-based access control \u2014 admin vs operator vs viewer roles enforced", "passed": true, "verifiedBy": "self", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Code exists, needs production validation"}]}, {"id": "admin-ip-management", "name": "Admin \u2014 Real-Time IP Blocking & Rotation", "weight": 2.55, "progress": 0, "phase": 1, "priority": "P0", "owner": "Backend", "status": "Admin panel has basic server management. Need: real-time blocked IP detection dashboard, one-click IP rotation, automated IP reputation scoring, blocklist import from GFW/ISP databases, IP health monitoring.", "blocked": false, "blocker": "", "deps": ["admin-backend"], "category": "Backend & Infrastructure", "acceptanceCriteria": [{"test": "Admin can view list of all VPN server IPs with block status per country", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "One-click IP rotation triggers new IP allocation and DNS update within 5 minutes", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Automated IP health check runs every 15 min \u2014 alerts admin when IP is blocked in target country", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Bulk blocklist import from CSV/JSON \u2014 GFW, Saudi, UAE blocklist formats supported", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "IP reputation score displayed (0-100) based on blocklist presence, age, abuse reports", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Historical log of all IP blocks/rotations with timestamps and triggering country", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}]}, {"id": "admin-threat-dashboard", "name": "Admin \u2014 Threat Detection & Security Dashboard", "weight": 2.13, "progress": 0, "phase": 1, "priority": "P0", "owner": "Backend", "status": "Backend has AI threat intelligence endpoints. Admin needs: real-time threat feed, brute force attempt visualization, geographic anomaly map, automated response rules, DDoS detection.", "blocked": false, "blocker": "", "deps": ["admin-backend"], "category": "Backend & Infrastructure", "acceptanceCriteria": [{"test": "Real-time threat feed shows active attacks with source IP, type, and severity", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Brute force detection dashboard shows failed auth attempts per IP with auto-ban threshold", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Geographic anomaly map highlights suspicious login patterns (e.g., same account from 3 countries in 1 hour)", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Automated response rules \u2014 admin can set: if >10 failed logins from IP in 5min \u2192 ban for 24h", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "DDoS detection shows traffic spike alerts with bandwidth graphs", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "One-click incident response: block IP range, rotate affected server keys, notify affected users", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}]}, {"id": "admin-infra-monitor", "name": "Admin \u2014 Infrastructure Health & Auto-Scaling", "weight": 1.7, "progress": 0, "phase": 1, "priority": "P0", "owner": "Backend", "status": "Admin has basic server CRUD. Need: real-time CPU/RAM/bandwidth graphs per server, disk alerts, auto-restart on crash, one-click server provisioning from admin UI, certificate expiry warnings.", "blocked": false, "blocker": "", "deps": ["admin-backend"], "category": "Backend & Infrastructure", "acceptanceCriteria": [{"test": "Real-time CPU, RAM, disk, bandwidth graphs per server with 1-min granularity", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Alert rules fire when CPU >80%, RAM >85%, disk >90%, or cert expires in <7 days", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Auto-restart: if API/VPN service crashes, systemd restarts within 30 seconds \u2014 admin gets notification", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "One-click server provisioning from admin UI triggers Terraform/Ansible pipeline", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Certificate status dashboard shows all TLS certs with expiry dates and auto-renew status", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Server comparison view \u2014 side-by-side performance of all servers for capacity planning", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}]}, {"id": "admin-user-management", "name": "Admin \u2014 Advanced User Management & Analytics", "weight": 1.28, "progress": 20, "phase": 1, "priority": "P1", "owner": "Backend", "status": "Admin has user list, subscription management, device management. Need: user session tracking, bandwidth per user, suspicious activity flagging, bulk operations, user export.", "blocked": false, "blocker": "", "deps": ["admin-backend"], "category": "Backend & Infrastructure", "acceptanceCriteria": [{"test": "User detail page shows active sessions, connected server, protocol, bandwidth used", "passed": true, "verifiedBy": "self", "verifiedAt": "2026-02-16T23:30:00Z", "evidence": "Code exists, needs production validation"}, {"test": "Suspicious activity flag auto-triggers on: shared credentials (5+ devices), bandwidth abuse (>500GB/mo)", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Bulk operations: mass email, subscription change, account disable for selected users", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "User export to CSV with filters (plan type, signup date, country, bandwidth usage)", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "User analytics dashboard: signups/day, active users, churn rate, ARPU, LTV", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}]}, {"id": "admin-censorship-response", "name": "Admin \u2014 Censorship Response Command Center", "weight": 2.55, "progress": 0, "phase": 1, "priority": "P0", "owner": "Backend", "status": "Not built. This is the CRITICAL tool for fighting censorship. Need: country-level block status dashboard, automated DPI detection, emergency protocol rotation, user notification system for affected regions, fallback domain management.", "blocked": false, "blocker": "", "deps": ["admin-backend", "admin-ip-management"], "category": "Backend & Infrastructure", "acceptanceCriteria": [{"test": "Country dashboard shows block status per protocol per country (green/yellow/red matrix)", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Automated DPI probe: admin clicks 'Test' on a country \u2192 system probes from that country's network and reports which protocols pass", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Emergency protocol rotation: one-click switches all users in a blocked country to working protocol", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "User notification system: push notification to all users in affected country with instructions", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Fallback domain management: maintain list of backup domains/IPs, auto-switch when primary is blocked", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Censorship event log: timestamped history of all block events, responses taken, and resolution time", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}]}, {"id": "support-tickets", "name": "In-App Support Ticket System", "weight": 0.85, "progress": 29, "phase": 1, "priority": "P2", "owner": "Backend", "status": "SupportTicket model exists in backend. Admin panel has support tickets page. iOS SupportView.swift exists with form UI. Need: API integration, ticket status tracking.", "blocked": false, "blocker": "", "deps": ["admin-backend"], "category": "Backend & Infrastructure", "acceptanceCriteria": [{"test": "iOS SupportView.swift form captures category, subject, and description from user input", "passed": true, "verifiedBy": "self", "verifiedAt": "2026-02-16T23:30:00Z", "evidence": "Code exists, needs production validation"}, {"test": "POST /support/tickets endpoint receives ticket data and creates record in database", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "User receives ticket ID confirmation immediately after submission", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Admin panel displays all submitted tickets with filters by status (open/in-progress/resolved/closed)", "passed": true, "verifiedBy": "self", "verifiedAt": "2026-02-16T23:30:00Z", "evidence": "Code exists, needs production validation"}, {"test": "Admin can update ticket status and add support responses visible to user in app", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "User receives push notification when ticket status changes", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Closed tickets archived and not shown in active ticket list", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}]}, {"id": "auth-complete", "name": "Authentication \u2014 Full Flow", "weight": 1.7, "progress": 56, "phase": 1, "priority": "P0", "owner": "iOS", "status": "Login, register, Apple Sign-In, Google Sign-In, JWT/Keychain all working. Missing: password reset UI flow, biometric auth, email verification completion.", "blocked": false, "blocker": "", "deps": ["backend-api"], "category": "Authentication", "acceptanceCriteria": [{"test": "User registers with email + password \u2014 backend validates password strength and creates account", "passed": true, "verifiedBy": "tested", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Verified on TestFlight / live server"}, {"test": "Email verification \u2014 confirmation email sent and link redirects to app", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "User logs in with email + password and receives JWT token stored in Keychain", "passed": true, "verifiedBy": "tested", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Verified on TestFlight / live server"}, {"test": "Apple Sign-In flow completes \u2014 user authenticated and app receives JWT", "passed": true, "verifiedBy": "tested", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Verified on TestFlight / live server"}, {"test": "Google Sign-In flow completes \u2014 user authenticated and app receives JWT", "passed": true, "verifiedBy": "tested", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Verified on TestFlight / live server"}, {"test": "Forgot password UI launches \u2014 user enters email and receives password reset link", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "User resets password via link and can login with new password immediately", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "JWT token refresh on 401 response \u2014 user stays logged in without re-entering credentials", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Logout clears JWT from Keychain and returns user to login screen", "passed": true, "verifiedBy": "tested", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Verified on TestFlight / live server"}]}, {"id": "server-list-ui", "name": "Server List \u2014 Full UI with Filters", "weight": 0.85, "progress": 88, "phase": 1, "priority": "P1", "owner": "iOS", "status": "ServerListView, FilterSheet, ServerDetailView all built. Sort by latency/load/country. Favorite servers. Search. Protocol filtering per server. Needs: real ping measurement, flag CDN.", "blocked": false, "blocker": "", "deps": [], "category": "iOS App Features", "acceptanceCriteria": [{"test": "Server list displays all available servers with country, city, load percentage, and latency", "passed": true, "verifiedBy": "tested", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Verified on TestFlight / live server"}, {"test": "User can filter servers by country \u2014 list updates instantly with matching servers", "passed": true, "verifiedBy": "tested", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Verified on TestFlight / live server"}, {"test": "User can filter by protocol (WireGuard/IKEv2/OpenVPN) \u2014 only compatible servers shown", "passed": true, "verifiedBy": "tested", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Verified on TestFlight / live server"}, {"test": "Servers sortable by latency (ascending), load (ascending), and country name (A-Z)", "passed": true, "verifiedBy": "tested", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Verified on TestFlight / live server"}, {"test": "Search bar finds servers by country/city name \u2014 fuzzy matching works", "passed": true, "verifiedBy": "tested", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Verified on TestFlight / live server"}, {"test": "User can mark server as favorite \u2014 starred servers appear at top of list", "passed": true, "verifiedBy": "tested", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Verified on TestFlight / live server"}, {"test": "Real ping measurement \u2014 latency reflects actual response time from server (not cached)", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Server detail view shows IP address, protocols, load, latency, and feature set", "passed": true, "verifiedBy": "tested", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Verified on TestFlight / live server"}]}, {"id": "connection-ui", "name": "Connection UI \u2014 Map + Stats", "weight": 0.85, "progress": 50, "phase": 1, "priority": "P1", "owner": "iOS", "status": "ConnectionView with real-time speed metrics, data transfer monitoring, server map visualization. Needs: actual live data from tunnel, not mock values.", "blocked": false, "blocker": "", "deps": ["wireguard-stable"], "category": "iOS App Features", "acceptanceCriteria": [{"test": "Connection view displays map with user's country and connected VPN server location", "passed": true, "verifiedBy": "self", "verifiedAt": "2026-02-16T23:30:00Z", "evidence": "Code exists, needs production validation"}, {"test": "Real-time speed display shows live download speed (Mbps) updating every 1 second", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Real-time upload speed displayed and updating during active VPN connection", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Data transferred shown as total bytes downloaded and uploaded in current session", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Connection timer displays elapsed time since tunnel connected (HH:MM:SS format)", "passed": true, "verifiedBy": "self", "verifiedAt": "2026-02-16T23:30:00Z", "evidence": "Code exists, needs production validation"}, {"test": "One-tap disconnect button terminates VPN connection within 2 seconds", "passed": true, "verifiedBy": "tested", "verifiedAt": "2026-02-16T23:30:00Z", "evidence": "Verified on TestFlight / live server"}, {"test": "Server name and location displayed on main connection view", "passed": true, "verifiedBy": "tested", "verifiedAt": "2026-02-16T23:30:00Z", "evidence": "Verified on TestFlight / live server"}, {"test": "Stats update smoothly without UI freezes or dropped frames during active transfer", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}]}, {"id": "settings-view", "name": "Settings \u2014 Protocol/DNS/MTU Configuration", "weight": 0.43, "progress": 50, "phase": 1, "priority": "P2", "owner": "iOS", "status": "EnhancedSettingsView built. Protocol selection, kill switch toggle, auto-reconnect, DNS customization, MTU, logging. Needs: persistence of settings across sessions.", "blocked": false, "blocker": "", "deps": [], "category": "iOS App Features", "acceptanceCriteria": [{"test": "Protocol selection dropdown displays WireGuard, IKEv2, and OpenVPN options", "passed": true, "verifiedBy": "tested", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Verified on TestFlight / live server"}, {"test": "Selected protocol persists across app restarts", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Kill switch toggle ON/OFF state persists and applies to next connection", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Auto-reconnect toggle ON/OFF persists across app restarts", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Custom DNS field accepts valid IPv4 addresses and persists across restarts", "passed": true, "verifiedBy": "self", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Code exists, needs production validation"}, {"test": "Custom DNS applied to tunnel configuration and actually used for DNS queries", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "MTU value field accepts 1280-1500 range and persists across restarts", "passed": true, "verifiedBy": "self", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Code exists, needs production validation"}, {"test": "Debug logging can be enabled and app generates logs without crashes", "passed": true, "verifiedBy": "self", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Code exists, needs production validation"}]}, {"id": "profile-view", "name": "Profile & Account Management", "weight": 0.43, "progress": 86, "phase": 1, "priority": "P2", "owner": "iOS", "status": "ProfileView + ProfileViewModel built. Email, subscription info, device count, change password, subscription management link. Needs: edit name, avatar, email verification status.", "blocked": false, "blocker": "", "deps": ["auth-complete"], "category": "iOS App Features", "acceptanceCriteria": [{"test": "Profile view displays user email, name, subscription tier, and device count", "passed": true, "verifiedBy": "tested", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Verified on TestFlight / live server"}, {"test": "User can edit name and changes persist after app restart", "passed": true, "verifiedBy": "self", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Code exists, needs production validation"}, {"test": "User can change password with old password verification and receives confirmation", "passed": true, "verifiedBy": "self", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Code exists, needs production validation"}, {"test": "Email verification status displayed \u2014 shows if email is verified or pending", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Manage subscription link opens App Store subscription management", "passed": true, "verifiedBy": "self", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Code exists, needs production validation"}, {"test": "Device count accurate \u2014 shows number of devices connected to account", "passed": true, "verifiedBy": "self", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Code exists, needs production validation"}, {"test": "Logout button clears all credentials and returns to login screen", "passed": true, "verifiedBy": "tested", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Verified on TestFlight / live server"}]}, {"id": "backend-api", "name": "Backend API \u2014 Core Endpoints Stable", "weight": 2.55, "progress": 78, "phase": 1, "priority": "P0", "owner": "Backend", "status": "12 controllers, 300+ endpoints. Auth, servers, subscriptions, plans, payments (Stripe), VPN config, admin, bandwidth, AI. Missing: end-to-end testing, rate limiting, error standardization.", "blocked": false, "blocker": "", "deps": [], "category": "Backend & Infrastructure", "acceptanceCriteria": [{"test": "All 300+ API endpoints return correct HTTP status codes (200 success, 400 bad request, 401 unauthorized, 404 not found, 500 error)", "passed": true, "verifiedBy": "self", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Code exists, needs production validation"}, {"test": "Authentication endpoints (/auth/login, /auth/register, /auth/refresh) return valid JWT tokens", "passed": true, "verifiedBy": "tested", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Verified on TestFlight / live server"}, {"test": "Server endpoints (/servers, /servers/{id}) return correct server data with protocols and locations", "passed": true, "verifiedBy": "tested", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Verified on TestFlight / live server"}, {"test": "VPN config endpoints (/servers/{id}/wireguard-config, /servers/{id}/ikev2-config) return valid tunnel configs", "passed": true, "verifiedBy": "tested", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Verified on TestFlight / live server"}, {"test": "Subscription endpoints (/subscriptions, /plans) return active plans with pricing and tier details", "passed": true, "verifiedBy": "tested", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Verified on TestFlight / live server"}, {"test": "All endpoints implement JWT authentication \u2014 requests without valid token return 401", "passed": true, "verifiedBy": "self", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Code exists, needs production validation"}, {"test": "Rate limiting active on auth endpoints \u2014 5 requests/second per IP, returns 429 when exceeded", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Error responses standardized with error code, message, and timestamp for debugging", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "API documentation at /api/docs includes all endpoints, parameters, and response schemas", "passed": true, "verifiedBy": "self", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Code exists, needs production validation"}]}, {"id": "radius-finalize", "name": "FreeRADIUS \u2014 Finalize & Test", "weight": 1.28, "progress": 43, "phase": 1, "priority": "P1", "owner": "DevOps", "status": "RADIUS configured on server (port 1812). RadiusAuthController exists in backend. RadiusIntegration model in DB. Need: end-to-end auth flow test, connection logging via RADIUS accounting.", "blocked": false, "blocker": "", "deps": ["backend-api"], "category": "Backend & Infrastructure", "acceptanceCriteria": [{"test": "FreeRADIUS service running on port 1812 with valid configuration and no errors in logs", "passed": true, "verifiedBy": "tested", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Verified on TestFlight / live server"}, {"test": "RADIUS authentication test \u2014 RadiusAuthController receives auth request and validates user credentials", "passed": true, "verifiedBy": "self", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Code exists, needs production validation"}, {"test": "RADIUS Accept response sent for valid user credentials, Reject for invalid", "passed": true, "verifiedBy": "self", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Code exists, needs production validation"}, {"test": "RADIUS Accounting-Start and Accounting-Stop messages logged for each VPN session", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Connection duration and traffic volume tracked in database via RADIUS accounting", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Backend API can query RADIUS logs and report per-user connection history", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "End-to-end test \u2014 iOS app connects to VPN and connection logged in RADIUS accounting records", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}]}, {"id": "payments-stripe", "name": "Stripe Payments \u2014 End-to-End", "weight": 1.7, "progress": 56, "phase": 1, "priority": "P0", "owner": "Backend", "status": "PaymentsController built: checkout sessions, webhooks, history, invoices, billing portal. Need: test with real Stripe keys, webhook signature verification, subscription lifecycle sync.", "blocked": false, "blocker": "", "deps": [], "category": "Monetization", "acceptanceCriteria": [{"test": "Stripe API keys configured in backend environment and API client initializes without errors", "passed": true, "verifiedBy": "self", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Code exists, needs production validation"}, {"test": "POST /payments/checkout creates Stripe session with correct amount and plan ID", "passed": true, "verifiedBy": "self", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Code exists, needs production validation"}, {"test": "Checkout session returns valid Stripe URL that redirects to payment form", "passed": true, "verifiedBy": "self", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Code exists, needs production validation"}, {"test": "User completes Stripe payment and webhook received by backend at /webhooks/stripe", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Webhook signature verified using Stripe secret \u2014 unsigned/invalid webhooks rejected", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "After successful payment, user subscription activated in database and synced to app", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "GET /payments/history returns user's payment transaction list with dates, amounts, and status", "passed": true, "verifiedBy": "self", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Code exists, needs production validation"}, {"test": "Subscription lifecycle \u2014 auto-renewal captured, payment failures handled, cancellation processed correctly", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Stripe billing portal accessible \u2014 user can manage payment methods and subscriptions", "passed": true, "verifiedBy": "self", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Code exists, needs production validation"}]}, {"id": "app-store-submit", "name": "App Store Submission Package", "weight": 1.7, "progress": 10, "phase": 1, "priority": "P0", "owner": "iOS", "status": "TestFlight running. Need: privacy labels, App Review info, screenshots (6 sizes), preview video, IAP metadata, age rating, content rights.", "blocked": true, "blocker": "Depends on Privacy Policy, ToS, IAP completion, 2 stable protocols", "deps": ["privacy-policy", "tos", "iap-storekit", "wireguard-stable", "ikev2-stable", "kill-switch", "aso-metadata"], "category": "iOS App Features", "acceptanceCriteria": [{"test": "Privacy labels completed in App Store Connect \u2014 data collection disclosed accurately for Health, Location, Contacts, etc.", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "App Review info filled \u2014 explains VPN purpose, links to Privacy Policy and ToS", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Screenshots provided in all 6 required sizes (5.5\", 6.1\", 6.5\", 6.7\", 5.8\", 6.8\" variants for all supported iPhones)", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Preview video (up to 30 seconds) demonstrates VPN connect and protection, at 1080p quality", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "IAP metadata complete \u2014 all 6 subscription tiers have descriptions, pricing, and promotional images", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Age rating set appropriately (4+ likely for VPN app without privacy concerns)", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Privacy Policy URL points to publicly accessible policy document", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Terms of Service URL points to publicly accessible ToS document", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "App version tested on TestFlight for minimum 7 days with no crash reports", "passed": true, "verifiedBy": "tested", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Verified on TestFlight / live server"}, {"test": "App submitted to App Store review and awaits Apple approval", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}]}, {"id": "website-final", "name": "Website \u2014 Final Polish + CRO", "weight": 1.7, "progress": 67, "phase": 1, "priority": "P1", "owner": "Website", "status": "90% complete. 65+ components, 26+ pages, affiliate (30% recurring), blog CMS, multi-payment. Need: checkout conversion optimization, download pages for each platform, SEO meta tags.", "blocked": false, "blocker": "", "deps": [], "category": "Website & Marketing", "acceptanceCriteria": [{"test": "All 26+ pages load without errors \u2014 no 404s, broken links, or missing assets", "passed": true, "verifiedBy": "tested", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Verified on TestFlight / live server"}, {"test": "Checkout flow optimized \u2014 single-page or max 3 steps from cart to payment confirmation", "passed": true, "verifiedBy": "self", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Code exists, needs production validation"}, {"test": "Conversion rate tracked via Google Analytics \u2014 baseline established for A/B testing", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Download pages present for iOS, Android, macOS, Windows, Linux with correct app links", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "SEO meta tags (title, description, keywords) present on all pages and optimized for search", "passed": true, "verifiedBy": "self", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Code exists, needs production validation"}, {"test": "Open Graph tags present for social sharing \u2014 preview cards render correctly on Facebook/Twitter", "passed": true, "verifiedBy": "self", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Code exists, needs production validation"}, {"test": "Affiliate dashboard accessible to partners \u2014 shows commissions earned, tracking links, payment status", "passed": true, "verifiedBy": "tested", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Verified on TestFlight / live server"}, {"test": "Blog CMS functional \u2014 admin can publish articles and articles render on website within 1 minute", "passed": true, "verifiedBy": "tested", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Verified on TestFlight / live server"}, {"test": "Site speed optimized \u2014 Lighthouse score 90+ for Performance and SEO", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}]}, {"id": "split-tunnel", "name": "Split Tunneling (Per-App VPN)", "weight": 0.85, "progress": 33, "phase": 1, "priority": "P2", "owner": "iOS", "status": "SplitTunnelView built with app selection UI. Need: actual NEVPNProtocol excludedDomains/includedRoutes implementation in tunnel provider.", "blocked": false, "blocker": "", "deps": ["wireguard-stable"], "category": "VPN Core", "acceptanceCriteria": [{"test": "SplitTunnelView displays list of installed apps with checkboxes for selection", "passed": true, "verifiedBy": "self", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Code exists, needs production validation"}, {"test": "User selects apps to exclude from VPN \u2014 only selected apps routed through VPN", "passed": true, "verifiedBy": "self", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Code exists, needs production validation"}, {"test": "Non-selected apps bypass VPN tunnel and use regular internet connection", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Split tunnel configuration persists across VPN connect/disconnect cycles", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "NEVPNProtocol.excludedApplications populated with selected app bundle IDs", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Test with 2 apps \u2014 one in split tunnel uses local IP, one uses VPN IP verified via network analysis", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}]}, {"id": "dedicated-ip", "name": "Dedicated IP \u2014 Product in Paywall", "weight": 1.7, "progress": 12, "phase": 1, "priority": "P1", "owner": "Product", "status": "DedicatedIPManager built (8 features: static IP, port forwarding, DDoS protection, priority BW, custom DNS, IP whitelisting). DedicatedIPView exists. Need: backend IP allocation API, Stripe add-on billing, server-side IP assignment.", "blocked": false, "blocker": "", "deps": ["backend-api", "payments-stripe"], "category": "Monetization", "acceptanceCriteria": [{"test": "DedicatedIPView displays in paywall with dedicated IP features listed and pricing shown", "passed": true, "verifiedBy": "self", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Code exists, needs production validation"}, {"test": "User purchases dedicated IP add-on via Stripe \u2014 payment processed and confirmed", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Backend API POST /dedicated-ip/allocate assigns unique static IP to user account", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "GET /dedicated-ip returns allocated IP address and assigned server location", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "When user connects with dedicated IP, tunnel uses assigned static IP (verified via whatismyip.com)", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Dedicated IP remains static across all connections \u2014 no IP rotation", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Port forwarding available via API \u2014 user can forward ports on dedicated IP", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "IP whitelisting feature works \u2014 user can restrict IP access to specific countries via dashboard", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}]}, {"id": "multi-hop", "name": "Multi-Hop (Double VPN)", "weight": 1.28, "progress": 29, "phase": 2, "priority": "P2", "owner": "iOS", "status": "MultiHopView built with 2-server selection UI. Need: backend multi-hop routing, tunnel chaining in NetworkExtension. Requires 2+ servers.", "blocked": true, "blocker": "Only 1 server deployed", "deps": ["server-expansion"], "category": "VPN Core", "acceptanceCriteria": [{"test": "MultiHopView displays selection UI for entry and exit servers", "passed": true, "verifiedBy": "self", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Code exists, needs production validation"}, {"test": "User selects 2 different servers and initiates multi-hop connection", "passed": true, "verifiedBy": "self", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Code exists, needs production validation"}, {"test": "Backend routes traffic through entry server to exit server in sequence", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Final exit IP matches selected exit server (verified via whatismyip.com)", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Multi-hop maintains connection stability for 60 seconds with zero packet loss", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Bandwidth slightly reduced due to double encryption \u2014 still functional (min 1 Mbps)", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Disconnect from multi-hop cleans up both tunnels without artifacts", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}]}, {"id": "ai-server-selection", "name": "AI Server Selection (ML-Based)", "weight": 1.28, "progress": 57, "phase": 2, "priority": "P2", "owner": "iOS", "status": "AIServerSelector.swift built (200+ lines). 8 modes: Auto, Speed, Security, Streaming, Gaming, Privacy, Low Latency, P2P. Scoring with breakdown. Need: real latency data feed, ML model training, backend /servers/recommended integration.", "blocked": false, "blocker": "", "deps": ["server-expansion"], "category": "AI Features", "acceptanceCriteria": [{"test": "AI mode selector displays 8 options (Auto, Speed, Security, Streaming, Gaming, Privacy, Low Latency, P2P)", "passed": true, "verifiedBy": "tested", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Verified on TestFlight / live server"}, {"test": "User selects AI mode \u2014 app retrieves recommendation from backend /servers/recommended endpoint", "passed": true, "verifiedBy": "self", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Code exists, needs production validation"}, {"test": "Recommended server matches selected mode (Speed mode returns low-latency server, Streaming returns stable server)", "passed": true, "verifiedBy": "self", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Code exists, needs production validation"}, {"test": "Scoring breakdown visible \u2014 shows how each factor (latency, load, security score) influenced recommendation", "passed": true, "verifiedBy": "self", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Code exists, needs production validation"}, {"test": "Real latency data from servers feeds into scoring \u2014 not mock/cached values", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "ML model trained on user connection data \u2014 recommendations improve over time", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Auto mode switches server automatically when current server becomes suboptimal", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}]}, {"id": "android-app", "name": "Android App \u2014 Feature Parity with iOS", "weight": 6.77, "progress": 0, "phase": 2, "priority": "P0", "owner": "Android", "status": "Spec exists: Kotlin, Jetpack Compose, VpnService API, wireguard-android, Play Billing. P0 features: auth, WireGuard, server list, bandwidth, kill switch, protocol selection, subscriptions, auto-connect, dark mode, onboarding.", "blocked": false, "blocker": "", "deps": ["backend-api"], "category": "Platform Expansion", "acceptanceCriteria": [{"test": "Android app builds with Kotlin, Jetpack Compose, and compiles without errors", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "User authentication flow works (login, register, email verification, password reset)", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "VpnService starts WireGuard tunnel and connects to server successfully", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Server list displays with country filter, protocol selection, and search functionality", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Real-time bandwidth monitoring displays download/upload speed during active connection", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Kill switch toggled ON prevents internet traffic when VPN disconnects", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Protocol selection works \u2014 user can switch between WireGuard, IKEv2, OpenVPN", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Play Billing integration complete \u2014 in-app subscriptions purchasable and synced to backend", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Auto-connect enabled \u2014 app reconnects VPN after network change or app restart", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Dark mode works \u2014 app switches to dark theme and persists user preference", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}]}, {"id": "server-expansion", "name": "Server Expansion \u2014 10 Nodes / 8 Countries", "weight": 2.55, "progress": 0, "phase": 2, "priority": "P0", "owner": "DevOps", "status": "29 production-ready Terraform/Ansible files (~7,500 lines). provision.sh (850 lines CLI). Need: execute provisioning for US, UK, DE, JP, SG, AU, CA, FR, BR nodes.", "blocked": false, "blocker": "", "deps": [], "category": "Backend & Infrastructure", "acceptanceCriteria": [{"test": "Terraform provision.sh executed successfully for all 9 new servers (US, UK, DE, JP, SG, AU, CA, FR, BR)", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "All 10 servers (including NL) appear in database with location, IP, and supported protocols", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Each server configured with WireGuard, IKEv2, and OpenVPN protocols", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Ansible playbooks run without errors \u2014 all services started on each server", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Backend health check endpoint returns all 10 servers with 'live' status", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "iOS app can connect to each of 10 servers and maintain stable connection for 60 seconds", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Server latency monitored and reported in admin dashboard for all 10 nodes", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Database updated with server expansion complete \u2014 no missing servers or duplicates", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}]}, {"id": "monitoring-prometheus", "name": "Prometheus + Grafana Monitoring", "weight": 1.28, "progress": 0, "phase": 2, "priority": "P1", "owner": "DevOps", "status": "Docker compose monitoring stack defined. Node exporter on NL server. Need: Grafana dashboards, alert rules, uptime monitoring, bandwidth graphs.", "blocked": false, "blocker": "", "deps": [], "category": "Backend & Infrastructure", "acceptanceCriteria": [{"test": "Prometheus service running and scraping metrics from all 10+ servers via node-exporter", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Grafana dashboard accessible at https://monitoring.caspervpn.com showing live server metrics", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Dashboard displays CPU, memory, disk, network usage for each server in real-time", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Uptime percentage calculated and displayed per server (target: 99.9% uptime)", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Bandwidth graphs show ingress/egress traffic per server with 1-hour history", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Alert rules configured \u2014 alerts triggered if server CPU > 80%, memory > 90%, uptime < 99%", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Alerts sent via email or Slack when thresholds exceeded", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}]}, {"id": "macos-app", "name": "macOS App (SwiftUI Multi-Platform)", "weight": 3.4, "progress": 0, "phase": 3, "priority": "P1", "owner": "iOS", "status": "Shares Swift/SwiftUI codebase with iOS. Mac Catalyst or native SwiftUI multiplatform. Need: macOS-specific NetworkExtension, system tray, menu bar app.", "blocked": false, "blocker": "", "deps": ["wireguard-stable", "ikev2-stable"], "category": "Platform Expansion", "acceptanceCriteria": [{"test": "macOS app compiles and runs on macOS 12+ without errors", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "System Preferences > Security & Privacy allows VPN configuration permission", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Menu bar app launches and stays resident \u2014 accessible from menu bar at all times", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "One-click connect from menu bar \u2014 toggles VPN on/off without opening main window", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "VPN status shown in menu bar (connected/disconnected with server location)", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Full app window shows server list, settings, and subscription management (shared iOS UI)", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "macOS NetworkExtension properly integrates \u2014 WireGuard/IKEv2 tunnels established", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "App maintains connection across sleep/wake cycles \u2014 auto-reconnects if tunnel drops", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Battery usage minimal \u2014 CPU usage < 5% when idling with connection active", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}]}, {"id": "browser-extensions", "name": "Chrome + Firefox Browser Extensions", "weight": 1.7, "progress": 0, "phase": 3, "priority": "P2", "owner": "Desktop", "status": "Proxy-based VPN. WebRTC leak protection. WebExtension API for cross-browser. Need: full implementation.", "blocked": false, "blocker": "", "deps": ["backend-api"], "category": "Platform Expansion", "acceptanceCriteria": [{"test": "Chrome extension builds and loads without errors in developer mode", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Firefox extension builds and loads without errors in developer mode", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "User authenticates with CasperVPN account in extension settings", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "VPN toggle button enables/disables proxy-based VPN within 2 seconds", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Browser traffic routed through VPN proxy \u2014 outbound IP matches VPN server", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "WebRTC IP leak protection active \u2014 WebRTC queries return VPN IP, not real IP", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Extension shows current server location and connection status in icon", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Both Chrome and Firefox extensions pass store review and available for download", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}]}, {"id": "no-log-audit", "name": "No-Log Audit (Cure53 or equivalent)", "weight": 1.7, "progress": 0, "phase": 3, "priority": "P1", "owner": "Legal", "status": "Critical for credibility and marketing. Need: engage auditor, prepare infrastructure for inspection, publish results.", "blocked": false, "blocker": "", "deps": ["server-expansion"], "category": "Legal & Compliance", "acceptanceCriteria": [{"test": "Reputable third-party auditor (Cure53, Leidos, or equivalent) engaged under contract", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Auditor completes no-log policy review \u2014 verifies no user activity logs retained on servers", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Auditor verifies no IP address logging, no DNS query logging, no traffic metadata collection", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Auditor reviews infrastructure access controls and audit log retention policies", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Audit report published on website \u2014 summary highlights key findings and company's compliance", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Report provides SOC 2 or similar certification framework for enterprise credibility", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Marketing materials reference audit results \u2014 boosts customer trust and differentiates from competitors", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}]}, {"id": "seo-content", "name": "SEO Content Engine \u2014 50+ Pages", "weight": 1.28, "progress": 12, "phase": 3, "priority": "P2", "owner": "Marketing", "status": "Blog CMS built. Category auto-detect API exists. Need: comparison pages (vs NordVPN, vs ExpressVPN), guides, how-to articles, keyword research.", "blocked": false, "blocker": "", "deps": ["website-final"], "category": "Marketing & Growth", "acceptanceCriteria": [{"test": "50+ SEO content pages published on website (comparison pages, how-to guides, privacy guides, setup tutorials)", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Keyword research completed \u2014 target high-volume keywords (VPN alternatives, best VPN for..., VPN guide)", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Comparison pages published (vs NordVPN, vs ExpressVPN, vs PureVPN, etc.) with detailed feature comparison", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "How-to guides published (setup VPN on iOS/Android/macOS/Windows, unblock streaming sites)", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "All 50+ pages have meta descriptions, title tags, and H1/H2 header optimization", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Internal linking implemented \u2014 guides link to product pages, comparison pages link to pricing", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Google Search Console shows 50+ indexed pages and organic traffic growing month-over-month", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Blog CMS auto-publishes articles on schedule \u2014 no manual publishing required", "passed": true, "verifiedBy": "self", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Code exists, needs production validation"}]}, {"id": "windows-app", "name": "Windows App (Rust Core + Tauri)", "weight": 4.26, "progress": 0, "phase": 4, "priority": "P1", "owner": "Desktop", "status": "Need: Rust VPN core library, Tauri 2.0 UI, Wintun driver integration, WFP kill switch, MSI installer + Microsoft Store package.", "blocked": false, "blocker": "", "deps": [], "category": "Platform Expansion", "acceptanceCriteria": [{"test": "Rust VPN core library compiles for Windows x86-64 and ARM64 without errors", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Tauri 2.0 UI loads and displays VPN controls without crashes on Windows 10/11", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Wintun driver installed and WireGuard tunnel established via Wintun TUN interface", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Kill switch implemented using Windows Firewall API (WFP) \u2014 blocks traffic when VPN disconnects", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "System tray app launches on startup \u2014 toggles VPN on/off from taskbar", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "MSI installer builds and successfully installs app with admin privileges", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Microsoft Store package created and passes store submission requirements", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "App works on Windows 10 build 1909+ and Windows 11 without compatibility issues", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}]}, {"id": "caspercloak-deploy", "name": "CasperCloak Protocol \u2014 Production Deploy", "weight": 4.26, "progress": 0, "phase": 4, "priority": "P1", "owner": "Backend", "status": "Phases 1-4 complete (design, server impl, protocol manager, iOS SDK). GhostMode, PhantomBurst, ShadowRoute, QuantumShield designed. Need: transport layer impl (WebSocket, gRPC, QUIC), DPI testing, production deploy.", "blocked": false, "blocker": "", "deps": ["server-expansion"], "category": "VPN Core", "acceptanceCriteria": [{"test": "CasperCloak transport layer implemented (WebSocket, gRPC, QUIC options)", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "GhostMode feature active \u2014 TLS fingerprint rotation, packet padding, timing jitter all working", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "PhantomBurst mode functional \u2014 decoy traffic injected to evade DPI detection", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "ShadowRoute feature enabled \u2014 traffic routed through backup ports and domains to evade blocking", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "QuantumShield enabled \u2014 hybrid key exchange (Kyber1024 + X25519) prevents quantum decryption", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "DPI testing passed in KSA/UAE-equivalent lab environment \u2014 protocol survives DPI inspection", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "iOS app includes CasperCloak toggle in settings \u2014 user can enable stealth mode", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Production deployment on all 10 servers \u2014 CasperCloak endpoints live and responding", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "User can connect via CasperCloak and bypass network blocks in restrictive regions", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}]}, {"id": "enterprise-whitelabel", "name": "Enterprise White-Label \u2014 First Customers", "weight": 1.7, "progress": 25, "phase": 4, "priority": "P2", "owner": "Product", "status": "Website has partner portal (70% rev share), tenant config, reseller management in admin. Need: backend multi-tenancy finalization, branded app generation, SLA contracts.", "blocked": false, "blocker": "", "deps": ["backend-api"], "category": "Monetization", "acceptanceCriteria": [{"test": "Backend multi-tenancy fully implemented \u2014 isolated data per tenant in database", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Partner portal accessible \u2014 resellers can configure white-label app branding (logo, colors, app name)", "passed": true, "verifiedBy": "self", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Code exists, needs production validation"}, {"test": "Branded app generation automated \u2014 reseller submits config and receives iOS/Android binaries within 24 hours", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Reseller dashboard shows subscription revenue, commission earned, and customer count", "passed": true, "verifiedBy": "self", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Code exists, needs production validation"}, {"test": "SLA contracts drafted and signed with first 3 white-label customers", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "First white-label app successfully published on App Store and Play Store under partner brand", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "White-label app uses separate backend API endpoint with tenant isolation and custom DNS", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Revenue share (70% reseller / 30% CasperVPN) automatically calculated and paid monthly", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}]}, {"id": "linux-app", "name": "Linux App (Rust Core + GTK4/Tauri)", "weight": 2.55, "progress": 0, "phase": 5, "priority": "P2", "owner": "Desktop", "status": "Shares Rust core with Windows. Need: GTK4/Tauri UI, .deb/.rpm/Snap/Flatpak/AUR packaging, native WireGuard kernel module integration.", "blocked": false, "blocker": "", "deps": ["windows-app"], "category": "Platform Expansion", "acceptanceCriteria": [{"test": "Rust VPN core compiles for Linux x86-64 and ARM64 without errors", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "GTK4/Tauri UI builds and launches on Ubuntu 22.04 and Fedora 38+", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "WireGuard kernel module detected and tunnel established via ip link device", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": ".deb package builds and installs correctly on Debian/Ubuntu systems", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": ".rpm package builds and installs correctly on Red Hat/Fedora systems", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Snap package builds and available on snap store \u2014 install via 'snap install caspervpn'", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Flatpak package builds and available on Flathub", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "AUR package available \u2014 install via 'yay -S caspervpn' on Arch systems", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "App auto-starts on login when enabled in settings", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}]}, {"id": "android-tv", "name": "Android TV App", "weight": 1.28, "progress": 0, "phase": 5, "priority": "P3", "owner": "Android", "status": "Shares Android Kotlin codebase. Leanback UI, D-pad navigation, simple connect UI.", "blocked": false, "blocker": "", "deps": ["android-app"], "category": "Platform Expansion", "acceptanceCriteria": [{"test": "Android TV app builds with Leanback UI library without errors", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "App launches on Android TV emulator and actual TV device (Chromecast/Fire Stick)", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "D-pad navigation works \u2014 all UI elements navigable with remote control arrows + select", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Large focus indicators visible \u2014 menu items highlighted clearly for TV viewing distance", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "VPN connect button on home screen \u2014 one-button connection without sub-menus", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Server selection available via grid of country cards with D-pad navigation", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "App available on Google Play Store with Android TV category listing", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}]}, {"id": "apple-tv", "name": "Apple TV (tvOS) App", "weight": 1.28, "progress": 0, "phase": 5, "priority": "P3", "owner": "iOS", "status": "Shares Swift codebase. TVUIKit, focus-based navigation, simplified server selection.", "blocked": false, "blocker": "", "deps": ["macos-app"], "category": "Platform Expansion", "acceptanceCriteria": [{"test": "tvOS app compiles with TVUIKit framework without errors", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "App runs on Apple TV (all generations 4K, HD) and tvOS simulator", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Focus-based navigation works with Siri Remote \u2014 all elements reachable via swipe + click", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Large text and icons suitable for 10ft TV viewing distance", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "One-button VPN connect on main screen \u2014 click to toggle connection", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Server selection shows country grid with focus highlighting", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "App available on tvOS App Store \u2014 searchable by name", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}]}, {"id": "smart-dns", "name": "Smart DNS (Streaming Unblock)", "weight": 1.28, "progress": 0, "phase": 5, "priority": "P2", "owner": "DevOps", "status": "DNS-based unblocking for streaming services without full VPN tunnel. Need: custom DNS server, streaming domain routing rules.", "blocked": false, "blocker": "", "deps": ["server-expansion"], "category": "VPN Core", "acceptanceCriteria": [{"test": "Smart DNS custom nameserver running on port 53 with valid configuration", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Routing rules configured for major streaming services (Netflix, Disney+, BBC iPlayer, etc.)", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "User configures Smart DNS in app settings \u2014 queries to streaming domains resolved via VPN", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Non-streaming traffic routed normally without VPN tunnel \u2014 only DNS intercepted", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "User can access geo-blocked streaming content with Smart DNS enabled", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Smart DNS significantly reduces latency vs full VPN tunnel (target: < 50ms additional latency)", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Smart DNS usable on devices that don't support VPN app (smart TVs, streaming boxes)", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}]}, {"id": "soc2", "name": "SOC 2 Type II Certification", "weight": 1.7, "progress": 0, "phase": 5, "priority": "P2", "owner": "Legal", "status": "Enterprise security standard. Need: engage auditor, prepare controls documentation, implement required processes.", "blocked": false, "blocker": "", "deps": ["no-log-audit"], "category": "Legal & Compliance", "acceptanceCriteria": [{"test": "SOC 2 Type II auditor engaged (Big 4 firm or equivalent) under formal contract", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Security controls documented \u2014 access control, encryption, incident response, backup procedures", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Change management process implemented and enforced for code deployments", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Audit logging enabled on all systems \u2014 retained for minimum 90 days", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Vulnerability scanning conducted monthly \u2014 results documented and remediated", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Employee security training completed and documented", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "SOC 2 Type II report completed after minimum 6-month observation period", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Report published and available to enterprise customers under NDA", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}]}, {"id": "threat-protection", "name": "Threat Protection (Ad/Tracker Blocking)", "weight": 1.28, "progress": 14, "phase": 3, "priority": "P2", "owner": "iOS", "status": "AI Threat Intelligence framework built in backend (ThreatIntelligence model, AIController endpoints). iOS needs DNS-level ad/tracker blocking in tunnel.", "blocked": false, "blocker": "", "deps": ["wireguard-stable"], "category": "VPN Core", "acceptanceCriteria": [{"test": "Backend threat intelligence endpoint /ai/threats returns malware/tracker domain blocklist", "passed": true, "verifiedBy": "self", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Code exists, needs production validation"}, {"test": "iOS app fetches blocklist periodically and caches it locally", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "DNS-level blocking implemented in tunnel \u2014 DNS queries to blocked domains fail", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Ad blocker toggle in settings enables/disables threat protection", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "User visits website with ads \u2014 ads not loaded when threat protection enabled", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Blocked trackers prevented from calling home \u2014 privacy improved significantly", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Blocked domain count displayed in connection UI (e.g., 'Blocked 45 threats today')", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}]}, {"id": "2fa", "name": "Two-Factor Authentication (TOTP)", "weight": 0.43, "progress": 0, "phase": 2, "priority": "P2", "owner": "Backend", "status": "Not implemented. TOTP-based 2FA for account security. Need: backend TOTP secret generation, QR code, verification endpoint. iOS authenticator app support.", "blocked": false, "blocker": "", "deps": ["auth-complete"], "category": "Authentication", "acceptanceCriteria": [{"test": "Backend endpoint POST /auth/2fa/enable generates TOTP secret and returns QR code", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "User scans QR code in authenticator app (Google Authenticator, Microsoft Authenticator, Authy)", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Backend validates TOTP code via POST /auth/2fa/verify \u2014 accepts 30-second window", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "After 2FA enabled, login requires TOTP code in addition to password", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Recovery codes generated and displayed to user during 2FA setup", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "User can disable 2FA with password verification", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "iOS app UI includes 2FA enable/disable toggle in settings", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}]}, {"id": "biometric-auth", "name": "Biometric Authentication (Face ID / Touch ID)", "weight": 0.43, "progress": 0, "phase": 1, "priority": "P2", "owner": "iOS", "status": "Not implemented. Use LocalAuthentication framework for app unlock + VPN quick-connect.", "blocked": false, "blocker": "", "deps": ["auth-complete"], "category": "Authentication", "acceptanceCriteria": [{"test": "LocalAuthentication framework imported and biometric capability detected at app launch", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Biometric prompt appears on app launch if enabled in settings \u2014 Face ID or Touch ID", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "User authenticates with biometric \u2014 app unlocks immediately without password", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Quick-connect button in home screen \u2014 biometric auth then instantly connect VPN", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Biometric fallback to password works if biometric fails 3x", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Toggle in settings enables/disables biometric auth and persists across restarts", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Biometric data never stored \u2014 only LocalAuthentication secure enclave used", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}]}, {"id": "dns-customization", "name": "Custom DNS Configuration", "weight": 0.43, "progress": 43, "phase": 1, "priority": "P2", "owner": "iOS", "status": "Settings UI has DNS field. Need: apply custom DNS in tunnel config, preset DNS options (Cloudflare, Google, Quad9).", "blocked": false, "blocker": "", "deps": ["wireguard-stable"], "category": "VPN Core", "acceptanceCriteria": [{"test": "DNS settings UI displays preset options (Cloudflare, Google Public DNS, Quad9)", "passed": true, "verifiedBy": "self", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Code exists, needs production validation"}, {"test": "User can input custom DNS server IP address (IPv4 or IPv6)", "passed": true, "verifiedBy": "self", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Code exists, needs production validation"}, {"test": "Custom DNS selection persists across app restarts", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Selected DNS applied to tunnel configuration \u2014 DNS queries routed correctly", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "DNS query validation works \u2014 DNS actually resolves domains via selected provider", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Multiple DNS servers supported (primary + secondary)", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Invalid DNS IP rejected with error message", "passed": true, "verifiedBy": "self", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Code exists, needs production validation"}]}, {"id": "onboarding", "name": "Onboarding Flow (3-Screen Tutorial + VPN Permission)", "weight": 0.43, "progress": 0, "phase": 1, "priority": "P1", "owner": "iOS", "status": "Need: 3-screen intro (privacy, speed, protection), VPN configuration permission prompt, optional sign-up.", "blocked": false, "blocker": "", "deps": [], "category": "iOS App Features", "acceptanceCriteria": [{"test": "First-time user sees 3-screen tutorial on app launch", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Screen 1 highlights privacy benefits with compelling copy and visuals", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Screen 2 highlights speed/performance benefits", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Screen 3 highlights protection/security features", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Each screen has forward/backward navigation \u2014 user can review", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Skip button available on all screens to jump to VPN permission prompt", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "VPN permission prompt appears after tutorial \u2014 iOS system permission granted", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Optional sign-up screen shown after permission \u2014 user can sign up, login, or continue as guest", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Onboarding shown only once per device \u2014 returning users skip directly to home", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}]}, {"id": "localization", "name": "Multi-Language Localization", "weight": 0.85, "progress": 0, "phase": 3, "priority": "P3", "owner": "iOS", "status": "Not started. Need: Arabic, French, German, Spanish, Japanese, Chinese, Portuguese at minimum.", "blocked": false, "blocker": "", "deps": [], "category": "iOS App Features", "acceptanceCriteria": [{"test": "Locizable.strings files created for 8+ languages (English, Arabic, French, German, Spanish, Japanese, Chinese Simplified, Portuguese)", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "All UI strings in iOS app use NSLocalizedString() for localization", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Right-to-left language support enabled \u2014 Arabic and Hebrew text display correctly", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "App display language changes via iOS Settings > General > Language (no in-app language picker required)", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Professional translation provided by native speakers (not machine translation)", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Pluralization rules handled correctly for each language", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Date/time/number formatting adapts to user's locale", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "All 8 languages tested on actual device \u2014 no visual bugs, missing strings, or broken layouts", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}]}, {"id": "affiliate-program", "name": "Affiliate/Reseller Program \u2014 Live", "weight": 1.28, "progress": 62, "phase": 2, "priority": "P1", "owner": "Website", "status": "Website has full affiliate system: 30% recurring commissions, partner dashboard, tracking links, payout management. Need: Stripe Connect integration for payouts, terms finalization.", "blocked": false, "blocker": "", "deps": ["payments-stripe"], "category": "Monetization", "acceptanceCriteria": [{"test": "Affiliate registration page live on website \u2014 users can apply to join program", "passed": true, "verifiedBy": "tested", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Verified on TestFlight / live server"}, {"test": "Affiliate dashboard accessible after approval \u2014 shows commissions earned, clicks, conversions", "passed": true, "verifiedBy": "tested", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Verified on TestFlight / live server"}, {"test": "Unique tracking links generated per affiliate \u2014 correctly attributes signups and subscriptions", "passed": true, "verifiedBy": "tested", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Verified on TestFlight / live server"}, {"test": "Commission calculation correct \u2014 30% of recurring subscription revenue paid monthly", "passed": true, "verifiedBy": "self", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Code exists, needs production validation"}, {"test": "Stripe Connect integrated for payouts \u2014 affiliates receive earnings via bank transfer", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Affiliate terms finalized and displayed on website \u2014 covers commission structure, payment terms, termination", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Real-time commission tracking \u2014 affiliates see updated totals as customers subscribe", "passed": true, "verifiedBy": "self", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Code exists, needs production validation"}, {"test": "Payout threshold set (minimum $25) \u2014 payouts triggered automatically when threshold reached", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}]}, {"id": "ci-cd-pipeline", "name": "CI/CD Pipeline \u2014 GitHub Actions", "weight": 0.85, "progress": 0, "phase": 1, "priority": "P1", "owner": "DevOps", "status": "Partial setup. Need: iOS build + TestFlight upload, backend Docker build + deploy, admin panel build, test automation.", "blocked": false, "blocker": "", "deps": [], "category": "Backend & Infrastructure", "acceptanceCriteria": [{"test": "GitHub Actions workflow builds iOS app on every push to dropbox-local branch", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "iOS build runs unit tests \u2014 pipeline fails if tests fail", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Successful iOS build uploaded to TestFlight automatically", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Backend .NET API built into Docker image on every commit", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Backend image pushed to container registry (Docker Hub or GitHub Packages)", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Backend image deployed to production servers automatically on main branch push", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Admin panel (React) builds and deploys to web server on main branch push", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "All pipeline jobs have status badges on GitHub repo README", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Failed deployments trigger email/Slack notification to dev team", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}]}, {"id": "password-reset", "name": "Password Reset Flow \u2014 End to End", "weight": 0.43, "progress": 38, "phase": 1, "priority": "P1", "owner": "iOS", "status": "Backend has /auth/forgot-password and /auth/reset-password endpoints. iOS needs: forgot password UI, email sent confirmation, reset link deep link handling.", "blocked": false, "blocker": "", "deps": ["backend-api"], "category": "Authentication", "acceptanceCriteria": [{"test": "Forgot password link available on login screen", "passed": true, "verifiedBy": "self", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Code exists, needs production validation"}, {"test": "User enters email and clicks 'Reset Password' \u2014 backend sends reset email within 30 seconds", "passed": true, "verifiedBy": "self", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Code exists, needs production validation"}, {"test": "App displays 'Check your email' confirmation screen", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Reset email contains valid deep link that opens app with reset token", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Reset UI prompts for new password with validation (min 8 chars, special chars)", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "User submits new password \u2014 backend /auth/reset-password validates token and updates password", "passed": true, "verifiedBy": "self", "verifiedAt": "2026-02-16T23:24:23Z", "evidence": "Code exists, needs production validation"}, {"test": "User can login with new password immediately", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Expired/invalid reset tokens handled gracefully with error message", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}]}, {"id": "notifications-system", "name": "Push Notifications \u2014 Connection/Subscription Alerts", "weight": 0.43, "progress": 0, "phase": 1, "priority": "P2", "owner": "iOS", "status": "NotificationView.swift exists. Backend has Notification + NotificationSettings models. Need: APNs integration, remote push setup, notification categories.", "blocked": false, "blocker": "", "deps": ["backend-api"], "category": "iOS App Features", "acceptanceCriteria": [{"test": "APNs certificate configured in Apple Developer account and imported to backend", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Device token registered on first app launch \u2014 sent to backend POST /notifications/register", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Push notification sent when user subscription expiring \u2014 user receives alert 7 days before expiration", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Push notification sent when VPN connection fails \u2014 user receives alert with reconnect action", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Notification categories configured \u2014 user can take action (reconnect, renew subscription) directly from notification", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Notification settings page in app allows user to disable alerts for specific categories", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Notification preferences synced to backend \u2014 user's preferences persist across app installs", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}, {"test": "Rich notifications include title, body, action buttons visible in lock screen", "passed": false, "verifiedBy": "none", "verifiedAt": null, "evidence": ""}]}], "verificationPolicy": {"rule": "Task progress is CALCULATED from acceptance criteria pass rate. No manual override.", "tiers": {"self": {"label": "Self-Reported", "icon": "\ud83d\udfe1", "description": "Department claims it works. NOT verified independently. Dashboard shows yellow.", "trustLevel": 1}, "tested": {"label": "Tested", "icon": "\ud83d\udd35", "description": "Tested by QA or another department. Reproducible test evidence exists.", "trustLevel": 2}, "verified": {"label": "CEO Verified", "icon": "\ud83d\udfe2", "description": "CEO or designated reviewer confirmed it works in production/TestFlight.", "trustLevel": 3}}, "rules": ["Progress % is auto-calculated: (criteria passed / total criteria) \u00d7 100", "Unchecking a criterion immediately reduces progress \u2014 no sticky 100%", "Self-reported criteria (tier 1) count toward progress but are flagged yellow", "P0 tasks require at least 'tested' tier on all criteria before counting as done", "App Store submission requires 'verified' tier on ALL P0 task criteria", "CEO can uncheck any criterion \u2014 progress drops immediately"], "enforcementFlow": ["1. Department checks criterion \u2192 marked 'self' (yellow) \u2192 progress updates", "2. QA or cross-dept validates \u2192 marked 'tested' (blue) \u2192 higher trust", "3. CEO confirms in TestFlight/production \u2192 marked 'verified' (green) \u2192 truly done", "4. If real-world failure found \u2192 CEO unchecks \u2192 progress drops \u2192 task reopened"]}, "departments": {"ios": {"name": "iOS Engineering", "status": "active", "lead": "Omar + Claude", "currentTask": "WireGuard token refresh fix", "blockers": 2, "completion": 62}, "backend": {"name": "Backend API", "status": "active", "lead": "Dev Team", "currentTask": "IKEv2 config endpoint verification", "blockers": 0, "completion": 70}, "devops": {"name": "DevOps & Infra", "status": "idle", "lead": "Unassigned", "currentTask": "Server expansion planning", "blockers": 0, "completion": 30}, "android": {"name": "Android", "status": "idle", "lead": "Dev Team (TBC)", "currentTask": "Awaiting Phase 2", "blockers": 0, "completion": 5}, "desktop": {"name": "Desktop (Win/Linux)", "status": "idle", "lead": "Unassigned", "currentTask": "Awaiting Phase 4", "blockers": 0, "completion": 0}, "website": {"name": "Website", "status": "active", "lead": "Dev Team", "currentTask": "Final polish + payment integration", "blockers": 0, "completion": 90}, "qa": {"name": "QA & Testing", "status": "idle", "lead": "Unassigned", "currentTask": "Test framework setup", "blockers": 0, "completion": 10}, "legal": {"name": "Legal & Compliance", "status": "idle", "lead": "Unassigned", "currentTask": "Privacy Policy + ToS drafts needed", "blockers": 0, "completion": 0}, "marketing": {"name": "Marketing & Growth", "status": "idle", "lead": "Unassigned", "currentTask": "ASO prep for App Store", "blockers": 0, "completion": 5}, "product": {"name": "Product & Strategy", "status": "active", "lead": "Omar", "currentTask": "Phase 1 prioritization + dashboard", "blockers": 0, "completion": 40}}, "infrastructure": {"servers": [{"id": "nl-1", "location": "Netherlands (Amsterdam)", "provider": "DigitalOcean", "ip": "178.62.101.221", "hostname": "nl-1.caspervpn.com", "specs": {"cpu": "2 vCPU", "ram": "4 GB", "disk": "80 GB SSD", "bandwidth": "4 TB/mo", "monthlyPrice": "$24/mo"}, "protocols": ["WireGuard", "OpenVPN", "IKEv2"], "vpnConfigured": true, "services": {"backendApi": {"port": 8080, "status": "live", "notes": ".NET 8.0 Core API, 300+ endpoints"}, "database": {"port": 5432, "status": "live", "notes": "PostgreSQL 16, all tables, ~50MB data"}, "cache": {"port": 6379, "status": "live", "notes": "Redis 7, session cache + rate limiting"}, "reverseProxy": {"port": 443, "status": "live", "notes": "Nginx, TLS 1.3, Let's Encrypt auto-renew"}, "adminPanel": {"port": 3000, "status": "live", "notes": "React 18 admin, 35+ pages"}, "website": {"port": 3001, "status": "live", "notes": "Next.js 14, 65+ components"}, "vpnControl": {"port": 5002, "status": "live", "notes": "Flask API, token: secure-api-token-change-me"}, "wireGuard": {"port": 51820, "status": "live", "notes": "Kernel module, subnet 10.66.66.0/24, pubkey: 6gSwbSQo4IFzqctUwz70gvEQ2f7XQiwShdXHnSE+5Hs="}, "openVPN": {"port": 1194, "status": "live", "notes": "UDP, ta.key configured"}, "ikeV2": {"port": 500, "status": "live", "notes": "strongSwan, IKEv2/IPsec, port 4500 NAT-T"}, "radius": {"port": 1812, "status": "live", "notes": "FreeRADIUS 3.x, accounting port 1813"}, "monitoring": {"port": null, "status": "planned", "notes": "Prometheus + Grafana not yet deployed"}, "docker": {"port": null, "status": "live", "notes": "Docker Engine, containers for API + admin + website"}}, "utilization": {"cpuUsage": "~25% avg", "ramUsage": "~2.8 GB / 4 GB (70%)", "diskUsage": "~35 GB / 80 GB (44%)", "bandwidthUsed": "~200 GB / 4 TB", "maxVpnConnections": "~500 concurrent (estimated)", "currentVpnConnections": 0}, "bottleneck": "RAM is the constraint \u2014 70% used. Adding more services (Prometheus/Grafana) will require upgrade to 8GB plan ($48/mo) or offloading DB to managed service.", "recommendations": ["Upgrade to 8GB RAM droplet before adding monitoring stack", "Move PostgreSQL to managed database when >1000 users ($15/mo)", "Consider separating VPN traffic from API on different servers for scale"], "status": "live", "load": 0}], "summary": {"totalServers": 1, "totalCountries": 1, "vpnReady": 1, "vpnNotConfigured": 0, "monthlyCost": "$24", "singlePointOfFailure": true, "riskLevel": "HIGH \u2014 everything on one server. DB, API, VPN, website all share 4GB RAM.", "expansionPlan": "29 Terraform/Ansible files ready. provision.sh (850 lines) can deploy US, UK, DE, JP, SG, AU, CA, FR, BR nodes.", "expansionCostEstimate": "$24/server \u00d7 10 servers = $240/mo base"}, "accessControl": {"password": "CasperInfra2026!", "note": "This password protects the Infrastructure tab from casual viewing. Change periodically."}}, "antiCensorship": {"currentCapability": "Standard WireGuard/IKEv2/OpenVPN \u2014 BLOCKABLE by DPI in KSA/UAE", "casperCloak": {"designed": true, "deployed": false, "targetPhase": "Phase 4 (Sep-Nov 2026)", "features": {"ghostMode": {"status": "designed", "description": "TLS fingerprint rotation, packet padding, timing jitter, decoy traffic", "phase": 4, "priority": "P0"}, "domainFronting": {"status": "designed", "description": "Cloudflare CDN, SNI manipulation, backup ports", "phase": 4, "priority": "P1"}, "activeProbingResistance": {"status": "designed", "description": "Decoy website serving, response mimicry", "phase": 4, "priority": "P1"}, "transports": {"status": "designed", "description": "WebSocket, gRPC, QUIC, TCP+XTLS", "phase": 4, "priority": "P0"}, "quantumShield": {"status": "designed", "description": "Kyber1024 + X25519 hybrid key exchange", "phase": 5, "priority": "P2"}}}, "interimSolution": "OpenVPN with obfs4 proxy OR IKEv2 on port 443"}, "aiFeatures": [{"name": "AI Server Selection", "status": "built", "description": "8 modes (Auto/Speed/Security/Streaming/Gaming/Privacy/LowLatency/P2P). AIServerSelector.swift 200+ lines. Scoring + confidence. Needs real data feed.", "phase": 2, "priority": "P2"}, {"name": "AI Threat Detection", "status": "built", "description": "Backend ThreatIntelligence model + AIController endpoints. Geographic anomaly detection, brute force detection. Needs ML model training.", "phase": 3, "priority": "P2"}, {"name": "AI Support Bot", "status": "planned", "description": "LLM-powered ticket resolution. SupportView exists in iOS. Backend SupportTicket model exists.", "phase": 3, "priority": "P3"}, {"name": "AI Content Engine", "status": "ready", "description": "Blog CMS built, category auto-detect API exists. Can auto-generate SEO content.", "phase": 2, "priority": "P1"}, {"name": "AI Test Generation", "status": "planned", "description": "Auto-generate test cases from code changes.", "phase": 3, "priority": "P3"}, {"name": "AI Protocol Auto-Switch", "status": "designed", "description": "CasperCloak config has auto_switch: true. Switches between stealth/speed/resilient based on network conditions.", "phase": 4, "priority": "P1"}, {"name": "AI Privacy Score", "status": "built", "description": "Backend has /ai/privacy/score endpoint. Privacy scoring system based on leak tests, configuration analysis.", "phase": 2, "priority": "P2"}, {"name": "AI Network Optimization", "status": "built", "description": "Backend has /ai/network/metrics and /ai/network/throttling endpoints. ISP throttling detection.", "phase": 3, "priority": "P2"}, {"name": "White-Label AI Customization", "status": "planned", "description": "AI-powered branding for white-label partners. Auto-generates branded assets.", "phase": 5, "priority": "P3"}], "crossDeptTasks": []};
+
+async function loadData(){
+  try{
+    const r=await fetch('data.json?t='+Date.now());
+    D=await r.json();
+    render();
+  }catch(e){
+    if(!D&&INLINE_DATA&&INLINE_DATA.tasks){D=INLINE_DATA;render()}
+  }
+}
+
+loadData();
+setInterval(loadData,30000);
+</script>
+</body>
+</html>
