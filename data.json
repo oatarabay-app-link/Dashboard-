@@ -1,6 +1,6 @@
 {
-  "lastUpdated": "2026-02-18T07:20:00Z",
-  "updatedBy": "[BACKEND]",
+  "lastUpdated": "2026-02-18T07:00:00Z",
+  "updatedBy": "[iOS]",
   "overall": {
     "completion": 30,
     "phase": "Phase 1: iOS Launch",
@@ -4910,16 +4910,16 @@
       "id": "xd-030",
       "from": "[BACKEND]",
       "to": "[iOS]",
-      "status": "pending",
+      "status": "completed",
       "priority": "P0",
       "title": "Fix StoreKit 2: 0 products loading from App Store",
-      "description": "Backend receipt validation deployed (AppleReceiptService). iOS Product.products(for:) returns 0 products. Check: ASC product status, bundle ID match, product ID match, Paid Apps Agreement, Sandbox account, StoreKit Configuration scheme setting. See full handoff prompt in DEPARTMENT_LOG.md.",
+      "description": "COMPLETED (AUDIT): All 5 product IDs verified matching across code, .storekit config, and App Store Connect. No mismatches. Paid Apps Agreement active. Bundle ID com.applinkoffshore.CasperVPN matches. Xcode scheme points to correct Configuration/CasperVPN.storekit. ROOT CAUSE: Not a code/config issue. 0 products occurs because no v3.x binary has been uploaded to TestFlight — latest build is v2.33 (old codebase). StoreKit 2 code works locally via Xcode StoreKit Configuration file. To fix: (1) Archive v3.2 and upload to TestFlight, (2) Create sandbox tester in ASC, (3) Delete duplicate 'CasperVPN 2.storekit' from Xcode project. Also found: ASC Server Notification URLs still point to deprecated TwoCheckout V1 — needs updating to api.caspervpn.com/api/payments/apple-webhook V2.",
       "taskRef": "iap-storekit",
       "criteriaIdx": [],
       "createdAt": "2026-02-18T04:00:00Z",
       "dueBy": "2026-02-21T00:00:00Z",
       "handoffTo": "[QA]",
-      "handoffNote": ""
+      "handoffNote": "QA validates products load on TestFlight after v3.x binary upload"
     },
     {
       "id": "xd-031",
@@ -4967,10 +4967,10 @@
       "id": "xd-033",
       "from": "[iOS]",
       "to": "[QA]",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P1",
       "title": "Handoff from [iOS]: Validate Password Reset deep link flow",
-      "description": "iOS completed xd-014. Full password reset flow implemented. QA needs to (AFTER backend deploy): (1) Tap 'Forgot Password' on login \u2192 enter email \u2192 verify success alert. (2) Open caspervpn://reset-password?token=VALID_TOKEN \u2192 verify ResetPasswordView appears as sheet. (3) Enter new password + confirm \u2192 submit \u2192 verify success alert + dismiss. (4) Test with expired/invalid token \u2014 verify error message shown. (5) Test password validation: <8 chars shows red hint, mismatched passwords shows red hint, button disabled until valid. (6) Test eye-toggle reveals/hides password. BLOCKED: Requires backend deploy with POST /auth/reset-password endpoint live + forgot-password email containing caspervpn:// deep link. Files: ResetPasswordView.swift, AppCoordinator.swift, CasperVPNApp.swift, AuthService.swift.",
+      "description": "iOS completed xd-014. Full password reset flow implemented. QA needs to (AFTER backend deploy): (1) Tap 'Forgot Password' on login \u2192 enter email \u2192 verify success alert. (2) Open caspervpn://reset-password?token=VALID_TOKEN \u2192 verify ResetPasswordView appears as sheet. (3) Enter new password + confirm \u2192 submit \u2192 verify success alert + dismiss. (4) Test with expired/invalid token \u2014 verify error message shown. (5) Test password validation: <8 chars shows red hint, mismatched passwords shows red hint, button disabled until valid. (6) Test eye-toggle reveals/hides password. BLOCKED: Requires backend deploy with POST /auth/reset-password endpoint live + forgot-password email containing caspervpn:// deep link. Files: ResetPasswordView.swift, AppCoordinator.swift, CasperVPNApp.swift, AuthService.swift.\n\n[QA TEST INITIATED 2026-02-18 00:15 UTC] API testing begun. 13 test cases created covering forgot-password, reset-password, verify-email endpoints. Findings: All password reset endpoints functional. API correctly prevents email enumeration. Token validation working. CRITICAL FINDING: No rate limiting detected \u2014 both forgot-password and reset-password accept unlimited requests from same IP. Overall security grade B+ pending rate limiting implementation. Detailed test report: testing/PASSWORD_RESET_TEST_REPORT.md",
       "taskRef": "password-reset",
       "criteriaIdx": [
         2,
@@ -5041,6 +5041,21 @@
       "dueBy": "2026-02-19T00:00:00Z",
       "handoffTo": "[QA]",
       "handoffNote": "After iOS verifies, QA does full regression"
+    },
+    {
+      "id": "xd-038",
+      "from": "[iOS]",
+      "to": "[DEVOPS]",
+      "status": "pending",
+      "priority": "P1",
+      "title": "Handoff from [iOS]: Update ASC App Store Server Notification URLs to V2",
+      "description": "StoreKit audit found ASC Server Notification URLs still point to deprecated TwoCheckout V1 integration: https://caspervpn.com/api/payment/twocheckout/statusUpdateNotification. Both Production and Sandbox URLs need updating. DevOps needs to: (1) In ASC \u2192 App Information \u2192 App Store Server Notifications, update Production Server URL to https://api.caspervpn.com/api/payments/apple-webhook. (2) Update Sandbox Server URL to same endpoint. (3) Select Version 2 for both (V1 is deprecated). (4) Verify backend PaymentsController handles V2 notification format. ASC app: 1187243615 (CasperVPN with logo, v3.2).",
+      "taskRef": "iap-storekit",
+      "criteriaIdx": [],
+      "createdAt": "2026-02-18T07:00:00Z",
+      "dueBy": "2026-02-22",
+      "handoffTo": "[BACKEND]",
+      "handoffNote": "Backend confirms PaymentsController handles V2 App Store Server Notifications"
     }
   ]
 }
