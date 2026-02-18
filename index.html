@@ -919,18 +919,40 @@ function renderXDept(){
     <strong>How it works:</strong> Any department can add to <code>crossDeptTasks</code> in <code>data.json</code>. The target department picks it up on their next session start.</p></div>`;
     return;
   }
+  const active=tasks.filter(t=>t.status!=='completed');
+  const done=tasks.filter(t=>t.status==='completed');
   let html='';
-  tasks.forEach(t=>{
+  active.forEach(t=>{
+    const created=t.createdAt?new Date(t.createdAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
+    const due=t.dueBy?new Date(t.dueBy).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'—';
+    const isOverdue=t.dueBy&&new Date(t.dueBy)<new Date();
     html+=`<div class="xdept">
       <div style="display:flex;justify-content:space-between;align-items:center">
         <strong>${t.title}</strong>
         <span class="tag tag-${t.priority.toLowerCase()}">${t.priority}</span>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:4px">${t.from} → ${t.to} | ${t.status} | ${new Date(t.created).toLocaleDateString()}</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">
+        ${t.from} → <strong>${t.to}</strong> | <span style="color:${t.status==='in_progress'?'var(--blue)':'var(--yellow)'}">⏳ ${t.status}</span>
+      </div>
+      <div style="font-size:11px;margin-top:3px">
+        📅 Created: ${created} | 🎯 Due: <span style="color:${isOverdue?'var(--red)':'var(--green)'}; font-weight:${isOverdue?'700':'400'}">${due}${isOverdue?' ⚠️ OVERDUE':''}</span>
+      </div>
       <div style="font-size:12px;margin-top:4px">${t.description}</div>
     </div>`;
   });
-  document.getElementById('xdept').innerHTML=`<div class="section"><div class="section-title">Cross-Department Task Queue (${tasks.length})</div>${html}</div>`;
+  if(done.length){
+    html+='<div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border)"><div style="font-size:11px;color:var(--muted);margin-bottom:8px">✅ COMPLETED ('+done.length+')</div>';
+    done.forEach(t=>{
+      const completed=t.completedAt?new Date(t.completedAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
+      html+=`<div style="padding:8px 12px;margin-bottom:4px;opacity:0.5;border-left:3px solid var(--green);border-radius:0 6px 6px 0">
+        <div style="text-decoration:line-through;font-size:13px">${t.title}</div>
+        <div style="font-size:10px;color:var(--muted)">${t.from} → ${t.to} | Completed: ${completed}${t.completedBy?' by '+t.completedBy:''}</div>
+      </div>`;
+    });
+    html+='</div>';
+  }
+  const activeCount=active.length;
+  document.getElementById('xdept').innerHTML=`<div class="section"><div class="section-title">Cross-Department Task Queue (${activeCount} active, ${done.length} completed)</div>${html}</div>`;
 }
 
 function updateTabPcts(){
