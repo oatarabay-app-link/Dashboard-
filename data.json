@@ -5151,6 +5151,51 @@
       "dueBy": "2026-02-25",
       "handoffTo": "[QA]",
       "handoffNote": "QA validates crash reports appear in Sentry after intentional test crash"
+    },
+    {
+      "id": "xd-044",
+      "from": "[iOS]",
+      "to": "[BACKEND]",
+      "status": "pending",
+      "priority": "P0",
+      "title": "Handoff from [iOS]: Apple Sign-In VALID_3001 — backend token validation fails",
+      "description": "Apple Sign-In NEVER passed on-device. iOS sends valid identityToken JWT (Apple-signed, correct audience com.applinkoffshore.CasperVPN). Backend returns 401 with VALID_3001. Bundle ID fix already deployed. Needs: (1) Debug AuthService.cs Apple token validation — log what claim fails, (2) Verify Apple Services ID vs App ID in appsettings, (3) Test with hardcoded Apple JWT to isolate issue. Files: backend-dotnet-core/Services/AuthService.cs, backend-dotnet-core/appsettings.json",
+      "taskRef": "xd-019",
+      "criteriaIdx": [],
+      "createdAt": "2026-02-18T22:00:00Z",
+      "dueBy": "2026-02-21",
+      "handoffTo": "[iOS]",
+      "handoffNote": "Once backend returns 200 for Apple tokens, iOS retests full Apple Sign-In flow"
+    },
+    {
+      "id": "xd-045",
+      "from": "[iOS]",
+      "to": "[BACKEND]",
+      "status": "pending",
+      "priority": "P1",
+      "title": "Handoff from [iOS]: IKEv2 API crypto params mismatch with strongSwan server config",
+      "description": "iOS IKEv2 fails (Connecting→Disconnecting in ~2s). Root cause: API /servers/{id}/config returns ikeDiffieHellmanGroup=20 (ECP384) + ikeEncryption=AES256GCM but strongSwan ipsec.conf has ike=aes256-sha384-modp3072 (DH Group 15, AES256 non-GCM). iOS now uses API values dynamically (IKEv2Manager.swift updated), so either: (1) Fix API to return correct values matching server (DH15, AES256), OR (2) Update strongSwan ipsec.conf to match API (DH20, AES256GCM). They MUST match. Files: backend API /servers/{id}/config endpoint, NL server ipsec.conf at 178.62.101.221",
+      "taskRef": "ikev2-stable",
+      "criteriaIdx": [],
+      "createdAt": "2026-02-18T22:00:00Z",
+      "dueBy": "2026-02-22",
+      "handoffTo": "[QA]",
+      "handoffNote": "After crypto alignment, QA validates IKEv2 connect + 60s stability test"
+    },
+    {
+      "id": "xd-046",
+      "from": "[iOS]",
+      "to": "[DEVOPS]",
+      "status": "pending",
+      "priority": "P1",
+      "title": "Handoff from [iOS]: WireGuard RADIUS accounting integration for bandwidth/device tracking",
+      "description": "WireGuard uses JWT-only auth — no RADIUS session tracking, no bandwidth accounting, no device tracking parity with IKEv2. CEO mandated all protocols use RADIUS for device tracking + bandwidth. Need: (1) wg-radius-accounting daemon that polls 'wg show wg0 dump' every 60s, (2) Maps peer public key → user via GET /api/radius/wireguard/lookup?publicKey=, (3) Sends RADIUS Accounting-Request (Start/Interim-Update/Stop) to FreeRADIUS, (4) Tracks bytes tx/rx per peer for bandwidth reporting. Note: DEVOPS already deployed wg-radius-accounting.py per DEPARTMENT_LOG — verify it works end-to-end with WireGuardKeys DB table (xd-042).",
+      "taskRef": "wireguard-radius",
+      "criteriaIdx": [],
+      "createdAt": "2026-02-18T22:00:00Z",
+      "dueBy": "2026-02-25",
+      "handoffTo": "[QA]",
+      "handoffNote": "QA validates WireGuard sessions appear in RADIUS accounting logs with correct user + bandwidth"
     }
   ]
 }
