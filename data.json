@@ -1,6 +1,6 @@
 {
-  "lastUpdated": "2026-02-19T23:03:24Z",
-  "updatedBy": "[BACKEND]",
+  "lastUpdated": "2026-02-19T23:10:42Z",
+  "updatedBy": "[QA]",
   "overall": {
     "completion": 30,
     "phase": "Phase 1: iOS Launch",
@@ -1121,16 +1121,16 @@
         {
           "test": "POST /support/tickets endpoint receives ticket data and creates record in database",
           "passed": false,
-          "verifiedBy": "none",
-          "verifiedAt": null,
-          "evidence": ""
+          "verifiedBy": "QA",
+          "verifiedAt": "2026-02-19T23:10:42Z",
+          "evidence": "FAILED: POST /api/support/tickets returns 200 with ticket data (id, subject, status=open, priority=medium) BUT GET /api/support/tickets immediately after returns empty array. Ticket NOT persisted to database. Handoff xd-057 to Backend."
         },
         {
           "test": "User receives ticket ID confirmation immediately after submission",
-          "passed": false,
-          "verifiedBy": "none",
-          "verifiedAt": null,
-          "evidence": ""
+          "passed": true,
+          "verifiedBy": "QA",
+          "verifiedAt": "2026-02-19T23:10:42Z",
+          "evidence": "POST /api/support/tickets returns ticket ID immediately: {id: '7f10136c...', subject: 'QA Test Ticket', status: 'open', priority: 'medium'}. User gets confirmation, but underlying persistence is broken (see AC-1)."
         },
         {
           "test": "Admin panel displays all submitted tickets with filters by status (open/in-progress/resolved/closed)",
@@ -1480,9 +1480,9 @@
         {
           "test": "Profile view displays user email, name, subscription tier, and device count",
           "passed": true,
-          "verifiedBy": "self-tested",
-          "verifiedAt": "2026-02-16T23:24:23Z",
-          "evidence": "Verified on TestFlight / live server \u2014 NEEDS REAL DEVICE VALIDATION"
+          "verifiedBy": "QA-code-review",
+          "verifiedAt": "2026-02-19T23:10:42Z",
+          "evidence": "ProfileView.swift has all 6 sections: profileHeader (user email/name), subscriptionCard (plan name, devices used/max, bandwidth), accountInfoCard (email, username, member since), devicesCard (GET /user/devices), supportTicketsCard (GET /support/tickets), legalSection + actionButtons."
         },
         {
           "test": "User can edit name and changes persist after app restart",
@@ -1515,9 +1515,9 @@
         {
           "test": "Device count accurate \u2014 shows number of devices connected to account",
           "passed": true,
-          "verifiedBy": "self-tested",
-          "verifiedAt": "2026-02-16T23:24:23Z",
-          "evidence": "Code exists, needs production validation"
+          "verifiedBy": "QA",
+          "verifiedAt": "2026-02-19T23:10:42Z",
+          "evidence": "GET /api/user/devices returns accurate count. After connect: 1 device with name 'iOS \u2014 Unknown', platform, lastActive, isCurrentDevice=true. ProfileViewModel.loadDevices() maps to devicesUsed count."
         },
         {
           "test": "Logout button clears all credentials and returns to login screen",
@@ -5492,7 +5492,7 @@
       "id": "xd-054",
       "from": "[iOS]",
       "to": "[QA]",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "title": "Handoff from [iOS]: Validate Profile view \u2014 devices, tickets, CrashReporter integration",
       "description": "Profile now has 6 sections: header, subscription, account info, devices, support tickets, legal + actions. Also CrashReporter is wired into auth flows (setUser/clearUser), VPN flows (setVPNContext/captureError), and settings (breadcrumbs). Validate: (1) Profile loads user data, (2) Devices card shows/hides properly, (3) Support section shows empty state, (4) CrashReporter.setUser called after login, (5) CrashReporter.setVPNContext called on connect/disconnect.",
@@ -5501,13 +5501,16 @@
       "createdAt": "2026-02-19T11:39:51Z",
       "dueBy": "2026-02-25T00:00:00Z",
       "handoffTo": null,
-      "handoffNote": null
+      "handoffNote": null,
+      "completedAt": "2026-02-19T23:10:42Z",
+      "completedBy": "[QA]",
+      "resolution": "ALL 8 CRITERIA PASS \u2014 iOS code review verified:\n1. ProfileView has all 6 sections: header, subscription, account info, devices, support tickets, legal+actions \u2705\n2. CrashReporter.setUser called in 3 auth flows (login L200, register L262, apple L305) \u2705\n3. CrashReporter.clearUser called on logout (AppCoordinator L203) \u2705\n4. CrashReporter.setVPNContext called on connect (VPNConnectionManager L250) and disconnect (L289) \u2705\n5. CrashReporter.captureError at 5 callsites with context dicts \u2705\n6. Devices card calls GET /user/devices with full CRUD \u2705\n7. Support section calls GET /support/tickets with status color coding \u2705\n8. CrashReporter initialized early in CasperVPNApp.init() \u2705"
     },
     {
       "id": "xd-056",
       "from": "[BACKEND]",
       "to": "[QA]",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "title": "Handoff from [BACKEND]: Validate /user/devices and /support/tickets endpoints",
       "description": "Two new controllers deployed: (1) GET /api/user/devices \u2014 returns UserDevice[] from connection logs, DELETE /api/user/devices/{id} \u2014 removes device. (2) GET /api/support/tickets \u2014 returns SupportTicket[] (empty until table created), POST /api/support/tickets \u2014 creates ticket. Both return {success, data[], message} wrapper. iOS Profile already handles empty state gracefully. QA validate: 200 responses, proper JSON structure, auth required (401 without token), device list populates after VPN connect.",
@@ -5516,7 +5519,28 @@
       "createdAt": "2026-02-19T22:14:23Z",
       "dueBy": "2026-02-23T23:59:00Z",
       "handoffTo": null,
-      "handoffNote": "iOS can now show real data in Profile devices/tickets sections"
+      "handoffNote": "iOS can now show real data in Profile devices/tickets sections",
+      "completedAt": "2026-02-19T23:10:42Z",
+      "completedBy": "[QA]",
+      "resolution": "7/9 TESTS PASS \u2014 2 BUGS FOUND:\n\u2705 GET /user/devices: 200, empty array before connect, shows device after connect\n\u2705 GET /user/devices without token: 401\n\u2705 POST /servers/{id}/connect with deviceType=iOS: creates device entry\n\u2705 GET /support/tickets: 200, empty state\n\u2705 GET /support/tickets without token: 401\n\u2705 POST /support/tickets: 200, returns ticket with id/subject/status/priority\n\u2705 Response wrapper: {success, data[], message} on all endpoints\n\u274c BUG #1: DELETE /user/devices/{id} returns 200 'Device removed' but device STILL appears in GET list\n\u274c BUG #2: POST /support/tickets returns 200 with ticket data, but GET /support/tickets still returns empty array \u2014 ticket NOT persisted\nHANDOFF: xd-057 \u2192 [BACKEND] for both bugs"
+    },
+    {
+      "id": "xd-057",
+      "from": "[QA]",
+      "to": "[BACKEND]",
+      "status": "pending",
+      "priority": "P1",
+      "title": "Fix: device delete not persisted + support tickets not stored",
+      "description": "Two bugs found during xd-056 validation:\n\nBUG #1: DELETE /api/user/devices/{id} returns 200 'Device removed successfully' but device still appears in subsequent GET /api/user/devices call (isCurrentDevice changes to false but device not removed).\n\nBUG #2: POST /api/support/tickets returns 200 with full ticket object (id, subject, status=open, priority=medium), but subsequent GET /api/support/tickets returns empty array with 'No support tickets yet'. Ticket is NOT being persisted to database.\n\nReproduction:\n1. Register account, connect to VPN, GET /user/devices \u2192 shows 1 device\n2. DELETE /user/devices/{id} \u2192 200\n3. GET /user/devices \u2192 STILL shows device (should be empty)\n4. POST /support/tickets with subject/description \u2192 200 with ticket data\n5. GET /support/tickets \u2192 empty array (should show ticket)",
+      "taskRef": "support-tickets",
+      "criteriaIdx": [
+        1,
+        2
+      ],
+      "createdAt": "2026-02-19T23:10:42Z",
+      "dueBy": "2026-02-21T23:59:00Z",
+      "handoffTo": "[QA]",
+      "handoffNote": "After Backend fixes, QA re-validates device delete + ticket persistence"
     }
   ],
   "importantNotes": [
