@@ -303,6 +303,11 @@ h1{font-size:26px;font-weight:700;margin-bottom:2px}
 .note-add-btn{background:var(--accent);color:#fff;border:none;padding:8px 16px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:opacity .15s}
 .note-add-btn:hover{opacity:.85}
 
+/* Expandable Readiness Cards */
+.rc-task-list{max-height:0;overflow:hidden;transition:max-height .3s ease;padding:0}
+.rc-expanded .rc-task-list{max-height:2000px;padding-top:10px;border-top:1px dashed var(--border);margin-top:8px}
+.rc-expanded{grid-column:1/-1}
+
 </style>
 </head>
 <body>
@@ -330,6 +335,7 @@ h1{font-size:26px;font-weight:700;margin-bottom:2px}
 <div class="tab" onclick="showTab('xdept',this)" data-tab="xdept">Cross-Dept</div>
 <div class="tab" onclick="showTab('notes',this)" data-tab="notes">📌 Notes</div>
 <div class="tab" onclick="showTab('systemscan',this)" data-tab="systemscan">🔍 System Scan</div>
+<div class="tab" onclick="showTab('skills',this)" data-tab="skills">🧠 Skills</div>
 </div>
 
 <div class="panel" id="overview"></div>
@@ -344,6 +350,7 @@ h1{font-size:26px;font-weight:700;margin-bottom:2px}
 <div class="panel" id="xdept"></div>
 <div class="panel" id="notes"></div>
 <div class="panel" id="systemscan"></div>
+<div class="panel" id="skills"></div>
 
 <!-- Note Modal -->
 <div id="noteModal" class="note-modal-overlay" style="display:none">
@@ -1955,16 +1962,81 @@ function renderSystemScan(){
     </div>
   </div>`;
 
-  // 2. Production Readiness Scorecard
+  // 2. Production Readiness Scorecard (expandable)
+  const scoreCats={
+    'VPN Core':'VPN Core',
+    'Authentication':'Authentication',
+    'Monetization':'Monetization',
+    'Legal':'Legal & Compliance',
+    'Infrastructure':null,
+    'Marketing':'Marketing & Growth'
+  };
+
+  let scoreCards='';
+  Object.entries(scores).forEach(([k,v])=>{
+    const catName=scoreCats[k];
+    const tasks=catName?D.tasks.filter(t=>t.category===catName):[];
+    const totalWeight=tasks.reduce((s,t)=>{const ac=t.acceptanceCriteria||[];return s+ac.length},0);
+
+    let taskListHtml='';
+    if(tasks.length){
+      const sorted=[...tasks].sort((a,b)=>(b.progress||0)-(a.progress||0));
+      sorted.forEach(t=>{
+        const ac=t.acceptanceCriteria||[];
+        const passed=ac.filter(c=>c.passed).length;
+        const pct=ac.length?Math.round(passed/ac.length*100):0;
+        const isDone=pct>=100;
+        const weight=ac.length;
+
+        let critHtml='';
+        ac.forEach(c=>{
+          critHtml+=`<div style="display:flex;align-items:center;gap:6px;padding:3px 0;font-size:11px">
+            <span style="color:var(--${c.passed?'green':'red'})">${c.passed?'✓':'✗'}</span>
+            <span style="color:var(--${c.passed?'text':'muted'})">${c.description}</span>
+            ${c.verifiedBy?'<span style="font-size:9px;background:rgba(16,185,129,.15);color:var(--green);padding:1px 5px;border-radius:3px">'+c.verifiedBy+'</span>':''}
+          </div>`;
+        });
+
+        taskListHtml+=`<div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,.03)">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="color:var(--${isDone?'green':pct>0?'yellow':'red'})">${isDone?'✅':pct>0?'🔄':'❌'}</span>
+              <span style="font-size:12px;font-weight:${isDone?'400':'600'};color:var(--${isDone?'muted':'text'})">${t.name}</span>
+              <span class="tag tag-${(t.priority||'P2').toLowerCase()}" style="font-size:9px">${t.priority||'P2'}</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:10px;color:var(--muted)">weight: ${weight}</span>
+              <span style="font-size:11px;font-weight:600;color:var(--${pc(pct)})">${pct}%</span>
+            </div>
+          </div>
+          <div class="ac-section" style="margin-top:4px;margin-left:24px">
+            <div class="ac-header" onclick="this.parentElement.classList.toggle('ac-open');event.stopPropagation()">
+              <span class="ac-toggle">▶</span> Criteria
+              <span class="ac-score" style="color:var(--${passed===ac.length?'green':passed>0?'yellow':'muted'})">${passed}/${ac.length}</span>
+            </div>
+            <div class="ac-list">${critHtml}</div>
+          </div>
+        </div>`;
+      });
+    }else if(k==='Infrastructure'){
+      taskListHtml=`<div style="padding:8px 0;font-size:12px;color:var(--muted)">Infrastructure score is based on server count. Current: ${D.infrastructure&&D.infrastructure.summary?D.infrastructure.summary.totalServers:1} server(s). Need 5+ for 100%.</div>`;
+    }
+
+    const taskCount=tasks.length;
+    const doneCount=tasks.filter(t=>(t.progress||0)>=100).length;
+
+    scoreCards+=`<div class="readiness-card" style="border-color:var(--${pc(v)});cursor:pointer" onclick="this.classList.toggle('rc-expanded')">
+      <div class="rc-label">${k}</div>
+      <div class="rc-pct" style="color:var(--${pc(v)})">${v}%</div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${v}%;${grad(v)}"></div></div>
+      ${taskCount?'<div style="font-size:10px;color:var(--muted);margin-top:4px;text-align:center">'+doneCount+'/'+taskCount+' tasks · '+totalWeight+' criteria · click to expand</div>':''}
+      <div class="rc-task-list">${taskListHtml}</div>
+    </div>`;
+  });
+
   html+=`<div class="scan-section">
     <div class="scan-title">🎯 Production Readiness Scorecard</div>
-    <div class="readiness-grid">
-      ${Object.entries(scores).map(([k,v])=>`<div class="readiness-card" style="border-color:var(--${pc(v)})">
-        <div class="rc-label">${k}</div>
-        <div class="rc-pct" style="color:var(--${pc(v)})">${v}%</div>
-        <div class="progress-bar"><div class="progress-fill" style="width:${v}%;${grad(v)}"></div></div>
-      </div>`).join('')}
-    </div>
+    <div class="readiness-grid">${scoreCards}</div>
   </div>`;
   
   // 3. Pre-Production Checklist
@@ -2027,6 +2099,103 @@ function renderSystemScan(){
   document.getElementById('systemscan').innerHTML=html;
 }
 
+// === SKILLS TAB ===
+function renderSkills(){
+  const skills=[
+    {id:'caspervpn-dev',name:'iOS & Backend Development',dept:'iOS / Backend',icon:'📱',lead:'Omar + Claude',
+     desc:'Elite multi-platform development and infrastructure mastery. SwiftUI MVVM, NetworkExtension, WireGuardKit, StoreKit 2 (iOS). .NET 8.0, PostgreSQL, Redis, JWT, Entity Framework (Backend).',
+     stack:['SwiftUI','NetworkExtension','WireGuardKit SPM v1.0.16','StoreKit 2','CryptoKit','Combine','.NET 8.0','PostgreSQL','Redis','JWT Auth','Entity Framework 8','Nginx TLS 1.3'],
+     triggers:'iOS app, SwiftUI, NetworkExtension, StoreKit, .NET backend API, database, endpoints',
+     command:'caspervpn-dev'},
+    {id:'caspervpn-android',name:'Android Engineering',dept:'Android',icon:'🤖',lead:'Dev Team (TBC)',
+     desc:'Kotlin, Jetpack Compose, VpnService API, WireGuard/OpenVPN/IKEv2 tunnel implementation, Play Billing v6, Play Store submission & compliance.',
+     stack:['Kotlin 1.9+','Jetpack Compose','VpnService API','WireGuard-Android','Play Billing 6.x','Retrofit + OkHttp','Room Database','Hilt DI'],
+     triggers:'Android app, Kotlin, Jetpack Compose, VPN tunnel, Play Store',
+     command:'caspervpn-android'},
+    {id:'caspervpn-desktop',name:'Desktop Engineering',dept:'Desktop',icon:'🖥️',lead:'TBD',
+     desc:'Windows (WinUI/Tauri + Wintun), Linux (GTK4/Tauri), shared Rust core library. Browser extensions (Chrome, Firefox). Cross-platform packaging.',
+     stack:['Rust','Tauri','WinUI','GTK4','Wintun','Chrome Extension API','Firefox WebExtension'],
+     triggers:'Desktop app, Windows, Linux, macOS, Rust, browser extension',
+     command:'caspervpn-desktop'},
+    {id:'caspervpn-devops',name:'DevOps & Infrastructure',dept:'DevOps',icon:'🚀',lead:'Unassigned',
+     desc:'Server provisioning, monitoring (Prometheus/Grafana), Docker orchestration, CI/CD pipelines, Nginx/TLS, certificate management, incident response, backup/restore.',
+     stack:['Docker 24.x','Docker Compose','Terraform','Ansible','Prometheus','Grafana','Nginx','LetsEncrypt','GitHub Actions','DigitalOcean'],
+     triggers:'Server deployment, Docker, monitoring, CI/CD, scaling, Nginx, TLS',
+     command:'caspervpn-devops'},
+    {id:'caspervpn-testing',name:'Testing & QA',dept:'QA',icon:'🧪',lead:'TBD',
+     desc:'4-Level Testing Hierarchy: Smoke Tests, Production Smoke, Unit Tests, Full Test Suite. Zero-Trust security validation. Crash triage and regression testing.',
+     stack:['XCTest','XCUITest','Jest','Playwright','WireGuard Handshake Tests','API Integration Tests'],
+     triggers:'Tests, QA validation, crash triage, regression, smoke tests',
+     command:'caspervpn-testing'},
+    {id:'caspervpn-product-strategy',name:'Product Strategy',dept:'Product',icon:'🎯',lead:'CEO',
+     desc:'Competitive intelligence (NordVPN, ExpressVPN, Surfshark, ProtonVPN, Mullvad), roadmap management, feature prioritization (RICE/ICE), pricing strategy, user personas.',
+     stack:['RICE Framework','ICE Scoring','Competitor Analysis','User Personas','Feature Prioritization','Go-to-Market'],
+     triggers:'Product direction, feature priorities, competitor analysis, pricing, roadmap',
+     command:'caspervpn-product-strategy'},
+    {id:'caspervpn-marketing-growth',name:'Marketing & Growth',dept:'Marketing',icon:'📈',lead:'TBD',
+     desc:'ASO optimization, SEO keyword clusters, conversion rate optimization, content marketing, social media strategy, app store listing A/B testing.',
+     stack:['ASO','SEO','CRO','Content Marketing','App Store Optimization','Social Media','A/B Testing','Analytics'],
+     triggers:'ASO, SEO, marketing campaigns, growth hacking, content',
+     command:'caspervpn-marketing-growth'},
+    {id:'caspervpn-legal-compliance',name:'Legal & Compliance',dept:'Legal',icon:'⚖️',lead:'TBD',
+     desc:'GDPR, CCPA, Lebanese Law No. 81/2018 (data protection), VPN jurisdiction strategy (5/9/14 Eyes), no-log verification, offshore corporate structuring, data sovereignty.',
+     stack:['GDPR','CCPA','Lebanese Privacy Law','5/9/14 Eyes Analysis','No-Log Policy','ToS/Privacy Policy','Data Sovereignty'],
+     triggers:'Privacy policy, ToS, GDPR, compliance, data protection, jurisdiction',
+     command:'caspervpn-legal-compliance'}
+  ];
+
+  let html=`<div class="stats-row" style="margin-bottom:16px">
+    <div class="stat-card"><div class="label">DEPARTMENT SKILLS</div><div class="value">${skills.length}</div><div class="sub">specialized AI agents</div></div>
+    <div class="stat-card"><div class="label">TECH STACK</div><div class="value">${skills.reduce((s,sk)=>s+sk.stack.length,0)}</div><div class="sub">technologies tracked</div></div>
+    <div class="stat-card"><div class="label">ACTIVE</div><div class="value" style="color:var(--green)">${D.departments?D.departments.filter(d=>d.status==='active').length:0}</div><div class="sub">departments working</div></div>
+    <div class="stat-card"><div class="label">COWORK READY</div><div class="value" style="color:var(--accent)">All</div><div class="sub">paste prompt to activate</div></div>
+  </div>`;
+
+  html+='<p style="font-size:12px;color:var(--muted);margin-bottom:16px">Each skill is a specialized AI agent. Open a Cowork session and use the skill command to activate. Click any card to expand the full tech stack and activation triggers.</p>';
+
+  skills.forEach(sk=>{
+    const dept=D.departments?D.departments.find(d=>d.skill===sk.command||d.name.toLowerCase().includes(sk.dept.toLowerCase())):null;
+    const deptStatus=dept?dept.status:'idle';
+    const statusCol=deptStatus==='active'?'green':deptStatus==='blocked'?'red':'muted';
+    const completion=dept?dept.completion:0;
+
+    html+=`<div class="dept-expand-card" onclick="this.classList.toggle('open')" style="cursor:pointer">
+      <div class="dept-expand-header">
+        <div style="display:flex;align-items:center;gap:12px">
+          <span class="dept-expand-toggle">▶</span>
+          <span style="font-size:20px">${sk.icon}</span>
+          <div>
+            <div style="font-weight:600;font-size:14px">${sk.name}</div>
+            <div style="font-size:11px;color:var(--muted)">${sk.command} · ${sk.dept} Department · <span style="color:var(--${statusCol})">${deptStatus}</span></div>
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:11px;color:var(--muted)">COMPLETION</div>
+          <div style="font-size:18px;font-weight:700;color:var(--${pc(completion)})">${completion}%</div>
+        </div>
+      </div>
+      <div class="dept-expand-body">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.5">${sk.desc}</div>
+        <div style="margin-bottom:10px">
+          <div style="font-size:10px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Tech Stack</div>
+          <div style="display:flex;flex-wrap:wrap;gap:4px">
+            ${sk.stack.map(t=>'<span style="font-size:10px;background:rgba(59,130,246,.1);color:var(--accent);padding:2px 8px;border-radius:4px;border:1px solid rgba(59,130,246,.2)">'+t+'</span>').join('')}
+          </div>
+        </div>
+        <div style="margin-bottom:10px">
+          <div style="font-size:10px;font-weight:600;color:var(--yellow);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Triggers</div>
+          <div style="font-size:11px;color:var(--muted)">${sk.triggers}</div>
+        </div>
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:10px;font-family:monospace;font-size:11px;color:var(--green)">
+          Activate in Cowork: use <strong>${sk.command}</strong> skill
+        </div>
+      </div>
+    </div>`;
+  });
+
+  document.getElementById('skills').innerHTML='<div class="section"><div class="section-title">🧠 Department Skills & AI Agents</div>'+html+'</div>';
+}
+
 function render(){
   if(!D)return;
   // CRITICAL: recalculate ALL progress from criteria on every render
@@ -2054,6 +2223,7 @@ function render(){
   renderImportantNotes();
   renderAnalytics();
   renderSystemScan();
+  renderSkills();
   updateTabPcts();
 }
 
