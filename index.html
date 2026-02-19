@@ -322,6 +322,9 @@ function showTab(id,el){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   if(el)el.classList.add('active');
+  // Charts need visible canvas — re-render when tab shown
+  if(id==='overview')setTimeout(renderOverviewCharts,50);
+  if(id==='analytics')setTimeout(renderAnalytics,50);
 }
 
 function setPhaseFilter(phaseNum){
@@ -652,11 +655,13 @@ function renderOverview(){
   html+=sectionFooter(D.tasks,'overall readiness');
   document.getElementById('overview').innerHTML=html;
 
-  // Render overview charts
-  renderOverviewCharts();
+  // Charts rendered on tab show (need visible canvas)
 }
 
 function renderOverviewCharts(){
+  // Skip if panel not visible (Chart.js needs visible canvas)
+  const panel=document.getElementById('overview');
+  if(!panel||!panel.classList.contains('active'))return;
   // Destroy old overview charts
   ['ovPriority','ovStatus','ovBlockers','ovTimeline','ovCriteria','ovPhaseRadar'].forEach(k=>{
     if(chartInstances[k]){chartInstances[k].destroy();delete chartInstances[k];}
