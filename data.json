@@ -1,6 +1,6 @@
 {
-  "lastUpdated": "2026-02-19T23:10:42Z",
-  "updatedBy": "[QA]",
+  "lastUpdated": "2026-02-19T23:23:28Z",
+  "updatedBy": "[BACKEND]",
   "overall": {
     "completion": 30,
     "phase": "Phase 1: iOS Launch",
@@ -5528,7 +5528,7 @@
       "id": "xd-057",
       "from": "[QA]",
       "to": "[BACKEND]",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "title": "Fix: device delete not persisted + support tickets not stored",
       "description": "Two bugs found during xd-056 validation:\n\nBUG #1: DELETE /api/user/devices/{id} returns 200 'Device removed successfully' but device still appears in subsequent GET /api/user/devices call (isCurrentDevice changes to false but device not removed).\n\nBUG #2: POST /api/support/tickets returns 200 with full ticket object (id, subject, status=open, priority=medium), but subsequent GET /api/support/tickets returns empty array with 'No support tickets yet'. Ticket is NOT being persisted to database.\n\nReproduction:\n1. Register account, connect to VPN, GET /user/devices \u2192 shows 1 device\n2. DELETE /user/devices/{id} \u2192 200\n3. GET /user/devices \u2192 STILL shows device (should be empty)\n4. POST /support/tickets with subject/description \u2192 200 with ticket data\n5. GET /support/tickets \u2192 empty array (should show ticket)",
@@ -5540,7 +5540,28 @@
       "createdAt": "2026-02-19T23:10:42Z",
       "dueBy": "2026-02-21T23:59:00Z",
       "handoffTo": "[QA]",
-      "handoffNote": "After Backend fixes, QA re-validates device delete + ticket persistence"
+      "handoffNote": "After Backend fixes, QA re-validates device delete + ticket persistence",
+      "completedAt": "2026-02-19T23:23:28Z",
+      "completedBy": "[BACKEND]",
+      "resolution": "BUG #1: DELETE marks ALL ConnectionLogs for device group as DEVICE_REMOVED; GET filters them. BUG #2: SupportTickets table auto-created; POST persists; GET returns real data."
+    },
+    {
+      "id": "xd-058",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "status": "pending",
+      "priority": "P1",
+      "title": "Handoff from [BACKEND]: Re-validate device delete + ticket persistence (xd-057 fixes)",
+      "description": "Both xd-057 bugs fixed and deployed. BUG #1: DELETE /user/devices marks ALL logs for DeviceType+DeviceOs group as DEVICE_REMOVED. GET filters them out. BUG #2: SupportTickets table auto-created via CREATE TABLE IF NOT EXISTS. POST persists to real DB. GET returns real data. Files: UserDevicesController.cs, SupportTicketsController.cs",
+      "taskRef": "xd-057",
+      "criteriaIdx": [
+        1,
+        2
+      ],
+      "createdAt": "2026-02-19T23:23:28Z",
+      "dueBy": "2026-02-21T23:59:00Z",
+      "handoffTo": null,
+      "handoffNote": "Final validation"
     }
   ],
   "importantNotes": [
