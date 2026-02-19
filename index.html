@@ -241,14 +241,14 @@ h1{font-size:26px;font-weight:700;margin-bottom:2px}
 .arch-detail-card{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px}
 .arch-detail-card h4{font-size:12px;font-weight:700;color:var(--accent);margin-bottom:8px;display:flex;align-items:center;gap:6px}
 .arch-dep-list{list-style:none;padding:0;margin:0}
-.arch-dep-list li{font-size:11px;color:var(--muted);padding:3px 0;display:flex;align-items:center;gap:6px;border-bottom:1px solid rgba(255,255,255,.03)}
-.arch-dep-list li:last-child{border-bottom:none}
+.arch-dep-list li,.arch-dep-list div,.arch-dep-list>*{font-size:11px;color:var(--muted);padding:3px 0;display:flex;align-items:center;gap:6px;border-bottom:1px solid rgba(255,255,255,.03)}
+.arch-dep-list li:last-child,.arch-dep-list div:last-child{border-bottom:none}
 .arch-dep-ver{font-size:9px;background:rgba(139,92,246,.15);color:var(--purple);padding:1px 5px;border-radius:3px;font-weight:600}
 .arch-dep-type{font-size:8px;padding:1px 4px;border-radius:2px;font-weight:600}
 .arch-dep-type.core{background:rgba(59,130,246,.15);color:var(--accent)}
 .arch-dep-type.infra{background:rgba(16,185,129,.15);color:var(--green)}
-.arch-dep-type.security{background:rgba(239,68,68,.15);color:var(--red)}
-.arch-dep-type.protocol{background:rgba(245,158,11,.15);color:var(--yellow)}
+.arch-dep-type.security,.arch-dep-type.sec{background:rgba(239,68,68,.15);color:var(--red)}
+.arch-dep-type.protocol,.arch-dep-type.proto{background:rgba(245,158,11,.15);color:var(--yellow)}
 .arch-flow-detail{margin-top:16px;padding-top:16px;border-top:1px dashed var(--border)}
 .arch-flow-step{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.03)}
 .arch-flow-step:last-child{border-bottom:none}
@@ -1575,6 +1575,98 @@ function renderSystemScan(){
     </div>
   </div>`;
   
+  // 1b. Connection Flow — Step by Step
+  html+=`<div class="scan-section">
+    <div class="scan-title">🔄 Connection Flow — Step by Step</div>
+    <div class="arch-flow-detail">
+      <div class="arch-flow-step"><div class="arch-flow-num">1</div><div class="arch-flow-desc"><strong>User Taps Connect</strong> — iOS/Android app calls <code>VPNConnectionManager.connect()</code>. Config selected (WireGuard default). Auth token validated locally before API call.</div></div>
+      <div class="arch-flow-step"><div class="arch-flow-num">2</div><div class="arch-flow-desc"><strong>Auth Check</strong> — JWT sent to <code>POST /servers/{id}/connect</code>. Backend verifies subscription status, checks rate limits (Redis), logs session start in PostgreSQL.</div></div>
+      <div class="arch-flow-step"><div class="arch-flow-num">3</div><div class="arch-flow-desc"><strong>Server Selection</strong> — AI Server Selector scores candidates by latency, load, geo-proximity. Returns optimal server config (WireGuard keys, endpoint, DNS).</div></div>
+      <div class="arch-flow-step"><div class="arch-flow-num">4</div><div class="arch-flow-desc"><strong>Tunnel Establishment</strong> — NetworkExtension (iOS) or VpnService (Android) creates tunnel. WireGuard handshake via <code>WireGuardKit</code>. Kill switch activates. DNS set to private resolver.</div></div>
+      <div class="arch-flow-step"><div class="arch-flow-num">5</div><div class="arch-flow-desc"><strong>Traffic Flow</strong> — All device traffic routed through encrypted WireGuard tunnel to VPN server (178.62.101.221). Server forwards to internet via NAT. Return traffic encrypted back.</div></div>
+      <div class="arch-flow-step"><div class="arch-flow-num">6</div><div class="arch-flow-desc"><strong>Monitoring</strong> — Prometheus scrapes server metrics (CPU, bandwidth, connections). Grafana dashboards alert on anomalies. FreeRADIUS logs auth events. Zero logs on traffic content.</div></div>
+    </div>
+  </div>`;
+
+  // 1c. Dependencies & Libraries Detail
+  html+=`<div class="scan-section">
+    <div class="scan-title">📦 Dependencies & Libraries</div>
+    <div class="arch-detail-grid">
+      <div class="arch-detail-card"><h4>📱 iOS App</h4>
+        <div class="arch-dep-list">
+          <div><span class="arch-dep-type core">CORE</span> <strong>SwiftUI</strong> <span class="arch-dep-ver">iOS 15+</span></div>
+          <div><span class="arch-dep-type core">CORE</span> <strong>NetworkExtension</strong> <span class="arch-dep-ver">System</span></div>
+          <div><span class="arch-dep-type proto">PROTO</span> <strong>WireGuardKit</strong> <span class="arch-dep-ver">SPM v1.0.16-27</span></div>
+          <div><span class="arch-dep-type core">CORE</span> <strong>StoreKit 2</strong> <span class="arch-dep-ver">iOS 15+</span></div>
+          <div><span class="arch-dep-type sec">SEC</span> <strong>CryptoKit</strong> <span class="arch-dep-ver">System</span></div>
+          <div><span class="arch-dep-type core">CORE</span> <strong>Combine</strong> <span class="arch-dep-ver">System</span></div>
+          <div><span class="arch-dep-type infra">INFRA</span> <strong>KeychainAccess</strong> <span class="arch-dep-ver">4.2.2</span></div>
+          <div><span class="arch-dep-type core">CORE</span> <strong>MVVM Architecture</strong> <span class="arch-dep-ver">Custom</span></div>
+        </div>
+      </div>
+      <div class="arch-detail-card"><h4>⚙️ Backend API</h4>
+        <div class="arch-dep-list">
+          <div><span class="arch-dep-type core">CORE</span> <strong>.NET 8.0</strong> <span class="arch-dep-ver">LTS</span></div>
+          <div><span class="arch-dep-type infra">INFRA</span> <strong>PostgreSQL</strong> <span class="arch-dep-ver">15+</span></div>
+          <div><span class="arch-dep-type infra">INFRA</span> <strong>Redis</strong> <span class="arch-dep-ver">7.x</span></div>
+          <div><span class="arch-dep-type sec">SEC</span> <strong>JWT Bearer Auth</strong> <span class="arch-dep-ver">Built-in</span></div>
+          <div><span class="arch-dep-type infra">INFRA</span> <strong>Entity Framework</strong> <span class="arch-dep-ver">8.0</span></div>
+          <div><span class="arch-dep-type infra">INFRA</span> <strong>Nginx</strong> <span class="arch-dep-ver">TLS 1.3</span></div>
+          <div><span class="arch-dep-type sec">SEC</span> <strong>Rate Limiting</strong> <span class="arch-dep-ver">AspNetCoreRateLimit</span></div>
+          <div><span class="arch-dep-type infra">INFRA</span> <strong>Docker</strong> <span class="arch-dep-ver">24.x</span></div>
+        </div>
+      </div>
+      <div class="arch-detail-card"><h4>🖥️ VPN Server</h4>
+        <div class="arch-dep-list">
+          <div><span class="arch-dep-type proto">PROTO</span> <strong>WireGuard</strong> <span class="arch-dep-ver">Kernel Module</span></div>
+          <div><span class="arch-dep-type proto">PROTO</span> <strong>strongSwan</strong> <span class="arch-dep-ver">IKEv2</span></div>
+          <div><span class="arch-dep-type proto">PROTO</span> <strong>OpenVPN</strong> <span class="arch-dep-ver">2.6.x</span></div>
+          <div><span class="arch-dep-type infra">INFRA</span> <strong>FreeRADIUS</strong> <span class="arch-dep-ver">3.2.x</span></div>
+          <div><span class="arch-dep-type sec">SEC</span> <strong>iptables/nftables</strong> <span class="arch-dep-ver">System</span></div>
+          <div><span class="arch-dep-type infra">INFRA</span> <strong>Flask Control API</strong> <span class="arch-dep-ver">Port 5002</span></div>
+          <div><span class="arch-dep-type sec">SEC</span> <strong>Unbound DNS</strong> <span class="arch-dep-ver">Private Resolver</span></div>
+          <div><span class="arch-dep-type infra">INFRA</span> <strong>Ubuntu 22.04</strong> <span class="arch-dep-ver">LTS</span></div>
+        </div>
+      </div>
+      <div class="arch-detail-card"><h4>📱 Android App</h4>
+        <div class="arch-dep-list">
+          <div><span class="arch-dep-type core">CORE</span> <strong>Kotlin</strong> <span class="arch-dep-ver">1.9+</span></div>
+          <div><span class="arch-dep-type core">CORE</span> <strong>Jetpack Compose</strong> <span class="arch-dep-ver">Latest</span></div>
+          <div><span class="arch-dep-type core">CORE</span> <strong>VpnService API</strong> <span class="arch-dep-ver">Android 7+</span></div>
+          <div><span class="arch-dep-type proto">PROTO</span> <strong>WireGuard-Android</strong> <span class="arch-dep-ver">Tunnel Lib</span></div>
+          <div><span class="arch-dep-type core">CORE</span> <strong>Play Billing</strong> <span class="arch-dep-ver">6.x</span></div>
+          <div><span class="arch-dep-type infra">INFRA</span> <strong>Retrofit + OkHttp</strong> <span class="arch-dep-ver">2.9.x</span></div>
+          <div><span class="arch-dep-type infra">INFRA</span> <strong>Room Database</strong> <span class="arch-dep-ver">2.6.x</span></div>
+          <div><span class="arch-dep-type infra">INFRA</span> <strong>Hilt DI</strong> <span class="arch-dep-ver">2.50</span></div>
+        </div>
+      </div>
+      <div class="arch-detail-card"><h4>🔒 Security Stack</h4>
+        <div class="arch-dep-list">
+          <div><span class="arch-dep-type sec">SEC</span> <strong>TLS 1.3</strong> <span class="arch-dep-ver">All API calls</span></div>
+          <div><span class="arch-dep-type sec">SEC</span> <strong>AES-256-GCM</strong> <span class="arch-dep-ver">WireGuard cipher</span></div>
+          <div><span class="arch-dep-type sec">SEC</span> <strong>ChaCha20-Poly1305</strong> <span class="arch-dep-ver">Mobile preferred</span></div>
+          <div><span class="arch-dep-type sec">SEC</span> <strong>Curve25519</strong> <span class="arch-dep-ver">Key exchange</span></div>
+          <div><span class="arch-dep-type sec">SEC</span> <strong>Certificate Pinning</strong> <span class="arch-dep-ver">API endpoints</span></div>
+          <div><span class="arch-dep-type sec">SEC</span> <strong>HSTS + CSP</strong> <span class="arch-dep-ver">Web headers</span></div>
+          <div><span class="arch-dep-type sec">SEC</span> <strong>DNS-over-HTTPS</strong> <span class="arch-dep-ver">Leak prevention</span></div>
+          <div><span class="arch-dep-type sec">SEC</span> <strong>Zero-Knowledge Logs</strong> <span class="arch-dep-ver">No traffic logs</span></div>
+        </div>
+      </div>
+      <div class="arch-detail-card"><h4>📊 Monitoring & DevOps</h4>
+        <div class="arch-dep-list">
+          <div><span class="arch-dep-type infra">INFRA</span> <strong>Prometheus</strong> <span class="arch-dep-ver">2.x</span></div>
+          <div><span class="arch-dep-type infra">INFRA</span> <strong>Grafana</strong> <span class="arch-dep-ver">10.x</span></div>
+          <div><span class="arch-dep-type infra">INFRA</span> <strong>Docker Compose</strong> <span class="arch-dep-ver">Orchestration</span></div>
+          <div><span class="arch-dep-type infra">INFRA</span> <strong>Terraform</strong> <span class="arch-dep-ver">IaC</span></div>
+          <div><span class="arch-dep-type infra">INFRA</span> <strong>Ansible</strong> <span class="arch-dep-ver">Config Mgmt</span></div>
+          <div><span class="arch-dep-type infra">INFRA</span> <strong>GitHub Actions</strong> <span class="arch-dep-ver">CI/CD</span></div>
+          <div><span class="arch-dep-type infra">INFRA</span> <strong>DigitalOcean</strong> <span class="arch-dep-ver">Cloud Provider</span></div>
+          <div><span class="arch-dep-type sec">SEC</span> <strong>Fail2Ban</strong> <span class="arch-dep-ver">SSH protection</span></div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+
   // 2. Production Readiness Scorecard
   html+=`<div class="scan-section">
     <div class="scan-title">🎯 Production Readiness Scorecard</div>
