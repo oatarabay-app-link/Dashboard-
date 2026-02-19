@@ -2147,14 +2147,15 @@ function renderSkills(){
   let html=`<div class="stats-row" style="margin-bottom:16px">
     <div class="stat-card"><div class="label">DEPARTMENT SKILLS</div><div class="value">${skills.length}</div><div class="sub">specialized AI agents</div></div>
     <div class="stat-card"><div class="label">TECH STACK</div><div class="value">${skills.reduce((s,sk)=>s+sk.stack.length,0)}</div><div class="sub">technologies tracked</div></div>
-    <div class="stat-card"><div class="label">ACTIVE</div><div class="value" style="color:var(--green)">${D.departments?D.departments.filter(d=>d.status==='active').length:0}</div><div class="sub">departments working</div></div>
+    <div class="stat-card"><div class="label">ACTIVE</div><div class="value" style="color:var(--green)">${D.departments?Object.values(D.departments).filter(d=>d.status==='active').length:0}</div><div class="sub">departments working</div></div>
     <div class="stat-card"><div class="label">COWORK READY</div><div class="value" style="color:var(--accent)">All</div><div class="sub">paste prompt to activate</div></div>
   </div>`;
 
   html+='<p style="font-size:12px;color:var(--muted);margin-bottom:16px">Each skill is a specialized AI agent. Open a Cowork session and use the skill command to activate. Click any card to expand the full tech stack and activation triggers.</p>';
 
   skills.forEach(sk=>{
-    const dept=D.departments?D.departments.find(d=>d.skill===sk.command||d.name.toLowerCase().includes(sk.dept.toLowerCase())):null;
+    const deptArr=D.departments?Object.values(D.departments):[];
+    const dept=deptArr.find(d=>d.skill===sk.command||d.name.toLowerCase().includes(sk.dept.toLowerCase()))||null;
     const deptStatus=dept?dept.status:'idle';
     const statusCol=deptStatus==='active'?'green':deptStatus==='blocked'?'red':'muted';
     const completion=dept?dept.completion:0;
