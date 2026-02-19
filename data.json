@@ -1,6 +1,6 @@
 {
-  "lastUpdated": "2026-02-19T01:53:34Z",
-  "updatedBy": "[DEVOPS]",
+  "lastUpdated": "2026-02-19T02:53:18Z",
+  "updatedBy": "[BACKEND]",
   "overall": {
     "completion": 30,
     "phase": "Phase 1: iOS Launch",
@@ -5202,7 +5202,9 @@
       "dueBy": "2026-02-21T00:00:00Z",
       "handoffTo": "[iOS]",
       "handoffNote": "Once backend returns 200 for Apple tokens, iOS retests full Apple Sign-In flow",
-      "completedAt": "2026-02-18T23:30:00Z"
+      "completedAt": "2026-02-19T02:53:18Z",
+      "completedBy": "[BACKEND]",
+      "resolution": "Root cause: Apple embeds SHA256(nonce) in identity token, but backend compared raw nonce = always mismatch. Fix: Added ComputeSha256Hash() and compare both raw+hashed. Also made Nonce field optional in DTO (Apple doesnt always include it). Added diagnostic logging. Deployed to production."
     },
     {
       "id": "xd-045",
@@ -5218,7 +5220,9 @@
       "dueBy": "2026-02-22T00:00:00Z",
       "handoffTo": "[QA]",
       "handoffNote": "After crypto alignment, QA validates IKEv2 connect + 60s stability test",
-      "completedAt": "2026-02-18T23:30:00Z"
+      "completedAt": "2026-02-19T02:53:18Z",
+      "completedBy": "[BACKEND]",
+      "resolution": "Root cause: appsettings.json had IkeEncryption=AES256GCM + IkeDiffieHellmanGroup=20 but strongSwan ipsec.conf has aes256-sha384-modp3072 (AES256 non-GCM, DH Group 15). Fix: Updated appsettings.json to match strongSwan: IkeEncryption=AES256, IkeDiffieHellmanGroup=15, ChildDiffieHellmanGroup=15. API now returns correct params. Verified via /ikev2-config endpoint."
     },
     {
       "id": "xd-046",
@@ -5387,6 +5391,36 @@
       "dueBy": "2026-02-20T12:00:00Z",
       "handoffTo": "[QA]",
       "handoffNote": "After Backend fixes, QA will re-validate bandwidth tracking pipeline"
+    },
+    {
+      "id": "xd-050",
+      "from": "[BACKEND]",
+      "to": "[iOS]",
+      "status": "pending",
+      "priority": "P0",
+      "title": "Handoff from [BACKEND]: Apple Sign-In nonce fix deployed \u2014 retest full flow",
+      "description": "Apple Sign-In backend fix deployed. Root cause was SHA256 nonce mismatch \u2014 backend now hashes raw nonce before comparing. Also Nonce field is now optional in DTO. Diagnostic logging added. iOS must retest: (1) Fresh Apple Sign-In with nonce, (2) Apple Sign-In without nonce, (3) Verify 200 response + JWT tokens returned. Files changed: AuthService.cs (ComputeSha256Hash + nonce comparison), AuthDTOs.cs (Nonce optional).",
+      "taskRef": "xd-019",
+      "criteriaIdx": [],
+      "createdAt": "2026-02-19T02:53:18Z",
+      "dueBy": "2026-02-21T23:59:00Z",
+      "handoffTo": "[QA]",
+      "handoffNote": "After iOS confirms Apple Sign-In works, QA validates full auth flow"
+    },
+    {
+      "id": "xd-051",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "status": "pending",
+      "priority": "P1",
+      "title": "Handoff from [BACKEND]: IKEv2 crypto params aligned \u2014 validate connect + 60s stability",
+      "description": "IKEv2 API crypto params now match strongSwan server config: IKE=AES256+SHA384+DH15, Child=AES256GCM+SHA384+DH15. appsettings.json updated on production. QA must validate: (1) GET /servers/{id}/ikev2-config returns correct params, (2) iOS IKEv2 connect succeeds (no more 2s disconnect), (3) 60-second stability test passes. Server: 178.62.101.221.",
+      "taskRef": "ikev2-stable",
+      "criteriaIdx": [],
+      "createdAt": "2026-02-19T02:53:18Z",
+      "dueBy": "2026-02-22T23:59:00Z",
+      "handoffTo": null,
+      "handoffNote": "Final IKEv2 stability certification"
     }
   ],
   "importantNotes": [
