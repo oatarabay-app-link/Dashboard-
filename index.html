@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CasperVPN — CEO Command Center</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1" integrity="sha384-jb8JQMbMoBUzgWatfe6COACi2ljcDdZQ2OxczGA3bGNeWe+6DChMTBJemed7ZnvJ" crossorigin="anonymous"></script>
 <style>
 :root{--bg:#0a0e1a;--card:#111827;--border:#1f2937;--accent:#3b82f6;--green:#10b981;--yellow:#f59e0b;--red:#ef4444;--purple:#8b5cf6;--orange:#f97316;--text:#e5e7eb;--muted:#6b7280;--glow:0 0 20px rgba(59,130,246,0.15)}
 *{margin:0;padding:0;box-sizing:border-box}
@@ -162,6 +163,44 @@ h1{font-size:26px;font-weight:700;margin-bottom:2px}
 /* Phase 1 task highlighting */
 .feature[data-task-phase="1"]{border-left:4px solid var(--accent)}
 .feature[data-task-phase="1"]:hover{border-left-color:var(--yellow)}
+
+/* Analytics Charts */
+.charts-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:24px}
+.chart-box{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px}
+.chart-box h3{font-size:14px;font-weight:600;margin-bottom:12px;color:var(--text)}
+.chart-box canvas{width:100%!important;max-height:300px}
+@media(max-width:900px){.charts-grid{grid-template-columns:1fr}}
+/* System Scan */
+.scan-section{margin-bottom:24px}
+.scan-title{font-size:16px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.arch-diagram{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;overflow-x:auto}
+.arch-flow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:16px}
+.arch-box{background:var(--bg);border:2px solid var(--border);border-radius:8px;padding:10px 16px;text-align:center;min-width:100px;transition:border-color .2s}
+.arch-box:hover{border-color:var(--accent)}
+.arch-box .ab-icon{font-size:20px}
+.arch-box .ab-name{font-size:11px;font-weight:700;margin-top:2px}
+.arch-box .ab-tech{font-size:9px;color:var(--muted)}
+.arch-arrow{color:var(--accent);font-size:18px;font-weight:700}
+.arch-row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin:12px 0}
+.arch-box-sm{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:8px 12px;text-align:center;font-size:10px}
+.arch-box-sm .ab-icon{font-size:16px}
+.readiness-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+.readiness-card{background:var(--card);border:2px solid var(--border);border-radius:10px;padding:16px;text-align:center}
+.readiness-card .rc-pct{font-size:32px;font-weight:800;margin:6px 0}
+.readiness-card .rc-label{font-size:11px;color:var(--muted);text-transform:uppercase}
+.checklist-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:8px}
+.check-item{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 14px;display:flex;align-items:center;gap:10px;font-size:13px}
+.check-icon{font-size:18px;flex-shrink:0}
+.risk-matrix{display:grid;grid-template-columns:80px repeat(3,1fr);gap:2px;margin-top:12px}
+.risk-cell{padding:10px;text-align:center;border-radius:6px;font-size:10px;min-height:60px;display:flex;flex-direction:column;justify-content:center;align-items:center}
+.risk-header{background:transparent;font-weight:700;color:var(--muted);font-size:10px;text-transform:uppercase}
+.risk-low{background:rgba(59,130,246,.15)}
+.risk-med{background:rgba(245,158,11,.15)}
+.risk-high{background:rgba(239,68,68,.15)}
+.risk-item{font-size:9px;color:var(--text);margin:2px 0;padding:2px 4px;background:rgba(0,0,0,.3);border-radius:3px}
+.blocker-card{background:var(--card);border-left:4px solid var(--red);border-radius:0 8px 8px 0;padding:12px 16px;margin-bottom:8px}
+.blocker-card .bc-title{font-weight:600;font-size:13px}
+.blocker-card .bc-detail{font-size:11px;color:var(--muted);margin-top:4px}
 </style>
 </head>
 <body>
@@ -178,6 +217,7 @@ h1{font-size:26px;font-weight:700;margin-bottom:2px}
 
 <div class="tab-row" id="tabRow">
 <div class="tab" onclick="showTab('overview',this)" data-tab="overview">Overview</div>
+<div class="tab" onclick="showTab('analytics',this)" data-tab="analytics">📊 Analytics</div>
 <div class="tab active" onclick="showTab('phase1',this)" data-tab="phase1">Phase 1: iOS</div>
 <div class="tab" onclick="showTab('phase2',this)" data-tab="phase2">Phase 2: Android</div>
 <div class="tab" onclick="showTab('phase3plus',this)" data-tab="phase3plus">Phase 3-6</div>
@@ -187,9 +227,11 @@ h1{font-size:26px;font-weight:700;margin-bottom:2px}
 <div class="tab" onclick="showTab('ai',this)" data-tab="ai">AI Features</div>
 <div class="tab" onclick="showTab('xdept',this)" data-tab="xdept">Cross-Dept</div>
 <div class="tab" onclick="showTab('notes',this)" data-tab="notes">📌 Notes</div>
+<div class="tab" onclick="showTab('systemscan',this)" data-tab="systemscan">🔍 System Scan</div>
 </div>
 
 <div class="panel" id="overview"></div>
+<div class="panel" id="analytics"></div>
 <div class="panel active" id="phase1"></div>
 <div class="panel" id="phase2"></div>
 <div class="panel" id="phase3plus"></div>
@@ -199,6 +241,7 @@ h1{font-size:26px;font-weight:700;margin-bottom:2px}
 <div class="panel" id="ai"></div>
 <div class="panel" id="xdept"></div>
 <div class="panel" id="notes"></div>
+<div class="panel" id="systemscan"></div>
 
 <div class="footer">
 Last updated: <span id="lu">—</span> | By: <span id="ub">—</span> | Departments update <code>data.json</code> on task completion | Auto-refresh: 30s
@@ -1021,6 +1064,236 @@ function renderImportantNotes(){
   document.getElementById('notes').innerHTML='<div class="section"><div class="section-title">📌 Important Notes ('+notes.length+' active)</div>'+html+'</div>';
 }
 
+
+// === ANALYTICS TAB (Chart.js) ===
+let chartInstances={};
+function destroyCharts(){Object.values(chartInstances).forEach(c=>{if(c)c.destroy()});chartInstances={}}
+
+function renderAnalytics(){
+  if(typeof Chart==='undefined'){document.getElementById('analytics').innerHTML='<p style="color:var(--muted);padding:20px">Chart.js loading...</p>';return}
+  destroyCharts();
+  
+  // Calculate data
+  const phaseData=[1,2,3,4,5].map(p=>{
+    const tasks=D.tasks.filter(t=>t.phase===p);
+    return{phase:'Phase '+p,pct:calcPct(tasks),count:tasks.length};
+  });
+  
+  const catData={};
+  D.tasks.forEach(t=>{catData[t.category]=(catData[t.category]||0)+1});
+  
+  const ownerData={};
+  D.tasks.forEach(t=>{
+    if(!ownerData[t.owner])ownerData[t.owner]={done:0,prog:0,notstarted:0};
+    if(t.progress>=100)ownerData[t.owner].done++;
+    else if(t.progress>0)ownerData[t.owner].prog++;
+    else ownerData[t.owner].notstarted++;
+  });
+  
+  const tierData={none:0,self:0,'self-tested':0,'code-review':0,production:0,DevOps:0,verified:0};
+  D.tasks.forEach(t=>{(t.acceptanceCriteria||[]).forEach(a=>{const v=a.verifiedBy||'none';tierData[v]=(tierData[v]||0)+1})});
+  
+  const chartColors={
+    phases:['#3b82f6','#8b5cf6','#ec4899','#f97316','#ef4444'],
+    cats:['#3b82f6','#8b5cf6','#ec4899','#f97316','#ef4444','#10b981','#06b6d4','#f59e0b','#6366f1','#14b8a6']
+  };
+  
+  document.getElementById('analytics').innerHTML=`
+    <div class="section"><div class="section-title">📊 Analytics Dashboard</div>
+    <div class="charts-grid">
+      <div class="chart-box"><h3>Phase Progress (%)</h3><canvas id="chartPhase"></canvas></div>
+      <div class="chart-box"><h3>Tasks by Category</h3><canvas id="chartCategory"></canvas></div>
+      <div class="chart-box"><h3>Workload by Owner</h3><canvas id="chartOwner"></canvas></div>
+      <div class="chart-box"><h3>Verification Pipeline</h3><canvas id="chartVerify"></canvas></div>
+    </div></div>`;
+  
+  const darkGrid={color:'rgba(255,255,255,0.08)'};
+  const darkTick={color:'#9ca3af'};
+  const defaultOpts={responsive:true,maintainAspectRatio:true,plugins:{legend:{labels:{color:'#e5e7eb',font:{size:11}}}}};
+  
+  // Phase Progress
+  chartInstances.phase=new Chart(document.getElementById('chartPhase'),{
+    type:'bar',
+    data:{labels:phaseData.map(d=>d.phase),datasets:[{label:'Progress %',data:phaseData.map(d=>d.pct),backgroundColor:chartColors.phases,borderRadius:4}]},
+    options:{...defaultOpts,indexAxis:'y',scales:{x:{max:100,grid:darkGrid,ticks:darkTick},y:{grid:{display:false},ticks:darkTick}},plugins:{...defaultOpts.plugins,tooltip:{callbacks:{label:ctx=>ctx.raw+'% ('+phaseData[ctx.dataIndex].count+' tasks)'}}}}
+  });
+  
+  // Category Doughnut
+  const catLabels=Object.keys(catData);
+  chartInstances.category=new Chart(document.getElementById('chartCategory'),{
+    type:'doughnut',
+    data:{labels:catLabels,datasets:[{data:Object.values(catData),backgroundColor:chartColors.cats.slice(0,catLabels.length),borderWidth:0}]},
+    options:{...defaultOpts,plugins:{...defaultOpts.plugins,legend:{position:'right',labels:{color:'#e5e7eb',font:{size:10},padding:8}}}}
+  });
+  
+  // Owner Workload
+  const owners=Object.keys(ownerData);
+  chartInstances.owner=new Chart(document.getElementById('chartOwner'),{
+    type:'bar',
+    data:{labels:owners,datasets:[
+      {label:'Completed',data:owners.map(o=>ownerData[o].done),backgroundColor:'#10b981'},
+      {label:'In Progress',data:owners.map(o=>ownerData[o].prog),backgroundColor:'#f59e0b'},
+      {label:'Not Started',data:owners.map(o=>ownerData[o].notstarted),backgroundColor:'#4b5563'}
+    ]},
+    options:{...defaultOpts,indexAxis:'y',scales:{x:{stacked:true,grid:darkGrid,ticks:darkTick},y:{stacked:true,grid:{display:false},ticks:darkTick}}}
+  });
+  
+  // Verification Pipeline
+  const tierLabels=Object.keys(tierData);
+  chartInstances.verify=new Chart(document.getElementById('chartVerify'),{
+    type:'bar',
+    data:{labels:tierLabels,datasets:[{label:'Criteria Count',data:Object.values(tierData),backgroundColor:tierLabels.map(t=>t==='verified'?'#10b981':t==='production'?'#3b82f6':t==='self-tested'?'#f59e0b':t==='self'?'#fbbf24':t==='none'?'#6b7280':'#8b5cf6'),borderRadius:4}]},
+    options:{...defaultOpts,scales:{x:{grid:{display:false},ticks:{...darkTick,maxRotation:45}},y:{grid:darkGrid,ticks:darkTick}}}
+  });
+}
+
+// === SYSTEM SCAN TAB ===
+function renderSystemScan(){
+  // Calculate readiness scores
+  function catPct(category){
+    const tasks=D.tasks.filter(t=>t.category===category);
+    return tasks.length?calcPct(tasks):0;
+  }
+  function taskPct(id){const t=D.tasks.find(t=>t.id===id);return t?t.progress:0}
+  
+  const scores={
+    'VPN Core':catPct('VPN Core'),
+    'Authentication':catPct('Authentication'),
+    'Monetization':catPct('Monetization'),
+    'Legal':catPct('Legal & Compliance'),
+    'Infrastructure':Math.min(100,(D.infrastructure&&D.infrastructure.summary?D.infrastructure.summary.totalServers:1)*20),
+    'Marketing':catPct('Marketing & Growth')
+  };
+  
+  // Pre-production checklist
+  const checks=[
+    {name:'WireGuard Protocol Stable',pass:taskPct('wireguard-stable')>=100},
+    {name:'IKEv2 Protocol Stable',pass:taskPct('ikev2-stable')>=100},
+    {name:'Kill Switch Working',pass:taskPct('kill-switch')>=80},
+    {name:'In-App Purchases Functional',pass:taskPct('iap-storekit')>=80},
+    {name:'Privacy Policy Live',pass:taskPct('privacy-policy')>=80},
+    {name:'Terms of Service Live',pass:taskPct('tos')>=80},
+    {name:'Backend API Rate Limiting',pass:taskPct('rate-limiting')>=80},
+    {name:'Auth Flow Complete',pass:catPct('Authentication')>=80},
+    {name:'Server Redundancy (>1 server)',pass:(D.infrastructure&&D.infrastructure.summary?D.infrastructure.summary.totalServers:1)>1},
+    {name:'App Store Metadata Ready',pass:taskPct('aso-metadata')>=80},
+    {name:'Auto-Reconnect on Network Change',pass:taskPct('auto-reconnect')>=80},
+    {name:'Bandwidth Monitoring',pass:taskPct('bandwidth-monitor')>=80},
+  ];
+  const passCount=checks.filter(c=>c.pass).length;
+  
+  // Blocked tasks
+  const blocked=D.tasks.filter(t=>t.blocked);
+  const p0NotStarted=D.tasks.filter(t=>t.priority==='P0'&&t.progress===0);
+  
+  // Overdue cross-dept
+  const now=new Date();
+  const overdue=(D.crossDeptTasks||[]).filter(t=>t.status!=='completed'&&t.dueBy&&new Date(t.dueBy)<now);
+  
+  let html='';
+  
+  // 1. Architecture Diagram
+  html+=`<div class="scan-section">
+    <div class="scan-title">🏗️ Infrastructure Architecture</div>
+    <div class="arch-diagram">
+      <div style="text-align:center;font-size:12px;color:var(--muted);margin-bottom:16px">CasperVPN System Architecture — End-to-End Data Flow</div>
+      <div class="arch-flow">
+        <div class="arch-box" style="border-color:var(--accent)"><div class="ab-icon">📱</div><div class="ab-name">Client App</div><div class="ab-tech">iOS (SwiftUI) / Android (Kotlin)</div></div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-box" style="border-color:var(--green)"><div class="ab-icon">🔐</div><div class="ab-name">Auth Layer</div><div class="ab-tech">JWT + Refresh Token</div></div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-box" style="border-color:var(--purple)"><div class="ab-icon">⚙️</div><div class="ab-name">API Server</div><div class="ab-tech">.NET 8.0 Backend</div></div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-box" style="border-color:var(--yellow)"><div class="ab-icon">🔀</div><div class="ab-name">Protocol Select</div><div class="ab-tech">WireGuard / IKEv2 / OpenVPN</div></div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-box" style="border-color:var(--orange)"><div class="ab-icon">🖥️</div><div class="ab-name">VPN Server</div><div class="ab-tech">178.62.101.221 (NL)</div></div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-box" style="border-color:var(--green)"><div class="ab-icon">🌐</div><div class="ab-name">Internet</div><div class="ab-tech">Encrypted Tunnel</div></div>
+      </div>
+      <div style="text-align:center;font-size:11px;color:var(--muted);margin:12px 0">Supporting Infrastructure</div>
+      <div class="arch-row">
+        <div class="arch-box-sm" style="border-color:var(--accent)"><div class="ab-icon">🐘</div><div class="ab-name">PostgreSQL</div><div class="ab-tech">Users, Sessions, Servers</div></div>
+        <div class="arch-box-sm" style="border-color:var(--red)"><div class="ab-icon">⚡</div><div class="ab-name">Redis</div><div class="ab-tech">Cache, Rate Limiting</div></div>
+        <div class="arch-box-sm" style="border-color:var(--green)"><div class="ab-icon">🔒</div><div class="ab-name">Nginx</div><div class="ab-tech">TLS 1.3 Reverse Proxy</div></div>
+        <div class="arch-box-sm" style="border-color:var(--yellow)"><div class="ab-icon">📡</div><div class="ab-name">FreeRADIUS</div><div class="ab-tech">Port 1812</div></div>
+        <div class="arch-box-sm" style="border-color:var(--purple)"><div class="ab-icon">💳</div><div class="ab-name">StoreKit / Play Billing</div><div class="ab-tech">Receipt Validation</div></div>
+        <div class="arch-box-sm" style="border-color:var(--orange)"><div class="ab-icon">📊</div><div class="ab-name">Prometheus + Grafana</div><div class="ab-tech">Monitoring</div></div>
+      </div>
+    </div>
+  </div>`;
+  
+  // 2. Production Readiness Scorecard
+  html+=`<div class="scan-section">
+    <div class="scan-title">🎯 Production Readiness Scorecard</div>
+    <div class="readiness-grid">
+      ${Object.entries(scores).map(([k,v])=>`<div class="readiness-card" style="border-color:var(--${pc(v)})">
+        <div class="rc-label">${k}</div>
+        <div class="rc-pct" style="color:var(--${pc(v)})">${v}%</div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${v}%;${grad(v)}"></div></div>
+      </div>`).join('')}
+    </div>
+  </div>`;
+  
+  // 3. Pre-Production Checklist
+  html+=`<div class="scan-section">
+    <div class="scan-title">✅ Pre-Production Checklist <span style="font-size:13px;color:var(--${passCount>=10?'green':passCount>=6?'yellow':'red'})">(${passCount}/${checks.length} passed)</span></div>
+    <div class="checklist-grid">
+      ${checks.map(c=>`<div class="check-item" style="border-color:var(--${c.pass?'green':'red'})">
+        <span class="check-icon">${c.pass?'✅':'❌'}</span>
+        <span>${c.name}</span>
+      </div>`).join('')}
+    </div>
+  </div>`;
+  
+  // 4. Critical Blockers & Bottlenecks
+  html+=`<div class="scan-section">
+    <div class="scan-title">🚨 Critical Blockers & Bottlenecks</div>`;
+  if(blocked.length){
+    blocked.forEach(t=>{
+      html+=`<div class="blocker-card"><div class="bc-title">⛔ ${t.name} <span class="tag tag-${t.priority.toLowerCase()}">${t.priority}</span></div><div class="bc-detail">${t.blocker||t.status}</div></div>`;
+    });
+  }
+  if(p0NotStarted.length){
+    html+=`<div style="margin-top:12px;padding:12px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:8px"><strong style="color:var(--yellow)">⚠️ P0 Tasks at 0%:</strong><div style="margin-top:6px;font-size:12px;color:var(--muted)">${p0NotStarted.map(t=>'• '+t.name).join('<br>')}</div></div>`;
+  }
+  if(overdue.length){
+    html+=`<div style="margin-top:12px;padding:12px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:8px"><strong style="color:var(--red)">⏰ Overdue Cross-Dept Tasks (${overdue.length}):</strong><div style="margin-top:6px;font-size:12px;color:var(--muted)">${overdue.map(t=>'• '+t.title+' ('+t.from+'→'+t.to+')').join('<br>')}</div></div>`;
+  }
+  const srvCount=D.infrastructure&&D.infrastructure.summary?D.infrastructure.summary.totalServers:1;
+  if(srvCount<=1){
+    html+=`<div style="margin-top:12px;padding:12px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);border-radius:8px"><strong style="color:var(--red)">🔴 SINGLE POINT OF FAILURE:</strong> <span style="font-size:12px;color:var(--muted)">Only ${srvCount} server. If it goes down, all users lose VPN. Need minimum 2 servers before production launch.</span></div>`;
+  }
+  if(!blocked.length&&!p0NotStarted.length&&!overdue.length&&srvCount>1){
+    html+=`<div style="padding:20px;text-align:center;color:var(--green);font-size:14px">✅ No critical blockers detected</div>`;
+  }
+  html+=`</div>`;
+  
+  // 5. Risk Assessment Matrix
+  html+=`<div class="scan-section">
+    <div class="scan-title">🎲 Risk Assessment Matrix</div>
+    <div class="risk-matrix">
+      <div class="risk-cell risk-header"></div>
+      <div class="risk-cell risk-header">Low Impact</div>
+      <div class="risk-cell risk-header">Med Impact</div>
+      <div class="risk-cell risk-header">High Impact</div>
+      <div class="risk-cell risk-header">High<br>Likelihood</div>
+      <div class="risk-cell risk-med"></div>
+      <div class="risk-cell risk-high"><div class="risk-item">OpenVPN delay</div></div>
+      <div class="risk-cell risk-high"><div class="risk-item">Single server failure</div><div class="risk-item">StoreKit 0 products</div></div>
+      <div class="risk-cell risk-header">Med<br>Likelihood</div>
+      <div class="risk-cell risk-low"><div class="risk-item">UI polish gaps</div></div>
+      <div class="risk-cell risk-med"><div class="risk-item">Server scaling</div><div class="risk-item">Auto-reconnect bugs</div></div>
+      <div class="risk-cell risk-high"><div class="risk-item">App Store rejection</div></div>
+      <div class="risk-cell risk-header">Low<br>Likelihood</div>
+      <div class="risk-cell risk-low"></div>
+      <div class="risk-cell risk-low"><div class="risk-item">Legal counsel delay</div></div>
+      <div class="risk-cell risk-med"><div class="risk-item">Auth token exploit</div></div>
+    </div>
+  </div>`;
+  
+  document.getElementById('systemscan').innerHTML=html;
+}
+
 function render(){
   if(!D)return;
   // CRITICAL: recalculate ALL progress from criteria on every render
@@ -1046,6 +1319,8 @@ function render(){
   renderAI();
   renderXDept();
   renderImportantNotes();
+  renderAnalytics();
+  renderSystemScan();
   updateTabPcts();
 }
 
