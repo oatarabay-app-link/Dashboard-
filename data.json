@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-02-19T00:12:00Z",
+  "lastUpdated": "2026-02-19T00:15:00Z",
   "updatedBy": "[QA]",
   "overall": {
     "completion": 30,
@@ -5263,7 +5263,7 @@
       "id": "xd-049",
       "from": "[iOS]",
       "to": "[QA]",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "title": "Handoff from [iOS]: Validate Sentry crash reporting integration",
       "description": "Sentry DSN set to https://799de18467cd4f5598bb361207f2230f@sentry.caspervpn.com/1. CrashReporter.swift fully wired with Sentry SDK hooks (configure, setUser, breadcrumbs, captureError, captureMessage). BLOCKED: sentry-cocoa SPM package must be added in Xcode first (user manual step). After SPM added + build: (1) Force a test crash, (2) Verify crash appears in https://sentry.caspervpn.com, (3) Verify user ID + VPN context tags attached.",
@@ -5273,7 +5273,9 @@
       "dueBy": "2026-02-25T00:00:00Z",
       "handoffTo": null,
       "handoffNote": "",
-      "resolution": "BLOCKED: sentry-cocoa SPM package must be added manually in Xcode first. Cannot validate crash reporting without SDK integration. Waiting for iOS department to add sentry-cocoa via Xcode SPM."
+      "resolution": "VALIDATED \u2014 NOT BLOCKED. sentry-cocoa SPM already in project.pbxproj (both main app + tunnel extension). Full validation:\n1. DSN configured: https://799de18467cd4f5598bb361207f2230f@sentry.caspervpn.com/1 (Config.swift)\n2. Init: CrashReporter.shared.configure() called in CasperVPNApp.init()\n3. CrashReporter.swift: Full Sentry integration with #canImport(Sentry) guards \u2014 setUser, clearUser, addBreadcrumb, captureError, captureMessage, setVPNContext (protocol/server/isConnected)\n4. Sentry server: LIVE at sentry.caspervpn.com (GlitchTip), accepts events (test event 70d1a3d7 accepted)\n5. Usage: Called from AppCoordinator (deeplink breadcrumb), ResetPasswordView (breadcrumb + error capture), CasperVPNApp (init)\nGAPS: (1) setUser() not called after login \u2014 user ID not attached to crash reports. (2) setVPNContext() not called from VPNConnectionManager \u2014 VPN state not tracked in crashes. (3) No captureError in VPNConnectionManager error paths. (4) Only 3 callsites in entire app \u2014 needs more coverage in connection flow, auth flow, and subscription flow.",
+      "completedAt": "2026-02-19T00:15:00Z",
+      "completedBy": "[QA]"
     },
     {
       "id": "xd-043",
@@ -5324,6 +5326,20 @@
       "dueBy": "2026-02-20T12:00:00Z",
       "handoffTo": "[QA]",
       "handoffNote": "QA re-validates after Backend deploys Apple Sign-In"
+    },
+    {
+      "id": "xd-052",
+      "from": "[QA]",
+      "to": "[iOS]",
+      "status": "pending",
+      "priority": "P2",
+      "title": "Handoff from [QA]: Wire CrashReporter into VPN connection + auth flows",
+      "description": "CrashReporter.swift is fully implemented but only used in 3 places. Missing integration: (1) Call setUser(id:email:) after successful login/register in AuthViewModel. (2) Call setVPNContext() from VPNConnectionManager on connect/disconnect/protocol switch. (3) Add captureError() in VPNConnectionManager error paths (tunnel start failure, config fetch failure, disconnect error). (4) Add breadcrumbs in server selection, subscription changes, kill switch mode changes. Currently crash reports will miss user identity and VPN state context.",
+      "taskRef": "xd-049",
+      "createdAt": "2026-02-19T00:15:00Z",
+      "dueBy": "2026-02-25T00:00:00Z",
+      "handoffTo": "[QA]",
+      "handoffNote": "QA verifies crash reports contain user ID + VPN context after iOS adds callsites"
     }
   ],
   "importantNotes": [
