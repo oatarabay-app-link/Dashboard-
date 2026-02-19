@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-02-19T02:53:18Z",
+  "lastUpdated": "2026-02-19T03:09:35Z",
   "updatedBy": "[BACKEND]",
   "overall": {
     "completion": 30,
@@ -5333,7 +5333,7 @@
       "id": "xd-051",
       "from": "[QA]",
       "to": "[BACKEND]",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "title": "Handoff from [QA]: Apple Sign-In endpoint returns 404 \u2014 not deployed",
       "description": "POST /api/auth/apple-signin returns 404. Backend marked xd-050 as resolved but endpoint is not live. QA validated IKEv2 config works (200 with full crypto params). Apple Sign-In needs deployment. Also: 3 remaining backend issues: (1) profile_null_values returns 200 not 400, (2) access_after_delete returns 200 not 401, (3) admin endpoint returns 404 not 403, (4) forgot-password still no rate limiting after 10 requests.",
@@ -5341,7 +5341,10 @@
       "createdAt": "2026-02-19T00:12:00Z",
       "dueBy": "2026-02-20T12:00:00Z",
       "handoffTo": "[QA]",
-      "handoffNote": "QA re-validates after Backend deploys Apple Sign-In"
+      "handoffNote": "QA re-validates after Backend deploys Apple Sign-In",
+      "completedAt": "2026-02-19T03:09:35Z",
+      "completedBy": "[BACKEND]",
+      "resolution": "Fixed: (1) Added /apple-signin alias route \u2014 endpoint was live at /apple, QA hit /apple-signin. (2) Rate limiting bug \u2014 middleware called GetRateLimitInfoAsync (read-only) instead of IsAllowedAsync (increments counter). Fixed to call both. (3) Profile null values \u2192 400 when all fields empty. (4) Access after delete \u2192 JWT blacklisted on account deletion. (5) Admin 403 \u2192 Added JwtBearerEvents OnForbidden handler. All deployed."
     },
     {
       "id": "xd-052",
@@ -5382,7 +5385,7 @@
       "id": "xd-054",
       "from": "[QA]",
       "to": "[BACKEND]",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "title": "Fix protocol param ignored + bandwidth not tracking on connect/disconnect",
       "description": "Two bugs found during RADIUS validation:\n\nBUG #1: POST /api/servers/{id}/connect with {\"protocol\":\"IKEv2\"} returns protocol='WireGuard'. The protocol field is hardcoded or ignored. Must pass through the client-specified protocol.\n\nBUG #2: POST /api/servers/{id}/disconnect with {\"bytesTransferred\":1048576} is completely ignored. Response shows bytesUploaded=0, bytesDownloaded=0, and /api/bandwidth/usage stays at 0B. The disconnect endpoint must accept and record bytesUploaded/bytesDownloaded params, or the RADIUS daemon must be the source of truth for bandwidth data.\n\nReproduction:\ncurl -X POST api.caspervpn.com/api/servers/5ad01fa7.../connect -d '{\"protocol\":\"IKEv2\"}' \u2192 returns protocol=WireGuard\ncurl -X POST api.caspervpn.com/api/servers/5ad01fa7.../disconnect -d '{\"bytesTransferred\":1048576}' \u2192 bytes stay 0",
@@ -5390,7 +5393,10 @@
       "createdAt": "2026-02-19T00:40:56Z",
       "dueBy": "2026-02-20T12:00:00Z",
       "handoffTo": "[QA]",
-      "handoffNote": "After Backend fixes, QA will re-validate bandwidth tracking pipeline"
+      "handoffNote": "After Backend fixes, QA will re-validate bandwidth tracking pipeline",
+      "completedAt": "2026-02-19T03:09:35Z",
+      "completedBy": "[BACKEND]",
+      "resolution": "Fixed: (1) ConnectRequest.Protocol alias added via JsonPropertyName \u2014 maps \"protocol\" to PreferredProtocol. (2) DisconnectRequest.BytesTransferred alias added \u2014 maps to BytesDownloaded when BytesUploaded/BytesDownloaded are both 0. Both deployed."
     },
     {
       "id": "xd-050",
@@ -5408,7 +5414,7 @@
       "handoffNote": "After iOS confirms Apple Sign-In works, QA validates full auth flow"
     },
     {
-      "id": "xd-051",
+      "id": "xd-052",
       "from": "[BACKEND]",
       "to": "[QA]",
       "status": "pending",
@@ -5421,6 +5427,21 @@
       "dueBy": "2026-02-22T23:59:00Z",
       "handoffTo": null,
       "handoffNote": "Final IKEv2 stability certification"
+    },
+    {
+      "id": "xd-055",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "status": "pending",
+      "priority": "P0",
+      "title": "Handoff from [BACKEND]: xd-051/054 fixes deployed \u2014 re-run all failing tests",
+      "description": "All issues from xd-051 and xd-054 fixed and deployed. Verify: (1) POST /api/auth/apple-signin returns 401 not 404, (2) forgot-password rate-limited to 3/hour (check X-RateLimit headers), (3) PUT /users/me with all-null fields returns 400, (4) After DELETE /users/me subsequent requests return 401, (5) GET /api/subscriptions as non-admin returns 403 (not 404), (6) POST /servers/{id}/connect with {\"protocol\":\"IKEv2\"} returns protocol=IKEv2, (7) POST /servers/{id}/disconnect with {\"bytesTransferred\":N} records bandwidth.",
+      "taskRef": "backend-api",
+      "criteriaIdx": [],
+      "createdAt": "2026-02-19T03:09:35Z",
+      "dueBy": "2026-02-20T23:59:00Z",
+      "handoffTo": null,
+      "handoffNote": "Final QA pass before iOS App Store submission"
     }
   ],
   "importantNotes": [
