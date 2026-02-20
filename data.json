@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-02-20T15:10:09Z",
+  "lastUpdated": "2026-02-20T15:24:45Z",
   "updatedBy": "[DEVOPS]",
   "overall": {
     "completion": 30,
@@ -1611,11 +1611,11 @@
       "id": "radius-finalize",
       "name": "FreeRADIUS \u2014 Finalize & Test",
       "weight": 1.28,
-      "progress": 71,
+      "progress": 86,
       "phase": 1,
       "priority": "P1",
       "owner": "DevOps",
-      "status": "RADIUS AAA chain WORKING. WG RADIUS accounting daemon deployed and verified (154 peers, 60s polling, auto-restart). strongSwan eap-radius \u2192 FreeRADIUS \u2192 REST \u2192 backend. Auth+Accounting both verified. Needs: E2E iOS test, QA validation.",
+      "status": "RADIUS AAA chain FULLY WIRED. FreeRADIUS\u2192PostgreSQL per-user auth (xd-061). WG accounting daemon\u2192BandwidthUsageLogs pipeline fixed (xd-069). Daemon wired to Backend lookup endpoint (xd-071). strongSwan eap-radius working. Needs: QA E2E validation, iOS device test.",
       "blocked": false,
       "blocker": "",
       "deps": [
@@ -5831,6 +5831,24 @@
       "completedAt": "2026-02-20T15:10:09Z",
       "completedBy": "[DEVOPS]",
       "resolution": "WG accounting daemon configured for new lookup endpoint. Fixed radiusUsername field mapping (was \"username\"). Cleared stale peer cache. Verified: GET /api/radius/wireguard/lookup returns radiusUsername correctly. Full pipeline: WireGuardKeys INSERT \u2192 lookup endpoint \u2192 daemon resolution \u2192 BandwidthUsageLogs. 3-tier resolution: (1) API lookup, (2) DB via ConnectionLogs IP, (3) direct DB write fallback."
+    },
+    {
+      "id": "xd-072",
+      "from": "[DEVOPS]",
+      "to": "[QA]",
+      "status": "pending",
+      "priority": "P1",
+      "title": "Validate full RADIUS accounting pipeline \u2014 FreeRADIUS\u2192PostgreSQL + WG daemon\u2192BandwidthUsageLogs",
+      "description": "DevOps completed 3 tasks this session:\n1. xd-061: FreeRADIUS wired to PostgreSQL (PAP + MSCHAPv2 auth verified)\n2. xd-069: WG accounting daemon patched \u2014 resolves peers via DB, writes BandwidthUsageLogs directly\n3. xd-071: Daemon wired to Backend lookup endpoint (field name fix)\n\nQA needs to validate:\n- radtest with valid/invalid users \u2192 Accept/Reject\n- WG daemon resolves real peers to correct RadiusUsername\n- BandwidthUsageLogs table receives new rows on active WG connections\n- IKEv2 connection via strongSwan uses per-user RADIUS creds (not static password)\n\nFiles changed on server 178.62.101.221:\n- /etc/freeradius/3.0/mods-available/sql\n- /etc/freeradius/3.0/mods-config/sql/main/postgresql/queries.conf\n- /etc/freeradius/3.0/sites-enabled/default\n- /etc/freeradius/3.0/sites-enabled/inner-tunnel\n- /etc/ipsec.conf (rightauth=eap-radius)\n- /opt/caspervpn/wg-radius-accounting.py",
+      "taskRef": "radius-finalize",
+      "criteriaIdx": [
+        5,
+        6
+      ],
+      "createdAt": "2026-02-20T15:24:45Z",
+      "dueBy": "2026-02-21T12:00:00Z",
+      "handoffTo": null,
+      "handoffNote": "Final validation before CEO marks radius-finalize as verified"
     }
   ],
   "importantNotes": [
