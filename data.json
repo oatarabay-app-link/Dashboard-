@@ -1,6 +1,6 @@
 {
-  "lastUpdated": "2026-02-20T00:53:48Z",
-  "updatedBy": "[iOS]",
+  "lastUpdated": "2026-02-20T01:02:08Z",
+  "updatedBy": "[BACKEND]",
   "overall": {
     "completion": 30,
     "phase": "Phase 1: iOS Launch",
@@ -5570,7 +5570,7 @@
       "id": "xd-059",
       "from": "[iOS]",
       "to": "[BACKEND]",
-      "status": "pending",
+      "status": "completed",
       "priority": "P0",
       "title": "Implement GET /api/user endpoint (returns authenticated user profile)",
       "description": "GET /api/user returns 404. iOS ProfileViewModel.loadUserData() calls AuthService.getCurrentUser() which hits this endpoint. Without it, profile shows no username, email, subscription, or member-since date. The endpoint should return the authenticated user's profile based on the JWT Bearer token. Expected response format: {success: true, data: {id, email, firstName, lastName, subscription: {plan, status, expiresAt}, createdAt, updatedAt}}. The User model and UserResponse struct already exist in iOS (Core/Models/User.swift). The login endpoint already returns this exact user structure inside LoginData \u2014 the /api/user endpoint just needs to return the same User object for the currently authenticated user.",
@@ -5582,13 +5582,16 @@
       "createdAt": "2026-02-20T00:53:48Z",
       "dueBy": "2026-02-22T00:00:00Z",
       "handoffTo": "[iOS]",
-      "handoffNote": "Once endpoint works, iOS profile will auto-populate. No iOS code changes needed \u2014 already wired up."
+      "handoffNote": "Once endpoint works, iOS profile will auto-populate. No iOS code changes needed \u2014 already wired up.",
+      "completedAt": "2026-02-20T01:02:08Z",
+      "completedBy": "[BACKEND]",
+      "resolution": "Created UserController.cs with GET /api/user route. Delegates to UserService.GetUserByIdAsync() which includes .Include(Subscription). Returns full user profile with subscription data."
     },
     {
       "id": "xd-060",
       "from": "[iOS]",
       "to": "[BACKEND]",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "title": "Per-user subscription data in /api/user response (not device-local StoreKit)",
       "description": "Currently when /api/user returns 404, iOS falls back to StoreKit local state (ProfileViewModel line 88). StoreKit is device-scoped, not account-scoped \u2014 so different user accounts on the same device see the same subscription. The /api/user endpoint must return the user's actual subscription from the database (plan, status, expiresAt, maxDevices, dataLimit). This ensures signing in with Apple ID vs test account shows their respective subscription tiers, not the device's App Store purchase history.",
@@ -5599,7 +5602,10 @@
       "createdAt": "2026-02-20T00:53:48Z",
       "dueBy": "2026-02-22T00:00:00Z",
       "handoffTo": "[iOS]",
-      "handoffNote": "iOS already parses user.subscription from the response. Just needs backend to populate it."
+      "handoffNote": "iOS already parses user.subscription from the response. Just needs backend to populate it.",
+      "completedAt": "2026-02-20T01:02:08Z",
+      "completedBy": "[BACKEND]",
+      "resolution": "Solved together with xd-059. GetUserByIdAsync already populates SubscriptionDto (plan, status, expiresAt, billingInterval, price). Per-user from DB, not device-local StoreKit."
     },
     {
       "id": "xd-061",
@@ -5625,13 +5631,34 @@
       "status": "pending",
       "priority": "P1",
       "title": "Auto-register device on VPN connect (POST /user/devices)",
-      "description": "The /user/devices endpoint exists and works (xd-053 completed), but no code calls it to register the current device when VPN connects. On successful VPN connection, iOS should POST to /user/devices with: deviceName (UIDevice.current.name), platform ('iOS'), deviceModel (UIDevice.current.model), osVersion (UIDevice.current.systemVersion), isCurrentDevice: true. This populates the Devices card in ProfileView. Best place: VPNConnectionManager.handleStatusChange(.connected) — after setting connectionState, fire a background API call to register/update the device.",
+      "description": "The /user/devices endpoint exists and works (xd-053 completed), but no code calls it to register the current device when VPN connects. On successful VPN connection, iOS should POST to /user/devices with: deviceName (UIDevice.current.name), platform ('iOS'), deviceModel (UIDevice.current.model), osVersion (UIDevice.current.systemVersion), isCurrentDevice: true. This populates the Devices card in ProfileView. Best place: VPNConnectionManager.handleStatusChange(.connected) \u2014 after setting connectionState, fire a background API call to register/update the device.",
       "taskRef": "user-profile",
-      "criteriaIdx": [3],
+      "criteriaIdx": [
+        3
+      ],
       "createdAt": "2026-02-20T01:00:00Z",
       "dueBy": "2026-02-23T00:00:00Z",
       "handoffTo": null,
       "handoffNote": null
+    },
+    {
+      "id": "xd-061",
+      "from": "[BACKEND]",
+      "to": "[iOS]",
+      "status": "pending",
+      "priority": "P0",
+      "title": "Handoff from [BACKEND]: GET /api/user endpoint live \u2014 test ProfileViewModel",
+      "description": "GET /api/user now returns 200 with full user profile + subscription data from DB. Response matches iOS User model (id, email, firstName, lastName, subscription.plan, subscription.status, subscription.expiresAt, createdAt). No iOS code changes needed \u2014 ProfileViewModel.loadUserData() should auto-populate. Verify: profile shows username, email, subscription tier, member-since date. Also verify different accounts show their own subscription (not device-scoped StoreKit).",
+      "taskRef": "user-profile",
+      "criteriaIdx": [
+        0,
+        1,
+        2
+      ],
+      "createdAt": "2026-02-20T01:02:08Z",
+      "dueBy": "2026-02-22T00:00:00Z",
+      "handoffTo": null,
+      "handoffNote": "Test in Xcode \u2014 profile should fully populate now"
     }
   ],
   "importantNotes": [
