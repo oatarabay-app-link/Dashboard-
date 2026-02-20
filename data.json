@@ -1,6 +1,6 @@
 {
-  "lastUpdated": "2026-02-20T01:02:08Z",
-  "updatedBy": "[BACKEND]",
+  "lastUpdated": "2026-02-20T01:30:40Z",
+  "updatedBy": "[DEVOPS]",
   "overall": {
     "completion": 30,
     "phase": "Phase 1: iOS Launch",
@@ -4081,8 +4081,8 @@
       "lead": "Unassigned",
       "currentTask": "All 4 cross-dept tasks resolved. CI/CD 7/7 critical jobs green. xd-038 awaiting CEO action.",
       "blockers": 0,
-      "completion": 50,
-      "progress": 90
+      "completion": 55,
+      "progress": 95
     },
     "android": {
       "name": "Android",
@@ -5611,7 +5611,7 @@
       "id": "xd-061",
       "from": "[iOS]",
       "to": "[DEVOPS]",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "title": "Wire FreeRADIUS to PostgreSQL for per-user IKEv2 authentication",
       "description": "Currently IKEv2 uses a static password (CasperVPN2026!) in ipsec.secrets with eap-mschapv2. This is a temporary workaround. For production, FreeRADIUS needs to query the PostgreSQL users table so each user authenticates with their own credentials. Steps: 1) Enable sql module in FreeRADIUS, 2) Configure rlm_sql_postgresql to connect to the backend DB, 3) Switch ipsec.conf back to rightauth=eap-radius, 4) Ensure shared secret matches between strongSwan and FreeRADIUS clients.conf. Server: 178.62.101.221, FreeRADIUS port 1812, current shared secret: CasperVPN-Radius-Secret-2026.",
@@ -5622,7 +5622,10 @@
       "createdAt": "2026-02-20T00:53:48Z",
       "dueBy": "2026-02-28T00:00:00Z",
       "handoffTo": "[iOS]",
-      "handoffNote": "Once RADIUS\u2192PostgreSQL works, iOS switches from Config.IKEv2.defaultEAPPassword to API-returned per-user password in VPNConnectionManager.swift."
+      "handoffNote": "Once RADIUS\u2192PostgreSQL works, iOS switches from Config.IKEv2.defaultEAPPassword to API-returned per-user password in VPNConnectionManager.swift.",
+      "completedAt": "2026-02-20T01:30:40Z",
+      "completedBy": "[DEVOPS]",
+      "resolution": "FreeRADIUS wired to PostgreSQL via rlm_sql_postgresql. Custom authorize_check_query maps Users table (RadiusUsername/RadiusPassword -> Cleartext-Password). strongSwan switched from eap-mschapv2 to eap-radius. All 5 E2E tests pass. 84/89 users have RADIUS credentials."
     },
     {
       "id": "xd-062",
@@ -5661,6 +5664,40 @@
       "dueBy": "2026-02-22T00:00:00Z",
       "handoffTo": null,
       "handoffNote": "Test in Xcode \u2014 profile should fully populate now"
+    },
+    {
+      "id": "xd-063",
+      "from": "[DEVOPS]",
+      "to": "[iOS]",
+      "status": "pending",
+      "priority": "P0",
+      "title": "Handoff: IKEv2 per-user auth via RADIUS\u2192PostgreSQL is LIVE",
+      "description": "IKEv2 authenticates per-user via FreeRADIUS\u2192PostgreSQL. Static password removed. iOS must: 1) Use RadiusUsername/RadiusPassword for EAP creds. 2) Get from /servers/{id}/ikev2-config. 3) Set protocolConfiguration.username = radiusUsername. Test: claude-dev_7f0f223c / kcem_TxEAlfZaBqnjLZjBQ on 178.62.101.221.",
+      "taskRef": "ikev2-stable",
+      "criteriaIdx": [
+        2
+      ],
+      "createdAt": "2026-02-20T01:30:40Z",
+      "dueBy": "2026-02-25T00:00:00Z",
+      "handoffTo": "[BACKEND]",
+      "handoffNote": "Backend must ensure ikev2-config returns RadiusUsername/RadiusPassword"
+    },
+    {
+      "id": "xd-064",
+      "from": "[DEVOPS]",
+      "to": "[BACKEND]",
+      "status": "pending",
+      "priority": "P0",
+      "title": "Ensure GET /servers/{id}/ikev2-config returns RadiusUsername/RadiusPassword",
+      "description": "FreeRADIUS authenticates IKEv2 via Users table. Endpoint must include RadiusUsername/RadiusPassword. Auto-generate on first request if NULL. Also ensure registration populates these fields.",
+      "taskRef": "ikev2-stable",
+      "criteriaIdx": [
+        2
+      ],
+      "createdAt": "2026-02-20T01:30:40Z",
+      "dueBy": "2026-02-23T00:00:00Z",
+      "handoffTo": "[iOS]",
+      "handoffNote": "Once endpoint returns RADIUS creds, iOS wires into VPNConnectionManager"
     }
   ],
   "importantNotes": [
@@ -5731,6 +5768,12 @@
       "addedBy": "[DEVOPS]",
       "addedAt": "2026-02-19T01:22:20Z",
       "priority": "P1"
+    },
+    {
+      "id": "note-radius-live",
+      "from": "[DEVOPS]",
+      "date": "2026-02-20T01:30:40Z",
+      "text": "IKEv2 per-user auth LIVE on 178.62.101.221. Static password removed. iOS/Backend must update to use RadiusUsername/RadiusPassword."
     }
   ]
 }
