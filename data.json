@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-02-20T02:06:24Z",
+  "lastUpdated": "2026-02-20T02:28:00Z",
   "updatedBy": "[iOS]",
   "overall": {
     "completion": 30,
@@ -5652,7 +5652,7 @@
       "id": "xd-061",
       "from": "[BACKEND]",
       "to": "[iOS]",
-      "status": "pending",
+      "status": "completed",
       "priority": "P0",
       "title": "Handoff from [BACKEND]: GET /api/user endpoint live \u2014 test ProfileViewModel",
       "description": "GET /api/user now returns 200 with full user profile + subscription data from DB. Response matches iOS User model (id, email, firstName, lastName, subscription.plan, subscription.status, subscription.expiresAt, createdAt). No iOS code changes needed \u2014 ProfileViewModel.loadUserData() should auto-populate. Verify: profile shows username, email, subscription tier, member-since date. Also verify different accounts show their own subscription (not device-scoped StoreKit).",
@@ -5665,7 +5665,10 @@
       "createdAt": "2026-02-20T01:02:08Z",
       "dueBy": "2026-02-22T00:00:00Z",
       "handoffTo": null,
-      "handoffNote": "Test in Xcode \u2014 profile should fully populate now"
+      "handoffNote": "Test in Xcode \u2014 profile should fully populate now",
+      "completedAt": "2026-02-20T02:26:00Z",
+      "completedBy": "[iOS]",
+      "resolution": "ProfileViewModel now reads user profile + bandwidth from GET /api/user. User.swift parses dataUsedBytes/dataLimitBytes. max(API, local) logic for bandwidth display."
     },
     {
       "id": "xd-063",
@@ -5724,6 +5727,36 @@
       "handoffNote": "Username/password fields in Ikev2ConfigResponse \u2014 map to NEVPNProtocolIKEv2",
       "completedAt": "2026-02-20T01:58:15Z",
       "completedBy": "[iOS]"
+    },
+    {
+      "id": "xd-066",
+      "from": "[iOS]",
+      "to": "[BACKEND]",
+      "status": "pending",
+      "priority": "P1",
+      "title": "Investigate subscription mismatch: API returns Free but CEO expects Unlimited",
+      "description": "GET /api/user returns planType: \"Free\" and GET /api/bandwidth/usage returns planName: \"Free\", isUnlimited: false, formattedLimit: \"2 GB\". CEO account (claude-dev@caspervpn.com) should have Unlimited plan. Either: (a) DB subscription record needs updating, or (b) Stripe webhook never fired to upgrade. iOS now correctly displays whatever API returns \u2014 this is a data/backend issue. Check Subscriptions table in PostgreSQL for this user.",
+      "taskRef": null,
+      "criteriaIdx": [],
+      "createdAt": "2026-02-20T02:28:00Z",
+      "dueBy": "2026-02-20T12:00:00Z",
+      "handoffTo": "[iOS]",
+      "handoffNote": "Once subscription is fixed in DB, iOS will automatically show correct plan on next /api/user fetch"
+    },
+    {
+      "id": "xd-067",
+      "from": "[iOS]",
+      "to": "[BACKEND]",
+      "status": "pending",
+      "priority": "P2",
+      "title": "Wire WireGuard bandwidth stats into GET /api/user dataUsedBytes",
+      "description": "GET /api/user returns dataUsedBytes: 0 even after VPN usage. Local iOS tunnel stats show >10MB used. RADIUS accounting daemon (xd-038) tracks transfer bytes in wg_accounting table, but this data is NOT reflected in the /api/user response. Need to: (1) query wg_accounting or bandwidth_usage table for current cycle, (2) populate dataUsedBytes and currentCycleDataUsedBytes in /api/user response. iOS ProfileViewModel already reads these fields \u2014 just needs real data from backend.",
+      "taskRef": null,
+      "criteriaIdx": [],
+      "createdAt": "2026-02-20T02:28:00Z",
+      "dueBy": "2026-02-21T12:00:00Z",
+      "handoffTo": "[DEVOPS]",
+      "handoffNote": "If RADIUS accounting data isnt reaching PostgreSQL, DevOps needs to verify wg_accounting daemon on 178.62.101.221"
     }
   ],
   "importantNotes": [
