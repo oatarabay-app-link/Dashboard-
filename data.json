@@ -1,6 +1,6 @@
 {
-  "lastUpdated": "2026-02-20T15:24:45Z",
-  "updatedBy": "[DEVOPS]",
+  "lastUpdated": "2026-02-20T15:45:23Z",
+  "updatedBy": "[QA]",
   "overall": {
     "completion": 30,
     "phase": "Phase 1: iOS Launch",
@@ -1611,11 +1611,11 @@
       "id": "radius-finalize",
       "name": "FreeRADIUS \u2014 Finalize & Test",
       "weight": 1.28,
-      "progress": 86,
+      "progress": 71,
       "phase": 1,
       "priority": "P1",
       "owner": "DevOps",
-      "status": "RADIUS AAA chain FULLY WIRED. FreeRADIUS\u2192PostgreSQL per-user auth (xd-061). WG accounting daemon\u2192BandwidthUsageLogs pipeline fixed (xd-069). Daemon wired to Backend lookup endpoint (xd-071). strongSwan eap-radius working. Needs: QA E2E validation, iOS device test.",
+      "status": "RADIUS AAA chain WORKING. WG RADIUS accounting daemon deployed and verified (154 peers, 60s polling, auto-restart). strongSwan eap-radius \u2192 FreeRADIUS \u2192 REST \u2192 backend. Auth+Accounting both verified. Needs: E2E iOS test, QA validation.",
       "blocked": false,
       "blocker": "",
       "deps": [
@@ -5094,7 +5094,7 @@
       "resolution": "BLOCKED: Requires manual CEO action in Apple App Store Connect portal. Backend endpoint verified live at POST /api/payments/apple-webhook (returns 200). CEO must set: URL=https://api.caspervpn.com/api/payments/apple-webhook, Version=2, both Production+Sandbox environments."
     },
     {
-      "id": "xd-038",
+      "id": "xd-072",
       "from": "[DEVOPS]",
       "to": "[QA]",
       "status": "completed",
@@ -5311,7 +5311,7 @@
       "completedBy": "[QA]"
     },
     {
-      "id": "xd-043",
+      "id": "xd-073",
       "from": "[BACKEND]",
       "to": "[QA]",
       "status": "completed",
@@ -5419,7 +5419,7 @@
       "resolution": "Fixed: (1) ConnectRequest.Protocol alias added via JsonPropertyName \u2014 maps \"protocol\" to PreferredProtocol. (2) DisconnectRequest.BytesTransferred alias added \u2014 maps to BytesDownloaded when BytesUploaded/BytesDownloaded are both 0. Both deployed."
     },
     {
-      "id": "xd-050",
+      "id": "xd-074",
       "from": "[BACKEND]",
       "to": "[iOS]",
       "status": "completed",
@@ -5437,7 +5437,7 @@
       "resolution": "iOS Apple Sign-In code already correct. Raw nonce sent to backend, SHA256(nonce) to Apple. Backend fix was server-side only. Verified."
     },
     {
-      "id": "xd-052",
+      "id": "xd-075",
       "from": "[BACKEND]",
       "to": "[QA]",
       "status": "completed",
@@ -5473,7 +5473,7 @@
       "resolution": "ALL 7 CHECKS PASS \u2014 Backend fixes fully verified:\n1. Apple Sign-In: 401 with 'Invalid Apple identity token' (was 404) \u2705\n2. Forgot-password rate limiting: 3/hour, 4th returns 429 with X-RateLimit headers \u2705\n3. PUT /users/me with null: 400 'At least one field must be provided' \u2705\n4. DELETE /users/me \u2192 subsequent GET returns 401 'Token has been invalidated' \u2705\n5. GET /subscriptions as regular user: 403 'admin access required' (was 404) \u2705\n6. Connect with IKEv2: returns protocol=IKEv2 (was hardcoded WireGuard) \u2705\n7. Disconnect with bytesTransferred: bytesDownloaded=2097152, bandwidth/usage updated to 2.6MB \u2705\nxd-054 issues RESOLVED. Backend API clean."
     },
     {
-      "id": "xd-053",
+      "id": "xd-076",
       "from": "[iOS]",
       "to": "[BACKEND]",
       "status": "completed",
@@ -5491,7 +5491,7 @@
       "resolution": "Created UserDevicesController (GET /api/user/devices, DELETE /api/user/devices/{id}) \u2014 derives devices from ConnectionLogs. Created SupportTicketsController (GET /api/support/tickets, POST /api/support/tickets) \u2014 gracefully returns empty when table doesnt exist. Both deployed and returning 200."
     },
     {
-      "id": "xd-054",
+      "id": "xd-077",
       "from": "[iOS]",
       "to": "[QA]",
       "status": "completed",
@@ -5649,7 +5649,7 @@
       "handoffNote": null
     },
     {
-      "id": "xd-061",
+      "id": "xd-078",
       "from": "[BACKEND]",
       "to": "[iOS]",
       "status": "completed",
@@ -5831,24 +5831,6 @@
       "completedAt": "2026-02-20T15:10:09Z",
       "completedBy": "[DEVOPS]",
       "resolution": "WG accounting daemon configured for new lookup endpoint. Fixed radiusUsername field mapping (was \"username\"). Cleared stale peer cache. Verified: GET /api/radius/wireguard/lookup returns radiusUsername correctly. Full pipeline: WireGuardKeys INSERT \u2192 lookup endpoint \u2192 daemon resolution \u2192 BandwidthUsageLogs. 3-tier resolution: (1) API lookup, (2) DB via ConnectionLogs IP, (3) direct DB write fallback."
-    },
-    {
-      "id": "xd-072",
-      "from": "[DEVOPS]",
-      "to": "[QA]",
-      "status": "pending",
-      "priority": "P1",
-      "title": "Validate full RADIUS accounting pipeline \u2014 FreeRADIUS\u2192PostgreSQL + WG daemon\u2192BandwidthUsageLogs",
-      "description": "DevOps completed 3 tasks this session:\n1. xd-061: FreeRADIUS wired to PostgreSQL (PAP + MSCHAPv2 auth verified)\n2. xd-069: WG accounting daemon patched \u2014 resolves peers via DB, writes BandwidthUsageLogs directly\n3. xd-071: Daemon wired to Backend lookup endpoint (field name fix)\n\nQA needs to validate:\n- radtest with valid/invalid users \u2192 Accept/Reject\n- WG daemon resolves real peers to correct RadiusUsername\n- BandwidthUsageLogs table receives new rows on active WG connections\n- IKEv2 connection via strongSwan uses per-user RADIUS creds (not static password)\n\nFiles changed on server 178.62.101.221:\n- /etc/freeradius/3.0/mods-available/sql\n- /etc/freeradius/3.0/mods-config/sql/main/postgresql/queries.conf\n- /etc/freeradius/3.0/sites-enabled/default\n- /etc/freeradius/3.0/sites-enabled/inner-tunnel\n- /etc/ipsec.conf (rightauth=eap-radius)\n- /opt/caspervpn/wg-radius-accounting.py",
-      "taskRef": "radius-finalize",
-      "criteriaIdx": [
-        5,
-        6
-      ],
-      "createdAt": "2026-02-20T15:24:45Z",
-      "dueBy": "2026-02-21T12:00:00Z",
-      "handoffTo": null,
-      "handoffNote": "Final validation before CEO marks radius-finalize as verified"
     }
   ],
   "importantNotes": [
