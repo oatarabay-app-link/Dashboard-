@@ -1,6 +1,6 @@
 {
-  "lastUpdated": "2026-02-20T02:28:00Z",
-  "updatedBy": "[iOS]",
+  "lastUpdated": "2026-02-20T13:11:34Z",
+  "updatedBy": "[BACKEND]",
   "overall": {
     "completion": 30,
     "phase": "Phase 1: iOS Launch",
@@ -5732,7 +5732,7 @@
       "id": "xd-066",
       "from": "[iOS]",
       "to": "[BACKEND]",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "title": "Investigate subscription mismatch: API returns Free but CEO expects Unlimited",
       "description": "GET /api/user returns planType: \"Free\" and GET /api/bandwidth/usage returns planName: \"Free\", isUnlimited: false, formattedLimit: \"2 GB\". CEO account (claude-dev@caspervpn.com) should have Unlimited plan. Either: (a) DB subscription record needs updating, or (b) Stripe webhook never fired to upgrade. iOS now correctly displays whatever API returns \u2014 this is a data/backend issue. Check Subscriptions table in PostgreSQL for this user.",
@@ -5741,13 +5741,16 @@
       "createdAt": "2026-02-20T02:28:00Z",
       "dueBy": "2026-02-20T12:00:00Z",
       "handoffTo": "[iOS]",
-      "handoffNote": "Once subscription is fixed in DB, iOS will automatically show correct plan on next /api/user fetch"
+      "handoffNote": "Once subscription is fixed in DB, iOS will automatically show correct plan on next /api/user fetch",
+      "completedAt": "2026-02-20T13:11:34Z",
+      "completedBy": "[BACKEND]",
+      "resolution": "DB subscription record was on Free plan (auto-assigned at registration). Updated Subscriptions.PlanId to Pro (82ff7395) and Users.DataLimitBytes to 0 (unlimited). GET /api/user now returns planName:Pro, dataLimitBytes:0."
     },
     {
       "id": "xd-067",
       "from": "[iOS]",
       "to": "[BACKEND]",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "title": "Wire WireGuard bandwidth stats into GET /api/user dataUsedBytes",
       "description": "GET /api/user returns dataUsedBytes: 0 even after VPN usage. Local iOS tunnel stats show >10MB used. RADIUS accounting daemon (xd-038) tracks transfer bytes in wg_accounting table, but this data is NOT reflected in the /api/user response. Need to: (1) query wg_accounting or bandwidth_usage table for current cycle, (2) populate dataUsedBytes and currentCycleDataUsedBytes in /api/user response. iOS ProfileViewModel already reads these fields \u2014 just needs real data from backend.",
@@ -5756,7 +5759,40 @@
       "createdAt": "2026-02-20T02:28:00Z",
       "dueBy": "2026-02-21T12:00:00Z",
       "handoffTo": "[DEVOPS]",
-      "handoffNote": "If RADIUS accounting data isnt reaching PostgreSQL, DevOps needs to verify wg_accounting daemon on 178.62.101.221"
+      "handoffNote": "If RADIUS accounting data isnt reaching PostgreSQL, DevOps needs to verify wg_accounting daemon on 178.62.101.221",
+      "completedAt": "2026-02-20T13:11:34Z",
+      "completedBy": "[BACKEND]",
+      "resolution": "GetUserByIdAsync now aggregates live bandwidth from BandwidthUsageLogs (RADIUS accounting) and ConnectionLogs (BytesUploaded+BytesDownloaded). Takes MAX of both sources, populates dataUsedBytes and currentCycleDataUsedBytes if live total exceeds stored value. Currently 0 because no bandwidth data logged yet \u2014 will auto-populate when VPN usage is recorded."
+    },
+    {
+      "id": "xd-068",
+      "from": "[BACKEND]",
+      "to": "[iOS]",
+      "status": "pending",
+      "priority": "P1",
+      "title": "Handoff from [BACKEND]: Subscription fixed (Pro) + bandwidth wiring live \u2014 verify ProfileView",
+      "description": "xd-066: claude-dev@caspervpn.com now shows planName:Pro, dataLimitBytes:0 (unlimited). xd-067: GET /api/user.dataUsedBytes now aggregates from BandwidthUsageLogs+ConnectionLogs. Currently 0 because no accounting data yet \u2014 once VPN session completes with disconnect report, it will populate. Verify ProfileView shows correct plan and data usage bar.",
+      "taskRef": "user-profile",
+      "criteriaIdx": [],
+      "createdAt": "2026-02-20T13:11:34Z",
+      "dueBy": "2026-02-21T12:00:00Z",
+      "handoffTo": null,
+      "handoffNote": "ProfileView should show Pro plan and data usage once VPN session reports bytes"
+    },
+    {
+      "id": "xd-069",
+      "from": "[BACKEND]",
+      "to": "[DEVOPS]",
+      "status": "pending",
+      "priority": "P2",
+      "title": "Handoff from [BACKEND]: Verify RADIUS accounting writes to BandwidthUsageLogs table",
+      "description": "xd-067 wired bandwidth into GET /api/user but BandwidthUsageLogs table has 0 rows. Backend reads from this table + ConnectionLogs. Need to verify: (1) wg_accounting daemon on 178.62.101.221 is running, (2) RADIUS accounting packets are being received, (3) data is being written to BandwidthUsageLogs in PostgreSQL. If accounting daemon isn't configured, ConnectionLogs.BytesUploaded/BytesDownloaded from disconnect reports are the fallback.",
+      "taskRef": "bandwidth-tracking",
+      "criteriaIdx": [],
+      "createdAt": "2026-02-20T13:11:34Z",
+      "dueBy": "2026-02-22T12:00:00Z",
+      "handoffTo": null,
+      "handoffNote": "Check if RADIUS accounting daemon writes to BandwidthUsageLogs"
     }
   ],
   "importantNotes": [
