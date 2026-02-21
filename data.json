@@ -5834,6 +5834,47 @@
       "completedAt": "2026-02-20T15:10:09Z",
       "completedBy": "[DEVOPS]",
       "resolution": "WG accounting daemon configured for new lookup endpoint. Fixed radiusUsername field mapping (was \"username\"). Cleared stale peer cache. Verified: GET /api/radius/wireguard/lookup returns radiusUsername correctly. Full pipeline: WireGuardKeys INSERT \u2192 lookup endpoint \u2192 daemon resolution \u2192 BandwidthUsageLogs. 3-tier resolution: (1) API lookup, (2) DB via ConnectionLogs IP, (3) direct DB write fallback."
+    },
+    {
+      "id": "xd-079",
+      "from": "[CEO]",
+      "to": "[BACKEND]",
+      "status": "pending",
+      "priority": "P0",
+      "title": "Admin Censorship Command Center \u2014 Backend API hardening + Admin Panel React UI",
+      "description": "Backend API is FULLY BUILT (10 endpoints at /api/admin/censorship). What's needed now:\n\n1. ADMIN PANEL UI (React/TypeScript in admin-panel-react/):\n   - Create CensorshipDashboard.tsx page with country\u00d7protocol block matrix (green/yellow/red grid)\n   - Wire GET /matrix endpoint \u2192 render 12-country grid with real-time status colors\n   - Add 'Test Country' button per row \u2192 calls POST /probe/{country}, shows probe results inline\n   - Add 'Emergency Rotate' button \u2192 POST /rotate-protocol modal (select country, fromProtocol, toProtocol)\n   - Add 'Notify Users' button \u2192 POST /notify-users modal (country, title, message, recommendedProtocol)\n   - Fallback Domains tab: GET /fallback-domains list, activate/deactivate toggles, health-check button\n   - Event Log tab: GET /events with country filter, date range, pagination \u2014 timestamped history table\n   - Affected Users count badge per country row \u2192 GET /affected-users/{country}\n   - Auto-Detect button \u2192 POST /auto-detect, show scan progress + results\n\n2. BACKEND HARDENING:\n   - EF Core migration for CountryBlockStatuses, CensorshipEvents, FallbackDomains tables (currently in-memory)\n   - Wire push notification integration into NotifyAffectedUsersAsync (needs Firebase/APNS setup from DevOps)\n   - Add Hangfire/background job for auto-detect every 60min and fallback health-check every 15min\n   - Add real probe endpoint validation (currently simulated) \u2014 coordinate with DevOps for probe servers\n\nFiles to reference:\n- backend-dotnet-core/Controllers/CensorshipResponseController.cs (437 lines)\n- backend-dotnet-core/Services/CensorshipResponseService.cs (934 lines)\n- backend-dotnet-core/DTOs/CensorshipDTOs.cs (423 lines)\n- backend-dotnet-core/Models/CensorshipResponse.cs (224 lines)\n- backend-dotnet-core/CENSORSHIP_QUICK_REFERENCE.md (full API reference)\n\nAcceptance Criteria (task: admin-censorship-response, indices 0-5):\n0: Country dashboard shows block status per protocol per country (green/yellow/red matrix)\n1: Automated DPI probe: admin clicks 'Test' \u2192 system probes and reports which protocols pass\n2: Emergency protocol rotation: one-click switches all users in blocked country to working protocol\n3: User notification system: push notification to all users in affected country\n4: Fallback domain management: backup domains/IPs, auto-switch when primary blocked\n5: Censorship event log: timestamped history of all block events, responses, resolution time",
+      "taskRef": "admin-censorship-response",
+      "criteriaIdx": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "createdAt": "2026-02-21T21:36:16Z",
+      "dueBy": "2026-03-01T00:00:00Z",
+      "handoffTo": "[QA]",
+      "handoffNote": "QA validates: matrix renders correctly, probe returns real results, protocol rotation works end-to-end, push notifications received on test devices, fallback domains activate, event log is accurate and timestamped"
+    },
+    {
+      "id": "xd-080",
+      "from": "[CEO]",
+      "to": "[DEVOPS]",
+      "status": "pending",
+      "priority": "P0",
+      "title": "Censorship Command Center \u2014 Probe Infrastructure + Push Notification Setup",
+      "description": "The Censorship Response Command Center backend is built but needs real infrastructure:\n\n1. PROBE SERVERS:\n   - Deploy lightweight probe endpoints in at least 3 geographic regions (EU, US, Asia)\n   - Each probe must test WireGuard, IKEv2, OpenVPN reachability from its location\n   - Endpoint format: GET /health returns {status, protocols: {wireguard: bool, ikev2: bool, openvpn: bool}}\n   - Configure in backend appsettings.json under CensorshipResponse.ProbeEndpoints\n   - Probes should simulate connectivity from DPI-heavy countries (use VPS in or near CN, IR, RU, SA, AE, TR)\n   - Timeout: 15 seconds per probe\n\n2. PUSH NOTIFICATION INFRASTRUCTURE:\n   - Set up Firebase Cloud Messaging (FCM) for Android push notifications\n   - Set up Apple Push Notification Service (APNS) using AuthKey_MLKCGXNWXW.p8\n   - Create a unified push notification service that Backend can call\n   - Endpoint or SDK integration that CensorshipResponseService.NotifyAffectedUsersAsync can use\n   - Must support country-targeted push (send only to users whose last-connected country matches)\n\n3. SCHEDULED JOBS:\n   - Set up Hangfire or equivalent for:\n     a. Auto-detect blocks: every 60 minutes, POST /auto-detect runs full scan\n     b. Fallback domain health: every 15 minutes, check all fallback domains are reachable\n   - Monitor job health via Prometheus/Grafana\n\n4. DATABASE MIGRATION:\n   - Ensure PostgreSQL has CountryBlockStatuses, CensorshipEvents, FallbackDomains tables\n   - Run EF Core migration on production server (178.62.101.221)\n   - Verify tables are populated with 12 pre-seeded countries\n\nServer: 178.62.101.221 (Netherlands)\nSSH: root@178.62.101.221\nFlask API: port 5002 (token: secure-api-token-change-me)\nBackend: .NET 8.0, PostgreSQL, Docker\n\nHandoff: Once probe infra + push notifications are live, notify [BACKEND] to wire real endpoints into CensorshipResponseService and test end-to-end.",
+      "taskRef": "admin-censorship-response",
+      "criteriaIdx": [
+        1,
+        3,
+        4
+      ],
+      "createdAt": "2026-02-21T21:36:16Z",
+      "dueBy": "2026-03-01T00:00:00Z",
+      "handoffTo": "[BACKEND]",
+      "handoffNote": "Once probe servers and push notification infra are live, Backend wires real probe URLs into appsettings.json and integrates push SDK into NotifyAffectedUsersAsync. Then handoff to QA for full validation."
     }
   ],
   "importantNotes": [
