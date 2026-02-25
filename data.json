@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-02-25T14:40:32Z",
+  "lastUpdated": "2026-02-25T14:50:00Z",
   "updatedBy": "[DEVOPS]",
   "overall": {
     "completion": 30,
@@ -5884,7 +5884,7 @@
       "id": "xd-081",
       "from": "[iOS]",
       "to": "[DEVOPS]",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "title": "Set up obfs4proxy for OpenVPN censorship bypass (pre-CasperCloak)",
       "description": "IKEv2 on UDP 443 is now live (iptables DNAT UDP 443\u2192500), but this only evades port-based blocks \u2014 not DPI fingerprinting used by UAE/KSA/China. Need obfs4proxy as pluggable transport for OpenVPN to make traffic look like random TLS:\n\n1. Install obfs4proxy on 178.62.101.221\n2. Configure as bridge: listen on TCP 443 (can share with Nginx via SNI routing or use alternate port like 4443)\n3. Create obfs4 bridge config that wraps OpenVPN UDP/1194\n4. Expose bridge fingerprint + cert for client configuration\n5. Test from a UAE/KSA VPS if possible\n\nServer: 178.62.101.221\nOpenVPN UDP: 1194, OpenVPN TCP: 1194\nIKEv2: 500/4500 + UDP 443 DNAT\n\nThis is interim before CasperCloak (full obfuscation protocol). Handoff to [iOS] for client-side obfs4 integration once server is ready.",
@@ -5893,7 +5893,10 @@
       "createdAt": "2026-02-22T15:28:00Z",
       "dueBy": "2026-03-05T00:00:00Z",
       "handoffTo": "[iOS]",
-      "handoffNote": "Once obfs4proxy is running, iOS needs to integrate pluggable transport client (or CasperCloak protocol handler) to connect through it."
+      "handoffNote": "Once obfs4proxy is running, iOS needs to integrate pluggable transport client (or CasperCloak protocol handler) to connect through it.",
+      "completedAt": "2026-02-25T14:50:00Z",
+      "completedBy": "[DEVOPS]",
+      "resolution": "obfs4proxy deployed on 178.62.101.221:4443 (TCP). OpenVPN TCP listener on port 1195. Bridge: obfs4 178.62.101.221:4443 0E6783ABE969F0DF4285F6A60EEFDDC479345233 cert=DmeDq+lp8N9ChfamDu/dxHk0UjNC2cgNQXa7NpP7gEpCCvidsBXNBq4Hwq8vBceMbIshHA iat-mode=0. Both services enabled (systemd), auto-restart on failure. Config files pushed to infrastructure/obfs4proxy/ in repo."
     },
     {
       "id": "xd-082",
@@ -6146,6 +6149,21 @@
       "dueBy": "2026-03-01T00:00:00Z",
       "handoffTo": "[QA]",
       "handoffNote": "After Backend wires service, QA validates full E2E"
+    },
+    {
+      "id": "xd-094",
+      "from": "[DEVOPS]",
+      "to": "[iOS]",
+      "status": "pending",
+      "priority": "P1",
+      "title": "Handoff from [DEVOPS]: obfs4proxy server ready \u2014 integrate client-side obfs4/CasperCloak",
+      "description": "obfs4proxy bridge is live on 178.62.101.221:4443 (TCP). iOS needs to integrate obfs4 client-side pluggable transport to connect through it.\n\nBridge credentials:\n- Server: 178.62.101.221:4443\n- Node ID: 0E6783ABE969F0DF4285F6A60EEFDDC479345233\n- cert: DmeDq+lp8N9ChfamDu/dxHk0UjNC2cgNQXa7NpP7gEpCCvidsBXNBq4Hwq8vBceMbIshHA\n- iat-mode: 0\n- Backend: OpenVPN TCP on port 1195\n\nOptions for iOS integration:\n1. Embed obfs4proxy client library (Go-based, needs gomobile bridge)\n2. Use CasperCloak custom protocol handler that implements obfs4 wire format\n3. Tunnel via local SOCKS proxy (obfs4proxy client mode -> OpenVPN)\n\nConfig files: infrastructure/obfs4proxy/ in Casper-Code repo",
+      "taskRef": "censorship-bypass",
+      "criteriaIdx": [],
+      "createdAt": "2026-02-25T14:50:00Z",
+      "dueBy": "2026-03-10T00:00:00Z",
+      "handoffTo": "[ANDROID]",
+      "handoffNote": "After iOS integration, Android needs same obfs4 client integration for CasperVPN Android app."
     }
   ],
   "importantNotes": [
