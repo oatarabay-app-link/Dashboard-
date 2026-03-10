@@ -7941,12 +7941,15 @@
       "id": "xd-174",
       "from": "[DEVOPS]",
       "to": "[BACKEND]",
-      "status": "pending",
+      "status": "completed",
       "createdDate": "2026-03-10",
       "completedDate": null,
       "title": "Handoff from DEVOPS: Security Lockdown P1: Verify monitoring + bandwidth enforcement (AC22-AC24). Con",
       "description": "Security Lockdown P1: Verify monitoring + bandwidth enforcement (AC22-AC24). ConnectionLogs (AC22): every VPN connect/disconnect must write to ConnectionLogs with all fields. BandwidthUsageLogs (AC23): WireGuardPeerUsages synced, CurrentCycleDataUsedBytes updated. Bandwidth cap (AC24): when data limit exceeded, VPN connection must be blocked. See runbook for verification queries.",
-      "createdAt": "2026-03-10T21:55:00Z"
+      "createdAt": "2026-03-10T21:55:00Z",
+      "completedAt": "2026-03-11",
+      "completedBy": "backend",
+      "resolution": "BACKEND CODE VERIFICATION COMPLETE for AC22-AC24:\n\nAC22 (ConnectionLogs): VERIFIED \u2705 \u2014 ConnectionLog model has all required fields: Id, UserId, ServerId, ConnectedAt, DisconnectedAt, BytesUploaded, BytesDownloaded, DeviceType, DeviceOs, Protocol, Status, DisconnectReason. Connect/Disconnect endpoints (POST /api/servers/{id}/connect and /disconnect) properly create and update ConnectionLog entries via VpnServerService.ConnectToServerAsync/DisconnectFromServerAsync. IP fields intentionally removed per no-log policy (2026-02-18).\n\nAC23 (BandwidthUsageLogs): VERIFIED \u2705 \u2014 BandwidthUsageLog model tracks UserId, ServerId, BytesUsed, RecordedAt. WireGuardUsageSyncService runs as BackgroundService polling every 60s, syncing WireGuard peer counters to BandwidthUsageLogs. BandwidthMonitoringService.RecordUsageAsync updates CurrentCycleDataUsedBytes on User model. DisconnectFromServerAsync also updates user.DataUsedBytes with BytesUploaded + BytesDownloaded.\n\nAC24 (Bandwidth Cap): VERIFIED \u2705 \u2014 Enforcement at TWO levels: (1) RADIUS auth level \u2014 RadiusAuthController L99-106 checks UsagePercentage >= 100 and returns Access-Reject with 'Bandwidth limit exceeded'. This blocks new VPN connections at protocol auth. (2) API connect level \u2014 VpnServerService.ConnectToServerAsync L444-448 checks DataLimitBytes vs DataUsedBytes and throws InvalidOperationException. Both enforce the cap before allowing connection."
     }
   ],
   "importantNotes": [
