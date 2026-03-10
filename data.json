@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-03-10T20:51:58Z",
+  "lastUpdated": "2026-03-10T21:14:33Z",
   "updatedBy": "[DEVOPS]",
   "overall": {
     "completion": 59,
@@ -4112,13 +4112,13 @@
       "phase": 1,
       "priority": "P0",
       "owner": "DevOps",
-      "status": "Queued \u2014 14 acceptance criteria covering SSH hardening, fail2ban, service binding, firewall, RADIUS, iptables cleanup, disk/logrotate, and DNS fix. Server at 81% disk, SSH root open, no fail2ban, 12+ internal ports exposed to internet.",
+      "status": "Queued \u2014 25 acceptance criteria: server hardening (AC0-AC13), firewall default-deny (AC14-AC15), TLS (AC16), auth pipeline (AC17-AC21), monitoring/bandwidth (AC22-AC24). Server: SSH root open, no fail2ban, 12+ ports exposed, RADIUS auth broken, OpenVPN zero auth, no bandwidth enforcement.",
       "blocked": false,
       "blocker": "",
       "deps": [],
       "category": "Security & Infrastructure",
-      "lastUpdated": "2026-03-10T20:51:58Z",
-      "notes": "Created from production readiness audit 2026-03-10. Covers C3,C4,C5,C6,C7,C10,C11,C12,C14,H4,H6,H7,H11,M1 from audit report. Must complete before Phase 2 (Code Hardening).",
+      "lastUpdated": "2026-03-10T21:14:33Z",
+      "notes": "Phase 1 expanded: original 14 server hardening + 3 firewall/TLS + 8 auth-pipeline/bandwidth/monitoring. Covers C3-C14, H4-H7-H11 from audit + RADIUS chain + OpenVPN auth + WG provisioning + connection logging + bandwidth enforcement. Must ALL pass before Phase 2 (Code Hardening).",
       "acceptanceCriteria": [
         {
           "test": "AC0: SSH root login disabled \u2014 PermitRootLogin set to 'no' in sshd_config, PasswordAuthentication set to 'no', PubkeyAuthentication set to 'yes'. Sudo user created and key-only auth enforced. Verify: ssh root@server REJECTED, ssh sudouser@server WORKS with key only.",
@@ -4213,6 +4213,83 @@
         },
         {
           "test": "AC13: Flask API rate limiting active \u2014 max 10 requests/min per IP on config generation endpoints. Returns 429 on excess. Verify: rapid curl loop to /openvpn/generate-client returns 429 after limit.",
+          "passed": false,
+          "verifiedBy": "",
+          "verifiedAt": "",
+          "evidence": ""
+        },
+        {
+          "test": "AC14: iptables INPUT chain default policy set to DROP \u2014 explicit ALLOW rules for SSH(22), HTTP(80), HTTPS(443), WireGuard(51820/udp), IKEv2(500+4500/udp), OpenVPN-UDP(1194/udp), OpenVPN-TCP(1195/tcp), CasperCloak(4444/tcp), obfs4(4443+4446/tcp), TCP-WG relay(4445/tcp), established/related. All other inbound traffic dropped. Verify: nmap from external shows only allowed ports.",
+          "passed": false,
+          "verifiedBy": "",
+          "verifiedAt": "",
+          "evidence": ""
+        },
+        {
+          "test": "AC15: ip6tables INPUT and FORWARD chains default policy set to DROP. IPv6 disabled at kernel (sysctl) but firewall rules as belt-and-suspenders. Verify: ip6tables -L shows DROP policy on INPUT/FORWARD.",
+          "passed": false,
+          "verifiedBy": "",
+          "verifiedAt": "",
+          "evidence": ""
+        },
+        {
+          "test": "AC16: Nginx TLS hardened \u2014 TLS 1.2+ only (no SSLv3/TLS1.0/1.1), strong cipher suites (ECDHE+AESGCM), HSTS header with max-age >= 31536000, OCSP stapling enabled. Verify: SSL Labs or testssl.sh grade A or higher.",
+          "passed": false,
+          "verifiedBy": "",
+          "verifiedAt": "",
+          "evidence": ""
+        },
+        {
+          "test": "AC17: RADIUS auth chain working end-to-end \u2014 RADIUS client secret in clients.conf matches strongSwan eap-radius.conf secret. radtest with a real DB user (RadiusUsername from Users table) returns Access-Accept. Verify: radtest <user> <pass> 127.0.0.1 0 <secret> \u2192 Access-Accept.",
+          "passed": false,
+          "verifiedBy": "",
+          "verifiedAt": "",
+          "evidence": ""
+        },
+        {
+          "test": "AC18: RADIUS accounting tables created (radacct, radpostauth) in PostgreSQL. IKEv2 sessions logged to radacct with Acct-Start/Stop records. Verify: connect IKEv2 \u2192 check radacct has session record with NAS-IP, Framed-IP, Acct-Session-Time.",
+          "passed": false,
+          "verifiedBy": "",
+          "verifiedAt": "",
+          "evidence": ""
+        },
+        {
+          "test": "AC19: OpenVPN auth plugin configured \u2014 auth-user-pass-verify via RADIUS plugin or PAM/script that validates against .NET API or RADIUS. Both server.conf (UDP) and server-tcp.conf (TCP) have auth enabled. Verify: OpenVPN connection without credentials REJECTED.",
+          "passed": false,
+          "verifiedBy": "",
+          "verifiedAt": "",
+          "evidence": ""
+        },
+        {
+          "test": "AC20: WireGuard dynamic peer provisioning \u2014 .NET API /servers/{id}/wireguard-config endpoint creates WireGuard peer (wg set wg0 peer <pubkey> allowed-ips <ip>), returns client config. Static hardcoded peers in wg0.conf replaced with API-managed peers. Verify: API call \u2192 new peer appears in 'wg show wg0'.",
+          "passed": false,
+          "verifiedBy": "",
+          "verifiedAt": "",
+          "evidence": ""
+        },
+        {
+          "test": "AC21: .NET API auth flow verified end-to-end \u2014 POST /auth/register creates user + RadiusUsername/Password, POST /auth/login returns valid JWT, GET /servers with JWT returns server list, GET /servers/{id}/config with JWT returns protocol config. No hardcoded fallback. Verify: fresh user register \u2192 login \u2192 fetch config \u2192 connect.",
+          "passed": false,
+          "verifiedBy": "",
+          "verifiedAt": "",
+          "evidence": ""
+        },
+        {
+          "test": "AC22: ConnectionLogs actively populated for ALL protocols \u2014 every VPN connect/disconnect writes to ConnectionLogs with correct UserId, ServerId, Protocol, BytesUploaded/Downloaded, ConnectedAt/DisconnectedAt. Verify: connect each protocol \u2192 check ConnectionLogs has new row within 30 seconds.",
+          "passed": false,
+          "verifiedBy": "",
+          "verifiedAt": "",
+          "evidence": ""
+        },
+        {
+          "test": "AC23: Bandwidth tracking active \u2014 BandwidthUsageLogs updated per-user per-session. WireGuardPeerUsages synced from 'wg show' transfer stats. CurrentCycleDataUsedBytes in Users table reflects actual usage. Verify: transfer 10MB \u2192 BandwidthUsageLogs row shows ~10MB, Users.CurrentCycleDataUsedBytes incremented.",
+          "passed": false,
+          "verifiedBy": "",
+          "verifiedAt": "",
+          "evidence": ""
+        },
+        {
+          "test": "AC24: Bandwidth cap enforcement \u2014 when Users.CurrentCycleDataUsedBytes >= DataLimitBytes, VPN connection is blocked or throttled. User receives clear error in app. Auto-reset on cycle boundary (DataResetDay). Verify: set low DataLimitBytes \u2192 exceed \u2192 connection rejected with bandwidth-exceeded error.",
           "passed": false,
           "verifiedBy": "",
           "verifiedAt": "",
@@ -7778,9 +7855,9 @@
   "importantNotes": [
     {
       "title": "[DEVOPS] Phase 1 Security Lockdown \u2014 14 Criteria Queued",
-      "content": "Production readiness audit identified 14 CRITICAL + HIGH server security issues. Phase 1 task 'security-lockdown-p1' created with 14 acceptance criteria. SSH root open, no fail2ban, 12+ internal ports exposed, disk at 81%, test users in ipsec.secrets, DPD disabled. Must complete before Phase 2 (Code Hardening). Execution order: AC0\u2192AC1\u2192AC2\u2192AC3\u2192AC4\u2192AC5\u2192AC6\u2192AC7\u2192AC8\u2192AC9\u2192AC10\u2192AC11\u2192AC12\u2192AC13.",
+      "content": "Production readiness audit + auth pipeline scan: 25 acceptance criteria total. Server hardening (AC0-AC13): SSH, fail2ban, service binding, firewall, iptables, logrotate, disk. Firewall (AC14-AC16): default-deny INPUT/ip6tables, Nginx TLS. Auth pipeline (AC17-AC21): RADIUS broken (Access-Reject), OpenVPN has ZERO auth, WireGuard static peers, .NET API flow unverified. Monitoring (AC22-AC24): ConnectionLogs dead (42 rows from Feb 25), bandwidth caps exist in schema but zero enforcement. Execute in order: security first, then auth, then monitoring.",
       "addedBy": "[DEVOPS]",
-      "addedAt": "2026-03-10T20:51:58Z",
+      "addedAt": "2026-03-10T21:14:33Z",
       "severity": "critical"
     },
     {
