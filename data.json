@@ -1,6 +1,6 @@
 {
-  "lastUpdated": "2026-03-10T21:59:47Z",
-  "updatedBy": "[BACKEND] Automated session",
+  "lastUpdated": "2026-03-11T00:58:53Z",
+  "updatedBy": "[DEVOPS]",
   "overall": {
     "completion": 59,
     "phase": "Phase 1: iOS Launch",
@@ -8232,6 +8232,166 @@
       "createdAt": "2026-03-11T00:01:03Z",
       "createdDate": "2026-03-11",
       "dueBy": "2026-03-14T01:00:00Z"
+    },
+    {
+      "id": "xd-187",
+      "from": "[CEO]",
+      "to": "[DEVOPS]",
+      "status": "pending",
+      "priority": "P0",
+      "title": "SSH Recovery: Restore SSH access via DigitalOcean console, then execute AC0-AC16",
+      "description": "SSH locked out after fail2ban install. Steps: (1) Login to DigitalOcean console at cloud.digitalocean.com \u2192 Droplets \u2192 178.62.101.221 \u2192 Access \u2192 Launch Recovery Console. (2) Run: systemctl restart ssh && fail2ban-client unban --all. (3) Verify SSH works: ssh caspervpn@178.62.101.221. (4) Execute security-lockdown-p1.sh in audit mode first, then apply mode. Script at: infrastructure/security/security-lockdown-p1.sh. Runbook at: infrastructure/runbooks/20260310_security_lockdown_p1_runbook.md. AC0 already DONE (SSH hardened, root disabled, caspervpn user created). Start from AC1.",
+      "taskRef": "security-lockdown-p1",
+      "criteriaIdx": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "createdAt": "2026-03-11T00:58:53Z",
+      "dueBy": "2026-03-12T08:10:00Z",
+      "handoffTo": "[QA]",
+      "handoffNote": "After all server ACs pass, QA validates full integration"
+    },
+    {
+      "id": "xd-188",
+      "from": "[DEVOPS]",
+      "to": "[DEVOPS]",
+      "status": "pending",
+      "priority": "P0",
+      "title": "AC17: Fix RADIUS client secret mismatch + verify auth chain",
+      "description": "RADIUS Access-Reject caused by secret mismatch. FIX: Edit /etc/freeradius/3.0/clients.conf \u2192 change localhost secret from 'testing123' to 'CasperVPN-Radius-Secret-2026' (matching strongSwan eap-radius.conf). Then: systemctl restart freeradius. Test: radtest casperuser CasperVPN2026! 127.0.0.1 0 CasperVPN-Radius-Secret-2026 \u2192 must get Access-Accept. Backend code side already verified (xd-173 completed).",
+      "taskRef": "security-lockdown-p1",
+      "criteriaIdx": [
+        17
+      ],
+      "createdAt": "2026-03-11T00:58:53Z",
+      "dueBy": "2026-03-12T08:10:00Z",
+      "handoffTo": null,
+      "handoffNote": null
+    },
+    {
+      "id": "xd-189",
+      "from": "[DEVOPS]",
+      "to": "[DEVOPS]",
+      "status": "pending",
+      "priority": "P0",
+      "title": "AC18: Create radacct + radpostauth tables in PostgreSQL for RADIUS accounting",
+      "description": "Tables DO NOT EXIST. Run FreeRADIUS PostgreSQL schema: docker exec -i caspervpn-postgres psql -U devuser caspervpn_dev < /etc/freeradius/3.0/mods-config/sql/main/postgresql/schema.sql. Verify: SELECT count(*) FROM radacct; should return 0. Then configure IKEv2/strongSwan accounting: accounting=yes in eap-radius.conf (already set). Test: connect via IKEv2, check radacct for new row.",
+      "taskRef": "security-lockdown-p1",
+      "criteriaIdx": [
+        18
+      ],
+      "createdAt": "2026-03-11T00:58:53Z",
+      "dueBy": "2026-03-12T08:10:00Z",
+      "handoffTo": null,
+      "handoffNote": null
+    },
+    {
+      "id": "xd-190",
+      "from": "[DEVOPS]",
+      "to": "[DEVOPS]",
+      "status": "pending",
+      "priority": "P0",
+      "title": "AC19: Configure OpenVPN auth-user-pass-verify plugin",
+      "description": "OpenVPN has ZERO auth configured. Add to both /etc/openvpn/server.conf AND /etc/openvpn/server-tcp.conf: auth-user-pass-verify /etc/openvpn/radius-auth.sh via-env (or use openvpn-plugin-auth-pam). Create radius-auth.sh script that validates against FreeRADIUS. Also add: verify-client-cert none, username-as-common-name. Backend xd-175 flagged this needs server-side work. Restart: systemctl restart openvpn@server openvpn@server-tcp.",
+      "taskRef": "security-lockdown-p1",
+      "criteriaIdx": [
+        19
+      ],
+      "createdAt": "2026-03-11T00:58:53Z",
+      "dueBy": "2026-03-12T08:10:00Z",
+      "handoffTo": "[BACKEND]",
+      "handoffNote": "After OpenVPN auth plugin is live, Backend needs to verify /auth/openvpn-config endpoint returns correct configs"
+    },
+    {
+      "id": "xd-191",
+      "from": "[DEVOPS]",
+      "to": "[BACKEND]",
+      "status": "pending",
+      "priority": "P1",
+      "title": "AC20: WireGuard dynamic peer provisioning \u2014 API endpoint + server script",
+      "description": "Currently WireGuard has 7+ static peers hardcoded in wg0.conf. Need: (1) BACKEND: Implement POST /servers/{id}/wireguard-config endpoint that generates keypair, assigns IP from 10.66.66.0/24, returns client config. (2) DEVOPS: Create server-side script that wg set wg0 peer <pubkey> allowed-ips <ip>/32 dynamically. (3) Delete static peers from wg0.conf. (4) Integrate with user registration flow. Backend already has WireGuardKeys table in DB.",
+      "taskRef": "security-lockdown-p1",
+      "criteriaIdx": [
+        20
+      ],
+      "createdAt": "2026-03-11T00:58:53Z",
+      "dueBy": "2026-03-13T08:30:00Z",
+      "handoffTo": "[QA]",
+      "handoffNote": "QA validates WireGuard dynamic provisioning end-to-end: register \u2192 get config \u2192 connect \u2192 verify peer appears on server"
+    },
+    {
+      "id": "xd-192",
+      "from": "[DEVOPS]",
+      "to": "[BACKEND]",
+      "status": "pending",
+      "priority": "P1",
+      "title": "AC22-AC24: ConnectionLogs pipeline + bandwidth cap enforcement",
+      "description": "AC22: ConnectionLogs dead since Feb 25 (42 rows). Need logging for ALL protocols (WG, IKEv2, OpenVPN). AC23: BandwidthUsageLogs has 4536 rows but need per-user per-session active tracking. AC24: Enforce bandwidth cap \u2014 when Users.CurrentCycleDataUsedBytes >= DataLimitBytes, disconnect user or block new connections. Backend code was verified (xd-174, xd-176) but production integration needed. DevOps needs to: enable RADIUS accounting writes (radacct \u2192 ConnectionLogs sync), configure bandwidth polling cron.",
+      "taskRef": "security-lockdown-p1",
+      "criteriaIdx": [
+        22,
+        23,
+        24
+      ],
+      "createdAt": "2026-03-11T00:58:53Z",
+      "dueBy": "2026-03-13T08:30:00Z",
+      "handoffTo": "[QA]",
+      "handoffNote": "QA validates: connect via each protocol, verify ConnectionLogs populated, verify bandwidth tracking, test cap enforcement"
+    },
+    {
+      "id": "xd-193",
+      "from": "[DEVOPS]",
+      "to": "[QA]",
+      "status": "pending",
+      "priority": "P0",
+      "title": "Phase 1 Security Lockdown \u2014 Full Integration Validation (AC0-AC24)",
+      "description": "After ALL 25 ACs are marked passed by their respective departments, QA must validate the FULL integration: (1) SSH hardening \u2014 root rejected, key-only. (2) Firewall \u2014 port scan shows only allowed ports. (3) Auth \u2014 register user, connect via WG/IKEv2/OpenVPN, verify RADIUS, verify ConnectionLogs. (4) Bandwidth \u2014 connect, transfer data, verify tracking, test cap. (5) TLS \u2014 SSL Labs scan A+ rating. Run nmap port scan, SSL Labs test, manual protocol tests. Mark task to 100% only after QA passes.",
+      "taskRef": "security-lockdown-p1",
+      "criteriaIdx": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24
+      ],
+      "createdAt": "2026-03-11T00:58:53Z",
+      "dueBy": "2026-03-14T13:00:00Z",
+      "handoffTo": null,
+      "handoffNote": "Final gate before Phase 2. CEO verifies after QA passes."
     }
   ],
   "importantNotes": [
@@ -8242,10 +8402,11 @@
     },
     {
       "title": "[DEVOPS] Phase 1 Security Lockdown \u2014 14 Criteria Queued",
-      "content": "Production readiness audit + auth pipeline scan: 25 acceptance criteria total. Server hardening (AC0-AC13): SSH, fail2ban, service binding, firewall, iptables, logrotate, disk. Firewall (AC14-AC16): default-deny INPUT/ip6tables, Nginx TLS. Auth pipeline (AC17-AC21): RADIUS broken (Access-Reject), OpenVPN has ZERO auth, WireGuard static peers, .NET API flow unverified. Monitoring (AC22-AC24): ConnectionLogs dead (42 rows from Feb 25), bandwidth caps exist in schema but zero enforcement. Execute in order: security first, then auth, then monitoring.",
+      "content": "Phase 1 Security Lockdown: 25 ACs allocated across departments. SSH currently locked (fail2ban). DevOps owns AC0-AC19 (server-side). Backend owns AC20-AC24 (API + bandwidth). QA owns final integration (xd-193). Execution blocked until DO console restores SSH. See runbook: infrastructure/runbooks/20260310_security_lockdown_p1_runbook.md",
       "addedBy": "[DEVOPS]",
       "addedAt": "2026-03-10T21:14:33Z",
-      "severity": "critical"
+      "severity": "critical",
+      "updatedAt": "2026-03-11T00:58:53Z"
     },
     {
       "id": "note-protocol-alloc",
