@@ -406,6 +406,9 @@ Use `push_dashboard()` or `rebuild_dashboard()` — NEVER edit INLINE_DATA manua
 11. **Never duplicate DEPARTMENT_LOG.md** → one copy, Casper-Code root
 12. **Never put department docs in Dashboard-** → they go in `memory/departments/<dept>/`
 13. **Never put loose files at `memory/departments/` root** → inside the dept folder
+14. **Never do global string replacements on index.html** → always re-bake INLINE_DATA from data.json via `json.dumps()`. Global replace corrupts JSON escape sequences.
+15. **Never create tasks without `acceptanceCriteria` (array) and `name` (string)** → wrong schema crashes render(). Factory scripts must validate before write.
+16. **Never use Python raw strings for JS patching** → use proper AST manipulation or targeted line replacement with exact byte matching.
 
 ---
 
