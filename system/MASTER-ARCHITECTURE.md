@@ -207,8 +207,75 @@ session_start.py
 
 ---
 
-## 7. data.json SCHEMA (crossDeptTasks)
+## 7. data.json COMPLETE SCHEMA
 
+**Top-level keys:**
+
+```
+lastUpdated       ISO8601 timestamp
+updatedBy         "[DEPT]" tag
+overall           Project-wide stats
+departments       Per-dept status (11 departments)
+tasks             Feature/task items (62+)
+crossDeptTasks    Cross-department handoffs (215+)
+importantNotes    CEO/dept notes & blockers
+benchmarks        Launch milestones (8)
+infrastructure    Server inventory + access control
+antiCensorship    CasperCloak protocol features
+aiFeatures        AI capability roadmap (9)
+ctoBoard          CTO dashboard — goals, tech debt, architecture
+handoffs          Active handoff queue
+```
+
+### overall
+```json
+{
+  "completion": 59,
+  "phase": "Phase 1: iOS Launch",
+  "targetDate": "March 16, 2026",
+  "serverCount": 5,
+  "countriesCount": 4,
+  "protocolsReady": 4,
+  "platformsLive": 0,
+  "progress": 58.9,
+  "launchCompletion": 61
+}
+```
+
+### departments[dept]
+```json
+{
+  "name": "iOS Engineering",
+  "status": "active|disabled|idle",
+  "lead": "Omar + Claude",
+  "currentTask": "string",
+  "blockers": 0,
+  "completion": 62,
+  "launchCompletion": 79
+}
+```
+Departments: ios, android, backend, devops, desktop, website, admin-panel, product, marketing, legal, qa
+
+### tasks[]
+```json
+{
+  "id": "wireguard-stable",
+  "name": "WireGuard Protocol — Production Stable",
+  "weight": 4.26,
+  "progress": 100,
+  "phase": 1,                ← 1-6 (maps to project phases)
+  "priority": "P0|P1|P2|P3",
+  "owner": "iOS",
+  "status": "string",
+  "blocked": false,
+  "blocker": "",
+  "deps": ["backend-api"],
+  "category": "VPN Core",
+  "acceptanceCriteria": [{"test": "...", "met": true}]
+}
+```
+
+### crossDeptTasks[]
 ```json
 {
   "id": "xd-NNN",
@@ -217,10 +284,75 @@ session_start.py
   "title": "string",
   "description": "string",
   "status": "pending|in_progress|completed|blocked|deferred",
-  "priority": "P1|P2|P3",    ← REQUIRED (crashes dashboard if missing)
+  "priority": "P0|P1|P2|P3",    ← REQUIRED (crashes dashboard if missing)
   "createdAt": "ISO8601",
-  "createdDate": "YYYY-MM-DD",
-  "completedDate": "YYYY-MM-DD|null"
+  "dueBy": "ISO8601|null",
+  "handoffTo": "[DEPT]|null",
+  "handoffNote": "string|null",
+  "completedAt": "ISO8601|null",
+  "completedBy": "[DEPT]|null",
+  "resolution": "string|null"
+}
+```
+
+### importantNotes[]
+String format: `"[DEPT DATE] note text"`
+
+### benchmarks[]
+```json
+{
+  "pct": 35,
+  "label": "iOS TestFlight Ready",
+  "description": "Core VPN works, 1 protocol stable, basic UI",
+  "reached": true
+}
+```
+
+### infrastructure
+```json
+{
+  "servers": [{"name":"...", "ip":"...", "location":"...", "status":"..."}],
+  "summary": {"totalServers":5, "onlineServers":5},
+  "accessControl": {"sshKeyRequired":true, "firewallRules":"..."}
+}
+```
+
+### aiFeatures[]
+```json
+{
+  "name": "AI Server Selection",
+  "status": "built|planned|partial",
+  "description": "string",
+  "phase": 2,
+  "priority": "P2"
+}
+```
+
+### ctoBoard
+```json
+{
+  "role": "CTO",
+  "lead": "Waqar",
+  "weeklyGoals": ["..."],
+  "techDebt": [{"item":"...", "priority":"..."}],
+  "architectureDecisions": [{"decision":"...", "rationale":"..."}],
+  "systemHealth": {"apiUptime":"99.2%", "lastIncident":"..."},
+  "ctoTasks": [{"id":"cto-001", "title":"...", "status":"..."}],
+  "platformStatus": {"ios":{"version":"1.0","status":"..."}}
+}
+```
+
+### handoffs[]
+```json
+{
+  "id": "xd-NNN",
+  "from": "dept",
+  "to": "dept",
+  "title": "string",
+  "description": "string",
+  "priority": "P1",
+  "status": "pending|in_progress|completed",
+  "createdAt": "ISO8601"
 }
 ```
 
@@ -228,7 +360,38 @@ session_start.py
 
 ---
 
-## 8. ABSOLUTE DON'TS
+## 8. DASHBOARD TABS & RENDERING
+
+The dashboard (index.html) renders 13 tabs from data.json:
+
+| Tab | ID | Renders From | Purpose |
+|-----|----|-------------|---------|
+| Overview | `overview` | `overall`, `tasks` | Charts: priority, status, blockers, timeline, phase radar |
+| Analytics | `analytics` | `tasks`, `crossDeptTasks` | Charts: category, owner, phase progress, verification |
+| Phase 1: iOS | `phase1` | `tasks` (phase=1) | Phase 1 tasks with filter, progress summary, milestones |
+| Phase 2: Android | `phase2` | `tasks` (phase=2) | Phase 2 tasks + AI features + anti-censorship |
+| Phase 3-6 | `phase3plus` | `tasks` (phase≥3) | Phases 3-6 grouped by phase with headers |
+| Departments | `departments` | `departments` | Per-dept completion bars, status, current task, blockers |
+| Infrastructure | `infra` | `infrastructure` | Server inventory, uptime, access control |
+| Anti-Censorship | `censorship` | `antiCensorship` | CasperCloak features grouped by phase |
+| AI Features | `ai` | `aiFeatures` | AI capabilities grouped by phase with priority |
+| Cross-Dept | `xdept` | `crossDeptTasks` | Active handoffs, filterable by status/dept |
+| Notes | `notes` | `importantNotes` | CEO/dept notes, editable via modal |
+| System Scan | `systemscan` | All sections | Automated health checks, overdue tasks, stale depts |
+| Skills | `skills` | N/A | Links to factory skills documentation |
+
+**Phase Milestones Bar** renders between benchmarks and tabs — shows Phase 1-6 completion %.
+
+**INLINE_DATA Bake Process:**
+```
+data.json → JSON.dumps() → inject into index.html replacing:
+  const INLINE_DATA = {...};
+```
+Use `push_dashboard()` or `rebuild_dashboard()` — NEVER edit INLINE_DATA manually.
+
+---
+
+## 9. ABSOLUTE DON'TS
 
 1. **Never git clone in factory scripts** → use `api_get()`/`api_put()`
 2. **Never push data.json without re-baking INLINE_DATA** → use `push_dashboard()`
@@ -246,7 +409,7 @@ session_start.py
 
 ---
 
-## 9. CHANGE ADVISORY PROTOCOL
+## 10. CHANGE ADVISORY PROTOCOL
 
 Before ANY structural change:
 
@@ -266,7 +429,7 @@ Before ANY structural change:
 
 ---
 
-## 10. FUTURE PROJECTS PATTERN
+## 11. FUTURE PROJECTS PATTERN
 
 ```
 app-link/<ProjectName>/
@@ -289,7 +452,7 @@ Brain/projects/<project-key>/
 
 ---
 
-## 11. PATH QUICK REFERENCE
+## 12. PATH QUICK REFERENCE
 
 | What | Path |
 |------|------|
