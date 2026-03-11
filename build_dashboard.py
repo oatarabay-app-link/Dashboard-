@@ -1,39 +1,56 @@
 #!/usr/bin/env python3
 """
-CasperVPN Dashboard Builder
-Injects data.json inline into index.html so it works via file:// protocol.
+CasperVPN Dashboard Builder (Safe Edition)
+Injects data.json inline into index.html using LINE-BY-LINE replacement.
+
+SAFETY: Never use marker-based string splicing. Always find the exact
+'const INLINE_DATA' line and replace only that line.
 
 Usage: python3 build_dashboard.py
 Run this after any department updates data.json.
 """
-import json, os
+import json, os, sys
 
 DIR = os.path.dirname(os.path.abspath(__file__))
 
-with open(os.path.join(DIR, 'data.json')) as f:
+# Load data.json
+with open(os.path.join(DIR, "data.json")) as f:
     data = json.load(f)
 
-with open(os.path.join(DIR, 'index.html')) as f:
+# Load index.html
+html_path = os.path.join(DIR, "index.html")
+with open(html_path) as f:
     html = f.read()
 
-# Find and replace the INLINE_DATA constant
+# SAFETY CHECK: must be real HTML
+if not html.strip().startswith("<!DOCTYPE") and not html.strip().startswith("<html"):
+    print("ABORT: index.html is corrupted (not HTML). Skipping rebuild.")
+    sys.exit(1)
+
+# Line-by-line replacement — find the INLINE_DATA line and replace ONLY that line
 inline_json = json.dumps(data, ensure_ascii=True)
-marker_start = 'const INLINE_DATA = '
-marker_end = ';\n\nasync function loadData'
+lines = html.split("\n")
+replaced = False
+for i, line in enumerate(lines):
+    if "const INLINE_DATA" in line and not line.strip().startswith("//"):
+        lines[i] = "const INLINE_DATA = " + inline_json + ";"
+        replaced = True
+        break
 
-start_idx = html.index(marker_start)
-end_idx = html.index(marker_end)
+if not replaced:
+    print("ABORT: 'const INLINE_DATA' marker not found in index.html.")
+    sys.exit(1)
 
-html = html[:start_idx] + marker_start + inline_json + html[end_idx:]
+new_html = "\n".join(lines)
 
-with open(os.path.join(DIR, 'index.html'), 'w') as f:
-    f.write(html)
+# SAFETY CHECK: output must still be HTML
+if not new_html.strip().startswith("<!DOCTYPE") and not new_html.strip().startswith("<html"):
+    print("ABORT: rebuild produced non-HTML output. Skipping write.")
+    sys.exit(1)
 
-# Calculate stats
-tw = sum(t['weight'] for t in data['tasks'])
-ws = sum(t['weight'] * (t['progress']/100) for t in data['tasks'])
-overall = round((ws/tw)*100) if tw > 0 else 0
-blocked = [t['name'] for t in data['tasks'] if t.get('blocked')]
+with open(html_path, "w") as f:
+    f.write(new_html)
 
-print(f"Dashboard rebuilt — {len(data['tasks'])} tasks, {overall}% overall, {len(blocked)} blocked")
-print(f"File: {os.path.join(DIR, 'index.html')} ({os.path.getsize(os.path.join(DIR, 'index.html')):,} bytes)")
+task_count = len(data.get("tasks", []))
+xd_count = len(data.get("crossDeptTasks", []))
+print(f"Dashboard rebuilt: {task_count} tasks, {xd_count} cross-dept tasks baked into index.html")
