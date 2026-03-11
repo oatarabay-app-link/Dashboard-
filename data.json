@@ -1,6 +1,6 @@
 {
-  "lastUpdated": "2026-03-11T01:35:55Z",
-  "updatedBy": "[DEVOPS]",
+  "lastUpdated": "2026-03-11T01:51:23Z",
+  "updatedBy": "[DESKTOP]",
   "overall": {
     "completion": 59,
     "phase": "Phase 1: iOS Launch",
@@ -2826,11 +2826,11 @@
       "id": "windows-app",
       "name": "Windows App (Rust Core + Tauri)",
       "weight": 4.26,
-      "progress": 30,
+      "progress": 50,
       "phase": 4,
       "priority": "P1",
       "owner": "Desktop",
-      "status": "Rust core + Tauri UI scaffolded with 11 IPC commands and system tray. GAPS: Wintun driver (file missing), kill switch (file missing), MSI untested, Store not started.",
+      "status": "Wintun driver + kill switch modules CREATED (yellow). Tauri frontend UI complete. MSI/Store packaging still pending. Needs Windows runtime validation.",
       "blocked": false,
       "blocker": "",
       "deps": [],
@@ -2851,24 +2851,26 @@
           "verifiedBy": "self",
           "verifiedAt": null,
           "evidence": "",
-          "verifiedDate": "2026-03-05",
-          "notes": "Tauri 2.0 app with 11 IPC commands, dark theme frontend, system tray. Full UI scaffold complete."
+          "verifiedDate": "2026-03-11",
+          "notes": "Tauri 2.0 app with 11 IPC commands, dark theme frontend, system tray. Full UI scaffold complete. NEW: dist/ frontend created (index.html + style.css + app.js) \u2014 login, main VPN, settings screens with Tauri IPC bridge."
         },
         {
           "test": "Wintun driver installed and WireGuard tunnel established via Wintun TUN interface",
-          "passed": false,
-          "verifiedBy": "none",
+          "passed": "yellow",
+          "verifiedBy": "self",
           "verifiedAt": null,
-          "evidence": "",
-          "notes": "GAP: lib.rs declares mod wintun_driver (Windows-only), wintun crate in Cargo.toml, but wintun_driver.rs FILE DOES NOT EXIST. wireguard.rs has Wintun stubs returning \"Wintun tunnel not yet implemented\". Timeline: 2-3 weeks."
+          "evidence": "desktop/caspervpn-core/src/wintun_driver.rs",
+          "notes": "CREATED: wintun_driver.rs (320 lines). Full Wintun TUN interface: establish_tunnel(), close_tunnel(), is_tunnel_active(). Config validation, DLL location, interface config via netsh, route config, WireGuard peer setup, CIDR parsing, DNS mgmt. 7 unit tests. Needs Windows runtime validation.",
+          "verifiedDate": "2026-03-11"
         },
         {
           "test": "Kill switch implemented using Windows Firewall API (WFP) \u2014 blocks traffic when VPN disconnects",
-          "passed": false,
-          "verifiedBy": "none",
+          "passed": "yellow",
+          "verifiedBy": "self",
           "verifiedAt": null,
-          "evidence": "",
-          "notes": "GAP: lib.rs declares mod killswitch (Windows-only), windows crate with fwpm features in Cargo.toml, but killswitch.rs FILE DOES NOT EXIST. Timeline: 1-2 weeks after Wintun driver."
+          "evidence": "desktop/caspervpn-core/src/killswitch.rs",
+          "notes": "CREATED: killswitch.rs (321 lines). WFP kill switch with AlwaysOn/WhileConnected modes. enable(), disable(), crash recovery via recover_on_startup(). WFP sublayer architecture: PERMIT (loopback, DHCP, VPN adapter, endpoints, DNS) + BLOCK all. 5 unit tests. Needs Windows WFP runtime validation.",
+          "verifiedDate": "2026-03-11"
         },
         {
           "test": "System tray app launches on startup \u2014 toggles VPN on/off from taskbar",
@@ -3065,11 +3067,11 @@
       "id": "linux-app",
       "name": "Linux App (Rust Core + GTK4/Tauri)",
       "weight": 2.55,
-      "progress": 20,
+      "progress": 45,
       "phase": 5,
       "priority": "P2",
       "owner": "Desktop",
-      "status": "Rust core compiles + passes tests on Linux. Tauri UI shared with Windows. WireGuard via wg-quick (not kernel). GAPS: All packaging (deb/rpm/snap/flatpak/AUR) untested or missing.",
+      "status": "Linux WireGuard kernel module CREATED (yellow). Snap, Flatpak, AUR packaging configs CREATED (yellow). Tauri frontend complete. deb/rpm via Tauri config. Needs Linux runtime validation.",
       "blocked": false,
       "blocker": "",
       "deps": [
@@ -3093,15 +3095,16 @@
           "verifiedAt": null,
           "evidence": "",
           "verifiedDate": "2026-03-11",
-          "notes": "Tauri 2.0 app shared with Windows. tauri.conf.json targets deb/rpm/appimage. No GTK4-native path yet \u2014 using Tauri web frontend. Ubuntu/Fedora runtime untested but config present."
+          "notes": "Tauri 2.0 app shared with Windows. NEW: dist/ frontend created (index.html + style.css + app.js). Login, main VPN, settings screens. Ubuntu/Fedora runtime untested but full UI present."
         },
         {
           "test": "WireGuard kernel module detected and tunnel established via ip link device",
-          "passed": false,
-          "verifiedBy": "none",
+          "passed": "yellow",
+          "verifiedBy": "self",
           "verifiedAt": null,
-          "evidence": "",
-          "notes": "PARTIAL: wireguard.rs Linux path uses wg-quick CLI (up/down). This works but is not kernel module integration. Direct netlink WireGuard config would be optimal. Timeline: 1-2 weeks."
+          "evidence": "desktop/caspervpn-core/src/linux_wireguard.rs",
+          "notes": "CREATED: linux_wireguard.rs (~350 lines). Kernel module detection + ip link type wireguard tunnel establishment. wg-quick fallback. Kill switch via iptables CASPERVPN chain. DNS via systemd-resolved + resolv.conf. Routes via two-half-routes trick. 4 unit tests. Needs Linux runtime validation.",
+          "verifiedDate": "2026-03-11"
         },
         {
           "test": ".deb package builds and installs correctly on Debian/Ubuntu systems",
@@ -3121,27 +3124,30 @@
         },
         {
           "test": "Snap package builds and available on snap store \u2014 install via 'snap install caspervpn'",
-          "passed": false,
-          "verifiedBy": "none",
+          "passed": "yellow",
+          "verifiedBy": "self",
           "verifiedAt": null,
-          "evidence": "",
-          "notes": "GAP: No snapcraft.yaml. Needs: snap confinement config, interfaces for network/system tray. Timeline: 1-2 weeks."
+          "evidence": "desktop/caspervpn-desktop/packaging/snap/snapcraft.yaml",
+          "notes": "CREATED: packaging/snap/snapcraft.yaml. core22 base, strict confinement, rust plugin. Plugs: network, network-bind, network-control, firewall-control, desktop, wayland, x11. amd64+arm64. Untested build \u2014 needs snapcraft environment.",
+          "verifiedDate": "2026-03-11"
         },
         {
           "test": "Flatpak package builds and available on Flathub",
-          "passed": false,
-          "verifiedBy": "none",
+          "passed": "yellow",
+          "verifiedBy": "self",
           "verifiedAt": null,
-          "evidence": "",
-          "notes": "GAP: No flatpak manifest. Needs: org.caspervpn.desktop.yml, runtime config, Flathub submission. Timeline: 1-2 weeks."
+          "evidence": "desktop/caspervpn-desktop/packaging/flatpak/com.caspervpn.desktop.yml",
+          "notes": "CREATED: packaging/flatpak/com.caspervpn.desktop.yml. GNOME 45 runtime, rust-stable SDK extension. Includes wireguard-tools module. finish-args for network, wayland, X11, PolicyKit. Untested build.",
+          "verifiedDate": "2026-03-11"
         },
         {
           "test": "AUR package available \u2014 install via 'yay -S caspervpn' on Arch systems",
-          "passed": false,
-          "verifiedBy": "none",
+          "passed": "yellow",
+          "verifiedBy": "self",
           "verifiedAt": null,
-          "evidence": "",
-          "notes": "GAP: No PKGBUILD. Needs: AUR account, PKGBUILD recipe, dependency list. Timeline: 1 week."
+          "evidence": "desktop/caspervpn-desktop/packaging/aur/PKGBUILD",
+          "notes": "CREATED: packaging/aur/PKGBUILD. Depends on webkit2gtk-4.1, gtk3, wireguard-tools. Installs binary, desktop entry, icons, polkit policy, systemd user service. Untested build.",
+          "verifiedDate": "2026-03-11"
         },
         {
           "test": "App auto-starts on login when enabled in settings",
@@ -4420,11 +4426,11 @@
     },
     "desktop": {
       "name": "Desktop (Win/Linux)",
-      "status": "idle",
+      "status": "yellow",
       "lead": "Unassigned",
-      "currentTask": "Awaiting Phase 4",
+      "currentTask": "Session 2 complete: Wintun driver, kill switch, Linux WireGuard, Snap/Flatpak/AUR packaging, Tauri frontend all created. Needs runtime validation.",
       "blockers": 0,
-      "completion": 0
+      "completion": 45
     },
     "website": {
       "name": "Website",
