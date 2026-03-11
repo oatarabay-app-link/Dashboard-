@@ -74,7 +74,7 @@ Dropbox/
         │   └── Dashboard-/                   ← Git clone (main)
         │       ├── index.html                ← Live dashboard
         │       ├── data.json                 ← Task/status data
-        │       ├── build_dashboard.py
+        │       ├── build_dashboard.py    (safe line-by-line version; canonical rebuild is in factory_bootstrap.py)
         │       ├── README.md
         │       └── system/                   ← System wiki (Brain reads via symlink)
         │           ├── INDEX.md
@@ -187,7 +187,7 @@ session_start.py
 ## 6. WHAT BELONGS WHERE
 
 ### Dashboard- repo (ONLY these):
-- `index.html`, `data.json`, `build_dashboard.py`, `README.md`
+- `index.html`, `data.json`, `build_dashboard.py` (local-only safe rebuilder), `README.md`
 - `system/*.md` (system wiki)
 - **NOTHING ELSE.** No department notes. No logs. No prompts. No code docs.
 
