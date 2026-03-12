@@ -9489,6 +9489,18 @@
       "createdAt": "2026-03-12T13:40:36Z",
       "createdDate": "2026-03-12",
       "completedDate": null
+    },
+    {
+      "id": "xd-249",
+      "from": "[DEVOPS]",
+      "to": "[CEO]",
+      "title": "Handoff from DEVOPS: NL-Primary CRITICAL: Unban SSH + execute 4 pending scripts (AC17-AC21 + migrations)",
+      "description": "SSH TO NL-PRIMARY BLOCKED \u2014 fail2ban iptables ban persists. Need CEO to clear via DO console then execute scripts.\n\nSTEP 1: Open DigitalOcean console for 178.62.101.221\n  URL: https://cloud.digitalocean.com/droplets (click NL-Primary \u2192 Console)\n\nSTEP 2: Unban SSH (run in DO console):\n  fail2ban-client set sshd unbanip --all\n  iptables -F fail2ban-sshd 2>/dev/null || iptables -D fail2ban-sshd -j RETURN 2>/dev/null || true\n  systemctl restart fail2ban\n  echo 'SSH unbanned'\n\nSTEP 3: Verify SSH open:\n  ss -tlnp | grep :22\n\nSTEP 4: Execute scripts in order (SSH as caspervpn, then sudo):\n  a) Auth pipeline (AC17-AC19 + RADIUS accounting + WireGuard):\n     sudo bash /path/to/auth-pipeline-fix.sh apply\n     OR fetch from GitHub:\n     curl -H 'Authorization: token <GITHUB_TOKEN>' -sL 'https://raw.githubusercontent.com/oatarabay-app-link/Casper-Code/dropbox-local/infrastructure/security/auth-pipeline-fix.sh' -o /tmp/auth-pipeline-fix.sh\n     sudo bash /tmp/auth-pipeline-fix.sh apply\n\n  b) WireGuard peer cleanup (xd-201):\n     sudo bash /tmp/wg-dynamic-peer-cleanup.sh apply\n\n  c) RADIUS accounting enable (xd-202):\n     sudo bash /tmp/radius-accounting-enable.sh apply\n\n  d) Enterprise tenancy migration (xd-219):\n     sudo bash /tmp/enterprise-tenancy-migration.sh apply\n\nSCRIPTS LOCATION: infrastructure/security/ in Casper-Code repo (dropbox-local branch)\nALL SCRIPTS ARE READY \u2014 only SSH access is blocking execution.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-03-12T13:44:29Z",
+      "createdDate": "2026-03-12",
+      "completedDate": null
     }
   ],
   "importantNotes": [
