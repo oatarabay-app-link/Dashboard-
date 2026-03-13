@@ -1,6 +1,6 @@
 {
-  "lastUpdated": "2026-03-12T14:59:16Z",
-  "updatedBy": "devops",
+  "lastUpdated": "2026-03-13T03:17:31Z",
+  "updatedBy": "[DEVOPS]",
   "overall": {
     "completion": 69,
     "phase": "Phase 1: iOS Launch",
@@ -4625,11 +4625,11 @@
       "name": "DevOps & Infra",
       "status": "active",
       "lead": "Unassigned",
-      "currentTask": "CasperCloak deploy script + Enterprise migration script + WireGuard cleanup + RADIUS accounting \u2014 all scripts ready, CEO execution pending",
+      "currentTask": "Session 2026-03-13: Flask 5002 binding hardened (0.0.0.0\u2192127.0.0.1) on all 4 secondary servers. systemd casper-control.service created for persistence. NL-Primary SSH now OPEN (fail2ban expired) \u2014 CEO must run 4 pending scripts. CasperCloak deploy + enterprise migration + RADIUS auth pipeline awaiting CEO.",
       "blockers": 0,
-      "completion": 76,
+      "completion": 78,
       "progress": 98,
-      "launchCompletion": 65
+      "launchCompletion": 67
     },
     "android": {
       "name": "Android",
@@ -9055,7 +9055,7 @@
       "from": "[DEVOPS]",
       "to": "[CEO]",
       "title": "Handoff from DEVOPS: Auth Pipeline Fix Ready \u2014 Run auth-pipeline-fix.sh apply on NL-Primary",
-      "description": "Script at infrastructure/security/auth-pipeline-fix.sh covers AC17 (RADIUS secret unification), AC18 (radacct/radpostauth table creation), AC19 (OpenVPN auth-user-pass-verify plugin), plus enables WireGuard RADIUS accounting daemon and FreeRADIUS SQL module. Runbook at infrastructure/runbooks/20260312_auth_pipeline_fix_runbook.md. Steps: (1) SSH to 178.62.101.221 as caspervpn, (2) sudo bash auth-pipeline-fix.sh audit, (3) sudo bash auth-pipeline-fix.sh apply, (4) verify with radtest + table checks. After NL passes, repeat on secondary servers via multi-server-hardening.sh.",
+      "description": "Auth Pipeline Fix Ready. NL-Primary SSH port 22 NOW OPEN (2026-03-13). Run: ./infrastructure/security/auth-pipeline-fix.sh apply This fixes: AC17 (RADIUS secret unification), AC18 (radacct tables), AC19 (OpenVPN auth-user-pass-verify), WG RADIUS accounting bridge.",
       "status": "pending",
       "createdAt": "2026-03-12T01:17:48Z",
       "createdDate": "2026-03-12",
@@ -9523,7 +9523,7 @@
       "from": "[DEVOPS]",
       "to": "[CEO]",
       "title": "Handoff from DEVOPS: NL-Primary CRITICAL: Unban SSH + execute 4 pending scripts (AC17-AC21 + migrations)",
-      "description": "SSH TO NL-PRIMARY BLOCKED \u2014 fail2ban iptables ban persists. Need CEO to clear via DO console then execute scripts.\n\nSTEP 1: Open DigitalOcean console for 178.62.101.221\n  URL: https://cloud.digitalocean.com/droplets (click NL-Primary \u2192 Console)\n\nSTEP 2: Unban SSH (run in DO console):\n  fail2ban-client set sshd unbanip --all\n  iptables -F fail2ban-sshd 2>/dev/null || iptables -D fail2ban-sshd -j RETURN 2>/dev/null || true\n  systemctl restart fail2ban\n  echo 'SSH unbanned'\n\nSTEP 3: Verify SSH open:\n  ss -tlnp | grep :22\n\nSTEP 4: Execute scripts in order (SSH as caspervpn, then sudo):\n  a) Auth pipeline (AC17-AC19 + RADIUS accounting + WireGuard):\n     sudo bash /path/to/auth-pipeline-fix.sh apply\n     OR fetch from GitHub:\n     curl -H 'Authorization: token <GITHUB_TOKEN>' -sL 'https://raw.githubusercontent.com/oatarabay-app-link/Casper-Code/dropbox-local/infrastructure/security/auth-pipeline-fix.sh' -o /tmp/auth-pipeline-fix.sh\n     sudo bash /tmp/auth-pipeline-fix.sh apply\n\n  b) WireGuard peer cleanup (xd-201):\n     sudo bash /tmp/wg-dynamic-peer-cleanup.sh apply\n\n  c) RADIUS accounting enable (xd-202):\n     sudo bash /tmp/radius-accounting-enable.sh apply\n\n  d) Enterprise tenancy migration (xd-219):\n     sudo bash /tmp/enterprise-tenancy-migration.sh apply\n\nSCRIPTS LOCATION: infrastructure/security/ in Casper-Code repo (dropbox-local branch)\nALL SCRIPTS ARE READY \u2014 only SSH access is blocking execution.",
+      "description": "URGENT UPDATE 2026-03-13: NL-Primary SSH port 22 is NOW OPEN \u2014 fail2ban ban expired. CEO must: (1) ssh root@178.62.101.221, (2) cd /opt/caspervpn or repo path, (3) run ./infrastructure/security/auth-pipeline-fix.sh apply, (4) run ./infrastructure/security/wg-dynamic-peer-cleanup.sh apply, (5) run ./infrastructure/security/radius-accounting-enable.sh apply, (6) run ./infrastructure/security/enterprise-tenancy-migration.sh apply. All 4 scripts verified ready in Casper-Code repo (dropbox-local).",
       "status": "pending",
       "priority": "P2",
       "createdAt": "2026-03-12T13:44:29Z",
@@ -9655,7 +9655,6 @@
       "addedAt": "2026-03-12T01:30:00Z",
       "severity": "info"
     },
-    "[DEVOPS 2026-03-11] Infrastructure Health Check: NL-Primary hardened (Flask internal-only). 4 secondary servers EXPOSED on port 5002 \u2014 security risk. Multi-server hardening script + health check script created. SSH restored on NL. xd-206 created for CEO to harden secondary nodes.",
     {
       "id": "note-qa-2026-03-11",
       "text": "[QA SESSION 2026-03-11] Re-verification results: xd-185 RADIUS STILL FAILS (mock data unchanged despite Admin-Panel claims). xd-186 2FA PARTIAL (file exists but adminService missing all 2FA methods + no route wired). xd-194 Marketing STILL non-compliant (subtitle over limit, keywords over limit, false server count/audit claims). 4 handoffs code-verified but DEFERRED for runtime (xd-168, xd-170, xd-171, xd-195). xd-193 Security Lockdown NOT READY (13/25 ACs). BLOCKER: live server deploy needed for any runtime testing.",
@@ -10097,7 +10096,6 @@
       "addedAt": "2026-03-11T23:45:00Z",
       "severity": "info"
     },
-    "[DEVOPS 2026-03-12] Session 2026-03-12: 4 scripts created \u2014 caspercloak-deploy.sh (xd-233), enterprise-tenancy-migration.sh (xd-219), wg-dynamic-peer-cleanup.sh (xd-201), radius-accounting-enable.sh (xd-202). All CEO-executable. DevOps 76%, launch 65%.",
     {
       "title": "[MARKETING] SEO Content Engine: 9/12 Articles Complete",
       "content": "Session 2026-03-12 18:10 UTC. 3 new articles committed to dropbox-local: (1) best-free-vpn-2026 \u2014 conversion listicle, 100K+/mo keyword cluster; (2) vpn-streaming-guide \u2014 Tier 2 mid-funnel, 12K+/mo; (3) data-protection-guide \u2014 Tier 3 awareness, 10K+/mo. All MARKETING_CLAIMS_AUDIT v1.1 compliant. Internal linking applied. 9/12 target articles now complete.",
@@ -10105,7 +10103,8 @@
       "addedAt": "2026-03-12T18:10:00Z",
       "severity": "info"
     },
-    "[BACKEND 2026-03-13] backend-api AC[8] DONE: Added /api/docs \u2192 /swagger/index.html redirect. Commit 4f449320. Remaining 8 backend-api ACs require live server deploy."
+    "[BACKEND 2026-03-13] backend-api AC[8] DONE: Added /api/docs \u2192 /swagger/index.html redirect. Commit 4f449320. Remaining 8 backend-api ACs require live server deploy.",
+    "[DEVOPS 2026-03-13] Flask 5002 hardened: all 4 secondary servers now bind to 127.0.0.1 (was 0.0.0.0). systemd casper-control.service created for auto-restart. NL-Primary SSH OPEN \u2014 CEO scripts ready to execute (xd-249)."
   ],
   "ctoBoard": {
     "role": "CTO",
