@@ -1,7 +1,7 @@
 # CASPER FACTORY — MASTER ARCHITECTURE & OPERATING RULES
 
 > CEO-approved system blueprint. Every AI session reads this BEFORE doing any work.
-> Last verified: 2026-03-11. Do not deviate.
+> Last verified: 2026-03-28. Do not deviate.
 
 ---
 
@@ -124,11 +124,11 @@ Documents/Claude/Scheduled/
 ## 4. SESSION LIFECYCLE (5 PHASES)
 
 ```
-Phase 0 — VAULT SYNC
-  vault_sync() pulls both clones:
-    Casper-Code → origin/dropbox-local
-    Dashboard-  → origin/main
-  Obsidian Brain sees fresh data via symlinks.
+Phase 0 — SESSION START
+  session_start.py initializes the session (no vault pull needed).
+  Factory sessions write ALL data to GitHub via API.
+  Obsidian Brain reads via symlinks into the Mac Dropbox clones —
+  it updates automatically when CEO runs git pull on Mac (same as Xcode workflow).
 
 Phase 1 — STATUS CHECK
   session_start.py reads:
@@ -161,26 +161,32 @@ session_exit(dept, summary)
   → write_session_memory() → 3 locations in Casper-Code via API
   → update_changelog() → CHANGELOG.md via API
   → push_dashboard() → data.json + rebuild index.html INLINE_DATA
-  → vault_sync() → git pull both local clones
-  → Obsidian Brain sees changes via symlinks
+  All writes go to GitHub via API. No local git operations.
 ```
 
 ### Read Path
 ```
 session_start.py
-  → vault_sync() → pull both clones
-  → fetch_dashboard() → read data.json
-  → api_get() → read DEPARTMENT_LOG.md, CHANGELOG.md
+  → fetch_dashboard() → read data.json via GitHub API
+  → api_get() → read DEPARTMENT_LOG.md, CHANGELOG.md via GitHub API
   → Display status, handoffs, recent changes
 ```
 
-### vault_sync() Details
-- Syncs TWO clones: Casper-Code (dropbox-local) + Dashboard- (main)
-- Tries host path first (`/Users/omar/Dropbox/...`)
-- Falls back to VM mount search (`/sessions/*/mnt/*/...`)
-- Deduplicates by realpath
-- Removes stale .git lock files
-- 60-second timeout per git operation
+### How Obsidian Brain Stays Current
+Brain reads via symlinks — NOT via vault_sync or git pull from the VM:
+```
+Brain/projects/caspervpn/memory   → symlink → Dropbox/.../Casper-Code/memory/
+Brain/projects/caspervpn/dashboard → symlink → Dropbox/.../Dashboard-/system/
+```
+Brain updates when CEO runs `git pull` on Mac (the same pull done to fetch iOS/backend
+code for Xcode). This is the ONLY step needed — it happens naturally in normal workflow.
+No separate vault sync is required or possible from the Cowork VM.
+
+### vault_sync() — NO-OP (kept for backward compatibility)
+- Prints a status message, returns True immediately
+- The old git pull logic was removed: it always failed in the VM (maintenance.lock,
+  read-only Dropbox mount) and was architecturally wrong
+- Never call vault_sync() expecting it to update Obsidian — use Mac git pull instead
 
 ---
 
@@ -396,7 +402,7 @@ Use `push_dashboard()` or `rebuild_dashboard()` — NEVER edit INLINE_DATA manua
 1. **Never git clone in factory scripts** → use `api_get()`/`api_put()`
 2. **Never push data.json without re-baking INLINE_DATA** → use `push_dashboard()`
 3. **Never mark tasks green unless you are CEO** → self-report = yellow
-4. **Never skip Phase 0** → Obsidian gets stale data
+4. **Phase 0 (session_start.py)** → initializes status from GitHub API. Obsidian updates via Mac git pull.
 5. **Never touch another department's code** → create a handoff
 6. **Never merge to main in Casper-Code** → all work on `dropbox-local`
 7. **Never skip Phase 4** → session becomes invisible
