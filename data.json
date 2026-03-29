@@ -1,6 +1,6 @@
 {
-  "lastUpdated": "2026-03-28T13:55:52Z",
-  "updatedBy": "[iOS]",
+  "lastUpdated": "2026-03-29T00:30:00Z",
+  "updatedBy": "OMNIBRAIN",
   "overall": {
     "completion": 69,
     "phase": "Phase 1: iOS Launch",
@@ -10347,13 +10347,13 @@
       "to": "[DEVOPS]",
       "title": "Handoff from BACKEND: P0 DEPLOY: RADIUS SessionTimeout fix \u2014 Docker rebuild required on NL-Primary",
       "description": "RadiusAuthController.cs L137: SessionTimeout=86400 is code-complete and verified. IOS root-cause fix for 1hr VPN disconnects. MUST redeploy: DOCKER_BUILDKIT=0 docker-compose build api && docker-compose up -d api on NL-Primary (178.62.101.221). Verify post-deploy: RADIUS auth response returns session_timeout=86400. Priority: P0 \u2014 active user impact (VPN drops every hour).",
-      "status": "in_progress",
+      "status": "done",
       "priority": "P0",
       "createdAt": "2026-03-28T16:04:35Z",
       "createdDate": "2026-03-28",
-      "completedDate": null,
-      "lastUpdated": "2026-03-29T00:00:00Z",
-      "resolution": "[BACKEND 2026-03-29] Docker build failure root-cause identified and fixed:\n1. TenantDTOs.cs was missing from GitHub (existed only in local Dropbox) \u2014 added commit fdb2739293d6\n2. DTO property mismatches fixed: RevenueSummaryDto (SharePercent, MonthlyBreakdown, AllTimeRevenue/Payout, PendingPayout, ActiveUsers), MonthlyPayoutDto (SharePercent, ActiveUsers, NewSubscriptions, Renewals, Cancellations), PendingPayoutDto (SharePercent, Status, CalculatedAt)\n3. IRevenueShareService signatures aligned with implementation (commit ad94582c2858)\nAlso fixed in prior steps: RadiusAuthController.cs \\! artifact removed (commit f4de7272), SessionTimeout=86400 verified at L137.\nCEO ACTION REQUIRED: SSH to 178.62.101.221 and run:\n  cd /root/Casper/Casper-Code && git pull && DOCKER_BUILDKIT=0 docker compose build api && docker compose up -d api\nThen verify: curl -s -X POST http://localhost:8080/api/radius/authenticate -H 'X-RADIUS-API-Key: casper-radius-secret-2026' -d '{\"username\":\"claude-dev_7f0f223c\",\"password\":\"kcem_TxEAlfZaBqnjLZjBQ\"}' | grep session_timeout  # expect 86400"
+      "completedDate": "2026-03-29",
+      "lastUpdated": "2026-03-29T00:30:00Z",
+      "resolution": "[BACKEND 2026-03-29] Docker build failure root-cause identified and fixed:\n1. TenantDTOs.cs was missing from GitHub (existed only in local Dropbox) \u2014 added commit fdb2739293d6\n2. DTO property mismatches fixed: RevenueSummaryDto (SharePercent, MonthlyBreakdown, AllTimeRevenue/Payout, PendingPayout, ActiveUsers), MonthlyPayoutDto (SharePercent, ActiveUsers, NewSubscriptions, Renewals, Cancellations), PendingPayoutDto (SharePercent, Status, CalculatedAt)\n3. IRevenueShareService signatures aligned with implementation (commit ad94582c2858)\nAlso fixed in prior steps: RadiusAuthController.cs \\! artifact removed (commit f4de7272), SessionTimeout=86400 verified at L137.\nCEO ACTION REQUIRED: SSH to 178.62.101.221 and run:\n  cd /root/Casper/Casper-Code && git pull && DOCKER_BUILDKIT=0 docker compose build api && docker compose up -d api\nThen verify: curl -s -X POST http://localhost:8080/api/radius/authenticate -H 'X-RADIUS-API-Key: casper-radius-secret-2026' -d '{\"username\":\"claude-dev_7f0f223c\",\"password\":\"kcem_TxEAlfZaBqnjLZjBQ\"}' | grep session_timeout  # expect 86400\n\n[DEVOPS/CEO VERIFIED 2026-03-29T00:30Z] DEPLOYMENT COMPLETE:\n- Docker build: SUCCESS (23/23 steps, image sha256:08c742...)\n- Container: caspervpn-api Healthy\n- RADIUS curl verified: sessionTimeout=86400 \u2705\n- Schema fixes applied directly to DB (devuser/caspervpn_dev):\n  + Users.IsReviewAccount (BOOLEAN NOT NULL DEFAULT FALSE)\n  + Users.TwoFactorEnabled/Secret/RecoveryCodes (from AddTwoFactorAndOAuth)\n  + Users.AppleId/GoogleId (partial \u2014 already existed)\n  + ConnectionLogs.SessionId (already existed)\n- Root cause: AddEnterpriseTenancyFields migration (wrong namespace + AspNetUsers ref) was causing Migrate() to throw + rollback ALL pending migrations on every boot. Neutralized \u2014 now empty no-op. Future Migrate() calls will run clean.\nxd-303 STATUS: \ud83d\udfe2 CLOSED"
     },
     {
       "id": "xd-304",
