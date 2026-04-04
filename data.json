@@ -12459,11 +12459,14 @@
       "to": "[BACKEND]",
       "title": "Handoff from QA: P1: /api/notifications/preferences returns 500 on authenticated request",
       "description": "GET /api/notifications/preferences with valid JWT returns HTTP 500. Dev account claude-dev@caspervpn.com. No error visible in docker logs. Needs debugging \u2014 possibly missing DB table or null reference.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-04-03T08:42:32Z",
       "createdDate": "2026-04-03",
-      "completedDate": null
+      "completedDate": "2026-04-04",
+      "completedAt": "2026-04-04",
+      "completedBy": "[BACKEND]",
+      "resolution": "FIXED: Created missing UserNotificationPreferences table in PostgreSQL. Root cause: model and DbSet existed but DB migration never ran to create the table. Manual DDL applied with FK to Users table + unique index on UserId. Endpoint now returns HTTP 200 with correct JSON shape."
     },
     {
       "id": "xd-326",
@@ -12538,9 +12541,13 @@
       "title": "Verify POST /api/multihop/connect response shape matches iOS MultiHopConnectResponse model",
       "description": "iOS MultiHopConnectResponse Swift model (MultiHopManager.swift) expects: { sessionId: String, protocol: String, entryHop: { serverId, serverName, country, endpoint, role, publicKey? }, exitHop: { serverId, serverName, country, endpoint, role, publicKey? }, estimatedLatencyMs: Int }. Backend MultiHopConnectionConfig (MultiHopController.cs) must serialize to this exact shape. Verify with: POST /api/multihop/connect with valid Premium user auth + valid entryServerId/exitServerId. Confirm publicKey is included in both hop objects (iOS tunnel provider needs it to configure WireGuard peer).",
       "priority": "P1",
-      "status": "pending",
+      "status": "completed",
       "createdAt": "2026-04-04T00:00:00Z",
-      "verification": "none"
+      "verification": "none",
+      "completedAt": "2026-04-04",
+      "completedDate": "2026-04-04",
+      "completedBy": "[BACKEND]",
+      "resolution": "VERIFIED: POST /api/multihop/connect response shape matches iOS MultiHopConnectResponse exactly. Fields: sessionId(String), protocol(String), entryHop({serverId,serverName,country,endpoint,role,publicKey?}), exitHop(same), estimatedLatencyMs(Int), createdAt(DateTime). publicKey IS included in both hops from VpnServer.PublicKey. 403 for non-Premium users is correct entitlement gate."
     },
     {
       "id": "xd-333",
@@ -12549,9 +12556,13 @@
       "title": "Verify GET /api/bandwidth/live response shape matches iOS LiveBandwidthResponse model",
       "description": "iOS LiveBandwidthResponse model (BandwidthHistoryManager.swift) expects: { connected: Bool, bytesUploaded: Int64, bytesDownloaded: Int64, sessionDurationSeconds: Int64, sampledAt: String? (ISO8601) }. BandwidthHistoryManager polls this endpoint every 3s while VPN is connected to display live speed. Verify endpoint exists and returns correct field names. Note: sampledAt should be ISO8601 string (iOS uses ISO8601DateFormatter to parse it).",
       "priority": "P1",
-      "status": "pending",
+      "status": "completed",
       "createdAt": "2026-04-04T00:00:00Z",
-      "verification": "none"
+      "verification": "none",
+      "completedAt": "2026-04-04",
+      "completedDate": "2026-04-04",
+      "completedBy": "[BACKEND]",
+      "resolution": "VERIFIED: GET /api/bandwidth/live response shape matches iOS LiveBandwidthResponse. Disconnected: {connected:false, bytesUploaded:0, bytesDownloaded:0, sessionDurationSeconds:0}. Connected: adds sessionId, serverName, sampledAt(ISO8601). All field names and types match iOS model. sampledAt is nullable as iOS expects."
     }
   ],
   "importantNotes": [
