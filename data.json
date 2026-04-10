@@ -12658,10 +12658,37 @@
       "to": "[BACKEND]",
       "title": "Handoff from IOS: OpenVPN config generation broken \u2014 VpnConnectionController.CreateOpenVpnClient hardcodes PRIMARY_SERVER",
       "description": "iOS tested xd-336 (OpenVPN routing fix). POST /api/servers/{id}/openvpn-config returns 500 on all 5 servers. Root cause: requests route to VpnConnectionController.CreateOpenVpnClient (line 263) which passes PRIMARY_SERVER to GenerateOpenVpnClientAsync. The fix in ServersController.GetOpenVpnConfig (uses server.IpAddress) exists in OptimizedVpnServerService.cs line 1090 but requests are NOT reaching that controller. Either: (1) Nginx rewrites /servers/{id}/openvpn-config to /vpn/openvpn/client, OR (2) ASP.NET route precedence picks VpnConnectionController over ServersController. Fix: ensure POST /api/servers/{id}/openvpn-config routes to ServersController.GetOpenVpnConfig, OR update VpnConnectionController.CreateOpenVpnClient to accept serverId parameter and use it. DB confirmed: all 5 servers have valid IpAddress values. Error: 'VPN Server primary not configured in appsettings.json'. iOS code path: ServerService.fetchOpenVPNConfig() calls POST /servers/{serverId}/openvpn-config \u2014 correct.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-04-07T07:14:11Z",
       "createdDate": "2026-04-07",
+      "completedDate": "2026-04-11",
+      "completedAt": "2026-04-11",
+      "completedBy": "[BACKEND]",
+      "resolution": "FIXED: Removed nginx rewrite that hijacked POST /api/servers/{id}/openvpn-config \u2192 /api/vpn/openvpn/client. Fix applied to: (1) Live nginx config on host /root/Casper/Casper-Code/nginx/sites/api.conf, nginx container restarted. (2) Source code in repo nginx/sites/api.conf (commit 7a1e707e on dropbox-local). Verified: All 5 servers return HTTP 200 with correct 'remote' IP in OpenVPN config (UK=178.62.101.221, NL=51.158.147.210, DE=91.194.84.79, FR=163.172.62.64, US=208.87.243.205). API logs confirm requests now route to ServersController.GetOpenVpnConfig (not VpnConnectionController)."
+    },
+    {
+      "id": "xd-339",
+      "from": "[BACKEND]",
+      "to": "[IOS]",
+      "title": "Handoff from BACKEND: OpenVPN per-server config FIXED \u2014 retest all 5 servers",
+      "description": "xd-338 resolved. POST /api/servers/{id}/openvpn-config now returns correct .ovpn with server-specific IP. Nginx rewrite removed (was redirecting all requests to VpnConnectionController which hardcoded PRIMARY_SERVER). Requests now route to ServersController.GetOpenVpnConfig which uses server.IpAddress from DB. Test matrix: 5 servers \u00d7 OpenVPN UDP. Verify: (1) correct 'remote' IP in generated config, (2) successful tunnel establishment, (3) traffic routes through selected server.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-04-11T01:27:08Z",
+      "createdDate": "2026-04-11",
+      "completedDate": null
+    },
+    {
+      "id": "xd-340",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: Verify OpenVPN per-server config fix (xd-338 resolution)",
+      "description": "Backend fixed nginx rewrite that was breaking OpenVPN config generation. POST /api/servers/{id}/openvpn-config now returns server-specific config. Verify: (1) All 5 servers return 200 with correct remote IP, (2) No regression on other VPN protocols, (3) Rate limiting still working (5 req/sec \u2192 429).",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-04-11T01:27:08Z",
+      "createdDate": "2026-04-11",
       "completedDate": null
     }
   ],
