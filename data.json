@@ -1,6 +1,6 @@
 {
-  "lastUpdated": "2026-04-06T04:35:00Z",
-  "updatedBy": "website-scheduled",
+  "lastUpdated": "2026-04-15T12:28:15Z",
+  "updatedBy": "[QA]",
   "overall": {
     "completion": 69,
     "phase": "Phase 1: iOS Launch",
@@ -12950,6 +12950,23 @@
       "handoffTo": "[QA]",
       "handoffNote": "After CEO completes the real DO activation, hand back to QA to close the methodology gap and re-mark xd-351 as fully verified.",
       "taskRef": "server-activation-real-do"
+    },
+    {
+      "id": "xd-354",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Smart Server Selection (Phase 1) - ranked server list + per-region protocol routing",
+      "description": "Feature implementing intelligent server selection for iOS VPN connections. Backend (.NET 8 / OptimizedVpnServerService): POST /api/servers/smart-recommend returns a ranked list of servers scored by proximity (Haversine distance), load, ping, premium status, and protocol-support bonus. Per-region protocol routing: restrictive countries (CN/IR/RU/AE/TM/BY/KP/SA/OM/PK/EG/VN/MM/CU) get CasperCloak, WiFi networks get IKEv2 (NAT traversal), cellular/default gets WireGuard. User explicit protocol choice always wins. iOS (SwiftUI, MVVM): SmartRecommendation Codable models, ServerService.getSmartRecommendations() API method, SmartConnectManager.smartConnect() as server-level failover orchestrator (tries up to 3 servers, 0.5s cooldown between attempts, falls back to legacy getRecommendedServer on API failure), ConnectionViewModel.quickConnect() rewired to use SmartConnectManager, VPNConnectionManager.connect(to:preferredProtocol:) wired for per-server protocol override. Backend adds existing GeoIpService (IGeoIpService + static restrictive-country HashSet + capital-city fallback coord map for 20 countries). DI: singleton GeoIpService in Program.cs. DTOs: SmartRecommendationRequest/Response/SmartServerRecommendation all in ServerDTOs.cs:340-390. Phase 4 follow-up: replace stubbed GeoIpService.ResolveAsync() with real MaxMind GeoLite2 .mmdb lookup (currently returns null, relies on client-sent ClientCountryCode).",
+      "status": "resolved",
+      "priority": "P2",
+      "createdAt": "2026-04-15T12:30:00Z",
+      "createdDate": "2026-04-15",
+      "completedDate": "2026-04-15",
+      "handoffTo": null,
+      "handoffNote": "Phase 1 feature-complete and QA verified. Phase 4 (MaxMind GeoIP .mmdb integration) deferred as non-blocking - current fallback to Locale.current.region is sufficient for iOS.",
+      "taskRef": "smart-server-selection",
+      "verifiedBy": "tested",
+      "resolutionNote": "QA VERIFIED 2026-04-15T12:30Z. Code-verified review of 6 files: backend Services/OptimizedVpnServerService.cs GetSmartRecommendationsAsync (lines 215-396) scoring formula base 100 -0.01*km -0.5*load -0.1*ping +10premium +20/-50 protocol-match; Services/GeoIpService.cs static restrictive set + 20 country-coord fallbacks + ResolveAsync cache stub; Controllers/ServersController.cs lines 120-148 POST /smart-recommend [Authorize] extracting HttpContext.Connection.RemoteIpAddress; DTOs/ServerDTOs.cs lines 340-390 three new DTOs. iOS: Core/Models/SmartRecommendation.swift (3 Codable structs), Core/Services/SmartConnectManager.swift (@MainActor, 3-attempt failover loop with 0.5s cooldown, legacy fallback on API failure, mapProtocol lowercase lookup), Core/Services/ServerService.swift getSmartRecommendations (lines 296-338) with NetworkMonitor + Locale.current.region, ServiceProtocols.swift protocol declaration (line 141), Features/Connection/ConnectionViewModel.swift quickConnect already rewired. 9 runtime tests against live api.caspervpn.com with admin JWT: T1 US-cellular returns ranked list LA>FR>NL>UK>DE with defaultProtocol=WireGuard and correct distance-decay scores (83->58->58->57->56); T2 CN-cellular returns defaultProtocol=CasperCloak isRestrictiveRegion=true top3 DE>NL>FR by distance from Beijing; T3 US-wifi returns defaultProtocol=IKEv2 protocolReason='WiFi network - IKEv2 handles NAT traversal well'; T4 explicit preferredProtocol=OpenVPN with CN+wifi returns OpenVPN with protocolReason='User selected' (user choice correctly overrides both restrictive and wifi logic); T5 no coords + no country code returns graceful fallback with null clientCountryCode and score=120 ties across all 5 servers (no crash, no distance penalty); T6 preferredCountry=DE returns exactly 1 server (Germany-Dusseldorf only); T7 backward compat GET /api/servers/recommended still returns single server (Netherlands-Amsterdam); T8 unknown countryCode=XX returns isRestrictiveRegion=false defaultProtocol=WireGuard (safe fallback - does not over-escalate to CasperCloak); T9 no-JWT returns 401. iOS decoder cross-check: VPNServer.swift Codable fields match backend VpnServerDto JSON exactly; backend extra 'location' field silently ignored per Swift default; all required fields (id,name,country,city,countryCode,latitude,longitude,protocol,status,load,isPremium,ping,flagUrl,hostname,ipAddress,port,supportedProtocols) present and correctly typed. No defects found. Phase 4 (real MaxMind GeoIP .mmdb per-IP resolution) deferred - iOS Locale.current.region?.identifier already provides sufficient country signal."
     }
   ],
   "importantNotes": [
