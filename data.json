@@ -12900,6 +12900,21 @@
       "createdAt": "2026-04-15T05:50:00Z",
       "createdDate": "2026-04-15",
       "dueBy": "2026-04-22T23:59:00Z"
+    },
+    {
+      "id": "xd-351",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: Validate admin server activation flow end-to-end (CEO P0)",
+      "description": "CEO P0 feature shipped 2026-04-15: admin can enter DigitalOcean API token, list droplets visible to that token, pick one, provide one-time SSH root password, and watch a live bootstrap log stream while backend SSHes in and provisions the node. Backend: 10 files, 732-line IServerActivationService, 7 REST endpoints under /api/admin, AES-256-GCM encrypted provider credentials, SSH.NET TOFU host-key capture, partial unique index for concurrent-activation protection. Admin panel: 4-step MUI Stepper modal with live polling progress log. Two rounds of static code review completed in-session: 5 round-1 issues (BLOCKER fire-and-forget exception loss, HIGH timestamp->timestamptz, HIGH bash injection, HIGH SSH host key verification, MEDIUM polling race) + 7 round-2 issues (H1 fingerprint memory visibility, H2 fleet-key fail-fast, H3 DbUpdateException->409, M1 log injection, M2 drain loop hang, M3 save throttling, M5 hostname DNS sanitization) \u2014 all fixed. VALIDATION REQUIRED: (1) full happy-path provisioning against real DO droplet, (2) all round-1 + round-2 regression tests at runtime \u2014 H2 and H3 are mandatory, (3) negative cases including password-never-in-logs and token encryption-at-rest, (4) admin-panel polling race on instant terminal state. PREREQUISITES before testing: DevOps must set Encryption:MasterKey + Activation:FleetSshPublicKey env vars on api container, apply migration backend-dotnet-core/Migrations/Manual/20260415_add_server_activation.sql, rebuild api container. DETAIL RECORDS: memory/departments/backend/session-log.md (round 1 + round 2 narrative, architectural decisions), memory/departments/admin-panel/session-log.md (UI side), DEPARTMENT_LOG.md [BACKEND]/[ADMIN-PANEL] 2026-04-15T04:11-04:12Z entries. BLOCKER FOR CEO: fleet SSH keypair must be generated + public half set in api container env before first real activation (backend fail-fasts with clear progress-log error if missing). Phase 2 follow-up: wire real Vultr/Linode/Hetzner provider clients (currently stubbed).",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-04-15T13:26:04Z",
+      "createdDate": "2026-04-15",
+      "completedDate": null,
+      "handoffTo": "[DEVOPS]",
+      "handoffNote": "After QA sign-off, DevOps rolls out to remaining provider accounts and opens phase-2 xd-task to wire Vultr/Linode/Hetzner clients",
+      "taskRef": "server-activation"
     }
   ],
   "importantNotes": [
