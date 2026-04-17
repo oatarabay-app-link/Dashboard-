@@ -13406,15 +13406,34 @@
       "status": "pending",
       "priority": "P1",
       "title": "[QA] Verify xd-380 fix: IKEv2 foreground-sync no longer triggers phantom cycle",
-      "description": "Commit: 8f8aa63d (dropbox-local) \u2192 requires local git pull + iOS rebuild to take effect.\n\nPASS criteria:\n1. Connect via IKEv2 to any server\n2. Confirm Personal Hotspot tethering works\n3. Background app, wait 10s, foreground\n4. Xcode console shows: \"Foreground sync: skipping tunnel-provider reconcile (active protocol = IKEv2)\"\n5. NO \"\u26a0\ufe0f Foreground sync: drift ... tunnel kernel=Disconnected. Forcing reconcile.\" log\n6. Home page continues to display server name (no transient blanking)\n7. Backend: NO new POST /api/vpn/disconnect for this session\n8. Hotspot keeps working after foreground (no Strict-mode flap)\n9. Regression: repeat with WG / OpenVPN / CasperCloak \u2014 tunnel-provider reconcile still runs",
+      "description": "Combined verification for xd-380 (8f8aa63d) + xd-382 (3246c013) on dropbox-local.\n\n\u2550\u2550\u2550 xd-380 \u2014 IKEv2 foreground-sync phantom cycle \u2550\u2550\u2550\n1. Connect via IKEv2 to any server\n2. Background app 10s, foreground\n3. Xcode console: \"Foreground sync: skipping tunnel-provider reconcile (active protocol = IKEv2)\"\n4. NO \"\u26a0\ufe0f Foreground sync: drift ... tunnel kernel=Disconnected\" log\n5. Home page keeps server name, no reconnect, no POST /api/vpn/disconnect\n6. Regression (WG/OpenVPN/CasperCloak): tunnel-provider reconcile still runs for those\n\n\u2550\u2550\u2550 xd-382 \u2014 IKEv2 Personal Hotspot \u2550\u2550\u2550\n7. Kill Switch OFF + IKEv2 + Personal Hotspot ON:\n   - Connected iPhone \u2192 VPN works, VPN IP shown at whatismyip.com\n   - Tethered device (laptop/tablet) \u2192 internet works\n   - Xcode console: \"includeAllNetworks = NO\" in IKEv2 DIAG loadFromPreferences\n8. Kill Switch SOFT + IKEv2 + Hotspot:\n   - Tethered device \u2192 NO internet (expected)\n   - iPhone LAN devices (AirDrop/AirPlay) \u2192 work\n9. Kill Switch STRICT + IKEv2 + Hotspot:\n   - Tethered device \u2192 NO internet\n   - iPhone LAN devices \u2192 NO access (full block)\n10. Regression: WG/OpenVPN/CasperCloak hotspot behavior unchanged\n\n\u2550\u2550\u2550 Critical: same-IP verification for xd-382 \u2550\u2550\u2550\n11. Kill Switch OFF + IKEv2 connect to sao-01:\n    - whatismyip.com MUST show 185.192.124.245 (Brazil)\n    - If it shows real IP \u2192 xd-382 fix revealed \"same IP bug\" is real \u2192 escalate",
       "taskRef": "xd-380",
       "createdAt": "2026-04-17T21:29:16Z",
       "dueBy": "2026-04-20T21:29:16Z",
       "handoffTo": "ceo",
       "handoffNote": "On PASS, add importantNote \"[QA PASSED] xd-380 IKEv2 foreground-sync fix ready for CEO \ud83d\udfe2 review\""
+    },
+    {
+      "id": "xd-382",
+      "from": "ios",
+      "to": "cto",
+      "status": "completed",
+      "priority": "P0",
+      "title": "Fix IKEv2 Personal Hotspot break: gate includeAllNetworks on Kill Switch",
+      "description": "IKEv2Manager.swift line 187 hardcoded `includeAllNetworks=true` for all IKEv2 connections, forcing iOS Strict kill-switch behavior regardless of user Kill Switch preference. Symptom: Personal Hotspot tethering stops working when connected via IKEv2; connected devices cannot load traffic until VPN config is deleted. Discovered via CEO-reported log during session 2026-04-17 \u2014 backend also sends `IncludeAllNetworks:true` (OptimizedVpnServerService.cs:691 and VpnServerService.cs:358 per \u00a79.6 dual-file trap) but iOS overrides it anyway.",
+      "createdAt": "2026-04-18T00:00:00Z",
+      "completedAt": "2026-04-17T22:24:08Z",
+      "completedBy": "cto",
+      "resolution": "Fixed in 3246c013: gated `includeAllNetworks` and `excludeLocalNetworks` on `killSwitch.isEnabled` + `currentMode` \u2014 mirrors the WG/CasperCloak pattern. Now: Kill Switch OFF \u2192 includeAllNetworks=false (hotspot works); Soft \u2192 true (hotspot blocked, LAN accessible); Strict \u2192 true + excludeLocalNetworks=true (full block).",
+      "resultingHandoff": "Merged into xd-381 QA matrix for combined device verification with xd-380."
     }
   ],
   "importantNotes": [
+    {
+      "date": "2026-04-17",
+      "from": "CTO",
+      "note": "xd-382 deployed (3246c013): IKEv2 Personal Hotspot fix \u2014 gated `includeAllNetworks` on Kill Switch setting (matches WG/CasperCloak pattern). Combined with xd-380 (8f8aa63d), this session closes the IKEv2 foreground+hotspot cluster. QA verification merged into xd-381. Backend duplicates in OptimizedVpnServerService.cs:691 + VpnServerService.cs:358 flagged for future cleanup (\u00a79.6 dual-file trap \u2014 iOS overrides anyway, so no immediate harm)."
+    },
     {
       "date": "2026-04-17",
       "from": "CTO",
