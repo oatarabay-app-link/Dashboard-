@@ -13016,6 +13016,18 @@
       "status": "pending",
       "createdDate": "2026-04-17",
       "type": "cross-department"
+    },
+    {
+      "id": "xd-358",
+      "from": "[DEVOPS]",
+      "to": "[BACKEND]",
+      "title": "Handoff from DEVOPS: Unblock CI pipeline \u2014 3 lint/build regressions in commit dbda2744",
+      "description": "BLOCKING CI regression since 2026-04-16 00:54 UTC (commit dbda2744 \u2014 \"add 8 fleet servers to vault credentials\"). Auto-Deploy to VPN Servers has not run successfully for 2+ hours. Production is healthy (all endpoints 200, 13/13 Flask nodes green), so this is NOT user-facing \u2014 but any backend/frontend changes pushed after dbda2744 are NOT live.\n\nTHREE ROOT CAUSES \u2014 all need fixing before next green CI:\n\n(1) .NET lint \u2014 WHITESPACE errors\n    File: Controllers/AdminAdvancedFeaturesController.cs \u2014 lines 447\u2013595\n    File: Controllers/AdminController.cs \u2014 lines 252, 355, 742\n    Fix: `dotnet format` in repo root, commit the formatting diff.\n\n(2) Admin Panel lint \u2014 missing npm script\n    File: admin-panel-react/package.json\n    Error: `npm error Missing script: \"lint\"`\n    Fix: add `\"lint\": \"eslint src\"` to the scripts block (or `\"lint\": \"echo skip\"` as interim).\n\n(3) Next.js build \u2014 DYNAMIC_SERVER_USAGE\n    Routes failing static generation: /api/admin/analytics/geo, /api/blog, and any route that reads request.url at build time.\n    Fix: add `export const dynamic = 'force-dynamic'` to each failing route handler file.\n\nVERIFICATION AFTER FIX:\n  - Push to dropbox-local \u2192 CI must show green on all 3 workflows (CI, Auto-Deploy, iOS CI)\n  - Auto-Deploy to VPN Servers must succeed \u2192 ssh to NL-Primary and verify commit SHA on disk matches latest dropbox-local HEAD\n  - Smoke: curl https://api.caspervpn.com/health (expect 200), curl https://caspervpn.com (expect 200), curl https://admin.caspervpn.com (expect 200)\n\nCONTEXT: see devops-health-report-2026-04-17.md. Diagnosed this session by [DEVOPS]; fix routes to [BACKEND] because all three are code-owner fixes.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-04-17T05:52:05Z",
+      "createdDate": "2026-04-17",
+      "completedDate": null
     }
   ],
   "importantNotes": [
@@ -13155,6 +13167,14 @@
       "note": "[DEVOPS SESSION 2026-04-15T03:20:00Z] NL Primary healthy: 16 containers UP, disk PRUNED 79%\u219252% (freed 13GB via image+buildcache prune). All 4 VPN nodes reachable (LA/DE/NL2/FR \u2014 all wg0 UP). FIXED CI build failure: 6 CS compilation errors in new server activation code (IInfraProviderClient.cs unnamed tuple fallback + IServerActivationService.cs ConnectionInfo ambiguity). Commits c73cebbe + 29f931d0. CI on 29f931d0 in-progress at session close \u2014 expected to pass. Prometheus 4/4 targets UP, 0 alerts. TLS valid Jun 24. Monitoring nominal. No pending [DEVOPS] crossDeptTasks.",
       "priority": "info",
       "addedAt": "2026-04-15T03:20:00Z"
+    },
+    {
+      "id": "note-devops-2026-04-17",
+      "category": "devops",
+      "priority": "info",
+      "addedAt": "2026-04-17T05:52:05Z",
+      "date": "2026-04-17",
+      "note": "[DEVOPS SESSION 2026-04-17T02:45Z] Production healthy end-to-end: all 13 nodes Flask :5002=200, SSL valid Jun 24, 16/16 Docker containers up, WG/OpenVPN UDP+TCP/IKEv2/Flask all listening on NL Primary. RESOLVED: caspervpn.com 502 (website container was only on bridge net \u2014 nginx DNS lookup for `website` failed; fix: docker network disconnect/connect --alias website + docker restart so Next.js rebinds to all interfaces). Drift cause = container recreated outside compose in a prior session. docker-compose.yml (lines 222\u2013241) already declares correct network + alias, so next `docker compose up -d` restores intent. FREED 3GB disk (83%\u219277%) via image prune + buildx prune. CI RED since dbda2744 (2026-04-16 00:54 UTC) \u2014 3 root causes (dotnet format, missing admin lint script, Next.js dynamic route usage) handed off to [BACKEND] as P1. Auto-Deploy dark for 2+ hours \u2014 no production impact because prod is healthy. NEXT DEVOPS SESSION MUST: (a) expand Prometheus \u2014 add 3 external blackbox probes (https://caspervpn.com/, https://api.caspervpn.com/health, https://admin.caspervpn.com/) so user-facing 502s trigger alerts; (b) deploy node-exporter on 12 fleet/legacy nodes (currently only NL Primary scraped); (c) add postgres-exporter + redis-exporter; (d) add weekly cron `docker image prune --filter until=14d`. See devops-health-report-2026-04-17.md for full RCA and ground-truth evidence."
     }
   ],
   "ctoBoard": {
