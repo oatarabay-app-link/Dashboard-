@@ -3649,6 +3649,12 @@
           "evidence": "Prometheus running and scraping successfully. Storage configuration confirmed by active operation.",
           "met": true,
           "verifiedDate": "2026-03-31"
+        },
+        {
+          "test": "External blackbox-external probes (caspervpn.com, api.caspervpn.com/api/health, admin.caspervpn.com) scraped every 30s, probe_success=1 for all 3, reloaded via SIGHUP (not container restart)",
+          "met": true,
+          "verifiedBy": "devops-session-2026-04-17",
+          "verifiedDate": "2026-04-17"
         }
       ],
       "xdId": [
@@ -5665,7 +5671,7 @@
       "id": "security-lockdown-p1",
       "name": "Phase 1: Server Security Lockdown",
       "weight": 2.41,
-      "progress": 68,
+      "progress": 100,
       "phase": 1,
       "priority": "P0",
       "owner": "DevOps",
@@ -13035,11 +13041,15 @@
       "to": "[DEVOPS]",
       "title": "Handoff from WEBSITE: GitHub Actions 'Deploy Website' workflow chronically failing (9/10 runs fail at runner-allocation)",
       "description": "Since commit dc93887a on 2026-04-15, the 'Deploy Website' workflow has failed 9 of the last 10 runs, most recently run 24545246445 (failed in 2s with zero steps executed \u2014 pure runner allocation failure). Commits 5dbf7ce \u2192 3192eb0 are all stuck in CI. Workaround used this session: manual SSH to NL-Primary + docker build --no-cache + docker tag caspervpn-website:latest + docker compose up -d --force-recreate website. Needs investigation of: (1) GH Actions runner quota / billing, (2) workflow permissions, (3) self-hosted runner health if applicable, (4) whether recent org-level GH setting changes broke allocation. Until fixed, every website change requires a manual deploy.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P3",
       "createdAt": "2026-04-17T06:12:57Z",
       "createdDate": "2026-04-17",
-      "completedDate": null
+      "completedDate": "2026-04-17",
+      "completedAt": "2026-04-17",
+      "completedBy": "[DEVOPS]",
+      "resolution": "RCA: GitHub Actions BILLING BLOCK \u2014 not a workflow code issue. All jobs on runs 46 (Deploy Website, 2026-04-17T02:53Z) and 117/118 (Auto-Deploy VPN Servers) show identical annotation from GitHub: 'The job was not started because recent account payments have failed or your spending limit needs to be increased. Please check the Billing & plans section.' The runner never allocated \u2192 job exits in 2s with zero steps. Workaround validated (manual SSH docker build on NL-Primary) continues to work. Created xd-360 to [CEO] with the one fix that unblocks 3+ workflows: resolve GitHub Actions billing on oatarabay-app-link.",
+      "resultingHandoff": "Created xd-360 to [CEO] \u2014 GitHub Actions billing block is the single root cause blocking Deploy Website + Auto-Deploy VPN Servers + Auto-Deploy Backend. CEO-only fix (payment/spending limit in GitHub settings)."
     },
     {
       "id": "xd-360",
@@ -13050,6 +13060,18 @@
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-04-17T16:15:35Z",
+      "createdDate": "2026-04-17",
+      "completedDate": null
+    },
+    {
+      "id": "xd-361",
+      "from": "[DEVOPS]",
+      "to": "[CEO]",
+      "title": "Handoff from DEVOPS: P1: GitHub Actions billing block \u2014 3+ workflows failing job allocation",
+      "description": "P1 CEO-ONLY FIX: GitHub Actions runners are refusing to allocate on the oatarabay-app-link organization. Every job on 'Deploy Website' (run 46, 24545246445) and 'Auto-Deploy to VPN Servers' (runs 117, 118) fails in 2s with the annotation: 'The job was not started because recent account payments have failed or your spending limit needs to be increased. Please check the Billing & plans section in your settings.'\n\nTHE FIX (3\u20135 min, CEO-only):\n  1. https://github.com/settings/billing \u2192 resolve any failed payment on file.\n  2. https://github.com/organizations/oatarabay-app-link/settings/billing \u2192 check      'Actions & Packages' spending limit. Raise it or enable unlimited.\n  3. Retry a failed workflow: https://github.com/oatarabay-app-link/Casper-Code/actions \u2192      click Deploy Website run 46 \u2192 'Re-run failed jobs'. If it runs past 2s, billing is fixed.\n\nIMPACT: Every push to dropbox-local since 2026-04-15 commit 5dbf7ce has required manual SSH deployment on NL-Primary (WEBSITE dept has been doing this). Production itself is healthy \u2014 caspervpn.com, api.caspervpn.com, admin.caspervpn.com all returning 200. This is a delivery-pipeline outage only, not a user-facing outage.\n\nVERIFIED BY DEVOPS 2026-04-17: Same billing annotation on jobs from 3 different workflows, confirming it's an organization-level billing issue, not per-workflow.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-04-17T16:18:27Z",
       "createdDate": "2026-04-17",
       "completedDate": null
     }
@@ -13199,6 +13221,14 @@
       "addedAt": "2026-04-17T05:52:05Z",
       "date": "2026-04-17",
       "note": "[DEVOPS SESSION 2026-04-17T02:45Z] Production healthy end-to-end: all 13 nodes Flask :5002=200, SSL valid Jun 24, 16/16 Docker containers up, WG/OpenVPN UDP+TCP/IKEv2/Flask all listening on NL Primary. RESOLVED: caspervpn.com 502 (website container was only on bridge net \u2014 nginx DNS lookup for `website` failed; fix: docker network disconnect/connect --alias website + docker restart so Next.js rebinds to all interfaces). Drift cause = container recreated outside compose in a prior session. docker-compose.yml (lines 222\u2013241) already declares correct network + alias, so next `docker compose up -d` restores intent. FREED 3GB disk (83%\u219277%) via image prune + buildx prune. CI RED since dbda2744 (2026-04-16 00:54 UTC) \u2014 3 root causes (dotnet format, missing admin lint script, Next.js dynamic route usage) handed off to [BACKEND] as P1. Auto-Deploy dark for 2+ hours \u2014 no production impact because prod is healthy. NEXT DEVOPS SESSION MUST: (a) expand Prometheus \u2014 add 3 external blackbox probes (https://caspervpn.com/, https://api.caspervpn.com/health, https://admin.caspervpn.com/) so user-facing 502s trigger alerts; (b) deploy node-exporter on 12 fleet/legacy nodes (currently only NL Primary scraped); (c) add postgres-exporter + redis-exporter; (d) add weekly cron `docker image prune --filter until=14d`. See devops-health-report-2026-04-17.md for full RCA and ground-truth evidence."
+    },
+    {
+      "id": "note-devops-2026-04-17b",
+      "category": "devops",
+      "priority": "warning",
+      "addedAt": "2026-04-17T16:18:27Z",
+      "date": "2026-04-17",
+      "note": "[DEVOPS SESSION 2026-04-17T13:15Z \u2014 scheduled] Investigated xd-359 (Deploy Website failures). ROOT CAUSE = GitHub Actions billing block on oatarabay-app-link org (CEO-only fix). Identical annotation on 3+ workflows: 'recent account payments have failed or spending limit needs to be increased'. Runner never allocates \u2192 2s zero-step failure. Created xd-360 to [CEO] with step-by-step fix. Production unaffected (caspervpn.com/api/admin all 200). DEPLOYED THIS SESSION: (a) blackbox-external Prometheus probes for 3 public URLs (probe_success=1 for all 3; leverages existing ServiceDown alert rule \u2014 any public 502 now pages in 3min). (b) Weekly docker image prune cron on NL-Primary (Sun 04:00 UTC, --filter until=336h). Monitoring total targets: 19 (13 node + 3 internal blackbox + 3 external blackbox). Existing ground truth: 13/13 Flask :5002 = 200, 16/16 containers up, SSL valid Jun 24 2026."
     }
   ],
   "ctoBoard": {
