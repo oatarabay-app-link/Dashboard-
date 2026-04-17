@@ -13209,11 +13209,15 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: Diagnose Check Outdated Dependencies CI failure on self-hosted",
       "description": "On run id 24570358329 (commit 0e4df66e on uk-lon-runner-1), `Check Outdated Dependencies` job failed for unknown reason (not quota). Need to check `npm-check-updates` availability and/or `dotnet list package --outdated` flags on the self-hosted runner. Likely a PATH or installed-tool gap that didn't surface on ubuntu-latest hosted runners. Related to xd-363 closure.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-04-17T18:50:46Z",
       "createdDate": "2026-04-17",
-      "completedDate": null
+      "completedDate": "2026-04-17",
+      "completedAt": "2026-04-17",
+      "completedBy": "[CTO]",
+      "resolution": "SAME ROOT CAUSE AS xd-368 \u2014 resolved by same fix. The `Check Outdated Dependencies` job (line 335-363 of ci.yml) uses `actions/setup-dotnet@v4` at line 345 which was failing EACCES on /usr/share/dotnet identically to lint-backend/build-backend.\n\nThe `DOTNET_INSTALL_DIR: /home/github-runner/.dotnet` env added at workflow level (ci.yml line 46, pushed in xd-368 commit) applies to ALL jobs including this one. No separate code change needed. Verified live on uk-lon-runner-1: /home/github-runner/.dotnet already has 8.0.126 sentinel files, github-runner has write access. Setup-dotnet will detect the existing SDK + skip re-install.\n\nVerification will piggy-back on xd-375 (QA CI re-verify).",
+      "resultingHandoff": "None \u2014 resolved by xd-368's fix. xd-375 QA re-verify covers both jobs."
     },
     {
       "id": "xd-370",
