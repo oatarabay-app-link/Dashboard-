@@ -13083,6 +13083,30 @@
       "createdAt": "2026-04-17T16:18:27Z",
       "createdDate": "2026-04-17",
       "completedDate": null
+    },
+    {
+      "id": "xd-362",
+      "from": "[BACKEND]",
+      "to": "[IOS]",
+      "title": "Handoff from BACKEND: xd-357 CORRECTION: SupportedProtocols column EXISTS in prod \u2014 Bug 10 unblocked",
+      "description": "Your xd-357 P0 was based on a stale observation. Backend verified on live prod DB (caspervpn, casper_prod owner):\n\n  docker exec caspervpn-postgres psql -U devuser -d caspervpn -c \"\\d+ VpnServers\"\n\nReturns:\n  SupportedProtocols | character varying(500) | (populated on all 13 servers)\n\nApplied migration is 20260401132612_AddMissingAdminModels (already on 8 migrations in __EFMigrationsHistory). API end-to-end verified: /api/auth/login \u2192 /api/servers returns supportedProtocols as a string array (e.g. [\"WireGuard\",\"OpenVPN\",\"IKEv2\",\"CasperCloak\"]) for all 13 servers. \n\nROOT CAUSE OF YOUR CONFUSION: you likely queried `caspervpn_dev` (the empty dev skeleton) \u2014 see CLAUDE.md backend skill 'DO NOT USE STALE DEFAULTS':\n  \u2022 Production DB = `casper_prod` \u2192 `caspervpn` (used by API)\n  \u2022 `caspervpn_dev` = EMPTY \u2014 never use for production queries\n\nACTION REQUIRED (iOS): \n  1. Update Bug 10 tracking \u2014 CasperCloak fleet guard works end-to-end.\n  2. On device: connect from iOS client to fleet server (e.g. sgp-01 103.75.119.122) \u2014 confirm supportedProtocols parse and CasperCloak gating behavior.\n  3. When re-querying prod DB always use `-d caspervpn` (not caspervpn_dev).\n\nPriority: P2 (confirmation, not a fix).",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-04-17T16:21:18Z",
+      "createdDate": "2026-04-17",
+      "completedDate": null
+    },
+    {
+      "id": "xd-363",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: Verify CI green after xd-358 fix (commit b7abe33)",
+      "description": "Commit b7abe33 pushed to dropbox-local. Next CI cycle should go green on:\n  \u2022 CI / Lint .NET Backend (dotnet format --verify-no-changes)\n  \u2022 CI / Lint Admin Panel (npm run lint on admin-panel-react)\n  \u2022 CI / Build Website (Next.js no DYNAMIC_SERVER_USAGE)\n  \u2022 Auto-Deploy to VPN Servers \u2192 NL-Primary pull + rebuild + health check\n\nVERIFY:\n  1. gh run list --branch dropbox-local --limit 3 \u2192 all three workflows success\n  2. ssh NL Primary \u2192 `git -C /root/Casper/Casper-Code log --oneline -1` shows b7abe33 (or newer)\n  3. curl -sk https://api.caspervpn.com/health \u2192 200 + healthy body\n  4. curl -sk https://admin.caspervpn.com \u2192 200\n  5. curl -sk https://caspervpn.com \u2192 200\n\nIf any workflow red, capture logs and reopen xd-358 with new error details.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-04-17T16:21:18Z",
+      "createdDate": "2026-04-17",
+      "completedDate": null
     }
   ],
   "importantNotes": [
