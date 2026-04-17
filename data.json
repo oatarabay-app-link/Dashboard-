@@ -13389,14 +13389,37 @@
       "to": "[IOS]",
       "title": "Handoff from CTO: P2: Foreground sync emits spurious /connect+/disconnect on IKEv2 app reopen",
       "description": "NEW BUG from CEO iOS log 2026-04-18 00:00:42 + 00:01:11 (UK-London IKEv2 session).\n\nSYMPTOM: Every time user backgrounds \u2192 foregrounds the app while IKEv2 is active, app fires phantom /disconnect + /connect POSTs on the backend even though the kernel tunnel never interrupted (kill-switch + on-demand keep it alive).\n\nLOG EVIDENCE (00:01:11 cycle):\n  00:00:56  App backgrounded (last heartbeat)\n  00:01:10.95  'Software caused connection abort' (network reset on foreground)\n  00:01:11.26  Foreground sync: re-reading VPN state from kernel\n  00:01:11.26  Ignoring tunnel provider status (Disconnected) \u2014 using IKEv2\n  00:01:11.26  drift: published=Connected, tunnel kernel=Disconnected \u2192 force-reconcile \u2192 .disconnected\n  00:01:11.27  IKEv2 kernel=Connected \u2192 drift \u2192 force-reconcile \u2192 .connected\n  00:01:11.27  POST /disconnect (28s, 4.28 MB)  \u2190 phantom (real tunnel still up)\n  00:01:11.29  POST /connect (new session 5a80b91a)  \u2190 phantom\n\nROOT CAUSE (~90% confidence): syncStateFromSystem() in VPNConnectionManager.swift checks tunnel provider status BEFORE IKEv2. Since IKEv2 uses NEVPNManager (not NETunnelProviderManager), tunnel provider is legitimately Disconnected \u2014 but the reconciler flips published state to .disconnected, triggering ConnectionViewModel's Combine observer to POST /disconnect. Then next kernel check sees IKEv2 connected, flips back to .connected, triggers /connect POST.\n\nPROPOSED FIX: In syncStateFromSystem():\n  1. Check ALL protocol managers BEFORE flipping to .disconnected\n  2. If current protocol is IKEv2, skip tunnel-provider disconnected check entirely\n  3. OR short-circuit: if any protocol manager shows Connected, don't force .disconnected\n\nIMPACT (P2):\n  \u2022 Not data-corrupting (real tunnel is fine)\n  \u2022 Backend ConnectionLogs fragment \u2014 1 real session becomes many 30-second phantom sessions\n  \u2022 BandwidthHistory shows fake disconnect/reconnect events\n  \u2022 Heartbeat timer + speed display reset every app reopen\n  \u2022 Analytics + admin panel connection metrics polluted\n\nFILES TO AUDIT:\n  - VPNConnectionManager.swift syncStateFromSystem() / Foreground sync path\n  - ConnectionViewModel.swift handleStateChange(.disconnected) observer \u2014 may need guard to not fire logDisconnection if this is just a reconcile flip, not a real user disconnect\n\nREPRO: Connect via IKEv2 to any server, background app (swipe up or switch apps), wait ~10s, foreground. Check logs for phantom /connect+/disconnect pair and verify backend ConnectionLogs table has duplicate session rows for same tunnel.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-04-18T00:09:54Z",
       "createdDate": "2026-04-18",
-      "completedDate": null
+      "completedDate": "2026-04-18",
+      "completedAt": "2026-04-18",
+      "completedBy": "[CTO]",
+      "resolution": "Fixed in 8f8aa63d: gated tunnel-provider reconcile in VPNConnectionManager.syncStateFromSystem() on currentProtocol != .ikev2. Mirrors existing IKEv2-block guard. Stale NETunnelProviderManager .disconnected state no longer flips published state during live IKEv2 sessions, eliminating the phantom POST /disconnect + auto-reconnect cycle. Side-benefit: Personal Hotspot no longer drops during Strict-kill-switch flap on app foreground.",
+      "resultingHandoff": "xd-NEXT to [QA] for device verification: connect IKEv2, background+foreground, confirm no phantom /disconnect AND hotspot stays up."
+    },
+    {
+      "id": "xd-381",
+      "from": "cto",
+      "to": "qa",
+      "status": "pending",
+      "priority": "P1",
+      "title": "[QA] Verify xd-380 fix: IKEv2 foreground-sync no longer triggers phantom cycle",
+      "description": "Commit: 8f8aa63d (dropbox-local) \u2192 requires local git pull + iOS rebuild to take effect.\n\nPASS criteria:\n1. Connect via IKEv2 to any server\n2. Confirm Personal Hotspot tethering works\n3. Background app, wait 10s, foreground\n4. Xcode console shows: \"Foreground sync: skipping tunnel-provider reconcile (active protocol = IKEv2)\"\n5. NO \"\u26a0\ufe0f Foreground sync: drift ... tunnel kernel=Disconnected. Forcing reconcile.\" log\n6. Home page continues to display server name (no transient blanking)\n7. Backend: NO new POST /api/vpn/disconnect for this session\n8. Hotspot keeps working after foreground (no Strict-mode flap)\n9. Regression: repeat with WG / OpenVPN / CasperCloak \u2014 tunnel-provider reconcile still runs",
+      "taskRef": "xd-380",
+      "createdAt": "2026-04-17T21:29:16Z",
+      "dueBy": "2026-04-20T21:29:16Z",
+      "handoffTo": "ceo",
+      "handoffNote": "On PASS, add importantNote \"[QA PASSED] xd-380 IKEv2 foreground-sync fix ready for CEO \ud83d\udfe2 review\""
     }
   ],
   "importantNotes": [
+    {
+      "date": "2026-04-17",
+      "from": "CTO",
+      "note": "xd-380 fix deployed (8f8aa63d) \u2014 gated tunnel-provider reconcile on currentProtocol != .ikev2. Eliminates: (a) phantom POST /disconnect+/reconnect on IKEv2 app reopen, (b) Personal Hotspot Strict-mode flap, (c) transient \"no server name on home\" from the phantom .disconnected handler clearing connectedServer. Ready for [QA] verification (xd-381). Root cause: xd-377 (forceInvalidateStuckTunnels) cleanly flipped stale tunnel manager to .disconnected, making the pre-existing asymmetric guard in syncStateFromSystem reliably trigger."
+    },
     {
       "id": "note-qa-2026-04-15",
       "from": "[QA]",
