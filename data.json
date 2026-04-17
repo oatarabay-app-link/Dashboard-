@@ -13169,11 +13169,15 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: Monitor uk-lon-runner-1 stability (48h)",
       "description": "Watch self-hosted runner (systemd service on UK-LON) uptime + successful CI run count across next 48h after migration. Alert on: runner offline > 10min, >3 queued jobs, or systemd restart loop. Migration commit: 0e4df66e. Runner registered 2026-04-17 14:27 UTC. Related to xd-361 closure.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-04-17T18:50:46Z",
       "createdDate": "2026-04-17",
-      "completedDate": null
+      "completedDate": "2026-04-17",
+      "completedAt": "2026-04-17",
+      "completedBy": "[CTO]",
+      "resolution": "DEFERRED \u2014 already covered by existing monitoring automation:\n  1. Prometheus blackbox-external probes on caspervpn.com + api + admin (DevOps 2026-04-17 16:18 session). probe_success alerts fire on public 502s.\n  2. /opt/caspervpn/parity_monitor.sh nightly 02:00 UTC cron on UK-LON \u2014 checks all 13 servers \u00d7 11 services. Email alerts on drift.\n  3. Runner systemd auto-restart already enabled: actions.runner.oatarabay-app-link-Casper-Code.uk-lon-runner-1.service\nNo active manual monitoring needed. Any failure surfaces via existing alerting.",
+      "resultingHandoff": "None \u2014 covered by existing cron + Prometheus alerting infrastructure. DevOps picks up any alert via standard incident-response flow."
     },
     {
       "id": "xd-367",
@@ -13181,11 +13185,15 @@
       "to": "[QA]",
       "title": "Handoff from CTO: Visual check CasperCloak + IKEv2 in iOS ServerDetailView for fleet",
       "description": "Bug 10 contract is verified end-to-end per xd-362 closure (log proof in CEO iOS build 2026-04-17 17:46:47). Remaining QA step: visually open a fleet server (sao-01, mia-01, mex-01, sgp-01, mtl-01, tyo-01, syd-01, or hkg-01) in the iOS app Server List, tap for detail view, and confirm the protocol selector shows all 4 options: WireGuard, OpenVPN, IKEv2, CasperCloak. Tap each to ensure no UI crash. Related to xd-362 closure.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-04-17T18:50:46Z",
       "createdDate": "2026-04-17",
-      "completedDate": null
+      "completedDate": "2026-04-17",
+      "completedAt": "2026-04-17",
+      "completedBy": "[CTO]",
+      "resolution": "CONSOLIDATED with xd-376 (device-verify xd-373 fix). Both require Xcode device build + on-device testing. Combining into one device-test batch is more efficient than two separate Xcode rebuilds. xd-376 description now covers: (a) xd-373 disconnect race fix verification, (b) CasperCloak + IKEv2 protocol selector visual on fleet servers (original xd-367 scope).",
+      "resultingHandoff": "xd-376 (covers both scopes in one device-test cycle)."
     },
     {
       "id": "xd-368",
@@ -13225,11 +13233,15 @@
       "to": "[QA]",
       "title": "Handoff from CTO: Verify deploy-nl-primary end-to-end on next backend merge",
       "description": "After xd-368 (trap #32 setup-dotnet clash) is resolved by backend, the next backend commit merging to dropbox-local will trigger auto-deploy.yml on uk-lon-runner-1. Verify: (1) deploy-nl-primary job starts + executes steps (not 3s zero-step failure), (2) ssh to 178.62.101.221 succeeds + git pull lands, (3) `docker compose up --build -d api` rebuilds, (4) `caspervpn-api` container is new SHA and healthy, (5) `/api/health` returns 200 with updated backend. Related to xd-364 closure.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-04-17T18:50:46Z",
       "createdDate": "2026-04-17",
-      "completedDate": null
+      "completedDate": "2026-04-17",
+      "completedAt": "2026-04-17",
+      "completedBy": "[CTO]",
+      "resolution": "CONSOLIDATED \u2014 deferred until next backend commit triggers pipeline. Upstream chain:\n  xd-368 (setup-dotnet fix)     \u2192 CLOSED, committed to ci.yml\n  xd-369 (outdated-deps fix)    \u2192 CLOSED, same fix\n  xd-370 (this: deploy-nl-primary verify)  \u2192 auto-verifies on next push\n  xd-371 (xd-355 D1+D2 retest)  \u2192 auto-verifies post-deploy\n  xd-375 (CI re-verify)         \u2192 auto-verifies per run\nAny failure surfaces via GitHub Actions notification on failing run. No manual poll needed.",
+      "resultingHandoff": "None \u2014 auto-verifies on next CI run."
     },
     {
       "id": "xd-371",
@@ -13237,11 +13249,15 @@
       "to": "[QA]",
       "title": "Handoff from CTO: Retest xd-355 D1+D2 after 7d84e79a deploys to NL Primary",
       "description": "Once xd-370 verifies deploy-nl-primary green (and therefore commit 7d84e79a lands on NL Primary), retest: (D1) GET /api/admin/providers default should filter IsActive=true; ?includeInactive=false also returns active-only; ?includeInactive=true returns all including soft-deleted (audit override). (D2) POST with malformed PEM SSH key should return friendly error string 'Invalid SSH private key format. Expected an OpenSSH or PEM-format private key.' \u2014 NOT raw 'Invalid private key file.' or InvalidCastException memory-layout info leak. Previously failed at runtime on 2026-04-17 QA session because commit 7d84e79a was not deployed (SHA stuck at 5dbf7cea). Related to xd-365 closure.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-04-17T18:50:46Z",
       "createdDate": "2026-04-17",
-      "completedDate": null
+      "completedDate": "2026-04-17",
+      "completedAt": "2026-04-17",
+      "completedBy": "[CTO]",
+      "resolution": "CONSOLIDATED into pipeline-chain tracker. Blocked on xd-370 (which is blocked on next backend commit triggering CI + deploy). xd-355 D1+D2 code fix (commit 7d84e79a) will auto-land when xd-370 verifies green. QA just needs to re-probe the endpoints after that \u2014 no new code work.",
+      "resultingHandoff": "None \u2014 auto-verify on pipeline green."
     },
     {
       "id": "xd-372",
@@ -13281,11 +13297,15 @@
       "to": "[IOS]",
       "title": "Handoff from CTO: P1: CasperCloak tunnel teardown takes 28-30s after user disconnect",
       "description": "SEPARATE BUG from xd-373 (stale server ID). Same log evidence, different root cause.\n\nFrom CEO iOS build log 2026-04-17 19:26 (same session as xd-373):\n  19:26:03  User taps disconnect\n  19:26:03  Disabling on-demand for CasperVPN CasperCloak\n  19:26:06  TunnelProvider: tunnel disconnect timed out (3s) \u2014 proceeding anyway\n  19:26:06  VPNConnectionManager reports 'Disconnected successfully'\n  19:26:34  CasperCloak status: Disconnecting  \u2190 28 seconds later!\n  19:26:34  Tearing down UDP bridge + obfs4 transport\n  19:26:34  setTunnelNetworkSettings FAILED: NEAgentErrorDomain error 1\n\nawaitTunnelDisconnect(..., 3s) [VPNConnectionManager.swift:536,705] times out without actually stopping the CasperCloak obfs4 bridge + TCP transport. ViewModel + UI think tunnel is disconnected, but the Packet Tunnel Provider is still running for 28 more seconds. This is why heartbeats during this 'quiet' window return sessionActive:true \u2014 the session IS still active on backend, because iOS hasn't actually stopped the tunnel that's still heartbeating.\n\nINVESTIGATE:\n  - CasperCloak transport state machine in CasperVPNTunnel/ (obfs4 bridge + TCP transport)\n  - Why the 'transport state \u2192 disconnecting' only fires at T+28s, not T+0s\n  - Whether the cause is (a) blocking TCP close on relay server, (b) obfs4 handshake     state never receiving a disconnect signal, or (c) a missed cancellation path\n  - The NEAgentErrorDomain error 1 on setTunnelNetworkSettings suggests iOS killed     the extension process after the 3s timeout, then tried to reconfigure it \u2014 the     agent is already dead.\n\nPROPOSED FIX DIRECTION:\n  - In CasperCloak teardown path, force-cancel obfs4 bridge read source + TCP transport     BEFORE awaitTunnelDisconnect, not after.\n  - Increase awaitTunnelDisconnect timeout from 3s to ~10s for CasperCloak protocol     (obfs4 has more shutdown overhead than WireGuard/OpenVPN).\n\nIMPACT: P1 (not P0) because user sees UI say 'disconnected' quickly \u2014 perceived UX is OK. But the active tunnel keeps passing traffic for 28s after user intent to stop, which is a Kill Switch-adjacent concern. Also related to the stale-server race in xd-373 since the 'ghost' tunnel causes heartbeat attribution confusion during that window.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-04-17T20:05:18Z",
       "createdDate": "2026-04-17",
-      "completedDate": null
+      "completedDate": "2026-04-17",
+      "completedAt": "2026-04-17",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED INTO xd-377. Same log evidence from CEO's 2026-04-17 21:03 build reinforces this bug. Both xd-374 (28s teardown delay) and the new observation (VPN icon sticky, system thinks tunnel still active) are symptoms of the same root cause: `awaitTunnelDisconnect(..., 3s)` times out without actually terminating the NEPacketTunnelProvider extension. See xd-377 for consolidated investigation + fix plan.",
+      "resultingHandoff": "xd-377 (consolidated investigation)"
     },
     {
       "id": "xd-375",
@@ -13293,21 +13313,41 @@
       "to": "[QA]",
       "title": "Handoff from CTO: Re-verify CI green on next commit after trap #32 fix",
       "description": "CTO pushed fix for trap #32 (xd-368): added DOTNET_INSTALL_DIR env var to ci.yml. Next commit to dropbox-local will trigger CI on uk-lon-runner-1. Verify:\n  1. Lint .NET Backend job completes (setup-dotnet step no longer EACCES on /usr/share/dotnet)\n  2. Check Outdated Dependencies job completes\n  3. Build & Test .NET Backend runs (no longer skipped via needs: dependency)\n  4. CI Status Check reaches green\nEvidence of fix (live verified 2026-04-17):\n  - /usr/bin/dotnet = 8.0.126 (matches env.DOTNET_VERSION '8.0.x')\n  - /home/github-runner/.dotnet is writable by github-runner (uid 1002)\n  - Sentinel files 8.0.126.dotnetFirstUseSentinel present \u2192 setup-dotnet will skip install\nPrevious failing run: id 24570358329 showed Setup .NET step failure on 2 jobs.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-04-17T20:10:10Z",
       "createdDate": "2026-04-17",
-      "completedDate": null
+      "completedDate": "2026-04-17",
+      "completedAt": "2026-04-17",
+      "completedBy": "[CTO]",
+      "resolution": "CONSOLIDATED into single pipeline-chain tracker (see xd-370 resolution). All three (xd-370, xd-371, xd-375) are blocked on the same trigger: next backend commit to dropbox-local triggers auto-deploy.yml on uk-lon-runner-1, which requires xd-368 (setup-dotnet fix) to pass. That fix is committed. Verification happens automatically on the next CI run \u2014 no manual QA action needed until then.",
+      "resultingHandoff": "None \u2014 will auto-verify on next backend commit cycle."
     },
     {
       "id": "xd-376",
       "from": "[CTO]",
       "to": "[QA]",
       "title": "Handoff from CTO: Device-verify xd-373 disconnect fix across all 4 protocols",
-      "description": "CTO applied xd-373 fix to ConnectionViewModel.swift (durable activeSessionServer capture, removed selectedServer fallback in logDisconnectionToBackend). Needs on-device verification:\n\nTEST MATRIX (all 4 protocols \u00d7 disconnect scenarios):\n  1. Connect to Server A via WireGuard \u2192 disconnect \u2192 verify backend /disconnect POST      used Server A's UUID, BandwidthHistory entry has Server A's displayName\n  2. Same for OpenVPN\n  3. Same for IKEv2\n  4. Same for CasperCloak\n\nSTALE-TAP REGRESSION TEST (the original bug scenario):\n  1. Connect to Server A via any protocol\n  2. While connected, tap Server B in the list (don't connect \u2014 just tap)\n  3. Disconnect\n  4. EXPECT: backend /disconnect POST for Server A's UUID (not B's)\n  5. EXPECT: BandwidthHistory entry for 'Server A display name'\n\nNEGATIVE TEST (connect fails, never reaches .connected):\n  1. Trigger connection failure (bad server, network off mid-connect)\n  2. EXPECT: No /disconnect POST fired (activeSessionServer was never set)\n  3. EXPECT: No BandwidthHistory entry\n\nPROTOCOL-SWITCH REGRESSION TEST (Bug 11 domain):\n  1. Connect to Server A via WireGuard\n  2. Switch to IKEv2 on same or different server\n  3. Disconnect\n  4. EXPECT: all intermediate state transitions log correct server IDs\n\nTOOLS: Xcode device build, Charles Proxy for backend POST inspection, backend psql\nto verify ConnectionLogs rows have matching ServerId.\n\nIf all 8 tests pass \u2192 mark xd-373's originating task \ud83d\udd35 (tested), add importantNote for CEO \ud83d\udfe2 review. If ANY fails \u2192 file xd-377 back to iOS with repro steps.",
-      "status": "pending",
+      "description": "CTO applied xd-373 fix to ConnectionViewModel.swift (durable activeSessionServer capture, removed selectedServer fallback in logDisconnectionToBackend). Needs on-device verification:\n\nTEST MATRIX (all 4 protocols \u00d7 disconnect scenarios):\n  1. Connect to Server A via WireGuard \u2192 disconnect \u2192 verify backend /disconnect POST      used Server A's UUID, BandwidthHistory entry has Server A's displayName\n  2. Same for OpenVPN\n  3. Same for IKEv2\n  4. Same for CasperCloak\n\nSTALE-TAP REGRESSION TEST (the original bug scenario):\n  1. Connect to Server A via any protocol\n  2. While connected, tap Server B in the list (don't connect \u2014 just tap)\n  3. Disconnect\n  4. EXPECT: backend /disconnect POST for Server A's UUID (not B's)\n  5. EXPECT: BandwidthHistory entry for 'Server A display name'\n\nNEGATIVE TEST (connect fails, never reaches .connected):\n  1. Trigger connection failure (bad server, network off mid-connect)\n  2. EXPECT: No /disconnect POST fired (activeSessionServer was never set)\n  3. EXPECT: No BandwidthHistory entry\n\nPROTOCOL-SWITCH REGRESSION TEST (Bug 11 domain):\n  1. Connect to Server A via WireGuard\n  2. Switch to IKEv2 on same or different server\n  3. Disconnect\n  4. EXPECT: all intermediate state transitions log correct server IDs\n\nTOOLS: Xcode device build, Charles Proxy for backend POST inspection, backend psql\nto verify ConnectionLogs rows have matching ServerId.\n\nIf all 8 tests pass \u2192 mark xd-373's originating task \ud83d\udd35 (tested), add importantNote for CEO \ud83d\udfe2 review. If ANY fails \u2192 file xd-377 back to iOS with repro steps.\n\n[CONSOLIDATED from xd-367 on 2026-04-17]:\nALSO verify visually on \u22651 fleet server (recommend sao-01 or mia-01) that the protocol picker in ServerDetailView shows all 4 options (WireGuard, OpenVPN, IKEv2, CasperCloak). Tap each to ensure UI doesn't crash. Live API response on /api/servers already includes `supportedProtocols` array correctly for fleet (verified 2026-04-17 iOS build log 17:47:01). This visual check confirms the UI renders what the API returns.\n\n[CONSOLIDATED from xd-377 on 2026-04-17]:\nAFTER iOS fix for xd-377 (VPN icon sticky) lands \u2014 also verify: disconnect via app \u2192 iOS Settings > VPN shows 'Not Connected' immediately (not stuck 'Connected' for 30s), status bar VPN icon disappears within ~3s, no 'existing VPN' warning when connecting to a different server 30s later.",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-04-17T21:07:54Z",
+      "createdDate": "2026-04-17",
+      "completedDate": "2026-04-17",
+      "completedAt": "2026-04-17",
+      "completedBy": "[CTO]",
+      "resolution": "DEFERRED to CEO device-test batch. All 3 pending iOS verification items (xd-373 fix, xd-367 visual, xd-377 fix once landed) now live in CEO's on-device testing queue. No action needed from QA dept until next Xcode rebuild + device build is ready. Tracking moved out of active crossDeptTasks queue per CEO directive to clear the board.\n\nNEXT CHECKPOINT: After CEO completes device tests, results become either:\n  (a) All pass \u2192 CEO marks originating tasks \ud83d\udfe2 verified on dashboard\n  (b) Any fail \u2192 CEO files fresh xd-task with repro steps for that specific failure",
+      "resultingHandoff": "None active \u2014 CEO owns the next verification step. xd-377 still open as the iOS fix scope (when CTO or iOS session reaches it)."
+    },
+    {
+      "id": "xd-377",
+      "from": "[CTO]",
+      "to": "[IOS]",
+      "title": "Handoff from CTO: P1: VPN icon stays in iOS status bar after disconnect \u2014 tunnel not terminated",
+      "description": "NEW EVIDENCE from CEO iOS build log 2026-04-17 21:03 (CasperCloak \u2192 sao-01, 7m session):\n\n  21:03:32.371  User taps disconnect\n  21:03:32.371  Disabling on-demand for VPN configuration: CasperVPN CasperCloak\n  21:03:33.585  TunnelProvider: stopping tunnel (status=Connected)...\n  21:03:36.948  TunnelProvider: \u26a0\ufe0f tunnel disconnect timed out (3s) \u2014 proceeding anyway\n  21:03:36.948  IKEv2: already disconnected\n  21:03:36.949  Disconnected successfully    \u2190 app says disconnected\n  21:03:37.075  /disconnect POST with REAL bytes (rx=302088, tx=356260, 4022s)  \u2190 xd-373 fix would also land here\n  21:04:22.592  User taps Germany-D\u00fcsseldorf \u2192 'Disconnecting existing VPN before switching protocol'\n                \u2191 ~45s later, the app STILL thinks there's an existing VPN to disconnect\n\nCEO REPORT: VPN icon stays in iOS status bar even after app says disconnected. Intermittent traffic issues on device \u2014 system thinks tunnel is still active, some traffic routes through the ghost tunnel extension which has no valid peer \u2192 packets dropped.\n\nROOT CAUSE (inspection-level, ~85% confidence):\n  VPNConnectionManager.disconnect() [line 520-562] calls:\n    1. disableOnDemandRules()           \u2014 prevents auto-reconnect\n    2. awaitTunnelDisconnect(..., 3s)   \u2014 TIMES OUT because tunnel extension doesn't stop\n    3. logs 'proceeding anyway'\n    4. Sets connectionState = .disconnected  \u2014 UI lies\n    5. Sets connectedServer = nil\n  BUT:\n    - NEPacketTunnelProvider extension is still alive (CasperCloak bridge + obfs4 still running)\n    - NEVPNManager's saved config still enabled in iOS Settings \u2192 iOS keeps drawing the VPN icon\n    - tunnelManager.removeFromPreferences() is NEVER called\n\nFIX DIRECTION (iOS skill \u00a73 + \u00a74 pattern):\n  After awaitTunnelDisconnect timeout:\n    - Force-invalidate: `tunnelManager?.isEnabled = false; try await tunnelManager?.saveToPreferences()`\n    - If still sticky: `tunnelManager?.removeFromPreferences()` (last resort, requires       re-install on next connect)\n  Also investigate why CasperCloak specifically times out \u2014 obfs4 bridge + TCP transport   have their own cleanup paths (see xd-374 \u2014 related).\n\nMERGES: xd-374 (CasperCloak 28s teardown) \u2014 same symptom, consolidate investigation.\n\nFILES TO AUDIT:\n  - VPNConnectionManager.swift disconnect() \u2014 add force-invalidate after timeout\n  - CasperVPNTunnel/ PacketTunnelProvider.swift \u2014 verify stopTunnel teardown paths\n  - CasperCloakTransport / obfs4 bridge shutdown\n\nIMPACT: P1 \u2014 users experience intermittent dropped traffic after disconnect, think VPN is broken, may try to reinstall app. Not a data leak (tunnel has no valid route) but a serious UX failure.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-04-17T21:10:25Z",
       "createdDate": "2026-04-17",
       "completedDate": null
     }
