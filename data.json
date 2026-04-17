@@ -12898,11 +12898,16 @@
       "to": "[BACKEND]",
       "title": "Handoff from QA: xd-168 2FA + IKEv2 endpoints not deployed (404)",
       "description": "QA runtime validation 2026-04-15 confirmed: /api/auth/twofactor/status (GET) and /api/auth/twofactor/setup (POST) both return 404. /api/vpn/ikev2/config returns 404. Backend xd-168 code review confirmed TwoFactorController.cs and IKEv2DTOs.cs exist in codebase, but these routes are NOT in the current deployed Docker image. REQUIRED: DevOps must rebuild Docker API container (git pull + docker compose build api + docker compose up -d api) to expose these endpoints.",
-      "status": "open",
+      "status": "resolved",
       "priority": "P2",
       "createdAt": "2026-04-15T05:50:00Z",
       "createdDate": "2026-04-15",
-      "dueBy": "2026-04-22T23:59:00Z"
+      "dueBy": "2026-04-22T23:59:00Z",
+      "completedDate": "2026-04-17",
+      "lastUpdated": "2026-04-17T02:33:59Z",
+      "handoffTo": "[QA]",
+      "handoffNote": "Routes ARE deployed \u2014 test at corrected paths.",
+      "resolutionNote": "[BACKEND 2026-04-17] NOT a deployment issue \u2014 QA tested wrong paths. Confirmed live endpoint probes against api.caspervpn.com: /api/twofactor/status returns 401 (route EXISTS, auth required), /api/twofactor/setup returns 401, /api/servers/ikev2/config returns 401. QA was probing /api/auth/twofactor/* and /api/vpn/ikev2/config which are NOT the controllers' routes. TwoFactorController uses [Route('api/[controller]')] \u2192 /api/twofactor/*. GetIKEv2Config is on ServersController \u2192 /api/servers/ikev2/config. DLL strings scan on deployed image (built 2026-04-16T01:36:54Z) confirms TwoFactorController.Setup/Disable/Verify methods present. No devops rebuild needed. QA: re-run validation at corrected paths."
     },
     {
       "id": "xd-351",
@@ -12927,14 +12932,16 @@
       "to": "[BACKEND]",
       "title": "Fix 2 MED defects from xd-351 server activation QA: ListProviders soft-delete + SSH key parse error",
       "description": "Two MED-severity defects found during xd-351 verification 2026-04-15. (D1) backend-dotnet-core/Controllers/ServerActivationController.cs:65-79 \u2014 ListProviders does not filter IsActive=true so soft-deleted credentials reappear in admin panel after refresh. Repro: POST /api/admin/providers -> DELETE /api/admin/providers/{id} -> GET /api/admin/providers -> soft-deleted cred is still in response with isActive:false. Fix: add `.Where(p => p.IsActive)` to the LINQ chain at line 65 (or add ?includeInactive=true query param for an audit-only view). React UI does optimistic local removal but doesn't filter on refresh, so the bug is visible. (D2) backend-dotnet-core/Services/IServerActivationService.cs around line 339 \u2014 SshClient construction throws raw ArgumentOutOfRangeException with internal memory-layout numbers when sshPrivateKeyPem is malformed. Repro: POST /api/admin/servers/activate with sshPrivateKeyPem='<malformed pem>'. Actual error returned to admin UI: 'The requested length (477217792) is greater than the actual number of bytes read (10). (Parameter length)'. Expected: 'Invalid SSH private key format. Expected an OpenSSH or PEM-format private key.' Fix: wrap SshClient construction (and PrivateKeyFile parsing) in try/catch for ArgumentOutOfRangeException, FormatException, Renci.SshNet.Common.SshException; rethrow InvalidOperationException with the friendly message above. The backend already correctly catches InvalidOperationException -> 409 in the controller, so this just needs a clean wrap. Cosmetic info leak (memory layout numbers) + unprofessional UX. Both fixes are <20 lines each. Full evidence in memory/departments/qa/session-log.md 2026-04-15 11:45 entry.",
-      "status": "pending",
+      "status": "resolved",
       "priority": "P2",
       "createdAt": "2026-04-15T11:55:00Z",
       "createdDate": "2026-04-15",
-      "completedDate": null,
+      "completedDate": "2026-04-17",
       "handoffTo": "[QA]",
-      "handoffNote": "After fixing both defects, hand back to QA for re-verification.",
-      "taskRef": "server-activation-defects"
+      "handoffNote": "Re-verify both defects now fixed.",
+      "taskRef": "server-activation-defects",
+      "lastUpdated": "2026-04-17T02:33:59Z",
+      "resolutionNote": "[BACKEND 2026-04-17] BOTH DEFECTS FIXED + pushed to dropbox-local (commit 7d84e79a). D1: ServerActivationController.ListProviders now filters IsActive=true by default (added ?includeInactive=true query param for audit view). D2: IServerActivationService.BootstrapTargetAsync wraps PrivateKeyFile() construction in try/catch for ArgumentOutOfRangeException / FormatException / SshException, rethrows as InvalidOperationException with friendly message 'Invalid SSH private key format. Expected an OpenSSH or PEM-format private key.' \u2014 no more memory-layout numbers leaked to admin UI. RunBootstrapAsync's existing exception handler writes this friendly message to job.ErrorMessage + progress log. GitHub Actions auto-deploy will rebuild api container."
     },
     {
       "id": "xd-353",
@@ -12967,6 +12974,18 @@
       "taskRef": "smart-server-selection",
       "verifiedBy": "tested",
       "resolutionNote": "QA VERIFIED 2026-04-15T12:30Z. Code-verified review of 6 files: backend Services/OptimizedVpnServerService.cs GetSmartRecommendationsAsync (lines 215-396) scoring formula base 100 -0.01*km -0.5*load -0.1*ping +10premium +20/-50 protocol-match; Services/GeoIpService.cs static restrictive set + 20 country-coord fallbacks + ResolveAsync cache stub; Controllers/ServersController.cs lines 120-148 POST /smart-recommend [Authorize] extracting HttpContext.Connection.RemoteIpAddress; DTOs/ServerDTOs.cs lines 340-390 three new DTOs. iOS: Core/Models/SmartRecommendation.swift (3 Codable structs), Core/Services/SmartConnectManager.swift (@MainActor, 3-attempt failover loop with 0.5s cooldown, legacy fallback on API failure, mapProtocol lowercase lookup), Core/Services/ServerService.swift getSmartRecommendations (lines 296-338) with NetworkMonitor + Locale.current.region, ServiceProtocols.swift protocol declaration (line 141), Features/Connection/ConnectionViewModel.swift quickConnect already rewired. 9 runtime tests against live api.caspervpn.com with admin JWT: T1 US-cellular returns ranked list LA>FR>NL>UK>DE with defaultProtocol=WireGuard and correct distance-decay scores (83->58->58->57->56); T2 CN-cellular returns defaultProtocol=CasperCloak isRestrictiveRegion=true top3 DE>NL>FR by distance from Beijing; T3 US-wifi returns defaultProtocol=IKEv2 protocolReason='WiFi network - IKEv2 handles NAT traversal well'; T4 explicit preferredProtocol=OpenVPN with CN+wifi returns OpenVPN with protocolReason='User selected' (user choice correctly overrides both restrictive and wifi logic); T5 no coords + no country code returns graceful fallback with null clientCountryCode and score=120 ties across all 5 servers (no crash, no distance penalty); T6 preferredCountry=DE returns exactly 1 server (Germany-Dusseldorf only); T7 backward compat GET /api/servers/recommended still returns single server (Netherlands-Amsterdam); T8 unknown countryCode=XX returns isRestrictiveRegion=false defaultProtocol=WireGuard (safe fallback - does not over-escalate to CasperCloak); T9 no-JWT returns 401. iOS decoder cross-check: VPNServer.swift Codable fields match backend VpnServerDto JSON exactly; backend extra 'location' field silently ignored per Swift default; all required fields (id,name,country,city,countryCode,latitude,longitude,protocol,status,load,isPremium,ping,flagUrl,hostname,ipAddress,port,supportedProtocols) present and correctly typed. No defects found. Phase 4 (real MaxMind GeoIP .mmdb per-IP resolution) deferred - iOS Locale.current.region?.identifier already provides sufficient country signal."
+    },
+    {
+      "id": "xd-355",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: Re-verify xd-352 fixes (ListProviders soft-delete + SSH PEM friendly error)",
+      "description": "Backend fixed both MED defects from xd-352 in commit 7d84e79a on dropbox-local (pushed 2026-04-17). Two tests to re-run after GitHub Actions rebuilds api container: (D1) POST /api/admin/providers -> DELETE /api/admin/providers/{id} -> GET /api/admin/providers \u2014 expect soft-deleted cred NOT in default response; GET /api/admin/providers?includeInactive=true should include it. (D2) POST /api/admin/servers/activate with malformed sshPrivateKeyPem \u2014 expect admin UI progress log to show 'Invalid SSH private key format. Expected an OpenSSH or PEM-format private key.' \u2014 no memory-layout numbers. Files: backend-dotnet-core/Controllers/ServerActivationController.cs (+19), backend-dotnet-core/Services/IServerActivationService.cs (+29).",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-04-17T05:33:59Z",
+      "createdDate": "2026-04-17",
+      "completedDate": null
     }
   ],
   "importantNotes": [
