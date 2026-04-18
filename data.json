@@ -13662,9 +13662,43 @@
       "completedBy": "cto",
       "resolution": "Fixed in 934af2b7 (dataUsagePercentage prefers userDataLimitBytes) and 0217d283 (Home badge uses effectiveDataLimitBytes, progress bar shows whenever hasLimit including admin override on paid tier). Home and Profile now read from the same source.",
       "resultingHandoff": "Device verify: admin sets limit on user A \u2192 user A foregrounds app \u2192 both Profile and Home show same number + progress bar scales correctly."
+    },
+    {
+      "id": "xd-400",
+      "from": "ceo",
+      "to": "cto",
+      "status": "completed",
+      "priority": "P0",
+      "title": "Admin-granted subscription silently reverts to free on iOS (Status=Inactive trap)",
+      "description": "CEO reported: \"I don't think admin changing subscription in app works.\" Validated via trace. Root cause: SubscriptionService.CreateSubscriptionAsync line 93 sets non-free subscriptions to Status=Inactive (modelling Stripe payment flow: create row \u2192 wait for webhook \u2192 activate). Admin grants have no payment flow, so Inactive is permanent. iOS SubscriptionManager.syncFromBackend line 521 correctly treats isActive=false as \"downgrade to free.\" Net effect: admin UI says \"saved,\" iOS keeps showing free. Only manifests for users with no prior Subscription row \u2014 users who had any plan before hit UpdateSubscriptionAsync which preserves Active status.",
+      "taskRef": "xd-399",
+      "createdAt": "2026-04-18T21:28:00Z",
+      "completedAt": "2026-04-18T21:28:00Z",
+      "completedBy": "cto",
+      "resolution": "Fixed in 65bdd340: after CreateSubscriptionAsync, fetch the subscription and force Status=Active. Admin-granted subs now activate immediately without payment webhook. iOS defensive guard (correct for Stripe path) now maps admin-granted subs to Premium as expected.",
+      "resultingHandoff": "Device test: admin grants Premium to a never-subscribed user \u2192 user foregrounds app \u2192 Home + Profile show Premium tier."
+    },
+    {
+      "id": "xd-399",
+      "from": "ceo",
+      "to": "cto",
+      "status": "completed",
+      "priority": "P1",
+      "title": "Admin subscription modal: custom data limit field (override plan default)",
+      "description": "CEO wants the admin \"Change Subscription\" flow to support per-user custom data limits in addition to plan selection. Backend already supported DataLimitOverrideBytes but frontend never sent it. Previously admins needed to edit the Plan globally or call SetDataAllocation separately.",
+      "createdAt": "2026-04-18T21:28:00Z",
+      "completedAt": "2026-04-18T21:28:00Z",
+      "completedBy": "cto",
+      "resolution": "Fixed in 15e6d241: added optional \"Custom data limit (GB)\" TextField in the subscription modal. Blank = plan default. Non-empty (positive number) \u2192 passes (GB \u00d7 1_073_741_824) as dataLimitOverrideBytes. Validation rejects negative/non-numeric input with toast.",
+      "resultingHandoff": "None \u2014 backend side was already complete via xd-392 path."
     }
   ],
   "importantNotes": [
+    {
+      "date": "2026-04-18",
+      "from": "CTO",
+      "note": "xd-400 (65bdd340): Fixed admin-granted subscription silent-revert bug. Root cause was CreateSubscriptionAsync setting Status=Inactive for Stripe flow; admin grants now force-activate. This IS the \"admin change doesn't work\" bug. xd-399 (15e6d241): Admin modal now has custom data limit field."
+    },
     {
       "date": "2026-04-18",
       "from": "CTO",
