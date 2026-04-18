@@ -13723,9 +13723,29 @@
       "completedBy": "cto",
       "resolution": "Fixed in 0794fe67 (live path) and 1ea96294 (legacy path per \u00a79.6 dual-file rule): both now increment CurrentCycleDataUsedBytes alongside DataUsedBytes in the disconnect flow. Admin sees cycle usage for all protocols after user disconnects. Live (mid-session) cycle visibility deferred \u2014 requires delta-tracking design to avoid double-counting.",
       "resultingHandoff": "xd-403 followup: heartbeat-based delta increment for live mid-session cycle visibility in admin panel. Optional \u2014 disconnect-based update meets current CEO requirement."
+    },
+    {
+      "id": "xd-403",
+      "from": "ceo",
+      "to": "cto",
+      "status": "completed",
+      "priority": "P0",
+      "title": "CRITICAL: xd-401 poll silently rolled dataUsedBytes backward (root cause of \"limit not enforced\")",
+      "description": "Discovered via post-xd-402 backfill inspection. applinks123@gmail.com showed lifetime=271MB / cycle=105MB \u2014 the gap exists because cycle only increments on disconnect. During an active session, iOS-local dataUsedBytes correctly tracked live bytes via updateDataUsage(). But xd-401 60s poll called syncFromBackend which OVERWROTE local dataUsedBytes with the stale lower backend cycle value. Counter rolled backward every 60s. hasExceededBandwidth compared against rolled-back counter, limit never exceeded, enforcement never fired.\n\nThis is THE root cause of CEO report \"set 0.5 GB data limit, app crossed limit and kept working\" (xd-401 investigation was necessary but created this regression by making the sync too aggressive).",
+      "taskRef": "xd-401",
+      "createdAt": "2026-04-18T22:35:51Z",
+      "completedAt": "2026-04-18T22:35:51Z",
+      "completedBy": "cto",
+      "resolution": "Fixed in bdfa1931: syncFromBackend now takes max(in-memory, UserDefaults-cached, backend) instead of blindly overwriting with backend value. Local session tracking never rolls backward. Monthly reset is unaffected \u2014 existing dataUsageResetDate check in updateDataUsage handles cycle rollover by explicit reset, not reduction.",
+      "resultingHandoff": "Device retest required: admin sets 500 MB limit, user connects, uses 501 MB \u2192 paywall fires. Xcode console should show \"reconciled dataUsed: backend=X localCached=Y inMemory=Z \u2192 max(...)\" confirming local wins."
     }
   ],
   "importantNotes": [
+    {
+      "date": "2026-04-18",
+      "from": "CTO",
+      "note": "xd-403 (bdfa1931): CRITICAL fix for \"limit not enforced in app\" \u2014 found via xd-402 backfill inspection. xd-401 60s poll was overwriting live session tracking with stale backend value, rolling counter backwards. Now uses max(local, backend) so counter only moves forward. This IS the real root cause of CEO's enforcement test failure."
+    },
     {
       "date": "2026-04-18",
       "from": "CTO",
