@@ -13694,9 +13694,29 @@
       "resolution": "Fixed in 15e6d241: added optional \"Custom data limit (GB)\" TextField in the subscription modal. Blank = plan default. Non-empty (positive number) \u2192 passes (GB \u00d7 1_073_741_824) as dataLimitOverrideBytes. Validation rejects negative/non-numeric input with toast.",
       "resultingHandoff": "None \u2014 backend side was already complete via xd-392 path.",
       "completedDate": "2026-04-19"
+    },
+    {
+      "id": "xd-401",
+      "from": "ceo",
+      "to": "cto",
+      "status": "completed",
+      "priority": "P0",
+      "title": "Data limit not enforced in app when crossed mid-session (admin set 0.5 GB, kept working)",
+      "description": "CEO reported: set user app link123 to 0.5 GB data limit in admin; in app traffic crossed 0.5 GB and kept flowing, no paywall, no disconnect. xd-392 refresh only fires on scenePhase .active \u2014 if admin changes limit while iOS app is already in foreground and user never backgrounds, iOS keeps stale limit forever. Mid-session stats check fires against the stale limit, returns false, no enforcement.",
+      "taskRef": "xd-392",
+      "createdAt": "2026-04-18T21:35:28Z",
+      "completedAt": "2026-04-18T21:35:28Z",
+      "completedBy": "cto",
+      "resolution": "Fixed in b3d70d99 + 2ac6c697: (1) connect/quickConnect now refreshFromBackend before the pre-connect limit check; (2) new dataLimitPollTimer polls every 60s while connected so admin changes propagate within 60s without requiring background\u2192foreground; (3) start/stop wired into .connected/.disconnected lifecycle; (4) hasExceededBandwidth now logs used/limit/tier/decision on every call \u2014 next test surfaces the actual values in Xcode console if enforcement still fails.",
+      "resultingHandoff": "Device test: admin sets 100 MB limit on user B \u2192 user B taps Connect (should immediately see paywall if already over) \u2192 user B connects from 0 \u2192 crosses 100 MB mid-session \u2192 within 60s + next stats tick, paywall appears and VPN disconnects. Xcode console should show \"hasExceededBandwidth: used=N limit=100000000 \u2192 true\"."
     }
   ],
   "importantNotes": [
+    {
+      "date": "2026-04-18",
+      "from": "CTO",
+      "note": "xd-401 (b3d70d99): Data limit enforcement now works mid-session without requiring background\u2192foreground. Pre-connect refresh + 60s poll + diagnostic logging. If next test still fails, Xcode console log \"hasExceededBandwidth: used=X limit=Y \u2192 bool\" will show exactly which value is wrong."
+    },
     {
       "date": "2026-04-18",
       "from": "CTO",
