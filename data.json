@@ -12264,14 +12264,15 @@
       "to": "[BACKEND]",
       "title": "Handoff from WEBSITE: P2: Affiliate Conversion Tracking Not Wired \u2014 Sales Don't Credit Affiliates",
       "description": "CRITICAL REVENUE GAP: Affiliate program signup + admin approval flow works correctly (Prisma DB, /api/affiliates POST, /api/admin/affiliates PATCH). However, conversion tracking is completely missing. When a user purchases through an affiliate referral link, NOTHING updates the affiliate record. EVIDENCE: (1) AffiliateConversion table exists in Prisma schema (affiliate_conversions) but is never written to. (2) totalConversions and totalEarnings on Affiliate model are never incremented after a sale. (3) Checkout page (app/checkout/page.tsx) has zero referral cookie reading or affiliate attribution logic. (4) AffiliatePayout table exists but no payout trigger exists anywhere. REQUIRED IMPLEMENTATION: (A) Checkout flow: read referral cookie (set when user clicks affiliate link), on successful payment write AffiliateConversion record (affiliateId, orderId, amount, commissionAmount = amount * commissionRate). (B) Increment affiliate.totalConversions + totalEarnings via Prisma update. (C) Monthly payout trigger: query affiliates with unpaid earnings >= $25, create AffiliatePayout records, mark as pending. (D) Admin payout UI already exists in /admin/affiliates \u2014 just needs the data. AFFILIATE LINK FORMAT: caspervpn.com?ref=REFERRALCODE \u2014 needs cookie middleware to persist across session. COMMISSION RATE: 30% default (stored per affiliate). SCOPE: All in website Next.js codebase (not backend-dotnet-core).",
-      "status": "completed",
+      "status": "open",
       "priority": "P2",
       "createdAt": "2026-03-30T02:21:00Z",
       "createdDate": "2026-03-30",
       "completedDate": "2026-03-30",
       "completedBy": "website-auto",
       "resolution": "[WEBSITE S21 COMPLETE] Affiliate conversion tracking fully wired: (1) components/referral-tracker.tsx \u2014 reads ?ref=CODE, sets casper_ref cookie (30 days, SameSite=Lax), fires POST /api/affiliates/click. (2) app/api/affiliates/click/route.ts \u2014 validates approved affiliate, hashes IP (GDPR), creates AffiliateClick, increments totalClicks atomically. (3) app/checkout/page.tsx \u2014 reads casper_ref cookie via getCookie(), sends referralCode in checkout POST body. (4) app/api/payments/checkout/route.ts \u2014 calls recordAffiliateConversion() after order creation, creates AffiliateConversion record, increments totalConversions + totalEarnings + pendingPayout atomically. Silent-fail on error \u2014 payment never blocked. REMAINING: Backend Stripe webhook handler to update conversion status pending->approved (deferred pending Stripe production key integration).",
-      "completedAt": "2026-03-31"
+      "completedAt": "2026-03-31",
+      "notes": "\n[2026-04-18] WEBSITE AUDIT: code path is wired (ReferralTracker\u2192/api/affiliates/click\u2192checkout cookie\u2192recordAffiliateConversion) but runtime is BLOCKED \u2014 caspervpn-website container has (a) no DATABASE_URL env, (b) is on frontend-network only, cannot reach postgres on backend-network. /api/affiliates/click returns {ok:true,tracked:false} because Prisma silent-fails. Required DEVOPS: add website to backend-network in docker-compose.yml + set DATABASE_URL=postgresql://casper_prod:***@caspervpn-postgres:5432/caspervpn_website. Required BACKEND: run `prisma db push` against caspervpn_website DB (currently empty, 0 tables). Was: completed"
     },
     {
       "id": "xd-314",
@@ -13500,6 +13501,62 @@
       "createdAt": "2026-04-18T07:11:45Z",
       "createdDate": "2026-04-18",
       "completedDate": null
+    },
+    {
+      "id": "xd-389",
+      "from": "[WEBSITE]",
+      "to": "[DEVOPS]",
+      "status": "open",
+      "priority": "P1",
+      "createdAt": "2026-04-18",
+      "title": "P1: Website container cannot reach postgres \u2014 xd-313 affiliate blocker",
+      "task": "Website container (caspervpn-website) runs on caspervpn-frontend-network only; postgres is on backend-network. DNS resolution of caspervpn-postgres FAILS from website container. Also missing DATABASE_URL env var.",
+      "description": "REQUIRED FIXES in docker-compose.yml for caspervpn-website service:\n1) Add to networks: also caspervpn-backend-network (alias: website)\n2) Add env: DATABASE_URL=postgresql://casper_prod:<pw>@caspervpn-postgres:5432/caspervpn_website\n3) docker compose up -d --force-recreate caspervpn-website\nVerify: `docker exec caspervpn-website nslookup caspervpn-postgres` must resolve, and `curl -skX POST https://caspervpn.com/api/affiliates/click -d '{\"referralCode\":\"APPROVED_CODE\"}'` must return tracked:true for a seeded approved affiliate.",
+      "notes": "[2026-04-18] Found during scheduled website audit. Critical for xd-313 revenue tracking. Currently /api/affiliates/click silent-fails (returns tracked:false for every code because Prisma cannot connect to DB).",
+      "acceptanceCriteria": [
+        {
+          "criterion": "caspervpn-website is attached to caspervpn-backend-network",
+          "met": false
+        },
+        {
+          "criterion": "DATABASE_URL env present in caspervpn-website container",
+          "met": false
+        },
+        {
+          "criterion": "`docker exec caspervpn-website nslookup caspervpn-postgres` returns an IP",
+          "met": false
+        },
+        {
+          "criterion": "Website Prisma client can connect (no connection errors in logs)",
+          "met": false
+        }
+      ]
+    },
+    {
+      "id": "xd-390",
+      "from": "[WEBSITE]",
+      "to": "[BACKEND]",
+      "status": "open",
+      "priority": "P1",
+      "createdAt": "2026-04-18",
+      "title": "P1: caspervpn_website DB is empty \u2014 run prisma db push + seed",
+      "task": "The `caspervpn_website` postgres database has ZERO tables. Website Prisma schema defines 20+ models (affiliates, affiliate_clicks, affiliate_conversions, affiliate_payouts, orders, blog_posts, etc). Schema has never been pushed to this DB.",
+      "description": "REQUIRED STEPS:\n1) Ensure DATABASE_URL set (see xd-389 DEVOPS handoff)\n2) From website/ directory: `npx prisma db push` to create tables matching schema.prisma\n3) Seed baseline data:\n   - 1 test Affiliate (status=approved, referralCode=TESTPROMO, commissionRate=0.30)\n   - Blog categories if needed\n4) Verify: SELECT count(*) FROM affiliates; returns >= 1",
+      "notes": "[2026-04-18] Verified 0 tables in caspervpn_website DB. Without this, xd-313 affiliate conversion tracking is non-functional.",
+      "acceptanceCriteria": [
+        {
+          "criterion": "`\\dt` in caspervpn_website DB shows \u226520 tables",
+          "met": false
+        },
+        {
+          "criterion": "affiliates table has \u22651 seeded approved affiliate",
+          "met": false
+        },
+        {
+          "criterion": "POST /api/affiliates/click with seeded referralCode returns tracked:true",
+          "met": false
+        }
+      ]
     }
   ],
   "importantNotes": [
