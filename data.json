@@ -13709,9 +13709,28 @@
       "completedBy": "cto",
       "resolution": "Fixed in b3d70d99 + 2ac6c697: (1) connect/quickConnect now refreshFromBackend before the pre-connect limit check; (2) new dataLimitPollTimer polls every 60s while connected so admin changes propagate within 60s without requiring background\u2192foreground; (3) start/stop wired into .connected/.disconnected lifecycle; (4) hasExceededBandwidth now logs used/limit/tier/decision on every call \u2014 next test surfaces the actual values in Xcode console if enforcement still fails.",
       "resultingHandoff": "Device test: admin sets 100 MB limit on user B \u2192 user B taps Connect (should immediately see paywall if already over) \u2192 user B connects from 0 \u2192 crosses 100 MB mid-session \u2192 within 60s + next stats tick, paywall appears and VPN disconnects. Xcode console should show \"hasExceededBandwidth: used=N limit=100000000 \u2192 true\"."
+    },
+    {
+      "id": "xd-402",
+      "from": "ceo",
+      "to": "cto",
+      "status": "completed",
+      "priority": "P0",
+      "title": "Admin panel data-usage invisible for IKEv2/OpenVPN users (CurrentCycleDataUsedBytes never updated on disconnect)",
+      "description": "CEO: \"user consumption bw not visible in admin for all users \u2014 some users have limit spent some don't.\" Root cause: OptimizedVpnServerService.DisconnectFromServerAsync incremented DataUsedBytes (lifetime) but forgot CurrentCycleDataUsedBytes (cycle, admin-displayed). Users on WireGuard got cycle usage via WireGuardUsageSyncService cron job; users on RADIUS got it via RadiusAuthController; users on IKEv2/OpenVPN via the heartbeat+disconnect flow got ZERO cycle attribution despite flowing real traffic. Admin UI reads row.currentCycleDataUsedBytes so those users showed 0 B / 0 B.",
+      "createdAt": "2026-04-18T22:22:13Z",
+      "completedAt": "2026-04-18T22:22:13Z",
+      "completedBy": "cto",
+      "resolution": "Fixed in 0794fe67 (live path) and 1ea96294 (legacy path per \u00a79.6 dual-file rule): both now increment CurrentCycleDataUsedBytes alongside DataUsedBytes in the disconnect flow. Admin sees cycle usage for all protocols after user disconnects. Live (mid-session) cycle visibility deferred \u2014 requires delta-tracking design to avoid double-counting.",
+      "resultingHandoff": "xd-403 followup: heartbeat-based delta increment for live mid-session cycle visibility in admin panel. Optional \u2014 disconnect-based update meets current CEO requirement."
     }
   ],
   "importantNotes": [
+    {
+      "date": "2026-04-18",
+      "from": "CTO",
+      "note": "xd-402 (0794fe67+1ea96294): Fixed missing CurrentCycleDataUsedBytes increment on disconnect. Admin panel now shows data usage for IKEv2/OpenVPN users (was only showing WireGuard + RADIUS users before). Live mid-session visibility is xd-403 (post-launch enhancement)."
+    },
     {
       "date": "2026-04-18",
       "from": "CTO",
