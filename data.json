@@ -13647,9 +13647,29 @@
       "resolution": "Set to https://api.caspervpn.com/payments/apple-webhook in appsettings.json (8fb2ef34). The matching endpoint (PaymentsController.cs:237) calls AppleReceiptService.HandleServerNotificationAsync which handles DID_RENEW, EXPIRED, DID_FAIL_TO_RENEW, REFUND, SUBSCRIBED, DID_CHANGE_RENEWAL_STATUS.",
       "resultingHandoff": "MUST also register this URL in App Store Connect > App Information > App Store Server Notifications V2 URL (production). Flagged as an importantNote for the CEO.",
       "completedDate": "2026-04-18"
+    },
+    {
+      "id": "xd-395",
+      "from": "ceo",
+      "to": "cto",
+      "status": "completed",
+      "priority": "P1",
+      "title": "Home page data limit badge now reflects admin-set per-user limit",
+      "description": "CEO observed: after xd-392, Profile page showed the admin-set limit correctly but the Home page still showed hardcoded \"2 GB\" and the progress bar scaled against 2GB. Two more sites in the same codebase that ignored userDataLimitBytes: (1) SubscriptionManager.dataUsagePercentage() divided by tier.bandwidthLimitBytes, (2) ConnectionView.dataUsageIndicator hardcoded limitText = \"2 GB\" for free tier.",
+      "taskRef": "xd-392",
+      "createdAt": "2026-04-18T20:37:22Z",
+      "completedAt": "2026-04-18T20:37:22Z",
+      "completedBy": "cto",
+      "resolution": "Fixed in 934af2b7 (dataUsagePercentage prefers userDataLimitBytes) and 0217d283 (Home badge uses effectiveDataLimitBytes, progress bar shows whenever hasLimit including admin override on paid tier). Home and Profile now read from the same source.",
+      "resultingHandoff": "Device verify: admin sets limit on user A \u2192 user A foregrounds app \u2192 both Profile and Home show same number + progress bar scales correctly."
     }
   ],
   "importantNotes": [
+    {
+      "date": "2026-04-18",
+      "from": "CTO",
+      "note": "xd-395 (934af2b7+0217d283): Home page now reflects admin-set data limit (was still showing hardcoded 2GB after xd-392 because dataUsagePercentage + ConnectionView.dataUsageIndicator had their own hardcoded checks). Companion fix to xd-392; QA sweep miss on my part \u2014 the \"audit every site that reads the tier cap\" pattern should have caught this in xd-392."
+    },
     {
       "date": "2026-04-18",
       "from": "CTO",
