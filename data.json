@@ -1,6 +1,6 @@
 {
-  "lastUpdated": "2026-04-15T12:28:15Z",
-  "updatedBy": "[QA]",
+  "lastUpdated": "2026-04-18T03:17:15Z",
+  "updatedBy": "[DEVOPS]",
   "overall": {
     "completion": 69,
     "phase": "Phase 1: iOS Launch",
@@ -13462,9 +13462,35 @@
       "dueBy": "2026-04-20T22:52:56Z",
       "handoffTo": null,
       "handoffNote": null
+    },
+    {
+      "id": "xd-387",
+      "from": "devops",
+      "to": "backend",
+      "title": "CI BLOCKER: Syntax error in website/app/guides/[slug]/page.tsx & website/app/compare/[slug]/page.tsx",
+      "description": "CI has been RED for 14+ hours. Blocker: commit 973df09b42 (2026-04-17T13:30:41Z) introduced invalid syntax in two Next.js dynamic route files:\n  \u2022 website/app/guides/[slug]/page.tsx line 18: `if (!data) const url = \\`https://caspervpn.com/guides/${slug}\\`;`\n  \u2022 website/app/compare/[slug]/page.tsx line 18: `if (!data) const url = \\`https://caspervpn.com/compare/${slug}\\`;`\n\nInvalid JS \u2014 you cannot declare `const` inside an `if` without a block, and the declaration is unreachable to the subsequent `alternates: { canonical: url }` referenced on line 25. swc parser rejects with 'Expression expected' and Next.js build aborts \u2192 Docker buildx fails on COPY --from=deps /app/.next/standalone \u2192 CI red.\n\nFIX (minimal diff):\n  Move `const url = ...` OUT of the `if` and handle `!data` cleanly:\n    const data = guides[slug];\n    const url = `https://caspervpn.com/guides/${slug}`;\n    if (!data) return { title: 'Guide not found | CasperVPN', alternates: { canonical: url } };\n  Same pattern for compare/[slug].\n\nVERIFY:\n  cd website && npm run build    # expect success\n  Watch next CI run on dropbox-local \u2014 Build Docker Images (website) should pass.",
+      "priority": "P0",
+      "status": "pending",
+      "createdAt": "2026-04-18T03:17:15Z",
+      "createdBy": "devops",
+      "handoffTo": null,
+      "evidence": {
+        "ciRun": "24590169446",
+        "failingStep": "Build Docker Images (website, website/Dockerfile, caspervpn-website, website/)",
+        "commitThatBrokeIt": "973df09b42",
+        "hoursRed": 14,
+        "consecutiveFailedRuns": 11
+      }
     }
   ],
   "importantNotes": [
+    {
+      "id": "note-devops-ci-2026-04-18",
+      "createdAt": "2026-04-18T03:17:15Z",
+      "createdBy": "devops",
+      "severity": "P0",
+      "message": "[DEVOPS 2026-04-18 03:15 UTC] CI RED for 14+ hrs. Root cause: syntax bug in website/app/{guides,compare}/[slug]/page.tsx line 18 \u2014 invalid `if (!data) const url = ...`. Introduced by commit 973df09b42. Self-hosted runner uk-lon-runner-1 ONLINE and healthy. Only blocker is this code issue. Handoff xd-387 \u2192 BACKEND. Infra health otherwise GREEN: 16/16 containers UP, 19/19 Prom targets UP, all 13 VPN nodes reachable, UK-LON disk down to 68% (was 81%)."
+    },
     {
       "date": "2026-04-17",
       "from": "QA",
@@ -13520,7 +13546,6 @@
       "priority": "info",
       "note": "[QA] Scheduled verification 2026-04-12: INFRA: 16/16 containers UP+healthy. API container rebuilt today. Server load=0.08, RAM 25%, Disk 50%. SMOKE: Auth PASS, health PASS (200, <1ms DB). VPN: WireGuard UP, IKEv2/strongSwan UP (35h), FreeRADIUS ACTIVE. SSH hardened (key-only). ENDPOINTS: 6/17 PASS, 7 auth-gated (404=not deployed), 4 minor issues. SELF-REPORTED ACs: support-tickets upgraded to qa-tested. 2FA marked qa-partial (setup works, verify/recovery 404). dedicated-ip REVERTED to FAIL (all 404). BLOCKING: xd-331 needs device testing. Admin advanced routes not in Docker build."
     },
-    "[ADMIN-PANEL 2026-04-12] xd-309 audit: 24/25 advanced admin endpoints return 200. 7 frontend pages verified \u2014 zero mock data, all wired to adminService. One missing backend endpoint: /api/admin/revenue-intelligence/trend (handoff xd-330 created). All crossDeptTasks for [ADMIN] are completed. Container healthy, admin panel serving at admin.caspervpn.com.",
     {
       "id": "note-ios-2026-04-12",
       "title": "[iOS] Scheduled Health Check \u2014 2026-04-12",
