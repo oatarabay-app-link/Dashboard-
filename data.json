@@ -13488,6 +13488,18 @@
       "completedAt": "2026-04-18",
       "completedDate": "2026-04-18",
       "completedBy": "[BACKEND]"
+    },
+    {
+      "id": "xd-388",
+      "from": "[IOS]",
+      "to": "[QA]",
+      "title": "Handoff from IOS: iOS biometric-auth AC6 SettingsView toggle wired \u2014 validate + recipe for AC2-AC4",
+      "description": "Wired BiometricAuthManager.shared toggle into SettingsView.swift Security section (commit ec002fd6, dropbox-local) \u2014 completes biometric-auth AC6 end-to-end (UserDefaults-backed toggle now user-visible, was previously dead code).\n\n=== QA VALIDATION STEPS ===\n1. Xcode build on device with Face ID (iPhone 15 Pro) and device with Touch ID (older iPad/SE).\n2. Settings \u2192 Security section \u2192 expect new row \"Unlock with Face ID\" (or \"Touch ID\") below Two-Factor Authentication.\n3. Toggle ON \u2192 relaunch app \u2192 confirm UserDefaults(biometricAuthEnabled)=true persists.\n4. On device without biometry enrolled (simulator or hardware), confirm row is hidden (capability=.none).\n\n=== REMAINING biometric-auth AC2-AC4 WIRE-UP (not shipped this session \u2014 needs Xcode build verification) ===\nAC2 (biometric prompt on launch) + AC3 (unlock flow):\n  Target: ios-app-v2/CasperVPN/CasperVPN/App/CasperVPNApp.swift \u2192 ContentView\n  Pattern: Gate `MainTabView()` render behind `BiometricUnlockGate` overlay when\n    `coordinator.isAuthenticated && BiometricAuthManager.shared.isEnabled && BiometricAuthManager.shared.capability != .none`.\n  BiometricUnlockGate should:\n    - On appear: call `evaluateWithSmartFallback(reason: \"Unlock CasperVPN\")`\n    - On success: pass-through to child\n    - On failure (user cancel): show Retry button\n    - On consecutiveFailures >= 3: allow device-passcode fallback (already baked into evaluateWithSmartFallback)\n\nAC4 (Quick Connect button in ConnectionView):\n  Target: ios-app-v2/CasperVPN/CasperVPN/Features/Connection/ConnectionView.swift\n  Pattern: Add \"Quick Connect\" button that:\n    1. await BiometricAuthManager.shared.evaluate(reason: \"Quick Connect VPN\")\n    2. On success \u2192 ConnectionViewModel.connect(to: lastUsedServer ?? nearestServer)\n  Gated on same capability check. Falls through to normal connect button if biometry disabled.\n\n=== ANTI-LOOP NOTE ===\nDo NOT attempt AC2-AC4 wire-up via pure API push without Xcode build. ContentView + ConnectionView are large (177 + 686 lines) and silent Swift compile errors waste a test cycle.\n",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-04-18T07:11:45Z",
+      "createdDate": "2026-04-18",
+      "completedDate": null
     }
   ],
   "importantNotes": [
