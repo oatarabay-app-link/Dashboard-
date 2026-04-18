@@ -13839,9 +13839,56 @@
       "dueBy": "2026-05-02T22:43:36Z",
       "handoffTo": "qa",
       "handoffNote": "Device regression test after fix"
+    },
+    {
+      "id": "xd-413",
+      "from": "ceo",
+      "to": "cto",
+      "status": "completed",
+      "priority": "P0",
+      "title": "Push notification \u2192 Support ticket deep-link",
+      "description": "CEO: \"messages still not visible in app in user profile... notifications when message received from admin\". The backend APNs push already fires on admin reply with payload {type: \"ticket_reply\", ticketId}, but iOS never consumed the payload \u2014 the tap did nothing. No deep-link navigation existed from AppDelegate \u2192 AppCoordinator \u2192 ProfileView.",
+      "createdAt": "2026-04-18T23:20:24Z",
+      "completedAt": "2026-04-18T23:20:24Z",
+      "completedBy": "cto",
+      "resolution": "Fixed in 4 commits: AppCoordinator.swift (000fe5d1) added pendingTicketDeepLink state + weak singleton. AppDelegate.swift (098fcd54) parses APNs payload in didReceive + UNNotificationCenterDelegate.didReceive. ConnectionView.swift (9873a402) auto-opens Profile on flag. ProfileView.swift (5432d495) opens LiveSupportView for target ticket on onChange + onAppear.",
+      "resultingHandoff": "Device test: (a) admin sends ticket reply \u2192 push arrives \u2192 tap \u2192 app opens Profile \u2192 LiveSupportView for target ticket shown. (b) Profile Messages card shows red dot next to unread tickets + total pill. (c) Profile Security card taps \u2192 2FA setup sheet. (d) Settings still shows pointer row."
+    },
+    {
+      "id": "xd-414",
+      "from": "ceo",
+      "to": "cto",
+      "status": "completed",
+      "priority": "P1",
+      "title": "Unread indicator + \"Messages\" rename on Profile tickets",
+      "description": "CEO: messages from admin should have visible indicator; terminology should be \"messages\". Profile Support Tickets card had no unread indicator and was labelled \"Support\".",
+      "createdAt": "2026-04-18T23:20:24Z",
+      "completedAt": "2026-04-18T23:20:24Z",
+      "completedBy": "cto",
+      "resolution": "Fixed in ProfileView.swift + ProfileViewModel.swift (4301a487): added hasUnread/markTicketRead using UserDefaults-backed per-ticket lastRead timestamp; red dot per unread ticket + total unread pill on card header; card heading renamed \"Support\" \u2192 \"Messages\"; markTicketRead fires on sheet dismiss.",
+      "resultingHandoff": "Device test: (a) admin sends ticket reply \u2192 push arrives \u2192 tap \u2192 app opens Profile \u2192 LiveSupportView for target ticket shown. (b) Profile Messages card shows red dot next to unread tickets + total pill. (c) Profile Security card taps \u2192 2FA setup sheet. (d) Settings still shows pointer row."
+    },
+    {
+      "id": "xd-415",
+      "from": "ceo",
+      "to": "cto",
+      "status": "completed",
+      "priority": "P1",
+      "title": "2FA moved from Settings to Profile > Security card",
+      "description": "CEO: move 2FA to profile area. 2FA currently lives under Settings \u2192 Security. Product rationale: 2FA is an account-level control, belongs with account details.",
+      "createdAt": "2026-04-18T23:20:24Z",
+      "completedAt": "2026-04-18T23:20:24Z",
+      "completedBy": "cto",
+      "resolution": "Fixed in ProfileView.swift (securityCard added between accountInfoCard and devicesCard, presents TwoFactorSetupView) + SettingsView.swift (c5a8210c) (removed NavigationLink, left static pointer \"Moved to Profile \u2192 Security\" for users with bookmarks). TwoFactorSetupView.swift file left in-place (no folder move needed since Swift module resolution is flat \u2014 avoids pbxproj surgery). UI-test accessibilityIdentifier \"twoFactorButton\" preserved.",
+      "resultingHandoff": "Device test: (a) admin sends ticket reply \u2192 push arrives \u2192 tap \u2192 app opens Profile \u2192 LiveSupportView for target ticket shown. (b) Profile Messages card shows red dot next to unread tickets + total pill. (c) Profile Security card taps \u2192 2FA setup sheet. (d) Settings still shows pointer row."
     }
   ],
   "importantNotes": [
+    {
+      "date": "2026-04-18",
+      "from": "CTO",
+      "note": "Messaging UX gaps + 2FA relocation shipped: xd-413 (deep-link tap \u2192 specific ticket), xd-414 (unread badge + \"Messages\" rename), xd-415 (2FA now in Profile > Security, Settings shows pointer row). Commits: 000fe5d1, 098fcd54, 9873a402, 5432d495, 4301a487, c5a8210c."
+    },
     {
       "date": "2026-04-18",
       "from": "CTO",
