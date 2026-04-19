@@ -14089,9 +14089,70 @@
       "resolution": "Fixed in d6b29b34: added NSLocationWhenInUseUsageDescription with a transparent, honest string clarifying the permission is never actually requested. Will clear the ITMS-90683 warning on next upload. Candidate SDKs bringing in CLLocationManager: Google Sign-In or Sentry (transitive).",
       "resultingHandoff": "Next TestFlight upload: ITMS-90683 should not appear.",
       "completedDate": "2026-04-19"
+    },
+    {
+      "id": "xd-422",
+      "from": "ceo",
+      "to": "cto",
+      "status": "completed",
+      "priority": "P0",
+      "title": "CRITICAL: Silent decoder drops entire SupportTicket.messages array on single bad entry",
+      "description": "Full-sweep audit root cause. SupportTicket.init(from:) used decodeIfPresent([SupportMessage].self) \u2014 if ANY single message fails to decode, the whole array is dropped. User sees \"no messages\" in Profile even when admin replied. This explains why xd-413/414/420 (deep-link + unread + DisclosureGroup) didn't help \u2014 they were UX layers over a silently-broken decoder.",
+      "createdAt": "2026-04-19T17:10:32Z",
+      "completedAt": "2026-04-19T17:10:32Z",
+      "completedBy": "cto",
+      "resolution": "Fixed in fa2d75a5: new ResilientMessage wrapper decodes each message individually. Failed entries log a warning and are skipped; successful entries populate the array. User now sees all valid messages even if one is malformed.",
+      "resultingHandoff": "Device test on next build. For xd-425: test with iOS Simulator locale set to \"AE\" (Edit Scheme \u2192 Region \u2192 United Arab Emirates) + SmartConnect \u2192 verify connection uses CasperCloak protocol regardless of user preference. Xcode log shows \"xd-425: Restrictive region detected...\""
+    },
+    {
+      "id": "xd-423",
+      "from": "ceo",
+      "to": "cto",
+      "status": "completed",
+      "priority": "P1",
+      "title": "Auto-reload ticket list when APNs ticket_reply push arrives",
+      "description": "After admin replies, APNs push fires and opens the chat sheet (xd-413), but Profile's Messages card list stayed stale until manual pull-to-refresh. Mismatch between chat-view and list-view staleness.",
+      "createdAt": "2026-04-19T17:10:32Z",
+      "completedAt": "2026-04-19T17:10:32Z",
+      "completedBy": "cto",
+      "resolution": "Fixed in ca296315: onChange(of: coordinator.pendingTicketDeepLink) now calls viewModel.loadTickets() before presenting the chat.",
+      "resultingHandoff": "Device test on next build. For xd-425: test with iOS Simulator locale set to \"AE\" (Edit Scheme \u2192 Region \u2192 United Arab Emirates) + SmartConnect \u2192 verify connection uses CasperCloak protocol regardless of user preference. Xcode log shows \"xd-425: Restrictive region detected...\""
+    },
+    {
+      "id": "xd-424",
+      "from": "ceo",
+      "to": "cto",
+      "status": "completed",
+      "priority": "P2",
+      "title": "Backend ORDER BY UpdatedAt DESC (tickets with recent admin replies surface to top)",
+      "description": "SupportTicketsController.GetTickets ordered by CreatedAt DESC. Freshly-replied tickets were pushed below older ones, making users think admin never replied.",
+      "createdAt": "2026-04-19T17:10:32Z",
+      "completedAt": "2026-04-19T17:10:32Z",
+      "completedBy": "cto",
+      "resolution": "Fixed in 7d951a63: SQL ORDER BY \"UpdatedAt\" DESC. Admin reply bumps the ticket to the top.",
+      "resultingHandoff": "Device test on next build. For xd-425: test with iOS Simulator locale set to \"AE\" (Edit Scheme \u2192 Region \u2192 United Arab Emirates) + SmartConnect \u2192 verify connection uses CasperCloak protocol regardless of user preference. Xcode log shows \"xd-425: Restrictive region detected...\""
+    },
+    {
+      "id": "xd-425",
+      "from": "ceo",
+      "to": "cto",
+      "status": "completed",
+      "priority": "P0",
+      "title": "CRITICAL: iOS enforce CasperCloak override when backend flags restrictive region (UAE fix)",
+      "description": "CEO: \"a new user registered in UAE was not automatically routed to CasperCloak.\" Backend GeoIpService.cs:26-42 correctly includes AE + 13 other countries in restricted list and sets response.isRestrictiveRegion=true. But iOS SmartConnectManager.swift only logged the flag \u2014 protocol choice fell through to user preference or per-server recommendation, both overridable. User in UAE could get standard WG which gets DPI-blocked.",
+      "createdAt": "2026-04-19T17:10:32Z",
+      "completedAt": "2026-04-19T17:10:32Z",
+      "completedBy": "cto",
+      "resolution": "Fixed in 105bb9f1: when response.isRestrictiveRegion=true, override preferredProtocol to .casperCloak unconditionally. Warning log for audit. Works for AE + IR + CN + RU + SA + OM + KP + PK + VN + MM + CU + BY + EG + TM.",
+      "resultingHandoff": "Device test on next build. For xd-425: test with iOS Simulator locale set to \"AE\" (Edit Scheme \u2192 Region \u2192 United Arab Emirates) + SmartConnect \u2192 verify connection uses CasperCloak protocol regardless of user preference. Xcode log shows \"xd-425: Restrictive region detected...\""
     }
   ],
   "importantNotes": [
+    {
+      "date": "2026-04-19",
+      "from": "CTO",
+      "note": "Full-sweep fixes for messaging + UAE routing: xd-422 (CRITICAL resilient decoder \u2014 fixes messages disappearing from Profile, root cause of prior 4 half-fixes), xd-425 (CRITICAL iOS enforce CasperCloak in restricted regions \u2014 UAE user wasn't auto-routed), xd-423 (auto-reload on push), xd-424 (backend UpdatedAt ordering). Commits: fa2d75a5, 105bb9f1, ca296315, 7d951a63."
+    },
     {
       "date": "2026-04-19",
       "from": "CTO",
