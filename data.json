@@ -13888,6 +13888,21 @@
       "resolution": "Fixed in ProfileView.swift (securityCard added between accountInfoCard and devicesCard, presents TwoFactorSetupView) + SettingsView.swift (c5a8210c) (removed NavigationLink, left static pointer \"Moved to Profile \u2192 Security\" for users with bookmarks). TwoFactorSetupView.swift file left in-place (no folder move needed since Swift module resolution is flat \u2014 avoids pbxproj surgery). UI-test accessibilityIdentifier \"twoFactorButton\" preserved.",
       "resultingHandoff": "Device test: (a) admin sends ticket reply \u2192 push arrives \u2192 tap \u2192 app opens Profile \u2192 LiveSupportView for target ticket shown. (b) Profile Messages card shows red dot next to unread tickets + total pill. (c) Profile Security card taps \u2192 2FA setup sheet. (d) Settings still shows pointer row.",
       "completedDate": "2026-04-19"
+    },
+    {
+      "id": "xd-416",
+      "from": "[iOS]",
+      "to": "[QA]",
+      "status": "pending",
+      "priority": "P1",
+      "title": "iOS validation: xd-413 deep-link + xd-414 unread + xd-415 2FA relocation",
+      "description": "CTO commits 000fe5d1..c5a8210c (2026-04-18T23:20) touched iOS user-facing code but did not create a QA handoff per \u00a74 auto-handoff rule. iOS dept closing the gap.\n\nVALIDATE ON TESTFLIGHT (Face ID + Touch ID devices):\n\nxd-413 (Push\u2192Ticket deep-link):\n  \u2022 Send APNs test payload {type:'ticket_reply', ticketId:'<real-uuid>', messageId:'<uuid>'} \u2014 background.\n  \u2022 Tap notification \u2192 app should open Profile sheet \u2192 LiveSupportView for that ticketId.\n  \u2022 Files: App/AppDelegate.swift L86-115, App/AppCoordinator.swift L27+L58-61+L83, Connection/ConnectionView.swift L86-89, Profile/ProfileView.swift L87-97.\n  \u2022 Edge cases: app cold-start, app foreground, malformed ticketId, multiple stacked notifications.\n\nxd-414 (Unread indicator + Messages rename):\n  \u2022 Reply to ticket from admin panel, verify red unread dot appears on ticket row in Profile.\n  \u2022 Verify total unread pill on 'Messages' card header.\n  \u2022 Open ticket \u2192 dismiss \u2192 dot/pill clears. Files: Profile/ProfileViewModel.swift (hasUnread/markTicketRead/unreadTicketCount).\n  \u2022 First-view heuristic: existing tickets never seen after install should NOT show dot.\n\nxd-415 (2FA relocation):\n  \u2022 Profile \u2192 Security card shows 2FA row between account info + devices. Files: Profile/ProfileView.swift L26-30+L494+L533.\n  \u2022 Settings \u2192 static 'Moved to Profile \u2192 Security' pointer row present. File: Settings/SettingsView.swift.\n  \u2022 TwoFactorSetupView still launches; accessibilityIdentifier preserved for UI tests.\n\nLIVE API: /api/support/tickets \u2192 200, /api/auth/refresh \u2192 200, /api/users/me \u2192 200. Prod backend verified healthy at 2026-04-19T02:55Z.",
+      "taskRef": "live-support-chat",
+      "criteriaIdx": [],
+      "createdAt": "2026-04-19T10:05:04Z",
+      "dueBy": "2026-04-22T10:05:04Z",
+      "handoffTo": "[CEO]",
+      "handoffNote": "Mark \ud83d\udfe2 on TestFlight device after QA pass"
     }
   ],
   "importantNotes": [
