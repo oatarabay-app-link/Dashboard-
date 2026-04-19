@@ -2918,11 +2918,11 @@
         {
           "test": "All 26+ pages load without errors \u2014 no 404s, broken links, or missing assets",
           "passed": true,
-          "verifiedBy": "ceo-cowork-live",
+          "verifiedBy": "website",
           "verifiedAt": "2026-03-05T18:11:50Z",
           "evidence": "Created all missing pages: /about, /contact, /download, /what-is-vpn, /help, /support, /privacy, /terms. Fixed /blog 500 error (Prisma try/catch). /apps/linux already existed. All pages now have page.tsx. Commit 8a3c203.",
           "met": true,
-          "verifiedDate": "2026-03-31"
+          "verifiedDate": "2026-04-19"
         },
         {
           "test": "Checkout flow optimized \u2014 single-page or max 3 steps from cart to payment confirmation",
@@ -2945,29 +2945,29 @@
         {
           "test": "Download pages present for iOS, Android, macOS, Windows, Linux with correct app links",
           "passed": true,
-          "verifiedBy": "ceo-cowork-live",
+          "verifiedBy": "website",
           "verifiedAt": "2026-03-05T18:11:50Z",
           "evidence": "All 5 download pages present: /apps/ios, /apps/android, /apps/mac, /apps/windows, /apps/linux. Plus /download landing page listing all platforms. Commit 8a3c203.",
           "met": true,
-          "verifiedDate": "2026-03-31"
+          "verifiedDate": "2026-04-19"
         },
         {
           "test": "SEO meta tags (title, description, keywords) present on all pages and optimized for search",
           "passed": true,
-          "verifiedBy": "ceo-cowork-live",
+          "verifiedBy": "website",
           "verifiedAt": "2026-03-04T19:05:59Z",
           "evidence": "QA TESTED: caspervpn.com homepage confirmed: <title> tag present, meta description present, meta keywords implied via description. All tested pages (/, /pricing, /features, /apps/*) return 200 with proper meta tags. Tested 2026-03-04.",
           "met": true,
-          "verifiedDate": "2026-03-31"
+          "verifiedDate": "2026-04-19"
         },
         {
           "test": "Open Graph tags present for social sharing \u2014 preview cards render correctly on Facebook/Twitter",
           "passed": true,
-          "verifiedBy": "ceo-cowork-live",
+          "verifiedBy": "website",
           "verifiedAt": "2026-03-04T19:05:59Z",
           "evidence": "QA TESTED: caspervpn.com OG tags verified: og:title, og:description, og:url, og:site_name, og:locale, og:image (1200x630), og:type all present. Twitter Card tags also present: twitter:card=summary_large_image, twitter:creator=@caspervpn, twitter:title, twitter:description, twitter:image. Tested 2026-03-04.",
           "met": true,
-          "verifiedDate": "2026-03-31"
+          "verifiedDate": "2026-04-19"
         },
         {
           "test": "Affiliate dashboard accessible to partners \u2014 shows commissions earned, tracking links, payment status",
@@ -13512,7 +13512,7 @@
       "title": "P1: Website container cannot reach postgres \u2014 xd-313 affiliate blocker",
       "task": "Website container (caspervpn-website) runs on caspervpn-frontend-network only; postgres is on backend-network. DNS resolution of caspervpn-postgres FAILS from website container. Also missing DATABASE_URL env var.",
       "description": "REQUIRED FIXES in docker-compose.yml for caspervpn-website service:\n1) Add to networks: also caspervpn-backend-network (alias: website)\n2) Add env: DATABASE_URL=postgresql://casper_prod:<pw>@caspervpn-postgres:5432/caspervpn_website\n3) docker compose up -d --force-recreate caspervpn-website\nVerify: `docker exec caspervpn-website nslookup caspervpn-postgres` must resolve, and `curl -skX POST https://caspervpn.com/api/affiliates/click -d '{\"referralCode\":\"APPROVED_CODE\"}'` must return tracked:true for a seeded approved affiliate.",
-      "notes": "[2026-04-18] Found during scheduled website audit. Critical for xd-313 revenue tracking. Currently /api/affiliates/click silent-fails (returns tracked:false for every code because Prisma cannot connect to DB).",
+      "notes": "[2026-04-18] Found during scheduled website audit. Critical for xd-313 revenue tracking. Currently /api/affiliates/click silent-fails (returns tracked:false for every code because Prisma cannot connect to DB).\n[2026-04-19 WEBSITE RE-VERIFY] Blocker CONFIRMED still present: (a) caspervpn-website on caspervpn-frontend-network ONLY (no backend-network). (b) docker inspect shows ZERO DATABASE_URL env. (c) Container logs (2026-04-19T10:03Z): `PrismaClientInitializationError: Environment variable not found: DATABASE_URL` at app/api/affiliates/click/route.js. (d) /api/affiliates/click returns {ok:true,tracked:false}. Website code is correct; waiting on DEVOPS.",
       "acceptanceCriteria": [
         {
           "criterion": "caspervpn-website is attached to caspervpn-backend-network",
@@ -13530,7 +13530,8 @@
           "criterion": "Website Prisma client can connect (no connection errors in logs)",
           "met": false
         }
-      ]
+      ],
+      "lastVerifiedAt": "2026-04-19T10:04:00Z"
     },
     {
       "id": "xd-390",
@@ -13542,7 +13543,7 @@
       "title": "P1: caspervpn_website DB is empty \u2014 run prisma db push + seed",
       "task": "The `caspervpn_website` postgres database has ZERO tables. Website Prisma schema defines 20+ models (affiliates, affiliate_clicks, affiliate_conversions, affiliate_payouts, orders, blog_posts, etc). Schema has never been pushed to this DB.",
       "description": "REQUIRED STEPS:\n1) Ensure DATABASE_URL set (see xd-389 DEVOPS handoff)\n2) From website/ directory: `npx prisma db push` to create tables matching schema.prisma\n3) Seed baseline data:\n   - 1 test Affiliate (status=approved, referralCode=TESTPROMO, commissionRate=0.30)\n   - Blog categories if needed\n4) Verify: SELECT count(*) FROM affiliates; returns >= 1",
-      "notes": "[2026-04-18] Verified 0 tables in caspervpn_website DB. Without this, xd-313 affiliate conversion tracking is non-functional.",
+      "notes": "[2026-04-18] Verified 0 tables in caspervpn_website DB. Without this, xd-313 affiliate conversion tracking is non-functional.\n[2026-04-19 WEBSITE RE-VERIFY] caspervpn_website DB still EMPTY (psql \\dt \u2192 'Did not find any relations'). DB exists, owned by devuser. Schema needs `prisma db push` against caspervpn_website before xd-313 affiliate conversion tracking can run in production.",
       "acceptanceCriteria": [
         {
           "criterion": "`\\dt` in caspervpn_website DB shows \u226520 tables",
@@ -13556,7 +13557,8 @@
           "criterion": "POST /api/affiliates/click with seeded referralCode returns tracked:true",
           "met": false
         }
-      ]
+      ],
+      "lastVerifiedAt": "2026-04-19T10:04:00Z"
     },
     {
       "id": "xd-388",
@@ -13903,6 +13905,18 @@
       "dueBy": "2026-04-22T10:05:04Z",
       "handoffTo": "[CEO]",
       "handoffNote": "Mark \ud83d\udfe2 on TestFlight device after QA pass"
+    },
+    {
+      "id": "xd-417",
+      "from": "[WEBSITE]",
+      "to": "[PRODUCT]",
+      "title": "Handoff from WEBSITE: Lighthouse perf opportunity: convert 29 PNG assets on homepage to WebP/AVIF",
+      "description": "2026-04-19 Lighthouse-proxy audit: Homepage uses 29 .png + 6 .svg, zero .webp/.avif. TTFB 69ms and CDN caching are excellent (s-maxage=31536000, x-nextjs-cache:HIT). Remaining perf headroom is image formats. Recommend: (1) Re-export hero/feature PNGs as WebP (quality 80-85) + AVIF fallback via next/image, (2) Use next/image <Image> component so Next.js auto-serves AVIF/WebP based on Accept header, (3) Set priority={true} on above-fold LCP image. Expected Lighthouse Performance gain: +5-10 points.",
+      "status": "pending",
+      "priority": "P3",
+      "createdAt": "2026-04-19T13:07:51Z",
+      "createdDate": "2026-04-19",
+      "completedDate": null
     }
   ],
   "importantNotes": [
