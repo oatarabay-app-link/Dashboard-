@@ -13548,32 +13548,44 @@
       "id": "xd-389",
       "from": "[WEBSITE]",
       "to": "[DEVOPS]",
-      "status": "open",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-04-18",
       "title": "P1: Website container cannot reach postgres \u2014 xd-313 affiliate blocker",
       "task": "Website container (caspervpn-website) runs on caspervpn-frontend-network only; postgres is on backend-network. DNS resolution of caspervpn-postgres FAILS from website container. Also missing DATABASE_URL env var.",
       "description": "REQUIRED FIXES in docker-compose.yml for caspervpn-website service:\n1) Add to networks: also caspervpn-backend-network (alias: website)\n2) Add env: DATABASE_URL=postgresql://casper_prod:<pw>@caspervpn-postgres:5432/caspervpn_website\n3) docker compose up -d --force-recreate caspervpn-website\nVerify: `docker exec caspervpn-website nslookup caspervpn-postgres` must resolve, and `curl -skX POST https://caspervpn.com/api/affiliates/click -d '{\"referralCode\":\"APPROVED_CODE\"}'` must return tracked:true for a seeded approved affiliate.",
-      "notes": "[2026-04-18] Found during scheduled website audit. Critical for xd-313 revenue tracking. Currently /api/affiliates/click silent-fails (returns tracked:false for every code because Prisma cannot connect to DB).\n[2026-04-19 WEBSITE RE-VERIFY] Blocker CONFIRMED still present: (a) caspervpn-website on caspervpn-frontend-network ONLY (no backend-network). (b) docker inspect shows ZERO DATABASE_URL env. (c) Container logs (2026-04-19T10:03Z): `PrismaClientInitializationError: Environment variable not found: DATABASE_URL` at app/api/affiliates/click/route.js. (d) /api/affiliates/click returns {ok:true,tracked:false}. Website code is correct; waiting on DEVOPS.",
+      "notes": "[2026-04-20 DEVOPS RESOLVED] Patched docker-compose.yml: caspervpn-website attached to caspervpn-backend-network (alias 'website') and DATABASE_URL env added (postgresql://${DB_USER}:${DB_PASSWORD}@caspervpn-postgres:5432/caspervpn_website). Container force-recreated. VERIFIED: AC1 website on backend-network (172.19.0.9); AC2 DATABASE_URL present; AC3 DNS caspervpn-postgres\u2192172.19.0.3; AC4 Prisma connection SUCCEEDS (P2021 'affiliates table missing' confirms DB reachable \u2014 schema deploy is WEBSITE scope, logged as xd-426). Compose commit 37017e5c on dropbox-local. | [2026-04-18] Found during scheduled website audit. Critical for xd-313 revenue tracking. Currently /api/affiliates/click silent-fails (returns tracked:false for every code because Prisma cannot connect to DB).\n[2026-04-19 WEBSITE RE-VERIFY] Blocker CONFIRMED still present: (a) caspervpn-website on caspervpn-frontend-network ONLY (no backend-network). (b) docker inspect shows ZERO DATABASE_URL env. (c) Container logs (2026-04-19T10:03Z): `PrismaClientInitializationError: Environment variable not found: DATABASE_URL` at app/api/affiliates/click/route.js. (d) /api/affiliates/click returns {ok:true,tracked:false}. Website code is correct; waiting on DEVOPS.",
       "acceptanceCriteria": [
         {
           "criterion": "caspervpn-website is attached to caspervpn-backend-network",
-          "met": false
+          "met": true,
+          "verifiedBy": "devops",
+          "verifiedDate": "2026-04-20"
         },
         {
           "criterion": "DATABASE_URL env present in caspervpn-website container",
-          "met": false
+          "met": true,
+          "verifiedBy": "devops",
+          "verifiedDate": "2026-04-20"
         },
         {
           "criterion": "`docker exec caspervpn-website nslookup caspervpn-postgres` returns an IP",
-          "met": false
+          "met": true,
+          "verifiedBy": "devops",
+          "verifiedDate": "2026-04-20"
         },
         {
           "criterion": "Website Prisma client can connect (no connection errors in logs)",
-          "met": false
+          "met": true,
+          "verifiedBy": "devops",
+          "verifiedDate": "2026-04-20"
         }
       ],
-      "lastVerifiedAt": "2026-04-19T10:04:00Z"
+      "lastVerifiedAt": "2026-04-20T03:15:00Z",
+      "completedAt": "2026-04-20",
+      "completedDate": "2026-04-20",
+      "completedBy": "[DEVOPS]",
+      "resolution": "Website\u2194postgres connectivity restored: attached backend-network + DATABASE_URL env"
     },
     {
       "id": "xd-390",
@@ -14149,9 +14161,75 @@
       "resolution": "Fixed in 105bb9f1: when response.isRestrictiveRegion=true, override preferredProtocol to .casperCloak unconditionally. Warning log for audit. Works for AE + IR + CN + RU + SA + OM + KP + PK + VN + MM + CU + BY + EG + TM.",
       "resultingHandoff": "Device test on next build. For xd-425: test with iOS Simulator locale set to \"AE\" (Edit Scheme \u2192 Region \u2192 United Arab Emirates) + SmartConnect \u2192 verify connection uses CasperCloak protocol regardless of user preference. Xcode log shows \"xd-425: Restrictive region detected...\"",
       "completedDate": "2026-04-20"
+    },
+    {
+      "id": "xd-426",
+      "from": "[DEVOPS]",
+      "to": "[WEBSITE]",
+      "status": "open",
+      "priority": "P1",
+      "createdAt": "2026-04-20",
+      "title": "P1: Deploy Prisma schema to caspervpn_website DB (tables missing \u2014 affiliate tracking still fails)",
+      "task": "xd-389 connectivity is FIXED. Website Prisma client now connects to caspervpn-postgres:5432/caspervpn_website \u2014 but the DB has NO tables. Need to run `npx prisma db push` or `npx prisma migrate deploy`.",
+      "description": "Repro on NL Primary: POST https://caspervpn.com/api/affiliates/click {referralCode:'X'} \u2192 returns tracked:false and logs show PrismaClientKnownRequestError P2021: public.affiliates table does not exist. Fix: (a) ensure website/prisma/migrations/ dir exists with init migration OR use db push, (b) execute against production DB (creds in .env at /root/Casper/Casper-Code/.env \u2014 DB_USER/DB_PASSWORD, DB=caspervpn_website), (c) verify affiliate endpoint returns tracked:true. Schema file: website/prisma/schema.prisma defines affiliates, blog_posts, blog_categories, admin_users, etc.",
+      "acceptanceCriteria": [
+        {
+          "criterion": "website/prisma/migrations/ committed to dropbox-local (if using migrate, not db push)",
+          "met": false
+        },
+        {
+          "criterion": "`npx prisma migrate deploy` or `prisma db push` executed against caspervpn_website DB",
+          "met": false
+        },
+        {
+          "criterion": "psql \\dt on caspervpn_website returns affiliates + blog_posts + blog_categories tables",
+          "met": false
+        },
+        {
+          "criterion": "POST /api/affiliates/click with valid code returns tracked:true (no P2021 in logs)",
+          "met": false
+        }
+      ],
+      "notes": "[2026-04-20 DEVOPS] Created as follow-up to xd-389 resolution. Infra is ready; schema deploy is WEBSITE-owned."
+    },
+    {
+      "id": "xd-427",
+      "from": "[DEVOPS]",
+      "to": "[DEVOPS]",
+      "status": "open",
+      "priority": "P2",
+      "createdAt": "2026-04-20",
+      "title": "P2: Rewrite deploy-website.yml to use docker compose (currently broken + bypasses compose network fix)",
+      "task": "Deploy Website workflow has failed 8 consecutive runs since 2026-04-17. Root cause: workflow does standalone `docker run -d` which bypasses docker-compose networks \u2014 would REVERT the xd-389 fix if it ever succeeded. Also fails at job start (3s) \u2014 likely missing/expired secret.",
+      "description": "Fix: replace standalone docker build+run with `ssh <prod> 'cd /root/Casper/Casper-Code && sudo docker compose up -d --build --force-recreate website'`. Requires NOPASSWD sudo for caspervpn user OR root SSH. Investigate 3-second fail-at-job-start. Failing runs: 24646720181, 24597112006, 24596035496, 24596031831, 24567717724, 24567684851, 24567652240.",
+      "acceptanceCriteria": [
+        {
+          "criterion": "deploy-website.yml rewritten to invoke `docker compose up -d --build --force-recreate website`",
+          "met": false
+        },
+        {
+          "criterion": "Job-start fail root-caused and fixed (secret/auth)",
+          "met": false
+        },
+        {
+          "criterion": "One successful end-to-end dropbox-local \u2192 production deploy run",
+          "met": false
+        },
+        {
+          "criterion": "Post-deploy: caspervpn-website still on caspervpn-backend-network + DATABASE_URL present",
+          "met": false
+        }
+      ],
+      "notes": "[2026-04-20 DEVOPS] Pre-existing (3 days) \u2014 not caused by xd-389 fix."
     }
   ],
   "importantNotes": [
+    {
+      "date": "2026-04-20",
+      "title": "[DEVOPS] xd-389 RESOLVED: website\u2194postgres connectivity restored",
+      "body": "docker-compose.yml patched + committed (37017e5c). caspervpn-website on caspervpn-backend-network + DATABASE_URL env. Prisma connects; next blocker is schema deploy (tracked as xd-426 \u2192 WEBSITE). Deploy-website.yml CI broken since 2026-04-17 \u2014 tracked as xd-427.",
+      "severity": "info"
+    },
     {
       "date": "2026-04-19",
       "from": "CTO",
