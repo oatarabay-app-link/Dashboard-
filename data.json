@@ -10216,10 +10216,11 @@
       "status": "completed",
       "createdAt": "2026-03-10T14:47:23Z",
       "createdDate": "2026-03-10",
-      "completedDate": null,
+      "completedDate": "2026-04-21",
       "priority": "P2",
       "qaVerifiedDate": "2026-04-21",
-      "qaVerifiedBy": "qa-tested"
+      "qaVerifiedBy": "qa-tested",
+      "completedAt": "2026-04-21"
     },
     {
       "id": "xd-169",
@@ -10764,7 +10765,9 @@
         }
       ],
       "qaVerifiedDate": "2026-04-21",
-      "qaVerifiedBy": "qa-tested"
+      "qaVerifiedBy": "qa-tested",
+      "completedAt": "2026-04-21",
+      "completedDate": "2026-04-21"
     },
     {
       "id": "xd-194",
@@ -12548,7 +12551,7 @@
       "priority": "P2",
       "createdAt": "2026-03-30T02:28:39Z",
       "createdDate": "2026-03-30",
-      "completedDate": null,
+      "completedDate": "2026-04-21",
       "blockedBy": "xd-315",
       "blockedReason": "[QA 2026-04-01] Re-tested. Login returns 401 (dev creds invalid \u2014 password changed or account disabled). Plans: 14 in DB (expected 5) \u2014 seeder STILL not deployed. Admin endpoints untestable without auth. xd-309/xd-311/xd-312 remain BLOCKED on xd-315 Docker rebuild. SSH key still broken (libcrypto error).",
       "adminVerification": "ADMIN-PANEL verified 2026-04-02: All 7 xd-309 advanced feature endpoint groups return 200. knowledge-base (2 endpoints), revenue-intelligence (4 endpoints), server-intelligence (5 endpoints), threat-intelligence (2 endpoints), resellers (2 endpoints), nats (3 endpoints), packages (3 endpoints). Total: 21/21 advanced feature endpoints live.",
@@ -12565,7 +12568,8 @@
         }
       ],
       "qaVerifiedDate": "2026-04-21",
-      "qaVerifiedBy": "qa-tested"
+      "qaVerifiedBy": "qa-tested",
+      "completedAt": "2026-04-21"
     },
     {
       "id": "xd-315",
@@ -13225,7 +13229,8 @@
       "verifiedBy": "tested",
       "resolutionNote": "QA VERIFIED 2026-04-15T11:55Z. Code-verified review of 5 critical files (732-line IServerActivationService.cs, ServerActivationController.cs with 7 endpoints, IEncryptionService.cs AES-256-GCM, ProviderCredential model, ActivateServerModal.tsx polling fix). 17 runtime tests against live api.caspervpn.com with admin JWT: all 6 negative cases return 400 with clear codes, AES-GCM round-trip proven (encrypt->store opaque ciphertext->decrypt->use against DO API), partial unique index UX_ServerActivationJobs_OpenIp WHERE Status IN (Pending,Running) returns 409 on concurrent collision and 200 on retry-after-Failed, manual-entry path runs Pending->Running->Failed end-to-end with 30s SSH timeout, no password leakage in 500 lines of backend logs, SshPassword column does not exist in schema, all 6 timestamp cols are timestamp with time zone, encrypted token in DB is opaque base64 (NOT plaintext), 5-server fleet untouched, zero ghost VpnServer rows from 5 fake-IP test activations. DEFECTS FOUND (2 MED): D1 ListProviders does not filter IsActive=true (soft-deleted creds reappear after refresh); D2 malformed sshPrivateKeyPem returns raw ArgumentOutOfRangeException with internal byte counts to admin UI. Both filed as xd-352 [QA->BACKEND]. METHODOLOGY GAP: bash injection defense not exercised at runtime (all fake-IP probes timed out before BuildBootstrapScript was called) \u2014 verified by induction (code review + S5 confirmed real CR/LF bytes reach Postgres). Real DO happy-path filed as xd-353 [QA->CEO]. Full evidence in memory/departments/qa/session-log.md 2026-04-15 11:45 entry.",
       "qaVerifiedDate": "2026-04-21",
-      "qaVerifiedBy": "qa-tested"
+      "qaVerifiedBy": "qa-tested",
+      "completedAt": "2026-04-21"
     },
     {
       "id": "xd-352",
@@ -13276,7 +13281,8 @@
       "verifiedBy": "tested",
       "resolutionNote": "QA VERIFIED 2026-04-15T12:30Z. Code-verified review of 6 files: backend Services/OptimizedVpnServerService.cs GetSmartRecommendationsAsync (lines 215-396) scoring formula base 100 -0.01*km -0.5*load -0.1*ping +10premium +20/-50 protocol-match; Services/GeoIpService.cs static restrictive set + 20 country-coord fallbacks + ResolveAsync cache stub; Controllers/ServersController.cs lines 120-148 POST /smart-recommend [Authorize] extracting HttpContext.Connection.RemoteIpAddress; DTOs/ServerDTOs.cs lines 340-390 three new DTOs. iOS: Core/Models/SmartRecommendation.swift (3 Codable structs), Core/Services/SmartConnectManager.swift (@MainActor, 3-attempt failover loop with 0.5s cooldown, legacy fallback on API failure, mapProtocol lowercase lookup), Core/Services/ServerService.swift getSmartRecommendations (lines 296-338) with NetworkMonitor + Locale.current.region, ServiceProtocols.swift protocol declaration (line 141), Features/Connection/ConnectionViewModel.swift quickConnect already rewired. 9 runtime tests against live api.caspervpn.com with admin JWT: T1 US-cellular returns ranked list LA>FR>NL>UK>DE with defaultProtocol=WireGuard and correct distance-decay scores (83->58->58->57->56); T2 CN-cellular returns defaultProtocol=CasperCloak isRestrictiveRegion=true top3 DE>NL>FR by distance from Beijing; T3 US-wifi returns defaultProtocol=IKEv2 protocolReason='WiFi network - IKEv2 handles NAT traversal well'; T4 explicit preferredProtocol=OpenVPN with CN+wifi returns OpenVPN with protocolReason='User selected' (user choice correctly overrides both restrictive and wifi logic); T5 no coords + no country code returns graceful fallback with null clientCountryCode and score=120 ties across all 5 servers (no crash, no distance penalty); T6 preferredCountry=DE returns exactly 1 server (Germany-Dusseldorf only); T7 backward compat GET /api/servers/recommended still returns single server (Netherlands-Amsterdam); T8 unknown countryCode=XX returns isRestrictiveRegion=false defaultProtocol=WireGuard (safe fallback - does not over-escalate to CasperCloak); T9 no-JWT returns 401. iOS decoder cross-check: VPNServer.swift Codable fields match backend VpnServerDto JSON exactly; backend extra 'location' field silently ignored per Swift default; all required fields (id,name,country,city,countryCode,latitude,longitude,protocol,status,load,isPremium,ping,flagUrl,hostname,ipAddress,port,supportedProtocols) present and correctly typed. No defects found. Phase 4 (real MaxMind GeoIP .mmdb per-IP resolution) deferred - iOS Locale.current.region?.identifier already provides sufficient country signal.",
       "qaVerifiedDate": "2026-04-21",
-      "qaVerifiedBy": "qa-tested"
+      "qaVerifiedBy": "qa-tested",
+      "completedAt": "2026-04-21"
     },
     {
       "id": "xd-355",
@@ -13288,12 +13294,13 @@
       "priority": "P2",
       "createdAt": "2026-04-17T05:33:59Z",
       "createdDate": "2026-04-17",
-      "completedDate": null,
+      "completedDate": "2026-04-21",
       "lastUpdated": "2026-04-17",
       "lastQAVerification": "2026-04-17",
       "qaResult": "fail",
       "qaVerifiedDate": "2026-04-21",
-      "qaVerifiedBy": "qa-tested"
+      "qaVerifiedBy": "qa-tested",
+      "completedAt": "2026-04-21"
     },
     {
       "id": "xd-356",
