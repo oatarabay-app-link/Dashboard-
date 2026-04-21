@@ -14125,7 +14125,7 @@
       "id": "xd-409",
       "from": "cto",
       "to": "backend",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "title": "Backend: Heartbeat should not overwrite ConnectionLog bytes with partial stats",
       "description": "Audit finding: ServersController.Heartbeat line 360-361 OVERWRITES activeLog.BytesDownloaded/Uploaded with the current heartbeat request bytes. If a heartbeat fires after the user has started disconnecting but before DisconnectFromServerAsync commits, the overwrite may clobber the final tally. Low-probability race but possible. Fix scope: either change = to += (accumulate), or guard with \"only write if new value > old value\". Evaluate regression risk on WireGuardUsageSyncService which may also write these fields.",
@@ -14133,13 +14133,17 @@
       "createdAt": "2026-04-18T22:43:36Z",
       "dueBy": "2026-05-02T22:43:36Z",
       "handoffTo": "qa",
-      "handoffNote": "Device regression test after fix"
+      "handoffNote": "Device regression test after fix",
+      "completedAt": "2026-04-21",
+      "completedDate": "2026-04-21",
+      "completedBy": "[BACKEND]",
+      "resolution": "ServersController heartbeat now uses Math.Max(existing, incoming) for BytesDownloaded and BytesUploaded so late heartbeats landing after a disconnect commit cannot move the counter backwards. Commit 3bdcd020. Deployed + smoke-tested."
     },
     {
       "id": "xd-410",
       "from": "cto",
       "to": "backend",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "title": "Backend: RADIUS accounting Stop vs Disconnect double-count risk",
       "description": "Audit finding: RadiusAuthController.Accounting line 210 calls BandwidthMonitoringService.RecordUsageAsync when AcctStatusType==\"Stop\" with AcctInputOctets+AcctOutputOctets. Separately, OptimizedVpnServerService.DisconnectFromServerAsync line 904 increments the same counters from iOS disconnect request. For IKEv2 users authenticated via RADIUS, both paths can fire for the same session \u2192 double-count. Fix scope: add ConnectionLog.BandwidthRecorded bool flag; first path to commit sets it; second path skips if already true. Requires migration.",
@@ -14147,13 +14151,17 @@
       "createdAt": "2026-04-18T22:43:36Z",
       "dueBy": "2026-05-02T22:43:36Z",
       "handoffTo": "qa",
-      "handoffNote": "Device regression test after fix"
+      "handoffNote": "Device regression test after fix",
+      "completedAt": "2026-04-21",
+      "completedDate": "2026-04-21",
+      "completedBy": "[BACKEND]",
+      "resolution": "Added ConnectionLog.BandwidthRecorded first-writer-wins flag. RadiusAuthController and OptimizedVpnServerService both gate the User.DataUsedBytes / CurrentCycleDataUsedBytes increment on this flag so only the first path to fire (RADIUS Stop or iOS Disconnect) increments; the second path skips and logs. Migration 20260421_add_bandwidth_recorded applied to prod: 421 disconnected rows backfilled to true, 2 active rows remain false. Commit 3bdcd020 on dropbox-local. Build validated (dotnet build -c Release = 0 errors, 94 pre-existing warnings). Deployed to caspervpn-api. Smoke test: health 200, /api/admin/metrics/overview 401 unauth + 200 auth."
     },
     {
       "id": "xd-412",
       "from": "cto",
       "to": "backend",
-      "status": "pending",
+      "status": "completed",
       "priority": "P3",
       "title": "Backend: Clarify CurrentCycleDataUsedBytes reset semantics",
       "description": "Audit finding: UserService.SetDataAllocationAsync (line 559) resets CurrentCycleDataUsedBytes=0 when ResetCurrentCycle is true. BulkSetDataAllocationAsync at line 603 sets it to user.DataUsedBytes. Inconsistent semantics \u2014 unclear whether the admin-intended behavior is \"zero the cycle\" vs \"copy lifetime into cycle\". Fix scope: document intended behavior, standardize both paths.",
@@ -14161,7 +14169,11 @@
       "createdAt": "2026-04-18T22:43:36Z",
       "dueBy": "2026-05-02T22:43:36Z",
       "handoffTo": "qa",
-      "handoffNote": "Device regression test after fix"
+      "handoffNote": "Device regression test after fix",
+      "completedAt": "2026-04-21",
+      "completedDate": "2026-04-21",
+      "completedBy": "[BACKEND]",
+      "resolution": "Added normative XML doc comment on UserService.SetDataAllocationAsync and BulkSetDataAllocationAsync documenting the three cycle-reset branches: (A) new limit implies new cycle -> reset cycle counter, (B) explicit resetCycle=true -> reset, (C) neither -> preserve. Both single + bulk paths now share the same intent. Commit 3bdcd020."
     },
     {
       "id": "xd-413",
@@ -14565,11 +14577,14 @@
       "to": "[BACKEND]",
       "title": "Handoff from QA: admin/metrics/overview returns 404 \u2014 route missing or renamed",
       "description": "[QA 2026-04-20] During full admin endpoint sweep (30 routes), /api/admin/metrics/overview returned HTTP 404 while 29 other admin endpoints returned 200. Controller grep shows no MetricsController route at `/admin/metrics/overview`; present routes are `/admin/revenue-intelligence/trend`, `/admin/server-intelligence/stats`, `/admin/threat-intelligence/stats`. ACTION: (1) Confirm whether admin panel frontend still calls `/admin/metrics/overview` \u2014 if yes, route it to the appropriate aggregate; if no, remove from frontend. (2) If legacy endpoint was intentionally removed, add a 410 Gone wrapper or a redirect to the composite of revenue-intel/trend + server-intel/stats. SEVERITY: P3 (no observable UX break today; catch before future sweep).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P3",
       "createdAt": "2026-04-20T08:47:03Z",
       "createdDate": "2026-04-20",
-      "completedDate": null
+      "completedDate": "2026-04-21",
+      "completedAt": "2026-04-21",
+      "completedBy": "[BACKEND]",
+      "resolution": "Added GET /api/admin/metrics/overview composite endpoint returning {ok, generatedAt, users{total,activeSubscriptions}, revenue{last30d}, servers{total,online,activeConnections}, threats{securityEventsLast30d, blockedIps}}. Fixed BlockedIP.IsActive alias bug (unmapped C# getter -> use Active column directly). Commits 3bdcd020 + 346a3454. Smoke test prod (2026-04-21): HTTP 401 unauth, HTTP 200 with admin token returning {users:16, activeSubs:12, revenue30d:743.47, servers 13/13 online, 9 security events 30d, 0 blocked IPs}."
     },
     {
       "id": "xd-431",
