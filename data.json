@@ -14635,6 +14635,30 @@
       "createdAt": "2026-04-20T16:41:01Z",
       "createdDate": "2026-04-20",
       "completedDate": null
+    },
+    {
+      "id": "xd-433",
+      "from": "[CTO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CTO: Add nginx reload step to backend deploy workflow (P0 prevention)",
+      "description": "INCIDENT xd-433: api.caspervpn.com 502 outage from 11:06:42 \u2192 11:26:33 UTC (20min).\n\nROOT CAUSE: When caspervpn-api container is rebuilt, it gets a new internal IP on the Docker network. nginx (running since 2026-04-02) had cached the OLD IP in its upstream keepalive connection pool (`upstream api_backend { server caspervpn-api:8080; keepalive 32; }`). Every request returned 502 \"Bad Gateway\" because nginx tried the dead IP.\n\nIMMEDIATE FIX APPLIED: `docker exec caspervpn-nginx nginx -s reload` \u2014 worker re-resolved caspervpn-api via Docker embedded DNS (127.0.0.11), found new IP 172.19.0.9/172.20.0.2, and 200 responses resumed immediately.\n\nPERMANENT FIX REQUIRED (DevOps):\n1. In deploy workflow (`.github/workflows/deploy-production.yml` or equivalent), add a step AFTER api container recreate:\n   `docker exec caspervpn-nginx nginx -s reload || docker restart caspervpn-nginx`\n2. ALTERNATIVE: add `resolver 127.0.0.11 valid=30s;` + `set $backend caspervpn-api:8080; proxy_pass http://$backend;` pattern to force per-request DNS re-lookups (has small latency cost).\n3. ADD MONITORING: Grafana alert on nginx 5xx rate > 5%/min, page oncall.\n\nFILES TO CHECK/EDIT:\n- `.github/workflows/*deploy*.yml`\n- `docker-compose.yml` (depends_on isn't enough; need restart strategy)\n- `infrastructure/nginx/nginx.conf` (resolver directive) OR `conf.d/api.conf` (proxy_pass pattern)\n\nTIMELINE:\n- 11:06:33 UTC: caspervpn-api rebuilt with xd-443/xd-444/xd-445 code\n- 11:06:42 UTC: api healthy on localhost:8080 internally\n- 11:06:42 \u2192 11:26:33: api.caspervpn.com returns 502 for ALL requests (~20min total outage)\n- 11:26:31 UTC: nginx reloaded by [CTO] \u2014 worker re-resolved upstream\n- 11:26:33 UTC: 200 OK confirmed via curl https://api.caspervpn.com/health\n\nUSER IMPACT: iOS/Android/Desktop clients unable to refresh auth, load plans, fetch server list, check subscription status during outage. No data loss (stateless API).",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-04-22T14:28:38Z",
+      "createdDate": "2026-04-22",
+      "completedDate": null
+    },
+    {
+      "id": "xd-434",
+      "from": "[DEVOPS]",
+      "to": "[CTO]",
+      "title": "Handoff from DEVOPS: DE server (91.194.84.79) SSH key injection pending \u2014 iLO firewall blocks NL Primary",
+      "description": "ROOT PROBLEM: DE Node 3 (OneProvider Dusseldorf, 91.194.84.79) is publickey-only for all users. The `claude-code@casper` Ed25519 key (embedded in `tools/factory_bootstrap.py`) is NOT in DE's authorized_keys, so NL Primary cannot SSH to DE. This blocks programmatic CasperCloak DE audit + future DevOps work.\n\nIPMI (iLO) PATH TESTED:\n- OneProvider provisioned iLO access: https://46.20.38.64 (user: ilo_user_r3M7k, pass: 9SaK5r5meJ) \u2014 1-hour window\n- iLO firewall whitelists ONLY 185.76.178.247 (CEO's ISP). NL Primary (178.62.101.221) blocked on ports 22/80/443/17988/17990/5900.\n- Cannot programmatically bypass Chrome's self-signed cert warning from Claude-in-Chrome extension.\n\nOPTIONS FOR PERMANENT FIX (pick one):\n1. **CEO-assisted IPMI**: CEO opens https://46.20.38.64 in his browser, bypasses cert, logs into iLO HTML5 Remote Console, pastes SSH key injection command on the running Linux TTY. No downtime.\n2. **Whitelist NL in OneProvider**: Re-provision IPMI with `IP to whitelist = 178.62.101.221`. Programmatic Playwright/curl access to iLO from NL. No downtime.\n3. **Boot in Rescue Mode**: OneProvider rescue mode reboots DE into a Linux live environment. Mount /dev/sda, edit /root/.ssh/authorized_keys, reboot back. Downtime 2-5 min.\n4. **Generate new host key pair for DE, store alongside factory_bootstrap**: Long-term \u2014 add `_DE_SSH_KEY_B64` to factory_bootstrap.py so NL can SSH to DE with a dedicated key (after CEO does one-time injection via option 1 or 2).\n\nRECOMMENDATION: Option 2 (re-provision with NL IP). Takes 2 min via OneProvider panel. Unblocks all future DE DevOps automation.\n\nCASPERCLOAK DE AUDIT (BLOCKED BY THIS):\nOnce SSH works, run:\n- `systemctl status caspercloak-ws` (obfs4 WebSocket relay)\n- `ss -tlnp | grep 9443` (relay_ws.py listener)\n- `wg show wg0 peers` (WireGuard peer count)\n- `cat /etc/wireguard/wg0.conf | head -30` (PSK match with NL Primary)\n- `tail -f /var/log/caspercloak-ws.log` (live traffic check)",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-04-22T14:28:38Z",
+      "createdDate": "2026-04-22",
+      "completedDate": null
     }
   ],
   "importantNotes": [
