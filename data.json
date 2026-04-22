@@ -14659,6 +14659,18 @@
       "createdAt": "2026-04-22T14:28:38Z",
       "createdDate": "2026-04-22",
       "completedDate": null
+    },
+    {
+      "id": "xd-435",
+      "from": "[CTO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CTO: caspervpn.com returns 502 \u2014 website container listening on wrong network interface (19h old bug)",
+      "description": "PRE-EXISTING ISSUE (not caused by today's api rebuild).\n\nSYMPTOM: `curl https://caspervpn.com` returns HTTP 502 Bad Gateway. Marketing landing page broken.\n\nROOT CAUSE:\n- caspervpn-website container is attached to BOTH docker networks:\n  - caspervpn-backend-network: 172.19.0.8\n  - caspervpn-frontend-network: 172.20.0.4\n- Next.js listens on port 3001 but ONLY on the backend network interface (container log: \"Network: http://172.19.0.8:3001\")\n- nginx is only on frontend-network (172.20.0.3) and resolves `website` \u2192 172.20.0.4 (frontend IP)\n- Connection refused because Next.js isn't bound on that interface\n- Container has been Up 19 hours \u2014 so this has been 502 that entire time\n\nFIX OPTIONS:\n1. **Quick**: `docker restart caspervpn-website` \u2014 Next.js may re-bind to 0.0.0.0 on restart. Low risk, ~5s downtime for the page.\n2. **Proper**: Set `HOSTNAME=0.0.0.0` environment variable in docker-compose.yml for the website service. This forces Next.js to listen on all interfaces. No restart loop risk.\n3. **Architectural**: Remove website from backend-network (it doesn't need DB access). Attach to frontend-network only.\n\nFILES:\n- `docker-compose.yml` (website service section)\n- `infrastructure/website/Dockerfile` (look for `ENV HOSTNAME=` or `CMD node server.js -H 0.0.0.0`)\n\nMONITORING GAP:\n19 hours of 502 went undetected. Add Uptime Kuma / Healthchecks.io monitoring for:\n- https://caspervpn.com (landing)\n- https://caspervpn.com/pricing\n- https://caspervpn.com/blog\n- Alert Discord/email if 5xx rate > 1% for 2 min",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-04-22T14:32:42Z",
+      "createdDate": "2026-04-22",
+      "completedDate": null
     }
   ],
   "importantNotes": [
