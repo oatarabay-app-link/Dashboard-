@@ -14671,6 +14671,78 @@
       "createdAt": "2026-04-22T14:32:42Z",
       "createdDate": "2026-04-22",
       "completedDate": null
+    },
+    {
+      "id": "xd-436",
+      "from": "[QA]",
+      "to": "[IOS]",
+      "title": "Handoff from QA: P0: PacketTunnelProvider.wake()/sleep() are empty no-ops \u2014 causes background VPN to silently die",
+      "description": "ROOT CAUSE #1 \u2014 HIGHEST PRIORITY\n\nCEO REPORT: \"Internet stops working after a while when VPN connected in background.\"\n\nCONFIRMED IN CODE:\n- ios-app-v2/CasperVPN/CasperVPNTunnel/PacketTunnelProvider.swift lines 428-435:\n\n```swift\noverride func sleep(completionHandler: @escaping () -> Void) {\n    os_log(\"Device going to sleep\", log: osLog, type: .info)\n    completionHandler()  // \u26a0\ufe0f NO-OP \u2014 just logs and exits\n}\n\noverride func wake() {\n    os_log(\"Device waking up\", log: osLog, type: .info)\n    // \u26a0\ufe0f NO-OP \u2014 no action taken\n}\n```\n\nSAME PATTERN in WireGuardTunnelProvider.swift (lines 148-155) \u2014 if that file is used.\n\nWHY THIS CAUSES THE BUG:\n1. iOS puts device to sleep (screen off, app backgrounded)\n2. iOS suspends the tunnel extension's CPU\n3. WireGuard's internal keepalive (25s) pauses\n4. Server-side conntrack UDP entry expires (30s initial, 120s stream)\n5. Server-side WG peer's handshake ages out (180s = 3 min)\n6. Device wakes \u2192 iOS resumes extension \u2192 wake() logs nothing-useful \u2192 tunnel state STALE\n7. Tunnel extension thinks \"connected\" but packets silently drop at server's NAT\n\nREQUIRED FIX:\n\n```swift\noverride func wake() {\n    os_log(\"Device waking up \u2014 checking tunnel health\", log: osLog, type: .info)\n    guard let adapter = wireGuardAdapter else { return }\n    adapter.getRuntimeConfiguration { [weak self] config in\n        guard let config = config else { return }\n        let hsLine = config.split(separator: \"\\n\").first { $0.hasPrefix(\"last_handshake_time_sec=\") }\n        let hsTime = Int(hsLine?.dropFirst(23) ?? \"0\") ?? 0\n        let age = Int(Date().timeIntervalSince1970) - hsTime\n        if age > 180 {\n            // Handshake stale (>3min) \u2014 force reconnect\n            os_log(\"Handshake stale (%d s) on wake \u2014 forcing reassert\", log: self?.osLog ?? .default, type: .info, age)\n            self?.reasserting = true\n            if let tc = self?.currentTunnelConfiguration {\n                adapter.update(tunnelConfiguration: tc) { _ in\n                    self?.reasserting = false\n                }\n            }\n        }\n    }\n}\n\noverride func sleep(completionHandler: @escaping () -> Void) {\n    os_log(\"Device going to sleep \u2014 saving state\", log: osLog, type: .info)\n    // Optional: flush pending packets, save connection metadata\n    completionHandler()\n}\n```\n\nACCEPTANCE CRITERIA:\n1. With VPN connected, lock phone, wait 30 min, unlock \u2192 internet works immediately\n2. With VPN connected in background, walk through Wi-Fi dead zone for 2min \u2192 VPN auto-recovers when Wi-Fi returns\n3. Tunnel extension log shows \"Handshake stale on wake \u2014 forcing reassert\" when appropriate\n4. Test on iOS 17, 18, 26 (if available)\n\nFILES:\n- ios-app-v2/CasperVPN/CasperVPNTunnel/PacketTunnelProvider.swift (main fix)\n- ios-app-v2/CasperVPN/CasperVPNTunnel/WireGuardTunnelProvider.swift (same fix for stub if still active)\n- ios-app-v2/CasperVPN/CasperVPNTunnel/CasperCloakTunnelProvider.swift (check if needs same)\n",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-04-23T04:58:14Z",
+      "createdDate": "2026-04-23",
+      "completedDate": null
+    },
+    {
+      "id": "xd-437",
+      "from": "[QA]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from QA: P0: Flask /wireguard/add-client does NOT set persistent-keepalive=25 server-side (found on ALL servers)",
+      "description": "ROOT CAUSE #2 \u2014 HIGHEST PRIORITY\n\nCONFIRMED IN CODE:\n- /opt/caspervpn/api/server.py line 101 on NL Primary:\n  `result = run_cmd(f\"wg set wg0 peer {public_key} allowed-ips {clean_ip}/32\")`\n- MISSING the `persistent-keepalive 25` argument.\n\nVERIFIED ON SERVER:\n- `wg show wg0 dump` shows user peers with `keepalive=off`\n- `wg show wg1 dump` (fleet mesh) shows `persistent keepalive: every 25 seconds` \u2014 that interface is configured right\n- So the bug is ONLY in the client-peer-add path (wg0)\n\nWHY THIS CAUSES THE BUG:\n- When iOS client connects, server adds peer WITHOUT keepalive.\n- If iOS client is suspended (backgrounded), it STOPS sending its 25s keepalive.\n- Server is silent (keepalive=off), never pings back.\n- Within 3 min, WG handshake becomes invalid on both sides.\n- Server's conntrack UDP entry expires (120s stream timeout).\n- iOS wakes \u2192 sends packet \u2192 server has no route \u2192 drops silently.\n\nFIX:\n\n```python\n# /opt/caspervpn/api/server.py line 101\n# BEFORE:\nresult = run_cmd(f\"wg set wg0 peer {public_key} allowed-ips {clean_ip}/32\")\n# AFTER:\nresult = run_cmd(f\"wg set wg0 peer {public_key} allowed-ips {clean_ip}/32 persistent-keepalive 25\")\n```\n\nDEPLOY PATH:\n1. Edit /opt/caspervpn/api/server.py on NL Primary\n2. Deploy to ALL fleet nodes (at minimum: 208.87.243.205, 91.194.84.79, 51.158.147.210, 163.172.62.64, and all 8 fleet nodes per CLAUDE.md \u00a79.5)\n3. Reload Flask: `systemctl restart caspervpn-api` OR similar\n4. Verify: connect iOS \u2192 run `wg show wg0 dump` on server \u2192 peer should show `keepalive=25`\n\nALSO: existing connected peers on wg0 have keepalive=off. Fix via:\n```\nfor p in $(wg show wg0 peers); do wg set wg0 peer $p persistent-keepalive 25; done\nwg-quick save wg0\n```\n\nACCEPTANCE CRITERIA:\n1. New iOS connections show persistent keepalive=25 in `wg show wg0`\n2. With fix applied, background VPN stays alive overnight (8h+)\n3. Code deployed to ALL 13 production servers\n",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-04-23T04:58:14Z",
+      "createdDate": "2026-04-23",
+      "completedDate": null
+    },
+    {
+      "id": "xd-438",
+      "from": "[QA]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from QA: P0: IKEv2 strongSwan `dpdaction=clear` drops mobile sessions after 5min background",
+      "description": "ROOT CAUSE #3 \u2014 HIGH PRIORITY (IKEv2 protocol)\n\nCONFIRMED IN CODE:\n- /etc/ipsec.conf on NL Primary:\n  ```\n  dpdaction=clear\n  dpddelay=300s\n  ```\n- `dpdaction=clear` = drop SA when peer unresponsive (destructive)\n- `dpddelay=300s` = check every 5 minutes\n\nWHY THIS CAUSES THE BUG (IKEv2 users):\n1. iOS user connects via IKEv2\n2. Phone backgrounded, screen off, low-power mode\n3. 5 minutes pass with no traffic\n4. strongSwan sends DPD \u2192 iOS doesn't respond (suspended)\n5. `dpdaction=clear` \u2192 strongSwan CLEARS the Security Association\n6. iOS thinks VPN still connected (no notification)\n7. User unlocks phone \u2192 no internet\n\nFIX (strongSwan config, `/etc/ipsec.conf`):\n```\n# Road-warrior friendly (iOS mobile clients):\ndpdaction=restart          # Instead of clear \u2014 attempts to rebuild SA\ndpddelay=600s              # 10 min instead of 5 min (gives iOS background a wider grace)\ndpdtimeout=900s            # 15 min total before giving up\n\n# OR: completely disable DPD for mobile (trust client-side DPD):\ndpdaction=none\n```\n\nRECOMMENDATION: `dpdaction=restart` with `dpddelay=600s` is safest \u2014 server proactively re-establishes SA when iOS wakes up.\n\nDEPLOY:\n1. Edit /etc/ipsec.conf on NL Primary + all servers that offer IKEv2\n2. Reload strongSwan: `systemctl restart strongswan-starter` (service name might be `ipsec` on older)\n3. Verify: `ipsec statusall` shows new settings\n\nACCEPTANCE CRITERIA:\n1. iOS IKEv2 user can leave phone idle 30min with VPN connected \u2192 comes back, internet works\n2. `ipsec statusall` shows dpdaction=restart\n",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-04-23T04:58:14Z",
+      "createdDate": "2026-04-23",
+      "completedDate": null
+    },
+    {
+      "id": "xd-439",
+      "from": "[QA]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from QA: P1: OpenVPN `keepalive 10 120` too aggressive for mobile + service MASKED on NL Primary",
+      "description": "ROOT CAUSE #4 \u2014 MEDIUM PRIORITY (OpenVPN protocol)\n\nCONFIRMED:\n- /etc/openvpn/server/server.conf:\n  ```\n  keepalive 10 120         # ping 10s, consider dead 120s (2min) \u2014 TOO SHORT\n  persist-key\n  persist-tun              # good \u2014 keeps TUN device on reconnect\n  ```\n- `openvpn@server.service` is MASKED/INACTIVE on NL Primary \u2192 OpenVPN users can't connect at all\n\nWHY THIS CAUSES THE BUG (OpenVPN users):\n- 2-min dead timeout kills ALL backgrounded iOS sessions\n- iOS in background usually survives 60s suspends but can go longer\n- Phone in Low Power Mode can skip pings for 5+ minutes\n\nFIX:\n```\n# /etc/openvpn/server/server.conf\n# Mobile-friendly keepalive:\nkeepalive 25 360             # ping every 25s, dead after 6 minutes\npersist-tun\npersist-key\npush \"persist-key\"           # so client also persists\npush \"persist-tun\"\npush \"keepalive 25 360\"      # push to clients\n```\n\nALSO: unmask and start the service (or remove the mask if intentional):\n```\nsystemctl unmask openvpn@server.service\nsystemctl enable openvpn@server\nsystemctl start openvpn@server\n```\n\nACCEPTANCE CRITERIA:\n1. `openvpn@server.service` is active/running\n2. `/etc/openvpn/server/server.conf` has `keepalive 25 360`\n3. iOS user using OpenVPN can background phone 10+ min without drop\n4. Deploy to all servers that offer OpenVPN\n",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-04-23T04:58:14Z",
+      "createdDate": "2026-04-23",
+      "completedDate": null
+    },
+    {
+      "id": "xd-440",
+      "from": "[QA]",
+      "to": "[BACKEND]",
+      "title": "Handoff from QA: P1: Audit CleanStaleSessionsAsync threshold \u2014 may be killing iOS background sessions prematurely",
+      "description": "ROOT CAUSE #5 \u2014 MEDIUM PRIORITY (Backend session eviction)\n\nDISCOVERED IN BINARY:\n- `caspervpn-api` container has these symbols:\n  - CleanStaleSessionsAsync\n  - RecordHeartbeatAsync\n  - SessionTimeoutMinutes (configurable)\n  - Heartbeat endpoint\n\nWHY THIS COULD CAUSE THE BUG:\n- iOS periodically POSTs a heartbeat to backend (e.g., every 1-2 min)\n- Backend's `CleanStaleSessionsAsync` background job runs periodically\n- If heartbeat missed > `SessionTimeoutMinutes` \u2192 backend sets DisconnectedAt \u2192 calls Flask to REMOVE the WG peer\n- iOS device thinks it's connected, tries to send traffic \u2192 server has no peer \u2192 silent drop\n\nAUDIT CHECKLIST (backend):\n1. Find `SessionTimeoutMinutes` default in appsettings.json or config\n2. Find `CleanStaleSessionsAsync` interval + logic\n3. Verify threshold is >= 10 minutes (absolute minimum for mobile)\n4. Check if stale cleanup also CALLS Flask to remove peer \u2014 if yes, that amplifies the problem\n5. If heartbeat from iOS uses app-foreground timer only, it'll miss while backgrounded \u2192 this is the trap\n\nRECOMMENDED FIX:\n1. Increase `SessionTimeoutMinutes` to 30+ minutes (mobile-friendly)\n2. Make heartbeat \"soft\" \u2014 mark disconnected in DB but DO NOT remove WG peer for another 15-30 min\n3. Only remove WG peer if heartbeat missed > 1 hour (unambiguous sign of true disconnect)\n4. iOS should use NEPacketTunnelProvider's silent-heartbeat on wake() (see handoff to iOS)\n\nFILES:\n- backend-dotnet-core/Services/*SessionCleanupService.cs (find the cleanup job)\n- backend-dotnet-core/Controllers/VpnConnectionController.cs (heartbeat endpoint)\n- backend-dotnet-core/appsettings.json (SessionTimeoutMinutes value)\n\nACCEPTANCE CRITERIA:\n1. SessionTimeoutMinutes >= 30 in prod config\n2. Stale cleanup does NOT remove WG peer immediately \u2014 only soft-marks + later cleanup\n3. Logs show session cleanup only for genuinely disconnected users, not backgrounded ones\n",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-04-23T04:58:14Z",
+      "createdDate": "2026-04-23",
+      "completedDate": null
+    },
+    {
+      "id": "xd-441",
+      "from": "[QA]",
+      "to": "[IOS]",
+      "title": "Handoff from QA: P1: WireGuard/CasperCloak have NO onDemand rules \u2014 no auto-reconnect on network drops",
+      "description": "ROOT CAUSE #6 \u2014 MEDIUM PRIORITY\n\nCONFIRMED IN CODE:\n- VPNConnectionManager.swift line 139: `manager.onDemandRules = []` (WireGuard = no rules)\n- Line 952: onDemandRules set only in kill-switch .strict mode\n\nKill-switch is OFF by default \u2192 users have NO auto-reconnect for WG/CasperCloak.\n\nWHY THIS CAUSES THE BUG:\n- iOS Wi-Fi\u2194cellular transition: VPN drops briefly\n- Without onDemand rules, iOS does NOT automatically reconnect\n- User has to open app and tap Reconnect\n\nFIX: Always set onDemand rules regardless of kill-switch mode:\n\n```swift\n// In VPNConnectionManager.swift where VPN config is saved:\nlet wifi = NEOnDemandRuleConnect()\nwifi.interfaceTypeMatch = .wiFi\nlet cellular = NEOnDemandRuleConnect()\ncellular.interfaceTypeMatch = .cellular\nmanager.onDemandRules = [wifi, cellular]\nmanager.isOnDemandEnabled = true  // Only when VPN is \"on\"\n```\n\nIMPORTANT: Only enable onDemand when user intends VPN to stay on. Disable when user taps \"Disconnect\".\n\nFILES:\n- ios-app-v2/CasperVPN/CasperVPN/Core/Services/VPNConnectionManager.swift (lines 139, 157, 952, 958)\n- IKEv2Manager.swift already has this (line 209, 729-743) \u2014 port the pattern to WG manager.\n\nACCEPTANCE CRITERIA:\n1. With VPN on, toggle airplane mode off/on 3\u00d7 \u2192 VPN reconnects each time within 5s\n2. With VPN on, switch Wi-Fi\u2194cellular \u2192 VPN reconnects automatically\n3. When user manually Disconnects, onDemand is disabled (doesn't auto-reconnect)\n",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-04-23T04:58:14Z",
+      "createdDate": "2026-04-23",
+      "completedDate": null
     }
   ],
   "importantNotes": [
