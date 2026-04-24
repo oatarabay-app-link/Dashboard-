@@ -14835,11 +14835,15 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: [SUBMISSION-BLOCKER] caspervpn.com returning 502 on every path \u2014 Next.js unreachable",
       "description": "ROOT CAUSE 2026-04-23T16:45Z: caspervpn-website container Up 45h but Next.js not listening :3001. wget localhost:3001 INSIDE container=Connection refused. Trigger '/app/app/.next/cache EACCES'. Apple crawler 57.103.82.247 hitting /.well-known/apple-app-site-association NOW getting 502. FIX: (1) docker compose restart caspervpn-website; (2) fix .next/cache perms; (3) verify nginx\u2192website:3001; (4) curl -sI https://caspervpn.com/privacy must=200. BLOCKS STORE SUBMISSION.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P0",
       "createdAt": "2026-04-23T16:58:36Z",
       "createdDate": "2026-04-23",
-      "completedDate": null
+      "completedDate": "2026-04-25",
+      "completedAt": "2026-04-25",
+      "completedBy": "[CTO]",
+      "resolution": "[CTO-RESOLVED 2026-04-24T21:08Z via direct SSH fix] Root cause: caspervpn-website Next.js bound only to backend-network interface (172.19.0.8:3001), nginx reaching via frontend-network (172.20.0.4:3001) got Connection refused. FIX APPLIED: (1) Added HOSTNAME=0.0.0.0 env var to website service in /root/Casper/Casper-Code/docker-compose.yml; (2) chown -R app:app /app/app/.next inside container; (3) docker compose up -d --force-recreate website. VERIFIED LIVE: caspervpn.com/ 200, /privacy 200, /terms 200, /support 307, /faq 200, /pricing 200, /.well-known/apple-app-site-association 200. Backup saved at docker-compose.yml.bak-<timestamp>. Additional issues logged but NOT blocking: sharp missing (image opt disabled), Prisma /api/track error (track DB missing).",
+      "resultingHandoff": "Follow-ups spun out: xd-465 (install sharp + fix Prisma track DB)"
     },
     {
       "id": "xd-447",
@@ -15069,9 +15073,75 @@
       "completedAt": "2026-04-24",
       "completedBy": "[QA]",
       "resolution": "NL dead-code cleanup executed: (1) /usr/local/bin/radius-auth-casper.sh \u2192 .unused-xd464-20260424-175310 (confirmed not referenced in /etc/freeradius/). (2) /opt/caspervpn/openvpn-auth-verify.sh \u2192 .unused-xd464-20260424-175310 (confirmed not referenced in /etc/openvpn/ \u2014 no auth-user-pass-verify directive). (3) /opt/caspervpn/backend-dotnet-core/ \u2192 .archived-backend-source-20260424-175310 (confirmed not mounted into caspervpn-api container via docker inspect; Total mounts: 0). Services freeradius/openvpn-server/caspervpn-api all verified active after cleanup."
+    },
+    {
+      "id": "xd-465",
+      "from": "[CTO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CTO: P2",
+      "description": "caspervpn-website follow-ups: install sharp + fix Prisma /api/track DB",
+      "status": "pending",
+      "priority": "Non-blocking remnants of xd-446. (1) sharp package missing -> image optimization degraded. Add sharp to website/package.json and rebuild, OR install in Dockerfile. (2) /api/track route throws 'Cannot read properties of undefined (reading findUnique)' - Prisma client not connecting for that route. Check DATABASE_URL env var is reachable from /api/track and schema has the table Prisma is querying. Neither blocks App Review URL reachability, but both need cleanup before launch analytics matter.",
+      "createdAt": "2026-04-25T00:16:23Z",
+      "createdDate": "2026-04-25",
+      "completedDate": null
+    },
+    {
+      "id": "xd-466",
+      "from": "[CTO]",
+      "to": "[MARKETING]",
+      "title": "Handoff from CTO: P0",
+      "description": "[SUBMISSION-BLOCKER OVERRIDE xd-449] Authoritative ASO file REVERSED after ASC inspection",
+      "status": "pending",
+      "priority": "CORRECTION to xd-449. After inspecting ASC live: the APPROVED subscription products (Weekly/Monthly/6mo/1yr + Lifetime non-consumables) MATCH marketing/APP-STORE-SUBMISSION-GUIDE.md, NOT the Quantum-Safe file. Authoritative file = APP-STORE-SUBMISSION-GUIDE.md ($2.99/$9.99/$34.99/$59.99/$149.99). Mark marketing/CasperVPN_AppStore_Metadata_ReadyToPaste.md as DEPRECATED (keep Quantum-Safe ideas for future repositioning but not current submission). Update marketing/ cross-references.",
+      "createdAt": "2026-04-25T00:16:23Z",
+      "createdDate": "2026-04-25",
+      "completedDate": null
+    },
+    {
+      "id": "xd-467",
+      "from": "[CTO]",
+      "to": "[MARKETING]",
+      "title": "Handoff from CTO: P0",
+      "description": "[SUBMISSION-BLOCKER] Re-render screenshots #4 and #9 \u2014 false '20+' claims",
+      "status": "pending",
+      "priority": "VISUAL AUDIT OF LIVE ASC SCREENSHOTS 2026-04-24: Screenshot #4 'Servers Worldwide' stat card falsely claims '20+ COUNTRIES' \u2014 reality is 12 (live API /api/servers returns 13 servers / 12 unique countries). Screenshot #9 'Choose Your Plan' bottom badge falsely claims '20+ Global Servers' \u2014 reality is 13. Apple Guideline 2.3.3 REJECTION TRIGGER. FIX: re-render #4 stat to '12 COUNTRIES' (or '10+ COUNTRIES' if growth-room desired), #9 badge to '13 Global Servers' (or '10+ Global Servers'). Optional Marketing polish: screenshot #5 says 'Your real IP never leaks. Ever.' \u2014 'Ever.' is absolute claim risk (Marketing skill mandate: ban absolute claims). Soften to 'Your real IP stays private.' Files to edit: marketing/SCREENSHOT-SPECS.md + source assets + re-upload to ASC Media Manager.",
+      "createdAt": "2026-04-25T00:16:23Z",
+      "createdDate": "2026-04-25",
+      "completedDate": null
+    },
+    {
+      "id": "xd-468",
+      "from": "[CTO]",
+      "to": "[IOS]",
+      "title": "Handoff from CTO: P1",
+      "description": "[SUBMISSION-CORRECTION xd-452] Bundle ID canonical is com.applinkoffshore.CasperVPN (NOT com.caspervpn.app)",
+      "status": "pending",
+      "priority": "CORRECTION to xd-452. ASC inspection 2026-04-24 shows production Bundle ID = com.applinkoffshore.CasperVPN (immutable once app has shipped). Tunnel Extension = com.applinkoffshore.CasperVPN.tunnel. DO NOT try to change ASC. INSTEAD: unify docker-compose.yml, backend appsettings.json, and all hardcoded strings to match ASC's com.applinkoffshore.CasperVPN. Also update CLAUDE.md \u00a79 which incorrectly said canonical is com.caspervpn.app. Do this BEFORE next submit or Apple's entitlement check will fail.",
+      "createdAt": "2026-04-25T00:16:23Z",
+      "createdDate": "2026-04-25",
+      "completedDate": null
+    },
+    {
+      "id": "xd-469",
+      "from": "[CTO]",
+      "to": "[CTO]",
+      "title": "Handoff from CTO: P1",
+      "description": "[CLAUDE.md CORRECTION] Update \u00a79 Bundle ID \u2014 canonical is com.applinkoffshore.CasperVPN",
+      "status": "pending",
+      "priority": "CLAUDE.md \u00a79 currently says canonical Bundle ID is com.caspervpn.app / com.caspervpn.app.tunnel. ASC inspection 2026-04-24 confirmed actual canonical = com.applinkoffshore.CasperVPN / com.applinkoffshore.CasperVPN.tunnel (immutable). Update \u00a79 credentials section, \u00a79.6 warning, and any other mention. Git push to dropbox-local.",
+      "createdAt": "2026-04-25T00:16:23Z",
+      "createdDate": "2026-04-25",
+      "completedDate": null
     }
   ],
   "importantNotes": [
+    {
+      "text": "[SUBMISSION-READY AUDIT 2026-04-24 CTO] Website FIXED (xd-465 cleanup). Day Pass removed from sale. CRITICAL REMAINING: screenshots #4/#9 falsely claim '20+' when reality=13 servers/12 countries (xd-467) \u2014 Guideline 2.3.3 auto-reject. Entity placeholders in PP/ToS (xd-447) \u2014 Guideline 5.1.1(v) auto-reject. Bundle ID direction REVERSED (xd-468). ASO authoritative file REVERSED (xd-466). DO NOT click 'Add for Review' until xd-467 + xd-447 done.",
+      "priority": "P0",
+      "date": "2026-04-24",
+      "dept": "cto"
+    },
     {
       "id": "note-1777051312",
       "dept": "qa",
