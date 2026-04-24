@@ -14996,6 +14996,18 @@
       "createdAt": "2026-04-24T18:20:26Z",
       "createdDate": "2026-04-24",
       "completedDate": null
+    },
+    {
+      "id": "xd-460",
+      "from": "[CTO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CTO: xd-460 \ud83d\udd25 wg-peer-cleanup.sh cron was REMOVING every mobile peer (root cause of background cut-offs for MONTHS)",
+      "description": "THE bug that was killing CEO's VPN and every other mobile user for months.\n\n/etc/cron.d/wg-peer-cleanup on LA/DE/AMS/Paris ran every 5 min. Script logic:\n1. Get all peers with handshake age > 180s\n2. For each, call GET /servers/peers/check?pubkey=XXX\n3. If response != 200, remove the peer via `wg set wg0 peer X remove`\n\nProblem: the endpoint /servers/peers/check DOES NOT EXIST in backend (404). AND\nthe bearer token was 'secure-api-token-change-me' (placeholder, never rotated).\nSo EVERY check returned non-200 \u2192 EVERY stale peer got removed.\n\nReal-world impact: user connects VPN \u2192 phone backgrounds \u2192 handshake goes stale\n\u2192 5-min cron runs \u2192 peer REMOVED \u2192 user wakes phone \u2192 tunnel dead, must reconnect.\n\nIMMEDIATE FIX APPLIED (runtime, server-local):\n  1. Renamed /etc/cron.d/wg-peer-cleanup \u2192 .disabled-xd460 on LA, DE, AMS, Paris\n  2. Dropped readme /usr/local/bin/wg-peer-cleanup.sh.README-xd460 with rationale\n\nDECIDE FATE OF THE SCRIPT:\n  Option A (preferred): delete it. WireGuard peers are small (~100 bytes) and\n  the Flask /wireguard/add-client re-uses IPs via pool. Stale peers aren't\n  a real resource problem.\n  \n  Option B: implement the missing /servers/peers/check endpoint in the\n  backend C# API, rotate the bearer token to the real API_TOKEN, re-enable.\n  \n  Option C: rewrite the script to only remove peers with handshake age > 1h\n  AND no entry in the pool list. Gives 20\u00d7 the current threshold so mobile\n  users never hit it.\n\nNL + 8 OneProvider fleet never had this cron \u2014 only the 4 \"original\" servers\ndid (LA/DE/AMS/Paris). Investigate whether newer provisioning playbook\naccidentally includes this script OR whether it's specifically been removed\nfrom newer playbooks.\n\nRELATED HANDOFFS SAME DAY:\n  xd-459: CasperCloak server_new.py needed persistent-keepalive=25 (applied)\n  xd-461: CasperCloak-WS ping_interval was None \u2192 TCP idle-out risk (applied)",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-04-24T19:07:49Z",
+      "createdDate": "2026-04-24",
+      "completedDate": null
     }
   ],
   "importantNotes": [
