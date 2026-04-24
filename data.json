@@ -15133,9 +15133,41 @@
       "createdAt": "2026-04-25T00:16:23Z",
       "createdDate": "2026-04-25",
       "completedDate": null
+    },
+    {
+      "id": "xd-470",
+      "from": "[CTO]",
+      "to": "[IOS]",
+      "title": "Handoff from CTO: xd-465: Archive + ship build 43 to TestFlight (bug-report URL fix)",
+      "description": "Build 42 had a double-/api/ prefix bug in BugReportService that caused every bug report submission to 404 (\"Resource Not Found\"). Root cause: BugReportService.submit() called APIClient.shared.post(\"/api/bugs\") but APIClient prepends /api via Config.fullAPIURL \u2192 URL became /api/api/bugs. Fixed in commit 745722c3 on dropbox-local: BugReportService now passes \"/bugs\" matching the convention every other service uses (e.g. BandwidthHistoryManager passes \"/bandwidth/live\"). Build bumped 42\u219243 in pbxproj. NEEDED: Archive in Xcode \u2192 Distribute App \u2192 TestFlight. Server-side nginx shim at /api/api/bugs is in place so build 42 still works until 43 lands; remove shim once 43 is live.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-04-25T01:24:38Z",
+      "createdDate": "2026-04-25",
+      "completedDate": null
+    },
+    {
+      "id": "xd-471",
+      "from": "[CTO]",
+      "to": "[IOS]",
+      "title": "Handoff from CTO: Bug A: VPN reconnect after disconnect requires sign-out/sign-in (stale token)",
+      "description": "CEO test 2026-04-25: VPN was stable for 7 hours (server fixes confirmed working) but after disconnect, attempts to reconnect failed silently. Resolved by sign-out then sign-in. Suspected root cause: JWT auth token expired during the 7-hour session OR connection state cache stale. iOS should: (1) check VPNConnectionManager / AuthService \u2014 does reconnect attempt auto-refresh token if 401 from /servers/{id}/config? (2) check if TokenManager refresh interval is < typical session length (refresh-while-active). (3) reproduce by leaving VPN on for 6+ hours then disconnecting and reconnecting. NOT URGENT (workaround is sign-out/in) but real UX bug.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-04-25T01:24:38Z",
+      "createdDate": "2026-04-25",
+      "completedDate": null
     }
   ],
   "importantNotes": [
+    {
+      "id": "note-xd465-1777069478",
+      "dept": "cto",
+      "priority": "P0",
+      "title": "[xd-465 LIVE WORKAROUND] Bug report 404 fixed \u2014 retry from build 42 now",
+      "text": "Bug report \"Resource Not Found\" root-caused: build 42 BugReportService had a double /api/ prefix \u2192 URL was /api/api/bugs (404). Two fixes shipped: (1) iOS source corrected for build 43 (commit 745722c3, pbxproj bumped 42\u219243, ready for Archive+TestFlight). (2) nginx shim deployed live on NL \u2014 /api/api/bugs now proxies to /api/bugs. CEO can retry bug report from build 42 RIGHT NOW and it will succeed. Also: 7-hour stability test PROVES xd-459/460/461 server-side fixes worked \u2014 that is the longest stability window since this saga began.",
+      "createdAt": "2026-04-24T22:24:38Z"
+    },
     {
       "text": "[SUBMISSION-READY AUDIT 2026-04-24 CTO] Website FIXED (xd-465 cleanup). Day Pass removed from sale. CRITICAL REMAINING: screenshots #4/#9 falsely claim '20+' when reality=13 servers/12 countries (xd-467) \u2014 Guideline 2.3.3 auto-reject. Entity placeholders in PP/ToS (xd-447) \u2014 Guideline 5.1.1(v) auto-reject. Bundle ID direction REVERSED (xd-468). ASO authoritative file REVERSED (xd-466). DO NOT click 'Add for Review' until xd-467 + xd-447 done.",
       "priority": "P0",
