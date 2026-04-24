@@ -14984,6 +14984,18 @@
       "createdAt": "2026-04-24T05:07:57Z",
       "createdDate": "2026-04-24",
       "completedDate": null
+    },
+    {
+      "id": "xd-459",
+      "from": "[CTO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CTO: xd-459: CasperCloak daemon source NOT in repo \u2014 bring into Casper-Code for CI/CD",
+      "description": "ROOT CAUSE discovered 2026-04-24 (session after xd-436/454-458 didn't fully solve background instability):\n\nCEO was connecting via CasperCloak (obfs4 gateway) on DE server. CasperCloak has its OWN\npeer-add code at /opt/caspervpn/caspercloak/server_new.py that adds WG peers WITHOUT\npersistent-keepalive=25. This is the exact same bug xd-437 fixed in /opt/caspervpn/api/server.py\nbut we missed the CasperCloak path.\n\nIMMEDIATE FIX APPLIED (runtime-only, server-local):\n  1. Retroactively set keepalive=25 on CEO's active DE peer (was off)\n  2. Patched /opt/caspervpn/caspercloak/server_new.py line 101 on DE\n  3. Restarted caspercloak-relay + caspercloak-ws services\n\nPERSISTENCE CONCERN:\nCasperCloak daemon source is NOT tracked in Casper-Code repo. Any future re-provision\nof DE (or migration to another country gateway) would re-introduce the bug.\n\nACTION REQUIRED:\n1. Download CasperCloak daemon source from DE:\n     scp -i /root/.ssh/vpn_nodes root@91.194.84.79:/opt/caspervpn/caspercloak/*.py local_dir/\n2. Check into Casper-Code repo under infrastructure/caspercloak/\n3. Update CI/CD deploy workflow to push this folder to the CasperCloak gateway server\n4. Verify post-deploy: wg show wg0 dump | awk '$9==\"off\"' should return 0 peers\n\nPRIORITY: P2 \u2014 immediate risk is mitigated (CEO's peer now has keepalive=25 + all future\npeers will too via the patched runtime file). This handoff is about making the fix\nsurvive server re-provisioning.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-04-24T18:20:26Z",
+      "createdDate": "2026-04-24",
+      "completedDate": null
     }
   ],
   "importantNotes": [
