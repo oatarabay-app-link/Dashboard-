@@ -14921,6 +14921,54 @@
       "createdAt": "2026-04-23T16:58:36Z",
       "createdDate": "2026-04-23",
       "completedDate": null
+    },
+    {
+      "id": "xd-454",
+      "from": "[CTO]",
+      "to": "[QA]",
+      "title": "Handoff from CTO: xd-447: Periodic watchdog in tunnel extension (THE missing piece)",
+      "description": "ROOT CAUSE: wake() only fires on DEVICE sleep/wake. No check between wake events.\nFIX: Added 60s DispatchSource timer in PacketTunnelProvider that queries\n     adapter.getRuntimeConfiguration() and forces adapter.update(tunnelConfiguration:)\n     if last_handshake_time_sec is > 180s old. Debounced to 1 reassert per 30s.\n\nFiles: ios-app-v2/CasperVPN/CasperVPNTunnel/PacketTunnelProvider.swift (commit 8ac9414f)\n\nACCEPTANCE CRITERIA (to validate on build 41):\n1. Lock phone 30min with VPN connected \u2192 unlock \u2192 internet works instantly\n2. Tunnel log shows: '\ud83d\udc15 xd-447 watchdog OK' every 60s\n3. If tunnel dies in background, log shows: '\ud83d\udc15 xd-447 watchdog STALE \u2014 forcing reassert' then 'reassert SUCCESS'\n4. Run overnight (8h) \u2014 no manual reconnect required",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-04-24T04:33:58Z",
+      "createdDate": "2026-04-24",
+      "completedDate": null
+    },
+    {
+      "id": "xd-455",
+      "from": "[CTO]",
+      "to": "[QA]",
+      "title": "Handoff from CTO: xd-448: Tunnel-extension NWPathMonitor (forces fresh handshake on Wi-Fi\u2194cellular)",
+      "description": "ROOT CAUSE: WireGuardAdapter's internal NWPathMonitor only calls wgBumpSockets()\nwhich doesn't push a fresh handshake. Combined with wgDisableSomeRoamingForBrokenMobileSemantics,\nthe server keeps the old endpoint cached \u2192 replies go to dead IP \u2192 tunnel looks connected\nbut no traffic flows.\nFIX: Added separate NWPathMonitor in PacketTunnelProvider that triggers adapter.update()\n     when interface TYPE changes (Wi-Fi \u2194 cellular).\n\nFiles: ios-app-v2/CasperVPN/CasperVPNTunnel/PacketTunnelProvider.swift (commit 8ac9414f)\n\nACCEPTANCE CRITERIA:\n1. Connect VPN on Wi-Fi \u2192 turn off Wi-Fi \u2192 cellular should take over within 10s\n2. Tunnel log shows: '\ud83d\udce1 xd-448 iface change wifi\u2192cellular \u2014 forcing reassert'\n3. Reverse test: cellular \u2192 Wi-Fi also works\n4. No stuck 'connected but no internet' state",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-04-24T04:33:58Z",
+      "createdDate": "2026-04-24",
+      "completedDate": null
+    },
+    {
+      "id": "xd-456",
+      "from": "[CTO]",
+      "to": "[QA]",
+      "title": "Handoff from CTO: xd-449: Removed auto-reconnect user-flag gate",
+      "description": "ROOT CAUSE: Auto-reconnect in VPNConnectionManager required user had EITHER\nautoConnect OR kill-switch-soft enabled. Most users have neither \u2192 no in-app\nreconnect trigger on network transitions.\nFIX: Removed the gate. When user has an active connectedServer, the app\n     auto-reconnects on ALL network transitions (Wi-Fi\u2194cellular, reconnect after\n     airplane mode, etc). Still respects wasManualDisconnect (user's intent).\n\nFiles: ios-app-v2/CasperVPN/CasperVPN/Core/Services/VPNConnectionManager.swift line 204 (commit 8ac9414f)\n\nACCEPTANCE CRITERIA:\n1. Test with auto-connect OFF + kill-switch OFF (default user state)\n2. Toggle airplane mode off/on with VPN connected\n3. Tunnel reconnects automatically within 5-10s",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-04-24T04:33:58Z",
+      "createdDate": "2026-04-24",
+      "completedDate": null
+    },
+    {
+      "id": "xd-457",
+      "from": "[CTO]",
+      "to": "[IOS]",
+      "title": "Handoff from CTO: xd-450: Added UIBackgroundModes [fetch, processing] to Info.plist",
+      "description": "ROOT CAUSE: Main app had NO UIBackgroundModes, so iOS suspended it ~10s after\nbackgrounding. All NWPathMonitor + auto-reconnect observers died.\nFIX: Added UIBackgroundModes array [fetch, processing]. iOS will grant the main\n     app occasional background CPU, keeping NWPathMonitor alive long enough to\n     detect network transitions.\n\nFiles: ios-app-v2/CasperVPN/CasperVPN/Info.plist (commit 8ac9414f)\n\nNOTE: The tunnel EXTENSION already gets special background CPU from NE subsystem,\nbut the main app observer (setupAutoReconnect) needs this Info.plist key to get\nany background time for belt-and-suspenders redundancy.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-04-24T04:33:58Z",
+      "createdDate": "2026-04-24",
+      "completedDate": null
     }
   ],
   "importantNotes": [
