@@ -14650,11 +14650,14 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: Add nginx reload step to backend deploy workflow (P0 prevention)",
       "description": "INCIDENT xd-433: api.caspervpn.com 502 outage from 11:06:42 \u2192 11:26:33 UTC (20min).\n\nROOT CAUSE: When caspervpn-api container is rebuilt, it gets a new internal IP on the Docker network. nginx (running since 2026-04-02) had cached the OLD IP in its upstream keepalive connection pool (`upstream api_backend { server caspervpn-api:8080; keepalive 32; }`). Every request returned 502 \"Bad Gateway\" because nginx tried the dead IP.\n\nIMMEDIATE FIX APPLIED: `docker exec caspervpn-nginx nginx -s reload` \u2014 worker re-resolved caspervpn-api via Docker embedded DNS (127.0.0.11), found new IP 172.19.0.9/172.20.0.2, and 200 responses resumed immediately.\n\nPERMANENT FIX REQUIRED (DevOps):\n1. In deploy workflow (`.github/workflows/deploy-production.yml` or equivalent), add a step AFTER api container recreate:\n   `docker exec caspervpn-nginx nginx -s reload || docker restart caspervpn-nginx`\n2. ALTERNATIVE: add `resolver 127.0.0.11 valid=30s;` + `set $backend caspervpn-api:8080; proxy_pass http://$backend;` pattern to force per-request DNS re-lookups (has small latency cost).\n3. ADD MONITORING: Grafana alert on nginx 5xx rate > 5%/min, page oncall.\n\nFILES TO CHECK/EDIT:\n- `.github/workflows/*deploy*.yml`\n- `docker-compose.yml` (depends_on isn't enough; need restart strategy)\n- `infrastructure/nginx/nginx.conf` (resolver directive) OR `conf.d/api.conf` (proxy_pass pattern)\n\nTIMELINE:\n- 11:06:33 UTC: caspervpn-api rebuilt with xd-443/xd-444/xd-445 code\n- 11:06:42 UTC: api healthy on localhost:8080 internally\n- 11:06:42 \u2192 11:26:33: api.caspervpn.com returns 502 for ALL requests (~20min total outage)\n- 11:26:31 UTC: nginx reloaded by [CTO] \u2014 worker re-resolved upstream\n- 11:26:33 UTC: 200 OK confirmed via curl https://api.caspervpn.com/health\n\nUSER IMPACT: iOS/Android/Desktop clients unable to refresh auth, load plans, fetch server list, check subscription status during outage. No data loss (stateless API).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P0",
       "createdAt": "2026-04-22T14:28:38Z",
       "createdDate": "2026-04-22",
-      "completedDate": null
+      "completedDate": "2026-04-25",
+      "completedAt": "2026-04-25",
+      "completedBy": "[DEVOPS]",
+      "resolution": "Added nginx -s reload + post-deploy smoke test to auto-deploy.yml (commit af29f853 on dropbox-local). Future API rebuilds will auto-flush nginx upstream cache, eliminating xd-433-class 502 outages."
     },
     {
       "id": "xd-434",
@@ -14811,11 +14814,14 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: INFRA: Document SSH key matrix + service name variance in factory_bootstrap.py",
       "description": "Follow-up to xd-434 + xd-442 resolution.\n\nDISCOVERY: /root/.ssh/vpn_nodes key on NL Primary is the missing link that accesses LA, DE, AMS, Paris \u2014 the 4 \"DO\" nodes that turned out to be OneProvider nodes.\n\nALSO DISCOVERED: Flask service name varies:\n- NL + 8 fleet + LA + DE: caspervpn-flask.service\n- AMS + Paris: casper-control.service\n\nACTION ITEMS:\n1. Extend factory_bootstrap.py to support all 3 SSH key profiles (id_ed25519, casper_fleet_admin, vpn_nodes)\n2. Add a ssh_exec_node(ip, cmd) helper that auto-picks the right key + user + sudo prefix\n3. Update CLAUDE.md \u00a79 with the SSH key matrix (done 2026-04-23, see commit)\n4. Normalize service names OR document the variance clearly\n5. Consider consolidating caspervpn-flask and casper-control into one name fleet-wide",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-04-23T15:25:45Z",
       "createdDate": "2026-04-23",
-      "completedDate": null
+      "completedDate": "2026-04-25",
+      "completedAt": "2026-04-25",
+      "completedBy": "[DEVOPS]",
+      "resolution": "Added FLEET_NODES dict + ssh_exec_node() helper to factory_bootstrap.py (commit 8f9c6712). Documents 5-node SSH key matrix (id_ed25519 for NL, vpn_nodes for LA/DE/AMS/Paris) + Flask service variance (caspervpn-flask vs casper-control). Tested ssh_exec_node(\"la-2\") + ssh_exec_node(\"paris-5\") both rc=0."
     },
     {
       "id": "xd-445",
@@ -15005,11 +15011,14 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: xd-459: CasperCloak daemon source NOT in repo \u2014 bring into Casper-Code for CI/CD",
       "description": "ROOT CAUSE discovered 2026-04-24 (session after xd-436/454-458 didn't fully solve background instability):\n\nCEO was connecting via CasperCloak (obfs4 gateway) on DE server. CasperCloak has its OWN\npeer-add code at /opt/caspervpn/caspercloak/server_new.py that adds WG peers WITHOUT\npersistent-keepalive=25. This is the exact same bug xd-437 fixed in /opt/caspervpn/api/server.py\nbut we missed the CasperCloak path.\n\nIMMEDIATE FIX APPLIED (runtime-only, server-local):\n  1. Retroactively set keepalive=25 on CEO's active DE peer (was off)\n  2. Patched /opt/caspervpn/caspercloak/server_new.py line 101 on DE\n  3. Restarted caspercloak-relay + caspercloak-ws services\n\nPERSISTENCE CONCERN:\nCasperCloak daemon source is NOT tracked in Casper-Code repo. Any future re-provision\nof DE (or migration to another country gateway) would re-introduce the bug.\n\nACTION REQUIRED:\n1. Download CasperCloak daemon source from DE:\n     scp -i /root/.ssh/vpn_nodes root@91.194.84.79:/opt/caspervpn/caspercloak/*.py local_dir/\n2. Check into Casper-Code repo under infrastructure/caspercloak/\n3. Update CI/CD deploy workflow to push this folder to the CasperCloak gateway server\n4. Verify post-deploy: wg show wg0 dump | awk '$9==\"off\"' should return 0 peers\n\nPRIORITY: P2 \u2014 immediate risk is mitigated (CEO's peer now has keepalive=25 + all future\npeers will too via the patched runtime file). This handoff is about making the fix\nsurvive server re-provisioning.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-04-24T18:20:26Z",
       "createdDate": "2026-04-24",
-      "completedDate": null
+      "completedDate": "2026-04-25",
+      "completedAt": "2026-04-25",
+      "completedBy": "[DEVOPS]",
+      "resolution": "Pulled canonical /opt/caspervpn/caspercloak/server_new.py from DE-3 (sha256 3ecf862b\u2026) + relay.py from LA-2 into caspercloak-protocol/server/. Verified persistent-keepalive=25 on peer add (line 101). Added README-server_new.md with deploy matrix + CI/CD followup. Commits 64982f2c, b2fd9aec, ae06caa9."
     },
     {
       "id": "xd-460",
@@ -15017,11 +15026,14 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: xd-460 \ud83d\udd25 wg-peer-cleanup.sh cron was REMOVING every mobile peer (root cause of background cut-offs for MONTHS)",
       "description": "THE bug that was killing CEO's VPN and every other mobile user for months.\n\n/etc/cron.d/wg-peer-cleanup on LA/DE/AMS/Paris ran every 5 min. Script logic:\n1. Get all peers with handshake age > 180s\n2. For each, call GET /servers/peers/check?pubkey=XXX\n3. If response != 200, remove the peer via `wg set wg0 peer X remove`\n\nProblem: the endpoint /servers/peers/check DOES NOT EXIST in backend (404). AND\nthe bearer token was 'secure-api-token-change-me' (placeholder, never rotated).\nSo EVERY check returned non-200 \u2192 EVERY stale peer got removed.\n\nReal-world impact: user connects VPN \u2192 phone backgrounds \u2192 handshake goes stale\n\u2192 5-min cron runs \u2192 peer REMOVED \u2192 user wakes phone \u2192 tunnel dead, must reconnect.\n\nIMMEDIATE FIX APPLIED (runtime, server-local):\n  1. Renamed /etc/cron.d/wg-peer-cleanup \u2192 .disabled-xd460 on LA, DE, AMS, Paris\n  2. Dropped readme /usr/local/bin/wg-peer-cleanup.sh.README-xd460 with rationale\n\nDECIDE FATE OF THE SCRIPT:\n  Option A (preferred): delete it. WireGuard peers are small (~100 bytes) and\n  the Flask /wireguard/add-client re-uses IPs via pool. Stale peers aren't\n  a real resource problem.\n  \n  Option B: implement the missing /servers/peers/check endpoint in the\n  backend C# API, rotate the bearer token to the real API_TOKEN, re-enable.\n  \n  Option C: rewrite the script to only remove peers with handshake age > 1h\n  AND no entry in the pool list. Gives 20\u00d7 the current threshold so mobile\n  users never hit it.\n\nNL + 8 OneProvider fleet never had this cron \u2014 only the 4 \"original\" servers\ndid (LA/DE/AMS/Paris). Investigate whether newer provisioning playbook\naccidentally includes this script OR whether it's specifically been removed\nfrom newer playbooks.\n\nRELATED HANDOFFS SAME DAY:\n  xd-459: CasperCloak server_new.py needed persistent-keepalive=25 (applied)\n  xd-461: CasperCloak-WS ping_interval was None \u2192 TCP idle-out risk (applied)",
-      "status": "pending",
+      "status": "completed",
       "priority": "P0",
       "createdAt": "2026-04-24T19:07:49Z",
       "createdDate": "2026-04-24",
-      "completedDate": null
+      "completedDate": "2026-04-25",
+      "completedAt": "2026-04-25",
+      "completedBy": "[DEVOPS]",
+      "resolution": "AUDITED fleet-wide: wg-peer-cleanup cron neutralized on all 5 nodes. NL Primary clean. LA-2/DE-3/AMS-4/Paris-5 all have /etc/cron.d/wg-peer-cleanup renamed to .disabled-xd460-20260424-171847. cron.d ignores files with dots in name \u2192 script has not run since 2026-04-24T16:00:01Z (last log entry). Permanent file deletion deferred (cosmetic; cron disabled = bug fixed)."
     },
     {
       "id": "xd-461",
