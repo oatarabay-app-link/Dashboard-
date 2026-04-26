@@ -15380,9 +15380,63 @@
       "status": "open",
       "createdAt": "2026-04-26T05:00:00Z",
       "createdDate": "2026-04-26"
+    },
+    {
+      "id": "xd-478",
+      "from": "[CTO]",
+      "to": "[IOS]",
+      "title": "Handoff from CTO: P0",
+      "description": "[ITMS-91065 FIX] Verify Re-sign openssl.framework Run Script + archive Build 44",
+      "status": "pending",
+      "priority": "Build 43 (Apple ID 1187243615 v2.33) auto-rejected on 2026-04-26T04:35Z with ITMS-91065 (Missing signature on openssl.framework / BoringSSL). Root cause: passepartoutvpn/openssl-apple ships unsigned XCFrameworks; maintainer keeshux refuses CI signing (issue #63). FIX APPLIED via commit 1ccc0423 to dropbox-local: added 'Re-sign openssl.framework (ITMS-91065 fix)' Run Script Build Phase to BOTH targets (TGT001 CasperVPN id=SHL09A065, TGT002 CasperVPNTunnel id=SHL09B065). VERIFY in Xcode: open ios-app-v2/CasperVPN/CasperVPN.xcodeproj -> select CasperVPN target -> Build Phases tab -> confirm new phase exists at end (after 'Embed Foundation Extensions'). Repeat for CasperVPNTunnel target (after 'Resources'). ARCHIVE: Product > Archive -> wait for archive complete -> in build log search 'ITMS-91065 fix: openssl.framework re-signed' to confirm script ran. PRE-UPLOAD VERIFY: cd ios-app-v2/CasperVPN && python3 ../../tools/asc_preflight.py ~/Library/Developer/Xcode/Archives/<latest>/CasperVPN.xcarchive --skip-network. Must exit 0 (or 2 with only minor warnings). Then upload via Organizer or Transporter. Build number must increment to 44.",
+      "createdAt": "2026-04-26T15:38:07Z",
+      "createdDate": "2026-04-26",
+      "completedDate": null
+    },
+    {
+      "id": "xd-479",
+      "from": "[CTO]",
+      "to": "[QA]",
+      "title": "Handoff from CTO: P0",
+      "description": "[ITMS-91065 FIX] Run asc_preflight.py against Build 44 archive before upload",
+      "status": "pending",
+      "priority": "New tool added: tools/asc_preflight.py (commit 1ccc0423). Validates .xcarchive against known Apple rejection triggers BEFORE upload. Run: 'python3 tools/asc_preflight.py /path/to/CasperVPN.xcarchive'. Checks: (1) codesign on Commonly-Used SDK frameworks (openssl, GoogleSignIn, Sentry, etc.), (2) PrivacyInfo.xcprivacy presence, (3) Bundle ID matches com.applinkoffshore.CasperVPN, (4) ITSAppUsesNonExemptEncryption value, (5) live URL reachability for Privacy/Terms/Support/AASA, (6) marketing claims vs live API server count. Exit 0=safe to upload; 1=BLOCKERS (do not upload); 2=WARNINGS only. After Build 44 archive completes, run the script and only proceed to upload if exit 0 or 2 with reviewed warnings.",
+      "createdAt": "2026-04-26T15:38:07Z",
+      "createdDate": "2026-04-26",
+      "completedDate": null
+    },
+    {
+      "id": "xd-480",
+      "from": "[CTO]",
+      "to": "[CEO]",
+      "title": "Handoff from CTO: P0",
+      "description": "[ASC ACTION] Cancel rejected Build 43 submission + resubmit Build 44 once iOS+QA pass",
+      "status": "pending",
+      "priority": "Build 43 submission rejected automatically (Submission ID 5458f8f2-7943-4f5e-b19f-8d86dfefbd31). Once iOS dept archives Build 44 with ITMS-91065 fix and QA preflight passes: (1) Open ASC -> CasperVPN -> App Review section -> click 'Today at 4:35 AM' rejected submission -> 'Cancel Submission' link at bottom (so the submission slot is freed). (2) Go to v4 page (/distribution/ios/version/inflight) -> Build section -> click '+' -> select Build 44. (3) Click 'Resubmit to App Review' (top-right button). (4) Wait 5-10 min for automated checks. If rejection email arrives again, share immediately. If no rejection in 1h, build is queued for human review.",
+      "createdAt": "2026-04-26T15:38:07Z",
+      "createdDate": "2026-04-26",
+      "completedDate": null
+    },
+    {
+      "id": "xd-481",
+      "from": "[CTO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CTO: P2",
+      "description": "[POST-LAUNCH] Wire asc_preflight.py into CI/CD before any upload step",
+      "status": "pending",
+      "priority": "tools/asc_preflight.py should run as a mandatory step in any future automated build/upload workflow. Recommend adding to .github/workflows/ios-archive-and-upload.yml: after xcodebuild archive, before xcrun altool/Transporter upload. Failure (exit 1) must abort the workflow. Goal: prevent another Invalid Binary cycle costing days of round-trips with App Review.",
+      "createdAt": "2026-04-26T15:38:07Z",
+      "createdDate": "2026-04-26",
+      "completedDate": null
     }
   ],
   "importantNotes": [
+    {
+      "text": "[SUBMISSION REJECTION 2026-04-26 CTO] Build 43 ITMS-91065 (openssl.framework unsigned) \u2014 FIX SHIPPED via commit 1ccc0423. Run Script Build Phase added to both iOS targets re-signs openssl.framework during archive. NEW HANDOFFS: xd-478 [iOS verify+archive Build 44], xd-479 [QA preflight], xd-480 [CEO cancel rejected+resubmit], xd-481 [DevOps CI/CD]. Also added tools/asc_preflight.py QA gate. Resubmit blocker: archive Build 44 + verify preflight exit 0 + click Resubmit in ASC.",
+      "priority": "P0",
+      "date": "2026-04-26",
+      "dept": "cto"
+    },
     {
       "date": "2026-04-26",
       "author": "QA",
