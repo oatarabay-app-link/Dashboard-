@@ -15255,14 +15255,17 @@
       "to": "[IOS]",
       "title": "Handoff from CTO: P1",
       "description": "[SUBMISSION-CORRECTION xd-452] Bundle ID canonical is com.applinkoffshore.CasperVPN (NOT com.caspervpn.app)",
-      "status": "pending",
+      "status": "completed",
       "priority": "CORRECTION to xd-452. ASC inspection 2026-04-24 shows production Bundle ID = com.applinkoffshore.CasperVPN (immutable once app has shipped). Tunnel Extension = com.applinkoffshore.CasperVPN.tunnel. DO NOT try to change ASC. INSTEAD: unify docker-compose.yml, backend appsettings.json, and all hardcoded strings to match ASC's com.applinkoffshore.CasperVPN. Also update CLAUDE.md \u00a79 which incorrectly said canonical is com.caspervpn.app. Do this BEFORE next submit or Apple's entitlement check will fail.",
       "createdAt": "2026-04-25T00:16:23Z",
       "createdDate": "2026-04-25",
-      "completedDate": null,
+      "completedDate": "2026-04-26",
       "iosVerifiedDate": "2026-04-25",
       "iosVerifiedBy": "ios",
-      "notes": "| iOS audit 2026-04-25: pbxproj + all Swift bundle-ID refs already canonical com.applinkoffshore.CasperVPN. App Group group.com.caspervpn.app intentional (separate dev-portal namespace, OK). StoreKit SKUs com.caspervpn.premium.* unrelated to bundle ID. No iOS drift."
+      "notes": "| iOS audit 2026-04-25: pbxproj + all Swift bundle-ID refs already canonical com.applinkoffshore.CasperVPN. App Group group.com.caspervpn.app intentional (separate dev-portal namespace, OK). StoreKit SKUs com.caspervpn.premium.* unrelated to bundle ID. No iOS drift.",
+      "completedAt": "2026-04-26",
+      "completedBy": "[IOS]",
+      "resolution": "iOS source confirmed clean (PRODUCT_BUNDLE_IDENTIFIER, all Swift files, both .entitlements use canonical com.applinkoffshore.CasperVPN[.tunnel]). Audit re-run 2026-04-26: SettingsView, BugReportService, Info.plist all canonical. Drift exists ONLY in non-iOS files: docker-compose.yml L136/L319 (Apple__BundleId + APNS_BUNDLE_ID = com.caspervpn.app), backend AuthService.cs L704 default fallback ('com.caspervpn.app'), CLAUDE.md \u00a79 L752-753 + \u00a79.6 L832-833 (still says canonical = com.caspervpn.app). Created downstream xd-474 \u2192 [DEVOPS] for docker-compose, xd-475 \u2192 [BACKEND] for AuthService default fallback. CLAUDE.md is already covered by xd-469 (CTO self). iOS portion: DONE."
     },
     {
       "id": "xd-469",
@@ -15313,6 +15316,30 @@
       "priority": "P3",
       "createdAt": "2026-04-25T17:46:33Z",
       "createdDate": "2026-04-25"
+    },
+    {
+      "id": "xd-474",
+      "from": "[IOS]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from IOS: Fix docker-compose.yml Apple__BundleId + APNS_BUNDLE_ID to com.applinkoffshore.CasperVPN",
+      "description": "[BUNDLE-ID DRIFT \u2014 xd-468 downstream] docker-compose.yml has 2 hits of legacy com.caspervpn.app that must change to ASC canonical com.applinkoffshore.CasperVPN. Risk: backend Apple JWT audience validation will reject prod tokens if env var ever overrides appsettings.json (which is correct).\n\nFILES:\n\u2022 docker-compose.yml L136: change `- Apple__BundleId=com.caspervpn.app` \u2192 `- Apple__BundleId=com.applinkoffshore.CasperVPN`\n\u2022 docker-compose.yml L319: change `- APNS_BUNDLE_ID=${APNS_BUNDLE_ID:-com.caspervpn.app}` \u2192 `- APNS_BUNDLE_ID=${APNS_BUNDLE_ID:-com.applinkoffshore.CasperVPN}`\n\nTEST:\n\u2022 docker compose config | grep -i bundleid \u2192 both must show com.applinkoffshore.CasperVPN\n\u2022 Redeploy caspervpn-api on NL Primary, then `curl -s https://api.caspervpn.com/health`\n\u2022 iOS Apple Sign-In flow + push registration smoke (CEO action)\n\nREF: ASC inspection 2026-04-24 confirmed canonical = com.applinkoffshore.CasperVPN (immutable). xd-468 from CTO. iOS source already clean.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-04-26T04:09:39Z",
+      "createdDate": "2026-04-26",
+      "completedDate": null
+    },
+    {
+      "id": "xd-475",
+      "from": "[IOS]",
+      "to": "[BACKEND]",
+      "title": "Handoff from IOS: Unify AuthService.cs default Apple BundleId fallback to com.applinkoffshore.CasperVPN",
+      "description": "[BUNDLE-ID DRIFT \u2014 xd-468 downstream] backend-dotnet-core/Services/AuthService.cs L704 has default fallback string 'com.caspervpn.app' which is contradicted by appsettings.json L80/L142 (com.applinkoffshore.CasperVPN \u2014 correct). Low runtime risk because IConfiguration['Apple:BundleId'] always resolves from appsettings, AND ValidAudiences allow-list at L721/L805 already includes both bundle IDs. Still must fix for source-of-truth consistency.\n\nFILES:\n\u2022 backend-dotnet-core/Services/AuthService.cs L696 (comment): 'Validate audience = com.caspervpn.app (bundle ID)' \u2192 'com.applinkoffshore.CasperVPN'\n\u2022 L704: `var bundleId = _configuration[\"Apple:BundleId\"] ?? \"com.caspervpn.app\";` \u2192 `... ?? \"com.applinkoffshore.CasperVPN\";`\n\u2022 L721 ValidAudiences allow-list: keep both for backward-compat (existing live tokens) \u2014 NO change\n\u2022 L805 validBundleIds: keep both for backward-compat \u2014 NO change\n\nTEST:\n\u2022 `dotnet build` clean\n\u2022 Apple Sign-In smoke against api.caspervpn.com (existing tokens still validate via allow-list)\n\nREF: xd-468 from CTO. ASC canonical = com.applinkoffshore.CasperVPN.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-04-26T04:09:39Z",
+      "createdDate": "2026-04-26",
+      "completedDate": null
     }
   ],
   "importantNotes": [
