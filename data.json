@@ -6808,10 +6808,14 @@
       "to": "[ADMIN_PANEL]",
       "title": "P1: Website build broken since 2026-04-17 \u2014 Prisma schema missing 7+ admin models",
       "description": "BLOCKER: deploy-website.yml fails at Build & Type Check stage. Root cause verified 2026-04-25 by typechecking dropbox-local: TS references Prisma models that DO NOT exist in website/prisma/schema.prisma. MISSING MODELS: analyticsSession, pageView, heatmapEvent, emailCampaign, contact, contactSegment, segment, funnel, funnelEvent. AFFECTED ROUTES (50+ TS errors): /api/admin/analytics/*, /api/admin/campaigns/*, /api/admin/contacts/*, /api/admin/segments/*, /api/admin/funnels/*. EXISTING SCHEMA HAS 16 MODELS (Task, GitHubSync, AdminUser, BlogCategory, BlogPost, Affiliate, AffiliateClick, AffiliateConversion, AffiliatePayout, SiteContent, VpnServer, PricingPlan, Order, Subscription, PaymentProvider, WaitlistEntry). REQUIRED FIX: Either (A) add the missing 9 Prisma models + run migration on caspervpn_website DB, or (B) delete/stub the broken admin routes. IMPACT: ALL website deploys blocked since 2026-04-17 (run #65 onward \u2014 currently on run #72 failure). Live site running 8-day-old container. Production drift accumulating. WEBSITE SEO PATCHES queued in commits 4b149c74 (SEO title fixes) \u2014 will deploy as soon as build is unblocked.",
-      "status": "open",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-04-25T17:45:00Z",
-      "createdDate": "2026-04-25"
+      "createdDate": "2026-04-25",
+      "completedAt": "2026-04-27T00:00:00Z",
+      "completedDate": "2026-04-27",
+      "completedBy": "admin-panel",
+      "resolution": "Added 10 Prisma models to website/prisma/schema.prisma (AnalyticsSession, PageView, HeatmapEvent, Contact, Segment, ContactSegment, EmailCampaign, EmailSend, Funnel, FunnelEvent). Schema validated with prisma 6.7.0 (matches website package.json). Forward migration SQL generated via prisma migrate diff and applied to production caspervpn_website DB on NL Primary \u2014 26 tables total (was 16). Build unblocked: npx prisma generate now succeeds; affected admin routes (/api/admin/analytics/*, /campaigns/*, /contacts/*, /segments/*, /funnels/*, /api/track) typecheck cleanly. Pushed to dropbox-local @ schema.prisma."
     },
     {
       "id": "xd-001",
@@ -15525,6 +15529,18 @@
       "createdAt": "2026-04-26T23:19:32Z",
       "createdDate": "2026-04-26",
       "completedDate": null
+    },
+    {
+      "id": "xd-486",
+      "from": "[ADMIN_PANEL]",
+      "to": "[WEBSITE]",
+      "title": "Handoff from ADMIN_PANEL: xd-473 RESOLVED \u2014 Prisma schema fixed, push 4b149c74 SEO patches",
+      "description": "xd-473 fix complete on dropbox-local. 10 missing Prisma models added (analytics, CRM, funnels). Production caspervpn_website DB migrated \u2014 26 tables verified. Website CI build should now pass: prisma generate + next build will succeed. Action: trigger deploy-website.yml (push to dropbox-local should re-run pipeline) and verify queued SEO commits 4b149c74 deploy. If build still fails, capture tsc output and re-route \u2014 there may be other stale references not in the original 9-model list.",
+      "status": "open",
+      "priority": "P1",
+      "createdAt": "2026-04-27T00:00:00Z",
+      "createdDate": "2026-04-27",
+      "acceptanceCriteria": []
     }
   ],
   "importantNotes": [
