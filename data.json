@@ -15394,11 +15394,14 @@
       "to": "[BACKEND]",
       "title": "Handoff from IOS: Unify AuthService.cs default Apple BundleId fallback to com.applinkoffshore.CasperVPN",
       "description": "[BUNDLE-ID DRIFT \u2014 xd-468 downstream] backend-dotnet-core/Services/AuthService.cs L704 has default fallback string 'com.caspervpn.app' which is contradicted by appsettings.json L80/L142 (com.applinkoffshore.CasperVPN \u2014 correct). Low runtime risk because IConfiguration['Apple:BundleId'] always resolves from appsettings, AND ValidAudiences allow-list at L721/L805 already includes both bundle IDs. Still must fix for source-of-truth consistency.\n\nFILES:\n\u2022 backend-dotnet-core/Services/AuthService.cs L696 (comment): 'Validate audience = com.caspervpn.app (bundle ID)' \u2192 'com.applinkoffshore.CasperVPN'\n\u2022 L704: `var bundleId = _configuration[\"Apple:BundleId\"] ?? \"com.caspervpn.app\";` \u2192 `... ?? \"com.applinkoffshore.CasperVPN\";`\n\u2022 L721 ValidAudiences allow-list: keep both for backward-compat (existing live tokens) \u2014 NO change\n\u2022 L805 validBundleIds: keep both for backward-compat \u2014 NO change\n\nTEST:\n\u2022 `dotnet build` clean\n\u2022 Apple Sign-In smoke against api.caspervpn.com (existing tokens still validate via allow-list)\n\nREF: xd-468 from CTO. ASC canonical = com.applinkoffshore.CasperVPN.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-04-26T04:09:39Z",
       "createdDate": "2026-04-26",
-      "completedDate": null
+      "completedDate": "2026-04-28",
+      "completedAt": "2026-04-28",
+      "completedBy": "[BACKEND]",
+      "resolution": "Code change committed (commit edda45f2) on dropbox-local: AuthService.cs L696 comment + L704 default fallback now read com.applinkoffshore.CasperVPN. Allow-lists at L721/L805 unchanged (both bundle IDs preserved for backward-compat). Auto-deploy gated by SUBMISSION_FREEZE.lock \u2014 change will deploy when freeze lifts post-Build-46 approval."
     },
     {
       "id": "xd-476",
@@ -15569,9 +15572,29 @@
       "createdAt": "2026-04-28T06:36:01Z",
       "createdDate": "2026-04-28",
       "completedDate": null
+    },
+    {
+      "id": "xd-489",
+      "from": "[BACKEND]",
+      "to": "[WEBSITE]",
+      "title": "Handoff from BACKEND: xd-313 follow-up: Affiliate conversion tracking is Next.js work \u2014 not backend-dotnet-core",
+      "description": "Per backend S2026-04-20 + S2026-04-25 + S2026-04-26 anti-loop: xd-313 conversion logic lives in website/app/checkout/page.tsx (referral cookie read) + website/app/api/affiliates/* (AffiliateConversion writer). Click tracking is LIVE in prod (caspervpn_website DB has affiliate_clicks rows). Conversion writer + monthly payout trigger remain unbuilt. Backend's role is ONLY to forward Stripe webhook events that contain the affiliate referrer claim \u2014 already wired in StripeService.HandleWebhookEventAsync. Recommend xd-313 ownership reassign to [WEBSITE] and the description's references to backend-dotnet-core be removed.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-04-28T03:39:23Z",
+      "createdDate": "2026-04-28",
+      "completedDate": null
     }
   ],
   "importantNotes": [
+    {
+      "id": "note-backend-session-2026-04-28",
+      "department": "backend",
+      "priority": "P2",
+      "createdAt": "2026-04-28T03:39:23Z",
+      "title": "Backend autonomous session 2026-04-28 \u2014 xd-475 shipped, full ownership audit",
+      "body": "XD-475 SHIPPED: AuthService.cs Apple BundleId default fallback unified to com.applinkoffshore.CasperVPN (commit edda45f2 on dropbox-local). NOT auto-deployed \u2014 SUBMISSION_FREEZE.lock active for Build 46 (Waiting for Review). Change deploys on next push after freeze lifts. Zero runtime risk in interim: appsettings.json Apple:BundleId is set in prod, fallback never hit; allow-lists at L721/L805 still accept both bundle IDs.\n\nOWNERSHIP AUDIT:\n\u2022 admin-backend: AdminAdvancedFeaturesController.cs is 1644 lines / 44 HTTP routes / 0 stub markers \u2014 fully built out. Knowledge base, packages, revenue/server/threat intelligence routes all wired.\n\u2022 payments-stripe webhook signature verification: \u2705 DONE. StripeService.cs L359 calls EventUtility.ConstructEvent(json, signature, _settings.WebhookSecret). Remaining work = OPS/CEO action: provision Stripe production keys + WebhookSecret in prod .env (not a backend code task).\n\u2022 rate-limiting auth: \u2705 LIVE. RateLimitingService.cs L57-60 \u2014 auth policy PermitLimit=5 / WindowSeconds=1 (5 req/sec \u2192 429). Confirmed deployed (xd-454 verified 2026-04-26 with bandwidth_live policy alongside).\n\u2022 multi-hop server routing: \u26a0\ufe0f NOT IMPLEMENTED. Zero references to multihop/multi-hop in ServersController.cs or OptimizedVpnServerService.cs or container /app. This is a backlog item requiring relay-side architecture (CasperCloak hop chains) before backend wiring is meaningful.\n\nXD-287 (Legal pre-impl review): still blocked on Legal sign-off; backend stubs unchanged. No backend action.\nXD-313 (Affiliate conversion): re-routed to [WEBSITE] via new handoff. Backend-dotnet-core has zero responsibility here; webhook delegation already in place.\n\nBACKEND HEALTH (live verified 2026-04-28T03:34Z): /health=200 (69ms), /api/Plans=200 (83ms), /api/bandwidth/live=401 with x-ratelimit-limit:600 (xd-454 live), zero errors last 30m, caspervpn-api+postgres+redis+nginx all Up healthy 31h."
+    },
     {
       "id": "note-1777347361-rejected",
       "title": "[iOS] CORRECTION: v4 with Build 46 was REJECTED by Apple post-submission",
