@@ -1,6 +1,6 @@
 {
-  "lastUpdated": "2026-04-29T03:15:55Z",
-  "updatedBy": "devops",
+  "lastUpdated": "2026-04-29T04:40:11Z",
+  "updatedBy": "[WEBSITE] auto-audit",
   "overall": {
     "completion": 69,
     "phase": "Phase 1: iOS Launch",
@@ -15598,6 +15598,16 @@
     }
   ],
   "importantNotes": [
+    {
+      "id": "note-website-audit-2026-04-29",
+      "department": "website",
+      "title": "[WEBSITE] 2026-04-29 autonomous audit \u2014 production-verified, 3 SEO defects found",
+      "priority": "P3",
+      "date": "2026-04-29",
+      "createdAt": "2026-04-29T04:40:11Z",
+      "createdBy": "website-auto",
+      "body": "Scheduled audit results (no incidents). Image sha256:02cc7361c378 (Up 2d). Fleet GREEN.\n\nAFFILIATE TRACKING (xd-313 scope) \u2014 VERIFIED GREEN: POST /api/affiliates/click {TESTPROMO} -> {ok:true,tracked:true} (TTFB 91ms). affiliates.total_clicks 10->11 atomic. caspervpn_website DB: 16 tables incl affiliate_clicks/conversions/payouts. Conversion-write code path (components/referral-tracker.tsx -> /api/affiliates/click -> recordAffiliateConversion in app/api/payments/checkout/route.ts) intact. Stripe-prod-key dependency tracked separately under xd-008.\n\nSEO/META AUDIT (41 canonical routes sampled) \u2014 39/41 PASS:\n- Sitemap.xml: 82 URLs, all with <lastmod>. robots.txt blocks GPTBot/CCBot/Google-Extended + /admin /api /checkout.\n- All canonical pages return 200 with route-specific <title>, og:title, description, canonical, robots index/follow.\n- /privacy, /terms, /no-log-policy, /affiliates/terms = 200 (verified canonical paths; previous audit notes citing /legal/* were path errors).\n- 5/5 platform pages (apps/windows|mac|linux|ios|android), 5/5 compare/* pages, /guides/* sample = 200.\n- JSON-LD: SoftwareApplication + Organization + WebSite schemas on /.\n- Security headers: HSTS (max-age 1y, includeSubDomains), X-Frame-Options DENY, Referrer-Policy, Permissions-Policy, X-Content-Type-Options nosniff, X-XSS-Protection. AASA served as application/json.\n- Performance proxy (TTFB / total): / 58/60ms, /pricing 53/53ms, /features 52/52ms, /blog 73/73ms, /apps/windows 47/47ms, /compare/nordvpn 80/80ms, /affiliates 68/68ms. All sub-100ms => Lighthouse Perf 90+ likely.\n- gzip compression on all HTML routes. avif/webp images via Next config.\n\nDEFECTS FOUND (P3 follow-ups, none P1/P2):\n1) /admin/login: title='CasperVPN \u2014 Privacy-First WireGuard VPN' (generic) + meta robots='index, follow'. Should be 'Admin Login | CasperVPN' + noindex,nofollow. robots.txt blocks /admin so search exposure low, but defense-in-depth needs page-level noindex.\n2) /reset-password og:title='CasperVPN - Privacy-First VPN' (generic). Should be 'Reset Password | CasperVPN' for share-link clarity (page is correctly noindex,nofollow).\n3) /verify-email og:title='CasperVPN - Privacy-First VPN' (generic). Should be 'Verify Email | CasperVPN'.\n\nENHANCEMENT OPPORTUNITIES (P3, optional):\n4) /download/win returns 404 (only /download/windows aliased). Add `{ source: '/download/win', destination: '/apps/windows', permanent: true }` to next.config.js redirects.\n5) HSTS missing 'preload' flag \u2014 eligible for hstspreload.org submission once owner approves cross-subdomain HSTS.\n6) Content-Security-Policy header not set \u2014 currently relying on per-tag x-content-type-options only. Define a strict CSP for production.\n7) Lighthouse-CI not deployable from this sandbox (no headless chrome on factory). Recommend wiring lighthouse-ci into deploy-website.yml so each PR gets scored automatically.\n\nNO REGRESSIONS vs 2026-04-28 baseline. xd-313 website-side scope remains PRODUCTION-VERIFIED."
+    },
     {
       "id": "note-backend-audit-2026-04-29",
       "category": "session-summary",
