@@ -6803,6 +6803,36 @@
   ],
   "crossDeptTasks": [
     {
+      "id": "xd-491",
+      "from": "[BACKEND]",
+      "to": "[CTO]",
+      "status": "open",
+      "priority": "P1",
+      "title": "Handoff from BACKEND: P1 \u2014 RadiusService architectural decision (HTTP API vs direct SQL to radcheck)",
+      "description": "BACKEND audit 2026-05-01 surfaced that the entire .NET FreeRadiusService HTTP-API pattern is broken-by-design: FreeRadiusService.cs:29 uses _settings.ApiEndpoint which defaults to http://localhost:3000/api/radius - no service ever served this URL. UpdateBandwidthLimitAsync, CreateUserAsync, DeleteUserAsync, etc. all 404/connection-refuse. Production caspervpn DB radcheck has 1 row vs 28 Users with RadiusUsername set. STRUCTURAL OPTIONS: (A) Rewrite FreeRadiusService to use Npgsql directly, INSERT/UPDATE/DELETE on radcheck/radreply/radusergroup in caspervpn DB (this is what FreeRADIUS sql module reads). Simpler, no extra service. (B) Stand up a FreeRADIUS rest module HTTP listener on a port and route via 'freeradius' Docker hostname. More moving parts. Useful for cross-cluster eventual scale-out. (C) Keep HTTP API contract but back it with Flask 5002 control API by adding /user/{username}/attributes PUT endpoint on the existing CasperVPN Flask Control API (DevOps already runs this). Lower disruption. Recommended path: A - direct SQL. Single source of truth (caspervpn DB), no auth-token dance, no DNS games. Also unblocks xd-391 (RADIUS Max-Monthly-Octets sync) by making SetMonthlyDataLimitAsync trivially another radcheck/radreply UPDATE in the same Npgsql call. IMPACT: Until decided, ~35% of new signups land with broken RADIUS provisioning. Affects IKEv2 and non-WireGuard auth paths only. WireGuard peer-key flow unaffected. DECISION REQUESTED: pick A/B/C and create implementation handoff back to [BACKEND] with chosen approach.",
+      "taskRef": "note-backend-radius-prov-broken-2026-05-01",
+      "criteriaIdx": [],
+      "createdAt": "2026-05-01T03:42:19Z",
+      "dueBy": "2026-05-04T03:42:19Z",
+      "handoffTo": "[BACKEND]",
+      "handoffNote": "After CTO picks A/B/C, BACKEND implements"
+    },
+    {
+      "id": "xd-490",
+      "from": "[BACKEND]",
+      "to": "[DEVOPS]",
+      "status": "open",
+      "priority": "P1",
+      "title": "Handoff from BACKEND: P1 \u2014 Set Radius__ApiEndpoint env on caspervpn-api (RADIUS user prov broken)",
+      "description": "BACKEND audit 2026-05-01 found RADIUS user creation failing in prod (10 fails/4d, 35% of signups). Root cause: caspervpn-api container missing Radius__ApiEndpoint env var; default is 'http://localhost:3000/api/radius' which has no listener (Connection refused). IMMEDIATE BANDAID (this handoff): Either (a) set Radius__ApiEndpoint to a non-existent-but-non-fatal value to silence the noise (e.g. http://127.0.0.1:0), OR (b) better, hold this handoff until xd-491 (CTO) decides the architectural direction. Recommended: hold + just acknowledge. The actual fix is xd-491 (rewrite RadiusService to write to radcheck directly via Npgsql or align hostname to 'freeradius' running an actual REST listener via FreeRADIUS rest module on port 3000).",
+      "taskRef": "note-backend-radius-prov-broken-2026-05-01",
+      "criteriaIdx": [],
+      "createdAt": "2026-05-01T03:42:19Z",
+      "dueBy": "2026-05-04T03:42:19Z",
+      "handoffTo": "[CTO]",
+      "handoffNote": "After bandaid lands, xd-491 still owns the architectural fix"
+    },
+    {
       "id": "xd-473",
       "from": "[WEBSITE]",
       "to": "[ADMIN_PANEL]",
@@ -12550,7 +12580,7 @@
       "from": "[WEBSITE]",
       "to": "[BACKEND]",
       "title": "Handoff from WEBSITE: P2: Affiliate Conversion Tracking Not Wired \u2014 Sales Don't Credit Affiliates",
-      "description": "CRITICAL REVENUE GAP: Affiliate program signup + admin approval flow works correctly (Prisma DB, /api/affiliates POST, /api/admin/affiliates PATCH). However, conversion tracking is completely missing. When a user purchases through an affiliate referral link, NOTHING updates the affiliate record. EVIDENCE: (1) AffiliateConversion table exists in Prisma schema (affiliate_conversions) but is never written to. (2) totalConversions and totalEarnings on Affiliate model are never incremented after a sale. (3) Checkout page (app/checkout/page.tsx) has zero referral cookie reading or affiliate attribution logic. (4) AffiliatePayout table exists but no payout trigger exists anywhere. REQUIRED IMPLEMENTATION: (A) Checkout flow: read referral cookie (set when user clicks affiliate link), on successful payment write AffiliateConversion record (affiliateId, orderId, amount, commissionAmount = amount * commissionRate). (B) Increment affiliate.totalConversions + totalEarnings via Prisma update. (C) Monthly payout trigger: query affiliates with unpaid earnings >= $25, create AffiliatePayout records, mark as pending. (D) Admin payout UI already exists in /admin/affiliates \u2014 just needs the data. AFFILIATE LINK FORMAT: caspervpn.com?ref=REFERRALCODE \u2014 needs cookie middleware to persist across session. COMMISSION RATE: 30% default (stored per affiliate). SCOPE: All in website Next.js codebase (not backend-dotnet-core).",
+      "description": "CRITICAL REVENUE GAP: Affiliate program signup + admin approval flow works correctly (Prisma DB, /api/affiliates POST, /api/admin/affiliates PATCH). However, conversion tracking is completely missing. When a user purchases through an affiliate referral link, NOTHING updates the affiliate record. EVIDENCE: (1) AffiliateConversion table exists in Prisma schema (affiliate_conversions) but is never written to. (2) totalConversions and totalEarnings on Affiliate model are never incremented after a sale. (3) Checkout page (app/checkout/page.tsx) has zero referral cookie reading or affiliate attribution logic. (4) AffiliatePayout table exists but no payout trigger exists anywhere. REQUIRED IMPLEMENTATION: (A) Checkout flow: read referral cookie (set when user clicks affiliate link), on successful payment write AffiliateConversion record (affiliateId, orderId, amount, commissionAmount = amount * commissionRate). (B) Increment affiliate.totalConversions + totalEarnings via Prisma update. (C) Monthly payout trigger: query affiliates with unpaid earnings >= $25, create AffiliatePayout records, mark as pending. (D) Admin payout UI already exists in /admin/affiliates \u2014 just needs the data. AFFILIATE LINK FORMAT: caspervpn.com?ref=REFERRALCODE \u2014 needs cookie middleware to persist across session. COMMISSION RATE: 30% default (stored per affiliate). SCOPE: All in website Next.js codebase (not backend-dotnet-core).\n\n[BACKEND 2026-05-01 STATUS]: Stripe env on caspervpn-api still on TEST keys (sk_test_, pk_test_). Backend half (Stripe webhook -> AffiliateConversion approval) remains blocked on prod-key migration (CEO/ops). No backend code change actionable today. Website-side wiring confirmed complete per S2026-04-20 (16-table caspervpn_website schema pushed, /api/affiliates/click live in prod). Conversion crediting waits for prod Stripe.",
       "status": "open",
       "priority": "P2",
       "createdAt": "2026-03-30T02:21:00Z",
@@ -14001,7 +14031,7 @@
       "status": "pending",
       "priority": "P2",
       "title": "Post-TestFlight: RADIUS tier sync on subscription change (Max-Monthly-Octets)",
-      "description": "DEFERRED from pre-TestFlight scope. Current state: AppleReceiptService.HandleServerNotificationAsync updates User.CurrentCycleDataLimitBytes on SUBSCRIBED/DID_RENEW/EXPIRED/REFUND events, but does NOT propagate the data-limit to the RADIUS radcheck table (Max-Monthly-Octets attribute). UserService.SetDataAllocationAsync also misses this sync when admin manually sets a user limit. \n\nScope: (a) Extend IFreeRadiusService with SetMonthlyDataLimitAsync(username, limitBytes) \u2014 mirrors UpdateBandwidthLimitAsync pattern, writes to radcheck via flask control API on port 5002. (b) Require control API (DevOps) to support Max-Monthly-Octets attribute + idempotent upsert/delete. (c) Configure FreeRADIUS policy to enforce Max-Monthly-Octets on IKE sessions (strongSwan integration). (d) Call SetMonthlyDataLimitAsync from: UserService.SetDataAllocationAsync, UserService.BulkSetDataAllocationAsync, AppleReceiptService.ProcessReceiptAsync (first purchase), AppleReceiptService.HandleServerNotificationAsync (renewals/refunds/expiry), SubscriptionExpiryService.DowngradeExpiredSubscriptions. \n\nImpact: defense-in-depth enforcement at protocol level for IKE users. Bypass scenario: if an adversary extracts RADIUS creds from iOS keychain and manually configures a non-CasperVPN client, they could use the tunnel without iOS app enforcement. This task closes that hole. NOT a TestFlight blocker because Apple reviewers test via the iOS app, which enforces via xd-392. \n\nRelated Blocker from audit: RadiusUserProfile model exists (Models/RadiusIntegration.cs:80) but no code populates MaxDownloadKbps/MaxUploadKbps per tier either \u2014 same sync should cover it.",
+      "description": "DEFERRED from pre-TestFlight scope. Current state: AppleReceiptService.HandleServerNotificationAsync updates User.CurrentCycleDataLimitBytes on SUBSCRIBED/DID_RENEW/EXPIRED/REFUND events, but does NOT propagate the data-limit to the RADIUS radcheck table (Max-Monthly-Octets attribute). UserService.SetDataAllocationAsync also misses this sync when admin manually sets a user limit. \n\nScope: (a) Extend IFreeRadiusService with SetMonthlyDataLimitAsync(username, limitBytes) \u2014 mirrors UpdateBandwidthLimitAsync pattern, writes to radcheck via flask control API on port 5002. (b) Require control API (DevOps) to support Max-Monthly-Octets attribute + idempotent upsert/delete. (c) Configure FreeRADIUS policy to enforce Max-Monthly-Octets on IKE sessions (strongSwan integration). (d) Call SetMonthlyDataLimitAsync from: UserService.SetDataAllocationAsync, UserService.BulkSetDataAllocationAsync, AppleReceiptService.ProcessReceiptAsync (first purchase), AppleReceiptService.HandleServerNotificationAsync (renewals/refunds/expiry), SubscriptionExpiryService.DowngradeExpiredSubscriptions. \n\nImpact: defense-in-depth enforcement at protocol level for IKE users. Bypass scenario: if an adversary extracts RADIUS creds from iOS keychain and manually configures a non-CasperVPN client, they could use the tunnel without iOS app enforcement. This task closes that hole. NOT a TestFlight blocker because Apple reviewers test via the iOS app, which enforces via xd-392. \n\nRelated Blocker from audit: RadiusUserProfile model exists (Models/RadiusIntegration.cs:80) but no code populates MaxDownloadKbps/MaxUploadKbps per tier either \u2014 same sync should cover it.\n\n[BACKEND 2026-05-01 UPDATE]: Validated current state of Flask 5002 control API: 22 routes, NONE include SetMonthlyDataLimit/Max-Monthly-Octets endpoints. DISCOVERED that this xd-391 is now a sub-task of xd-491 (RadiusService architectural decision). FreeRADIUS uses sql module against caspervpn DB radcheck (NOT Flask). The xd-391 description's 'Flask control API on port 5002 must add SetMonthlyDataLimit endpoint' instruction is incorrect - the right place to write Max-Monthly-Octets is the radcheck/radreply table directly. RECOMMEND: hold xd-391 implementation until xd-491 lands; then xd-391 collapses to one Npgsql INSERT/UPDATE in the same code path as the broader rewrite.",
       "createdAt": "2026-04-18T20:24:05Z",
       "dueBy": "2026-05-18T20:24:05Z",
       "handoffTo": "devops",
@@ -15607,6 +15637,17 @@
     }
   ],
   "importantNotes": [
+    {
+      "id": "note-backend-radius-prov-broken-2026-05-01",
+      "category": "production-bug",
+      "priority": "P1",
+      "status": "open",
+      "department": "backend",
+      "createdAt": "2026-05-01T03:42:19Z",
+      "createdDate": "2026-05-01",
+      "title": "[BACKEND] P1 \u2014 RADIUS user creation broken: localhost:3000 default endpoint, 10 fails/4d",
+      "body": "ROOT CAUSE: Helpers/Settings.cs:32 RadiusSettings.ApiEndpoint default = 'http://localhost:3000/api/radius'. Production caspervpn-api container has Radius__Host/Port/ApiKey/Secret env vars set but NO Radius__ApiEndpoint, so default fires. localhost:3000 has no listener -> Connection refused. EVIDENCE: caspervpn-api ERR logs 10x in last 24h: 'Error creating RADIUS user: <username>' with 'System.Net.Http.HttpRequestException: Connection refused (localhost:3000)'. DB EVIDENCE: caspervpn DB has 28 Users with RadiusUsername set, but radcheck has only 1 row (an Apple sub id). Confirmed user tony.wheibe@gmail.com signed up 2026-04-30 17:07:55 UTC, RadiusUsername=tony.wheibe_6cbd2967, but absent from radcheck. ~35% of new signups affected since deploy. IMPACT ASSESSMENT: User registration succeeds (.NET continues past failure - fire-and-forget). WireGuard auth bypasses RADIUS (peer-key based) so iOS WG users unaffected. IKEv2 / OpenVPN-CHAP / strongSwan flows that look up radcheck WILL fail auth for all affected users. Apple sub-id auth path (1 row in radcheck) writes via separate path -- still working. Bigger structural finding: HTTP RadiusService base URL pattern is broken-by-design - no service ever served PUT /user/{username}/attributes. FreeRADIUS uses sql module directly against caspervpn DB radcheck table. The .NET HTTP RADIUS API approach should likely be replaced with direct SQL writes to radcheck. Spawned: xd-490 (DevOps env bandaid), xd-491 (CTO architectural decision)."
+    },
     {
       "id": "note-devops-audit-2026-05-01",
       "priority": "P3",
