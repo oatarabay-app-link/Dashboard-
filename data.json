@@ -15749,6 +15749,14 @@
   ],
   "importantNotes": [
     {
+      "id": "note-admin-2026-05-02",
+      "date": "2026-05-02",
+      "source": "admin-panel",
+      "priority": "P3",
+      "title": "[ADMIN] xd-309 production sweep clean \u2014 30/31 read endpoints 200, affiliate review E2E verified",
+      "body": "Scheduled audit 2026-05-02 05:09 UTC. Read surface: 30/31 advanced-admin endpoints HTTP 200 with real-DB data (knowledge-base 5 cats/1 article/5 FAQs, packages 14 plans, revenue-intelligence, resellers 3 partners, NATS 2 servers, server-intelligence 13 servers, threat-intelligence 10 threats/5 fraud scores). Write surface: 5/5 expected-501 stubs (xd-492 BACKEND) still returning 501 with table-migration messages \u2014 no regression. 2/2 soft-200 stubs (Stripe Connect) still returning 200 with TODO. Affiliate review flow E2E TESTED: PATCH /api/admin/website/affiliates/{id}/status flips active\u2194suspended (200, atomic, persists). caspervpn-admin-react Up 6d healthy, admin.caspervpn.com 200, api.caspervpn.com/health 200. Single non-canonical 404: /api/admin/affiliates (legacy alias; canonical = /api/admin/website/affiliates). No admin-side code changes \u2014 outstanding work is BACKEND (xd-492) + PRODUCT (xd-472)."
+    },
+    {
       "createdAt": "2026-05-01T05:14:23Z",
       "createdBy": "[ADMIN-PANEL]",
       "priority": "P3",
@@ -16074,52 +16082,6 @@
       "date": "2026-04-18",
       "from": "CTO",
       "note": "xd-388 deployed (d54b564e): OpenVPN Kill Switch parity \u2014 was the 4th-protocol outlier. All 4 protocols (WG, IKE, OpenVPN, CasperCloak) now apply includeAllNetworks/excludeLocalNetworks uniformly based on user Kill Switch setting. CEO identified this during xd-384 post-mortem; QA sweep xd-381 had missed it by stopping at first asymmetry finding. Updated xd-386 CEO matrix with 3 new OpenVPN scenarios (steps 7-10)."
-    },
-    {
-      "id": "note-backend-2026-04-18-xd387",
-      "date": "2026-04-18",
-      "createdAt": "2026-04-18T03:36:43.438858Z",
-      "from": "backend",
-      "createdBy": "backend",
-      "severity": "P0",
-      "message": "[BACKEND 2026-04-18] xd-387 FIXED \u2014 website CI unblocked. Commits: 9c160bcb (guides/[slug]/page.tsx) + 9660105e (compare/[slug]/page.tsx) on dropbox-local. Next CI run on dropbox-local should pass Build Docker Images (website). DEVOPS to verify and close the deploy pipeline."
-    },
-    {
-      "id": "note-devops-ci-2026-04-18",
-      "createdAt": "2026-04-18T03:17:15Z",
-      "createdBy": "devops",
-      "severity": "P0",
-      "message": "[DEVOPS 2026-04-18 03:15 UTC] CI RED for 14+ hrs. Root cause: syntax bug in website/app/{guides,compare}/[slug]/page.tsx line 18 \u2014 invalid `if (!data) const url = ...`. Introduced by commit 973df09b42. Self-hosted runner uk-lon-runner-1 ONLINE and healthy. Only blocker is this code issue. Handoff xd-387 \u2192 BACKEND. Infra health otherwise GREEN: 16/16 containers UP, 19/19 Prom targets UP, all 13 VPN nodes reachable, UK-LON disk down to 68% (was 81%)."
-    },
-    {
-      "date": "2026-04-17",
-      "from": "QA",
-      "note": "[QA CODE-VERIFIED PASS + SELF-CORRECTION] xd-380 (8f8aa63d) + xd-382 (3246c013) + xd-384 (5f9a2d8c) ready for CEO \ud83d\udfe2 device verification via xd-386. QA sweep caught defect in xd-382 (Soft/Strict inversion on excludeLocalNetworks), corrected same-session in xd-384. This is exactly the CTO-self-report \u2192 QA-catch workflow \u00a74.1 was designed for. Runtime (device) matrix in xd-386 description."
-    },
-    {
-      "date": "2026-04-17",
-      "from": "CTO",
-      "note": "xd-382 deployed (3246c013): IKEv2 Personal Hotspot fix \u2014 gated `includeAllNetworks` on Kill Switch setting (matches WG/CasperCloak pattern). Combined with xd-380 (8f8aa63d), this session closes the IKEv2 foreground+hotspot cluster. QA verification merged into xd-381. Backend duplicates in OptimizedVpnServerService.cs:691 + VpnServerService.cs:358 flagged for future cleanup (\u00a79.6 dual-file trap \u2014 iOS overrides anyway, so no immediate harm)."
-    },
-    {
-      "date": "2026-04-17",
-      "from": "CTO",
-      "note": "xd-380 fix deployed (8f8aa63d) \u2014 gated tunnel-provider reconcile on currentProtocol != .ikev2. Eliminates: (a) phantom POST /disconnect+/reconnect on IKEv2 app reopen, (b) Personal Hotspot Strict-mode flap, (c) transient \"no server name on home\" from the phantom .disconnected handler clearing connectedServer. Ready for [QA] verification (xd-381). Root cause: xd-377 (forceInvalidateStuckTunnels) cleanly flipped stale tunnel manager to .disconnected, making the pre-existing asymmetric guard in syncStateFromSystem reliably trigger."
-    },
-    {
-      "id": "note-ios-audit-2026-04-29",
-      "priority": "P2",
-      "date": "2026-04-29",
-      "title": "[iOS] Scheduled audit 2026-04-29 \u2014 Build 47 in review, all P0 blockers green, no code changes",
-      "text": "iOS scheduled-task autonomous audit (read-only, no code commits).\n\nBUILD STATE:\n\u2022 Build 47 (com.applinkoffshore.CasperVPN, v2.33, framework rename Path 1) \u2014 WAITING_FOR_REVIEW per backend session 2026-04-29 (Apple human SLA 24-48h)\n\u2022 Build 48 committed locally (2b91fae8 2026-04-28T18:24Z) \u2014 Open Source Licenses screen + framework rename disclosure. CFBundleVersion=48 in main+tunnel Info.plist. NOT yet uploaded; intended as resubmission staging if Build 47 is rejected.\n\u2022 SUBMISSION_FREEZE.lock STILL PRESENT at repo root (backend 2026-04-29 audit said REMOVED \u2014 discrepancy noted, lock blocks .github/workflows/auto-deploy.yml only, NOT iOS submissions). Consistent with current Build 47 review window.\n\nP0 SPRINT-1 BLOCKERS (per casper-ios SKILL.md) \u2014 ALL GREEN ON dropbox-local:\n\u2022 JWT 401 + refreshToken: APIClient.swift sha f85580cf, auto-refresh path verified\n\u2022 IKEv2 status observer: VPNConnectionManager.swift sha 87f880d4 \u2014 NWPathMonitor + NEVPNStatusDidChange + 98 IKEv2 refs + includeAllNetworks\n\u2022 Internet Kill Switch: KillSwitchManager.swift sha 691ef42e \u2014 NEOnDemandRule + Strict mode\n\u2022 StoreKit 2 receipt validation: SubscriptionView.swift sha aefd8e12, server-side POST /payments/validate-receipt verified PRODUCTION-GRADE per CTO 2026-04-27 audit\n\u2022 PacketTunnelProvider.wake()/sleep(): sha ff6087c8 \u2014 handleAppMessage + override wake/sleep present (xd-436 P0 fix shipped)\n\u2022 AppCoordinator.completeOnboarding(): sha b1cd9da2 \u2014 uses Self.currentOnboardingVersion=5 (no hardcode regression; xd-262/270 trap closed)\n\nBACKEND API HEALTH (curl from NL-Primary):\n\u2022 /api/health=200 47ms, /api/Plans=200 45ms\n\u2022 /api/auth/refresh=400 (POST empty body, expected), /api/user=401, /api/user/subscription=401, /api/Servers=401, /api/bandwidth/live=401, /api/multihop/connect=401, /api/payments/validate-receipt=401, /api/auth/vpn-credentials=401, /api/support/tickets=401 \u2014 all auth gates intact\n\nP3 ENV DRIFT (already noted by backend 2026-04-29):\n\u2022 caspervpn-api container env Apple__BundleId=com.caspervpn.app vs appsettings.json Apple:BundleId=com.applinkoffshore.CasperVPN. Both in AuthService.cs L721+L805 allow-list \u2014 zero functional impact. Recommend [DEVOPS] align env to canonical ASC bundleId AFTER Build 47 review clears.\n\nPENDING [iOS] HANDOFFS (audit, no actions):\n\u2022 xd-282 [iOS\u2192CEO] Apple Privacy Nutrition Labels \u2014 CEO action item, ASC manual update only\n\u2022 xd-320 [iOS\u2192CEO] Xcode Archive + TestFlight \u2014 already executed via Build 47\n\u2022 xd-388/xd-416/xd-421/xd-428 [iOS\u2192QA] \u2014 code-complete, awaiting QA validation pass (xd-421 = AC2-AC4 device test on Face ID/Touch ID hardware)\n\u2022 xd-419 [CTO\u2192iOS] missing dSYMs Sentry/openssl P3 \u2014 post-launch follow-up\n\u2022 xd-470 [CTO\u2192iOS] Archive Build 43 \u2014 SUPERSEDED by Build 47\n\u2022 xd-478 [CTO\u2192iOS] Build 44 ITMS-91065 plan \u2014 SUPERSEDED by Build 47 (Path 1 framework rename, commit 5fc3d03c, verified through pre-review 2026-04-28)\n\niOS-OWNED OPEN BACKLOG (Phase 2/3, not P0):\n\u2022 multi-hop-activation-fix \u2014 4/6 AC met, Phase 3\n\u2022 dedicated-ip-prod-readiness \u2014 1/8 AC met, Phase 3\n\u2022 vpn-background-stability-cluster \u2014 8/19 AC met, Phase 0; partially advanced by xd-436 wake/sleep fix\n\nPRE-MORTEM: If Build 47 rejected by human reviewer, Build 48 (already committed) provides Open Source Licenses transparency screen + framework rename disclosure as a resubmission upgrade. Path 3 (upstream openssl-apple cloud-sign issue #77) remains in flight as long-term fix.\n\nRISKS: (1) Build 47 human-review outcome unknown; (2) SUBMISSION_FREEZE lifecycle mismatch between backend session note and actual file state; (3) Apple__BundleId env drift cosmetic but log-confusing.\n\nPIVOT TRIGGERS: Apple App Review decision arrives \u2192 unfreeze + remove SUBMISSION_FREEZE.lock if approved, OR archive Build 48 + resubmit if rejected.\n\nDECISION: AUDIT-ONLY this session. Zero code commits. No dashboard task status flips (xd-470/xd-478 left pending until CTO/CEO formally close them post-Build 47 outcome). Confidence: 96%.",
-      "owner": "ios"
-    },
-    {
-      "id": "note-backend-audit-2026-05-02",
-      "createdAt": "2026-05-02T03:40:00Z",
-      "createdBy": "backend",
-      "severity": "P2",
-      "message": "Backend scheduled audit (read-only). Verified live: xd-350 endpoints LIVE at /api/twofactor/* (QA had wrong paths originally \u2014 /api/auth/twofactor was never the route); xd-352 D1+D2 fixes confirmed (200/clean errors); xd-492 5 stubs still 501 BUT tables exist in DB (Resellers=3 rows, ServerPlacementRecommendations=0, FraudScores=5) \u2014 real blocker is EF DbSet wiring + Stripe Connect for resellers, NOT migrations as 501 messages claim; xd-313 Stripe still TEST keys (sk_test_, pk_test_) \u2014 affiliate conversion webhook waits for prod-key rotation; xd-287 admin contacts/analytics/ab-tests now 200 in prod (no longer 501 stubs) \u2014 Legal review should re-scope to post-launch; xd-181 dedicated-IP routes 404 in prod despite 80% self-report \u2014 needs redeploy. API healthy, rate-limiting on /api/auth/login works (5\u2192429), 18/18 containers up. Image: caspervpn-api:latest built 2026-04-26."
     }
   ],
   "ctoBoard": {
