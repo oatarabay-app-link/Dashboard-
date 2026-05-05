@@ -9208,7 +9208,17 @@
       "handoffTo": null,
       "handoffNote": "QA validation is the gate before CEO marks tasks \ud83d\udfe2 verified.",
       "resolution": "NEAR-COMPLETE: 50+13+11=74 criteria upgraded self\u2192tested via API testing, code review, CI/CD workflow review, and Grafana verification. Remaining 8: website-final (6) + aso-metadata (2) \u2192 [MARKETING] xd-127.",
-      "task": "QA test plan review and acceptance criteria sign-off for launch"
+      "task": "QA test plan review and acceptance criteria sign-off for launch",
+      "qaNotes": [
+        {
+          "date": "2026-05-05",
+          "author": "qa-scheduled",
+          "result": "INCREMENTAL",
+          "summary": "Prod-smoke pass on 2026-05-05. api.caspervpn.com healthy, /api/v1/health=200, /api/v1/plans=200. Admin auth flow 200 with claude-dev creds. NEW FINDINGS: (1) /api/admin/{blog,blog/posts,blog/categories,ddos,ddos-alerts,threats,affiliates,email-campaigns} all return 404 despite blog_posts=5/blog_categories=3/DdosAlerts table populated in PROD. Frontend bundle references these paths \u2014 backend controllers missing. Handoff to [BACKEND]. (2) Memory file project_postgres_actual_creds.md is stale \u2014 documents DEV creds (caspervpn_dev/devuser) as \"actual\"; PROD is caspervpn/casper_prod (97 tables, 31 Users, 13 VpnServers, 95 Payments). (3) /api/v1/servers returns 401 unauth \u2014 verify whether intended or if public posture changed. (4) ASO + Stripe self-tested ACs cannot be QA-upgraded: ASC requires marketing access; Stripe uses placeholder keys."
+        }
+      ],
+      "qaLastVerified": "2026-05-05",
+      "qaVerdict": "INCREMENTAL"
     },
     {
       "id": "xd-115",
@@ -14969,6 +14979,12 @@
       "completedDate": null,
       "qaNotes": [
         {
+          "date": "2026-05-05",
+          "author": "qa-scheduled",
+          "result": "PASS-SOURCE / BLOCKED-DEVICE",
+          "summary": "Re-verified 2026-05-05. Source-level state unchanged since 2026-05-01. End-to-end fleet-wide WireGuard/OpenVPN tunnel validation requires physical iOS device \u2014 BLOCKED-DEVICE. Server fleet healthy: 13 VpnServers in PROD DB, /api/admin/servers responsive with auth. NL Primary container fleet 0 restarts."
+        },
+        {
           "date": "2026-05-01",
           "author": "qa-scheduled",
           "result": "PASS-SOURCE / BLOCKED-DEVICE",
@@ -14982,7 +14998,7 @@
         },
         "[2026-04-26 QA] PASS-SERVER-SIDE: xd-437 \u2713: Flask peer-add line 101 has 'persistent-keepalive 25' on NL Primary | xd-438 \u2713: /etc/ipsec.conf has dpdaction=restart, dpddelay=600s | xd-439 \u2713: OpenVPN keepalive 25 360 + service active+enabled (no longer masked) | WG: 3/3 client peers showing persistent keepalive 25s in runtime (wg show wg0) | Device-side validation (iOS Wi-Fi\u2194cellular, 30min lock test) still requires CEO/iOS QA on physical device."
       ],
-      "qaLastVerified": "2026-05-01",
+      "qaLastVerified": "2026-05-05",
       "qaVerdict": "PASS-SOURCE / BLOCKED-DEVICE"
     },
     {
@@ -15135,6 +15151,12 @@
       "completedDate": null,
       "qaNotes": [
         {
+          "date": "2026-05-05",
+          "author": "qa-scheduled",
+          "result": "PARTIAL-PASS",
+          "summary": "Re-verified 2026-05-05. /privacy=200, /terms=200, /pricing=200, /blog=200 PASS. /support still 307 with __next_error__ Next.js page (21KB body) \u2014 UNCHANGED since 2026-05-01, flagged to [WEBSITE]. /api/admin/servers count=13 (>=9 PASS). TLS certs all valid until 2026-06-24. API errors in last 5 log lines: 0. Container restarts: 0 across all services. Awaits Info.plist ITSAppUsesNonExemptEncryption verification (requires IPA)."
+        },
+        {
           "date": "2026-05-01",
           "author": "qa-scheduled",
           "result": "PARTIAL-PASS",
@@ -15148,7 +15170,7 @@
         },
         "[2026-04-26 QA] PARTIAL-PASS: https://caspervpn.com/privacy = 200 \u2713 | https://caspervpn.com/terms = 200 \u2713 | https://caspervpn.com/support = 307 \u26a0 (Next.js redirect \u2014 may flag with App Store Reviewer; recommend WEBSITE 200 or skip /support entirely on submission) | https://api.caspervpn.com/health = 200 \u2713 | VpnServers active = 13 (\u22659 \u2713) | Plans live: Free $0, Pro $9.99 (mo) / $99.99 (yr), Business $14.99/$149.99, Enterprise $49.99/$499.99 \u2014 verify against StoreKit price tiers (StoreKit IAP IDs differ from web prices). | Live containers healthy (caspervpn-api up 58m healthy, postgres healthy, all 17 containers up). | BugReports table present in caspervpn DB. | BLOCKERS for 'STORE SUBMISSION READY' note: device-side validation of xd-454/455/456 + /support 307 fix."
       ],
-      "qaLastVerified": "2026-05-01",
+      "qaLastVerified": "2026-05-05",
       "qaVerdict": "PARTIAL-PASS"
     },
     {
@@ -15785,6 +15807,25 @@
       "createdAt": "2026-05-02T05:42:36Z",
       "createdDate": "2026-05-02",
       "completedDate": null
+    },
+    {
+      "id": "xd-500",
+      "from": "[QA]",
+      "to": "[BACKEND]",
+      "priority": "P1",
+      "status": "pending",
+      "createdAt": "2026-05-05T05:49:55Z",
+      "createdDate": "2026-05-05",
+      "title": "Handoff from QA: Missing admin controllers \u2014 frontend calls 404",
+      "description": "Admin React frontend bundle references the following /api/admin/* paths that return 404 with valid auth token, despite underlying tables existing in PROD caspervpn DB:\n- /api/admin/blog (blog_posts has 5 rows, blog_categories has 3)\n- /api/admin/blog/posts\n- /api/admin/blog/categories\n- /api/admin/ddos-alerts (DdosAlerts table exists)\n- /api/admin/ddos\n- /api/admin/threats (ThreatDetections table exists)\n- /api/admin/affiliates (affiliates table exists)\n- /api/admin/email-campaigns (email_campaigns has 3 rows)\n\nCasperVPN.dll strings show only AdminSettingsController has registered routes for /api/admin/*; other expected controllers (AdminBlogController, AdminDdosController, AdminThreatsController, etc.) are NOT compiled into the production binary. Either controllers were never written or build did not include them. Memory project_admin_panel_full_qa_2026_04_02b.md claimed \"25/25 pages green\" \u2014 this is either regression or memory was overstated.\n\nIMPACT: Admin pages for blog, ddos alerts, threats, affiliates, email campaigns will display empty/error states.",
+      "qaNotes": [
+        {
+          "date": "2026-05-05",
+          "author": "qa-scheduled",
+          "result": "INCREMENTAL",
+          "summary": "Prod-smoke pass on 2026-05-05. api.caspervpn.com healthy, /api/v1/health=200, /api/v1/plans=200. Admin auth flow 200 with claude-dev creds. NEW FINDINGS: (1) /api/admin/{blog,blog/posts,blog/categories,ddos,ddos-alerts,threats,affiliates,email-campaigns} all return 404 despite blog_posts=5/blog_categories=3/DdosAlerts table populated in PROD. Frontend bundle references these paths \u2014 backend controllers missing. Handoff to [BACKEND]. (2) Memory file project_postgres_actual_creds.md is stale \u2014 documents DEV creds (caspervpn_dev/devuser) as \"actual\"; PROD is caspervpn/casper_prod (97 tables, 31 Users, 13 VpnServers, 95 Payments). (3) /api/v1/servers returns 401 unauth \u2014 verify whether intended or if public posture changed. (4) ASO + Stripe self-tested ACs cannot be QA-upgraded: ASC requires marketing access; Stripe uses placeholder keys."
+        }
+      ]
     }
   ],
   "importantNotes": [
