@@ -16322,7 +16322,8 @@
       "priority": "P1",
       "createdAt": "2026-05-12T18:30:03Z",
       "createdDate": "2026-05-12",
-      "completedDate": null
+      "completedDate": null,
+      "handoffNote": "2026-05-13 marketing scheduled run: 4 blogs STILL 404 (5.6h after xd-530 filed). No override-gate trigger (no CEO P0 nudge, P1 priority, idle < 24h). REFRAMED via new handoff (see today's xd) \u2014 blog publication is DB-backed, not file-backed. \"Redeploy\" alone won't fix this. Both handoffs now point to the real upsert / pipeline-build ask."
     },
     {
       "id": "xd-531",
@@ -16383,9 +16384,51 @@
       "createdAt": "2026-05-12T20:00:23Z",
       "createdDate": "2026-05-12",
       "completedDate": null
+    },
+    {
+      "id": "xd-536",
+      "from": "[MARKETING]",
+      "to": "[WEBSITE]",
+      "title": "Handoff from MARKETING: REFRAMED: 4 blog 404s need DB upsert (not redeploy) \u2014 pipeline is Prisma-backed",
+      "description": "CORRECTION to xd-512/518/522/525/530 framing. After tracing website/app/blog/[slug]/page.tsx this session, confirmed the blog renderer reads from Prisma BlogPost (DB), NOT from marketing/blog/*.md files. Deploying the Next.js app does NOT ingest .md files. Live BlogPost rows in prod = 17 (verified via GET https://caspervpn.com/api/blog?limit=100). The 17 live posts must have been inserted via /admin/blog UI or /api/admin/blog POST at some prior point. CURRENT GAP \u2014 4 posts not in DB: best-vpn-china, vpn-with-kill-switch, vpn-lebanon, best-vpn-lebanon. \n\nREAL ASK (pick one): (A) An admin user signs into /admin/blog and creates 4 posts, pasting the 4 .md files in. (B) Write a one-shot ingestion script (similar shape to website/scripts/seed-blog-posts.ts) that calls prisma.blogPost.upsert() for these 4 slugs and run it on the prod DB. (C) Build a /api/admin/blog/import endpoint that POSTs marketing/blog/<slug>.md \u2192 DB row, and a server-key auth so scheduled marketing sessions can ingest without an admin cookie. \n\nFILES PRESENT (origin/development, sizes verified 2026-05-13): marketing/blog/best-vpn-china.md (14,782B), vpn-with-kill-switch.md (15,099B), vpn-lebanon.md (15,106B), best-vpn-lebanon.md (17,659B). \n\nPRIORITY \u2014 P2 not P0: (a) no CEO P0 nudge specific to blog 404s, (b) pricing-drift (P0) already resolved live, (c) these 4 posts are SEO-supplemental, not load-bearing. Override gate from xd-529 not met \u2192 marketing will NOT direct-push.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-05-13T00:07:41Z",
+      "createdDate": "2026-05-13",
+      "completedDate": null
+    },
+    {
+      "id": "xd-537",
+      "from": "[MARKETING]",
+      "to": "[CTO]",
+      "title": "Handoff from MARKETING: Process gap: marketing/blog/*.md \u2192 live /blog/<slug> requires manual DB upsert (no automation)",
+      "description": "Discovered during the 2026-05-13 marketing scheduled run. Every blog post in marketing/blog/ requires manual ingestion into the Prisma BlogPost table to become a live /blog/<slug>. Five recent .md commits (best-vpn-china, vpn-with-kill-switch, vpn-lebanon, best-vpn-lebanon, and one more not yet inventoried) sit in the repo with no path to publication. \n\nThe marketing skill (caspervpn-marketing) historically treated \"ship to dropbox-local\" + \"trigger deploy-website.yml\" as the publication step. That assumption is wrong. Codify this in CLAUDE.md and/or build the automation. \n\nRecommended fixes (any one closes the gap): (1) Add a build-time Next.js page that statically generates from marketing/blog/*.md (move away from DB-backed blog entirely \u2014 simplest, version-controlled, no auth needed). (2) Add a deploy-time step in .github/workflows/deploy-website.yml that runs a `tsx scripts/ingest-blog.ts` after the container is up, which calls prisma.blogPost.upsert() for every .md file. (3) Build /api/admin/blog/import with a service-key auth path for scheduled MARKETING sessions. \n\nReco: option (1) is the lowest-friction fix and matches how nordvpn-vs-caspervpn.md and 4 other comparison .md files are already serving content (some manual sync happened in the past). Marketing skill will be updated this session to reflect the current reality so future sessions do not refile the same wrong handoff.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-05-13T00:07:41Z",
+      "createdDate": "2026-05-13",
+      "completedDate": null
+    },
+    {
+      "id": "xd-538",
+      "from": "[MARKETING]",
+      "to": "[WEBSITE]",
+      "title": "Handoff from MARKETING: Companion to xd-528 (P2): seed.ts has BOTH pricing drift AND QRE \"available now\" drift",
+      "description": "Extending xd-528 (P3) scope. website/scripts/seed.ts contains TWO drift surfaces, not one: \n(a) Lines 79-93: caspervpn-vs-nordvpn-vs-expressvpn-2024 blog post block \u2014 $5.99/$49.99 + \"50% lower pricing\" + 2024-stale slug. Already covered by xd-528 (Option A: delete this block). \n(b) Lines 105-117: caspervpn-launches-caspercloak-protocol press release \u2014 states \"CasperCloak is the first consumer VPN protocol to implement NIST-approved post-quantum cryptography\" and \"CasperCloak is available now\" with Kyber1024/Quantum Standard/Enhanced level language. This contradicts the QRE = \"coming soon\" rule (marketing skill \u00a7Messaging Rules #2). Conditional live impact ONLY if `prisma db seed` runs against prod; if so, the press-release post is currently serving false claims. Status currently: not in live BlogPost set, so dormant \u2014 but one accidental `prisma db seed` flip in CI would publish it. \n\nASK: delete the caspercloak-protocol press-release block from seed.ts entirely (no current marketing/blog/ replacement; quantum-encryption-explained.md already covers QRE accurately). Bump combined seed.ts cleanup to P2 \u2014 the QRE drift is a brand-safety concern, not just SEO hygiene.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-05-13T00:07:41Z",
+      "createdDate": "2026-05-13",
+      "completedDate": null
     }
   ],
   "importantNotes": [
+    {
+      "date": "2026-05-13",
+      "priority": "P2",
+      "category": "MARKETING",
+      "text": "[2026-05-13 MARKETING] Scheduled-run verification + structural finding. PRICING: /pricing /faq /download confirmed CLEAN ($9.99/$59.99/$149.99 + save 50%). xd-527 still holds. BLOG 404s: 4 posts still missing on caspervpn.com (best-vpn-china, vpn-with-kill-switch, vpn-lebanon, best-vpn-lebanon). ROOT CAUSE FOUND \u2014 blog is DB-backed (Prisma BlogPost), NOT file-backed. Redeploying the Next.js app does NOT publish marketing/blog/*.md files. Previous handoffs xd-512/518/522/525/530 to [WEBSITE] were structurally wrong (asked for \"redeploy\" when the actual ask is \"DB upsert\"). FILED today: (a) reframed handoff to [WEBSITE] with 3 concrete options for DB ingestion, (b) handoff to [CTO] requesting pipeline automation, (c) companion handoff bumping seed.ts cleanup P3\u2192P2 (NEW: QRE \"available now\" press-release drift in addition to known pricing drift). Override gate from xd-529 NOT met \u2014 marketing did NOT direct-push. Zero production touches this session. Skill updated to codify the pipeline reality."
+    },
     {
       "date": "2026-05-11",
       "text": "[2026-05-11 MARKETING/P0 \u2014 scheduled-run nudge #2] Pricing drift confirmed STILL LIVE on caspervpn.com/pricing as of 2026-05-11 (curl returns $12.99/$64.99/$199.99 + 'save 58%'). StoreKit/ASC ground truth = $9.99/$59.99/$149.99 + 'save 50%'. Patch staged 2026-05-10 (8 files, 14 occurrences). Today's state report at Dropbox/Marketing-Reports/MARKETING-STATE-REPORT-2026-05-11b.md enumerates 4 CEO decision options (A approve patch, B raise StoreKit, C hybrid, D defer). Pre-mortem flags Stripe STRIPE_PRICE_IDS env coupling \u2014 verify before deploy: `docker exec caspervpn-api env | grep STRIPE_PRICE`. Also: new SEO cornerstone marketing/blog/no-log-vpn.md (14K/mo, P0 Cluster 3) pushed to production this run; no dashboard task \u2014 it's ongoing seo-content work, the seo-content task is already 8/8 AC met."
@@ -17326,18 +17369,6 @@
     "addedAt": "2026-04-14T23:09:15Z"
   },
   "dashboardSessionLog": [
-    {
-      "id": "ds-010",
-      "date": "2026-05-13",
-      "timestamp": "2026-05-13T00:07:41Z",
-      "dept": "[MARKETING]",
-      "change": "Reframed blog-404 handoffs (DB-backed pipeline finding), expanded seed.ts cleanup scope",
-      "filesChanged": [
-        "data.json"
-      ],
-      "structureAffected": false,
-      "backwardCompatible": true
-    },
     {
       "date": "2026-05-06T23:19:38Z",
       "operator": "cto",
