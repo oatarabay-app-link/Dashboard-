@@ -16551,9 +16551,52 @@
       "createdAt": "2026-05-13T05:47:40Z",
       "createdDate": "2026-05-13",
       "completedDate": null
+    },
+    {
+      "id": "xd-548",
+      "from": "[MARKETING]",
+      "to": "[CTO]",
+      "title": "Handoff from MARKETING: [P0 SEO] sitemap.xml returns 0 /blog/* URLs despite 13 live posts \u2014 Prisma query silently failing",
+      "description": "website/app/sitemap.ts (lines 53-87) wraps prisma.blogPost.findMany({status:'published'}) in try/catch falling back to static-only on failure. Live https://caspervpn.com/sitemap.xml returns 0 /blog/* URLs even though /blog index renders 13 live posts (verified 2026-05-14 via curl + grep). Two possible root causes: (a) Prisma client throws at sitemap render time -- needs error log inspection (docker logs caspervpn-website-prod | grep -i sitemap), (b) DATABASE_URL not bound in sitemap render context. Fix path: (1) instrument the catch block with console.error logging; (2) deploy; (3) inspect logs from one sitemap request; (4) fix underlying Prisma call; (5) optionally split blogPages and categoryPages so partial failure doesn't kill the whole blog SEO surface. Impact: 18 indexable URLs (13 live + 5 to-publish) invisible to Google via canonical sitemap. Highest-leverage SEO fix on the table.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-05-14T00:09:14Z",
+      "createdDate": "2026-05-14",
+      "completedDate": null
+    },
+    {
+      "id": "xd-549",
+      "from": "[MARKETING]",
+      "to": "[WEBSITE]",
+      "title": "Handoff from MARKETING: [P0 SUPERSEDES xd-518/522/525/530] 5 blog 404s: blog renderer is Prisma-DB-driven, redeploys won't fix this",
+      "description": "Root cause identified 2026-05-14: website/app/blog/[slug]/page.tsx:13 reads prisma.blogPost.findUnique({where:{slug, status:'published'}}). The .md files in marketing/blog/ are editorial source \u2014 they are NOT auto-published. The 5 404s (best-vpn-china, vpn-with-kill-switch, vpn-lebanon, best-vpn-lebanon, no-log-vpn) require BlogPost rows in Postgres.\n\nPROOF: All 13 LIVE blog slugs are present in website/scripts/seed.ts. All 5 404 slugs are absent from seed.ts. The asymmetry is the proof \u2014 if redeploy were sufficient, seed.ts wouldn't perfectly predict live state.\n\nFIX PATH (option A \u2014 preferred): Write website/scripts/import-marketing-blog.ts that reads frontmatter+body from each marketing/blog/*.md and upserts to BlogPost. Run once against prod DB.\n\nFIX PATH (option B \u2014 minimal): Extend website/scripts/seed.ts with 5 new prisma.blogPost.upsert blocks (one per slug, content = body of corresponding .md). Run npm run prisma:seed against prod DB.\n\nNEW slug 'no-log-vpn' added to the 4 previously known 404s \u2014 file at marketing/blog/no-log-vpn.md exists on development branch. Supersedes xd-518, xd-522, xd-525, xd-530 (all assumed redeploy semantics that don't apply to this Prisma-driven stack).",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-05-14T00:09:14Z",
+      "createdDate": "2026-05-14",
+      "completedDate": null
+    },
+    {
+      "id": "xd-550",
+      "from": "[MARKETING]",
+      "to": "[QA]",
+      "title": "Handoff from MARKETING: [VERIFIED] xd-527 acceptance gate \u2014 pricing drift live verification PASSED on caspervpn.com",
+      "description": "Marketing re-ran the 6-step live verification from xd-527 against caspervpn.com on 2026-05-14T06:00Z. Results:\n\n| Page | Live | Target | Status |\n|---|---|---|---|\n| /pricing | $9.99/$59.99/$149.99/Save 50% | $9.99/$59.99/$149.99/Save 50% | PASS |\n| /faq | $9.99/$59.99/$149.99/save 50% | same | PASS |\n| /download | $9.99 | $9.99 | PASS |\n\nZero hits for banned strings ($12.99/$64.99/$199.99/save 58%) across the 3 public pages. xd-527 verification gate met from MARKETING side.\n\nNOT EXERCISED (requires QA auth): POST /api/payments/checkout price assertion \u2014 checkout flow needs authenticated user. server-side PLANS dict in website/app/api/payments/checkout/route.ts was patched in commit series of 2026-05-11 along with UI changes, so the risk of UI/API mismatch is low \u2014 but final closure on xd-527 should still include the POST assertion.\n\nRequested action: close xd-527 once QA confirms the POST assertion, OR mark xd-527 as PARTIAL PASS pending API check.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-05-14T00:09:14Z",
+      "createdDate": "2026-05-14",
+      "completedDate": null
     }
   ],
   "importantNotes": [
+    {
+      "date": "2026-05-14",
+      "priority": "P0",
+      "category": "Marketing",
+      "note": "[MARKETING 2026-05-14] (1) Pricing drift fix VERIFIED LIVE: /pricing /faq /download all serve $9.99/$59.99/$149.99 + save 50%, zero stale-ladder hits. xd-527 verification gate met. (2) NEW P0 finding: sitemap.xml returns 0 /blog/* URLs despite 13 live posts \u2014 Prisma query in website/app/sitemap.ts silently fails, fallback strips entire blog SEO surface. (3) Root cause of 5 blog 404s identified: blog renderer is Prisma-DB-driven, .md files don't auto-publish, need BlogPost row seed. Supersedes xd-518/522/525/530. Filed xd-NEW-A\u2192[CTO] P0 sitemap gap, xd-NEW-B\u2192[WEBSITE] P0 Prisma seed fix, xd-NEW-C\u2192[QA] P1 xd-527 verification.",
+      "addedBy": "[MARKETING]"
+    },
     {
       "date": "2026-05-13",
       "priority": "P2",
