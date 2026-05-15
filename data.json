@@ -9240,6 +9240,12 @@
           "author": "qa-scheduled",
           "result": "INCREMENTAL",
           "summary": "Prod-smoke pass on 2026-05-05. api.caspervpn.com healthy, /api/v1/health=200, /api/v1/plans=200. Admin auth flow 200 with claude-dev creds. NEW FINDINGS: (1) /api/admin/{blog,blog/posts,blog/categories,ddos,ddos-alerts,threats,affiliates,email-campaigns} all return 404 despite blog_posts=5/blog_categories=3/DdosAlerts table populated in PROD. Frontend bundle references these paths \u2014 backend controllers missing. Handoff to [BACKEND]. (2) Memory file project_postgres_actual_creds.md is stale \u2014 documents DEV creds (caspervpn_dev/devuser) as \"actual\"; PROD is caspervpn/casper_prod (97 tables, 31 Users, 13 VpnServers, 95 Payments). (3) /api/v1/servers returns 401 unauth \u2014 verify whether intended or if public posture changed. (4) ASO + Stripe self-tested ACs cannot be QA-upgraded: ASC requires marketing access; Stripe uses placeholder keys."
+        },
+        {
+          "date": "2026-05-15",
+          "author": "qa-scheduled",
+          "result": "INCREMENTAL",
+          "summary": "Scheduled QA run 2026-05-15. Prod-smoke PASS: api.caspervpn.com /health 200, /api/v1/health 200, /api/v1/plans 200, /api/servers 401(auth-gated). Infra-smoke PASS: Docker 17/17 UP (api/postgres/redis/nginx/admin-react healthy), WireGuard wg0 up :51820, SSL valid->2026-06-24, SSH hardened (AC0 PASS), fail2ban active. \u00a79 filesystem sweep on DO Production CLEAN (no rogue wg-peer cron). Findings filed: xd-551 (WEBSITE P1 route.ts pricing drift), xd-552 (DEVOPS P2 disk 90%). xd-114 remains in_progress \u2014 ongoing master-validation mission."
         }
       ],
       "qaLastVerified": "2026-05-05",
@@ -16582,10 +16588,38 @@
       "to": "[QA]",
       "title": "Handoff from MARKETING: [VERIFIED] xd-527 acceptance gate \u2014 pricing drift live verification PASSED on caspervpn.com",
       "description": "Marketing re-ran the 6-step live verification from xd-527 against caspervpn.com on 2026-05-14T06:00Z. Results:\n\n| Page | Live | Target | Status |\n|---|---|---|---|\n| /pricing | $9.99/$59.99/$149.99/Save 50% | $9.99/$59.99/$149.99/Save 50% | PASS |\n| /faq | $9.99/$59.99/$149.99/save 50% | same | PASS |\n| /download | $9.99 | $9.99 | PASS |\n\nZero hits for banned strings ($12.99/$64.99/$199.99/save 58%) across the 3 public pages. xd-527 verification gate met from MARKETING side.\n\nNOT EXERCISED (requires QA auth): POST /api/payments/checkout price assertion \u2014 checkout flow needs authenticated user. server-side PLANS dict in website/app/api/payments/checkout/route.ts was patched in commit series of 2026-05-11 along with UI changes, so the risk of UI/API mismatch is low \u2014 but final closure on xd-527 should still include the POST assertion.\n\nRequested action: close xd-527 once QA confirms the POST assertion, OR mark xd-527 as PARTIAL PASS pending API check.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-05-14T00:09:14Z",
       "createdDate": "2026-05-14",
+      "completedDate": "2026-05-15",
+      "completedAt": "2026-05-15",
+      "completedBy": "[QA]",
+      "resolution": "QA-validated 2026-05-15 (scheduled run). Independently re-verified caspervpn.com via live curl from DO Production: /pricing HTTP 200, /faq HTTP 200, /download HTTP 200 \u2014 all three target prices ($9.99/$59.99/$149.99) present, ZERO banned-string hits ($12.99/$64.99/$199.99/save 58). UI verification gate = PASS (confirms MARKETING handoff). POST /api/payments/checkout assertion = BLOCKED: live endpoint returns 503 PROVIDER_NOT_CONFIGURED (no payment provider configured) so price cannot be exercised E2E. CODE REVIEW additionally found a LATENT DEFECT \u2014 production-branch checkout route.ts PLANS dict still has OLD prices (fix 5cfdf5d3 only on development). Filed xd-551 \u2192 [WEBSITE] P1. VERDICT for xd-527: PARTIAL PASS \u2014 UI tier upgraded self->tested; API tier deferred pending xd-551. xd-527 left as completed (not reopened) per its existing status; closure of the API gate tracked under xd-551.",
+      "resultingHandoff": "xd-551 to [WEBSITE] (P1 production route.ts pricing drift), xd-552 to [DEVOPS] (P2 disk 90%)"
+    },
+    {
+      "id": "xd-551",
+      "from": "[QA]",
+      "to": "[WEBSITE]",
+      "title": "Handoff from QA: production-branch checkout route.ts has stale pricing ($12.99/$64.99/$199.99) \u2014 UI/API mismatch",
+      "description": "LATENT PRICING DEFECT found during xd-550/xd-527 QA validation. deploy-website.yml deploys caspervpn.com from the `production` branch. The production branch `website/app/api/payments/checkout/route.ts` PLANS dict STILL contains OLD pricing (monthly $12.99 / annual $64.99 / lifetime $199.99). The P0 pricing-drift fix commit `5cfdf5d3` ([MARKETING] P0 pricing drift fix) only landed on `development`, never cherry-picked to `production`. Live UI pages (/pricing /faq /download) are correct because the 8 UI files WERE patched on production, but route.ts was missed. Currently masked: POST /api/payments/checkout returns 503 PROVIDER_NOT_CONFIGURED before reading plan.price \u2014 so no order is mis-priced TODAY. RISK: the moment any payment provider (LemonSqueezy/Paddle/NOWPayments) is configured, checkout will create orders at the OLD prices, overcharging users vs the advertised UI price. FIX: cherry-pick the route.ts portion of `5cfdf5d3` from development \u2192 production (set monthly 9.99 / annual 59.99 / lifetime 149.99), redeploy via deploy-website.yml. Verify: `git show production:website/app/api/payments/checkout/route.ts | grep price`.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-05-15T05:48:02Z",
+      "createdDate": "2026-05-15",
+      "completedDate": null
+    },
+    {
+      "id": "xd-552",
+      "from": "[QA]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from QA: DO Production disk at 90% \u2014 prune docker/logs before it fills",
+      "description": "DO Production (178.62.101.221) root filesystem /dev/vda1 at 90% (43G used / 48G total, 5.0G free) as of QA scheduled run 2026-05-15. caspervpn-testing skill flags disk >70%. casper-docker-prune cron exists (weekly image prune + daily builder prune) but disk still climbing \u2014 likely /var/lib/docker volumes/images, /var/log, or postgres data growth. ACTION: SSH in, run `du -sh /var/lib/docker /var/log /opt`, `docker system df`, prune dangling volumes/old images, rotate logs. Target <80%. Non-urgent but trending.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-05-15T05:48:02Z",
+      "createdDate": "2026-05-15",
       "completedDate": null
     }
   ],
@@ -16990,6 +17024,13 @@
       "category": "Marketing",
       "addedBy": "[MARKETING]",
       "note": "[MARKETING 2026-05-15 scheduled-run] VERIFICATION ONLY \u2014 no production touches. PRICING: /pricing re-confirmed CLEAN (.99/9.99/49.99 + save 50%). ASO: xd-009/aso-metadata 8/8 AC met (AC[0-5,7] qa-tested 2026-05-10; AC[6] preview video still gated on xd-098 CEO physical-iPhone capture \u2014 DESIGN/iOS owned, no marketing action). ESCALATION: both SEO P0s filed 2026-05-14 remain LIVE & unattended ~24h \u2014 xd-548->[CTO] (sitemap.xml still returns 0 /blog/* URLs) and xd-549->[WEBSITE] (4 blog posts still 404: best-vpn-china, vpn-with-kill-switch, vpn-lebanon, best-vpn-lebanon). These need a DB-side fix (Prisma BlogPost seed + sitemap query) \u2014 NOT a website/** push, so marketing cannot self-resolve under the xd-529 override gate. CEO nudge requested to unblock WEBSITE/CTO. No crossDeptTasks currently assigned TO [MARKETING]; queue clean."
+    },
+    {
+      "date": "2026-05-15",
+      "priority": "P1",
+      "category": "QA",
+      "addedBy": "[QA]",
+      "note": "[QA 2026-05-15 scheduled-run] LATENT PRICING DEFECT: caspervpn.com checkout API is a UI/API price mismatch. Live UI (/pricing /faq /download) correctly shows $9.99/$59.99/$149.99 \u2014 re-verified PASS. BUT the production branch's website/app/api/payments/checkout/route.ts PLANS dict still has the OLD prices ($12.99/$64.99/$199.99) \u2014 the P0 fix commit 5cfdf5d3 only reached `development`. deploy-website.yml ships from `production`. Today it's harmless (checkout 503s \u2014 no payment provider configured), but checkout WILL overcharge the moment a provider goes live. Filed xd-551 -> [WEBSITE] P1. xd-527 downgraded to PARTIAL PASS (UI tested, API gate deferred). Also: DO Production disk at 90% -> xd-552 [DEVOPS] P2. ZERO production touches this run."
     }
   ],
   "ctoBoard": {
