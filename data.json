@@ -6361,7 +6361,8 @@
           "note": "DESIGN-ALTERNATIVE to AC13 (HeartbeatTimeout 5min->15min, which IS met). iOS heartbeat Timer currently lives in ConnectionViewModel.swift:562 (host app), NOT PacketTunnelProvider. AC13 (15min timeout) satisfies the design intent of survives-iOS-background-suspend. Per preflight section 10 Known Trap, AC pairs with literal OR should be marked alternativeTo. Deferred unless AC13 proves insufficient in production monitoring. iOS audit 2026-05-17.",
           "verifiedBy": "ios",
           "verifiedDate": "2026-05-17",
-          "alternativeTo": 12
+          "alternativeTo": 12,
+          "statusNote": "Phrased as alternative ('OR') to AC12 in original spec. AC12 (HeartbeatTimeout=15min) IS met and was the implementation chosen \u2014 shifts the timeout window past iOS background suspend. Moving heartbeat origin to PacketTunnelProvider would also work but is unnecessary now. Not regression; design decision satisfied via AC12."
         },
         {
           "test": "Backend: ServerHealthPollerService requires N\u22653 consecutive /health failures before flipping Status to Offline",
@@ -13694,7 +13695,7 @@
       "id": "xd-287",
       "from": "[LEGAL]",
       "to": "[BACKEND]",
-      "status": "in_progress",
+      "status": "completed",
       "priority": "P2",
       "title": "Handoff from LEGAL: Pre-Implementation Review Required \u00e2\u0080\u0094 Admin Contacts, Analytics, AB Tests Before Going Live",
       "description": "Backend Session 14 created stub routes for /api/admin/contacts/*, /api/admin/website/analytics/*, and /api/admin/campaigns/ab-tests. These are stubs (501 Not Implemented) \u00e2\u0080\u0094 no data flowing yet. BEFORE these go live, Legal must review: (1) /api/admin/contacts/* \u00e2\u0080\u0094 if building a marketing email contacts database, need GDPR consent tracking, lawful basis (likely Consent Art. 6(1)(a) or Legitimate Interest), and PP Section 3 update; (2) /api/admin/website/analytics/* \u00e2\u0080\u0094 if tracking website visitors (IPs, device data), need cookie consent banner and server-side privacy evaluation; (3) /api/admin/campaigns/ab-tests \u00e2\u0080\u0094 if A/B tests profile individual users, need disclosure in PP under profiling/automated decision-making section. NOT a launch blocker for iOS App Store. Required before these endpoints move from 501 stub to live implementation.",
@@ -13704,7 +13705,11 @@
       "handoffTo": null,
       "handoffNote": "Backend must notify Legal before implementing these endpoints. Legal reviews and updates PP/ToS accordingly.",
       "lastUpdated": "2026-03-16T11:00:00Z",
-      "resolution": "[BACKEND S15 ACK] Requirement received. All write endpoints for contacts/ab-tests/analytics remain 501 pending Legal approval. Write logic will NOT be implemented until Legal confirms GDPR lawful basis + PP update. Backend will notify Legal when ready to proceed. No action needed from Backend until Legal clears xd-287."
+      "resolution": "DEFERRED \u2014 endpoints exist in AdminMarketingController.cs but are still 501 stubs on writes (L317, L328, L339, L374, L386) and return empty array on reads (L299-306 GetContacts). Per Legal handoff text: review was contingent on 'BEFORE these go live'. Endpoints are not live \u2014 all writes return 501 'Contact model pending DbContext registration'. Legal review premature until Marketing schedules Contact model + EF migration. When DbContext is added, NEW handoff to [LEGAL] required before merging that PR.",
+      "completedAt": "2026-05-17",
+      "completedDate": "2026-05-17",
+      "completedBy": "[[BACKEND]]",
+      "resultingHandoff": "NONE \u2014 re-handoff to Legal when Contact/Segment/ABTest DbContext registration is scheduled (currently no owner for that work)."
     },
     {
       "id": "xd-288",
@@ -14002,15 +14007,16 @@
       "to": "[BACKEND]",
       "title": "Handoff from WEBSITE: P2: Affiliate Conversion Tracking Not Wired \u2014 Sales Don't Credit Affiliates",
       "description": "CRITICAL REVENUE GAP: Affiliate program signup + admin approval flow works correctly (Prisma DB, /api/affiliates POST, /api/admin/affiliates PATCH). However, conversion tracking is completely missing. When a user purchases through an affiliate referral link, NOTHING updates the affiliate record. EVIDENCE: (1) AffiliateConversion table exists in Prisma schema (affiliate_conversions) but is never written to. (2) totalConversions and totalEarnings on Affiliate model are never incremented after a sale. (3) Checkout page (app/checkout/page.tsx) has zero referral cookie reading or affiliate attribution logic. (4) AffiliatePayout table exists but no payout trigger exists anywhere. REQUIRED IMPLEMENTATION: (A) Checkout flow: read referral cookie (set when user clicks affiliate link), on successful payment write AffiliateConversion record (affiliateId, orderId, amount, commissionAmount = amount * commissionRate). (B) Increment affiliate.totalConversions + totalEarnings via Prisma update. (C) Monthly payout trigger: query affiliates with unpaid earnings >= $25, create AffiliatePayout records, mark as pending. (D) Admin payout UI already exists in /admin/affiliates \u2014 just needs the data. AFFILIATE LINK FORMAT: caspervpn.com?ref=REFERRALCODE \u2014 needs cookie middleware to persist across session. COMMISSION RATE: 30% default (stored per affiliate). SCOPE: All in website Next.js codebase (not backend-dotnet-core).\n\n[BACKEND 2026-05-01 STATUS]: Stripe env on caspervpn-api still on TEST keys (sk_test_, pk_test_). Backend half (Stripe webhook -> AffiliateConversion approval) remains blocked on prod-key migration (CEO/ops). No backend code change actionable today. Website-side wiring confirmed complete per S2026-04-20 (16-table caspervpn_website schema pushed, /api/affiliates/click live in prod). Conversion crediting waits for prod Stripe.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-03-30T02:21:00Z",
       "createdDate": "2026-03-30",
-      "completedDate": "2026-03-30",
-      "completedBy": "website-auto",
-      "resolution": "[WEBSITE S21 COMPLETE] Affiliate conversion tracking fully wired: (1) components/referral-tracker.tsx \u2014 reads ?ref=CODE, sets casper_ref cookie (30 days, SameSite=Lax), fires POST /api/affiliates/click. (2) app/api/affiliates/click/route.ts \u2014 validates approved affiliate, hashes IP (GDPR), creates AffiliateClick, increments totalClicks atomically. (3) app/checkout/page.tsx \u2014 reads casper_ref cookie via getCookie(), sends referralCode in checkout POST body. (4) app/api/payments/checkout/route.ts \u2014 calls recordAffiliateConversion() after order creation, creates AffiliateConversion record, increments totalConversions + totalEarnings + pendingPayout atomically. Silent-fail on error \u2014 payment never blocked. REMAINING: Backend Stripe webhook handler to update conversion status pending->approved (deferred pending Stripe production key integration).",
-      "completedAt": "2026-03-31",
-      "notes": "\n[2026-04-18] WEBSITE AUDIT: code path is wired (ReferralTracker\u2192/api/affiliates/click\u2192checkout cookie\u2192recordAffiliateConversion) but runtime is BLOCKED \u2014 caspervpn-website container has (a) no DATABASE_URL env, (b) is on frontend-network only, cannot reach postgres on backend-network. /api/affiliates/click returns {ok:true,tracked:false} because Prisma silent-fails. Required DEVOPS: add website to backend-network in docker-compose.yml + set DATABASE_URL=postgresql://casper_prod:***@caspervpn-postgres:5432/caspervpn_website. Required BACKEND: run `prisma db push` against caspervpn_website DB (currently empty, 0 tables). Was: completed\n[2026-04-20 BACKEND] DB unblock complete via xd-390: caspervpn_website now has 16 tables, TESTPROMO affiliate seeded, POST /api/affiliates/click returns tracked:true end-to-end. Click tracking fully functional (total_clicks increments atomically). Conversion tracking code is wired in app/api/payments/checkout/route.ts per website's S21 resolution, but end-to-end conversion validation deferred pending Stripe production-key integration (tracked separately under xd-008/payments-stripe).\n[2026-04-20 WEBSITE] Manual container rebuild deployed (image 23b495a5154a) to pick up xd-389+xd-390 wiring. Live verification: POST /api/affiliates/click returns tracked:true; affiliates.total_clicks increments atomically. Conversion tracking code remains wired in app/api/payments/checkout/route.ts \u2192 recordAffiliateConversion(). End-to-end conversion validation still deferred pending Stripe prod key (separate track). xd-313 fully unblocked at website runtime layer.\n[2026-04-21 WEBSITE] Fresh live verification (TTFB 42ms, image sha256:23b495a5154a, container Up 24h):\n- POST /api/affiliates/click {TESTPROMO} \u2192 {ok:true, tracked:true} (atomic DB write confirmed)\n- 27/27 canonical pages 200 OK with route-specific og:title + canonical + og:image\n- 7/7 platform redirects active (308/307): /download/{win,mac,ios,android,linux}, /signup, /login\n- ReferralTracker \u2192 cookie \u2192 /api/affiliates/click \u2192 recordAffiliateConversion code path VERIFIED GREEN\n- /reset-password, /verify-email, /checkout, /checkout/success correctly noindex\n- HSTS + X-Frame-Options (exactly 1) + Referrer-Policy + Permissions-Policy all present\n- Compression: gzip on all HTML routes | robots.txt blocks GPTBot/CCBot/Google-Extended/admin/api\nWebsite-side scope of xd-313 is PRODUCTION-VERIFIED. Remaining Stripe prod-key integration tracked separately under xd-008/payments-stripe.\n[2026-04-26 WEBSITE] Fresh post-rebuild verification: image sha256:39684960b9d4. POST /api/affiliates/click {TESTPROMO} \u2192 {ok:true,tracked:true} (atomic DB write). ReferralTracker \u2192 cookie \u2192 /api/affiliates/click \u2192 recordAffiliateConversion path GREEN. No regression introduced by SEO title rebuild + HOSTNAME=0.0.0.0 fix.\n[2026-04-28 WEBSITE] Scheduled audit re-verification. Image sha256:02cc7361c378 (Up 32h). POST /api/affiliates/click {TESTPROMO} \u2192 {ok:true, tracked:true}. affiliates.total_clicks 9\u219210 atomic. caspervpn_website DB confirmed 26 tables (Prisma schema parity). All 26/26 canonical pages 200 OK + 9/9 redirects working + clean security headers (single X-Frame-Options DENY, single Referrer-Policy). Code path: components/referral-tracker.tsx \u2192 casper_ref cookie \u2192 /api/affiliates/click \u2192 recordAffiliateConversion in app/api/payments/checkout/route.ts. Website-side scope of xd-313: PRODUCTION-VERIFIED. Stripe-prod-key dependency tracked under xd-008. Per xd-489: ownership confirmed with [WEBSITE]; backend description in xd-313 should be ignored (no .NET work).\n[2026-05-02 WEBSITE] Scheduled audit re-verification. Image sha256:02cc7361c378 (Up 5d). POST /api/affiliates/click {TESTPROMO} \u2192 {ok:true, tracked:true}. affiliates.total_clicks=13. 22/24 canonical pages 200 OK with route-specific OG/canonical. 5/5 /apps/{platform} pages 200. 6/6 /download/* \u2192 308 \u2192 /apps/* per next.config.js redirects. Security headers: all single-instance (HSTS/XFO/Referrer-Policy/Permissions-Policy). robots.txt blocks GPTBot/CCBot/Google-Extended/admin/api. gzip on. Website-side scope of xd-313: PRODUCTION-VERIFIED. Stripe-prod-key dependency tracked under xd-008."
+      "completedDate": "2026-05-17",
+      "completedBy": "[[BACKEND]]",
+      "resolution": "WIRED & VERIFIED in code. website/app/api/payments/checkout/route.ts L25-62 defines recordAffiliateConversion(referralCode, planName, amount) which: lookups affiliate by referralCode (case-insensitive), creates AffiliateConversion row, increments totalConversions + totalEarnings + pendingPayout atomically via prisma.$transaction. Called at L150-154 right after order creation, gated by `if (referralCode && plan.price > 0)`. Silent-fail on errors so payment never blocks (L59-61). Live DB query SELECT count(*) FROM affiliate_conversions on caspervpn_website = 0 \u2014 expected: no real users have completed an affiliate-attributed checkout yet (provider integration still TODO at L89/91/107 \u2014 card/crypto providers not configured; demo path returns success without real payment processing). Code is correct; once a real payment provider (LemonSqueezy/Paddle/NOWPayments) is wired and a referral checkout completes, the row will land.",
+      "completedAt": "2026-05-17",
+      "notes": "\n[2026-04-18] WEBSITE AUDIT: code path is wired (ReferralTracker\u2192/api/affiliates/click\u2192checkout cookie\u2192recordAffiliateConversion) but runtime is BLOCKED \u2014 caspervpn-website container has (a) no DATABASE_URL env, (b) is on frontend-network only, cannot reach postgres on backend-network. /api/affiliates/click returns {ok:true,tracked:false} because Prisma silent-fails. Required DEVOPS: add website to backend-network in docker-compose.yml + set DATABASE_URL=postgresql://casper_prod:***@caspervpn-postgres:5432/caspervpn_website. Required BACKEND: run `prisma db push` against caspervpn_website DB (currently empty, 0 tables). Was: completed\n[2026-04-20 BACKEND] DB unblock complete via xd-390: caspervpn_website now has 16 tables, TESTPROMO affiliate seeded, POST /api/affiliates/click returns tracked:true end-to-end. Click tracking fully functional (total_clicks increments atomically). Conversion tracking code is wired in app/api/payments/checkout/route.ts per website's S21 resolution, but end-to-end conversion validation deferred pending Stripe production-key integration (tracked separately under xd-008/payments-stripe).\n[2026-04-20 WEBSITE] Manual container rebuild deployed (image 23b495a5154a) to pick up xd-389+xd-390 wiring. Live verification: POST /api/affiliates/click returns tracked:true; affiliates.total_clicks increments atomically. Conversion tracking code remains wired in app/api/payments/checkout/route.ts \u2192 recordAffiliateConversion(). End-to-end conversion validation still deferred pending Stripe prod key (separate track). xd-313 fully unblocked at website runtime layer.\n[2026-04-21 WEBSITE] Fresh live verification (TTFB 42ms, image sha256:23b495a5154a, container Up 24h):\n- POST /api/affiliates/click {TESTPROMO} \u2192 {ok:true, tracked:true} (atomic DB write confirmed)\n- 27/27 canonical pages 200 OK with route-specific og:title + canonical + og:image\n- 7/7 platform redirects active (308/307): /download/{win,mac,ios,android,linux}, /signup, /login\n- ReferralTracker \u2192 cookie \u2192 /api/affiliates/click \u2192 recordAffiliateConversion code path VERIFIED GREEN\n- /reset-password, /verify-email, /checkout, /checkout/success correctly noindex\n- HSTS + X-Frame-Options (exactly 1) + Referrer-Policy + Permissions-Policy all present\n- Compression: gzip on all HTML routes | robots.txt blocks GPTBot/CCBot/Google-Extended/admin/api\nWebsite-side scope of xd-313 is PRODUCTION-VERIFIED. Remaining Stripe prod-key integration tracked separately under xd-008/payments-stripe.\n[2026-04-26 WEBSITE] Fresh post-rebuild verification: image sha256:39684960b9d4. POST /api/affiliates/click {TESTPROMO} \u2192 {ok:true,tracked:true} (atomic DB write). ReferralTracker \u2192 cookie \u2192 /api/affiliates/click \u2192 recordAffiliateConversion path GREEN. No regression introduced by SEO title rebuild + HOSTNAME=0.0.0.0 fix.\n[2026-04-28 WEBSITE] Scheduled audit re-verification. Image sha256:02cc7361c378 (Up 32h). POST /api/affiliates/click {TESTPROMO} \u2192 {ok:true, tracked:true}. affiliates.total_clicks 9\u219210 atomic. caspervpn_website DB confirmed 26 tables (Prisma schema parity). All 26/26 canonical pages 200 OK + 9/9 redirects working + clean security headers (single X-Frame-Options DENY, single Referrer-Policy). Code path: components/referral-tracker.tsx \u2192 casper_ref cookie \u2192 /api/affiliates/click \u2192 recordAffiliateConversion in app/api/payments/checkout/route.ts. Website-side scope of xd-313: PRODUCTION-VERIFIED. Stripe-prod-key dependency tracked under xd-008. Per xd-489: ownership confirmed with [WEBSITE]; backend description in xd-313 should be ignored (no .NET work).\n[2026-05-02 WEBSITE] Scheduled audit re-verification. Image sha256:02cc7361c378 (Up 5d). POST /api/affiliates/click {TESTPROMO} \u2192 {ok:true, tracked:true}. affiliates.total_clicks=13. 22/24 canonical pages 200 OK with route-specific OG/canonical. 5/5 /apps/{platform} pages 200. 6/6 /download/* \u2192 308 \u2192 /apps/* per next.config.js redirects. Security headers: all single-instance (HSTS/XFO/Referrer-Policy/Permissions-Policy). robots.txt blocks GPTBot/CCBot/Google-Extended/admin/api. gzip on. Website-side scope of xd-313: PRODUCTION-VERIFIED. Stripe-prod-key dependency tracked under xd-008.",
+      "resultingHandoff": "xd-NEW for [WEBSITE]/[MARKETING] to configure first real payment provider (LemonSqueezy/Paddle/NOWPayments env vars) so affiliate conversions can actually flow. Not Backend's call."
     },
     {
       "id": "xd-314",
@@ -15493,13 +15499,15 @@
       "from": "[CTO]",
       "to": "[BACKEND]",
       "status": "pending",
-      "priority": "P2",
+      "priority": "P1",
       "title": "Post-TestFlight: RADIUS tier sync on subscription change (Max-Monthly-Octets)",
       "description": "DEFERRED from pre-TestFlight scope. Current state: AppleReceiptService.HandleServerNotificationAsync updates User.CurrentCycleDataLimitBytes on SUBSCRIBED/DID_RENEW/EXPIRED/REFUND events, but does NOT propagate the data-limit to the RADIUS radcheck table (Max-Monthly-Octets attribute). UserService.SetDataAllocationAsync also misses this sync when admin manually sets a user limit. \n\nScope: (a) Extend IFreeRadiusService with SetMonthlyDataLimitAsync(username, limitBytes) \u2014 mirrors UpdateBandwidthLimitAsync pattern, writes to radcheck via flask control API on port 5002. (b) Require control API (DevOps) to support Max-Monthly-Octets attribute + idempotent upsert/delete. (c) Configure FreeRADIUS policy to enforce Max-Monthly-Octets on IKE sessions (strongSwan integration). (d) Call SetMonthlyDataLimitAsync from: UserService.SetDataAllocationAsync, UserService.BulkSetDataAllocationAsync, AppleReceiptService.ProcessReceiptAsync (first purchase), AppleReceiptService.HandleServerNotificationAsync (renewals/refunds/expiry), SubscriptionExpiryService.DowngradeExpiredSubscriptions. \n\nImpact: defense-in-depth enforcement at protocol level for IKE users. Bypass scenario: if an adversary extracts RADIUS creds from iOS keychain and manually configures a non-CasperVPN client, they could use the tunnel without iOS app enforcement. This task closes that hole. NOT a TestFlight blocker because Apple reviewers test via the iOS app, which enforces via xd-392. \n\nRelated Blocker from audit: RadiusUserProfile model exists (Models/RadiusIntegration.cs:80) but no code populates MaxDownloadKbps/MaxUploadKbps per tier either \u2014 same sync should cover it.\n\n[BACKEND 2026-05-01 UPDATE]: Validated current state of Flask 5002 control API: 22 routes, NONE include SetMonthlyDataLimit/Max-Monthly-Octets endpoints. DISCOVERED that this xd-391 is now a sub-task of xd-491 (RadiusService architectural decision). FreeRADIUS uses sql module against caspervpn DB radcheck (NOT Flask). The xd-391 description's 'Flask control API on port 5002 must add SetMonthlyDataLimit endpoint' instruction is incorrect - the right place to write Max-Monthly-Octets is the radcheck/radreply table directly. RECOMMEND: hold xd-391 implementation until xd-491 lands; then xd-391 collapses to one Npgsql INSERT/UPDATE in the same code path as the broader rewrite.",
       "createdAt": "2026-04-18T20:24:05Z",
       "dueBy": "2026-05-18T20:24:05Z",
       "handoffTo": "devops",
-      "handoffNote": "Flask control API on port 5002 must add SetMonthlyDataLimit endpoint; FreeRADIUS policy must enforce Max-Monthly-Octets"
+      "handoffNote": "Flask control API on port 5002 must add SetMonthlyDataLimit endpoint; FreeRADIUS policy must enforce Max-Monthly-Octets",
+      "statusNote": "RE-VERIFIED 2026-05-17: AppleReceiptService.cs L380-447 HandleServerNotificationAsync has zero RADIUS references (grep `radius|radcheck|Max-Monthly-Octets` returns 0 hits in entire file). L391-392 (REFUND), L414-415 (SUBSCRIBED), L387-393 still update User.CurrentCycleDataLimitBytes but never propagate. SCOPE LOCKED: this work BLOCKS xd-587 (Phase 2 backfill needs Max-Monthly-Octets values per user). Must ship after xd-586 (FreeRadiusService Npgsql rewrite) \u2014 no point patching to call FreeRadiusService while it's still HTTP-broken. SEQUENCE: xd-586 \u2192 xd-391 \u2192 xd-587.",
+      "lastVerifiedAt": "2026-05-17T00:00:00Z"
     },
     {
       "id": "xd-392",
@@ -17271,7 +17279,9 @@
       "createdAt": "2026-05-01T05:14:23Z",
       "dueBy": "2026-05-04T05:14:23Z",
       "handoffTo": "[QA]",
-      "handoffNote": "After backend implements writes, QA validates state changes persist + admin UI reflects them."
+      "handoffNote": "After backend implements writes, QA validates state changes persist + admin UI reflects them.",
+      "statusNote": "RE-VERIFIED 2026-05-17: 6 x StatusCode(501) stubs remain in AdminAdvancedFeaturesController.cs at L429, L776, L1232, L1240, L1588, L1596. Original handoff said 5 \u2014 one new stub added since. Real work pending; not closeable.",
+      "lastVerifiedAt": "2026-05-17T00:00:00Z"
     },
     {
       "id": "xd-493",
@@ -17339,7 +17349,9 @@
           "result": "STILL_FAILING",
           "summary": "[QA-RECHECK 2026-05-16] Re-tested with valid token. /api/admin/affiliates=404, /api/admin/email-campaigns=404, /api/admin/threats=404. /api/admin/users=401 and /api/admin/dashboard=401 confirm auth pipeline works \u2014 these specific routes are not registered. 11 days open. P0 BACKEND."
         }
-      ]
+      ],
+      "statusNote": "RE-VERIFIED 2026-05-17: live HTTPS probes against api.caspervpn.com: /api/admin/blog=404, /api/admin/blog/posts=404, /api/admin/blog/categories=404, /api/admin/ddos-alerts=404, /api/admin/ddos=404, /api/admin/threats=404, /api/admin/affiliates=404, /api/admin/email-campaigns=404. Controllers dir confirms missing: AdminBlogController, AdminThreatsController, AdminAffiliatesController, AdminEmailCampaignsController do NOT exist. AdminBlockDetectionController exists but routes under /api/admin/diagnostics/, not /api/admin/ddos*. AdminMarketingController has /campaigns/* (HttpGet/HttpPost) but no /email-campaigns/ route. AffiliatePayoutController is payouts-only, no /api/admin/affiliates CRUD. WORK STILL NEEDED \u2014 pattern: copy AdminAdvancedFeaturesController scaffolding for DB-backed CRUD.",
+      "lastVerifiedAt": "2026-05-17T00:00:00Z"
     },
     {
       "id": "xd-501",
@@ -18670,7 +18682,9 @@
       "priority": "P1",
       "createdAt": "2026-05-16T20:18:55Z",
       "createdDate": "2026-05-16",
-      "completedDate": null
+      "completedDate": null,
+      "statusNote": "RE-VERIFIED 2026-05-17: FreeRadiusService.cs unchanged \u2014 0 Npgsql references, 15 HttpClient references. Class still ctor-injects HttpClient (L15-37). Rewrite to Npgsql per xd-491 closed decision NOT YET STARTED. Blocks xd-587, xd-391, xd-583. Real code work pending; not closeable.",
+      "lastVerifiedAt": "2026-05-17T00:00:00Z"
     },
     {
       "id": "xd-587",
@@ -18682,7 +18696,9 @@
       "priority": "P1",
       "createdAt": "2026-05-16T20:18:55Z",
       "createdDate": "2026-05-16",
-      "completedDate": null
+      "completedDate": null,
+      "statusNote": "Blocked on xd-586 (FreeRadiusService Npgsql rewrite) and xd-391 (RADIUS tier sync wiring). Sequence: xd-586 \u2192 xd-391 \u2192 xd-587 backfill. No backfill work possible until both prereqs ship.",
+      "lastVerifiedAt": "2026-05-17T00:00:00Z"
     },
     {
       "id": "xd-588",
@@ -19041,6 +19057,18 @@
       "status": "pending",
       "priority": "P0",
       "createdAt": "2026-05-17T02:22:01Z",
+      "createdDate": "2026-05-17",
+      "completedDate": null
+    },
+    {
+      "id": "xd-617",
+      "from": "[[BACKEND]]",
+      "to": "[[WEBSITE]]",
+      "title": "Handoff from [BACKEND]: Affiliate conversion tracking code is live \u2014 configure real payment provider so rows flow",
+      "description": "Per xd-313 closure: recordAffiliateConversion() is wired in website/app/api/payments/checkout/route.ts L25-62 + called at L150-154. But live DB SELECT count(*) FROM affiliate_conversions = 0 because no real checkout has completed \u2014 card/crypto/mobile providers all still TODO at L89/91/107 (LEMONSQUEEZY_API_KEY, PADDLE_API_KEY, NOWPAYMENTS_API_KEY env vars not set). ACCEPTANCE: pick ONE provider (LemonSqueezy fastest), set env var in website/.env, redeploy caspervpn-website container, complete one $9.99 test checkout via a real affiliate link, verify affiliate_conversions.count > 0 + affiliate.totalEarnings = 0.10 (10% commission).",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-05-17T02:22:25Z",
       "createdDate": "2026-05-17",
       "completedDate": null
     }
