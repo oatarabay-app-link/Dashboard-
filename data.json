@@ -17139,11 +17139,12 @@
       "to": "[LEGAL]",
       "title": "Handoff from CTO: P2",
       "description": "GDPR cookie-consent banner gap on caspervpn.com",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "Live caspervpn.com has no cookie banner. Open in browser, check DevTools cookies. If only essential -> add Cookies page. If analytics loaded -> add consent banner before launch (4% revenue fine risk).",
       "createdAt": "2026-04-26T23:19:32Z",
       "createdDate": "2026-04-26",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "Technical infrastructure shipped 2026-05-16 by [CTO] \u2014 components/cookie-banner.tsx + app/cookies/page.tsx + layout.tsx wiring. Wording is scaffolding-grade; Legal review handoff (xd-611) for final copy approval before treating as production-grade."
     },
     {
       "id": "xd-486",
@@ -18930,6 +18931,30 @@
       "createdAt": "2026-05-16T21:46:25Z",
       "createdDate": "2026-05-16",
       "completedDate": null
+    },
+    {
+      "id": "xd-611",
+      "from": "[CTO]",
+      "to": "[LEGAL]",
+      "title": "Handoff from CTO: REVIEW: Cookie banner + /cookies page wording (xd-485 final sign-off before production-grade)",
+      "description": "Technical infrastructure shipped 2026-05-16 by [CTO]: website/components/cookie-banner.tsx (client banner, localStorage cc_consent_v1, Accept-all/Essential-only buttons) + website/app/cookies/page.tsx (cookie policy page, was 404) + layout.tsx wiring. Pushed to BOTH production + development branches. Visit https://caspervpn.com/ (incognito) \u2014 banner appears on first visit. /cookies page now returns HTTP 200 with scaffolding content.\n\nLEGAL REVIEW NEEDED on wording: (1) Banner text \u2014 currently says 'We use essential cookies to keep this site working and optional analytics cookies to understand traffic patterns.' (2) /cookies page \u2014 6 sections (What cookies are, Categories, Your choices, Third parties, Changes, Contact) \u2014 all scaffolding-grade. (3) Specifically: review the Google Analytics 4 third-party disclosure + confirm contact email privacy@caspervpn.com is correct. (4) Version is v1.0 (scaffolding \u2014 Legal review pending) \u2014 bump to v1.0-final once approved. (5) Verify the consent mechanism is GDPR-compliant for the EU jurisdiction Legal currently cites (or confirm CasperVPN's actual jurisdiction). (6) Optional: review whether 'Essential only' should also disable the existing Google Analytics + AnalyticsTracker components. Currently they load unconditionally; xd-NEW (separate from this task) is the WEBSITE handoff to gate them on cc_consent_v1 = 'all'. GOAL: Legal returns either (a) approved final wording, OR (b) marked-up red-lined version. Then CTO ships v1.0-final via doc-only PR. P1 \u2014 closes GDPR 4% revenue fine risk (xd-485 original framing). Until Legal sign-off, banner is technically functional but legally scaffolding.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-05-16T22:49:20Z",
+      "createdDate": "2026-05-16",
+      "completedDate": null
+    },
+    {
+      "id": "xd-612",
+      "from": "[CTO]",
+      "to": "[WEBSITE]",
+      "title": "Handoff from CTO: WIRE consent gating: AnalyticsTracker + GoogleAnalytics components should only fire when cc_consent_v1='all' (xd-485 follow-up)",
+      "description": "Cookie banner (xd-485) infrastructure shipped 2026-05-16 \u2014 sets localStorage `cc_consent_v1` to 'all' or 'essential'. Banner also fires a custom 'cc-consent' DOM event. But: website/components/analytics-tracker.tsx + website/components/google-analytics.tsx currently load and fire UNCONDITIONALLY. To make the consent banner FUNCTIONALLY gate analytics (not just cosmetic), each component should: (1) Read `localStorage.getItem('cc_consent_v1')` at mount; (2) If 'all' \u2192 proceed with current init; (3) If 'essential' OR null \u2192 skip init entirely (return null from component); (4) Listen for 'cc-consent' event to react to mid-session consent changes. ACCEPTANCE: (a) In a fresh incognito session with cookies disabled, AnalyticsTracker + GoogleAnalytics do NOT fire any network requests. (b) After clicking 'Accept all' on banner, GA4 + tracker fire correctly. (c) After clicking 'Essential only', neither fires. Without this gating, the banner is decorative \u2014 GDPR-wise we're still tracking pre-consent. P1 because xd-485 GDPR risk only fully closes once consent is functional.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-05-16T22:49:20Z",
+      "createdDate": "2026-05-16",
+      "completedDate": null
     }
   ],
   "importantNotes": [
@@ -19934,20 +19959,6 @@
     "addedAt": "2026-04-14T23:09:15Z"
   },
   "dashboardSessionLog": [
-    {
-      "id": "ds-022",
-      "date": "2026-05-16",
-      "timestamp": "2026-05-16T22:49:20Z",
-      "dept": "[CTO]",
-      "change": "Cookie banner shipped: NEW website/components/cookie-banner.tsx + NEW website/app/cookies/page.tsx + edited app/layout.tsx. Banner stores consent in localStorage cc_consent_v1. /cookies page returns HTTP 200 with policy scaffold. xd-485 updated to in_progress with 'infrastructure shipped, Legal wording sign-off pending' status. Spawned xd-611 (Legal review wording) + xd-612 (Website analytics-gating to make consent functional). Pushed to BOTH branches.",
-      "filesChanged": [
-        "website/components/cookie-banner.tsx",
-        "website/app/cookies/page.tsx",
-        "website/app/layout.tsx"
-      ],
-      "structureAffected": true,
-      "backwardCompatible": false
-    },
     {
       "id": "ds-021",
       "date": "2026-05-16",
