@@ -7710,7 +7710,7 @@
       "id": "xd-490",
       "from": "[BACKEND]",
       "to": "[DEVOPS]",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "title": "Handoff from BACKEND: P1 \u2014 Set Radius__ApiEndpoint env on caspervpn-api (RADIUS user prov broken)",
       "description": "BACKEND audit 2026-05-01 found RADIUS user creation failing in prod (10 fails/4d, 35% of signups). Root cause: caspervpn-api container missing Radius__ApiEndpoint env var; default is 'http://localhost:3000/api/radius' which has no listener (Connection refused). IMMEDIATE BANDAID (this handoff): Either (a) set Radius__ApiEndpoint to a non-existent-but-non-fatal value to silence the noise (e.g. http://127.0.0.1:0), OR (b) better, hold this handoff until xd-491 (CTO) decides the architectural direction. Recommended: hold + just acknowledge. The actual fix is xd-491 (rewrite RadiusService to write to radcheck directly via Npgsql or align hostname to 'freeradius' running an actual REST listener via FreeRADIUS rest module on port 3000).",
@@ -7719,7 +7719,12 @@
       "createdAt": "2026-05-01T03:42:19Z",
       "dueBy": "2026-05-04T03:42:19Z",
       "handoffTo": "[CTO]",
-      "handoffNote": "After bandaid lands, xd-491 still owns the architectural fix"
+      "handoffNote": "After bandaid lands, xd-491 still owns the architectural fix",
+      "completedAt": "2026-05-16",
+      "completedDate": "2026-05-16",
+      "completedBy": "[CTO]",
+      "resolution": "SUPERSEDED 2026-05-16. xd-491 (closed same day) made the architectural decision to STOP setting Radius__ApiEndpoint entirely \u2014 FreeRadiusService will be rewritten to write directly to radcheck/radreply/radusergroup tables via Npgsql (Option A), bypassing the broken HTTP API layer. Setting ApiEndpoint to a bandaid value would mask the issue rather than fix it. Evidence (this session): (1) caspervpn-api env still has NO Radius__ApiEndpoint set, but RADIUS users ARE being provisioned successfully \u2014 live logs show 'IKEv2 user provisioned on Paris/Montreal/Miami/LA/Mexico City/Singapore/Hong Kong/S\u00e3o Paulo/Tokyo/Sydney' across 10 fleet nodes at 00:09:45-46. Original failure mode (RADIUS user creation 35% failure rate) is no longer present. (2) Container has Radius__Host=freeradius + Port=1812 + ApiKey + ProbeApiKey + Secret \u2014 direct RADIUS protocol path works. (3) The ONE current RADIUS-related warning ('RADIUS accounting attempt with invalid API key' on /api/radius/accounting) is a SEPARATE issue (node-to-API accounting auth key mismatch, not user provisioning) \u2014 see resulting_handoff.",
+      "resultingHandoff": "(a) The Backend Npgsql rewrite task spawned by xd-491 is the proper long-term fix \u2014 see xd-491 resultingHandoff. (b) xd-576 NEW to [DEVOPS] P2: Investigate persistent 'RADIUS accounting attempt with invalid API key' 401s on /api/radius/accounting (fires every ~60s in caspervpn-api logs as of 2026-05-16). Nodes are sending accounting POSTs with a key that doesn't match container's Radius__ApiKey env. Likely cause: fleet WG accounting daemon was configured with an old API key before rotation. Audit /etc/casper/radius-accounting.conf on each node."
     },
     {
       "id": "xd-473",
@@ -17897,6 +17902,18 @@
       "status": "pending",
       "priority": "P2",
       "createdAt": "2026-05-16T17:24:58Z",
+      "createdDate": "2026-05-16",
+      "completedDate": null
+    },
+    {
+      "id": "xd-576",
+      "from": "[CTO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CTO: Investigate /api/radius/accounting 401s \u2014 node WG accounting daemons sending stale API key",
+      "description": "caspervpn-api logs show 'RADIUS accounting attempt with invalid API key' fires every ~60 seconds (constant 401s on POST /api/radius/accounting). Container has correct Radius__ApiKey + Radius__ProbeApiKey env set. The problem is on the SENDING side \u2014 fleet nodes' WG accounting daemons appear to be using a stale key from before a rotation. ACTION: SSH each fleet node, check accounting daemon config (likely /etc/casper/radius-accounting.* or systemd unit env), rotate to match container's current Radius__ApiKey. Acceptance: 0 'invalid API key' warnings in caspervpn-api logs over 10-minute window. Not user-facing (accounting only \u2014 doesn't block sessions), but blocks RADIUS bandwidth/session tracking until fixed.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-05-16T17:27:11Z",
       "createdDate": "2026-05-16",
       "completedDate": null
     }
