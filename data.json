@@ -16704,11 +16704,15 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: Fleet convergence \u2014 add dev WG interface (wg-dev / 10.99.X.0/24) to all fleet nodes",
       "description": "Per CEO architecture clarification 2026-05-16, all fleet nodes should serve BOTH prod and dev traffic via dual WG interfaces. Today only prod WG (wg0, 10.66.X.0/24) is deployed. ADD: wg-dev interface on 10.99.X.0/24 to all 13 fleet nodes (matching the prod subnet numbering: UK-LON=10.99.66, US-LA=10.99.67, DE=10.99.68, AMS=10.99.69, PAR=10.99.70, mia-01=10.99.10 ... hkg-01=10.99.17). Dev users get same geographic distribution as prod users. After this: Dev VPS (10.66.99.0/24 host wg0) can be reduced to brain-only role. CRITICAL: maintain network isolation between prod (10.66.X) and dev (10.99.X) \u2014 they should NEVER route to each other.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-05-16T15:08:41Z",
       "createdDate": "2026-05-16",
-      "completedDate": null
+      "completedDate": "2026-05-16",
+      "completedAt": "2026-05-16",
+      "completedBy": "[CTO]",
+      "resolution": "DECISION (CEO-approved 2026-05-16): YES, add wg-dev interface (10.99.X.0/24) to all 13 fleet nodes. This implements the shared-fleet dual-WG architecture target. Dev users will get full geographic distribution via the same fleet that serves prod users, isolated by subnet (prod=10.66.X, dev=10.99.X). After deployment: Dev VPS reduces to brain-only role.",
+      "resultingHandoff": "xd-561 to [DEVOPS] for per-node canary rollout (UK-LON first, then 12 others)"
     },
     {
       "id": "xd-556",
@@ -16716,11 +16720,15 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: Fleet convergence \u2014 pick ONE IKEv2 mechanism (strongSwan daemon vs per-user)",
       "description": "Per CEO architecture clarification 2026-05-16, all fleet nodes should run identical service set. CURRENT DRIFT: LA, DE, AMS, Paris run strongSwan as a service daemon for IKEv2. The 8 OneProvider nodes do IKEv2 per-user WITHOUT strongSwan daemon. Both work for users but mechanisms differ. DECISION needed: pick one (strongSwan daemon vs per-user) and apply to all 12 non-brain nodes. Recommend: whichever is currently easier to operate at scale (probably per-user since 8 nodes already use it).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-05-16T15:08:41Z",
       "createdDate": "2026-05-16",
-      "completedDate": null
+      "completedDate": "2026-05-16",
+      "completedAt": "2026-05-16",
+      "completedBy": "[CTO]",
+      "resolution": "DECISION (CEO-approved 2026-05-16): per-user IKEv2 (no strongSwan service daemon) is the canonical mechanism across all 13 fleet nodes. 8 OneProvider nodes already use this. 4 nodes (LA, DE, AMS, PAR) need migration FROM strongSwan daemon TO per-user. WHY: simpler operationally (no daemon, fewer moving parts), already proven on majority of fleet, aligns with \"all nodes are similar\" target.",
+      "resultingHandoff": "xd-562 to [DEVOPS] for the 4-node migration"
     },
     {
       "id": "xd-557",
@@ -16728,11 +16736,15 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: Fleet convergence \u2014 decide on obfs4proxy (port 4443) + casper-control + casper-smartdns + caspervpn-clean-boot daemons",
       "description": "Per CEO architecture clarification 2026-05-16, all fleet nodes should run identical service set. CURRENT DRIFT: LA, DE, AMS, Paris have obfs4proxy (port 4443/tcp), casper-control, casper-smartdns, caspervpn-clean-boot daemons. OneProvider 8 nodes do not. UK-LON has obfs4proxy. Existing notes say \"iOS does not use obfs4proxy, low priority\". DECISION needed: (a) keep obfs4proxy + install on all 12 fleet nodes (full convergence with obfs4 capability), OR (b) retire obfs4proxy entirely (remove from LA/DE/AMS/PAR/UK-LON) since unused by iOS. Same decision for casper-control / casper-smartdns / caspervpn-clean-boot daemons: install everywhere or remove from 4 nodes that have them. Recommend: (b) \u2014 retire unused services, simpler fleet.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-05-16T15:08:41Z",
       "createdDate": "2026-05-16",
-      "completedDate": null
+      "completedDate": "2026-05-16",
+      "completedAt": "2026-05-16",
+      "completedBy": "[CTO]",
+      "resolution": "DECISION (CEO-approved 2026-05-16): retire obfs4proxy entirely (iOS does not use it per existing docs; low-priority transport). casper-control / casper-smartdns / caspervpn-clean-boot daemons require a per-daemon audit \u2014 if they have active value, install on all 12 non-brain nodes; if dead code, retire. WHY: aligns with \"all nodes are similar\" target \u2014 unused services on subset of nodes = drift to eliminate.",
+      "resultingHandoff": "xd-563 to [DEVOPS] for the retirement + daemon audit"
     },
     {
       "id": "xd-558",
@@ -16740,11 +16752,15 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: Fleet convergence \u2014 promote Bangkok to fleet node #14 (or decide to keep as test-only)",
       "description": "Per CEO architecture clarification 2026-05-16, Bangkok (46.16.129.246) is currently a dev-only test endpoint with WG on 10.66.98.0/24. CasperCloak relay forced to 8443/TCP because OneProvider Thailand blocks 4444 upstream. DECISION needed: (a) promote Bangkok to fleet node #14 \u2014 add prod + dev WG interfaces (assign new 10.66.X and 10.99.X subnets), run standard service set,     customers can connect to Thailand region. CasperCloak port-block becomes a runtime config (8443 instead of 4444), not a separate node identity. (b) keep Bangkok as dedicated dev test node \u2014 no prod traffic, used only for CasperCloak port-edge-case validation. Recommend: (a) \u2014 promotes Thailand to a real region and eliminates the \"this node is special\" pattern. Edge-case testing can be done on any port-blocked node or via CI port simulation.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-05-16T15:08:41Z",
       "createdDate": "2026-05-16",
-      "completedDate": null
+      "completedDate": "2026-05-16",
+      "completedAt": "2026-05-16",
+      "completedBy": "[CTO]",
+      "resolution": "DECISION (CEO-approved 2026-05-16): promote Bangkok (46.16.129.246) to fleet node #14. Assigned subnets: prod wg0 = 10.66.18.0/24, dev wg-dev = 10.99.18.0/24. CasperCloak retains port 8443/tcp (OneProvider Thailand blocks 4444 \u2014 runtime config, not architectural). WHY: aligns with \"all nodes are similar\" target \u2014 Thailand becomes a real region instead of a special-snowflake test node. Edge-case port testing can still be done on Bangkok or via CI port simulation.",
+      "resultingHandoff": "xd-564 to [DEVOPS] for Bangkok promotion + parity monitor update"
     },
     {
       "id": "xd-559",
@@ -16752,11 +16768,15 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: caspercloak_ws.py convergence \u2014 pick canonical variant (xd-462)",
       "description": "Per CEO architecture clarification 2026-05-16 (fleet equivalence), the three caspercloak_ws.py variants currently in production (54-line on 8 OneProvider nodes, 123-line on DE-DUS only, 155-line on UK-LON/LA/AMS/Paris) MUST converge to a single canonical script. All three currently have ping_interval=20 (xd-461 applied), so functionally equivalent, but maintaining three variants triples every future fix. DECISION needed: pick one variant (recommend 123-line DE variant \u2014 it is the cleanest), deploy identically to all 13 fleet nodes, delete the other two paths. Path on every node: /usr/local/bin/caspercloak_ws.py (single canonical location).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-05-16T15:08:41Z",
       "createdDate": "2026-05-16",
-      "completedDate": null
+      "completedDate": "2026-05-16",
+      "completedAt": "2026-05-16",
+      "completedBy": "[CTO]",
+      "resolution": "DECISION (CEO-approved 2026-05-16): adopt the 123-line DE-DUS variant of caspercloak_ws.py as canonical. Deploy identically to all 13 fleet nodes at /usr/local/bin/caspercloak_ws.py. Delete /opt/caspercloak/relay_ws.py on the nodes that have it (UK-LON, LA). WHY: DE variant is cleanest (xd-459 + xd-461 already applied), shortest at 123 lines, and Class B already has it on at least one node. Single canonical path eliminates xd-462 drift permanently \u2014 future fixes apply once, not three times.",
+      "resultingHandoff": "xd-565 to [DEVOPS] for canonical deployment (closes xd-462 historical drift)"
     },
     {
       "id": "xd-560",
@@ -16764,9 +16784,85 @@
       "to": "[BACKEND]",
       "title": "Handoff from CTO: Evaluate vpn_servers.tier column \u2014 drop or rename per fleet-equivalence architecture (2026-05-16)",
       "description": "Per CEO architecture clarification 2026-05-16, the legacy/fleet distinction has been dropped \u2014 all 13 fleet nodes are equivalent peers. However, the production DB still has a `tier` column in vpn_servers table with values legacy/fleet. DECISION needed: (a) DROP the tier column entirely (cleanest \u2014 terminology gone everywhere). (b) RENAME to `region` or `class` (if backend logic uses it for grouping). (c) Keep as historical metadata column (cheapest, but invites future confusion). Check BOTH OptimizedVpnServerService.cs and VpnServerService.cs (CLAUDE.md \u00a79.6 dual-file trap) for any usage. If dropping: include the per-CLAUDE.md \u00a711.1 API rollout dance (do not drop while iOS apps in the field read it).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-05-16T15:08:41Z",
+      "createdDate": "2026-05-16",
+      "completedDate": "2026-05-16",
+      "completedAt": "2026-05-16",
+      "completedBy": "[CTO]",
+      "resolution": "DECISION (CEO-approved 2026-05-16): drop the vpn_servers.tier DB column. Use API rollout dance per CLAUDE.md \u00a711.1: (1) Stop reading column in backend code now (BOTH OptimizedVpnServerService.cs AND VpnServerService.cs per \u00a79.6). (2) Wait ~30 days for any client adoption issues to surface. (3) Drop column in a follow-up migration. WHY: terminology no longer matches architecture (no legacy/fleet split per 2026-05-16 clarification). Column is server-side only (iOS does not read it), so the dance may be shorter than usual.",
+      "resultingHandoff": "xd-566 to [BACKEND] for Phase 1 (stop-reading) of the API rollout dance"
+    },
+    {
+      "id": "xd-561",
+      "from": "[CTO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CTO: EXECUTE: Add wg-dev interface to fleet nodes \u2014 per-node canary rollout starting with UK-LON",
+      "description": "EXECUTION HANDOFF for the xd-555 decision (finalized 2026-05-16). Per-node rollout plan to add wg-dev (10.99.X.0/24) interface alongside existing wg0 (10.66.X.0/24): NODE ORDER (start safest, finish riskiest): 1. UK-LON 178.62.101.221 \u2192 wg-dev on 10.99.66.0/24 (CANARY \u2014 known state best). VERIFY wg0 still up before next node. 2. DE-DUS 91.194.84.79 \u2192 wg-dev on 10.99.68.0/24. 3. NL-AM2 51.158.147.210 \u2192 wg-dev on 10.99.69.0/24. 4. FR-PAR 163.172.62.64 \u2192 wg-dev on 10.99.70.0/24. 5. US-LA 208.87.243.205 \u2192 wg-dev on 10.99.67.0/24. 6-13. OneProvider 8 nodes (mia/mex/sgp/mtl/sao/tyo/syd/hkg) \u2192 wg-dev on 10.99.10-17.0/24. PER-NODE CHECKLIST: (a) confirm no port 51821/udp conflict, (b) create wg-dev interface with new private key, (c) configure NAT/iptables to isolate 10.99.X from 10.66.X (prod) traffic, (d) test `wg show wg-dev` and `wg show wg0` both up, (e) register dev WG public key in dev brain DB vpn_servers, (f) test connection from dev test client. ROLLBACK: `wg-quick down wg-dev` removes only the dev interface, wg0 untouched. TARGET PER CLAUDE.md architecture clarification 2026-05-16: shared-fleet dual-WG model.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-05-16T15:11:51Z",
+      "createdDate": "2026-05-16",
+      "completedDate": null
+    },
+    {
+      "id": "xd-562",
+      "from": "[CTO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CTO: EXECUTE: Migrate 4 fleet nodes from strongSwan daemon to per-user IKEv2 config",
+      "description": "EXECUTION HANDOFF for the xd-556 decision (finalized 2026-05-16): per-user IKEv2 is the canonical mechanism. 4 nodes need migration FROM strongSwan daemon TO per-user config: LA, DE-DUS, NL-AM2, FR-PAR. (The 8 OneProvider nodes already use per-user \u2014 no change needed.) PER-NODE STEPS: (a) enumerate active IKEv2 users on the node (via strongSwan), (b) build per-user config equivalent, (c) deploy per-user config alongside strongSwan (verify both work), (d) cut over clients to per-user (zero-downtime), (e) verify clients still connect, (f) stop + disable strongSwan daemon, (g) confirm IKEv2 still works via per-user. ROLLBACK: re-enable strongSwan daemon. WHY per-user: simpler operationally (no daemon to manage), already proven on 8/13 fleet nodes.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-05-16T15:11:51Z",
+      "createdDate": "2026-05-16",
+      "completedDate": null
+    },
+    {
+      "id": "xd-563",
+      "from": "[CTO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CTO: EXECUTE: Retire obfs4proxy on UK-LON/LA/DE/AMS/PAR + audit casper-control/smartdns/clean-boot daemons",
+      "description": "EXECUTION HANDOFF for the xd-557 decision (finalized 2026-05-16): retire obfs4proxy entirely. STEPS: (a) confirm zero iOS / Android clients use port 4443/tcp obfs4 bridge (telemetry check), (b) stop obfs4proxy service on UK-LON, LA, DE-DUS, NL-AM2, FR-PAR, (c) close port 4443/tcp on firewall, (d) remove the bridge config from OpenVPN TCP 1195. ALSO AUDIT: casper-control, casper-smartdns, caspervpn-clean-boot daemons (currently on 4 legacy nodes only). For each: (a) determine current purpose by reading systemd unit + recent journal logs, (b) if dead code \u2192 retire from those 4 nodes, (c) if active value \u2192 either install on all 12 non-brain nodes (converge UP) or migrate functionality elsewhere. ROLLBACK for obfs4proxy: re-enable service, re-open firewall.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-05-16T15:11:51Z",
+      "createdDate": "2026-05-16",
+      "completedDate": null
+    },
+    {
+      "id": "xd-564",
+      "from": "[CTO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CTO: EXECUTE: Promote Bangkok to fleet node #14 \u2014 add prod WG interface, register in vpn_servers DB",
+      "description": "EXECUTION HANDOFF for the xd-558 decision (finalized 2026-05-16): promote Bangkok (46.16.129.246) to fleet node #14. ASSIGNED SUBNETS: prod wg0 = 10.66.18.0/24, dev wg-dev = 10.99.18.0/24 (next available after hkg-01 at 10.66.17). STEPS: (a) provision standard fleet service set on Bangkok (verify all services from 02-infrastructure.md target list), (b) keep existing CasperCloak port 8443/tcp config (OneProvider Thailand blocks 4444 upstream \u2014 known constraint), (c) add prod wg0 interface on 10.66.18.0/24, (d) add dev wg-dev interface on 10.99.18.0/24 (coordinate with xd-555 dev WG rollout), (e) register in production DB vpn_servers (call backend API or DB insert), (f) update parity_monitor.sh target list on UK-LON to include Bangkok (now 14 targets, was 13), (g) verify Bangkok appears in iOS app server picker via /servers endpoint. ROLLBACK: deactivate vpn_servers row (IsActive=false), remove WG interfaces, Bangkok reverts to dev-only state.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-05-16T15:11:51Z",
+      "createdDate": "2026-05-16",
+      "completedDate": null
+    },
+    {
+      "id": "xd-565",
+      "from": "[CTO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CTO: EXECUTE: Deploy 123-line DE-variant caspercloak_ws.py to all 13 fleet nodes (delete other variants)",
+      "description": "EXECUTION HANDOFF for the xd-559 decision (finalized 2026-05-16): the 123-line DE variant is canonical. STEPS: (a) snapshot the canonical script from DE-DUS (91.194.84.79) at /usr/local/bin/caspercloak_ws.py, (b) verify it has ping_interval=20 + ping_timeout=30 (xd-461 fix), (c) commit canonical script to memory/architecture/scripts/ in vault for git-tracked reference, (d) per fleet node (canary one first, verify, then roll out 12 more):     - back up existing variant (54-line or 155-line) to .bak     - deploy canonical at /usr/local/bin/caspercloak_ws.py     - delete /opt/caspercloak/relay_ws.py if present (UK-LON, LA had it)     - restart caspercloak-ws service     - verify WS clients reconnect (brief blip, auto-handled by clients) ROLLBACK: restore .bak, restart. CLOSES historical drift xd-462 (3 variants).",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-05-16T15:11:51Z",
+      "createdDate": "2026-05-16",
+      "completedDate": null
+    },
+    {
+      "id": "xd-566",
+      "from": "[CTO]",
+      "to": "[BACKEND]",
+      "title": "Handoff from CTO: EXECUTE: Stop reading vpn_servers.tier column in OptimizedVpnServerService.cs + VpnServerService.cs (Phase 1 of API rollout dance)",
+      "description": "EXECUTION HANDOFF for the xd-560 decision (finalized 2026-05-16): drop the vpn_servers.tier column via API rollout dance. This is Phase 1 of the multi-release dance (per CLAUDE.md \u00a711.1). STEPS: (1) NOW (this handoff): stop READING vpn_servers.tier in backend code. Per CLAUDE.md \u00a79.6 dual-file trap,     edit BOTH OptimizedVpnServerService.cs AND VpnServerService.cs. Ship to production. (2) AFTER (separate handoff in ~30 days): verify telemetry shows zero column reads from iOS app versions in the field. (3) THEN (separate handoff): DROP COLUMN vpn_servers.tier in DB migration. iOS does NOT read this column (it is server-side only), so the dance may be shorter than usual \u2014 but verify via grep on iOS Codable models for any field named \"tier\" or \"Tier\" before assuming safe.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-05-16T15:11:51Z",
       "createdDate": "2026-05-16",
       "completedDate": null
     }
