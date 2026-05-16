@@ -18052,6 +18052,42 @@
       "createdAt": "2026-05-16T17:56:12Z",
       "createdDate": "2026-05-16",
       "completedDate": null
+    },
+    {
+      "id": "xd-582",
+      "from": "[CTO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CTO: REOPEN xd-461 \u2014 caspercloak ping_interval=None on ALL 13 nodes (2026-04-24 patch was reverted/never deployed)",
+      "description": "FLEET AUDIT 2026-05-16: confirmed xd-461 fix is NOT deployed anywhere. Live grep across all 13 nodes shows /usr/local/bin/caspercloak_ws.py with `ping_interval=None` (the bug condition). Architecture/02 doc claimed 'Patched to ping_interval=20, ping_timeout=30 (2026-04-24)' \u2014 that claim is inaccurate. Either the patch was reverted in a subsequent deploy, OR it was never actually pushed to the nodes. EXECUTION REQUIRED: 1. Pick canonical variant \u2014 RECOMMEND 282L OneProvider script (8 nodes already have it, most consistent). 2. Apply the ping_interval/timeout patch to canonical: change `ping_interval=None` \u2192 `ping_interval=20, ping_timeout=30`. 3. Deploy to all 13 nodes (including UK-LON + US-LA which currently have NO script). 4. Restart caspercloak-ws service on each node (~30s service interruption per node \u2014 schedule rolling). 5. VERIFY post-deploy: `grep -c 'ping_interval=20' /usr/local/bin/caspercloak_ws.py` returns \u22651 on EVERY node. 6. SMOKE TEST: real WSS handshake from a TestFlight client \u2014 should NOT silently disconnect after 30s of background. ACCEPTANCE: 13/13 nodes have ping_interval=20 verified by re-running the audit script. Until done, iOS CasperCloak clients will silently timeout in background (the original xd-461 symptom).",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-05-16T18:58:47Z",
+      "createdDate": "2026-05-16",
+      "completedDate": null
+    },
+    {
+      "id": "xd-583",
+      "from": "[CTO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CTO: EXPAND xd-541 scope \u2014 OpenVPN auth-user-pass-verify missing on ALL 13 nodes (not just UK-LON)",
+      "description": "FLEET AUDIT 2026-05-16: QA's xd-541 report was UK-LON-only, but actual scope is fleet-wide. Live grep `grep -c auth-user-pass-verify /etc/openvpn/server/server.conf /etc/openvpn/server/server-tcp.conf` returns 0/0 on ALL 13 nodes. EVERY OpenVPN endpoint (UDP 1194 + TCP 1195 \u00d7 13 nodes = 26 endpoints) is currently authenticating without RADIUS. RISK: Any user with a valid OpenVPN cert can connect regardless of subscription status, data limit, or per-user RADIUS attributes. Tier-1 service for unpaid users effectively. EXECUTION REQUIRED: 1. Create /etc/openvpn/scripts/auth-radius.sh (or similar) per the canonical config in [[memory/skills/fleet-onboarding.md]] \u00a74 (OpenVPN setup). 2. Add to both server.conf + server-tcp.conf: `auth-user-pass-verify /etc/openvpn/scripts/auth-radius.sh via-env` + `plugin /usr/lib/x86_64-linux-gnu/openvpn/plugins/openvpn-plugin-auth-pam.so radius`. 3. Restart openvpn-server@server + openvpn-server@server-tcp on each node (~30s drop of active OpenVPN connections per node). 4. VERIFY: `grep -c auth-user-pass-verify /etc/openvpn/server/server*.conf` returns \u22652 on every node. 5. SMOKE TEST: attempt OpenVPN connection with invalid RADIUS credentials \u2192 should be REJECTED. With valid \u2192 ACCEPTED. ACCEPTANCE: 26/26 OpenVPN endpoints (13 UDP + 13 TCP) reject unauthenticated/unauthorized users.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-05-16T18:58:47Z",
+      "createdDate": "2026-05-16",
+      "completedDate": null
+    },
+    {
+      "id": "xd-584",
+      "from": "[CTO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CTO: TLS cert provisioning for 3 nodes \u2014 NL-AM2 + FR-PAR (no certs at all) + UK-LON (missing cc-uk hostname)",
+      "description": "FLEET AUDIT 2026-05-16: NL-AM2 + FR-PAR have completely empty `/etc/letsencrypt/live/` directories. UK-LON has caspervpn.com (apex) + pompesh.com but NO `cc-uk.caspervpn.com` hostname for CasperCloak WSS endpoint. Without TLS cert, CasperCloak WSS handshake on those nodes either fails or uses an invalid/self-signed cert (which the iOS client may reject). 8 OneProvider nodes have proper `cc-<region>.caspervpn.com` certs \u2705. US-LA + DE-DUS have proper certs \u2705. EXECUTION REQUIRED per node: 1. DNS: verify A record exists for `cc-<region>.caspervpn.com` \u2192 node IP (Namecheap panel \u2014 see credentials.md \u00a78).    - cc-uk.caspervpn.com \u2192 178.62.101.221 (UK-LON)    - cc-nl.caspervpn.com \u2192 51.158.147.210 (NL-AM2)    - cc-fr.caspervpn.com \u2192 163.172.62.64 (FR-PAR) 2. SSH to node + run `certbot --nginx -d cc-<region>.caspervpn.com --non-interactive --agree-tos -m admin@caspervpn.com`. 3. Add renewal cron `0 4 * * * root certbot renew --post-hook 'systemctl restart caspercloak-ws'` to `/etc/cron.d/certbot-caspercloak`. 4. Wire cert into caspercloak-ws systemd unit (CC_CERT + CC_KEY env vars). 5. VERIFY: `openssl x509 -checkend 86400 -noout -in /etc/letsencrypt/live/cc-<region>.caspervpn.com/cert.pem >/dev/null 2>&1 && echo OK`.    AND iOS WSS handshake from `wss://cc-<region>.caspervpn.com/` succeeds with no cert warning. GOTCHAS (preserve from xd-NL-AM2 2026-05-13 experience): (a) NL-AM2 + FR-PAR are caspervpn user with passworded sudo \u2014 DO NOT pipe stdin (`echo $PASS | sudo -S bash -s <<EOF` double-consumes stdin).     Pattern: scp the script first, then `ssh user@host \"echo $PASS | sudo -S bash /tmp/script.sh\"`. (b) Don't use `openssl s_client -brief` when testing \u2014 strips PEM block; downstream `x509 -checkend` fails. (c) Wrap `openssl x509 -checkend -noout` with `>/dev/null 2>&1` \u2014 `-noout` doesn't suppress status messages. P1 because affects 3 production fleet nodes (NL-AM2 + FR-PAR + UK-LON cc hostname). iOS users routing through these nodes get TLS errors or fall back to other protocols.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-05-16T18:58:47Z",
+      "createdDate": "2026-05-16",
+      "completedDate": null
     }
   ],
   "importantNotes": [
