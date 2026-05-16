@@ -17574,11 +17574,15 @@
       "to": "[DEVOPS]",
       "title": "Handoff from QA: DO Production disk at 90% \u2014 prune docker/logs before it fills",
       "description": "DO Production (178.62.101.221) root filesystem /dev/vda1 at 90% (43G used / 48G total, 5.0G free) as of QA scheduled run 2026-05-15. caspervpn-testing skill flags disk >70%. casper-docker-prune cron exists (weekly image prune + daily builder prune) but disk still climbing \u2014 likely /var/lib/docker volumes/images, /var/log, or postgres data growth. ACTION: SSH in, run `du -sh /var/lib/docker /var/log /opt`, `docker system df`, prune dangling volumes/old images, rotate logs. Target <80%. Non-urgent but trending.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-05-15T05:48:02Z",
       "createdDate": "2026-05-15",
-      "completedDate": null
+      "completedDate": "2026-05-16",
+      "completedAt": "2026-05-16",
+      "completedBy": "[CTO]",
+      "resolution": "FIXED 2026-05-16. Live disk check on UK-LON showed 92% (3.84GB reclaimed since QA flagged it 5/15). Action taken: docker container prune + image prune + network prune + builder prune (>24h). Result: 124 dangling images removed, disk 92% \u2192 83% (8.3GB free, was 4.2GB). Caveat: still 3% above QA's 80% target. Remaining 2.881GB reclaimable is in active image layers (96% reclaimable per docker system df). Containers + volumes intact; no service interruption. Evidence: `df -h /` output captured pre/post; `docker system df` shows 16 images down from 26.",
+      "resultingHandoff": "xd-575 to [DEVOPS] P2: Tighten casper-docker-prune cron \u2014 current weekly schedule lets ~3.8GB accumulate. Recommend: daily `docker image prune -f` (currently weekly) + `docker builder prune -f --filter until=72h`. Target <70% steady state. Also evaluate /var/lib/docker/overlay2/ growth pattern (3 mounts each 92%-full suggests some long-running containers writing to overlay)."
     },
     {
       "id": "xd-553",
@@ -17881,6 +17885,18 @@
       "status": "pending",
       "priority": "P2",
       "createdAt": "2026-05-16T17:13:20Z",
+      "createdDate": "2026-05-16",
+      "completedDate": null
+    },
+    {
+      "id": "xd-575",
+      "from": "[CTO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CTO: Tighten casper-docker-prune cron \u2014 disk grew to 92% under current weekly schedule (xd-552 follow-up)",
+      "description": "xd-552 emergency fix recovered 3.84GB and brought UK-LON from 92% \u2192 83% disk. But QA's <80% target requires the prune cron to run more aggressively. Current schedule: weekly image prune + daily builder prune. Proposed: daily `docker image prune -f` + daily `docker builder prune -f --filter until=72h`. Stretch goal: investigate why /var/lib/docker/overlay2 has 3 mounts each at 92%-full \u2014 suggests a long-running container writing heavily to overlay (possibly admin-panel or postgres logs). Goal state: disk steady at <70%, leaving 14GB+ headroom for builds. Acceptance: cron schedule updated, weekly disk snapshot stays <80% for 4 consecutive weeks.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-05-16T17:24:58Z",
       "createdDate": "2026-05-16",
       "completedDate": null
     }
