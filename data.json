@@ -16590,11 +16590,15 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: P2",
       "description": "[POST-LAUNCH] Wire asc_preflight.py into CI/CD before any upload step",
-      "status": "pending",
+      "status": "completed",
       "priority": "tools/asc_preflight.py should run as a mandatory step in any future automated build/upload workflow. Recommend adding to .github/workflows/ios-archive-and-upload.yml: after xcodebuild archive, before xcrun altool/Transporter upload. Failure (exit 1) must abort the workflow. Goal: prevent another Invalid Binary cycle costing days of round-trips with App Review.",
       "createdAt": "2026-04-26T15:38:07Z",
       "createdDate": "2026-04-26",
-      "completedDate": null
+      "completedDate": "2026-05-16",
+      "completedAt": "2026-05-16",
+      "completedBy": "[CTO]",
+      "resolution": "ALREADY DONE 2026-05-16. Evidence: .github/workflows/ios-testflight.yml on production + development (both 145 lines, identical) has step 'ASC preflight gate (xd-481)' at line 81-94. Workflow flow: Checkout \u2192 Select Xcode \u2192 Install Apple cert \u2192 Resolve deps \u2192 Archive \u2192 Bundle 3rd-party dSYMs (xd-419) \u2192 **asc_preflight gate** \u2192 Export IPA \u2192 altool upload \u2192 notify. Gate logic: `python3 tools/asc_preflight.py <archive_path> && EXIT=0 || EXIT=$?` with `case` statement: 0=notice 'All checks passed', 2=warning 'proceeding', other=`exit 1` (aborts before altool). tools/asc_preflight.py exists on both branches (16060 bytes, 351 lines). Task description referenced filename 'ios-archive-and-upload.yml' but the actual workflow is 'ios-testflight.yml' (triggered on push to main/production paths 'ios-app-v2/**', plus workflow_dispatch). Goal achieved: any future archive that fails ASC preflight aborts the workflow BEFORE Apple receives an Invalid Binary.",
+      "resultingHandoff": "(a) None \u2014 terminal task, no downstream needed. (b) Future-proof followup: when iOS team adds App Store (not TestFlight) release workflow, the same asc_preflight gate should be copied into that file. Recommend that gate be extracted into a reusable composite action: .github/actions/asc-preflight/action.yml so both workflows reference it identically."
     },
     {
       "id": "xd-482",
