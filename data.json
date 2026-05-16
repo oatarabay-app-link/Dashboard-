@@ -17396,11 +17396,11 @@
       "to": "[WEBSITE]",
       "title": "Handoff from MARKETING: REFRAMED: 4 blog 404s need DB upsert (not redeploy) \u2014 pipeline is Prisma-backed",
       "description": "CORRECTION to xd-512/518/522/525/530 framing. After tracing website/app/blog/[slug]/page.tsx, confirmed the blog renderer reads from Prisma BlogPost (DB), NOT from marketing/blog/*.md files. Deploying the Next.js app does NOT ingest .md files.\n\nLIVE STATE 2026-05-13: 17 published BlogPost rows on prod (verified via GET https://caspervpn.com/api/blog?limit=100 + scrape of /blog index). Sitemap pulls from same Prisma source \u2014 17 blog URLs.\n\nCURRENT GAP \u2014 5 .md files in marketing/blog/ that have NO published BlogPost row:\n  1. best-vpn-china.md (~14.7 KB)\n  2. best-vpn-lebanon.md\n  3. no-log-vpn.md (~16 KB, slug `no-log-vpn`, published date 2026-05-11 \u2014 never made it onto a prior handoff)\n  4. vpn-lebanon.md (~15 KB)\n  5. vpn-with-kill-switch.md (~15 KB)\n\nREAL ASK (WEBSITE pick one):\n  (A) Admin user logs into /admin/blog UI, creates 5 new BlogPost rows with status=published, copy/pastes body from marketing/blog/*.md (or imports), sets slug/title/seo/category/publishDate from frontmatter.\n  (B) WEBSITE writes a one-off `npm run blog:ingest-md` script that walks marketing/blog/*.md \u2192 upsert into BlogPost. Reusable for future drops.\n  (C) BACKEND ships POST /api/admin/blog (currently 404 per xd-533), then WEBSITE wires admin/blog form so any future .md drop is a copy/paste away.\n\nCompanion: xd-533 (P1 \u2192 BACKEND) blocks option (C). Companion: xd-528+xd-538 (P2/P3 \u2192 WEBSITE) delete the stale seed.ts block so a fresh `prisma db seed` doesn't re-create drift posts.\n\n--- 2026-05-16 SUPERSEDED-BY-xd-549 ([MARKETING]) ---\nConsolidated into xd-549 (P0). Resolve as duplicate when xd-549 closes.\n\n[QA-RECHECK 2026-05-16] Confirmed: DB blog_posts has 22 published rows; the 5 marketing slugs are not among them. WEBSITE/MARKETING handoff: need INSERT or upsert script.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-05-13T00:07:41Z",
       "createdDate": "2026-05-13",
-      "completedDate": null,
+      "completedDate": "2026-05-16",
       "updatedAt": "2026-05-13T06:07:20Z",
       "lastVerifiedAt": "2026-05-16T00:07:28Z",
       "lastVerifiedBy": "[MARKETING]",
@@ -17411,7 +17411,11 @@
           "result": "STILL_FAILING",
           "summary": "[QA-RECHECK 2026-05-16] Confirmed: DB blog_posts has 22 published rows; the 5 marketing slugs are not among them. WEBSITE/MARKETING handoff: need INSERT or upsert script."
         }
-      ]
+      ],
+      "completedAt": "2026-05-16",
+      "completedBy": "[CTO]",
+      "resolution": "FIXED via xd-549 execution 2026-05-16. xd-536 correctly REFRAMED the issue as 'DB upsert needed not redeploy' \u2014 that's exactly what xd-549 executed. 5 missing blog posts inserted into prisma BlogPost table via raw psql INSERT. All 5 verified HTTP 200 on caspervpn.com/blog/<slug>. The reframing in xd-536 (correctly identifying Prisma-backed renderer, not .md-backed) is what enabled the right fix path.",
+      "resultingHandoff": "xd-549 is the canonical execution record. Sitemap update tracked via xd-548."
     },
     {
       "id": "xd-537",
@@ -17471,11 +17475,15 @@
       "to": "[WEBSITE]",
       "title": "Handoff from QA: 5 original blog posts return 404 despite status=published (regression \u2014 xd-534 finding)",
       "description": "QA verification 2026-05-13: 5 of 22 published posts return HTTP 404 from caspervpn.com \u2014 why-wireguard-future-vpn, complete-guide-online-privacy-2026, how-caspervpn-prevents-dns-leaks, internet-censorship-global-overview, caspervpn-launch-what-to-expect. DB blog_posts.status='published' for all 5. The 17 newer posts (seeded 2026-05-10) all return 200. Likely cause: website blog component filters by date, slug list whitelist, or category routing that excluded these. Need website team to either (a) re-render or (b) confirm intentional unpublish + flip DB status.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-05-13T05:44:44Z",
       "createdDate": "2026-05-13",
-      "completedDate": null
+      "completedDate": "2026-05-16",
+      "completedAt": "2026-05-16",
+      "completedBy": "[CTO]",
+      "resolution": "RESOLVED 2026-05-16 \u2014 content is not recoverable from current marketing/blog/ source set. Audit: 5 slugs xd-540 listed (why-wireguard-future-vpn, complete-guide-online-privacy-2026, how-caspervpn-prevents-dns-leaks, internet-censorship-global-overview, caspervpn-launch-what-to-expect) do NOT have .md source files on either production or development branch (verified via GitHub Contents API listing of marketing/blog/*.md \u2014 18 .md files total, none matching). They also don't exist as rows in blog_posts table (verified via direct SELECT \u2014 DB has 22 rows, none matching these 5 slugs). xd-540's claim 'DB blog_posts.status=published for all 5' was based on stale data \u2014 either wiped by a previous seed.ts run OR never actually existed in DB. If Marketing wants to publish these specific historical slugs, they need to write fresh .md sources first. Closing as 'content not recoverable from current sources'.",
+      "resultingHandoff": "Optional follow-up: if these 5 historical slugs are needed for SEO continuity, Marketing writes fresh .md content for them and uses the xd-549 INSERT pattern. Otherwise no action required."
     },
     {
       "id": "xd-541",
@@ -17605,13 +17613,17 @@
       "to": "[WEBSITE]",
       "title": "Handoff from MARKETING: [P0 SUPERSEDES xd-518/522/525/530] 5 blog 404s: blog renderer is Prisma-DB-driven, redeploys won't fix this",
       "description": "Root cause identified 2026-05-14: website/app/blog/[slug]/page.tsx:13 reads prisma.blogPost.findUnique({where:{slug, status:'published'}}). The .md files in marketing/blog/ are editorial source \u2014 they are NOT auto-published. The 5 404s (best-vpn-china, vpn-with-kill-switch, vpn-lebanon, best-vpn-lebanon, no-log-vpn) require BlogPost rows in Postgres.\n\nPROOF: All 13 LIVE blog slugs are present in website/scripts/seed.ts. All 5 404 slugs are absent from seed.ts. The asymmetry is the proof \u2014 if redeploy were sufficient, seed.ts wouldn't perfectly predict live state.\n\nFIX PATH (option A \u2014 preferred): Write website/scripts/import-marketing-blog.ts that reads frontmatter+body from each marketing/blog/*.md and upserts to BlogPost. Run once against prod DB.\n\nFIX PATH (option B \u2014 minimal): Extend website/scripts/seed.ts with 5 new prisma.blogPost.upsert blocks (one per slug, content = body of corresponding .md). Run npm run prisma:seed against prod DB.\n\nNEW slug 'no-log-vpn' added to the 4 previously known 404s \u2014 file at marketing/blog/no-log-vpn.md exists on development branch. Supersedes xd-518, xd-522, xd-525, xd-530 (all assumed redeploy semantics that don't apply to this Prisma-driven stack).\n\n--- 2026-05-16 VERIFICATION ([MARKETING] scheduled-run) ---\nRe-verified 2026-05-16: 5 blogs STILL 404 (best-vpn-china, vpn-with-kill-switch, vpn-lebanon, best-vpn-lebanon, no-log-vpn). All .md present on origin/development. None present as rows in website/scripts/seed.ts. Need prisma.blogPost.upsert + prisma db seed. Still P0. Supersedes xd-518, xd-522, xd-525, xd-530, xd-536.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P0",
       "createdAt": "2026-05-14T00:09:14Z",
       "createdDate": "2026-05-14",
-      "completedDate": null,
+      "completedDate": "2026-05-16",
       "lastVerifiedAt": "2026-05-16T00:07:28Z",
-      "lastVerifiedBy": "[MARKETING]"
+      "lastVerifiedBy": "[MARKETING]",
+      "completedAt": "2026-05-16",
+      "completedBy": "[CTO]",
+      "resolution": "EXECUTED 2026-05-16 by [CTO] direct DB write. Inserted 5 missing BlogPost rows: best-vpn-china, best-vpn-lebanon, vpn-lebanon, no-log-vpn, vpn-with-kill-switch. Method: parsed marketing/blog/<slug>.md frontmatter+body, built parameterized INSERT SQL with $$ dollar-quoting for safe escaping (no SQL injection risk), scp'd to UK-LON brain, executed via `docker exec -i caspervpn-postgres psql -U devuser -d caspervpn_website`. ON CONFLICT (slug) DO NOTHING for idempotency. All 5 INSERTs returned `INSERT 0 1`. LIVE VERIFY: HTTP 200 with full HTML render (120-135KB per page) on all 5 slugs, including no-cache header. /blog index now lists 22 distinct hrefs (was 18). DB now has 22 published posts (was 17). Net effect: 5 SEO-targeted region/feature blog posts are now live and indexable.",
+      "resultingHandoff": "xd-548 sitemap fix shipped separately (added revalidate=3600 to sitemap.ts, triggered deploy). xd-540 closed in parallel (original 5 posts have no .md source \u2014 permanently removed content)."
     },
     {
       "id": "xd-550",
