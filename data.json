@@ -17455,11 +17455,11 @@
       "to": "[WEBSITE]",
       "title": "Handoff from QA: Sitemap missing all blog post URLs (regression \u2014 xd-534 finding)",
       "description": "QA verification of xd-534 on 2026-05-13 confirmed caspervpn.com/sitemap.xml returns 200 but contains zero individual blog-post URLs (grep '/blog/' /tmp/sitemap.xml = 0). Only /blog landing is present. DB has 22 published posts. Sitemap generator must emit one <url><loc> per published blog_posts row. This blocks indexing of all 17 new SEO posts seeded 2026-05-10.\n\n[QA-RECHECK 2026-05-16] curl https://caspervpn.com/sitemap.xml | grep '/blog/' returns 1 entry (the /blog index). DB has 22 published blog_posts rows. Generator still failing silently to fallback. WEBSITE.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-05-13T05:44:44Z",
       "createdDate": "2026-05-13",
-      "completedDate": null,
+      "completedDate": "2026-05-16",
       "qaNotes": [
         {
           "date": "2026-05-16",
@@ -17467,7 +17467,11 @@
           "result": "STILL_FAILING",
           "summary": "[QA-RECHECK 2026-05-16] curl https://caspervpn.com/sitemap.xml | grep '/blog/' returns 1 entry (the /blog index). DB has 22 published blog_posts rows. Generator still failing silently to fallback. WEBSITE."
         }
-      ]
+      ],
+      "completedAt": "2026-05-16",
+      "completedBy": "[CTO]",
+      "resolution": "DUPLICATE of xd-548 (both QA-reported the same sitemap-missing-blog-URLs regression from xd-534 audit). xd-548 carries the canonical fix + evidence. Live sitemap.xml now contains 27 /blog/* URLs.",
+      "resultingHandoff": "See xd-548 for execution detail."
     },
     {
       "id": "xd-540",
@@ -17591,11 +17595,11 @@
       "to": "[WEBSITE]",
       "title": "[REASSIGNED from CTO] Handoff from MARKETING: [P0 SEO] sitemap.xml returns 0 /blog/* URLs despite 13 live posts \u2014 Prisma query silently failing",
       "description": "[CTO REASSIGNMENT 2026-05-16] This is WEBSITE + BACKEND scope (Prisma + sitemap.ts), not CTO infrastructure. Original description preserved below.\n\nwebsite/app/sitemap.ts (lines 53-87) wraps prisma.blogPost.findMany({status:'published'}) in try/catch falling back to static-only on failure. Live https://caspervpn.com/sitemap.xml returns 0 /blog/* URLs even though /blog index renders 13 live posts (verified 2026-05-14 via curl + grep). Two possible root causes: (a) Prisma client throws at sitemap render time -- needs error log inspection (docker logs caspervpn-website-prod | grep -i sitemap), (b) DATABASE_URL not bound in sitemap render context. Fix path: (1) instrument the catch block with console.error logging; (2) deploy; (3) inspect logs from one sitemap request; (4) fix underlying Prisma call; (5) optionally split blogPages and categoryPages so partial failure doesn't kill the whole blog SEO surface. Impact: 18 indexable URLs (13 live + 5 to-publish) invisible to Google via canonical sitemap. Highest-leverage SEO fix on the table.\n\n--- 2026-05-16 VERIFICATION ([MARKETING] scheduled-run) ---\nRe-verified 2026-05-16: sitemap.xml STILL returns 0 /blog/* URLs. 17 blog posts ARE live in DB. Prisma query in website/app/sitemap.ts continues to fail or fall back to static-only. Still P0.\n\n[QA-RECHECK 2026-05-16] Same condition as xd-539. sitemap.xml has 0 /blog/<slug> URLs. CTO.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P0",
       "createdAt": "2026-05-14T00:09:14Z",
       "createdDate": "2026-05-14",
-      "completedDate": null,
+      "completedDate": "2026-05-16",
       "lastVerifiedAt": "2026-05-16T00:07:28Z",
       "lastVerifiedBy": "[MARKETING]",
       "qaNotes": [
@@ -17605,7 +17609,11 @@
           "result": "STILL_FAILING",
           "summary": "[QA-RECHECK 2026-05-16] Same condition as xd-539. sitemap.xml has 0 /blog/<slug> URLs. CTO."
         }
-      ]
+      ],
+      "completedAt": "2026-05-16",
+      "completedBy": "[CTO]",
+      "resolution": "FIXED 2026-05-16. Root cause + execution path: (1) DIAGNOSED: sitemap.ts was SSG'd at build time. The cached static result had 0 blog URLs because (a) it was generated before today's INSERTs and (b) the try/catch silently swallowed any prisma error. (2) FIX 1 (FAILED): added `export const revalidate = 3600` \u2014 only changes cache TTL, doesn't force first regen. Sitemap stayed at 0 after that deploy. (3) FIX 2 (SUCCEEDED): changed to `export const dynamic = 'force-dynamic'` so sitemap regenerates on EVERY request, PLUS added `console.error` in catch block to log silent prisma failures. (4) Pushed both branches \u2192 deploy run 25968552222 SUCCESS at 2026-05-16T17:39 UTC. (5) Discovered + fixed disk-full emergency mid-deploy (100% \u2192 84% via aggressive prune: docker image -af + builder -af + journalctl vacuum 50M). VERIFIED: live `curl -s 'https://caspervpn.com/sitemap.xml' | grep -c '/blog/'` returns 27 (22 published posts \u00d7 /blog/<slug> + 5 /blog/category/<slug>). Net effect: Google + AI crawlers will now index all 22 blog posts via sitemap. SEO regression closed.",
+      "resultingHandoff": "(a) None \u2014 terminal. (b) Disk pressure follow-up = xd-NEW (next handoff to tighten caspervpn-website rebuild's disk-hungry behavior \u2014 disk filled within 30 min today from rebuilds alone, faster than xd-575 weekly prune cron can keep up)."
     },
     {
       "id": "xd-549",
