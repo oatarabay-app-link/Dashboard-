@@ -708,6 +708,7 @@ function renderOverview(){
   let html='';
   // Open Cross-Dept widget (landing page requirement — CTO directive 2026-04-15)
   html+=renderOpenXDeptWidget();
+  html+=renderDeptBreakdownWidget();
   // Blocked first
   const blockedTasks=sorted.filter(t=>t.blocked);
   if(blockedTasks.length){
@@ -1499,6 +1500,44 @@ function renderOpenXDeptWidget(){
   const overflow=tasks.length>15?`<p style="font-size:11px;color:var(--muted);margin-top:6px">+${tasks.length-15} more → <a href="#" onclick="document.querySelector('[data-tab=xdept]').click();return false" style="color:var(--blue)">Cross-Dept tab</a></p>`:'';
   return `<div class="section"><div class="section-title">📋 Open Cross-Dept Tasks (${tasks.length})</div>${rows}${overflow}</div>`;
 }
+
+// Phase D 2026-05-16: per-dept active xd-task counts widget
+// Reads D.xDeptStats (populated by factory_bootstrap normalization)
+// Falls back to live count if xDeptStats absent
+function renderDeptBreakdownWidget(){
+  let stats = D.xDeptStats;
+  if(!stats){
+    // Fallback: compute on the fly
+    const counts = {};
+    (D.crossDeptTasks||[]).forEach(t=>{
+      const s = (t.status||'').toLowerCase();
+      if(s==='pending'||s==='in_progress'){
+        const to = (t.to||'?').trim();
+        counts[to] = (counts[to]||0) + 1;
+      }
+    });
+    stats = {activeByDept: counts, totalActive: Object.values(counts).reduce((a,b)=>a+b,0), totalCompleted: 0, totalStale30d: 0};
+  }
+  const byDept = stats.activeByDept || {};
+  const entries = Object.entries(byDept).sort((a,b)=>b[1]-a[1]);
+  if(entries.length===0){
+    return '';
+  }
+  let pills = '';
+  entries.forEach(([dept, count])=>{
+    const safeDept = ctoEsc(dept);
+    const safeCount = parseInt(count,10) || 0;
+    // Color the pill by count: red=heavy(>10), orange=medium(5-10), yellow=light(<5)
+    const color = safeCount>10 ? 'red' : (safeCount>=5 ? 'orange' : 'yellow');
+    pills += '<span style="display:inline-block;padding:4px 10px;margin:2px;border-radius:12px;background:var(--panel-alt,rgba(255,255,255,0.05));border-left:3px solid var(--'+color+');font-size:12px;font-weight:600">'+safeDept+' <span style="color:var(--muted);font-weight:400">'+safeCount+'</span></span>';
+  });
+  const totalActive = parseInt(stats.totalActive,10) || 0;
+  const totalCompleted = parseInt(stats.totalCompleted,10) || 0;
+  const totalStale = parseInt(stats.totalStale30d,10) || 0;
+  const staleNote = totalStale>0 ? ' <span style="color:var(--orange);font-size:11px;margin-left:8px">⚠️ '+totalStale+' stale (>30d)</span>' : '';
+  return '<div class="section"><div class="section-title">\u{1F4CA} Active Cross-Dept Tasks by Department ('+totalActive+' active, '+totalCompleted+' completed)'+staleNote+'</div><div style="line-height:1.8">'+pills+'</div></div>';
+}
+
 
 // Finalized tab — un-summarized full-fidelity view of completed cross-dept tasks.
 // Per CTO directive 2026-04-15: finalized tasks must preserve full description,
