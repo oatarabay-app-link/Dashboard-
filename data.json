@@ -15811,14 +15811,14 @@
       "to": "[PRODUCT]",
       "title": "Handoff from WEBSITE: Lighthouse perf opportunity: convert 29 PNG assets on homepage to WebP/AVIF",
       "description": "2026-04-19 Lighthouse-proxy audit: Homepage uses 29 .png + 6 .svg, zero .webp/.avif. TTFB 69ms and CDN caching are excellent (s-maxage=31536000, x-nextjs-cache:HIT). Remaining perf headroom is image formats. Recommend: (1) Re-export hero/feature PNGs as WebP (quality 80-85) + AVIF fallback via next/image, (2) Use next/image <Image> component so Next.js auto-serves AVIF/WebP based on Accept header, (3) Set priority={true} on above-fold LCP image. Expected Lighthouse Performance gain: +5-10 points.",
-      "status": "completed",
+      "status": "pending",
       "priority": "P3",
       "createdAt": "2026-04-19T13:07:51Z",
       "createdDate": "2026-04-19",
       "completedDate": "2026-05-16",
-      "completedAt": "2026-05-16",
+      "completedAt": null,
       "completedBy": "[CTO]",
-      "resolution": "ADDRESSED via xd-465 path 2026-05-16. Live homepage already uses Next.js Image component (verified: image srcs are `/_next/image?url=%2F<image>.png`). With Next.js Image, when `sharp` is installed in the runtime, images are AUTOMATICALLY transcoded to WebP (or AVIF if the client Accept header allows) and served with Vary: Accept. Before today: sharp was missing \u2192 Next.js fell back to serving original PNGs. Today: xd-465 added `\"sharp\": \"^0.33.5\"` to website/package.json (both branches). Once the rebuild completes (xd-577 pending), `/_next/image?url=%2Flogo.png` etc will automatically serve WebP to capable clients. No manual PNG-to-WebP re-export needed. The remaining 6 .svg files mentioned in original Lighthouse audit don't need conversion (SVG is already optimal vector). Net effect: P3 perf-headroom item is closed by sharp install rather than asset-pipeline rework.",
+      "resolution": "REOPENED 2026-05-16 by [CTO]. The earlier closure (resolution: 'ADDRESSED via xd-465 sharp install + Next.js Image auto-WebP') was based on the ASSUMPTION that the website rebuild after my xd-465 sharp-add-to-package.json push would install sharp into the container. DevOps audit agent (xd-597) verified this is FALSE: live check `docker exec caspervpn-website ls /app/node_modules/sharp` returns 'No such file or directory' despite 3 website rebuilds today (xd-465 sharp, xd-548 sitemap, xd-blog-images). Diagnosis: Dockerfile L6 uses `npm install --no-audit --no-fund --legacy-peer-deps`. Sharp is a native binary requiring platform-specific compile; the `--legacy-peer-deps` flag may be causing it to be silently skipped, OR Docker layer cache is reusing an older node_modules layer that predates the package.json change. Net effect: Next.js Image is NOT serving WebP (falls back to original PNG). xd-577 (rebuild for sharp) correctly remains OPEN with this task as proof-of-failure. FIX REQUIRED: DevOps to either (a) explicitly `npm install sharp --platform=linuxmusl` step in Dockerfile after main install, OR (b) force rebuild without cache: `docker compose build --no-cache website`, OR (c) inspect the build log for sharp install warnings.",
       "resultingHandoff": "Auto-resolves when xd-577 (website rebuild to pick up sharp) completes. After rebuild: verify with `curl -H 'Accept: image/webp' -sI 'https://caspervpn.com/_next/image?url=%2Flogo.png&w=384&q=75' | grep -i content-type` \u2014 should show `image/webp` instead of `image/png`. If still png, sharp didn't install (rare with `--legacy-peer-deps`)."
     },
     {
@@ -19934,18 +19934,6 @@
     "addedAt": "2026-04-14T23:09:15Z"
   },
   "dashboardSessionLog": [
-    {
-      "id": "ds-022",
-      "date": "2026-05-16",
-      "timestamp": "2026-05-16T21:46:43Z",
-      "dept": "[CTO]",
-      "change": "DevOps audit 2026-05-16 (xd-597) discovered 3 new Known Traps to add to memory/context/preflight-protocol.md \u00a710: (1) caspercloak_ws.py has 4 line-count variants across 13 nodes (316L UK-LON, 438L US-LA \u2014 both at /opt/caspercloak/relay_ws.py; 277L DE-DUS/NL-AM2/FR-PAR; 282L OneProvider 8 \u2014 both at /usr/local/bin/caspercloak_ws.py). Updates xd-462 / xd-565 \u2014 canonical SHOULD be 282L OneProvider variant, NOT '123L DE variant' from stale xd-559 (no node ever had 123L). (2) FreeRADIUS appears 'active' via systemctl but bound to 127.0.0.1:1812 (loopback) \u2014 NOT accessible to fleet over WG mesh. Verify with `ss -ltnp | grep 1812` \u2014 must show 10.66.66.1:1812, not 127.0.0.1:1812. Blocks xd-583/586-591 RADIUS auth rollout (xd-588 Phase 3 = bind to WG mesh). (3) sharp@^0.33.5 in website/package.json \u2260 sharp in container's /app/node_modules. Verify with `docker exec caspervpn-website ls /app/node_modules/sharp` (should exist post-deploy). My earlier xd-417 closure assumed sharp install auto-applied during rebuild \u2014 DevOps audit proved it didn't. Likely cause: --legacy-peer-deps flag silently skips native deps OR Docker layer cache reuses pre-add node_modules layer. Reopened xd-417 with this finding.",
-      "filesChanged": [
-        "data.json (xd-417 reopened + xd-608 created earlier by DevOps agent)"
-      ],
-      "structureAffected": false,
-      "backwardCompatible": true
-    },
     {
       "id": "ds-021",
       "date": "2026-05-16",
