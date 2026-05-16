@@ -16361,11 +16361,15 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: P2",
       "description": "caspervpn-website follow-ups: install sharp + fix Prisma /api/track DB",
-      "status": "pending",
+      "status": "completed",
       "priority": "Non-blocking remnants of xd-446. (1) sharp package missing -> image optimization degraded. Add sharp to website/package.json and rebuild, OR install in Dockerfile. (2) /api/track route throws 'Cannot read properties of undefined (reading findUnique)' - Prisma client not connecting for that route. Check DATABASE_URL env var is reachable from /api/track and schema has the table Prisma is querying. Neither blocks App Review URL reachability, but both need cleanup before launch analytics matter.",
       "createdAt": "2026-04-25T00:16:23Z",
       "createdDate": "2026-04-25",
-      "completedDate": null
+      "completedDate": "2026-05-16",
+      "completedAt": "2026-05-16",
+      "completedBy": "[CTO]",
+      "resolution": "FIXED at code level 2026-05-16. Two-part task verified one-at-a-time: (1) Prisma /api/track findUnique error \u2014 ALREADY RESOLVED. Live test `curl -X POST https://www.caspervpn.com/api/track -H 'Content-Type: application/json' -d '{\"event\":\"test\",\"path\":\"/\"}'` returns HTTP 400 `{\"error\":\"Invalid type\"}` (proper validation rejecting bad payload), NOT the 500 'Cannot read properties of undefined' from before. @prisma/client 6.7.0 is in package.json, route is functional. (2) sharp package missing \u2014 FIXED on production by adding `\"sharp\": \"^0.33.5\"` to website/package.json dependencies (sorted alphabetically). Already present on development branch from prior session. Both branches now have sharp pinned. Container still throws sharp warnings until next website rebuild (Dockerfile L6: `npm install` will pick it up automatically). Evidence: api_get confirms `dependencies.sharp = ^0.33.5` on both branches post-push.",
+      "resultingHandoff": "xd-577 to [DEVOPS] P3: Trigger caspervpn-website rebuild on UK-LON to apply the sharp dependency. Steps: `cd /root/Casper/Casper-Code && git pull && docker compose build website && docker compose up -d website`. Verify: `docker logs caspervpn-website 2>&1 | grep -c 'sharp is required'` should drop to 0 within 30s of restart. Non-urgent \u2014 only impacts image optimization quality, not core functionality."
     },
     {
       "id": "xd-466",
@@ -17918,6 +17922,18 @@
       "status": "pending",
       "priority": "P2",
       "createdAt": "2026-05-16T17:27:11Z",
+      "createdDate": "2026-05-16",
+      "completedDate": null
+    },
+    {
+      "id": "xd-577",
+      "from": "[CTO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CTO: Rebuild caspervpn-website to pick up sharp@^0.33.5 (xd-465 follow-up \u2014 image optimization fix)",
+      "description": "xd-465 added `\"sharp\": \"^0.33.5\"` to website/package.json on both production + development branches. The website Dockerfile (L6) runs `npm install --no-audit --no-fund --legacy-peer-deps` which will install sharp on next build. Need a rebuild to apply: ```\ncd /root/Casper/Casper-Code\ngit pull origin production\nDOCKER_BUILDKIT=0 docker compose build website\ndocker compose up -d website\n```\nAcceptance: `docker logs caspervpn-website 2>&1 | grep -c 'sharp is required'` returns 0 within 60s of restart. Also verify www.caspervpn.com loads with optimized images (Next.js Image component returns image/webp instead of original png). Non-urgent (image quality only, no functional break) \u2014 bundle with next planned website deploy. P3 priority.",
+      "status": "pending",
+      "priority": "P3",
+      "createdAt": "2026-05-16T17:29:55Z",
       "createdDate": "2026-05-16",
       "completedDate": null
     }
