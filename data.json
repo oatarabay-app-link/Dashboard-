@@ -9246,9 +9246,15 @@
           "author": "qa-scheduled",
           "result": "INCREMENTAL",
           "summary": "Scheduled QA run 2026-05-15. Prod-smoke PASS: api.caspervpn.com /health 200, /api/v1/health 200, /api/v1/plans 200, /api/servers 401(auth-gated). Infra-smoke PASS: Docker 17/17 UP (api/postgres/redis/nginx/admin-react healthy), WireGuard wg0 up :51820, SSL valid->2026-06-24, SSH hardened (AC0 PASS), fail2ban active. \u00a79 filesystem sweep on DO Production CLEAN (no rogue wg-peer cron). Findings filed: xd-551 (WEBSITE P1 route.ts pricing drift), xd-552 (DEVOPS P2 disk 90%). xd-114 remains in_progress \u2014 ongoing master-validation mission."
+        },
+        {
+          "date": "2026-05-16",
+          "author": "qa-scheduled",
+          "result": "INCREMENTAL",
+          "summary": "Scheduled QA prod-smoke on 2026-05-16 from NL Primary. PASS: /health 200, /api/v1/health 200, /api/v1/plans 200, /api/v1/servers 401 (auth-gated, expected). Website root 200, sitemap.xml 200, admin SPA 200. Docker fleet healthy (api+postgres+redis+nginx+admin-react all UP). DB counts: Users=40, VpnServers=13, blog_posts=22 (all 'published'), blog_categories=5, admin_users=1. Blog post smoke: 6/6 sampled slugs from DB return 200 (best-free-vpn-2026, expressvpn-vs-caspervpn, nordvpn-vs-caspervpn, quantum-encryption-explained, wireguard-vs-openvpn, vpn-setup-guide). REGRESSIONS STILL ACTIVE (no movement since 2026-05-13): (1) xd-500/xd-533 admin route 404s \u2014 /api/admin/{affiliates,email-campaigns,threats} still 404 with auth (11 days open, BACKEND owns). (2) xd-539/xd-548 sitemap missing blog URLs \u2014 sitemap.xml has 1 /blog URL, DB has 22 published posts (3 days open, WEBSITE/CTO own). (3) xd-530/xd-536 5 marketing-authored .md slugs (best-vpn-china, vpn-with-kill-switch, vpn-lebanon, best-vpn-lebanon, no-log-vpn) still 404 \u2014 confirmed absent from blog_posts table; needs DB upsert (xd-536 reframed correctly). YELLOW: NL Primary /dev/vda1 at 91% (43G/48G) \u2014 devops disk pressure. /var/lib/docker/overlay2=12G, /root=12G, /home=11G. INFRA NOTE: postgres container env is POSTGRES_USER=casper_prod, POSTGRES_DB=caspervpn (memory was inverted). VpnServers_CasperCloakDomain_backup_2026_05_13 table exists \u2014 confirms a 2026-05-13 schema change. Uptime 24d, load 0.02. No new failures introduced since 2026-05-15 run."
         }
       ],
-      "qaLastVerified": "2026-05-05",
+      "qaLastVerified": "2026-05-16",
       "qaVerdict": "INCREMENTAL"
     },
     {
@@ -15907,13 +15913,19 @@
       "createdAt": "2026-05-05T05:49:55Z",
       "createdDate": "2026-05-05",
       "title": "Handoff from QA: Missing admin controllers \u2014 frontend calls 404",
-      "description": "Admin React frontend bundle references the following /api/admin/* paths that return 404 with valid auth token, despite underlying tables existing in PROD caspervpn DB:\n- /api/admin/blog (blog_posts has 5 rows, blog_categories has 3)\n- /api/admin/blog/posts\n- /api/admin/blog/categories\n- /api/admin/ddos-alerts (DdosAlerts table exists)\n- /api/admin/ddos\n- /api/admin/threats (ThreatDetections table exists)\n- /api/admin/affiliates (affiliates table exists)\n- /api/admin/email-campaigns (email_campaigns has 3 rows)\n\nCasperVPN.dll strings show only AdminSettingsController has registered routes for /api/admin/*; other expected controllers (AdminBlogController, AdminDdosController, AdminThreatsController, etc.) are NOT compiled into the production binary. Either controllers were never written or build did not include them. Memory project_admin_panel_full_qa_2026_04_02b.md claimed \"25/25 pages green\" \u2014 this is either regression or memory was overstated.\n\nIMPACT: Admin pages for blog, ddos alerts, threats, affiliates, email campaigns will display empty/error states.",
+      "description": "Admin React frontend bundle references the following /api/admin/* paths that return 404 with valid auth token, despite underlying tables existing in PROD caspervpn DB:\n- /api/admin/blog (blog_posts has 5 rows, blog_categories has 3)\n- /api/admin/blog/posts\n- /api/admin/blog/categories\n- /api/admin/ddos-alerts (DdosAlerts table exists)\n- /api/admin/ddos\n- /api/admin/threats (ThreatDetections table exists)\n- /api/admin/affiliates (affiliates table exists)\n- /api/admin/email-campaigns (email_campaigns has 3 rows)\n\nCasperVPN.dll strings show only AdminSettingsController has registered routes for /api/admin/*; other expected controllers (AdminBlogController, AdminDdosController, AdminThreatsController, etc.) are NOT compiled into the production binary. Either controllers were never written or build did not include them. Memory project_admin_panel_full_qa_2026_04_02b.md claimed \"25/25 pages green\" \u2014 this is either regression or memory was overstated.\n\nIMPACT: Admin pages for blog, ddos alerts, threats, affiliates, email campaigns will display empty/error states.\n\n[QA-RECHECK 2026-05-16] Re-tested with valid token. /api/admin/affiliates=404, /api/admin/email-campaigns=404, /api/admin/threats=404. /api/admin/users=401 and /api/admin/dashboard=401 confirm auth pipeline works \u2014 these specific routes are not registered. 11 days open. P0 BACKEND.",
       "qaNotes": [
         {
           "date": "2026-05-05",
           "author": "qa-scheduled",
           "result": "INCREMENTAL",
           "summary": "Prod-smoke pass on 2026-05-05. api.caspervpn.com healthy, /api/v1/health=200, /api/v1/plans=200. Admin auth flow 200 with claude-dev creds. NEW FINDINGS: (1) /api/admin/{blog,blog/posts,blog/categories,ddos,ddos-alerts,threats,affiliates,email-campaigns} all return 404 despite blog_posts=5/blog_categories=3/DdosAlerts table populated in PROD. Frontend bundle references these paths \u2014 backend controllers missing. Handoff to [BACKEND]. (2) Memory file project_postgres_actual_creds.md is stale \u2014 documents DEV creds (caspervpn_dev/devuser) as \"actual\"; PROD is caspervpn/casper_prod (97 tables, 31 Users, 13 VpnServers, 95 Payments). (3) /api/v1/servers returns 401 unauth \u2014 verify whether intended or if public posture changed. (4) ASO + Stripe self-tested ACs cannot be QA-upgraded: ASC requires marketing access; Stripe uses placeholder keys."
+        },
+        {
+          "date": "2026-05-16",
+          "author": "qa-scheduled",
+          "result": "STILL_FAILING",
+          "summary": "[QA-RECHECK 2026-05-16] Re-tested with valid token. /api/admin/affiliates=404, /api/admin/email-campaigns=404, /api/admin/threats=404. /api/admin/users=401 and /api/admin/dashboard=401 confirm auth pipeline works \u2014 these specific routes are not registered. 11 days open. P0 BACKEND."
         }
       ]
     },
@@ -16337,7 +16349,7 @@
       "from": "[MARKETING]",
       "to": "[WEBSITE]",
       "title": "Handoff from MARKETING: P1 nudge: 4 blog posts still 404 on caspervpn.com \u2014 trigger website redeploy",
-      "description": "VERIFICATION RESULT (caspervpn.com fetched 2026-05-13 scheduled marketing run):\n\u2022 /blog/best-vpn-china \u2192 404\n\u2022 /blog/vpn-with-kill-switch \u2192 404\n\u2022 /blog/vpn-lebanon \u2192 404\n\u2022 /blog/best-vpn-lebanon \u2192 404\n\u2022 /blog/no-log-vpn \u2192 404  [NEW \u2014 discovered 2026-05-13]\nAll 5 .md files present in marketing/blog/ on origin/development. Sitemap.xml also missing all 5 (DB-backed sitemap).\n\nROOT CAUSE (already known per xd-536): The /blog renderer reads from Prisma BlogPost (DB). Redeploying the Next.js app does NOT publish marketing/blog/*.md files. ACTIONABLE ASK lives in xd-536, NOT this ticket. Keep this open as the running 'gap count' nudge until parity is achieved.\n\nDay-3 status: 5 missing, 0 closed. xd-518 now at Day 3. Escalation protocol (xd-529) gate met for P0 promotion IF press outreach starts depending on these pages.\n\n--- 2026-05-16 SUPERSEDED-BY-xd-549 ([MARKETING]) ---\nConsolidated into xd-549 (P0). Resolve as duplicate when xd-549 closes.",
+      "description": "VERIFICATION RESULT (caspervpn.com fetched 2026-05-13 scheduled marketing run):\n\u2022 /blog/best-vpn-china \u2192 404\n\u2022 /blog/vpn-with-kill-switch \u2192 404\n\u2022 /blog/vpn-lebanon \u2192 404\n\u2022 /blog/best-vpn-lebanon \u2192 404\n\u2022 /blog/no-log-vpn \u2192 404  [NEW \u2014 discovered 2026-05-13]\nAll 5 .md files present in marketing/blog/ on origin/development. Sitemap.xml also missing all 5 (DB-backed sitemap).\n\nROOT CAUSE (already known per xd-536): The /blog renderer reads from Prisma BlogPost (DB). Redeploying the Next.js app does NOT publish marketing/blog/*.md files. ACTIONABLE ASK lives in xd-536, NOT this ticket. Keep this open as the running 'gap count' nudge until parity is achieved.\n\nDay-3 status: 5 missing, 0 closed. xd-518 now at Day 3. Escalation protocol (xd-529) gate met for P0 promotion IF press outreach starts depending on these pages.\n\n--- 2026-05-16 SUPERSEDED-BY-xd-549 ([MARKETING]) ---\nConsolidated into xd-549 (P0). Resolve as duplicate when xd-549 closes.\n\n[QA-RECHECK 2026-05-16] All 5 slugs (best-vpn-china, vpn-with-kill-switch, vpn-lebanon, best-vpn-lebanon, no-log-vpn) confirmed ABSENT from blog_posts table on PROD. xd-536's reframing is correct: needs DB upsert, not redeploy.",
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-05-12T18:30:03Z",
@@ -16346,7 +16358,15 @@
       "handoffNote": "2026-05-13 marketing scheduled run: 4 blogs STILL 404 (5.6h after xd-530 filed). No override-gate trigger (no CEO P0 nudge, P1 priority, idle < 24h). REFRAMED via new handoff (see today's xd) \u2014 blog publication is DB-backed, not file-backed. \"Redeploy\" alone won't fix this. Both handoffs now point to the real upsert / pipeline-build ask.",
       "updatedAt": "2026-05-13T06:07:20Z",
       "lastVerifiedAt": "2026-05-16T00:07:28Z",
-      "lastVerifiedBy": "[MARKETING]"
+      "lastVerifiedBy": "[MARKETING]",
+      "qaNotes": [
+        {
+          "date": "2026-05-16",
+          "author": "qa-scheduled",
+          "result": "STILL_FAILING",
+          "summary": "[QA-RECHECK 2026-05-16] All 5 slugs (best-vpn-china, vpn-with-kill-switch, vpn-lebanon, best-vpn-lebanon, no-log-vpn) confirmed ABSENT from blog_posts table on PROD. xd-536's reframing is correct: needs DB upsert, not redeploy."
+        }
+      ]
     },
     {
       "id": "xd-531",
@@ -16420,7 +16440,7 @@
       "from": "[MARKETING]",
       "to": "[WEBSITE]",
       "title": "Handoff from MARKETING: REFRAMED: 4 blog 404s need DB upsert (not redeploy) \u2014 pipeline is Prisma-backed",
-      "description": "CORRECTION to xd-512/518/522/525/530 framing. After tracing website/app/blog/[slug]/page.tsx, confirmed the blog renderer reads from Prisma BlogPost (DB), NOT from marketing/blog/*.md files. Deploying the Next.js app does NOT ingest .md files.\n\nLIVE STATE 2026-05-13: 17 published BlogPost rows on prod (verified via GET https://caspervpn.com/api/blog?limit=100 + scrape of /blog index). Sitemap pulls from same Prisma source \u2014 17 blog URLs.\n\nCURRENT GAP \u2014 5 .md files in marketing/blog/ that have NO published BlogPost row:\n  1. best-vpn-china.md (~14.7 KB)\n  2. best-vpn-lebanon.md\n  3. no-log-vpn.md (~16 KB, slug `no-log-vpn`, published date 2026-05-11 \u2014 never made it onto a prior handoff)\n  4. vpn-lebanon.md (~15 KB)\n  5. vpn-with-kill-switch.md (~15 KB)\n\nREAL ASK (WEBSITE pick one):\n  (A) Admin user logs into /admin/blog UI, creates 5 new BlogPost rows with status=published, copy/pastes body from marketing/blog/*.md (or imports), sets slug/title/seo/category/publishDate from frontmatter.\n  (B) WEBSITE writes a one-off `npm run blog:ingest-md` script that walks marketing/blog/*.md \u2192 upsert into BlogPost. Reusable for future drops.\n  (C) BACKEND ships POST /api/admin/blog (currently 404 per xd-533), then WEBSITE wires admin/blog form so any future .md drop is a copy/paste away.\n\nCompanion: xd-533 (P1 \u2192 BACKEND) blocks option (C). Companion: xd-528+xd-538 (P2/P3 \u2192 WEBSITE) delete the stale seed.ts block so a fresh `prisma db seed` doesn't re-create drift posts.\n\n--- 2026-05-16 SUPERSEDED-BY-xd-549 ([MARKETING]) ---\nConsolidated into xd-549 (P0). Resolve as duplicate when xd-549 closes.",
+      "description": "CORRECTION to xd-512/518/522/525/530 framing. After tracing website/app/blog/[slug]/page.tsx, confirmed the blog renderer reads from Prisma BlogPost (DB), NOT from marketing/blog/*.md files. Deploying the Next.js app does NOT ingest .md files.\n\nLIVE STATE 2026-05-13: 17 published BlogPost rows on prod (verified via GET https://caspervpn.com/api/blog?limit=100 + scrape of /blog index). Sitemap pulls from same Prisma source \u2014 17 blog URLs.\n\nCURRENT GAP \u2014 5 .md files in marketing/blog/ that have NO published BlogPost row:\n  1. best-vpn-china.md (~14.7 KB)\n  2. best-vpn-lebanon.md\n  3. no-log-vpn.md (~16 KB, slug `no-log-vpn`, published date 2026-05-11 \u2014 never made it onto a prior handoff)\n  4. vpn-lebanon.md (~15 KB)\n  5. vpn-with-kill-switch.md (~15 KB)\n\nREAL ASK (WEBSITE pick one):\n  (A) Admin user logs into /admin/blog UI, creates 5 new BlogPost rows with status=published, copy/pastes body from marketing/blog/*.md (or imports), sets slug/title/seo/category/publishDate from frontmatter.\n  (B) WEBSITE writes a one-off `npm run blog:ingest-md` script that walks marketing/blog/*.md \u2192 upsert into BlogPost. Reusable for future drops.\n  (C) BACKEND ships POST /api/admin/blog (currently 404 per xd-533), then WEBSITE wires admin/blog form so any future .md drop is a copy/paste away.\n\nCompanion: xd-533 (P1 \u2192 BACKEND) blocks option (C). Companion: xd-528+xd-538 (P2/P3 \u2192 WEBSITE) delete the stale seed.ts block so a fresh `prisma db seed` doesn't re-create drift posts.\n\n--- 2026-05-16 SUPERSEDED-BY-xd-549 ([MARKETING]) ---\nConsolidated into xd-549 (P0). Resolve as duplicate when xd-549 closes.\n\n[QA-RECHECK 2026-05-16] Confirmed: DB blog_posts has 22 published rows; the 5 marketing slugs are not among them. WEBSITE/MARKETING handoff: need INSERT or upsert script.",
       "status": "pending",
       "priority": "P2",
       "createdAt": "2026-05-13T00:07:41Z",
@@ -16428,7 +16448,15 @@
       "completedDate": null,
       "updatedAt": "2026-05-13T06:07:20Z",
       "lastVerifiedAt": "2026-05-16T00:07:28Z",
-      "lastVerifiedBy": "[MARKETING]"
+      "lastVerifiedBy": "[MARKETING]",
+      "qaNotes": [
+        {
+          "date": "2026-05-16",
+          "author": "qa-scheduled",
+          "result": "STILL_FAILING",
+          "summary": "[QA-RECHECK 2026-05-16] Confirmed: DB blog_posts has 22 published rows; the 5 marketing slugs are not among them. WEBSITE/MARKETING handoff: need INSERT or upsert script."
+        }
+      ]
     },
     {
       "id": "xd-537",
@@ -16459,12 +16487,20 @@
       "from": "[QA]",
       "to": "[WEBSITE]",
       "title": "Handoff from QA: Sitemap missing all blog post URLs (regression \u2014 xd-534 finding)",
-      "description": "QA verification of xd-534 on 2026-05-13 confirmed caspervpn.com/sitemap.xml returns 200 but contains zero individual blog-post URLs (grep '/blog/' /tmp/sitemap.xml = 0). Only /blog landing is present. DB has 22 published posts. Sitemap generator must emit one <url><loc> per published blog_posts row. This blocks indexing of all 17 new SEO posts seeded 2026-05-10.",
+      "description": "QA verification of xd-534 on 2026-05-13 confirmed caspervpn.com/sitemap.xml returns 200 but contains zero individual blog-post URLs (grep '/blog/' /tmp/sitemap.xml = 0). Only /blog landing is present. DB has 22 published posts. Sitemap generator must emit one <url><loc> per published blog_posts row. This blocks indexing of all 17 new SEO posts seeded 2026-05-10.\n\n[QA-RECHECK 2026-05-16] curl https://caspervpn.com/sitemap.xml | grep '/blog/' returns 1 entry (the /blog index). DB has 22 published blog_posts rows. Generator still failing silently to fallback. WEBSITE.",
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-05-13T05:44:44Z",
       "createdDate": "2026-05-13",
-      "completedDate": null
+      "completedDate": null,
+      "qaNotes": [
+        {
+          "date": "2026-05-16",
+          "author": "qa-scheduled",
+          "result": "STILL_FAILING",
+          "summary": "[QA-RECHECK 2026-05-16] curl https://caspervpn.com/sitemap.xml | grep '/blog/' returns 1 entry (the /blog index). DB has 22 published blog_posts rows. Generator still failing silently to fallback. WEBSITE."
+        }
+      ]
     },
     {
       "id": "xd-540",
@@ -16567,14 +16603,22 @@
       "from": "[MARKETING]",
       "to": "[CTO]",
       "title": "Handoff from MARKETING: [P0 SEO] sitemap.xml returns 0 /blog/* URLs despite 13 live posts \u2014 Prisma query silently failing",
-      "description": "website/app/sitemap.ts (lines 53-87) wraps prisma.blogPost.findMany({status:'published'}) in try/catch falling back to static-only on failure. Live https://caspervpn.com/sitemap.xml returns 0 /blog/* URLs even though /blog index renders 13 live posts (verified 2026-05-14 via curl + grep). Two possible root causes: (a) Prisma client throws at sitemap render time -- needs error log inspection (docker logs caspervpn-website-prod | grep -i sitemap), (b) DATABASE_URL not bound in sitemap render context. Fix path: (1) instrument the catch block with console.error logging; (2) deploy; (3) inspect logs from one sitemap request; (4) fix underlying Prisma call; (5) optionally split blogPages and categoryPages so partial failure doesn't kill the whole blog SEO surface. Impact: 18 indexable URLs (13 live + 5 to-publish) invisible to Google via canonical sitemap. Highest-leverage SEO fix on the table.\n\n--- 2026-05-16 VERIFICATION ([MARKETING] scheduled-run) ---\nRe-verified 2026-05-16: sitemap.xml STILL returns 0 /blog/* URLs. 17 blog posts ARE live in DB. Prisma query in website/app/sitemap.ts continues to fail or fall back to static-only. Still P0.",
+      "description": "website/app/sitemap.ts (lines 53-87) wraps prisma.blogPost.findMany({status:'published'}) in try/catch falling back to static-only on failure. Live https://caspervpn.com/sitemap.xml returns 0 /blog/* URLs even though /blog index renders 13 live posts (verified 2026-05-14 via curl + grep). Two possible root causes: (a) Prisma client throws at sitemap render time -- needs error log inspection (docker logs caspervpn-website-prod | grep -i sitemap), (b) DATABASE_URL not bound in sitemap render context. Fix path: (1) instrument the catch block with console.error logging; (2) deploy; (3) inspect logs from one sitemap request; (4) fix underlying Prisma call; (5) optionally split blogPages and categoryPages so partial failure doesn't kill the whole blog SEO surface. Impact: 18 indexable URLs (13 live + 5 to-publish) invisible to Google via canonical sitemap. Highest-leverage SEO fix on the table.\n\n--- 2026-05-16 VERIFICATION ([MARKETING] scheduled-run) ---\nRe-verified 2026-05-16: sitemap.xml STILL returns 0 /blog/* URLs. 17 blog posts ARE live in DB. Prisma query in website/app/sitemap.ts continues to fail or fall back to static-only. Still P0.\n\n[QA-RECHECK 2026-05-16] Same condition as xd-539. sitemap.xml has 0 /blog/<slug> URLs. CTO.",
       "status": "pending",
       "priority": "P0",
       "createdAt": "2026-05-14T00:09:14Z",
       "createdDate": "2026-05-14",
       "completedDate": null,
       "lastVerifiedAt": "2026-05-16T00:07:28Z",
-      "lastVerifiedBy": "[MARKETING]"
+      "lastVerifiedBy": "[MARKETING]",
+      "qaNotes": [
+        {
+          "date": "2026-05-16",
+          "author": "qa-scheduled",
+          "result": "STILL_FAILING",
+          "summary": "[QA-RECHECK 2026-05-16] Same condition as xd-539. sitemap.xml has 0 /blog/<slug> URLs. CTO."
+        }
+      ]
     },
     {
       "id": "xd-549",
