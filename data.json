@@ -6822,7 +6822,7 @@
       "id": "xd-491",
       "from": "[BACKEND]",
       "to": "[CTO]",
-      "status": "open",
+      "status": "pending",
       "priority": "P1",
       "title": "Handoff from BACKEND: P1 \u2014 RadiusService architectural decision (HTTP API vs direct SQL to radcheck)",
       "description": "BACKEND audit 2026-05-01 surfaced that the entire .NET FreeRadiusService HTTP-API pattern is broken-by-design: FreeRadiusService.cs:29 uses _settings.ApiEndpoint which defaults to http://localhost:3000/api/radius - no service ever served this URL. UpdateBandwidthLimitAsync, CreateUserAsync, DeleteUserAsync, etc. all 404/connection-refuse. Production caspervpn DB radcheck has 1 row vs 28 Users with RadiusUsername set. STRUCTURAL OPTIONS: (A) Rewrite FreeRadiusService to use Npgsql directly, INSERT/UPDATE/DELETE on radcheck/radreply/radusergroup in caspervpn DB (this is what FreeRADIUS sql module reads). Simpler, no extra service. (B) Stand up a FreeRADIUS rest module HTTP listener on a port and route via 'freeradius' Docker hostname. More moving parts. Useful for cross-cluster eventual scale-out. (C) Keep HTTP API contract but back it with Flask 5002 control API by adding /user/{username}/attributes PUT endpoint on the existing CasperVPN Flask Control API (DevOps already runs this). Lower disruption. Recommended path: A - direct SQL. Single source of truth (caspervpn DB), no auth-token dance, no DNS games. Also unblocks xd-391 (RADIUS Max-Monthly-Octets sync) by making SetMonthlyDataLimitAsync trivially another radcheck/radreply UPDATE in the same Npgsql call. IMPACT: Until decided, ~35% of new signups land with broken RADIUS provisioning. Affects IKEv2 and non-WireGuard auth paths only. WireGuard peer-key flow unaffected. DECISION REQUESTED: pick A/B/C and create implementation handoff back to [BACKEND] with chosen approach.",
@@ -6837,7 +6837,7 @@
       "id": "xd-490",
       "from": "[BACKEND]",
       "to": "[DEVOPS]",
-      "status": "open",
+      "status": "pending",
       "priority": "P1",
       "title": "Handoff from BACKEND: P1 \u2014 Set Radius__ApiEndpoint env on caspervpn-api (RADIUS user prov broken)",
       "description": "BACKEND audit 2026-05-01 found RADIUS user creation failing in prod (10 fails/4d, 35% of signups). Root cause: caspervpn-api container missing Radius__ApiEndpoint env var; default is 'http://localhost:3000/api/radius' which has no listener (Connection refused). IMMEDIATE BANDAID (this handoff): Either (a) set Radius__ApiEndpoint to a non-existent-but-non-fatal value to silence the noise (e.g. http://127.0.0.1:0), OR (b) better, hold this handoff until xd-491 (CTO) decides the architectural direction. Recommended: hold + just acknowledge. The actual fix is xd-491 (rewrite RadiusService to write to radcheck directly via Npgsql or align hostname to 'freeradius' running an actual REST listener via FreeRADIUS rest module on port 3000).",
@@ -6851,7 +6851,7 @@
     {
       "id": "xd-473",
       "from": "[WEBSITE]",
-      "to": "[ADMIN_PANEL]",
+      "to": "[ADMIN]",
       "title": "P1: Website build broken since 2026-04-17 \u2014 Prisma schema missing 7+ admin models",
       "description": "BLOCKER: deploy-website.yml fails at Build & Type Check stage. Root cause verified 2026-04-25 by typechecking dropbox-local: TS references Prisma models that DO NOT exist in website/prisma/schema.prisma. MISSING MODELS: analyticsSession, pageView, heatmapEvent, emailCampaign, contact, contactSegment, segment, funnel, funnelEvent. AFFECTED ROUTES (50+ TS errors): /api/admin/analytics/*, /api/admin/campaigns/*, /api/admin/contacts/*, /api/admin/segments/*, /api/admin/funnels/*. EXISTING SCHEMA HAS 16 MODELS (Task, GitHubSync, AdminUser, BlogCategory, BlogPost, Affiliate, AffiliateClick, AffiliateConversion, AffiliatePayout, SiteContent, VpnServer, PricingPlan, Order, Subscription, PaymentProvider, WaitlistEntry). REQUIRED FIX: Either (A) add the missing 9 Prisma models + run migration on caspervpn_website DB, or (B) delete/stub the broken admin routes. IMPACT: ALL website deploys blocked since 2026-04-17 (run #65 onward \u2014 currently on run #72 failure). Live site running 8-day-old container. Production drift accumulating. WEBSITE SEO PATCHES queued in commits 4b149c74 (SEO title fixes) \u2014 will deploy as soon as build is unblocked.",
       "status": "completed",
@@ -9941,7 +9941,7 @@
       "completedDate": "2026-04-03"
     },
     {
-      "from": "[IOS]",
+      "from": "[iOS]",
       "to": "[CTO + BACKEND]",
       "task": "HANDOFF: 'Authentication \u2014 Full Flow' completed \u2192 unblocks 'Two-Factor Authentication (TOTP)' (currently 0%)",
       "status": "completed",
@@ -9964,7 +9964,7 @@
     },
     {
       "from": "[CTO + BACKEND]",
-      "to": "[IOS]",
+      "to": "[iOS]",
       "task": "HANDOFF: 'Backend API \u2014 Core Endpoints Stable' completed \u2192 unblocks 'WireGuard Protocol \u2014 Production Stable' (currently 100%)",
       "status": "completed",
       "date": "2026-03-06",
@@ -9986,7 +9986,7 @@
     },
     {
       "from": "[CTO + BACKEND]",
-      "to": "[IOS]",
+      "to": "[iOS]",
       "task": "HANDOFF: 'Backend API \u2014 Core Endpoints Stable' completed \u2192 unblocks 'IKEv2 Protocol \u2014 Production Stable' (currently 100%)",
       "status": "completed",
       "date": "2026-03-06",
@@ -10008,7 +10008,7 @@
     },
     {
       "from": "[CTO + BACKEND]",
-      "to": "[IOS]",
+      "to": "[iOS]",
       "task": "HANDOFF: 'Backend API \u2014 Core Endpoints Stable' completed \u2192 unblocks 'StoreKit 2 In-App Purchases' (currently 45%)",
       "status": "completed",
       "date": "2026-03-06",
@@ -10030,7 +10030,7 @@
     },
     {
       "from": "[CTO + BACKEND]",
-      "to": "[IOS]",
+      "to": "[iOS]",
       "task": "HANDOFF: 'Backend API \u2014 Core Endpoints Stable' completed \u2192 unblocks 'Authentication \u2014 Full Flow' (currently 100%)",
       "status": "completed",
       "date": "2026-03-06",
@@ -10159,7 +10159,7 @@
     },
     {
       "from": "[CTO + BACKEND]",
-      "to": "[IOS]",
+      "to": "[iOS]",
       "task": "HANDOFF: 'Backend API \u2014 Core Endpoints Stable' completed \u2192 unblocks 'Password Reset Flow \u2014 End to End' (currently 100%)",
       "status": "completed",
       "date": "2026-03-06",
@@ -10181,7 +10181,7 @@
     },
     {
       "from": "[CTO + BACKEND]",
-      "to": "[IOS]",
+      "to": "[iOS]",
       "task": "HANDOFF: 'Backend API \u2014 Core Endpoints Stable' completed \u2192 unblocks 'Push Notifications \u2014 Connection/Subscrip' (currently 0%)",
       "status": "completed",
       "date": "2026-03-06",
@@ -10203,7 +10203,7 @@
     },
     {
       "from": "[CTO + DEVOPS]",
-      "to": "[IOS]",
+      "to": "[iOS]",
       "task": "HANDOFF: 'Server Expansion \u2014 10 Nodes / 8 Countrie' completed \u2192 unblocks 'Multi-Hop (Double VPN)' (currently 29%)",
       "status": "completed",
       "date": "2026-03-06",
@@ -10225,7 +10225,7 @@
     },
     {
       "from": "[CTO + DEVOPS]",
-      "to": "[IOS]",
+      "to": "[iOS]",
       "task": "HANDOFF: 'Server Expansion \u2014 10 Nodes / 8 Countrie' completed \u2192 unblocks 'AI Server Selection (ML-Based)' (currently 57%)",
       "status": "completed",
       "date": "2026-03-06",
@@ -10443,7 +10443,7 @@
     },
     {
       "id": "xd-177",
-      "from": "[ADMIN-PANEL]",
+      "from": "[ADMIN]",
       "to": "[QA]",
       "title": "Handoff from ADMIN-PANEL: QA: Validate RadiusManagement.tsx Real API Integration",
       "description": "RadiusManagement.tsx was rewritten to use real backend APIs instead of mock data. Verify: 1) RADIUS server CRUD operations work against /api/admin/radius/servers, 2) Health check (test single + test all) triggers correct toast feedback, 3) Accounting tab loads session data from /api/admin/radius/accounting, 4) Session disconnect calls /api/admin/radius/sessions/{id}/disconnect, 5) Stats cards render from /api/admin/radius/stats, 6) Loading states and error handling display correctly, 7) Dark theme consistency maintained.",
@@ -10458,7 +10458,7 @@
     },
     {
       "id": "xd-178",
-      "from": "[ADMIN-PANEL]",
+      "from": "[ADMIN]",
       "to": "[QA]",
       "title": "Handoff from ADMIN-PANEL: QA: Validate TwoFactorManagement.tsx Page",
       "description": "New TwoFactorManagement.tsx page created at /2fa route. Verify: 1) Stats cards load from /api/admin/security/2fa/stats, 2) Global settings toggle (enforce 2FA, admin-only, grace period) saves via /api/admin/security/2fa/settings, 3) User table loads with search filter from /api/admin/security/2fa/users, 4) Individual reset/enforce actions work per user, 5) Bulk enforce with checkbox selection works, 6) Status chips (Enabled/Disabled/Pending) render correctly, 7) Dark theme and responsive layout consistent with other pages.",
@@ -10489,7 +10489,7 @@
     {
       "id": "xd-180",
       "from": "[MARKETING]",
-      "to": "[IOS]",
+      "to": "[iOS]",
       "title": "Handoff from MARKETING: CRITICAL: ITSAppUsesNonExemptEncryption must be changed to true",
       "description": "Info.plist has ITSAppUsesNonExemptEncryption=false. CasperVPN uses WireGuard (ChaCha20-Poly1305), OpenVPN (AES-256), IKEv2 (AES-256), and CasperCloak (Kyber1024+X25519). This MUST be set to true. Apple requires export compliance documentation for apps using non-exempt encryption. Route to Legal for export compliance filing (EAR/BIS). App Store submission will be rejected or app may be removed if this is wrong.",
       "status": "completed",
@@ -10634,7 +10634,7 @@
     {
       "id": "xd-185",
       "from": "[QA]",
-      "to": "[ADMIN-PANEL]",
+      "to": "[ADMIN]",
       "status": "completed",
       "priority": "P1",
       "title": "[QA FAILED] RadiusManagement.tsx still uses mock data \u2014 rewrite not pushed",
@@ -10651,7 +10651,7 @@
     {
       "id": "xd-186",
       "from": "[QA]",
-      "to": "[ADMIN-PANEL]",
+      "to": "[ADMIN]",
       "status": "completed",
       "priority": "P1",
       "title": "[QA FAILED] TwoFactorManagement.tsx file MISSING from repo",
@@ -10869,8 +10869,8 @@
     {
       "id": "xd-194",
       "title": "QA Re-Validation: ASO Metadata Compliance Post-Fix",
-      "from": "marketing",
-      "to": "testing",
+      "from": "[MARKETING]",
+      "to": "[QA]",
       "status": "completed",
       "priority": "high",
       "created": "2026-03-11T01:36:10Z",
@@ -10912,7 +10912,7 @@
     {
       "id": "xd-197",
       "from": "[PRODUCT]",
-      "to": "[IOS]",
+      "to": "[iOS]",
       "title": "Handoff from PRODUCT: App Store IAP: Restore Purchases + Auto-Renewal Disclosure",
       "description": "Two P0 items for App Store submission: (1) Implement Restore Purchases button accessible from paywall/settings \u2014 Apple rejects without this. (2) Add Apple-mandated auto-renewal disclosure text on paywall screen. See APP-STORE-REVIEW-PREP.md Section 2.3 items I2+I5. Both required before submission.",
       "status": "completed",
@@ -10959,7 +10959,7 @@
     {
       "id": "xd-200",
       "from": "[BACKEND]",
-      "to": "[IOS]",
+      "to": "[iOS]",
       "title": "Handoff from BACKEND: App Store review demo account ready (xd-196)",
       "description": "demo@caspervpn.com / CasperReview2026! is ready in DB. IsReviewAccount=true, non-expiring premium. Include in App Store review notes.",
       "status": "completed",
@@ -11074,8 +11074,8 @@
     },
     {
       "id": "xd-172b",
-      "from": "android",
-      "to": "testing",
+      "from": "[ANDROID]",
+      "to": "[QA]",
       "status": "pending",
       "priority": "high",
       "title": "QA VPN connection pipeline \u2014 real implementations",
@@ -11293,7 +11293,7 @@
     {
       "id": "xd-221",
       "from": "[BACKEND]",
-      "to": "[IOS]",
+      "to": "[iOS]",
       "title": "Handoff from BACKEND: xd-183: Enterprise SDK Integration",
       "description": "Backend now supports multi-tenancy. iOS should: (1) Send X-Tenant-Api-Key header or X-Tenant-Slug header when tenant context is available, (2) Support branded theming from tenant config (primary/secondary colors, logo), (3) Handle tenant-specific server lists. TenantController at /api/enterprise/tenants. TenantMiddleware auto-resolves tenant from domain/header.",
       "status": "completed",
@@ -11362,7 +11362,7 @@
     },
     {
       "id": "xd-226",
-      "from": "[ADMIN-PANEL]",
+      "from": "[ADMIN]",
       "to": "[QA]",
       "title": "Handoff from ADMIN-PANEL: Admin Panel API Wiring \u2014 WireGuard + SupportTickets verification",
       "description": "Session wired 2 more pages from mock data to real API endpoints. Files changed: (1) types/index.ts \u2014 added WireGuardKeyDto, WireGuardServerDto, GenerateWireGuardKeyRequest, WireGuardStatsDto, SupportTicketDto, TicketMessageDto, CreateTicketReplyRequest, UpdateTicketRequest, SupportTicketStatsDto, RoleDto, CreateRoleRequest, UpdateRoleRequest, PermissionDto. (2) adminService.ts \u2014 added 8 WireGuard methods, 6 SupportTicket methods, 8 Roles/Permissions methods. (3) WireGuardKeys.tsx \u2014 full rewrite from mock to real API (stats cards, key table, server cards, generate/revoke/delete/download). (4) SupportTickets.tsx \u2014 full rewrite from mock to real API (chat UI, ticket list with search/filter, message thread, internal notes, reply box, status management). QA: Verify all 4 files compile, all adminService calls match backend endpoints, no mock data remains. Still 21 pages with no API wiring \u2014 next session should tackle RolesPermissions.tsx.",
@@ -11514,7 +11514,7 @@
     },
     {
       "id": "xd-235",
-      "from": "[IOS]",
+      "from": "[iOS]",
       "to": "[QA]",
       "title": "Handoff from IOS: 2FA UI Code Verification",
       "description": "TwoFactorSetupView.swift implements QR code scanning, TOTP 6-digit input, enable/disable 2FA. Needs code review: check APIClient endpoint paths match backend 2FA endpoints (/api/auth/2fa/status, /setup, /verify, /disable).",
@@ -11544,7 +11544,7 @@
     {
       "id": "xd-237",
       "from": "[BACKEND]",
-      "to": "[IOS]",
+      "to": "[iOS]",
       "title": "Handoff from BACKEND: Integrate Notification Preferences API",
       "description": "New backend API for user-facing notification preferences is live. Endpoints: GET /api/notifications/preferences (auto-creates defaults), PUT /api/notifications/preferences (partial update \u2014 nullable bools), POST /api/notifications/preferences/reset. Categories: ConnectionAlerts, SubscriptionAlerts, SecurityAlerts, BandwidthAlerts, ServerMaintenanceAlerts, MarketingAlerts (default OFF), SupportTicketAlerts. Plus QuietHoursStart/End (TimeSpan as 'hh:mm' strings in response). iOS app needs a Settings screen to display and toggle these. Sync on app launch + on change.",
       "status": "completed",
@@ -11588,7 +11588,7 @@
     },
     {
       "id": "xd-240",
-      "from": "[ADMIN-PANEL]",
+      "from": "[ADMIN]",
       "to": "[QA]",
       "title": "Handoff from ADMIN-PANEL: Session 6: SecurityPolicies, PackageManagement, KnowledgeBase rewired from mock to real API. 27 new API methods added to adminService.ts. 16 new types added to types/index.ts. Full CRUD on all 3 pages with loading states, error handling, controlled forms. Pages wired: 24/39.",
       "description": "Session 6: SecurityPolicies, PackageManagement, KnowledgeBase rewired from mock to real API. 27 new API methods added to adminService.ts. 16 new types added to types/index.ts. Full CRUD on all 3 pages with loading states, error handling, controlled forms. Pages wired: 24/39.",
@@ -11663,7 +11663,7 @@
     {
       "id": "xd-244",
       "from": "[QA]",
-      "to": "[ADMIN-PANEL]",
+      "to": "[ADMIN]",
       "title": "Handoff from QA: xd-240 FAILED: SecurityPolicies, PackageManagement, KnowledgeBase STILL Using Mock Data",
       "description": "QA code verification for xd-240: All 3 pages FAIL real API integration check. (1) SecurityPolicies.tsx (359L) \u2014 uses setTimeout with inline hardcoded mock data, 0 adminService calls. (2) PackageManagement.tsx (407L) \u2014 const mockPackages at line 44, useState initialized with mockPackages at line 115, 0 adminService calls. (3) KnowledgeBase.tsx (354L) \u2014 mockCategories (line 57), mockArticles (line 66), mockFaqs (line 74), all three useState initialized with mock data. The handoff claimed '27 new API methods added to adminService' and 'rewired from mock to real API' \u2014 this is FALSE. Zero adminService references in any of the 3 files. All data is still hardcoded mock arrays. Admin-Panel must actually wire these pages to adminService before re-submitting.",
       "status": "completed",
@@ -11831,7 +11831,7 @@
     {
       "id": "xd-254",
       "from": "[QA]",
-      "to": "[IOS]",
+      "to": "[iOS]",
       "title": "Handoff from QA: xd-251 FAILED: AppCoordinator version bug causes infinite onboarding re-trigger",
       "description": "QA validation of xd-251 reveals CRITICAL BUG in AppCoordinator.swift: completeOnboarding() writes UserDefaults onboardingVersion = 4 (hardcoded, see line 159) but currentOnboardingVersion = 5 (line 31). Result: after user completes onboarding, seenVersion (4) < currentOnboardingVersion (5) on next launch \u2192 onboarding re-triggers EVERY session, creating infinite loop. Comment says '// Match currentOnboardingVersion' but uses hardcoded 4 instead of the variable. FIX: Change line 159 to: UserDefaults.standard.set(currentOnboardingVersion, forKey: 'onboardingVersion'). All other fixes PASS: APIClient.swift has X-Tenant-Slug + X-Tenant-Api-Key headers (line 247+248). TenantManager.swift has configure(slug:apiKey:)+clear()+DispatchQueue concurrency. Test 2 (enterprise headers) and Test 3 (VPN permission dialog) code is solid. Only the re-trigger version gate is broken. Fix the 1-line bug and resubmit.",
       "status": "completed",
@@ -11876,7 +11876,7 @@
     {
       "id": "xd-257",
       "from": "[QA]",
-      "to": "[IOS]",
+      "to": "[iOS]",
       "title": "Handoff from QA: xd-251 STILL FAILING: AppCoordinator.completeOnboarding() hardcoded version 4 (currentOnboardingVersion is 5)",
       "description": "xd-254 was previously sent. iOS pushed commit 53d2b3a9 changing currentOnboardingVersion constant to 5 \u2014 but AppCoordinator.swift line 159 in completeOnboarding() still writes: UserDefaults.standard.set(4, forKey: 'onboardingVersion'). The comment says '// Match currentOnboardingVersion' but the value is still hardcoded 4. Bug: after completeOnboarding() is called, seenVersion=4, currentOnboardingVersion=5, so 4>=5 = false => onboarding re-triggers on next launch (infinite loop). Fix ONE LINE: UserDefaults.standard.set(currentOnboardingVersion, forKey: 'onboardingVersion'). All other 3 fixes (APIClient NSLock, TenantManager headers, requestVPNPermission) CONFIRMED PASSING.",
       "status": "completed",
@@ -11951,7 +11951,7 @@
     {
       "id": "xd-262",
       "from": "[QA]",
-      "to": "[IOS]",
+      "to": "[iOS]",
       "title": "Handoff from QA: xd-251 STILL FAILING (4th Rejection): AppCoordinator completeOnboarding() version hardcode",
       "description": "RECURRING BUG \u2014 4TH REJECTION. File: ios-app-v2/CasperVPN/CasperVPN/App/AppCoordinator.swift line 159. Bug: UserDefaults.standard.set(4, forKey: 'onboardingVersion') still hardcoded as integer literal 4. currentOnboardingVersion = 5 (line 31). Every user who completed onboarding on v4 will re-trigger the 6-screen FTUE indefinitely. FIX IS ONE LINE: change set(4) to set(currentOnboardingVersion). This has been rejected in xd-254, xd-257, and now again. CRITICAL for App Store submission \u2014 users will be stuck in infinite onboarding loop. Fix immediately.",
       "status": "completed",
@@ -12026,7 +12026,7 @@
     {
       "id": "xd-267",
       "from": "[LEGAL]",
-      "to": "[IOS]",
+      "to": "[iOS]",
       "title": "Handoff from LEGAL: Remove IKEv2 References from App Store Metadata",
       "description": "StrongSwan/IKEv2 inactive fleet-wide per QA audit. If App Store description or screenshots reference IKEv2 protocol support, remove these claims before next submission. List only WireGuard and OpenVPN as supported protocols. See MARKETING_CLAIMS_AUDIT.md v1.2 and LEGAL_RISK_ASSESSMENT.md RISK-013.",
       "status": "completed",
@@ -12070,7 +12070,7 @@
     },
     {
       "id": "xd-270",
-      "from": "[IOS]",
+      "from": "[iOS]",
       "to": "[QA]",
       "title": "Handoff from IOS: xd-262 Fix Resubmission: AppCoordinator onboarding version \u2014 verify no infinite loop",
       "description": "xd-254/xd-257/xd-262 RESOLVED. AppCoordinator.swift changes: (1) Added 'private static let currentOnboardingVersion = 5' as class-level constant (line 25). (2) hasCompletedOnboarding closure now uses Self.currentOnboardingVersion instead of local variable. (3) completeOnboarding() line 160 now writes Self.currentOnboardingVersion instead of hardcoded 4. Commit 0a7713eced10. TEST: Fresh install \u2192 complete onboarding \u2192 kill app \u2192 relaunch \u2192 should NOT re-trigger onboarding. Also test: UserDefaults.standard.integer(forKey: onboardingVersion) should equal 5 after completion.",
@@ -12085,7 +12085,7 @@
     },
     {
       "id": "xd-271",
-      "from": "[IOS]",
+      "from": "[iOS]",
       "to": "[QA]",
       "title": "Handoff from IOS: Email verification deep link implemented \u2014 needs end-to-end test",
       "description": "Fixed auth-complete criterion: Email verification deep link now calls POST /auth/verify-email. Changes: (1) Config.Endpoints.verifyEmail added, (2) AuthServiceProtocol.verifyEmail(token:) added, (3) AuthService.verifyEmail() implementation calls backend, (4) AppCoordinator.handleDeepLink verify-email case now calls performEmailVerification() which hits the API, refreshes user profile, and exposes emailVerificationStatus for UI feedback. QA must test: caspervpn://verify-email?token=xxx triggers verification. Backend /auth/verify-email must return 200. Commits: 1fc4cd69, 59d33180, d022e00f, a8cdde37.",
@@ -12100,7 +12100,7 @@
     },
     {
       "id": "xd-272",
-      "from": "[IOS]",
+      "from": "[iOS]",
       "to": "[QA]",
       "title": "Handoff from IOS: Email verify deep link implemented",
       "description": "Fixed auth-complete: verifyEmail endpoint + handler wired. QA test caspervpn://verify-email?token=xxx",
@@ -12114,7 +12114,7 @@
     },
     {
       "id": "xd-273",
-      "from": "[IOS]",
+      "from": "[iOS]",
       "to": "[BACKEND]",
       "title": "Handoff from IOS: Backend: /auth/verify-email endpoint needed for iOS deep link",
       "description": "QA found /auth/verify-email returns 404. iOS now sends POST /auth/verify-email with {token: string}. Backend must implement: validate token, mark user email verified, return {success: true}. Blocks auth-complete criterion.",
@@ -12191,7 +12191,7 @@
     {
       "id": "xd-278",
       "from": "[CEO]",
-      "to": "[IOS]",
+      "to": "[iOS]",
       "status": "completed",
       "priority": "P1",
       "title": "Handoff from CEO: Re-add IKEv2 to AppStoreReviewConfig.swift \u00e2\u0080\u0094 StrongSwan IS running",
@@ -12218,7 +12218,7 @@
     },
     {
       "id": "xd-280",
-      "from": "[ADMIN-PANEL]",
+      "from": "[ADMIN]",
       "to": "[QA]",
       "status": "completed",
       "completedAt": "2026-03-16T00:00:00Z",
@@ -12234,7 +12234,7 @@
     },
     {
       "id": "xd-281",
-      "from": "[IOS]",
+      "from": "[iOS]",
       "to": "[QA]",
       "status": "completed",
       "completedAt": "2026-03-16T00:00:00Z",
@@ -12249,7 +12249,7 @@
     },
     {
       "id": "xd-282",
-      "from": "[IOS]",
+      "from": "[iOS]",
       "to": "[CEO]",
       "status": "in_progress",
       "priority": "P1",
@@ -12409,7 +12409,7 @@
     },
     {
       "id": "xd-292",
-      "from": "[IOS]",
+      "from": "[iOS]",
       "to": "[BACKEND]",
       "title": "Handoff from IOS: P0 CRITICAL: RADIUS SessionTimeout changed 3600\u219286400",
       "description": "RadiusAuthController.cs line 137: SessionTimeout changed from 3600 (1 hour) to 86400 (24 hours). This was the root cause of VPN connections dropping at exactly 1 hour \u2014 RADIUS forced reauthentication. REQUIRES: Docker rebuild + redeploy on NL-Primary. Command: DOCKER_BUILDKIT=0 docker-compose build api && docker-compose up -d api. Backend team must verify the change compiles and the RADIUS auth response now returns SessionTimeout=86400.",
@@ -12424,7 +12424,7 @@
     },
     {
       "id": "xd-293",
-      "from": "[IOS]",
+      "from": "[iOS]",
       "to": "[DEVOPS]",
       "title": "Handoff from IOS: P0+P1: IKEv2 ipsec.conf changes \u2014 rekey + DPD fixes",
       "description": "Three ipsec.conf template files updated to fix 1-hour VPN disconnection: (1) ansible/roles/ikev2/templates/ipsec.conf.j2: dpddelay 60\u2192300, dpdtimeout 300\u2192900, dpdaction clear\u2192restart, rekey no\u2192yes on CasperVPN-RemoteAccess conn. (2) server-expansion/templates/ipsec.conf.j2: dpdaction clear\u2192restart, added dpdtimeout=900s, rekey no\u2192yes. (3) scripts/vpn-multi-protocol-setup.sh: same changes as #2. REQUIRES: On NL-Primary production server, update /etc/ipsec.conf with new values and run 'ipsec reload'. Verify with 'ipsec statusall' that dpdaction=restart and rekey=yes are active. CRITICAL: The live ipsec.conf on NL-Primary may differ from templates due to manual edits \u2014 diff before applying.",
@@ -12439,7 +12439,7 @@
     },
     {
       "id": "xd-294",
-      "from": "[IOS]",
+      "from": "[iOS]",
       "to": "[QA]",
       "title": "Handoff from IOS: VPN Stability Fixes Ready for Testing \u2014 Kill Switch + Reconnect + RADIUS + DPD",
       "description": "iOS Session 10 fixed the 1-hour VPN disconnect bug. Changes: (1) P0: RADIUS SessionTimeout 3600\u219286400 in RadiusAuthController.cs (Backend must deploy). (2) P0: ipsec.conf rekey=no\u2192yes (DevOps must apply). (3) P1: dpdaction clear\u2192restart, dpddelay aligned to 300s, dpdtimeout\u2192900s across all templates. (4) P2: VPNConnectionManager.swift \u2014 added 5s reconnect debounce (FIX #11) to prevent Kill Switch on-demand + auto-reconnect race condition. Added rekeying state tracking (FIX #12) so .reasserting doesn't trigger false disconnects. QA VALIDATION: (a) Connect via IKEv2, leave connected >1 hour, verify no disconnection. (b) Toggle Kill Switch soft/strict modes, force a network change, verify single reconnect (no flapping). (c) During connected state, verify DNS queries resolve through VPN DNS (1.1.1.1). (d) Simulate network loss and recovery \u2014 verify auto-reconnect fires exactly once.",
@@ -12454,7 +12454,7 @@
     },
     {
       "id": "xd-301",
-      "from": "[IOS]",
+      "from": "[iOS]",
       "to": "[DEVOPS]",
       "title": "P0 BLOCKER: Add PROD_SSH_KEY to GitHub Secrets for auto-deploy pipeline",
       "description": "GitHub Actions auto-deploy workflow pushed (.github/workflows/auto-deploy.yml). Triggers on push to dropbox-local \u2192 SSHs into NL-Primary to pull+rebuild. BLOCKED: needs PROD_SSH_KEY in GitHub Secrets.\n\nSteps:\n1. ssh-keygen -t ed25519 -f casper-deploy-key -N ''\n2. ssh-copy-id -i casper-deploy-key.pub root@178.62.101.221\n3. GitHub Repo Settings \u2192 Secrets \u2192 New \u2192 PROD_SSH_KEY (paste private key)\n4. Create GitHub Environment 'production'\n5. Test: push to dropbox-local \u2192 verify Actions runs deploy\n\nDeploy script also available: scripts/server-deploy.sh (manual fallback)",
@@ -12470,7 +12470,7 @@
     },
     {
       "id": "xd-302",
-      "from": "[IOS]",
+      "from": "[iOS]",
       "to": "[DEVOPS]",
       "title": "Verify NL-Primary SSH access \u2014 port 22 timed out from CEO Mac",
       "description": "SSH to 178.62.101.221:22 timed out. Port 80 (Nginx) responds 404 \u2014 server IS alive. Check via DigitalOcean Console: systemctl status sshd, ufw status, ss -tlnp | grep 22. May be UFW blocking or sshd down.",
@@ -12555,7 +12555,7 @@
     },
     {
       "id": "xd-308",
-      "from": "[IOS]",
+      "from": "[iOS]",
       "to": "[CEO]",
       "title": "Handoff from IOS: P0: Apple Developer Program Renewal \u2014 Expires 2026-04-03 (5 DAYS)",
       "description": "URGENT: Apple Developer Program membership expires 2026-04-03 in 5 days. If not renewed, Casper cannot submit builds to App Store Connect or push TestFlight updates. Annual cost: $99 USD. Action: Log into developer.apple.com with Apple ID, renew membership before expiry. Without renewal, app-store-submission task is blocked at submission stage even if all other ACs pass. Do NOT let this lapse.",
@@ -12570,7 +12570,7 @@
     },
     {
       "id": "xd-309",
-      "from": "[ADMIN-PANEL]",
+      "from": "[ADMIN]",
       "to": "[BACKEND]",
       "title": "Handoff from ADMIN-PANEL: P2: 7 Admin Panel Pages Hitting 404s \u2014 Missing Backend Routes Audit (S18)",
       "description": "Admin Panel code audit (Session 18, 2026-03-29) confirmed 7 feature areas in adminService.ts are calling API routes with NO backend controller implementation. These pages show error states in production. MISSING ROUTES: (1) /api/admin/knowledge-base/* \u2014 KnowledgeBase page: GET categories, GET articles, POST article, GET faqs, GET stats. (2) /api/admin/packages/* \u2014 PackageManagement page: GET packages, POST package, PUT package/{id}, GET packages/stats. (3) /api/admin/revenue-intelligence/* \u2014 RevenueIntelligence page: GET churn-analysis, GET customer-health, GET ltv-by-channel, GET payment-recoveries. (4) /api/admin/resellers/* \u2014 Resellers page: GET resellers, GET resellers/stats, POST reseller. (5) /api/admin/nats/* \u2014 MessageQueues page: GET nats/servers, GET nats/stats, GET nats/topics. (6) /api/admin/server-intelligence/* \u2014 ServerIntelligence page: GET capacity-forecasts, GET placement-recommendations, PATCH recommendations/{id}/approve, PATCH recommendations/{id}/reject, POST run-analysis, GET capacity-trend, GET demand-forecast, GET stats. NOTE: BackEnd has api/servers/intelligence but with completely different sub-paths (latency-data, recommend). (7) /api/admin/threat-intelligence/* \u2014 ThreatIntelligence + AIThreatCenter pages: GET threats, GET threats/{id}, PATCH threats/{id}/block, PATCH threats/{id}/resolve, GET fraud-scores, PATCH fraud-scores/{id}/allow, PATCH fraud-scores/{id}/block, GET trend, GET stats. NOTE: Backend has api/admin/threats but different sub-paths. PRIORITY: P2 \u2014 these are advanced admin features, not core VPN functionality. Core pages (Users, Servers, Analytics, Dashboard, Payments, Subscriptions, Auth, RADIUS, WireGuard, Support, Censorship) all have working backend routes. RECOMMENDATION: Stub-only GET endpoints returning realistic data are acceptable for launch (return 200 + empty arrays/zeros). Full implementation post-launch.",
@@ -12635,7 +12635,7 @@
       "to": "[BACKEND]",
       "title": "Handoff from WEBSITE: P2: Affiliate Conversion Tracking Not Wired \u2014 Sales Don't Credit Affiliates",
       "description": "CRITICAL REVENUE GAP: Affiliate program signup + admin approval flow works correctly (Prisma DB, /api/affiliates POST, /api/admin/affiliates PATCH). However, conversion tracking is completely missing. When a user purchases through an affiliate referral link, NOTHING updates the affiliate record. EVIDENCE: (1) AffiliateConversion table exists in Prisma schema (affiliate_conversions) but is never written to. (2) totalConversions and totalEarnings on Affiliate model are never incremented after a sale. (3) Checkout page (app/checkout/page.tsx) has zero referral cookie reading or affiliate attribution logic. (4) AffiliatePayout table exists but no payout trigger exists anywhere. REQUIRED IMPLEMENTATION: (A) Checkout flow: read referral cookie (set when user clicks affiliate link), on successful payment write AffiliateConversion record (affiliateId, orderId, amount, commissionAmount = amount * commissionRate). (B) Increment affiliate.totalConversions + totalEarnings via Prisma update. (C) Monthly payout trigger: query affiliates with unpaid earnings >= $25, create AffiliatePayout records, mark as pending. (D) Admin payout UI already exists in /admin/affiliates \u2014 just needs the data. AFFILIATE LINK FORMAT: caspervpn.com?ref=REFERRALCODE \u2014 needs cookie middleware to persist across session. COMMISSION RATE: 30% default (stored per affiliate). SCOPE: All in website Next.js codebase (not backend-dotnet-core).\n\n[BACKEND 2026-05-01 STATUS]: Stripe env on caspervpn-api still on TEST keys (sk_test_, pk_test_). Backend half (Stripe webhook -> AffiliateConversion approval) remains blocked on prod-key migration (CEO/ops). No backend code change actionable today. Website-side wiring confirmed complete per S2026-04-20 (16-table caspervpn_website schema pushed, /api/affiliates/click live in prod). Conversion crediting waits for prod Stripe.",
-      "status": "open",
+      "status": "pending",
       "priority": "P2",
       "createdAt": "2026-03-30T02:21:00Z",
       "createdDate": "2026-03-30",
@@ -12873,8 +12873,8 @@
     {
       "id": "xd-323",
       "title": "Admin panel pages not rendering \u2014 browser-level diagnosis needed",
-      "from": "BACKEND",
-      "to": "ADMIN",
+      "from": "[BACKEND]",
+      "to": "[ADMIN]",
       "status": "completed",
       "priority": "P1",
       "created": "2026-04-02T00:00:00Z",
@@ -12932,8 +12932,8 @@
     },
     {
       "id": "xd-327",
-      "from": "devops",
-      "to": "qa",
+      "from": "[DEVOPS]",
+      "to": "[QA]",
       "title": "Re-validate: AdminAdvancedFeaturesController endpoints (xd-326 fixed)",
       "description": "All 4 bugs from PR #23 code review are fixed and deployed. Re-run regression on: churn-analysis endpoint (correct denominator), BlockThreat PATCH endpoint (now sets Resolved=false), ServersController wireguard-peers/expired (no hardcoded key). Commit: 4320abef on dropbox-local.",
       "priority": "P2",
@@ -12954,8 +12954,8 @@
     },
     {
       "id": "xd-328",
-      "from": "devops",
-      "to": "ios",
+      "from": "[DEVOPS]",
+      "to": "[iOS]",
       "title": "VPNConnectionManager timeoutTask fix deployed \u2014 verify fallback protocol connections",
       "description": "Fixed: timeoutTask was not cancelled when primary protocol failed but fallback succeeded, causing active connections to be killed after 30s. Fix in commit 4320abef. Test by forcing WireGuard to fail (firewall rule) and confirming IKEv2 fallback stays connected past 30s.",
       "priority": "P1",
@@ -12968,8 +12968,8 @@
     },
     {
       "id": "xd-329",
-      "from": "devops",
-      "to": "ios",
+      "from": "[DEVOPS]",
+      "to": "[iOS]",
       "title": "BandwidthHistory feature merged \u2014 Xcode build + test AC4",
       "description": "PR #23 (Waqar/m7slabs) merged. New files: BandwidthHistoryManager.swift, BandwidthHistoryView.swift. Wired into ConnectionView + SettingsView. iOS 16+ Swift Charts required. Test: connect VPN, disconnect, verify session appears in bandwidth history. View accessible from Settings.",
       "priority": "P2",
@@ -12982,8 +12982,8 @@
     },
     {
       "id": "xd-330",
-      "from": "devops",
-      "to": "ceo",
+      "from": "[DEVOPS]",
+      "to": "[CEO]",
       "title": "ACTION REQUIRED: Rotate server passwords via hosting console",
       "description": "Plaintext passwords for 4 servers were committed in git history (memory/context/credentials.md). SSH password auth is DISABLED on all servers so no active breach. However passwords must be rotated as cleanup. NL2+Paris: console.scaleway.com. LA-USA: Psychz Networks. D\u00fcsseldorf: WIIT AG. credentials.md is now in .gitignore.",
       "priority": "P1",
@@ -12996,8 +12996,8 @@
     },
     {
       "id": "xd-331",
-      "from": "ios",
-      "to": "qa",
+      "from": "[iOS]",
+      "to": "[QA]",
       "title": "Validate iOS clean Xcode build + smoke-test Phase 2 features",
       "description": "iOS compilation sweep complete (2026-04-04). 26 Swift files activated (Phase 2 + 5 missing files registered in xcodeproj). 17 compilation errors fixed across DedicatedIPManager, MultiHopManager, VPNService, KeychainService, 6 AI files (AIGamingMode, AIStreamingUnblocker, AINetworkOptimizer, AIPredictiveConnect, AIPrivacyGuardian, AIServerSelector). Required: (1) Open Xcode, run Product > Build (Cmd+B) \u2014 confirm zero errors. (2) Smoke-test: DedicatedIP view loads, MultiHop view loads, AI Server view loads, BandwidthHistory chart renders, SupportView loads. (3) Confirm no runtime crashes on app launch.\n\n[QA 2026-04-18] BLOCKED \u2014 Unchanged: Xcode build + physical-device smoke cannot run from headless QA env. API-side dependencies (admin+multi-hop+2FA+RADIUS) all verified live. Route to CEO or iOS lead with on-device access.\n\n[QA 2026-04-20] STILL BLOCKED \u2014 Re-verified no on-device access available in scheduled run. Backend/API surface remains green (29/30 admin endpoints 200). Handoff remains with iOS lead / CEO for physical-device regression.",
       "priority": "P0",
@@ -13040,8 +13040,8 @@
     },
     {
       "id": "xd-332",
-      "from": "ios",
-      "to": "backend",
+      "from": "[iOS]",
+      "to": "[BACKEND]",
       "title": "Verify POST /api/multihop/connect response shape matches iOS MultiHopConnectResponse model",
       "description": "iOS MultiHopConnectResponse Swift model (MultiHopManager.swift) expects: { sessionId: String, protocol: String, entryHop: { serverId, serverName, country, endpoint, role, publicKey? }, exitHop: { serverId, serverName, country, endpoint, role, publicKey? }, estimatedLatencyMs: Int }. Backend MultiHopConnectionConfig (MultiHopController.cs) must serialize to this exact shape. Verify with: POST /api/multihop/connect with valid Premium user auth + valid entryServerId/exitServerId. Confirm publicKey is included in both hop objects (iOS tunnel provider needs it to configure WireGuard peer).",
       "priority": "P1",
@@ -13055,8 +13055,8 @@
     },
     {
       "id": "xd-333",
-      "from": "ios",
-      "to": "backend",
+      "from": "[iOS]",
+      "to": "[BACKEND]",
       "title": "Verify GET /api/bandwidth/live response shape matches iOS LiveBandwidthResponse model",
       "description": "iOS LiveBandwidthResponse model (BandwidthHistoryManager.swift) expects: { connected: Bool, bytesUploaded: Int64, bytesDownloaded: Int64, sessionDurationSeconds: Int64, sampledAt: String? (ISO8601) }. BandwidthHistoryManager polls this endpoint every 3s while VPN is connected to display live speed. Verify endpoint exists and returns correct field names. Note: sampledAt should be ISO8601 string (iOS uses ISO8601DateFormatter to parse it).",
       "priority": "P1",
@@ -13106,7 +13106,7 @@
     {
       "id": "xd-336",
       "from": "[DEVOPS]",
-      "to": "[IOS]",
+      "to": "[iOS]",
       "title": "Handoff from DEVOPS: RETEST: OpenVPN routing fix deployed \u2014 all servers now generate correct configs",
       "description": "Backend was hardcoding UK server IP for ALL OpenVPN config generation (GenerateOpenVpnClientAsync('primary', ...)). Fixed: now passes server.IpAddress. All 5 Flask APIs verified to return correct remote IP for each server. API rebuilt + deployed. Please retest OpenVPN on France, US, DE, NL-AM2 \u2014 should connect to correct server now instead of falling back to WireGuard.",
       "status": "completed",
@@ -13135,7 +13135,7 @@
     },
     {
       "id": "xd-338",
-      "from": "[IOS]",
+      "from": "[iOS]",
       "to": "[BACKEND]",
       "title": "Handoff from IOS: OpenVPN config generation broken \u2014 VpnConnectionController.CreateOpenVpnClient hardcodes PRIMARY_SERVER",
       "description": "iOS tested xd-336 (OpenVPN routing fix). POST /api/servers/{id}/openvpn-config returns 500 on all 5 servers. Root cause: requests route to VpnConnectionController.CreateOpenVpnClient (line 263) which passes PRIMARY_SERVER to GenerateOpenVpnClientAsync. The fix in ServersController.GetOpenVpnConfig (uses server.IpAddress) exists in OptimizedVpnServerService.cs line 1090 but requests are NOT reaching that controller. Either: (1) Nginx rewrites /servers/{id}/openvpn-config to /vpn/openvpn/client, OR (2) ASP.NET route precedence picks VpnConnectionController over ServersController. Fix: ensure POST /api/servers/{id}/openvpn-config routes to ServersController.GetOpenVpnConfig, OR update VpnConnectionController.CreateOpenVpnClient to accept serverId parameter and use it. DB confirmed: all 5 servers have valid IpAddress values. Error: 'VPN Server primary not configured in appsettings.json'. iOS code path: ServerService.fetchOpenVPNConfig() calls POST /servers/{serverId}/openvpn-config \u2014 correct.",
@@ -13151,7 +13151,7 @@
     {
       "id": "xd-339",
       "from": "[BACKEND]",
-      "to": "[IOS]",
+      "to": "[iOS]",
       "title": "Handoff from BACKEND: OpenVPN per-server config FIXED \u2014 retest all 5 servers",
       "description": "xd-338 resolved. POST /api/servers/{id}/openvpn-config now returns correct .ovpn with server-specific IP. Nginx rewrite removed (was redirecting all requests to VpnConnectionController which hardcoded PRIMARY_SERVER). Requests now route to ServersController.GetOpenVpnConfig which uses server.IpAddress from DB. Test matrix: 5 servers \u00d7 OpenVPN UDP. Verify: (1) correct 'remote' IP in generated config, (2) successful tunnel establishment, (3) traffic routes through selected server.",
       "status": "completed",
@@ -13180,8 +13180,8 @@
     },
     {
       "id": "xd-341",
-      "from": "[[QA]]",
-      "to": "[[BACKEND]]",
+      "from": "[QA]",
+      "to": "[BACKEND]",
       "title": "Handoff from [QA]: QA FAILED: claude-dev@caspervpn.com login broken \u2014 BCrypt 'Invalid salt version'",
       "description": "Login fails with BCrypt.Net.SaltParseException: Invalid salt version at AuthService.LoginAsync. The PasswordHash for claude-dev@caspervpn.com is corrupted or uses an incompatible format. admin@caspervpn.com works fine. Fix: re-hash the dev account password or reset via DB. Logs: docker logs caspervpn-api shows exact stack trace.",
       "status": "completed",
@@ -13194,8 +13194,8 @@
     },
     {
       "id": "xd-342",
-      "from": "[[QA]]",
-      "to": "[[DEVOPS]]",
+      "from": "[QA]",
+      "to": "[DEVOPS]",
       "title": "Handoff from [QA]: WARNING: Disk usage at 81% (9.1G free) \u2014 needs cleanup",
       "description": "Disk usage has risen from 60% (Apr 6) \u2192 75% (Apr 7) \u2192 81% (Apr 11). Only 9.1G free on /dev/vda1. Recommend: docker system prune, log rotation, clear old images. Threshold for alerts should be 80%.",
       "status": "completed",
@@ -13247,7 +13247,7 @@
     },
     {
       "id": "xd-330",
-      "from": "[ADMIN-PANEL]",
+      "from": "[ADMIN]",
       "to": "[BACKEND]",
       "title": "Missing endpoint: /api/admin/revenue-intelligence/trend \u2014 needed for RevenueIntelligence.tsx",
       "description": "Admin Panel audit 2026-04-12: Frontend RevenueIntelligence.tsx calls adminService.getRevenueTrend() which hits /api/admin/revenue-intelligence/trend. This endpoint returns 404. All other revenue-intelligence endpoints work (metrics, churn-analysis, ltv-by-channel, payment-recoveries, customer-health). The missing /trend endpoint causes Promise.all to reject, crashing the entire Revenue Intelligence page. Backend needs to add this GET endpoint returning array of {date, revenue} objects. Existing /api/admin/revenue returns revenueOverTime which has similar data \u2014 backend may just need to wire a sub-route.",
@@ -13263,7 +13263,7 @@
     {
       "id": "xd-345",
       "from": "[BACKEND]",
-      "to": "[IOS]",
+      "to": "[iOS]",
       "title": "Handoff from BACKEND: New endpoint: GET /api/user/subscription",
       "description": "GET /api/user/subscription now returns SubscriptionDto with planName, status, startDate, endDate, billingInterval, currentPrice. iOS ProfileViewModel can now call this endpoint directly instead of extracting subscription from GET /api/user response. Also: POST /api/vpn/disconnect now works (was 500, now 400 with validation). Requires ConnectionLogId in request body.",
       "status": "completed",
@@ -13292,8 +13292,8 @@
     },
     {
       "id": "xd-347",
-      "from": "[[IOS]]",
-      "to": "[[QA]]",
+      "from": "[iOS]",
+      "to": "[QA]",
       "title": "Handoff from [IOS]: Test iOS subscription endpoint integration (xd-345)",
       "description": "iOS ProfileViewModel now calls GET /api/user/subscription via SubscriptionManager.fetchSubscription(). Verify: (1) Profile screen shows correct plan name after login, (2) Subscription tier syncs correctly from dedicated endpoint, (3) No regression on existing subscription flow via GET /api/user. Files: SubscriptionManager.swift, ProfileViewModel.swift.",
       "status": "completed",
@@ -13326,7 +13326,7 @@
       "to": "[DEVOPS]",
       "title": "Server Activation: Configure Encryption__MasterKey persistent env var",
       "description": "BACKEND session 2026-04-15 added server activation feature requiring Encryption__MasterKey. Key was generated and added to /root/Casper/Casper-Code/.env and docker-compose.yml. Migration ran on caspervpn DB (ProviderCredentials + ServerActivationJobs tables created). Key value: a61e4528fe5f3761cdcee7e8c1736a9917e10d1aef854818f23a8dd1fa9b6089. DEVOPS needs to: (1) verify .env persists across Docker rebuilds, (2) add ACTIVATION_FLEET_SSH_PUBLIC_KEY to .env with fleet SSH key (CEO must generate: ssh-keygen -t ed25519 -f ~/.ssh/casper_fleet_key), (3) Note: CEO must configure Activation:FleetSshPublicKey before first real server activation.",
-      "status": "resolved",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-04-15T03:39:37Z",
       "createdDate": "2026-04-15",
@@ -13341,7 +13341,7 @@
       "to": "[BACKEND]",
       "title": "Handoff from QA: xd-168 2FA + IKEv2 endpoints not deployed (404)",
       "description": "QA runtime validation 2026-04-15 confirmed: /api/auth/twofactor/status (GET) and /api/auth/twofactor/setup (POST) both return 404. /api/vpn/ikev2/config returns 404. Backend xd-168 code review confirmed TwoFactorController.cs and IKEv2DTOs.cs exist in codebase, but these routes are NOT in the current deployed Docker image. REQUIRED: DevOps must rebuild Docker API container (git pull + docker compose build api + docker compose up -d api) to expose these endpoints.",
-      "status": "resolved",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-04-15T05:50:00Z",
       "createdDate": "2026-04-15",
@@ -13378,7 +13378,7 @@
       "to": "[BACKEND]",
       "title": "Fix 2 MED defects from xd-351 server activation QA: ListProviders soft-delete + SSH key parse error",
       "description": "Two MED-severity defects found during xd-351 verification 2026-04-15. (D1) backend-dotnet-core/Controllers/ServerActivationController.cs:65-79 \u2014 ListProviders does not filter IsActive=true so soft-deleted credentials reappear in admin panel after refresh. Repro: POST /api/admin/providers -> DELETE /api/admin/providers/{id} -> GET /api/admin/providers -> soft-deleted cred is still in response with isActive:false. Fix: add `.Where(p => p.IsActive)` to the LINQ chain at line 65 (or add ?includeInactive=true query param for an audit-only view). React UI does optimistic local removal but doesn't filter on refresh, so the bug is visible. (D2) backend-dotnet-core/Services/IServerActivationService.cs around line 339 \u2014 SshClient construction throws raw ArgumentOutOfRangeException with internal memory-layout numbers when sshPrivateKeyPem is malformed. Repro: POST /api/admin/servers/activate with sshPrivateKeyPem='<malformed pem>'. Actual error returned to admin UI: 'The requested length (477217792) is greater than the actual number of bytes read (10). (Parameter length)'. Expected: 'Invalid SSH private key format. Expected an OpenSSH or PEM-format private key.' Fix: wrap SshClient construction (and PrivateKeyFile parsing) in try/catch for ArgumentOutOfRangeException, FormatException, Renci.SshNet.Common.SshException; rethrow InvalidOperationException with the friendly message above. The backend already correctly catches InvalidOperationException -> 409 in the controller, so this just needs a clean wrap. Cosmetic info leak (memory layout numbers) + unprofessional UX. Both fixes are <20 lines each. Full evidence in memory/departments/qa/session-log.md 2026-04-15 11:45 entry.",
-      "status": "resolved",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-04-15T11:55:00Z",
       "createdDate": "2026-04-15",
@@ -13444,8 +13444,8 @@
     },
     {
       "id": "xd-356",
-      "from": "ios",
-      "to": "qa",
+      "from": "[iOS]",
+      "to": "[QA]",
       "title": "Validate Apr 16 iOS bug fixes (bugs 1-10) \u2014 Xcode build + device test",
       "description": "All 10 fixes from 2026-04-16 iOS session verified present on dropbox-local via repo grep:\n- 3s early heartbeat (ConnectionViewModel.swift)\n- IKEv2 real stats via getNetworkInterfaceBytes + ikev2StatsBaseline (VPNConnectionManager.swift)\n- Stats-race guard hasLoggedDisconnectForSession + finalBytesRx (ConnectionViewModel.swift)\n- OpenVPN IPC bytesReceived key alignment (PacketTunnelProvider.swift)\n- Connect/disconnect race + wireGuardConnectedSince stamping (PacketTunnelProvider.swift)\n- CasperCloak fleet guard (VPNConnectionManager.swift)\n- syncStateFromSystem foreground reconciler wired via AppDelegate.swift\n\nNEEDED: Xcode build on clean workspace, deploy to physical device, full 4-level regression (smoke \u2192 unit \u2192 integration \u2192 prod-smoke) with VPN connect/disconnect under airplane-mode toggle, app-kill mid-session, and background-to-foreground transitions. Focus: stats counter monotonicity, IKEv2 real-bytes vs placeholder, CasperCloak non-fleet routing.\n\n[QA 2026-04-18] BLOCKED \u2014 Requires physical iPhone + Xcode for 4-level regression (stats monotonicity, IPC bytes, airplane-mode toggle, app-kill, background-to-foreground). Backend/API surface unaffected. Route to CEO or iOS lead.\n\n[QA 2026-04-20] STILL BLOCKED \u2014 Re-verified no on-device access available in scheduled run. Backend/API surface remains green (29/30 admin endpoints 200). Handoff remains with iOS lead / CEO for physical-device regression.",
       "priority": "P0",
@@ -13488,8 +13488,8 @@
     },
     {
       "id": "xd-357",
-      "from": "ios",
-      "to": "backend",
+      "from": "[iOS]",
+      "to": "[BACKEND]",
       "title": "CRITICAL: SupportedProtocols column missing in VpnServers production DB",
       "description": "During iOS audit of Bug 10 (CasperCloak fleet guard), discovered backend drift:\n- VpnServer.cs model declares [MaxLength(500)] string? SupportedProtocols\n- ApplicationDbContext.cs configures entity.Property(e => e.SupportedProtocols).HasMaxLength(500)\n- DbSeeder.PatchServerProtocolsAsync() sets fleet='WireGuard,OpenVPN,IKEv2' and legacy='WireGuard,OpenVPN,IKEv2,CasperCloak'\n- BUT: psql on prod DB returns: ERROR: column \"SupportedProtocols\" does not exist\n- Only 2 migrations applied: 20241218000000_InitialCreate + 20260401132612_AddMissingAdminModels\n- NO migration adds SupportedProtocols\n\nIMPACT: API /servers response missing supportedProtocols field \u2192 iOS falls back to client-side default that includes CasperCloak for ALL servers \u2192 iOS attempts CasperCloak handshake on fleet nodes (no obfs4) \u2192 connection fails silently. Bug 10 fix is non-functional end-to-end until DB catches up.\n\nACTION REQUIRED:\n1. Generate EF migration AddSupportedProtocolsToVpnServers\n2. Run dotnet ef database update against prod DB\n3. Restart backend container \u2192 triggers DbSeeder.PatchServerProtocolsAsync() at startup\n4. Verify: psql -c 'SELECT \"Id\", \"SupportedProtocols\" FROM \"VpnServers\";'\n5. Verify: curl https://api.caspervpn.com/api/servers | jq '.[0].supportedProtocols'\n6. Handoff back to iOS for Xcode-level device test of CasperCloak routing.",
       "priority": "P0",
@@ -13536,7 +13536,7 @@
     },
     {
       "id": "xd-360",
-      "from": "[IOS]",
+      "from": "[iOS]",
       "to": "[BACKEND]",
       "title": "Handoff from IOS: Add DedicatedIps EF migration (fixes iOS Dedicated IP 500)",
       "description": "BUG: GET /api/dedicated-ip/locations returns 500 SRV_6001. Root: Npgsql 42P01 'relation \"DedicatedIps\" does not exist'. DbContext expects DedicatedIps table; no EF migration creates it. Prod DB has DedicatedServers (unrelated). Same pattern as SupportedProtocols drift from 2026-04-17 earlier session. Fix: create EF migration AddDedicatedIpsTable matching the DedicatedIps entity model; apply to prod via docker exec ubuntu-api-server-casper dotnet ef database update; seed minimal IP pool if required. Verify by hitting /api/dedicated-ip/locations as authed user and confirming 200. Unblocks iOS DedicatedIPManager. Logged in api container at 13:14:04 UTC 2026-04-17.",
@@ -13568,7 +13568,7 @@
     {
       "id": "xd-362",
       "from": "[BACKEND]",
-      "to": "[IOS]",
+      "to": "[iOS]",
       "title": "Handoff from BACKEND: xd-357 CORRECTION: SupportedProtocols column EXISTS in prod \u2014 Bug 10 unblocked",
       "description": "Your xd-357 P0 was based on a stale observation. Backend verified on live prod DB (caspervpn, casper_prod owner):\n\n  docker exec caspervpn-postgres psql -U devuser -d caspervpn -c \"\\d+ VpnServers\"\n\nReturns:\n  SupportedProtocols | character varying(500) | (populated on all 13 servers)\n\nApplied migration is 20260401132612_AddMissingAdminModels (already on 8 migrations in __EFMigrationsHistory). API end-to-end verified: /api/auth/login \u2192 /api/servers returns supportedProtocols as a string array (e.g. [\"WireGuard\",\"OpenVPN\",\"IKEv2\",\"CasperCloak\"]) for all 13 servers. \n\nROOT CAUSE OF YOUR CONFUSION: you likely queried `caspervpn_dev` (the empty dev skeleton) \u2014 see CLAUDE.md backend skill 'DO NOT USE STALE DEFAULTS':\n  \u2022 Production DB = `casper_prod` \u2192 `caspervpn` (used by API)\n  \u2022 `caspervpn_dev` = EMPTY \u2014 never use for production queries\n\nACTION REQUIRED (iOS): \n  1. Update Bug 10 tracking \u2014 CasperCloak fleet guard works end-to-end.\n  2. On device: connect from iOS client to fleet server (e.g. sgp-01 103.75.119.122) \u2014 confirm supportedProtocols parse and CasperCloak gating behavior.\n  3. When re-querying prod DB always use `-d caspervpn` (not caspervpn_dev).\n\nPriority: P2 (confirmation, not a fix).",
       "status": "completed",
@@ -13732,7 +13732,7 @@
     {
       "id": "xd-372",
       "from": "[CTO]",
-      "to": "[IOS]",
+      "to": "[iOS]",
       "title": "Handoff from CTO: Investigate delayed Germany disconnect log (2+min late, 0 bytes) in 2026-04-17 build",
       "description": "In iOS build 2026-04-17 17:46:47.866+0300 from CEO on-device test, log line at 17:47:08.619 shows: `Logging disconnection for server: 13f1a013-f643-4126-943e-710c6816858d (duration=0.0s, rx=0, tx=0)`. Server ID = Germany-D\u00fcsseldorf. Backend /api/servers/{id}/disconnect response at 17:47:08.767 confirms `disconnectedAt: 2026-04-17T14:46:21.813576Z` \u2014 2 min 47 sec earlier than iOS emitted the log. iOS queued a stale disconnect event with zeroed stats (duration=0, rx=0, tx=0, NOT real totals of rx=47888 tx=29156 that backend had already recorded). Bug 1 synchronous stats-capture fix in logDisconnectionToBackend() should have prevented zeroed totals on this path. Hypothesis: second code path (protocol-switch sequence or foreground sync) calls disconnect logging without the Bug 1 guard. Investigate: (1) why disconnect event queued ~3 min before firing, (2) which code path emits `(duration=0, rx=0, tx=0)` instead of real captured totals. Files to audit: ConnectionViewModel.swift logDisconnectionToBackend(), VPNConnectionManager.swift protocol-switch paths, AppDelegate.swift syncStateFromSystem reconciler. NOT launch-blocking \u2014 disconnect eventually logged \u2014 but corrupts analytics on protocol-switch data.",
       "status": "completed",
@@ -13748,7 +13748,7 @@
     {
       "id": "xd-373",
       "from": "[CTO]",
-      "to": "[IOS]",
+      "to": "[iOS]",
       "title": "Handoff from CTO: P0: Stale server ID in logDisconnectionToBackend \u2014 Bug 11 fix incomplete on disconnect path",
       "description": "ROOT CAUSE (95% confidence, code-verified per iOS skill Pattern 7/8 methodology):\n\nlogDisconnectionToBackend() in ConnectionViewModel.swift:341 still has `selectedServer` fallback:\n  guard let server = connectedServer ?? selectedServer else { return }\n\nThe 2026-04-16 Bug 11 fix removed this fallback from sendHeartbeat() and logConnectionToBackend() but MISSED logDisconnectionToBackend(). This is the same class of bug as Bug 11, in a third callsite.\n\nRACE SEQUENCE (VPNConnectionManager.disconnect at lines 549+552):\n  Line 549: connectionState = .disconnected       \u2190 fires @Published, queued on main\n  Line 552: connectedServer = nil                  \u2190 fires @Published, queued on main\nBoth ConnectionViewModel sinks use .receive(on: DispatchQueue.main). Order:\n  Tick 1: handleStateChange(.disconnected) runs \u2192 calls logDisconnectionToBackend()\n          reads self.connectedServer \u2014 but ViewModel's local property hasn't received\n          the nil assignment yet, OR has, depending on Combine internals.\n          Fallback can fire to selectedServer (last user tap in server list).\n\nLOG EVIDENCE from CEO iOS build 2026-04-17 19:26:01 (CasperCloak session):\n  19:26:03.096  Disconnecting (manual)\n  19:26:03.097  Disabling on-demand for VPN configuration: CasperVPN CasperCloak\n  19:26:06.351  TunnelProvider: tunnel disconnect timed out (3s) \u2014 proceeding anyway\n  19:26:06.352  Disconnected successfully\n  19:26:06.369  Logging disconnection for server: 847e2d36 (LA) (duration=1145s, rx=707976, tx=472888)\n  Backend response: closed already-closed 17:47:13 OpenVPN session with rx=251626 tx=274222.\n  Real current session (19-min CasperCloak) never closed in backend ConnectionLog.\n\nPROPOSED FIX (per iOS skill Pattern 7 'snapshot before' + Bug 11 fix pattern):\nAdd a durable session-scoped capture in ConnectionViewModel:\n  1. @Published private(set) var activeSessionServer: VPNServer?\n  2. In handleStateChange(.connected): activeSessionServer = connectedServer\n  3. In logDisconnectionToBackend: guard let server = activeSessionServer else { return }\n     (NO selectedServer fallback \u2014 if activeSessionServer is nil, we never had a      connected session \u2192 skip logging, don't lie)\n  4. In recordBandwidthSession: same \u2014 use activeSessionServer.displayName\n  5. After logDisconnectionToBackend completes: activeSessionServer = nil\n\nFILES TO EDIT:\n  - ios-app-v2/CasperVPN/CasperVPN/Features/Connection/ConnectionViewModel.swift:341 (logDisconnectionToBackend)\n  - ios-app-v2/CasperVPN/CasperVPN/Features/Connection/ConnectionViewModel.swift:364 (recordBandwidthSession same pattern)\n\nVERIFICATION ON DEVICE:\n  1. Connect via Protocol A to Server A\n  2. Disconnect \u2192 verify backend /api/servers/{A}/disconnect receives correct server ID\n  3. Connect via Protocol B to Server B \u2192 disconnect \u2192 verify Server B ID, not a stale one\n  4. Special case: tap Server C in list without connecting, then disconnect previous \u2192      previous session's ID used, not Server C\n\nMERGES: xd-372 (Germany late-disconnect anomaly) is the SAME root cause \u2014 same race, same symptom. Close xd-372 as MERGED. Log snippet from 2026-04-17 17:47:08.619 'Logging disconnection for server: 13f1a013 (Germany-D\u00fcsseldorf) rx=0 tx=0 duration=0.0s' is this exact race firing with the ADDITIONAL stats-capture race (also a variant of Pattern 7 path).\n\nIMPACT: P0 because admin analytics + bandwidth stats + session attribution all corrupted in production right now. Every protocol switch or reconnect has a chance of misattributing the disconnected session to the wrong server.",
       "status": "completed",
@@ -13764,7 +13764,7 @@
     {
       "id": "xd-374",
       "from": "[CTO]",
-      "to": "[IOS]",
+      "to": "[iOS]",
       "title": "Handoff from CTO: P1: CasperCloak tunnel teardown takes 28-30s after user disconnect",
       "description": "SEPARATE BUG from xd-373 (stale server ID). Same log evidence, different root cause.\n\nFrom CEO iOS build log 2026-04-17 19:26 (same session as xd-373):\n  19:26:03  User taps disconnect\n  19:26:03  Disabling on-demand for CasperVPN CasperCloak\n  19:26:06  TunnelProvider: tunnel disconnect timed out (3s) \u2014 proceeding anyway\n  19:26:06  VPNConnectionManager reports 'Disconnected successfully'\n  19:26:34  CasperCloak status: Disconnecting  \u2190 28 seconds later!\n  19:26:34  Tearing down UDP bridge + obfs4 transport\n  19:26:34  setTunnelNetworkSettings FAILED: NEAgentErrorDomain error 1\n\nawaitTunnelDisconnect(..., 3s) [VPNConnectionManager.swift:536,705] times out without actually stopping the CasperCloak obfs4 bridge + TCP transport. ViewModel + UI think tunnel is disconnected, but the Packet Tunnel Provider is still running for 28 more seconds. This is why heartbeats during this 'quiet' window return sessionActive:true \u2014 the session IS still active on backend, because iOS hasn't actually stopped the tunnel that's still heartbeating.\n\nINVESTIGATE:\n  - CasperCloak transport state machine in CasperVPNTunnel/ (obfs4 bridge + TCP transport)\n  - Why the 'transport state \u2192 disconnecting' only fires at T+28s, not T+0s\n  - Whether the cause is (a) blocking TCP close on relay server, (b) obfs4 handshake     state never receiving a disconnect signal, or (c) a missed cancellation path\n  - The NEAgentErrorDomain error 1 on setTunnelNetworkSettings suggests iOS killed     the extension process after the 3s timeout, then tried to reconfigure it \u2014 the     agent is already dead.\n\nPROPOSED FIX DIRECTION:\n  - In CasperCloak teardown path, force-cancel obfs4 bridge read source + TCP transport     BEFORE awaitTunnelDisconnect, not after.\n  - Increase awaitTunnelDisconnect timeout from 3s to ~10s for CasperCloak protocol     (obfs4 has more shutdown overhead than WireGuard/OpenVPN).\n\nIMPACT: P1 (not P0) because user sees UI say 'disconnected' quickly \u2014 perceived UX is OK. But the active tunnel keeps passing traffic for 28s after user intent to stop, which is a Kill Switch-adjacent concern. Also related to the stale-server race in xd-373 since the 'ghost' tunnel causes heartbeat attribution confusion during that window.",
       "status": "completed",
@@ -13812,7 +13812,7 @@
     {
       "id": "xd-377",
       "from": "[CTO]",
-      "to": "[IOS]",
+      "to": "[iOS]",
       "title": "Handoff from CTO: P1: VPN icon stays in iOS status bar after disconnect \u2014 tunnel not terminated",
       "description": "NEW EVIDENCE from CEO iOS build log 2026-04-17 21:03 (CasperCloak \u2192 sao-01, 7m session):\n\n  21:03:32.371  User taps disconnect\n  21:03:32.371  Disabling on-demand for VPN configuration: CasperVPN CasperCloak\n  21:03:33.585  TunnelProvider: stopping tunnel (status=Connected)...\n  21:03:36.948  TunnelProvider: \u26a0\ufe0f tunnel disconnect timed out (3s) \u2014 proceeding anyway\n  21:03:36.948  IKEv2: already disconnected\n  21:03:36.949  Disconnected successfully    \u2190 app says disconnected\n  21:03:37.075  /disconnect POST with REAL bytes (rx=302088, tx=356260, 4022s)  \u2190 xd-373 fix would also land here\n  21:04:22.592  User taps Germany-D\u00fcsseldorf \u2192 'Disconnecting existing VPN before switching protocol'\n                \u2191 ~45s later, the app STILL thinks there's an existing VPN to disconnect\n\nCEO REPORT: VPN icon stays in iOS status bar even after app says disconnected. Intermittent traffic issues on device \u2014 system thinks tunnel is still active, some traffic routes through the ghost tunnel extension which has no valid peer \u2192 packets dropped.\n\nROOT CAUSE (inspection-level, ~85% confidence):\n  VPNConnectionManager.disconnect() [line 520-562] calls:\n    1. disableOnDemandRules()           \u2014 prevents auto-reconnect\n    2. awaitTunnelDisconnect(..., 3s)   \u2014 TIMES OUT because tunnel extension doesn't stop\n    3. logs 'proceeding anyway'\n    4. Sets connectionState = .disconnected  \u2014 UI lies\n    5. Sets connectedServer = nil\n  BUT:\n    - NEPacketTunnelProvider extension is still alive (CasperCloak bridge + obfs4 still running)\n    - NEVPNManager's saved config still enabled in iOS Settings \u2192 iOS keeps drawing the VPN icon\n    - tunnelManager.removeFromPreferences() is NEVER called\n\nFIX DIRECTION (iOS skill \u00a73 + \u00a74 pattern):\n  After awaitTunnelDisconnect timeout:\n    - Force-invalidate: `tunnelManager?.isEnabled = false; try await tunnelManager?.saveToPreferences()`\n    - If still sticky: `tunnelManager?.removeFromPreferences()` (last resort, requires       re-install on next connect)\n  Also investigate why CasperCloak specifically times out \u2014 obfs4 bridge + TCP transport   have their own cleanup paths (see xd-374 \u2014 related).\n\nMERGES: xd-374 (CasperCloak 28s teardown) \u2014 same symptom, consolidate investigation.\n\nFILES TO AUDIT:\n  - VPNConnectionManager.swift disconnect() \u2014 add force-invalidate after timeout\n  - CasperVPNTunnel/ PacketTunnelProvider.swift \u2014 verify stopTunnel teardown paths\n  - CasperCloakTransport / obfs4 bridge shutdown\n\nIMPACT: P1 \u2014 users experience intermittent dropped traffic after disconnect, think VPN is broken, may try to reinstall app. Not a data leak (tunnel has no valid route) but a serious UX failure.",
       "status": "completed",
@@ -13856,7 +13856,7 @@
     {
       "id": "xd-380",
       "from": "[CTO]",
-      "to": "[IOS]",
+      "to": "[iOS]",
       "title": "Handoff from CTO: P2: Foreground sync emits spurious /connect+/disconnect on IKEv2 app reopen",
       "description": "NEW BUG from CEO iOS log 2026-04-18 00:00:42 + 00:01:11 (UK-London IKEv2 session).\n\nSYMPTOM: Every time user backgrounds \u2192 foregrounds the app while IKEv2 is active, app fires phantom /disconnect + /connect POSTs on the backend even though the kernel tunnel never interrupted (kill-switch + on-demand keep it alive).\n\nLOG EVIDENCE (00:01:11 cycle):\n  00:00:56  App backgrounded (last heartbeat)\n  00:01:10.95  'Software caused connection abort' (network reset on foreground)\n  00:01:11.26  Foreground sync: re-reading VPN state from kernel\n  00:01:11.26  Ignoring tunnel provider status (Disconnected) \u2014 using IKEv2\n  00:01:11.26  drift: published=Connected, tunnel kernel=Disconnected \u2192 force-reconcile \u2192 .disconnected\n  00:01:11.27  IKEv2 kernel=Connected \u2192 drift \u2192 force-reconcile \u2192 .connected\n  00:01:11.27  POST /disconnect (28s, 4.28 MB)  \u2190 phantom (real tunnel still up)\n  00:01:11.29  POST /connect (new session 5a80b91a)  \u2190 phantom\n\nROOT CAUSE (~90% confidence): syncStateFromSystem() in VPNConnectionManager.swift checks tunnel provider status BEFORE IKEv2. Since IKEv2 uses NEVPNManager (not NETunnelProviderManager), tunnel provider is legitimately Disconnected \u2014 but the reconciler flips published state to .disconnected, triggering ConnectionViewModel's Combine observer to POST /disconnect. Then next kernel check sees IKEv2 connected, flips back to .connected, triggers /connect POST.\n\nPROPOSED FIX: In syncStateFromSystem():\n  1. Check ALL protocol managers BEFORE flipping to .disconnected\n  2. If current protocol is IKEv2, skip tunnel-provider disconnected check entirely\n  3. OR short-circuit: if any protocol manager shows Connected, don't force .disconnected\n\nIMPACT (P2):\n  \u2022 Not data-corrupting (real tunnel is fine)\n  \u2022 Backend ConnectionLogs fragment \u2014 1 real session becomes many 30-second phantom sessions\n  \u2022 BandwidthHistory shows fake disconnect/reconnect events\n  \u2022 Heartbeat timer + speed display reset every app reopen\n  \u2022 Analytics + admin panel connection metrics polluted\n\nFILES TO AUDIT:\n  - VPNConnectionManager.swift syncStateFromSystem() / Foreground sync path\n  - ConnectionViewModel.swift handleStateChange(.disconnected) observer \u2014 may need guard to not fire logDisconnection if this is just a reconcile flip, not a real user disconnect\n\nREPRO: Connect via IKEv2 to any server, background app (swipe up or switch apps), wait ~10s, foreground. Check logs for phantom /connect+/disconnect pair and verify backend ConnectionLogs table has duplicate session rows for same tunnel.",
       "status": "completed",
@@ -13871,8 +13871,8 @@
     },
     {
       "id": "xd-381",
-      "from": "cto",
-      "to": "qa",
+      "from": "[CTO]",
+      "to": "[QA]",
       "status": "completed",
       "priority": "P1",
       "title": "[QA] Verify xd-380 fix: IKEv2 foreground-sync no longer triggers phantom cycle",
@@ -13898,8 +13898,8 @@
     },
     {
       "id": "xd-382",
-      "from": "ios",
-      "to": "cto",
+      "from": "[iOS]",
+      "to": "[CTO]",
       "status": "completed",
       "priority": "P0",
       "title": "Fix IKEv2 Personal Hotspot break: gate includeAllNetworks on Kill Switch",
@@ -13913,8 +13913,8 @@
     },
     {
       "id": "xd-384",
-      "from": "qa",
-      "to": "cto",
+      "from": "[QA]",
+      "to": "[CTO]",
       "status": "completed",
       "priority": "P0",
       "title": "[QA\u2192CTO] Fix Soft/Strict inversion defect in xd-382 (IKEv2 excludeLocalNetworks)",
@@ -13929,8 +13929,8 @@
     },
     {
       "id": "xd-386",
-      "from": "qa",
-      "to": "ceo",
+      "from": "[QA]",
+      "to": "[CEO]",
       "status": "pending",
       "priority": "P1",
       "title": "[CEO] Device-verify xd-380 + xd-382 + xd-384 \u2192 mark \ud83d\udfe2",
@@ -13943,8 +13943,8 @@
     },
     {
       "id": "xd-387",
-      "from": "devops",
-      "to": "backend",
+      "from": "[DEVOPS]",
+      "to": "[BACKEND]",
       "title": "CI BLOCKER: Syntax error in website/app/guides/[slug]/page.tsx & website/app/compare/[slug]/page.tsx",
       "description": "CI has been RED for 14+ hours. Blocker: commit 973df09b42 (2026-04-17T13:30:41Z) introduced invalid syntax in two Next.js dynamic route files:\n  \u2022 website/app/guides/[slug]/page.tsx line 18: `if (!data) const url = \\`https://caspervpn.com/guides/${slug}\\`;`\n  \u2022 website/app/compare/[slug]/page.tsx line 18: `if (!data) const url = \\`https://caspervpn.com/compare/${slug}\\`;`\n\nInvalid JS \u2014 you cannot declare `const` inside an `if` without a block, and the declaration is unreachable to the subsequent `alternates: { canonical: url }` referenced on line 25. swc parser rejects with 'Expression expected' and Next.js build aborts \u2192 Docker buildx fails on COPY --from=deps /app/.next/standalone \u2192 CI red.\n\nFIX (minimal diff):\n  Move `const url = ...` OUT of the `if` and handle `!data` cleanly:\n    const data = guides[slug];\n    const url = `https://caspervpn.com/guides/${slug}`;\n    if (!data) return { title: 'Guide not found | CasperVPN', alternates: { canonical: url } };\n  Same pattern for compare/[slug].\n\nVERIFY:\n  cd website && npm run build    # expect success\n  Watch next CI run on dropbox-local \u2014 Build Docker Images (website) should pass.",
       "priority": "P0",
@@ -13969,7 +13969,7 @@
     },
     {
       "id": "xd-388",
-      "from": "[IOS]",
+      "from": "[iOS]",
       "to": "[QA]",
       "title": "Handoff from IOS: iOS biometric-auth AC6 SettingsView toggle wired \u2014 validate + recipe for AC2-AC4",
       "description": "Wired BiometricAuthManager.shared toggle into SettingsView.swift Security section (commit ec002fd6, dropbox-local) \u2014 completes biometric-auth AC6 end-to-end (UserDefaults-backed toggle now user-visible, was previously dead code).\n\n=== QA VALIDATION STEPS ===\n1. Xcode build on device with Face ID (iPhone 15 Pro) and device with Touch ID (older iPad/SE).\n2. Settings \u2192 Security section \u2192 expect new row \"Unlock with Face ID\" (or \"Touch ID\") below Two-Factor Authentication.\n3. Toggle ON \u2192 relaunch app \u2192 confirm UserDefaults(biometricAuthEnabled)=true persists.\n4. On device without biometry enrolled (simulator or hardware), confirm row is hidden (capability=.none).\n\n=== REMAINING biometric-auth AC2-AC4 WIRE-UP (not shipped this session \u2014 needs Xcode build verification) ===\nAC2 (biometric prompt on launch) + AC3 (unlock flow):\n  Target: ios-app-v2/CasperVPN/CasperVPN/App/CasperVPNApp.swift \u2192 ContentView\n  Pattern: Gate `MainTabView()` render behind `BiometricUnlockGate` overlay when\n    `coordinator.isAuthenticated && BiometricAuthManager.shared.isEnabled && BiometricAuthManager.shared.capability != .none`.\n  BiometricUnlockGate should:\n    - On appear: call `evaluateWithSmartFallback(reason: \"Unlock CasperVPN\")`\n    - On success: pass-through to child\n    - On failure (user cancel): show Retry button\n    - On consecutiveFailures >= 3: allow device-passcode fallback (already baked into evaluateWithSmartFallback)\n\nAC4 (Quick Connect button in ConnectionView):\n  Target: ios-app-v2/CasperVPN/CasperVPN/Features/Connection/ConnectionView.swift\n  Pattern: Add \"Quick Connect\" button that:\n    1. await BiometricAuthManager.shared.evaluate(reason: \"Quick Connect VPN\")\n    2. On success \u2192 ConnectionViewModel.connect(to: lastUsedServer ?? nearestServer)\n  Gated on same capability check. Falls through to normal connect button if biometry disabled.\n\n=== ANTI-LOOP NOTE ===\nDo NOT attempt AC2-AC4 wire-up via pure API push without Xcode build. ContentView + ConnectionView are large (177 + 686 lines) and silent Swift compile errors waste a test cycle.\n\n\n[QA 2026-04-18] BLOCKED \u2014 Face ID / Touch ID testing requires physical iOS device with enrolled biometrics. Route to CEO.\n\n[QA 2026-04-29] Scheduled QA pass \u2014 BLOCKED: requires physical iOS device + TestFlight build access. Server-side dependencies confirmed healthy (api.caspervpn.com 200, all 13 nodes Online). Routing back to CEO/iOS for on-device validation.",
@@ -14087,8 +14087,8 @@
     },
     {
       "id": "xd-388",
-      "from": "ceo",
-      "to": "cto",
+      "from": "[CEO]",
+      "to": "[CTO]",
       "status": "completed",
       "priority": "P0",
       "title": "OpenVPN Kill Switch missing \u2014 fix protocol parity (4/4 unified)",
@@ -14103,8 +14103,8 @@
     },
     {
       "id": "xd-389",
-      "from": "ceo",
-      "to": "cto",
+      "from": "[CEO]",
+      "to": "[CTO]",
       "status": "completed",
       "priority": "P0",
       "title": "Kill Switch toggle now propagates to saved profiles (fix stale hotspot-block on IKE)",
@@ -14119,8 +14119,8 @@
     },
     {
       "id": "xd-391",
-      "from": "cto",
-      "to": "backend",
+      "from": "[CTO]",
+      "to": "[BACKEND]",
       "status": "pending",
       "priority": "P2",
       "title": "Post-TestFlight: RADIUS tier sync on subscription change (Max-Monthly-Octets)",
@@ -14132,8 +14132,8 @@
     },
     {
       "id": "xd-392",
-      "from": "ceo",
-      "to": "cto",
+      "from": "[CEO]",
+      "to": "[CTO]",
       "status": "completed",
       "priority": "P0",
       "title": "Admin-set data limit now propagates to iOS app (both value + freshness bugs fixed)",
@@ -14147,8 +14147,8 @@
     },
     {
       "id": "xd-393",
-      "from": "ceo",
-      "to": "cto",
+      "from": "[CEO]",
+      "to": "[CTO]",
       "status": "completed",
       "priority": "P1",
       "title": "\"Free data's up\" friendly sheet replaces generic paywall on limit-exceeded",
@@ -14162,8 +14162,8 @@
     },
     {
       "id": "xd-394",
-      "from": "ceo",
-      "to": "cto",
+      "from": "[CEO]",
+      "to": "[CTO]",
       "status": "completed",
       "priority": "P0",
       "title": "App Store Server Notifications v2 webhook URL configured",
@@ -14177,8 +14177,8 @@
     },
     {
       "id": "xd-395",
-      "from": "ceo",
-      "to": "cto",
+      "from": "[CEO]",
+      "to": "[CTO]",
       "status": "completed",
       "priority": "P1",
       "title": "Home page data limit badge now reflects admin-set per-user limit",
@@ -14193,8 +14193,8 @@
     },
     {
       "id": "xd-400",
-      "from": "ceo",
-      "to": "cto",
+      "from": "[CEO]",
+      "to": "[CTO]",
       "status": "completed",
       "priority": "P0",
       "title": "Admin-granted subscription silently reverts to free on iOS (Status=Inactive trap)",
@@ -14209,8 +14209,8 @@
     },
     {
       "id": "xd-399",
-      "from": "ceo",
-      "to": "cto",
+      "from": "[CEO]",
+      "to": "[CTO]",
       "status": "completed",
       "priority": "P1",
       "title": "Admin subscription modal: custom data limit field (override plan default)",
@@ -14224,8 +14224,8 @@
     },
     {
       "id": "xd-401",
-      "from": "ceo",
-      "to": "cto",
+      "from": "[CEO]",
+      "to": "[CTO]",
       "status": "completed",
       "priority": "P0",
       "title": "Data limit not enforced in app when crossed mid-session (admin set 0.5 GB, kept working)",
@@ -14240,8 +14240,8 @@
     },
     {
       "id": "xd-402",
-      "from": "ceo",
-      "to": "cto",
+      "from": "[CEO]",
+      "to": "[CTO]",
       "status": "completed",
       "priority": "P0",
       "title": "Admin panel data-usage invisible for IKEv2/OpenVPN users (CurrentCycleDataUsedBytes never updated on disconnect)",
@@ -14255,8 +14255,8 @@
     },
     {
       "id": "xd-403",
-      "from": "ceo",
-      "to": "cto",
+      "from": "[CEO]",
+      "to": "[CTO]",
       "status": "completed",
       "priority": "P0",
       "title": "CRITICAL: xd-401 poll silently rolled dataUsedBytes backward (root cause of \"limit not enforced\")",
@@ -14271,8 +14271,8 @@
     },
     {
       "id": "xd-406",
-      "from": "ceo",
-      "to": "cto",
+      "from": "[CEO]",
+      "to": "[CTO]",
       "status": "completed",
       "priority": "P0",
       "title": "User-scope lastSessionTotal key (cross-user contamination)",
@@ -14286,8 +14286,8 @@
     },
     {
       "id": "xd-407",
-      "from": "ceo",
-      "to": "cto",
+      "from": "[CEO]",
+      "to": "[CTO]",
       "status": "completed",
       "priority": "P3",
       "title": "Remove dead sessionBaseBytes reference",
@@ -14301,8 +14301,8 @@
     },
     {
       "id": "xd-408",
-      "from": "ceo",
-      "to": "cto",
+      "from": "[CEO]",
+      "to": "[CTO]",
       "status": "completed",
       "priority": "P1",
       "title": "Transactional RecordUsageAsync (atomicity of cycle + lifetime + log)",
@@ -14316,8 +14316,8 @@
     },
     {
       "id": "xd-411",
-      "from": "ceo",
-      "to": "cto",
+      "from": "[CEO]",
+      "to": "[CTO]",
       "status": "completed",
       "priority": "P1",
       "title": "Immediate syncFromBackend on .connected (close 60s sync window)",
@@ -14331,8 +14331,8 @@
     },
     {
       "id": "xd-409",
-      "from": "cto",
-      "to": "backend",
+      "from": "[CTO]",
+      "to": "[BACKEND]",
       "status": "completed",
       "priority": "P2",
       "title": "Backend: Heartbeat should not overwrite ConnectionLog bytes with partial stats",
@@ -14349,8 +14349,8 @@
     },
     {
       "id": "xd-410",
-      "from": "cto",
-      "to": "backend",
+      "from": "[CTO]",
+      "to": "[BACKEND]",
       "status": "completed",
       "priority": "P1",
       "title": "Backend: RADIUS accounting Stop vs Disconnect double-count risk",
@@ -14367,8 +14367,8 @@
     },
     {
       "id": "xd-412",
-      "from": "cto",
-      "to": "backend",
+      "from": "[CTO]",
+      "to": "[BACKEND]",
       "status": "completed",
       "priority": "P3",
       "title": "Backend: Clarify CurrentCycleDataUsedBytes reset semantics",
@@ -14385,8 +14385,8 @@
     },
     {
       "id": "xd-413",
-      "from": "ceo",
-      "to": "cto",
+      "from": "[CEO]",
+      "to": "[CTO]",
       "status": "completed",
       "priority": "P0",
       "title": "Push notification \u2192 Support ticket deep-link",
@@ -14400,8 +14400,8 @@
     },
     {
       "id": "xd-414",
-      "from": "ceo",
-      "to": "cto",
+      "from": "[CEO]",
+      "to": "[CTO]",
       "status": "completed",
       "priority": "P1",
       "title": "Unread indicator + \"Messages\" rename on Profile tickets",
@@ -14415,8 +14415,8 @@
     },
     {
       "id": "xd-415",
-      "from": "ceo",
-      "to": "cto",
+      "from": "[CEO]",
+      "to": "[CTO]",
       "status": "completed",
       "priority": "P1",
       "title": "2FA moved from Settings to Profile > Security card",
@@ -14485,8 +14485,8 @@
     {
       "id": "xd-421",
       "from": "[QA]",
-      "to": "[IOS]",
-      "status": "in-progress",
+      "to": "[iOS]",
+      "status": "in_progress",
       "priority": "P0",
       "created": "2026-04-19",
       "description": "REGRESSION \u2014 Biometric AC6 wire-up removed by c5a8210c. Restore lines 11-18 (@ObservedObject biometricAuth = BiometricAuthManager.shared) and the `if biometricAuth.capability != .none` SettingsToggleRow block at ~L124+ from ec002fd6, WITHOUT re-adding the TwoFactorSetupView NavigationLink. xd-388 claimed completion and was counted toward biometric-auth AC6. P0.",
@@ -14522,8 +14522,8 @@
     },
     {
       "id": "xd-416",
-      "from": "ceo",
-      "to": "cto",
+      "from": "[CEO]",
+      "to": "[CTO]",
       "status": "completed",
       "priority": "P1",
       "title": "Profile ticket row not expanding on tap (xd-414 regression)",
@@ -14537,8 +14537,8 @@
     },
     {
       "id": "xd-417",
-      "from": "ceo",
-      "to": "cto",
+      "from": "[CEO]",
+      "to": "[CTO]",
       "status": "completed",
       "priority": "P0",
       "title": "Profile chat: tap row opens full chat (drop flaky inline expansion)",
@@ -14552,8 +14552,8 @@
     },
     {
       "id": "xd-418",
-      "from": "ceo",
-      "to": "cto",
+      "from": "[CEO]",
+      "to": "[CTO]",
       "status": "completed",
       "priority": "P0",
       "title": "TestFlight validation failed: Export Compliance Code mismatch",
@@ -14567,8 +14567,8 @@
     },
     {
       "id": "xd-419",
-      "from": "cto",
-      "to": "ios",
+      "from": "[CTO]",
+      "to": "[iOS]",
       "status": "pending",
       "priority": "P3",
       "title": "Post-launch: Missing dSYMs for Sentry.framework + openssl.framework in archive",
@@ -14580,8 +14580,8 @@
     },
     {
       "id": "xd-420",
-      "from": "ceo",
-      "to": "cto",
+      "from": "[CEO]",
+      "to": "[CTO]",
       "status": "completed",
       "priority": "P0",
       "title": "Profile chat expansion: proper fix with DisclosureGroup (reverts xd-417 shortcut)",
@@ -14596,8 +14596,8 @@
     },
     {
       "id": "xd-421",
-      "from": "ceo",
-      "to": "cto",
+      "from": "[CEO]",
+      "to": "[CTO]",
       "status": "completed",
       "priority": "P1",
       "title": "ITMS-90683: Missing NSLocationWhenInUseUsageDescription purpose string",
@@ -14612,8 +14612,8 @@
     },
     {
       "id": "xd-422",
-      "from": "ceo",
-      "to": "cto",
+      "from": "[CEO]",
+      "to": "[CTO]",
       "status": "completed",
       "priority": "P0",
       "title": "CRITICAL: Silent decoder drops entire SupportTicket.messages array on single bad entry",
@@ -14627,8 +14627,8 @@
     },
     {
       "id": "xd-423",
-      "from": "ceo",
-      "to": "cto",
+      "from": "[CEO]",
+      "to": "[CTO]",
       "status": "completed",
       "priority": "P1",
       "title": "Auto-reload ticket list when APNs ticket_reply push arrives",
@@ -14642,8 +14642,8 @@
     },
     {
       "id": "xd-424",
-      "from": "ceo",
-      "to": "cto",
+      "from": "[CEO]",
+      "to": "[CTO]",
       "status": "completed",
       "priority": "P2",
       "title": "Backend ORDER BY UpdatedAt DESC (tickets with recent admin replies surface to top)",
@@ -14657,8 +14657,8 @@
     },
     {
       "id": "xd-425",
-      "from": "ceo",
-      "to": "cto",
+      "from": "[CEO]",
+      "to": "[CTO]",
       "status": "completed",
       "priority": "P0",
       "title": "CRITICAL: iOS enforce CasperCloak override when backend flags restrictive region (UAE fix)",
@@ -14716,7 +14716,7 @@
       "id": "xd-427",
       "from": "[DEVOPS]",
       "to": "[DEVOPS]",
-      "status": "open",
+      "status": "pending",
       "priority": "P2",
       "createdAt": "2026-04-20",
       "title": "P2: Rewrite deploy-website.yml to use docker compose (currently broken + bypasses compose network fix)",
@@ -14744,7 +14744,7 @@
     },
     {
       "id": "xd-428",
-      "from": "[IOS]",
+      "from": "[iOS]",
       "to": "[QA]",
       "title": "Handoff from IOS: iOS TestFlight validation \u2014 xd-422 resilient decoder, xd-423 ticket auto-reload, xd-424 UpdatedAt DESC, xd-425 restrictive-region CasperCloak",
       "description": "Four iOS fixes shipped by CTO 2026-04-19\u21922026-04-20 need TestFlight validation. All four commits verified on dropbox-local.\n\nxd-422 (fa2d75a5): AISupportManager.swift ResilientMessage decoder \u2014 per-message error isolation so one malformed message no longer drops the entire Profile messages list. Repro: create a ticket, have admin reply with valid content, verify Profile Messages card shows thread. Edge case: if any message has a decoding failure, it should log a warning but other messages still render.\n\nxd-423 (ca296315): ProfileView / coordinator wiring \u2014 when APNs ticket_reply push fires, the ticket list auto-reloads so the user sees fresh state. Repro: app in background \u2192 admin replies \u2192 push arrives \u2192 tap notification \u2192 Profile opens to LiveSupportView with up-to-date thread (no pull-to-refresh).\n\nxd-424 (7d951a63): backend SupportTicketsController.GetTickets now ORDER BY UpdatedAt DESC. LIVE-VERIFIED 2026-04-20: GET /api/support/tickets UpdatedAt DESC ordering confirmed. Repro: trigger admin reply on an old ticket \u2192 refresh list \u2192 old ticket bubbles to top.\n\nxd-425 (105bb9f1): SmartConnectManager.swift enforces .casperCloak when response.isRestrictiveRegion=true, overriding user preference and per-server recommended protocol. Backend GeoIpService.cs:26-42 restricted list: AE, IR, CN, RU, SA, OM, KP, PK, VN, MM, CU, BY, EG, TM. Repro: UAE user opens app \u2192 Smart Connect call \u2192 backend returns isRestrictiveRegion:true \u2192 client connects via CasperCloak (obfs4) regardless of user setting. Validate with network inspector: outgoing traffic should hit obfs4 port (4443/4444), NOT 51820 (WG) or 500/4500 (IKEv2). Negative case: non-restricted region (US/UK/DE) should still honor user protocol preference.\n\nAll 4 fixes are on dropbox-local, verified via GitHub API. Live API smoke on api.caspervpn.com = 9/9 endpoints green. iOS dept not blocked on anything; this is purely a device-side validation handoff.\n\n[QA 2026-04-20] PARTIAL VERIFICATION (source-level, backend-live):\n- xd-422 ResilientMessage decoder: SOURCE VERIFIED on GitHub dropbox-local (3 refs in AISupportManager.swift). Device UX test still required.\n- xd-423 ProfileView APNs reload: SOURCE VERIFIED on GitHub (L89 of ProfileView.swift: `xd-423: Reload the ticket list before opening the chat`). Device UX test still required.\n- xd-424 backend ORDER BY UpdatedAt DESC: \u2705 LIVE-VERIFIED on api.caspervpn.com + SOURCE VERIFIED (SupportTicketsController.cs L43-52). GET /api/support/tickets returns tickets with UpdatedAt DESC monotonic order.\n- xd-425 SmartConnectManager CasperCloak override: SOURCE VERIFIED on GitHub dropbox-local (lines 85/106/114/121 \u2014 force `.casperCloak` when response.isRestrictiveRegion=true and preferredProtocol is not already casperCloak). Backend GeoIpService.cs L26-42 contains AE/IR/CN/RU/SA/OM/KP/PK/VN/MM/CU/BY/EG/TM. Device UAE-region test needed for full sign-off.\nNOTE: NL Primary /root/Casper-Code checkout is stale (HEAD f9cb76c predates commit 105bb9f1 from 2026-04-19). The GitHub dropbox-local branch is authoritative. Consider pulling on NL Primary.\nREMAINING DEVICE TESTS: ticket decoder malformed-message isolation (xd-422), APNs push \u2192 Profile fresh state (xd-423), UAE-region network inspector (obfs4 port 4443/4444, not 51820) (xd-425). Device test requires physical iPhone + Xcode access \u2014 unchanged constraint.",
@@ -14925,7 +14925,7 @@
     {
       "id": "xd-436",
       "from": "[QA]",
-      "to": "[IOS]",
+      "to": "[iOS]",
       "title": "Handoff from QA: P0: PacketTunnelProvider.wake()/sleep() are empty no-ops \u2014 causes background VPN to silently die",
       "description": "ROOT CAUSE #1 \u2014 HIGHEST PRIORITY\n\nCEO REPORT: \"Internet stops working after a while when VPN connected in background.\"\n\nCONFIRMED IN CODE:\n- ios-app-v2/CasperVPN/CasperVPNTunnel/PacketTunnelProvider.swift lines 428-435:\n\n```swift\noverride func sleep(completionHandler: @escaping () -> Void) {\n    os_log(\"Device going to sleep\", log: osLog, type: .info)\n    completionHandler()  // \u26a0\ufe0f NO-OP \u2014 just logs and exits\n}\n\noverride func wake() {\n    os_log(\"Device waking up\", log: osLog, type: .info)\n    // \u26a0\ufe0f NO-OP \u2014 no action taken\n}\n```\n\nSAME PATTERN in WireGuardTunnelProvider.swift (lines 148-155) \u2014 if that file is used.\n\nWHY THIS CAUSES THE BUG:\n1. iOS puts device to sleep (screen off, app backgrounded)\n2. iOS suspends the tunnel extension's CPU\n3. WireGuard's internal keepalive (25s) pauses\n4. Server-side conntrack UDP entry expires (30s initial, 120s stream)\n5. Server-side WG peer's handshake ages out (180s = 3 min)\n6. Device wakes \u2192 iOS resumes extension \u2192 wake() logs nothing-useful \u2192 tunnel state STALE\n7. Tunnel extension thinks \"connected\" but packets silently drop at server's NAT\n\nREQUIRED FIX:\n\n```swift\noverride func wake() {\n    os_log(\"Device waking up \u2014 checking tunnel health\", log: osLog, type: .info)\n    guard let adapter = wireGuardAdapter else { return }\n    adapter.getRuntimeConfiguration { [weak self] config in\n        guard let config = config else { return }\n        let hsLine = config.split(separator: \"\\n\").first { $0.hasPrefix(\"last_handshake_time_sec=\") }\n        let hsTime = Int(hsLine?.dropFirst(23) ?? \"0\") ?? 0\n        let age = Int(Date().timeIntervalSince1970) - hsTime\n        if age > 180 {\n            // Handshake stale (>3min) \u2014 force reconnect\n            os_log(\"Handshake stale (%d s) on wake \u2014 forcing reassert\", log: self?.osLog ?? .default, type: .info, age)\n            self?.reasserting = true\n            if let tc = self?.currentTunnelConfiguration {\n                adapter.update(tunnelConfiguration: tc) { _ in\n                    self?.reasserting = false\n                }\n            }\n        }\n    }\n}\n\noverride func sleep(completionHandler: @escaping () -> Void) {\n    os_log(\"Device going to sleep \u2014 saving state\", log: osLog, type: .info)\n    // Optional: flush pending packets, save connection metadata\n    completionHandler()\n}\n```\n\nACCEPTANCE CRITERIA:\n1. With VPN connected, lock phone, wait 30 min, unlock \u2192 internet works immediately\n2. With VPN connected in background, walk through Wi-Fi dead zone for 2min \u2192 VPN auto-recovers when Wi-Fi returns\n3. Tunnel extension log shows \"Handshake stale on wake \u2014 forcing reassert\" when appropriate\n4. Test on iOS 17, 18, 26 (if available)\n\nFILES:\n- ios-app-v2/CasperVPN/CasperVPNTunnel/PacketTunnelProvider.swift (main fix)\n- ios-app-v2/CasperVPN/CasperVPNTunnel/WireGuardTunnelProvider.swift (same fix for stub if still active)\n- ios-app-v2/CasperVPN/CasperVPNTunnel/CasperCloakTunnelProvider.swift (check if needs same)\n",
       "status": "completed",
@@ -15004,7 +15004,7 @@
     {
       "id": "xd-441",
       "from": "[QA]",
-      "to": "[IOS]",
+      "to": "[iOS]",
       "title": "Handoff from QA: P1: WireGuard/CasperCloak have NO onDemand rules \u2014 no auto-reconnect on network drops",
       "description": "ROOT CAUSE #6 \u2014 MEDIUM PRIORITY\n\nCONFIRMED IN CODE:\n- VPNConnectionManager.swift line 139: `manager.onDemandRules = []` (WireGuard = no rules)\n- Line 952: onDemandRules set only in kill-switch .strict mode\n\nKill-switch is OFF by default \u2192 users have NO auto-reconnect for WG/CasperCloak.\n\nWHY THIS CAUSES THE BUG:\n- iOS Wi-Fi\u2194cellular transition: VPN drops briefly\n- Without onDemand rules, iOS does NOT automatically reconnect\n- User has to open app and tap Reconnect\n\nFIX: Always set onDemand rules regardless of kill-switch mode:\n\n```swift\n// In VPNConnectionManager.swift where VPN config is saved:\nlet wifi = NEOnDemandRuleConnect()\nwifi.interfaceTypeMatch = .wiFi\nlet cellular = NEOnDemandRuleConnect()\ncellular.interfaceTypeMatch = .cellular\nmanager.onDemandRules = [wifi, cellular]\nmanager.isOnDemandEnabled = true  // Only when VPN is \"on\"\n```\n\nIMPORTANT: Only enable onDemand when user intends VPN to stay on. Disable when user taps \"Disconnect\".\n\nFILES:\n- ios-app-v2/CasperVPN/CasperVPN/Core/Services/VPNConnectionManager.swift (lines 139, 157, 952, 958)\n- IKEv2Manager.swift already has this (line 209, 729-743) \u2014 port the pattern to WG manager.\n\nACCEPTANCE CRITERIA:\n1. With VPN on, toggle airplane mode off/on 3\u00d7 \u2192 VPN reconnects each time within 5s\n2. With VPN on, switch Wi-Fi\u2194cellular \u2192 VPN reconnects automatically\n3. When user manually Disconnects, onDemand is disabled (doesn't auto-reconnect)\n",
       "status": "completed",
@@ -15142,7 +15142,7 @@
     {
       "id": "xd-448",
       "from": "[CTO]",
-      "to": "[IOS]",
+      "to": "[iOS]",
       "title": "Handoff from CTO: [SUBMISSION-BLOCKER] Flip ITSAppUsesNonExemptEncryption true + prepare ERN",
       "description": "DEPENDS on Legal. When approved: Info.plist L23-24 flip to true + add ITSEncryptionExportComplianceCode. Prepare BIS/NSA Year-End Self-Classification: WireGuard/OpenVPN/IKEv2/CasperCloak. ASC Encryption: upload CCATS OR \u00a7740.17(b). CLEANUP: Info.plist L77 UIRequiredDeviceCapabilities:armv7 wrong for iOS 16.",
       "status": "completed",
@@ -15199,7 +15199,7 @@
     {
       "id": "xd-452",
       "from": "[CTO]",
-      "to": "[IOS]",
+      "to": "[iOS]",
       "title": "Handoff from CTO: [SUBMISSION] Unify bundleId to com.caspervpn.app",
       "description": "\u00a79.6 drift: appsettings.json+Swift=com.applinkoffshore.CasperVPN; docker-compose=com.caspervpn.app. Canonical per \u00a79: com.caspervpn.app / com.caspervpn.app.tunnel. Fix appsettings.json + hardcoded strings. Verify entitlements.",
       "status": "completed",
@@ -15347,7 +15347,7 @@
     {
       "id": "xd-457",
       "from": "[CTO]",
-      "to": "[IOS]",
+      "to": "[iOS]",
       "title": "Handoff from CTO: xd-450: Added UIBackgroundModes [fetch, processing] to Info.plist",
       "description": "ROOT CAUSE: Main app had NO UIBackgroundModes, so iOS suspended it ~10s after\nbackgrounding. All NWPathMonitor + auto-reconnect observers died.\nFIX: Added UIBackgroundModes array [fetch, processing]. iOS will grant the main\n     app occasional background CPU, keeping NWPathMonitor alive long enough to\n     detect network transitions.\n\nFiles: ios-app-v2/CasperVPN/CasperVPN/Info.plist (commit 8ac9414f)\n\nNOTE: The tunnel EXTENSION already gets special background CPU from NE subsystem,\nbut the main app observer (setupAutoReconnect) needs this Info.plist key to get\nany background time for belt-and-suspenders redundancy.",
       "status": "completed",
@@ -15518,7 +15518,7 @@
     {
       "id": "xd-468",
       "from": "[CTO]",
-      "to": "[IOS]",
+      "to": "[iOS]",
       "title": "Handoff from CTO: P1",
       "description": "[SUBMISSION-CORRECTION xd-452] Bundle ID canonical is com.applinkoffshore.CasperVPN (NOT com.caspervpn.app)",
       "status": "completed",
@@ -15548,7 +15548,7 @@
     {
       "id": "xd-470",
       "from": "[CTO]",
-      "to": "[IOS]",
+      "to": "[iOS]",
       "title": "Handoff from CTO: xd-465: Archive + ship build 43 to TestFlight (bug-report URL fix)",
       "description": "Build 42 had a double-/api/ prefix bug in BugReportService that caused every bug report submission to 404 (\"Resource Not Found\"). Root cause: BugReportService.submit() called APIClient.shared.post(\"/api/bugs\") but APIClient prepends /api via Config.fullAPIURL \u2192 URL became /api/api/bugs. Fixed in commit 745722c3 on dropbox-local: BugReportService now passes \"/bugs\" matching the convention every other service uses (e.g. BandwidthHistoryManager passes \"/bandwidth/live\"). Build bumped 42\u219243 in pbxproj. NEEDED: Archive in Xcode \u2192 Distribute App \u2192 TestFlight. Server-side nginx shim at /api/api/bugs is in place so build 42 still works until 43 lands; remove shim once 43 is live.",
       "status": "completed",
@@ -15563,7 +15563,7 @@
     {
       "id": "xd-471",
       "from": "[CTO]",
-      "to": "[IOS]",
+      "to": "[iOS]",
       "title": "Handoff from CTO: Bug A: VPN reconnect after disconnect requires sign-out/sign-in (stale token)",
       "description": "CEO test 2026-04-25: VPN was stable for 7 hours (server fixes confirmed working) but after disconnect, attempts to reconnect failed silently. Resolved by sign-out then sign-in. Suspected root cause: JWT auth token expired during the 7-hour session OR connection state cache stale. iOS should: (1) check VPNConnectionManager / AuthService \u2014 does reconnect attempt auto-refresh token if 401 from /servers/{id}/config? (2) check if TokenManager refresh interval is < typical session length (refresh-while-active). (3) reproduce by leaving VPN on for 6+ hours then disconnecting and reconnecting. NOT URGENT (workaround is sign-out/in) but real UX bug.",
       "status": "completed",
@@ -15581,14 +15581,14 @@
       "to": "[PRODUCT]",
       "title": "PackageManagement UI vs Plans table \u2014 data model decision needed",
       "description": "GAP IDENTIFIED (Admin S2026-04-25): admin-panel-react PackageManagement.tsx expects PackageDto with marketing fields (slug, billingCycle, durationDays, originalPrice, discountPercent, currency, maxServers, dataLimitGb, features[{text,included}], isPopular, isBestValue, badgeText, badgeColor, isPublic) that DO NOT EXIST on backend Plans table (Plans only has: Name, Description, PriceMonthly/PriceYearly, MaxDevices, DataLimitBytes, ServerAccessLevel, Type, DefaultBillingInterval, IsActive, SortOrder, Features as comma-string). CURRENT STATE: GET /api/admin/packages returns 200 with 14 plans (read-only works). POST/PUT/DELETE/PATCH return 501 \u2014 purposely NOT wired because mapping would silently drop marketing fields. /api/admin/plans CRUD already works correctly via SubscriptionService. DECISION OPTIONS: (A) Refactor PackageManagement.tsx to match Plans schema (drops marketing card UX). (B) Create a separate Packages table (FK\u2192Plans) for marketing wrappers, keeping Plans as entitlement contract. Option B is the correct enterprise design but is a 1\u20132 day Backend+DB task. Need PRODUCT to choose direction before Admin ships further package CRUD.",
-      "status": "open",
+      "status": "pending",
       "priority": "P3",
       "createdAt": "2026-04-25T17:46:33Z",
       "createdDate": "2026-04-25"
     },
     {
       "id": "xd-474",
-      "from": "[IOS]",
+      "from": "[iOS]",
       "to": "[DEVOPS]",
       "title": "Handoff from IOS: Fix docker-compose.yml Apple__BundleId + APNS_BUNDLE_ID to com.applinkoffshore.CasperVPN",
       "description": "[BUNDLE-ID DRIFT \u2014 xd-468 downstream] docker-compose.yml has 2 hits of legacy com.caspervpn.app that must change to ASC canonical com.applinkoffshore.CasperVPN. Risk: backend Apple JWT audience validation will reject prod tokens if env var ever overrides appsettings.json (which is correct).\n\nFILES:\n\u2022 docker-compose.yml L136: change `- Apple__BundleId=com.caspervpn.app` \u2192 `- Apple__BundleId=com.applinkoffshore.CasperVPN`\n\u2022 docker-compose.yml L319: change `- APNS_BUNDLE_ID=${APNS_BUNDLE_ID:-com.caspervpn.app}` \u2192 `- APNS_BUNDLE_ID=${APNS_BUNDLE_ID:-com.applinkoffshore.CasperVPN}`\n\nTEST:\n\u2022 docker compose config | grep -i bundleid \u2192 both must show com.applinkoffshore.CasperVPN\n\u2022 Redeploy caspervpn-api on NL Primary, then `curl -s https://api.caspervpn.com/health`\n\u2022 iOS Apple Sign-In flow + push registration smoke (CEO action)\n\nREF: ASC inspection 2026-04-24 confirmed canonical = com.applinkoffshore.CasperVPN (immutable). xd-468 from CTO. iOS source already clean.",
@@ -15603,7 +15603,7 @@
     },
     {
       "id": "xd-475",
-      "from": "[IOS]",
+      "from": "[iOS]",
       "to": "[BACKEND]",
       "title": "Handoff from IOS: Unify AuthService.cs default Apple BundleId fallback to com.applinkoffshore.CasperVPN",
       "description": "[BUNDLE-ID DRIFT \u2014 xd-468 downstream] backend-dotnet-core/Services/AuthService.cs L704 has default fallback string 'com.caspervpn.app' which is contradicted by appsettings.json L80/L142 (com.applinkoffshore.CasperVPN \u2014 correct). Low runtime risk because IConfiguration['Apple:BundleId'] always resolves from appsettings, AND ValidAudiences allow-list at L721/L805 already includes both bundle IDs. Still must fix for source-of-truth consistency.\n\nFILES:\n\u2022 backend-dotnet-core/Services/AuthService.cs L696 (comment): 'Validate audience = com.caspervpn.app (bundle ID)' \u2192 'com.applinkoffshore.CasperVPN'\n\u2022 L704: `var bundleId = _configuration[\"Apple:BundleId\"] ?? \"com.caspervpn.app\";` \u2192 `... ?? \"com.applinkoffshore.CasperVPN\";`\n\u2022 L721 ValidAudiences allow-list: keep both for backward-compat (existing live tokens) \u2014 NO change\n\u2022 L805 validBundleIds: keep both for backward-compat \u2014 NO change\n\nTEST:\n\u2022 `dotnet build` clean\n\u2022 Apple Sign-In smoke against api.caspervpn.com (existing tokens still validate via allow-list)\n\nREF: xd-468 from CTO. ASC canonical = com.applinkoffshore.CasperVPN.",
@@ -15649,7 +15649,7 @@
     {
       "id": "xd-478",
       "from": "[CTO]",
-      "to": "[IOS]",
+      "to": "[iOS]",
       "title": "Handoff from CTO: P0",
       "description": "[ITMS-91065 FIX] Verify Re-sign openssl.framework Run Script + archive Build 44",
       "status": "completed",
@@ -15781,7 +15781,7 @@
     },
     {
       "id": "xd-486",
-      "from": "[ADMIN_PANEL]",
+      "from": "[ADMIN]",
       "to": "[WEBSITE]",
       "title": "Handoff from ADMIN_PANEL: xd-473 RESOLVED \u2014 Prisma schema fixed, push 4b149c74 SEO patches",
       "description": "xd-473 fix complete on dropbox-local. 10 missing Prisma models added (analytics, CRM, funnels). Production caspervpn_website DB migrated \u2014 26 tables verified. Website CI build should now pass: prisma generate + next build will succeed. Action: trigger deploy-website.yml (push to dropbox-local should re-run pipeline) and verify queued SEO commits 4b149c74 deploy. If build still fails, capture tsc output and re-route \u2014 there may be other stale references not in the original 9-model list.",
@@ -15797,7 +15797,7 @@
     },
     {
       "id": "xd-487",
-      "from": "[IOS]",
+      "from": "[iOS]",
       "to": "[QA]",
       "title": "Handoff from IOS: Verify Build 46 ITMS-91065 fix",
       "description": "Build 46 uses xcsigningtool cloud-sign on openssl.framework producing Apple Distribution authority chain + Apple-trusted timestamp. Once Apple processing completes (5-30 min from 06:19 UTC 2026-04-28), verify the build is VALID in ASC and that ITMS-91065 no longer triggers. If VALID, the build is ready to attach to v4 and resubmit to App Review.",
@@ -15813,8 +15813,8 @@
     },
     {
       "id": "xd-488",
-      "from": "[IOS]",
-      "to": "[IOS]",
+      "from": "[iOS]",
+      "to": "[iOS]",
       "title": "Handoff from IOS: [REOPENED] Diagnose Build 46 rejection + plan Build 47",
       "description": "Build 46 was uploaded VALID and resubmitted at 06:26 UTC, but Apple rejected within 10 min via their pre-review check. ASC API does not expose the specific reason \u2014 it was emailed to gm@applinkoffshore.com. CEO must share that email so we can identify whether the rejection is still ITMS-91065 (cloud-sign needs different metadata), a different ITMS code (e.g. binary validation, privacy manifest semantic check, encryption export, etc.), or a Guideline-level issue. Once known, produce Build 47 with the correct fix.",
       "status": "completed",
@@ -15844,15 +15844,15 @@
     },
     {
       "id": "xd-qa-1777441737",
-      "from": "qa",
-      "to": "ceo",
+      "from": "[QA]",
+      "to": "[CEO]",
       "status": "pending",
       "createdDate": "2026-04-29",
       "description": "[QA 2026-04-29] Scheduled QA pass complete. RESULTS:\n \u2022 SMOKE: api.caspervpn.com (health, /api/health, /api/auth/login 405, /api/users/me 200, /api/user/devices 200, /api/support/tickets 200, /api/admin/users 200) \u2192 all healthy.\n \u2022 SERVERS: 13/13 Online, ICMP+SSH+TCP443 reachable from NL Primary. xd-444 (4 missing DO nodes) APPEARS RESOLVED \u2014 LA, DE, AMS, Paris now in /api/servers.\n \u2022 xd-432 SKILL SCAFFOLDS: PASS qa-tested (HOME.md skill column present, DevOps 13-node table present, iOS infrastructure section present, server-onboarding.md present). Only \"design\" dept dir missing.\n \u2022 xd-453 STORE GATE: 4/5 server gates PASS. \u26a0 caspervpn.com/support returns 307 (Next.js RSC, no Location, full body) \u2014 recommend Web team to ensure raw GET returns 200 for App Store reviewers.\n \u2022 xd-443 PROTOCOL FLEET: Server side PASS. iOS-side wake/handshake/iface-change tests BLOCKED on TestFlight.\n \u2022 BLOCKED tasks routed back: xd-388, xd-416, xd-443 (iOS), xd-454, xd-455, xd-456, xd-479, xd-483.\n Recommend CEO: (1) review /support 307 with Web; (2) get TestFlight Build 39+/41+/44 cycle so iOS-blocked items can clear."
     },
     {
       "id": "xd-492",
-      "from": "[ADMIN-PANEL]",
+      "from": "[ADMIN]",
       "to": "[BACKEND]",
       "status": "pending",
       "priority": "P2",
@@ -15868,7 +15868,7 @@
     {
       "id": "xd-493",
       "from": "[QA]",
-      "to": "[IOS]",
+      "to": "[iOS]",
       "title": "Handoff from QA: ASC screenshot visual-audit \u2014 residual \"20+\" overlays (xd-483 follow-up)",
       "description": "QA verified server-side strings 'App Link s.a.l' + 'Lebanon' present on caspervpn.com/privacy + /terms. Remaining gate: visually audit ALL 10 ASC screenshots for residual '20+' country-count overlays (must reflect current 13-server fleet, no stale '20+' bumpers). Requires Xcode + ASC asset access. Run tools/asc_preflight.py if archive available.",
       "status": "completed",
@@ -15883,7 +15883,7 @@
     {
       "id": "xd-494",
       "from": "[QA]",
-      "to": "[IOS]",
+      "to": "[iOS]",
       "title": "Handoff from QA: xd-443 iOS device-test gates: WG wake reassert / IKEv2 dpdaction / OpenVPN background / overnight E2E",
       "description": "Server-side fleet stability re-verified 2026-05-02 (13/13 Online, 13/13 ping). Remaining ACs require physical iOS 18+/26 device on TestFlight Build 39+: AC1-10 (xd-436 wake/handshake reassert log lines, xd-438 IKEv2 SA-up after 15min lock, xd-439 OpenVPN UDP/TCP background 5min+, overnight 8h+ E2E). Reproduce on Wi-Fi + cellular, iPhone 15 + iPhone 16 Pro. Capture tunnel logs containing '\u23f0 xd-436 wake: handshake age=Xs' lines.",
       "status": "pending",
@@ -15962,7 +15962,7 @@
     {
       "id": "xd-503",
       "from": "[MARKETING]",
-      "to": "[IOS]",
+      "to": "[iOS]",
       "title": "Handoff from MARKETING: ASO authoritative drop ready for App Store Connect (Build 50)",
       "description": "New file marketing/ASO-AUTHORITATIVE-DROP-2026-05-07.md consolidates final copy/paste fields after xd-466 override + xd-484 server-count cleanup. Use this OR APP-STORE-SUBMISSION-GUIDE.md (now updated). Old CasperVPN_AppStore_Metadata_ReadyToPaste.md is DEPRECATED with banner. Server count = 13 across 12 countries (no longer 20+). CasperCloak = LIVE. QRE = Coming Soon. Pricing: $2.99/$9.99/$34.99/$59.99/$149.99 confirmed against ASC. Preview video (xd-098) still pending.",
       "status": "completed",
@@ -15977,7 +15977,7 @@
     {
       "id": "xd-504",
       "from": "[MARKETING]",
-      "to": "[IOS]",
+      "to": "[iOS]",
       "title": "Handoff from MARKETING: ASO authoritative drop ready for App Store Connect (Build 50)",
       "description": "New marketing/ASO-AUTHORITATIVE-DROP-2026-05-07.md consolidates final copy-paste fields after xd-466 override + xd-484 server-count cleanup. Use this or APP-STORE-SUBMISSION-GUIDE.md. ReadyToPaste.md DEPRECATED. Server count 13/12. CasperCloak LIVE. QRE Coming Soon. Pricing 2.99/9.99/34.99/59.99/149.99 confirmed.",
       "status": "pending",
@@ -16017,7 +16017,7 @@
     {
       "id": "xd-507",
       "from": "[QA]",
-      "to": "[IOS]",
+      "to": "[iOS]",
       "title": "Handoff from QA: iOS-side submission gate validation (residual from xd-453)",
       "description": "QA verified all server-side submission gate items on 2026-05-08. iOS-side items still need device + Xcode validation: (1) Info.plist ITSAppUsesNonExemptEncryption matches legal export-compliance answer, (2) Screenshots match live 13-server count, (3) StoreKit price tiers match production pricing ($9.99/$34.99/$59.99/$149.99). Run before App Store submission, attach evidence, then close out xd-453.",
       "status": "pending",
@@ -16029,7 +16029,7 @@
     {
       "id": "xd-508",
       "from": "[QA]",
-      "to": "[IOS]",
+      "to": "[iOS]",
       "title": "Handoff from QA: Device-side fleet stability tests (residual from xd-443)",
       "description": "Server-side checks for xd-443/xd-436/437/438/439 verified by QA on 2026-05-08. Device-side tests still required: (1) WG handshake-age wake reassert on iOS 18 + iOS 26 beta across NL/mia/mex/sgp/mtl/sao/tyo/syd/hkg, (2) IKEv2 dpdaction=restart leaves SA up after 15min idle/locked, (3) OpenVPN UDP/TCP no disconnect within 5min background, (4) 8h+ overnight cross-protocol resume. Test devices: iPhone 15 + iPhone 16 Pro, Wi-Fi + cellular.",
       "status": "pending",
@@ -16383,7 +16383,7 @@
     {
       "id": "xd-532",
       "from": "[MARKETING]",
-      "to": "[IOS]",
+      "to": "[iOS]",
       "title": "Handoff from MARKETING: Bump iOS build (4.1 or 5.0) so full ASO drop can paste into ASC",
       "description": "Promotional Text updated live for v4. Description/Keywords/What's New are locked in \"Ready for Distribution\" state. To paste the full ASO authoritative drop into ASC (ASO-AUTHORITATIVE-DROP-2026-05-07.md + 9 localizations now under Marketing/2026_aso_localizations/), iOS must submit a new app version. Trigger: bump CFBundleShortVersionString to 4.1 (or 5.0 if breaking changes), upload via Xcode, create new version row in ASC. Marketing will paste verbatim once version exists.",
       "status": "pending",
@@ -16880,6 +16880,13 @@
     }
   ],
   "importantNotes": [
+    {
+      "id": "note-stale-audit-20260516",
+      "from": "[CTO]",
+      "date": "2026-05-16",
+      "priority": "P2",
+      "message": "[CTO STALE-XD AUDIT 2026-05-16] 15 cross-dept tasks still pending after 30+ days. Needs CEO triage: close as no-longer-relevant, escalate to action, or reassign. List: xd-102 (79d, \u2192[QA]); xd-109 (76d, \u2192[LEGAL]); xd-114 (76d, \u2192[QA]); xd-171b (66d, \u2192[CEO]); xd-204 (66d, \u2192[CEO]); xd-172b (65d, \u2192[QA]); xd-208 (65d, \u2192[CEO]); xd-214 (65d, \u2192[CEO]); xd-282 (61d, \u2192[CEO]); xd-286 (61d, \u2192[CEO]); xd-287 (61d, \u2192[BACKEND]); xd-304 (48d, \u2192[LEGAL]); xd-313 (47d, \u2192[BACKEND]); xd-316 (47d, \u2192[DESKTOP]); xd-353 (31d, \u2192[CEO])"
+    },
     {
       "date": "2026-05-16",
       "text": "[2026-05-16 MARKETING scheduled-run] Inbound queue empty. Live verification: PRICING CLEAN ($9.99/$59.99/$149.99 + save 50% on /pricing, /faq, /download). BLOG: 5 .md files (best-vpn-china, vpn-with-kill-switch, vpn-lebanon, best-vpn-lebanon, no-log-vpn) STILL 404 day-6 \u2014 xd-549 P0 stamped. SITEMAP: 0 /blog/ URLs in sitemap.xml \u2014 xd-548 P0 stamped. PP/ToS: live PP now ~3101 words (93% aligned with v1.4 source); ToS live 2584w larger than source 2387w \u2014 xd-535 premise outdated, description refreshed for LEGAL+WEBSITE reconciliation. No production touches this run. Full report: Dropbox/Marketing-Reports/MARKETING-STATE-REPORT-2026-05-16.md",
@@ -18110,5 +18117,24 @@
       "session": "qa-scheduled",
       "summary": "Re-verification pass on 12 QA handoffs. 1 PARTIAL (xd-453 /support=307), 4 SOURCE-PASS (xd-443/454/455/456), 7 STILL-BLOCKED (device-gated). Live infra: api 200 Healthy, 13/13 VpnServers IsActive=true, privacy/terms 200, support 307 YELLOW, entity strings present, no placeholders."
     }
-  ]
+  ],
+  "xDeptStats": {
+    "updatedAt": "2026-05-16T12:26:15Z",
+    "activeByDept": {
+      "[WEBSITE]": 13,
+      "[CEO]": 12,
+      "[DEVOPS]": 11,
+      "[CTO]": 9,
+      "[BACKEND]": 8,
+      "[iOS]": 7,
+      "[QA]": 6,
+      "[LEGAL]": 6,
+      "[DESKTOP]": 3,
+      "[PRODUCT]": 2,
+      "[ANDROID]": 2
+    },
+    "totalActive": 79,
+    "totalCompleted": 478,
+    "totalStale30d": 15
+  }
 }
