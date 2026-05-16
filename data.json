@@ -15598,7 +15598,7 @@
       "id": "xd-427",
       "from": "[DEVOPS]",
       "to": "[DEVOPS]",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-04-20",
       "title": "P2: Rewrite deploy-website.yml to use docker compose (currently broken + bypasses compose network fix)",
@@ -15622,7 +15622,12 @@
           "met": false
         }
       ],
-      "notes": "[2026-04-20 DEVOPS] Pre-existing (3 days) \u2014 not caused by xd-389 fix."
+      "notes": "[2026-04-20 DEVOPS] Pre-existing (3 days) \u2014 not caused by xd-389 fix.",
+      "completedAt": "2026-05-16",
+      "completedDate": "2026-05-16",
+      "completedBy": "[CTO]",
+      "resolution": "ALREADY DONE 2026-05-16. deploy-website.yml L131-141 uses docker compose (build website + up -d --no-deps website). Includes container-running verify + post-deploy smoke test (/, /privacy, /terms, /support HTTP 200). Last SUCCESS run 25690312264 (2026-05-11). Currently in-progress run 25964440866 (triggered by xd-465 sharp dep add) validates same path. 7 historical failing runs cited in original task all predate this rewrite.",
+      "resultingHandoff": "None \u2014 workflow healthy. In-progress run 25964440866 will validate end-to-end since it also picks up xd-465 sharp dep; if it succeeds, xd-577 may be auto-closed by [DEVOPS]."
     },
     {
       "id": "xd-428",
@@ -17281,11 +17286,15 @@
       "to": "[BACKEND]",
       "title": "Handoff from QA: Investigate /api/payments/checkout 404 (xd-527 follow-up)",
       "description": "During xd-527 verification, POST https://api.caspervpn.com/api/payments/checkout {planId:'annual'} returned HTTP 404, not the documented 503 PROVIDER_NOT_CONFIGURED. Pricing on website is correct; this is purely an API route/contract drift. Please confirm whether the endpoint path moved (e.g. /api/payments/create-checkout-session) or whether the route is no longer mounted in prod. Non-blocking for marketing P0.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-05-12T18:33:35Z",
       "createdDate": "2026-05-12",
-      "completedDate": null
+      "completedDate": "2026-05-16",
+      "completedAt": "2026-05-16",
+      "completedBy": "[CTO]",
+      "resolution": "ANSWERED 2026-05-16. Endpoint moved (not removed): POST /api/payments/checkout \u2192 HTTP 404 (confirms QA report), POST /api/payments/create-checkout-session \u2192 HTTP 401 (route exists, requires auth). New canonical path is /create-checkout-session. The expected 503 PROVIDER_NOT_CONFIGURED likely fires on the new path with valid JWT. Non-blocking for marketing P0 (clients use new path).",
+      "resultingHandoff": "xd-578 to [BACKEND] P3: decide backward-compat - 301 redirect from /checkout to /create-checkout-session, OR leave 404 and update docs."
     },
     {
       "id": "xd-532",
@@ -17934,6 +17943,18 @@
       "status": "pending",
       "priority": "P3",
       "createdAt": "2026-05-16T17:29:55Z",
+      "createdDate": "2026-05-16",
+      "completedDate": null
+    },
+    {
+      "id": "xd-578",
+      "from": "[CTO]",
+      "to": "[BACKEND]",
+      "title": "Handoff from CTO: Decide /api/payments/checkout backward-compat \u2014 endpoint moved to /create-checkout-session (xd-531 follow-up)",
+      "description": "POST /api/payments/checkout returns 404; POST /api/payments/create-checkout-session returns 401 (exists). Endpoint renamed without redirect. Option A: 301/302 from /checkout. Option B: leave 404, update docs. Search repo for '/api/payments/checkout' before deciding.",
+      "status": "pending",
+      "priority": "P3",
+      "createdAt": "2026-05-16T17:33:27Z",
       "createdDate": "2026-05-16",
       "completedDate": null
     }
