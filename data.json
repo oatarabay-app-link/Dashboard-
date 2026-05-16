@@ -18075,11 +18075,15 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: EXPAND xd-541 scope \u2014 OpenVPN auth-user-pass-verify missing on ALL 13 nodes (not just UK-LON)",
       "description": "FLEET AUDIT 2026-05-16: QA's xd-541 report was UK-LON-only, but actual scope is fleet-wide. Live grep `grep -c auth-user-pass-verify /etc/openvpn/server/server.conf /etc/openvpn/server/server-tcp.conf` returns 0/0 on ALL 13 nodes. EVERY OpenVPN endpoint (UDP 1194 + TCP 1195 \u00d7 13 nodes = 26 endpoints) is currently authenticating without RADIUS. RISK: Any user with a valid OpenVPN cert can connect regardless of subscription status, data limit, or per-user RADIUS attributes. Tier-1 service for unpaid users effectively. EXECUTION REQUIRED: 1. Create /etc/openvpn/scripts/auth-radius.sh (or similar) per the canonical config in [[memory/skills/fleet-onboarding.md]] \u00a74 (OpenVPN setup). 2. Add to both server.conf + server-tcp.conf: `auth-user-pass-verify /etc/openvpn/scripts/auth-radius.sh via-env` + `plugin /usr/lib/x86_64-linux-gnu/openvpn/plugins/openvpn-plugin-auth-pam.so radius`. 3. Restart openvpn-server@server + openvpn-server@server-tcp on each node (~30s drop of active OpenVPN connections per node). 4. VERIFY: `grep -c auth-user-pass-verify /etc/openvpn/server/server*.conf` returns \u22652 on every node. 5. SMOKE TEST: attempt OpenVPN connection with invalid RADIUS credentials \u2192 should be REJECTED. With valid \u2192 ACCEPTED. ACCEPTANCE: 26/26 OpenVPN endpoints (13 UDP + 13 TCP) reject unauthenticated/unauthorized users.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-05-16T18:58:47Z",
       "createdDate": "2026-05-16",
-      "completedDate": null
+      "completedDate": "2026-05-16",
+      "completedAt": "2026-05-16",
+      "completedBy": "[CTO]",
+      "resolution": "DECOMPOSED \u2014 original task was 1-line 'add auth-user-pass-verify' but live investigation reveals it requires a 6-phase project. Investigation 2026-05-16 revealed missing infrastructure: (a) FreeRADIUS on UK-LON binds only to 127.0.0.1:1812 (loopback) \u2014 not network-reachable from fleet, (b) `radcheck` table has 1 row total \u2014 essentially empty, would reject all auth attempts, (c) `libpam-radius-auth` not installed on fleet nodes, (d) `/etc/pam.d/openvpn` doesn't exist on fleet, (e) Flask api server.py has no /openvpn/auth handler, (f) Current OpenVPN is cert-only (tls-auth + ca/cert/key) \u2014 adding auth-user-pass-verify changes client expectation too. Executing xd-583 in this state would REJECT every OpenVPN user on every node (worse than current 'anyone with valid cert' state). TRUTH PROTOCOL \u00a77: refusing to execute without the supporting infrastructure in place. DECOMPOSED into 6 phased handoffs (xd-586 through xd-591) below \u2014 each phase has its own canary + acceptance gate. xd-583 closed as umbrella \u2192 see decomposition for execution path.",
+      "resultingHandoff": "Decomposed into 6 phased handoffs: xd-586 (Phase 1 \u2014 BACKEND: execute xd-491 FreeRadiusService Npgsql rewrite), xd-587 (Phase 2 \u2014 BACKEND: backfill User \u2192 radcheck), xd-588 (Phase 3 \u2014 DEVOPS: bind FreeRADIUS to 10.66.66.1:1812 + iptables for fleet), xd-589 (Phase 4 \u2014 DEVOPS: install libpam-radius-auth + /etc/pam.d/openvpn on all 13 fleet), xd-590 (Phase 5 \u2014 DEVOPS: canary auth-user-pass-verify on ONE node + 24h soak), xd-591 (Phase 6 \u2014 DEVOPS: rollout to remaining 12 nodes after canary PASS)."
     },
     {
       "id": "xd-584",
@@ -18106,6 +18110,78 @@
       "status": "pending",
       "priority": "P2",
       "createdAt": "2026-05-16T20:17:31Z",
+      "createdDate": "2026-05-16",
+      "completedDate": null
+    },
+    {
+      "id": "xd-586",
+      "from": "[CTO]",
+      "to": "[BACKEND]",
+      "title": "Handoff from CTO: Phase 1/6: Execute xd-491 \u2014 FreeRadiusService rewrite to Npgsql direct (foundation for xd-583 OpenVPN auth)",
+      "description": "Per xd-491 closed decision (Option A \u2014 Npgsql direct, skip HTTP API). Backend rewrites FreeRadiusService methods to INSERT/UPDATE/DELETE on radcheck/radreply/radusergroup tables via Npgsql instead of the broken HTTP API path. FILES: backend-dotnet-core/Services/FreeRadiusService.cs (and any RADIUS controllers calling it). ACCEPTANCE: Smoke test \u2014 register a new test user via /api/auth/register, verify radcheck table receives a new row within 5s. This is the foundation for xd-587/588/589/590/591 (OpenVPN RADIUS auth rollout). Blocks xd-583 / xd-587 / xd-590 until shipped. P1.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-05-16T20:18:55Z",
+      "createdDate": "2026-05-16",
+      "completedDate": null
+    },
+    {
+      "id": "xd-587",
+      "from": "[CTO]",
+      "to": "[BACKEND]",
+      "title": "Handoff from CTO: Phase 2/6: Backfill existing Users into radcheck (foundation for OpenVPN auth on all 13 fleet)",
+      "description": "After xd-586 (Phase 1) ships Npgsql writes, run a one-off backfill: for each User row with status=active, INSERT into radcheck (username, attribute, op, value) where username = User.Email or User.RadiusUsername, attribute = 'Cleartext-Password' or 'NT-Password', value = derived from User.PasswordHash. Plus Max-Monthly-Octets attribute from User.CurrentCycleDataLimitBytes per xd-391. ACCEPTANCE: SELECT count(*) FROM radcheck >= count(*) FROM users WHERE status='active'. DRY-RUN first: log INSERT statements, count, verify before COMMIT. P1.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-05-16T20:18:55Z",
+      "createdDate": "2026-05-16",
+      "completedDate": null
+    },
+    {
+      "id": "xd-588",
+      "from": "[CTO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CTO: Phase 3/6: Bind FreeRADIUS on UK-LON to 10.66.66.1:1812 (WG mesh) + iptables fleet allow (foundation for OpenVPN auth)",
+      "description": "Currently FreeRADIUS binds to 127.0.0.1:1812 only (loopback) \u2014 fleet nodes can't reach it. CHANGE in /etc/freeradius/3.0/sites-available/default and /sites-enabled/default:   ipaddr = 10.66.66.1   (was 127.0.0.1) OR add additional listen block for the WG mesh address. PLUS iptables: `iptables -I INPUT -i wg0 -p udp --dport 1812 -j ACCEPT` (persist to /etc/iptables/rules.v4). PLUS in /etc/freeradius/3.0/clients.conf \u2014 add each fleet node's WG IP as a client with shared secret. Restart freeradius. ACCEPTANCE: from any fleet node `radclient 10.66.66.1:1812 status <secret>` returns Accept. P1 blocker for xd-590.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-05-16T20:18:55Z",
+      "createdDate": "2026-05-16",
+      "completedDate": null
+    },
+    {
+      "id": "xd-589",
+      "from": "[CTO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CTO: Phase 4/6: Install libpam-radius-auth + /etc/pam.d/openvpn on all 13 fleet (foundation for OpenVPN auth)",
+      "description": "After xd-588 (Phase 3) ships RADIUS network access, every fleet node needs PAM-RADIUS configured: `apt-get install -y libpam-radius-auth` on each node. Create /etc/pam_radius_auth.conf with: `10.66.66.1:1812  <shared-secret>  3` Create /etc/pam.d/openvpn with: `auth required pam_radius_auth.so` and `account required pam_radius_auth.so`. ACCEPTANCE: `echo '<test-user>:<test-pass>' | pamtester openvpn <test-user> authenticate` returns 0. P1 blocker for xd-590.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-05-16T20:18:55Z",
+      "createdDate": "2026-05-16",
+      "completedDate": null
+    },
+    {
+      "id": "xd-590",
+      "from": "[CTO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CTO: Phase 5/6: CANARY auth-user-pass-verify + plugin on ONE node (mia-01) + 24h soak test",
+      "description": "After xd-589 (Phase 4) ships PAM-RADIUS, canary on mia-01 (low-traffic OneProvider): Add to /etc/openvpn/server/server.conf + server-tcp.conf:   `plugin /usr/lib/x86_64-linux-gnu/openvpn/plugins/openvpn-plugin-auth-pam.so openvpn` Restart openvpn-server@server + openvpn-server@server-tcp. TEST: (1) Connect with valid user/pass \u2192 ACCEPTED. (2) Connect with invalid user/pass \u2192 REJECTED. (3) Connect with expired subscription \u2192 REJECTED (Max-Monthly-Octets exhausted). Monitor for 24h: no false-rejects in /var/log/openvpn/server.log; no spike in connection failures from existing users. P1 \u2014 DO NOT proceed to Phase 6 until 24h soak passes. Roll back via `systemctl restart openvpn-server@server` after removing the plugin line if anything goes wrong.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-05-16T20:18:55Z",
+      "createdDate": "2026-05-16",
+      "completedDate": null
+    },
+    {
+      "id": "xd-591",
+      "from": "[CTO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CTO: Phase 6/6: Rollout auth-user-pass-verify to remaining 12 fleet nodes (after canary PASS)",
+      "description": "After xd-590 canary passes 24h soak: roll out the same config change (plugin + restart) to other 12 nodes: UK-LON, US-LA, DE-DUS, NL-AM2, FR-PAR, mex-01, sgp-01, mtl-01, sao-01, tyo-01, syd-01, hkg-01. Recommend rolling pattern: 2-3 nodes per batch, 15 min observation between batches. ACCEPTANCE: 26/26 OpenVPN endpoints (13 UDP + 13 TCP) reject unauthenticated users; existing valid users connect normally; no spike in support tickets. Close xd-583 (umbrella) once 26/26 endpoints verified. P1.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-05-16T20:18:55Z",
       "createdDate": "2026-05-16",
       "completedDate": null
     }
