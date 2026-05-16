@@ -17242,14 +17242,19 @@
       "id": "xd-528",
       "from": "[MARKETING]",
       "to": "[WEBSITE]",
-      "status": "pending",
+      "status": "completed",
       "priority": "P3",
       "title": "P3 cleanup: delete blog comparison post block from website/scripts/seed.ts (Option A from PRICING-DRIFT-PATCH-READY)",
       "description": "marketing/blog/{nordvpn,expressvpn,mullvad,surfshark,protonvpn}-vs-caspervpn.md now own SEO comparison content. The Prisma seed at website/scripts/seed.ts lines ~79-93 still has stale $5.99/$49.99 + '50% lower pricing' + '2GB/mo' free tier copy that creates duplicate-content SEO risk if `prisma db seed` ever runs on prod. Recommended: DELETE the 'caspervpn-vs-nordvpn-vs-expressvpn-2024' BlogPost block from seed.ts. Non-blocking (seed is run-on-demand). Spec: /Users/omar/Dropbox/app-link/Marketing-Reports/PRICING-DRIFT-PATCH-READY-2026-05-10.md addendum.",
       "createdAt": "2026-05-11T18:52:11Z",
       "dueBy": "2026-05-14T18:52:11Z",
       "handoffTo": null,
-      "handoffNote": ""
+      "handoffNote": "",
+      "completedAt": "2026-05-16",
+      "completedDate": "2026-05-16",
+      "completedBy": "[CTO]",
+      "resolution": "FIXED 2026-05-16. Direct CTO execution. Removed the 'caspervpn-vs-nordvpn-vs-expressvpn-2024' BlogPost block from website/scripts/seed.ts (was L77-89, 13 lines). Block contained: stale $5.99/$49.99 pricing, '50% lower pricing' claim, 2024 slug. Pushed to BOTH production and development branches. Verified: seed.ts no longer contains 'caspervpn-vs-nordvpn' on either branch. Net effect: future `prisma db seed` runs won't recreate the stale comparison post \u2014 eliminates the duplicate-content SEO risk per the original task (Option A). Existing 17 live BlogPost rows on prod are unaffected (this only changes the seed source, not the DB). Side benefit: same commit also handled xd-538 (CasperCloak press release block) \u2014 see xd-538 resolution.",
+      "resultingHandoff": "(a) None \u2014 terminal cleanup. (b) If 'caspervpn-vs-nordvpn-vs-expressvpn-2024' slug exists in the production BlogPost table (it shouldn't, per xd-536 audit showing 17 rows none matching), it can be deleted with: `docker exec caspervpn-postgres psql -U casper_prod -d caspervpn -c \"DELETE FROM blog_posts WHERE slug='caspervpn-vs-nordvpn-vs-expressvpn-2024';\"`. Run `SELECT slug FROM blog_posts;` first to confirm whether it's present."
     },
     {
       "id": "xd-529",
@@ -17409,11 +17414,15 @@
       "to": "[WEBSITE]",
       "title": "Handoff from MARKETING: Companion to xd-528 (P2): seed.ts has BOTH pricing drift AND QRE \"available now\" drift",
       "description": "Extending xd-528 (P3) scope. website/scripts/seed.ts contains TWO drift surfaces, not one: \n(a) Lines 79-93: caspervpn-vs-nordvpn-vs-expressvpn-2024 blog post block \u2014 $5.99/$49.99 + \"50% lower pricing\" + 2024-stale slug. Already covered by xd-528 (Option A: delete this block). \n(b) Lines 105-117: caspervpn-launches-caspercloak-protocol press release \u2014 states \"CasperCloak is the first consumer VPN protocol to implement NIST-approved post-quantum cryptography\" and \"CasperCloak is available now\" with Kyber1024/Quantum Standard/Enhanced level language. This contradicts the QRE = \"coming soon\" rule (marketing skill \u00a7Messaging Rules #2). Conditional live impact ONLY if `prisma db seed` runs against prod; if so, the press-release post is currently serving false claims. Status currently: not in live BlogPost set, so dormant \u2014 but one accidental `prisma db seed` flip in CI would publish it. \n\nASK: delete the caspercloak-protocol press-release block from seed.ts entirely (no current marketing/blog/ replacement; quantum-encryption-explained.md already covers QRE accurately). Bump combined seed.ts cleanup to P2 \u2014 the QRE drift is a brand-safety concern, not just SEO hygiene.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-05-13T00:07:41Z",
       "createdDate": "2026-05-13",
-      "completedDate": null
+      "completedDate": "2026-05-16",
+      "completedAt": "2026-05-16",
+      "completedBy": "[CTO]",
+      "resolution": "FIXED 2026-05-16. Same commit as xd-528 \u2014 removed the 'caspervpn-launches-caspercloak-protocol' BlogPost block from website/scripts/seed.ts (was L103-115, 13 lines). Block had TWO problems addressed simultaneously: (a) 'CasperCloak is available now' \u2014 violated the QRE = 'coming soon' rule (post-quantum readiness is a roadmap item, not a shipped feature). (b) 'first consumer VPN protocol to implement NIST-approved post-quantum cryptography' \u2014 unverified PQ claim that hadn't passed Legal review. Pushed to BOTH production and development branches. Verified: seed.ts no longer contains 'caspervpn-launches-caspercloak' or 'available now' on either branch. Net effect: future `prisma db seed` won't recreate this press-release content with the now-incorrect 'available now' framing.",
+      "resultingHandoff": "(a) None \u2014 terminal cleanup. (b) If a CasperCloak announcement IS desired later (when PQ is actually shipped), Marketing should draft fresh post content via the proper channel (marketing/blog/*.md \u2192 DB upsert per xd-536) with Legal-cleared wording \u2014 NOT by reverting this seed.ts change. (c) If 'caspervpn-launches-caspercloak-protocol' slug exists in production BlogPost table, delete with: `docker exec caspervpn-postgres psql -U casper_prod -d caspervpn -c \"DELETE FROM blog_posts WHERE slug='caspervpn-launches-caspercloak-protocol';\"` after running `SELECT slug FROM blog_posts;` to check."
     },
     {
       "id": "xd-539",
