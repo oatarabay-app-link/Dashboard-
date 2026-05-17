@@ -2459,12 +2459,34 @@ function render(){
   if(!D)return;
   // CRITICAL: recalculate ALL progress from criteria on every render
   // Ensures progress % ALWAYS matches checked criteria — never stale
+  // CTO 2026-05-17: Defensive normalization — guards EVERY downstream renderer
+  // against bad data (string AC, missing owner, etc). See CLAUDE.md §7 Known Traps.
   D.tasks.forEach(function(t){
-    if(!t.acceptanceCriteria)t.acceptanceCriteria=[];
+    // AC: must be a list of dicts; coerce string/null/object → []
+    if(!Array.isArray(t.acceptanceCriteria))t.acceptanceCriteria=[];
+    // Filter out malformed AC items (must be objects)
+    t.acceptanceCriteria=t.acceptanceCriteria.filter(function(a){return a&&typeof a==='object';});
+    // Backfill common null fields that renderers .toLowerCase() etc on
     if(!t.name&&t.title){t.name=t.title;}
+    if(typeof t.name!=='string')t.name=String(t.name||t.id||'(unnamed)');
+    if(typeof t.owner!=='string')t.owner=String(t.owner||'');
+    if(typeof t.status!=='string')t.status=String(t.status||'unknown');
+    if(typeof t.category!=='string')t.category=String(t.category||'general');
     var p=t.acceptanceCriteria.filter(function(a){return a.passed||a.met;}).length;
     var tot=t.acceptanceCriteria.length;
     t.progress=tot>0?Math.round((p/tot)*100):0;
+  });
+  // Also normalize crossDeptTasks to prevent renderXDept crashes
+  (D.crossDeptTasks||[]).forEach(function(x){
+    if(typeof x.from!=='string')x.from=String(x.from||'');
+    if(typeof x.to!=='string')x.to=String(x.to||'');
+    if(typeof x.status!=='string')x.status=String(x.status||'pending');
+    if(typeof x.title!=='string')x.title=String(x.title||'(untitled)');
+    if(typeof x.priority!=='string')x.priority=String(x.priority||'P2');
+  });
+  // Normalize departments
+  (D.departments||[]).forEach(function(d){
+    if(typeof d.name!=='string')d.name=String(d.name||d.id||'(unnamed)');
   });
   acUid=0; // reset unique counter for task card IDs
   document.getElementById('lu').textContent=new Date(D.lastUpdated).toLocaleString();
