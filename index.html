@@ -339,6 +339,8 @@ h1{font-size:26px;font-weight:700;margin-bottom:2px}
 <div class="tab" onclick="showTab('ai',this)" data-tab="ai">AI Features</div>
 <div class="tab" onclick="showTab('xdept',this)" data-tab="xdept">Cross-Dept</div>
 <div class="tab" onclick="showTab('finalized',this)" data-tab="finalized">✅ Finalized</div>
+<div class="tab" onclick="showTab('deferred',this)" data-tab="deferred">⏸️ Deferred</div>
+<div class="tab" onclick="showTab('consolidated',this)" data-tab="consolidated">🔄 Consolidated</div>
 <div class="tab" onclick="showTab('notes',this)" data-tab="notes">📌 Notes</div>
 <div class="tab" onclick="showTab('systemscan',this)" data-tab="systemscan">🔍 System Scan</div>
 <div class="tab" onclick="showTab('skills',this)" data-tab="skills">🧠 Skills</div>
@@ -355,6 +357,8 @@ h1{font-size:26px;font-weight:700;margin-bottom:2px}
 <div class="panel" id="ai"></div>
 <div class="panel" id="xdept"></div>
 <div class="panel" id="finalized"></div>
+<div class="panel" id="deferred"></div>
+<div class="panel" id="consolidated"></div>
 <div class="panel" id="notes"></div>
 <div class="panel" id="systemscan"></div>
 <div class="panel" id="skills"></div>
@@ -1413,37 +1417,51 @@ function renderAI(){
 function renderXDept(){
   const tasks=D.crossDeptTasks||[];
   if(!tasks.length){
-    document.getElementById('xdept').innerHTML=`<div class="section"><div class="section-title">Cross-Department Task Queue</div>
-    <p style="color:var(--muted);font-size:13px">No cross-department tasks queued. When a department creates a task for another department, it appears here automatically.<br><br>
-    <strong>How it works:</strong> Any department can add to <code>crossDeptTasks</code> in <code>data.json</code>. The target department picks it up on their next session start.</p></div>`;
+    ctoSetDom('xdept',`<div class="section"><div class="section-title">Cross-Department Task Queue</div><p style="color:var(--muted);font-size:13px">No cross-department tasks queued.</p></div>`);
     return;
   }
-  const active=tasks.filter(t=>t.status!=='completed').sort((a,b)=>new Date(b.createdAt||0)-new Date(a.createdAt||0));
-  const done=tasks.filter(t=>t.status==='completed').sort((a,b)=>new Date(b.completedAt||b.createdAt||0)-new Date(a.completedAt||a.createdAt||0));
-  let html='';
+  // STRICT filter: only pending + in_progress + open (NOT deferred/consolidated/completed — those have their own tabs)
+  const active=tasks.filter(t=>{
+    const s=(t.status||'').toLowerCase();
+    return s==='pending'||s==='in_progress'||s==='in-progress'||s==='open';
+  }).sort((a,b)=>new Date(b.createdAt||0)-new Date(a.createdAt||0));
+  // Group by `to` (owning dept)
+  const byDept={};
   active.forEach(t=>{
-    const created=t.createdAt?new Date(t.createdAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
-    const due=t.dueBy?new Date(t.dueBy).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'—';
-    const isOverdue=t.dueBy&&new Date(t.dueBy)<new Date();
-    html+=`<div class="xdept">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <strong>${t.title}</strong>
-        <span class="tag tag-${(t.priority||'P2').toLowerCase()}">${t.priority||'P2'}</span>
-      </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:4px">
-        ${t.from} → <strong>${t.to}</strong> | <span style="color:${t.status==='in_progress'?'var(--blue)':'var(--yellow)'}">⏳ ${t.status}</span>
-      </div>
-      <div style="font-size:11px;margin-top:3px">
-        📅 Created: ${created} | 🎯 Due: <span style="color:${isOverdue?'var(--red)':'var(--green)'}; font-weight:${isOverdue?'700':'400'}">${due}${isOverdue?' ⚠️ OVERDUE':''}</span>
-      </div>
-      <div style="font-size:12px;margin-top:4px">${t.description}</div>
-    </div>`;
+    const dept=(t.to||'unknown').replace(/^\[+|\]+$/g,'').toUpperCase();
+    if(!byDept[dept])byDept[dept]=[];
+    byDept[dept].push(t);
   });
-  // Finalized (completed) tasks moved to the "✅ Finalized" tab per CTO directive 2026-04-15.
-  // Un-summarized full-fidelity view lives in renderFinalized(). Cross-Dept tab shows ONLY active work.
-  const activeCount=active.length;
-  const finalizedLink=done.length?`<span style="font-size:11px;color:var(--muted);margin-left:8px">${done.length} finalized → <a href="#" onclick="document.querySelector('[data-tab=finalized]').click();return false" style="color:var(--blue)">Finalized tab</a></span>`:'';
-  ctoSetDom('xdept',`<div class="section"><div class="section-title">Cross-Department Task Queue (${activeCount} active)${finalizedLink}</div>${html}</div>`);
+  const depts=Object.keys(byDept).sort();
+  const done=tasks.filter(t=>t.status==='completed').length;
+  const deferred=tasks.filter(t=>t.status==='deferred').length;
+  const consolidated=tasks.filter(t=>t.status==='consolidated').length;
+  let html=`<div class="section"><div class="section-title">Cross-Department Task Queue (${active.length} active)</div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:14px">${active.length} pending/in-progress · grouped by owning department · <a href="#" onclick="document.querySelector('.tab[data-tab=deferred]').click();return false" style="color:var(--yellow)">⏸️ ${deferred} deferred</a> · <a href="#" onclick="document.querySelector('.tab[data-tab=consolidated]').click();return false" style="color:var(--blue)">🔄 ${consolidated} consolidated</a> · <a href="#" onclick="document.querySelector('.tab[data-tab=finalized]').click();return false" style="color:var(--green)">✅ ${done} finalized</a></p>`;
+  depts.forEach(dept=>{
+    const list=byDept[dept];
+    html+=`<div style="margin-top:18px;font-size:13px;color:var(--fg,#fff);font-weight:700;border-bottom:1px solid var(--border);padding-bottom:6px;margin-bottom:8px">${ctoEsc(dept)} <span style="color:var(--muted);font-weight:400">— ${list.length} ${list.length===1?'task':'tasks'}</span></div>`;
+    list.forEach(t=>{
+      const created=t.createdAt?new Date(t.createdAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'—';
+      const due=t.dueBy?new Date(t.dueBy).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'—';
+      const isOverdue=t.dueBy&&new Date(t.dueBy)<new Date();
+      const idTag=`<span style="color:var(--muted);font-weight:400;font-size:11px">[${ctoEsc(t.id||'?')}]</span> `;
+      const priClass=(t.priority||'P2').toLowerCase();
+      html+=`<div class="xdept" style="padding:10px 12px;margin-bottom:8px;border-left:3px solid var(--${t.status==='in_progress'?'blue':'yellow'});border-radius:0 6px 6px 0;background:var(--panel-alt,rgba(255,255,255,0.02))">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+          <strong style="font-size:13px">${idTag}${ctoEsc(t.title||'')}</strong>
+          <span class="tag tag-${priClass}">${ctoEsc(t.priority||'P2')}</span>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">
+          ${ctoEsc(t.from||'?')} → <strong>${ctoEsc(t.to||'?')}</strong> | <span style="color:${t.status==='in_progress'?'var(--blue)':'var(--yellow)'}">⏳ ${ctoEsc(t.status||'?')}</span>
+        </div>
+        <div style="font-size:11px;margin-top:3px;color:var(--muted)">📅 ${created} | 🎯 Due: <span style="color:${isOverdue?'var(--red)':'var(--green)'}">${due}${isOverdue?' ⚠️':''}</span></div>
+        ${t.description?`<div style="font-size:12px;margin-top:6px;line-height:1.45">${ctoEsc(t.description).slice(0,400)}${t.description.length>400?'...':''}</div>`:''}
+      </div>`;
+    });
+  });
+  html+=`</div>`;
+  ctoSetDom('xdept',html);
 }
 
 // ─── CTO 2026-04-15 additions ───
@@ -1542,6 +1560,84 @@ function renderDeptBreakdownWidget(){
 // Finalized tab — un-summarized full-fidelity view of completed cross-dept tasks.
 // Per CTO directive 2026-04-15: finalized tasks must preserve full description,
 // completion metadata, and any resulting-handoff notes. No strikethrough. No opacity dim.
+function renderDeferred(){
+  const tasks=(D.crossDeptTasks||[]).filter(t=>t.status==='deferred').sort((a,b)=>{
+    return (a.deferredUntil||'9999-12-31').localeCompare(b.deferredUntil||'9999-12-31');
+  });
+  if(!tasks.length){
+    ctoSetDom('deferred',`<div class="section"><div class="section-title">⏸️ Deferred Tasks</div><p style="color:var(--muted);font-size:13px">No tasks are currently deferred. Deferred = work preserved with future target date but NOT in active queue.</p></div>`);
+    return;
+  }
+  // Group by deferredUntil month
+  const byMonth={};
+  tasks.forEach(t=>{
+    const d=t.deferredUntil||'unknown';
+    const key=typeof d==='string'?d.substring(0,7):'unknown';
+    if(!byMonth[key])byMonth[key]=[];
+    byMonth[key].push(t);
+  });
+  const months=Object.keys(byMonth).sort();
+  let html=`<div class="section"><div class="section-title">⏸️ Deferred Tasks (${tasks.length})</div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:14px"><strong>Work preserved with target date — NOT in active queue.</strong> These items exited the live dashboard but the work remains planned. Grouped by target month.</p>`;
+  months.forEach(month=>{
+    const list=byMonth[month];
+    const monthLabel=month==='unknown'?'No target date':new Date(month+'-01').toLocaleDateString('en-US',{year:'numeric',month:'long'});
+    html+=`<div style="margin-top:18px;font-size:13px;color:var(--fg,#fff);font-weight:700;border-bottom:1px solid var(--border);padding-bottom:6px;margin-bottom:8px">${ctoEsc(monthLabel)} <span style="color:var(--muted);font-weight:400">— ${list.length} ${list.length===1?'task':'tasks'}</span></div>`;
+    // Sort by dept within month
+    list.sort((a,b)=>(a.to||'').localeCompare(b.to||''));
+    list.forEach(t=>{
+      const idTag=`<span style="color:var(--muted);font-weight:400;font-size:11px">[${ctoEsc(t.id||'?')}]</span> `;
+      const priClass=(t.priority||'P2').toLowerCase();
+      const eta=t.deferredUntil?new Date(t.deferredUntil).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'?';
+      html+=`<div style="padding:10px 12px;margin-bottom:8px;border-left:3px solid var(--yellow);background:rgba(255,200,0,0.04);border-radius:0 6px 6px 0">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+          <strong style="font-size:13px">${idTag}${ctoEsc(t.title||'')}</strong>
+          <span class="tag tag-${priClass}">${ctoEsc(t.priority||'P2')}</span>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">${ctoEsc(t.from||'?')} → <strong>${ctoEsc(t.to||'?')}</strong> | ⏸️ Deferred to <strong style="color:var(--yellow)">${eta}</strong></div>
+        ${t.resolution?`<div style="font-size:11px;margin-top:6px;padding:6px 8px;background:rgba(255,200,0,0.06);border-radius:4px"><strong>Deferral reason:</strong> ${ctoEsc(t.resolution).slice(0,500)}</div>`:''}
+      </div>`;
+    });
+  });
+  html+=`</div>`;
+  ctoSetDom('deferred',html);
+}
+
+function renderConsolidated(){
+  const tasks=(D.crossDeptTasks||[]).filter(t=>t.status==='consolidated');
+  if(!tasks.length){
+    ctoSetDom('consolidated',`<div class="section"><div class="section-title">🔄 Consolidated Tasks</div><p style="color:var(--muted);font-size:13px">No tasks consolidated into umbrellas. Consolidated = work absorbed into a Phase task as ACs.</p></div>`);
+    return;
+  }
+  // Group by consolidatedInto
+  const byUmbrella={};
+  tasks.forEach(t=>{
+    const u=t.consolidatedInto||'unknown-umbrella';
+    if(!byUmbrella[u])byUmbrella[u]=[];
+    byUmbrella[u].push(t);
+  });
+  let html=`<div class="section"><div class="section-title">🔄 Consolidated Tasks (${tasks.length})</div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:14px"><strong>Work absorbed into Phase task ACs — still pending, tracked at umbrella.</strong> Click the umbrella to see AC-level status.</p>`;
+  Object.keys(byUmbrella).sort().forEach(umb=>{
+    const list=byUmbrella[umb];
+    html+=`<div style="margin-top:18px;font-size:13px;font-weight:700;border-bottom:1px solid var(--border);padding-bottom:6px;margin-bottom:8px">📦 Umbrella: <code style="background:rgba(0,100,255,0.1);padding:2px 6px;border-radius:3px">${ctoEsc(umb)}</code> <span style="color:var(--muted);font-weight:400">— ${list.length} consolidated</span></div>`;
+    list.sort((a,b)=>(a.to||'').localeCompare(b.to||''));
+    list.forEach(t=>{
+      const idTag=`<span style="color:var(--muted);font-weight:400;font-size:11px">[${ctoEsc(t.id||'?')}]</span> `;
+      const priClass=(t.priority||'P2').toLowerCase();
+      html+=`<div style="padding:10px 12px;margin-bottom:8px;border-left:3px solid var(--blue);background:rgba(0,100,255,0.04);border-radius:0 6px 6px 0">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+          <strong style="font-size:13px">${idTag}${ctoEsc(t.title||'')}</strong>
+          <span class="tag tag-${priClass}">${ctoEsc(t.priority||'P2')}</span>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">${ctoEsc(t.from||'?')} → <strong>${ctoEsc(t.to||'?')}</strong> | 🔄 Now tracked as AC in <strong>${ctoEsc(umb)}</strong></div>
+      </div>`;
+    });
+  });
+  html+=`</div>`;
+  ctoSetDom('consolidated',html);
+}
+
 function renderFinalized(){
   const tasks=(D.crossDeptTasks||[]).filter(t=>t.status==='completed').sort((a,b)=>{
     return new Date(b.completedAt||b.completedDate||b.createdAt||0)-new Date(a.completedAt||a.completedDate||a.createdAt||0);
@@ -2386,6 +2482,8 @@ function render(){
   renderAI();
   renderXDept();
   renderFinalized();
+      renderDeferred();
+      renderConsolidated();
   verifyWeightsClient();
   renderImportantNotes();
   renderAnalytics();
