@@ -19393,11 +19393,15 @@
       "to": "[WEBSITE]",
       "title": "Handoff from CTO: WIRE consent gating: AnalyticsTracker + GoogleAnalytics components should only fire when cc_consent_v1='all' (xd-485 follow-up)",
       "description": "Cookie banner (xd-485) infrastructure shipped 2026-05-16 \u2014 sets localStorage `cc_consent_v1` to 'all' or 'essential'. Banner also fires a custom 'cc-consent' DOM event. But: website/components/analytics-tracker.tsx + website/components/google-analytics.tsx currently load and fire UNCONDITIONALLY. To make the consent banner FUNCTIONALLY gate analytics (not just cosmetic), each component should: (1) Read `localStorage.getItem('cc_consent_v1')` at mount; (2) If 'all' \u2192 proceed with current init; (3) If 'essential' OR null \u2192 skip init entirely (return null from component); (4) Listen for 'cc-consent' event to react to mid-session consent changes. ACCEPTANCE: (a) In a fresh incognito session with cookies disabled, AnalyticsTracker + GoogleAnalytics do NOT fire any network requests. (b) After clicking 'Accept all' on banner, GA4 + tracker fire correctly. (c) After clicking 'Essential only', neither fires. Without this gating, the banner is decorative \u2014 GDPR-wise we're still tracking pre-consent. P1 because xd-485 GDPR risk only fully closes once consent is functional.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-05-16T22:49:20Z",
       "createdDate": "2026-05-16",
-      "completedDate": null
+      "completedDate": "2026-05-17",
+      "completedAt": "2026-05-17",
+      "completedBy": "[CTO]",
+      "resolution": "EXECUTED 2026-05-17 \u2014 wired consent gating into both analytics components. (1) website/components/analytics-tracker.tsx: added `hasAnalyticsConsent()` reading localStorage 'cc_consent_v1', useEffect early-return when consent missing, listens for 'cc-consent' DOM event so banner Accept re-enables tracking without page refresh. (2) website/components/google-analytics.tsx: full rewrite using useState/useEffect \u2014 gates BOTH Script tag rendering on `consent === true`, subscribes to 'cc-consent' AND 'storage' events (multi-tab consent changes). Pushed to BOTH production + development branches. Will trigger deploy-website.yml on production push (website/** path). EFFECT: cookie banner is now FUNCTIONALLY gating (not cosmetic). If user clicks Essential-only OR ignores banner, neither analytics-tracker fetch nor GA Script tags fire.",
+      "resultingHandoff": "Knock-on to xd-611 (Legal cookie banner wording review): wording is now legally protected by working consent gating; Legal review can focus purely on wording clarity not 'does the banner actually do anything'. Followup: when GA4 property is created (gated on CEO running xd-214 GSC verification), set NEXT_PUBLIC_GA_MEASUREMENT_ID env var on the website container; GA scripts will then render for consented users only."
     },
     {
       "id": "xd-613",
