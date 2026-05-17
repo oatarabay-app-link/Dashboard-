@@ -26,6 +26,13 @@ h1{font-size:26px;font-weight:700;margin-bottom:2px}
 .tab{padding:6px 14px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text);transition:all .2s;position:relative}
 .tab:hover,.tab.active{background:var(--accent);border-color:var(--accent);color:#fff}
 .tab .tab-pct{font-size:9px;opacity:.85;margin-left:4px;font-weight:700}
+
+/* CTO 2026-05-17: Unified Cross-Dept tab filter chips */
+.xd-filter-bar{display:flex;gap:8px;margin-bottom:16px;padding:8px;background:rgba(255,255,255,0.03);border-radius:8px;flex-wrap:wrap}
+.xd-filter{background:transparent;color:var(--muted);border:1px solid rgba(255,255,255,0.1);padding:6px 14px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:500;transition:all 0.15s ease}
+.xd-filter:hover{background:rgba(255,255,255,0.05);color:#fff}
+.xd-filter.xd-filter-active{background:#7c3aed;color:#fff;border-color:#7c3aed}
+.xd-filter span{opacity:0.85;font-weight:600}
 .panel{display:none}.panel.active{display:block}
 /* Benchmarks */
 .bench-bar{position:relative;height:36px;background:var(--card);border:1px solid var(--border);border-radius:8px;margin-bottom:16px;overflow:hidden}
@@ -337,10 +344,7 @@ h1{font-size:26px;font-weight:700;margin-bottom:2px}
 <div class="tab" onclick="showTab('infra',this)" data-tab="infra">Infrastructure</div>
 <div class="tab" onclick="showTab('censorship',this)" data-tab="censorship">Anti-Censorship</div>
 <div class="tab" onclick="showTab('ai',this)" data-tab="ai">AI Features</div>
-<div class="tab" onclick="showTab('xdept',this)" data-tab="xdept">Cross-Dept</div>
-<div class="tab" onclick="showTab('finalized',this)" data-tab="finalized">✅ Finalized</div>
-<div class="tab" onclick="showTab('deferred',this)" data-tab="deferred">⏸️ Deferred</div>
-<div class="tab" onclick="showTab('consolidated',this)" data-tab="consolidated">🔄 Consolidated</div>
+<div class="tab" onclick="showTab('xdept',this)" data-tab="xdept">📋 Cross-Dept</div>
 <div class="tab" onclick="showTab('notes',this)" data-tab="notes">📌 Notes</div>
 <div class="tab" onclick="showTab('systemscan',this)" data-tab="systemscan">🔍 System Scan</div>
 <div class="tab" onclick="showTab('skills',this)" data-tab="skills">🧠 Skills</div>
@@ -355,10 +359,19 @@ h1{font-size:26px;font-weight:700;margin-bottom:2px}
 <div class="panel" id="infra"></div>
 <div class="panel" id="censorship"></div>
 <div class="panel" id="ai"></div>
-<div class="panel" id="xdept"></div>
-<div class="panel" id="finalized"></div>
-<div class="panel" id="deferred"></div>
-<div class="panel" id="consolidated"></div>
+<div class="panel" id="xdept">
+  <!-- Unified Cross-Dept tab (CTO 2026-05-17): 4 tabs → 1 with filter chips -->
+  <div class="xd-filter-bar">
+    <button class="xd-filter xd-filter-active" data-view="xdept-active" onclick="showXdView('xdept-active',this)">📋 Active (<span id="cnt-xdept-active">…</span>)</button>
+    <button class="xd-filter" data-view="finalized" onclick="showXdView('finalized',this)">✅ Finalized (<span id="cnt-finalized">…</span>)</button>
+    <button class="xd-filter" data-view="deferred" onclick="showXdView('deferred',this)">⏸️ Deferred (<span id="cnt-deferred">…</span>)</button>
+    <button class="xd-filter" data-view="consolidated" onclick="showXdView('consolidated',this)">🔄 Consolidated (<span id="cnt-consolidated">…</span>)</button>
+  </div>
+  <div id="xdept-active"></div>
+  <div id="finalized" style="display:none"></div>
+  <div id="deferred" style="display:none"></div>
+  <div id="consolidated" style="display:none"></div>
+</div>
 <div class="panel" id="notes"></div>
 <div class="panel" id="systemscan"></div>
 <div class="panel" id="skills"></div>
@@ -428,6 +441,38 @@ function showTab(id,el){
   // Charts need visible canvas — re-render when tab shown
   if(id==='overview')setTimeout(renderOverviewCharts,50);
   if(id==='analytics')setTimeout(renderAnalytics,50);
+}
+
+// CTO 2026-05-17: filter pill switcher for unified Cross-Dept tab.
+// Toggles which inner view is visible (xdept-active|finalized|deferred|consolidated)
+// and updates the active-pill highlight. Called from filter pill onclick.
+function showXdView(view, btn){
+  const views = ['xdept-active','finalized','deferred','consolidated'];
+  views.forEach(v => {
+    const el = document.getElementById(v);
+    if(el) el.style.display = (v === view) ? 'block' : 'none';
+  });
+  document.querySelectorAll('.xd-filter').forEach(b => b.classList.remove('xd-filter-active'));
+  if(btn) btn.classList.add('xd-filter-active');
+}
+
+// Update filter pill counts. Called from render() so badges stay fresh.
+function updateXdCounts(){
+  if(!D || !D.crossDeptTasks) return;
+  const tasks = D.crossDeptTasks;
+  const counts = {
+    'xdept-active': tasks.filter(t => {
+      const s = (t.status||'').toLowerCase();
+      return s==='pending'||s==='in_progress'||s==='in-progress'||s==='open';
+    }).length,
+    'finalized': tasks.filter(t => t.status==='completed').length,
+    'deferred': tasks.filter(t => t.status==='deferred').length,
+    'consolidated': tasks.filter(t => t.status==='consolidated').length,
+  };
+  Object.entries(counts).forEach(([id, n]) => {
+    const el = document.getElementById('cnt-' + id);
+    if(el) el.textContent = n;
+  });
 }
 
 function setPhaseFilter(phaseNum){
@@ -1417,7 +1462,7 @@ function renderAI(){
 function renderXDept(){
   const tasks=D.crossDeptTasks||[];
   if(!tasks.length){
-    ctoSetDom('xdept',`<div class="section"><div class="section-title">Cross-Department Task Queue</div><p style="color:var(--muted);font-size:13px">No cross-department tasks queued.</p></div>`);
+    ctoSetDom('xdept-active',`<div class="section"><div class="section-title">Cross-Department Task Queue</div><p style="color:var(--muted);font-size:13px">No cross-department tasks queued.</p></div>`);
     return;
   }
   // STRICT filter: only pending + in_progress + open (NOT deferred/consolidated/completed — those have their own tabs)
@@ -1461,7 +1506,7 @@ function renderXDept(){
     });
   });
   html+=`</div>`;
-  ctoSetDom('xdept',html);
+  ctoSetDom('xdept-active',html);
 }
 
 // ─── CTO 2026-04-15 additions ───
@@ -2508,6 +2553,7 @@ function render(){
   renderFinalized();
       renderDeferred();
       renderConsolidated();
+  updateXdCounts();
   verifyWeightsClient();
   renderImportantNotes();
   renderAnalytics();
