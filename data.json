@@ -5962,33 +5962,48 @@
       "priority": "P1",
       "progress": 80,
       "verification": "self",
-      "notes": "Backend complete: Model + DTOs + Service + Controller + DbContext + DI. Pushed 7 files.",
-      "lastUpdated": "2026-03-11",
+      "notes": "Backend complete: Model + DTOs + Service + Controller + DbContext + DI. Pushed 7 files. | QA 2026-05-18: dedicated-ip routes live (401). Port-forwarding + ip-whitelist 404 \u2014 see xd-625.",
+      "lastUpdated": "2026-05-18",
       "acceptanceCriteria": [
         {
           "test": "POST /dedicated-ip/purchase",
           "met": true,
-          "passed": true
+          "passed": true,
+          "verifiedBy": "qa-tested",
+          "verifiedDate": "2026-05-18",
+          "evidence": "curl https://api.caspervpn.com/api/dedicated-ip/* -> 401 (route registered, auth-gated) 2026-05-18 05:42 UTC"
         },
         {
           "test": "POST /dedicated-ip/allocate",
           "met": true,
-          "passed": true
+          "passed": true,
+          "verifiedBy": "qa-tested",
+          "verifiedDate": "2026-05-18",
+          "evidence": "curl https://api.caspervpn.com/api/dedicated-ip/* -> 401 (route registered, auth-gated) 2026-05-18 05:42 UTC"
         },
         {
           "test": "GET /dedicated-ip",
           "met": true,
-          "passed": true
+          "passed": true,
+          "verifiedBy": "qa-tested",
+          "verifiedDate": "2026-05-18",
+          "evidence": "curl https://api.caspervpn.com/api/dedicated-ip/* -> 401 (route registered, auth-gated) 2026-05-18 05:42 UTC"
         },
         {
           "test": "Port forwarding API (CRUD)",
-          "met": true,
-          "passed": true
+          "met": false,
+          "passed": true,
+          "verifiedBy": "qa-not-met",
+          "verifiedDate": "2026-05-18",
+          "evidence": "GET/POST /api/port-forwarding[ /portforwarding /port-forward] all returned 404 from https://api.caspervpn.com 2026-05-18 05:41 UTC. Controller not in prod."
         },
         {
           "test": "IP whitelisting API (CRUD)",
-          "met": true,
-          "passed": true
+          "met": false,
+          "passed": true,
+          "verifiedBy": "qa-not-met",
+          "verifiedDate": "2026-05-18",
+          "evidence": "GET/POST /api/ip-whitelist[ /ipwhitelist /ip-whitelisting /whitelist] all returned 404 from https://api.caspervpn.com 2026-05-18 05:41 UTC. Controller not in prod."
         },
         {
           "test": "Stripe subscription lifecycle",
@@ -19856,6 +19871,30 @@
       "priority": "P1",
       "createdAt": "2026-05-17T18:14:49Z",
       "createdDate": "2026-05-17",
+      "completedDate": null
+    },
+    {
+      "id": "xd-625",
+      "from": "[QA]",
+      "to": "[BACKEND]",
+      "title": "Handoff from QA: Handoff from QA: xd-181 AC #3 (port-forwarding CRUD) and AC #4 (ip-whitelist CRUD) return 404 in prod \u2014 controllers not deployed",
+      "description": "QA verification 2026-05-18 05:41 UTC. Probed https://api.caspervpn.com over SSH from NL Primary (178.62.101.221). Dedicated-IP routes are live and auth-gated as expected (401 on /api/dedicated-ip[/purchase|/allocate]) \u2014 xd-181 AC 0/1/2 now verifiedBy=qa-tested. BUT AC #3 (Port forwarding API CRUD) and AC #4 (IP whitelisting API CRUD) return 404 on every path variant tried: /api/port-forwarding, /api/portforwarding, /api/port-forward, /api/ip-whitelist, /api/ipwhitelist, /api/ip-whitelisting, /api/whitelist (both GET and POST). Backend's xd-181 self-claim of `notes: Model + DTOs + Service + Controller + DbContext + DI. Pushed 7 files.` matches dedicated-IP scope only \u2014 port-forwarding + ip-whitelist controllers appear to have either never shipped or rolled back. Action items: (1) confirm controllers exist in backend-dotnet-core (grep PortForwardingController.cs + IpWhitelistController.cs); (2) if absent, treat as scope-bleed in xd-181 \u2014 these AC belong to a separate ship and should be moved to their own task with realistic phase/owner; (3) if present, redeploy + confirm route registration; (4) when live, re-handoff to [QA] for verification. xd-181 AC#3/#4 now met=false.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-05-18T05:43:51Z",
+      "createdDate": "2026-05-18",
+      "completedDate": null
+    },
+    {
+      "id": "xd-626",
+      "from": "[QA]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from QA: Handoff from QA: NL Primary disk at 86% (7.0G free, /) \u2014 watch threshold",
+      "description": "Routine prod smoke 2026-05-18 05:42 UTC. NL Primary (178.62.101.221, ubuntu-api-server-casper) root filesystem is 86% used with 7.0G free. Memory 1.9G/7.8G, load 0.46/0.29/0.24 \u2014 all healthy. TLS certs for api/caspervpn/admin valid until 2026-06-24 (Let's Encrypt should auto-renew ~37 days). Not yet at the 90% red threshold but trending. Recommend a `docker system prune -af --volumes` audit + glitchtip + prometheus retention sweep + caspervpn-postgres WAL/log cleanup. No action blocker; advisory only.",
+      "status": "pending",
+      "priority": "P3",
+      "createdAt": "2026-05-18T05:43:52Z",
+      "createdDate": "2026-05-18",
       "completedDate": null
     }
   ],
