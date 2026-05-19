@@ -19879,11 +19879,14 @@
       "to": "[BACKEND]",
       "title": "Handoff from QA: Handoff from QA: xd-181 AC #3 (port-forwarding CRUD) and AC #4 (ip-whitelist CRUD) return 404 in prod \u2014 controllers not deployed",
       "description": "QA verification 2026-05-18 05:41 UTC. Probed https://api.caspervpn.com over SSH from NL Primary (178.62.101.221). Dedicated-IP routes are live and auth-gated as expected (401 on /api/dedicated-ip[/purchase|/allocate]) \u2014 xd-181 AC 0/1/2 now verifiedBy=qa-tested. BUT AC #3 (Port forwarding API CRUD) and AC #4 (IP whitelisting API CRUD) return 404 on every path variant tried: /api/port-forwarding, /api/portforwarding, /api/port-forward, /api/ip-whitelist, /api/ipwhitelist, /api/ip-whitelisting, /api/whitelist (both GET and POST). Backend's xd-181 self-claim of `notes: Model + DTOs + Service + Controller + DbContext + DI. Pushed 7 files.` matches dedicated-IP scope only \u2014 port-forwarding + ip-whitelist controllers appear to have either never shipped or rolled back. Action items: (1) confirm controllers exist in backend-dotnet-core (grep PortForwardingController.cs + IpWhitelistController.cs); (2) if absent, treat as scope-bleed in xd-181 \u2014 these AC belong to a separate ship and should be moved to their own task with realistic phase/owner; (3) if present, redeploy + confirm route registration; (4) when live, re-handoff to [QA] for verification. xd-181 AC#3/#4 now met=false.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-05-18T05:43:51Z",
       "createdDate": "2026-05-18",
-      "completedDate": null
+      "completedDate": "2026-05-19",
+      "completedAt": "2026-05-19",
+      "completedBy": "[QA]",
+      "resolution": "closed-false-positive \u2014 actual DedicatedIp routes are /api/dedicated-ip/port-forwarding (HTTP 401 = auth-gated \u2713) and /api/dedicated-ip/whitelist (HTTP 401 = auth-gated \u2713). Prior QA tested /api/dedicated-ip/ip-whitelist which 404s because the route is /whitelist per DedicatedIpController.cs:299. xd-181 AC #3 and AC #4 are CODE-VERIFIED PASS. Updating memory so future sessions test correct paths."
     },
     {
       "id": "xd-626",
@@ -19895,6 +19898,42 @@
       "priority": "P3",
       "createdAt": "2026-05-18T05:43:52Z",
       "createdDate": "2026-05-18",
+      "completedDate": null
+    },
+    {
+      "id": "xd-627",
+      "from": "[QA]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from QA: P0: NL Primary disk at 97% (1.9G free) \u2014 escalation of xd-626",
+      "description": "QA scheduled-task verification 2026-05-19 05:39 UTC observed root filesystem at 97% (46G / 48G; 1.9G free), up from 86% on 2026-05-18 (xd-626 P3 advisory). Breakdown: /var/lib/docker/overlay2=12G, /root=12G. `docker system df` reports Images=3.15G (98% reclaimable), Build Cache=2.39G (100% reclaimable), Containers=1.37G (93% reclaimable), Local Volumes=5.43G (6% reclaimable). Total reclaimable ~6.5G via `docker system prune -af --volumes` (careful \u2014 review volumes first). Recommended remediation: (1) `docker builder prune -af` clears 2.4G fast and safe; (2) `docker image prune -af` clears ~3.1G of unused images; (3) audit /root for stray archives. All 18 containers remain healthy; no service degradation YET, but new docker pulls / log writes will start failing soon. Single-server prod = SPOF.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-05-19T05:45:22Z",
+      "createdDate": "2026-05-19",
+      "completedDate": null
+    },
+    {
+      "id": "xd-628",
+      "from": "[QA]",
+      "to": "[BACKEND]",
+      "title": "Handoff from QA: P1: Wave 5 ServerIps migration still not applied to prod DB",
+      "description": "EFMigrationsHistory latest = 20260519000000_AddConnectionLogLastSeenAt. 20260517230000_AddServerIpsTable (Wave 5 Agent 1) is NOT in the history table and the ServerIps relation does not exist in `caspervpn` DB. Idempotent SQL is ready at backend-dotnet-core/Migrations/Manual/20260517_add_server_ips_table.sql. Per prior QA self-audit (memory/departments/qa/session-log.md 2026-05-18) and the migration header itself, this needs explicit manual apply: `sudo docker exec -i caspervpn-postgres psql -U casper_prod -d caspervpn < 20260517_add_server_ips_table.sql`. Wave 5 Agent 2 backend code that DI-injects ServerIpsRepository / queries the table will 500 until this lands. Currently in-memory ConcurrentDictionary in IpManagementService still serves (transitional fallback), so no live-traffic impact YET \u2014 but no rollout-complete until applied.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-05-19T05:45:22Z",
+      "createdDate": "2026-05-19",
+      "completedDate": null
+    },
+    {
+      "id": "xd-629",
+      "from": "[QA]",
+      "to": "[CTO]",
+      "title": "Handoff from QA: P1: complete_handoff() still silently updates first match when xd-ID collides",
+      "description": "Follow-up to xd-547 (closed). The create_handoff() side has the xd-544 guard (factory_bootstrap.py:919) which detects duplicates on CREATE and walks forward to the next free ID \u2014 that part is fixed. But complete_handoff() (factory_bootstrap.py:407-432) still iterates data['crossDeptTasks'] and `return True` on the FIRST id match, silently ignoring any later entries with the same id. Six dup-ID pairs still exist in live data (xd-330, xd-388, xd-389, xd-416, xd-417, xd-421) \u2014 all old completed/completed pairs, but any future complete_handoff() call against one of those IDs will be non-deterministic. Proposed fix: in complete_handoff(), scan for >1 match; if found, raise (or log warning + update ALL matches with same fields). Same scan should live in push_dashboard() preflight or session_exit() to catch dup-IDs introduced by manual data.json edits.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-05-19T05:45:22Z",
+      "createdDate": "2026-05-19",
       "completedDate": null
     }
   ],
