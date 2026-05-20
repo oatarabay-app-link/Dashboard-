@@ -19935,6 +19935,42 @@
       "createdAt": "2026-05-19T05:45:22Z",
       "createdDate": "2026-05-19",
       "completedDate": null
+    },
+    {
+      "id": "xd-630",
+      "from": "[QA]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from QA: [QA 2026-05-20] F-01 ESCALATION P0: caspervpn-flask still crash-looping US-LA+DE-DU 24h post-audit",
+      "description": "Audit 2026-05-20 SHOW finding F-01 remains unaddressed. Live verification 2026-05-20 05:42 UTC: US-LA (208.87.243.205) NRestarts=439,825 (+5,404 in 24h, was 434,421); DE-DU (91.194.84.79) NRestarts=420,239 (+5,168 in 24h, was 415,071). ActiveState=activating (never reaches active). Same orphan python3 holding :5002 on both nodes: US-LA pid=2784152, DE-DU pid=984404 etime=11d13h (May-08 deploy ghost). Blackbox probe shows OK because orphan answers HTTP \u2014 monitoring CANNOT detect the broken legitimate service. Per audit fix recipe: kill -9 the orphan PID per node, let systemd rebind, add KillMode=control-group + StartLimitIntervalSec. Verify with: ssh root@<node> 'systemctl restart caspervpn-flask && sleep 5 && systemctl show caspervpn-flask -p NRestarts -p ActiveState' \u2192 expect NRestarts=0 ActiveState=active and ss -tlnp shows the new legitimate PID on :5002.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-05-20T05:46:53Z",
+      "createdDate": "2026-05-20",
+      "completedDate": null
+    },
+    {
+      "id": "xd-631",
+      "from": "[QA]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from QA: [QA 2026-05-20] D6-01 ESCALATION P0: bkk-dev (46.16.129.246) still wide-open + brute-forced",
+      "description": "Audit 2026-05-20 CRIT finding D6-01 remains unaddressed. Live verification 2026-05-20: bkk-dev ping reachable (200ms), port 22 from internet succeeds. Fleet vpn_nodes key rejected (different key) \u2014 confirms the node is not on the fleet hardening baseline. Per audit: sshd_config has PasswordAuth=yes, PermitRootLogin=yes, iptables policy ACCEPT (empty), node_exporter :9100 public, no fail2ban, active brute-force from 103.164.9.74 user='claude' 2026-05-19. Fix: SSH via the master CEO key, disable password auth, apply fleet iptables baseline, enable fail2ban, drop :9100 to localhost-only or auth. Pivot risk: bkk-dev is on the WG mesh + runs RADIUS soak.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-05-20T05:46:53Z",
+      "createdDate": "2026-05-20",
+      "completedDate": null
+    },
+    {
+      "id": "xd-632",
+      "from": "[QA]",
+      "to": "[CTO]",
+      "title": "Handoff from QA: [QA 2026-05-20] 2026-05-20 audit produced 51 findings but 0 dashboard xd-* entries \u2014 claim/reality drift",
+      "description": "QA session log entry 2026-05-20 01:15 claims '15 fix-tasks created covering every SHOW/CRIT/HIGH', but live dashboard (fetched 2026-05-20 05:42 UTC, sha 65a295447d23) has highest xd-NNN = xd-629 (filed 2026-05-19 by QA scheduled task). No xd-630+ exist. lastUpdated=2026-05-19T00:13:49Z (older than audit). Audit master doc memory/sessions/AUDIT-2026-05-20-whole-infrastructure-sweep.md exists and contains the 51 findings, but no corresponding xd-* dashboard entries OR Phase tasks were pushed. Likely cause: process hazard noted IN the audit log itself ('auto-sync daemon flipped Dropbox clone dev\u2192production mid-session') may have prevented the dashboard push, OR the 'fix-tasks created' claim referred to recommendations in the doc not dashboard entries. Either way: 1 SHOW + 2 CRIT + 24 HIGH audit findings are not actionable through the queue. Recommended: re-process the audit master doc, file an xd-* per SHOW/CRIT/HIGH item, assign to owning dept. I am filing xd-630 (F-01) and xd-631 (D6-01) in this session to cover the 2 most critical.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-05-20T05:46:53Z",
+      "createdDate": "2026-05-20",
+      "completedDate": null
     }
   ],
   "importantNotes": [
