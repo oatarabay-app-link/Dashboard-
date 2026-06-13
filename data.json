@@ -6048,7 +6048,7 @@
     {
       "id": "xd-184",
       "department": "devops",
-      "status": "Blocked on dedicated-ip backend completion (xd-181 at 80%). DevOps provisioning follows backend.",
+      "status": "\ud83d\udfe1 SELF-REPORTED 2026-06-13 (DevOps verify). Dedicated-IP server-side EGRESS VERIFIED on syd-01 (dedicated 103.75.119.124) + mia-01 (dedicated 23.95.79.248): a packet sourced from the dedicated user's internal /32 (10.66.16.254 / 10.66.10.254) hits POSTROUTING SNAT rule #1 and egresses on the dedicated public IP \u2014 confirmed via api.ipify.org AND ifconfig.me, SNAT counter incremented 0->2. Reboot-safe: SNAT in /etc/iptables/rules.v4 (netfilter-persistent enabled), ordered ABOVE the blanket MASQUERADE. CORRECTION: OneProvider DID deliver+route both /32s \u2014 NO provider escalation needed. The earlier 'dedicated IP exits as main IP' report was a PROBE ARTIFACT: curl --interface <public-ded-ip> sources from the public IP, does NOT match the SNAT rule (scoped to the internal /32), falls through to the blanket MASQUERADE -> rewritten to main IP. Real users source from 10.66.x.254 -> SNAT fires first -> correct egress. Also corrects stale session-note (2026-06-13 #5 'SNAT not wired' \u2014 it IS wired). STILL PENDING (=> \ud83d\udfe1 not \ud83d\udfe2): full IP pool (10+/server) NOT provisioned (only 2 prod IPs exist); AWAITING Backend confirm client config sets WG interface addr=10.66.x.254 (xd-633); AWAITING QA real-device whatismyip end-to-end (xd-634). EU dedicated IP recommended (Gulf ~2x closer to Frankfurt/Paris than Sydney/Miami); CEO deferred procurement 2026-06-13.",
       "priority": "P1",
       "progress": 0,
       "from": "backend",
@@ -19974,9 +19974,39 @@
       "createdAt": "2026-05-20T05:46:53Z",
       "createdDate": "2026-05-20",
       "completedDate": null
+    },
+    {
+      "id": "xd-633",
+      "from": "[DEVOPS]",
+      "to": "[BACKEND]",
+      "title": "Handoff from DEVOPS: Confirm dedicated-user WG client config sets interface address = 10.66.x.254",
+      "description": "DevOps verified (2026-06-13) the SERVER path end-to-end: SNAT on syd-01/mia-01 maps internal /32 10.66.x.254 -> dedicated public IP (.124/.248) and OneProvider routes it (egress proven via ipify+ifconfig.me; SNAT counter fired). ONLY unproven link = client config: GetServerConfigAsync / DedicatedIp.WireGuardAllowedIps must give a dedicated user a WG config whose INTERFACE ADDRESS is the assigned internal /32 (10.66.16.254/32 on syd-01, 10.66.10.254/32 on mia-01). If the client's tunnel source is anything else it won't match the SNAT rule and egress falls back to the node main IP. ACTION: confirm the generator pins interface addr to the DedicatedIp internal /32 for the correct node, then this hands to QA (xd-634) for a real-device whatismyip test. Refs: scripts/setup-dedicated-ip-snat.sh; OptimizedVpnServerService.cs + VpnServerService.cs (keep both in sync per CLAUDE.md 9.6).",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-06-13T04:10:06Z",
+      "createdDate": "2026-06-13",
+      "completedDate": null
+    },
+    {
+      "id": "xd-634",
+      "from": "[DEVOPS]",
+      "to": "[QA]",
+      "title": "Handoff from DEVOPS: Verify dedicated-user public egress IP == assigned dedicated IP (real device, whatismyip)",
+      "description": "End-to-end device test of the dedicated-IP acceptance criterion. DevOps proved the server path (syd-01 .124, mia-01 .248) 2026-06-13. STEPS: (1) ensure a test account has an active dedicated IP on syd-01 or mia-01; (2) connect a real iOS device via that node; (3) check whatismyip / api.ipify.org on-device; (4) PASS iff shown public IP == assigned dedicated IP (103.75.119.124 syd / 23.95.79.248 mia), FAIL if node main IP (103.75.119.122 / 23.95.79.249). Depends on Backend xd-633 first. On PASS: mark dedicated-ip AC 'tunnel uses assigned static IP' \ud83d\udd35 + importantNote for CEO \ud83d\udfe2.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-06-13T04:10:06Z",
+      "createdDate": "2026-06-13",
+      "completedDate": null
     }
   ],
   "importantNotes": [
+    {
+      "date": "2026-06-13",
+      "priority": "P1",
+      "by": "[DEVOPS]",
+      "message": "[DevOps/CTO 2026-06-13] Dedicated-IP egress VERIFIED, not broken. syd-01 (.124) + mia-01 (.248) egress on their dedicated IP when sourced from the internal /32 (proven via ipify+ifconfig.me; SNAT counter fired; reboot-safe via netfilter-persistent). OneProvider routing is FINE \u2014 NO escalation. KNOWN TRAP (anti-loop): to test dedicated-IP egress, source from the INTERNAL /32 (10.66.x.254); NEVER curl --interface <public-dedicated-ip> \u2014 that bypasses the SNAT rule, hits the blanket MASQUERADE, and falsely shows the node main IP. Open: Backend confirm client gets 10.66.x.254 (xd-633), QA real-device whatismyip (xd-634). EU dedicated IP recommended for Gulf latency (Frankfurt/Paris ~2x closer than Sydney/Miami); procurement deferred by CEO."
+    },
     {
       "date": "2026-05-18",
       "priority": "P3",
