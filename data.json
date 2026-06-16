@@ -20005,11 +20005,15 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: Backend auto-deploy failing on docker-proxy (Docker pull exit 1) \u2014 post 2026-06-17 dev->prod ship",
       "description": "Build OK; deploy step fails on self-hosted runner 'Docker pull failed exit 1' (known docker-proxy issue; scripts/fix-docker-proxy.sh exists). Fails before touching container -> prod backend on prior HEALTHY version, no harm. 2 undeployed files: ServerDTOs lenient parser + DeviceLimitService. FIX: fix-docker-proxy.sh + re-trigger OR manual rebuild on UK-LON.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-06-17T01:46:31Z",
       "createdDate": "2026-06-17",
-      "completedDate": null
+      "completedDate": "2026-06-17",
+      "completedAt": "2026-06-17",
+      "completedBy": "[DEVOPS]",
+      "resolution": "RESOLVED. Live blocker was the armed SUBMISSION_FREEZE.lock fast-failing CI at freeze-check (9s) \u2014 NOT docker-proxy (stale earlier run). Backend code (lenient VpnProtocol parser) was already live via a manual rebuild 2026-06-16 22:02Z. Re-triggered auto-deploy.yml via workflow_dispatch with the sanctioned override_freeze=I-ACCEPT-RISK (lock left ARMED, \u00a717 intact). deploy-do-production SUCCEEDED: clean --no-cache build, zero-downtime rolling swap to image 0e71a574, 'API healthy after 1 checks'. Verified api.caspervpn.com/health=200; lenient parser live (POST connect preferredProtocol:'unknown' -> 401 auth-gate, NOT 400); StealthEnforcement untouched (false). Overall run shows 'failure' ONLY due to unrelated deploy-flask-secondary ghcr rate-limit (does not touch the api).",
+      "resultingHandoff": "Downstream [DEVOPS]: fix deploy-flask-secondary ghcr pull + nginx -t failure inside caspervpn-nginx (xd-433 guard no-op)."
     },
     {
       "id": "xd-636",
@@ -20017,11 +20021,15 @@
       "to": "[QA]",
       "title": "Handoff from CTO: Validate masking + CC fixes on new TestFlight build (server side 12/12 verified)",
       "description": "2026-06-17: fronting 12/12 (101), wildcard *.pompesh.com 12/12, control-plane masked cdn.capablitys.com (#53). Validate masking + CC stability on the new build. StealthEnforcement stays OFF until adopted. Grade A- (NOT 100%). Ref memory/context/MASKING-FORMULA.md.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P0",
       "createdAt": "2026-06-17T01:46:31Z",
       "createdDate": "2026-06-17",
-      "completedDate": null
+      "completedDate": "2026-06-17",
+      "completedAt": "2026-06-17",
+      "completedBy": "[QA]",
+      "resolution": "SERVER-SIDE PASS (mark \ud83d\udd35 tested). Re-verified READ-ONLY from UK-LON 2026-06-17, gate left OFF: per-node CF fronting 12/12 = HTTP 101 (live-secret per-node JWT WS-upgrade; wrong-secret + no-auth controls both 401 = backend\u2194Worker secret matches, no silent direct-relay); wildcard 12/12 CN=*.pompesh.com; control-plane #53 cdn.capablitys.com -> server:cloudflare, neutral cert CN=capablitys.com; StealthEnforcement__Enabled=false; honest-mode decoy s11 200 nginx/1.24.0. Grade A- (NOT 100%). DEVICE/iOS half pending the CEO's new TestFlight build + logs -> device-validation checklist handed off. Stays \ud83d\udd35 until CEO device-pass -> \ud83d\udfe2.",
+      "resultingHandoff": "Device-validation checklist -> CEO/[iOS] (new handoff): BUILD MARKER present; CC traffic to CF edge IP 104.x/188.114.x not bare relay; no jitter; no zombie after 15-20min bg; CC-enforced in restricted region. On device-pass CEO marks \ud83d\udfe2."
     },
     {
       "id": "xd-637",
@@ -20048,6 +20056,30 @@
       "createdDate": "2026-06-16",
       "completedDate": null,
       "dueBy": "2026-06-19T23:14:26Z"
+    },
+    {
+      "id": "xd-639",
+      "from": "[DEVOPS]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from DEVOPS: Fix deploy-flask-secondary ghcr pull (drone-ssh denied) + nginx -t failure in caspervpn-nginx",
+      "description": "From xd-635 finalize: deploy-flask-secondary fails at appleboy/ssh-action ghcr.io anonymous-pull 'denied' (mirror/cache it like deploy-do-production was migrated 2026-05-17). Also: post-swap nginx upstream-cache reload logged 'nginx config test failed \u2014 skipping reload' -> the xd-433 502-prevention guard is a no-op on api rebuild; investigate `nginx -t` inside caspervpn-nginx. Non-blocking (live health 200).",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-06-17T02:33:13Z",
+      "createdDate": "2026-06-17",
+      "completedDate": null
+    },
+    {
+      "id": "xd-640",
+      "from": "[QA]",
+      "to": "[CEO]",
+      "title": "Handoff from QA: Device-validate masking + CC on the new TestFlight build (checklist) -> mark masking \ud83d\udfe2",
+      "description": "Server side verified \ud83d\udd35 (xd-636). Upload new build -> connect -> export device log. Verify: (1) BUILD MARKER line present (else stale binary); (2) CC data plane to a Cloudflare edge IP 104.x/188.114.96-97.x NOT the bare relay IP; (3) no per-packet jitter (pages load normally); (4) no zombie after 15-20min background (foreground probe OK or #52=RESUME same src port); (5) CC-enforced in a restricted region (409 region_requires_stealth on plain protocols). Items 1-4 prove masking+CC stability; item 5 needs StealthEnforcement flipped ON (after adoption). On pass -> CEO marks \ud83d\udfe2.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-06-17T02:33:13Z",
+      "createdDate": "2026-06-17",
+      "completedDate": null
     }
   ],
   "importantNotes": [
