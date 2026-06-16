@@ -20022,6 +20022,32 @@
       "createdAt": "2026-06-17T01:46:31Z",
       "createdDate": "2026-06-17",
       "completedDate": null
+    },
+    {
+      "id": "xd-637",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: Verify over-limit data-cap cut on prod (server-side ARMED; needs a live over-limit peer) + Gap1 paywall on new build",
+      "description": "RECONCILED from DEPARTMENT_LOG (was log-only as DEPT_LOG 'xd-636'; never reached the board because the author believed Dashboard push was GH-PAT 403 \u2014 QA verified 2026-06-17 the token writes fine; real cause = transient API resets + 3MB-data.json rebuild fragility). SHIPPED: WireGuardUsageSyncService cuts the wg0 peer of an active user past 100% of a REAL cap (Gap 2, prod 75847c5ae; paid/unlimited via IsUnlimited=cycleLimit==0 spared). backend-dotnet-core/Services/WireGuardUsageSyncService.cs:196-242. iOS Gap 1: HTTP 402 DATA_CAP_REACHED -> APIError.dataCapReached -> showDataLimitPaywall (dev 1c4addeab, needs app build). QA SERVER-SIDE VERIFIED 2026-06-17: S1 api healthy, image Created 2026-06-16T22:02:27Z = PASS; S2 'usage sync service started (interval: 20s)' at 22:02:38 = PASS; S3 log level Information = PASS. STILL NEEDS (S4/S5): witness a LIVE cut \u2014 connect a real over-limit FREE account, watch `docker logs -f caspervpn-api | grep over-limit` for `[wg-sync][over-limit] ... removing WG peer ... (data-plane cut)` then `wg show wg0` peer GONE within ~20s; negative control = paid/unlimited stays connected. DEVICE-SIDE (CEO): D1 over-limit user sees DataLimitExceededView paywall (not generic error) on a NEW build. Full checklist: memory/departments/qa/VERIFICATION-PATH-2026-06-17.md \u00a74.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-06-16T23:14:26Z",
+      "createdDate": "2026-06-16",
+      "completedDate": null,
+      "dueBy": "2026-06-19T23:14:26Z"
+    },
+    {
+      "id": "xd-638",
+      "from": "[IOS]",
+      "to": "[QA]",
+      "title": "Handoff from IOS: Validate CasperCloak stability cluster on new TestFlight build (BUILD TAG 2026-06-16-cc-selfheal+dejitter)",
+      "description": "RECONCILED from DEPARTMENT_LOG (was log-only as DEPT_LOG 'xd-635'; the board id xd-635 was consumed by an unrelated CTO docker-proxy task, so this never had a real board entry). SHIPPED (dev, 2026-06-16, BUILD TAG 2026-06-16-cc-selfheal+dejitter): relay de-jitter (speed) on 13 relays; clean-drop self-heal reconnectBudgetSeconds 80->600s; in-extension background-zombie watchdog->self-heal; CC-enforcement regression revert; dev protocol toggle (default OFF); login-flood guard. Files: CasperVPNTunnel/{Obfs4Transport,PacketTunnelProvider}.swift, Core/Services/*.swift, App/Config.swift. HONEST CAVEAT: background reconnect AFTER a full iOS extension kill is NOT fixed (iOS suspends extension timers in deep bg); real fix = on-demand/Auto-Connect, opt-in, not implemented. Test only the in-extension self-heal scenario. MOSTLY DEVICE-SIDE (CEO checklist): D0 verify BUILD TAG `2026-06-16-cc-selfheal+dejitter`; D1 CC-enforced+fast in AE; D2 clean-drop self-heal (airplane toggle); D3 in-extension bg zombie recovery \u2014 log `Tab CasperCloak handshake STALE ... in-extension self-heal`, internet returns without opening app; D4 dev toggle OFF/DEV-only; D5 no login 401 flood. SERVER-SIDE (QA): de-jitter grep + obfs=v2 journalctl per target relay. Full checklist: memory/departments/qa/VERIFICATION-PATH-2026-06-17.md \u00a75.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-06-16T23:14:26Z",
+      "createdDate": "2026-06-16",
+      "completedDate": null,
+      "dueBy": "2026-06-19T23:14:26Z"
     }
   ],
   "importantNotes": [
