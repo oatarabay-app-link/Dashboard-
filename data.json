@@ -20156,6 +20156,18 @@
       "createdAt": "2026-06-18T00:20:14Z",
       "createdDate": "2026-06-18",
       "completedDate": null
+    },
+    {
+      "id": "xd-647",
+      "from": "[IOS]",
+      "to": "[QA]",
+      "title": "Handoff from IOS: Device-test CC background-recovery on-demand clobber fix (new Xcode build required)",
+      "description": "WHAT CHANGED: VPNConnectionManager.ensureOnDemandRespectsSetting() no longer strips on-demand off a LIVE CasperCloak session in a restricted region. Previously it cleared on-demand on every app foreground (when Auto-Connect+Kill-Switch are off), wiping the Layer 1 on-demand arm off an already-connected CC tunnel -> no OS-level background auto-restart. ROOT CAUSE (CEO device log 2026-06-17): on-demand cleared 18:24:36 on a live session; obfs resume-exhausted teardown at 19:23:36 (tunnel -> .disconnected) had no on-demand to restart -> manual reopen required. FIX: preserve on-demand ONLY when status in {connected,connecting,reasserting} AND userInRestrictedRegion. Disconnected profiles still cleared; manual disconnect already persists on-demand=false -> no connect-on-sign-in regression. FILE: ios-app-v2/.../Core/Services/VPNConnectionManager.swift (+ AppDelegate BUILD MARKER 2026-06-18a). BUILD: xcodebuild device config ** BUILD SUCCEEDED ** (0 errors). Commit development 3d691d36e. REQUIRES A NEW XCODE BUILD to take effect (iOS code). QA/CEO DEVICE TEST: (1) Connect CC (restricted region), confirm log shows 'Preserving on-demand on live CasperCloak session' when you foreground the app while connected (NOT 'forcing on-demand rules to be cleared'). (2) Background app, force a drop (toggle airplane ~30s or wait for a real drop) -> tunnel must auto-restart in background WITHOUT opening the app. (3) Manually disconnect, kill app, relaunch -> must NOT auto-connect (connect-on-sign-in must stay fixed). (4) Pairs with backend session-TTL revive (xd-646, already on dev) -> after >70min background, reopening must keep the session + timer, no 'Session terminated by administrator'.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-06-18T00:42:22Z",
+      "createdDate": "2026-06-18",
+      "completedDate": null
     }
   ],
   "importantNotes": [
