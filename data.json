@@ -20144,6 +20144,18 @@
       "createdAt": "2026-06-17T21:26:46Z",
       "createdDate": "2026-06-17",
       "completedDate": null
+    },
+    {
+      "id": "xd-646",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: Validate session-TTL heartbeat revive (CC background false-disconnect fix)",
+      "description": "WHAT CHANGED: ServersController.Heartbeat now REVIVES a session that was reaped by ConnectionLogTimeoutSweeperService (Status=Timeout, no DisconnectReason) instead of returning sessionActive=false. Preserves ConnectedAt for timer continuity; re-checks data cap before reviving. Genuine terminations (admin force-disconnect=DisconnectReason set; over-limit cut=Status=Disconnected; user/duplicate disconnect=Disconnected) are NOT revived. ROOT CAUSE (CEO device log 2026-06-17): iOS suspends the extension heartbeat timer in deep background (70-min gap 18:24->19:35), sweeper's 1h StaleThreshold reaps the live session, resume heartbeat then force-disconnected iOS and reset the on-screen timer to 00:00. FILE: backend-dotnet-core/Controllers/ServersController.cs (+52 lines, build SUCCEEDED 0 errors). STATUS: committed development 2655c7173, auto-deploying to api.dev.caspervpn.com. QA TO TEST ON DEV: (1) Connect CC, background app >70min, reopen -> session must stay connected, timer must NOT reset to 0; backend log shows [heartbeat][revive]. (2) Admin force-disconnect a session -> iOS MUST still disconnect (no revive). (3) Drive a Free user >512MB while backgrounded -> on resume must NOT revive (declined-over-cap log) and must hit 402 paywall. PROD GATE: alters disconnect behavior for ALL users -> CEO must approve before production promotion (cherry-pick to production / deploy-production.yml). Do NOT auto-promote.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-06-18T00:20:14Z",
+      "createdDate": "2026-06-18",
+      "completedDate": null
     }
   ],
   "importantNotes": [
