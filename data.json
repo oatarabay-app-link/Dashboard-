@@ -20111,9 +20111,25 @@
       "to": "[DEVOPS]",
       "title": "Handoff from IOS: CC Layer 0 \u2014 relay downstream binary cover-frame cadence (~15-20s), NOT a WS control ping",
       "description": "Layer 0 for CC background recovery (paired with the [iOS]->[QA] CC-bg-recovery handoff; iOS side is built + pushed on development @ build 2026-06-17-cc-bg-recovery). DESIGN: memory/departments/ios/CC-BACKGROUND-RECOVERY-DESIGN-2026-06-17.md \u00a73.1 (M1) + \u00a75 item 7.\n\nASK: guarantee a DOWNSTREAM (relay->client) BINARY cover-frame cadence (~15-20s) per CC session even when the link is idle, in infrastructure/caspercloak/caspercloak_ws.py (+ the LA /opt/caspercloak/relay_ws.py variant + the EU py3.8 nodes patched in place). Re-sync via infrastructure/caspercloak/sync.sh so it doesn't drift.\n\nWHY: a silent CC zombie keeps the obfs TCP socket L4-alive (relay kernel still ACKs) while no app data flows, so iOS gets NO bg-capable death signal and the watchdog timer is suspended in deep background. A guaranteed downstream cadence means the kernel TCP keepalive + the absence of expected frames make the dead-peer detectable, and iOS records the gap (M1 telemetry already shipped).\n\n\u26d4 HARD CONSTRAINT (06-11 regression trap): it MUST be a BINARY obfs cover frame on the existing WS data path ([2B 0x0000][random bytes], already part of obfs-v2 \u2014 zero new wire format, zero new DPI signature). It MUST NOT be a WebSocket CONTROL ping. The 2026-06-11 ping_interval=20 change closed the obfs WS every 20s because the obfs-wrapped client can't return a pong the relay accepts \u2014 that's the exact regression to avoid. The fix was ping_interval=None fleet-wide; do not reintroduce a control ping.\n\nACCEPTANCE: on a connected idle CC session, tcpdump/relay log shows a binary downstream frame ~every 15-20s; iOS tunnel log shows NO '\ud83d\udce5\u23f1\ufe0f M1 inbound gap \u2026 exceeded cadence ceiling' lines in steady state; NO ~20s disconnect cadence reappears. iOS degrades gracefully if this is absent (kernel keepalive + M2 path events still provide partial bg recovery).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-06-17T14:59:55Z",
+      "createdDate": "2026-06-17",
+      "completedDate": "2026-06-17",
+      "completedAt": "2026-06-17",
+      "completedBy": "[[DEVOPS]]",
+      "resolution": "VERDICT: Layer 0 ALREADY SATISFIED by the existing cover_loop on all 13 relays \u2014 NO relay code added (validate-before-fix; the design doc itself says the cover frame 'already exists'). Every obfs-v2 session already gets a BINARY obfs cover frame every 0.1-1.0s via cover_loop (caspercloak_ws.py:529-534, .v13.py:558-563, relay_ws.py:355-362) \u2014 15-200x denser than the 15-20s minimum Layer 0 asked for, and it is a binary obfs data frame on the WS data channel, NOT a WS control ping. SEPARATELY, the 13-node audit CAUGHT A REAL REGRESSION: UK-LON's LIVE /opt/caspercloak/relay_ws.py had drifted to a stale 315-line variant carrying ping_interval=20, ping_timeout=30 (the exact 2026-06-11 trap) while the other 12 nodes + all 4 repo sources were ping_interval=None. Fixed UK-LON live: backup (relay_ws.py.bak-pingfix-20260617-123933Z) -> sed on temp copy -> py_compile gate -> promote -> systemctl restart -> verify active + ping_interval=None + cover intact + jitter=0 (restarted 12:39:33Z). FINAL 13/13 SWEEP = ALL_GREEN: active 13/13, ping_interval=None 13/13, numeric-ping 0/13, jitter-call 0/13, cover_loop 1/13 each. Repo sources already correct (no source code change needed). Evidence: memory/departments/devops/CC-LAYER0-VERDICT-2026-06-17.md.",
+      "resultingHandoff": "xd-644 to [QA]/[CEO] for device verification + UK-LON stale-file re-sync follow-up"
+    },
+    {
+      "id": "xd-644",
+      "from": "[[DEVOPS]]",
+      "to": "[[QA]]",
+      "title": "Handoff from [DEVOPS]: Layer 0 server-side COMPLETE \u2014 CEO device-test CC bg-recovery + re-sync UK-LON stale relay_ws.py",
+      "description": "Layer 0 (relay cover-frame cadence) is server-side COMPLETE: cover_loop guarantees a binary obfs downstream frame every 0.1-1.0s on all 13 relays (15-200x denser than the 15-20s minimum), ping_interval=None on all 13, jitter=0, service active 13/13 (live-verified). UK-LON's stale-deploy ping_interval=20 regression was found + fixed live this session. WHAT'S NEEDED NEXT: (1) [CEO] device test of the full CC background-recovery stack (iOS build 2026-06-17-cc-bg-recovery from xd-642) now that Layer 0's downstream cadence is confirmed live \u2014 verify a backgrounded CC tunnel surfaces a dead path and recovers without opening the app (the iOS-side honest limit on the pure half-open zombie still applies). (2) MAINTENANCE FOLLOW-UP (out of xd-643 scope): UK-LON's live relay_ws.py is a stale 315-line variant lacking #52 session-resumption + metrics that the repo canonical (450L) and US-LA's live copy have; re-sync UK-LON to the canonical infrastructure/caspercloak/relay_ws.py in a future devops pass. File paths: infrastructure/caspercloak/{relay_ws.py,caspercloak_ws.py,caspercloak_ws.v13.py}, memory/departments/devops/CC-LAYER0-VERDICT-2026-06-17.md.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-06-17T15:45:33Z",
       "createdDate": "2026-06-17",
       "completedDate": null
     }
