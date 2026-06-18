@@ -20231,11 +20231,15 @@
       "to": "[IOS]",
       "title": "Handoff from CTO: bg\u2192fg FREEZE after long background (device-proven, clean log): tunnel dies in deep bg \u2192 reopen routes API through dead tunnel (29s hangs) + auth 401-loop \u2192 UI frozen on stale 'Connected'",
       "description": "Device log text-69B871E7A80B (prod, D\u00fcsseldorf CasperCloak, user 2eecd0e6): connection was HEALTHY 9h + 21MB traffic (probe OK through 04:23). After ~8.7h background (04:23\u219213:06), reopened: (1) kernel status=Connecting (obfs-over-TCP died in deep suspension \u2014 known trade-off, self-heal reconnecting); (2) API calls (heartbeat,/user,/servers,/bandwidth/live) HUNG ~27-29s (Duration:29.00s) \u2014 routed through the dead/connecting tunnel; (3) access token expired (8.7h) \u2192 401 AUTH_1001; (4) /auth/refresh ALSO 401 \u2192 refresh-failure loop ('refresh already in-flight'); (5) UI frozen on stale 'Connected' + iOS VPN icon disappeared; backend /bandwidth/live=connected:false. FIX DIRECTION: on foreground when kernel != Connected, (a) do NOT route API calls through the tunnel (they hang) \u2014 go direct / short timeout; (b) show 'Reconnecting' not stale 'Connected'; (c) auth refresh must not loop on 401 (cooldown/backoff). Relates to: caspercloak-background-recovery-needs-ondemand, ios-login-flood (fix 250b5afc6 \u2014 verify it covers this path), auth-refresh-token-stable. Masking/CC itself WORKS (9h/21MB) \u2014 this is purely the deep-bg recovery+UI path.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-06-18T13:12:43Z",
       "createdDate": "2026-06-18",
-      "completedDate": null
+      "completedDate": "2026-06-18",
+      "completedAt": "2026-06-18",
+      "completedBy": "[CTO]",
+      "resolution": "LAYER 1 (no-freeze) DONE. Implemented by 3 skilled agents (isolated worktrees), integrated to `development` (commits 804757266 L2, 72f81698d L3, 88f00702f L1), pushed origin/development. VERIFIED: full xcodebuild green \u2014 CasperVPN.app + CasperVPNTunnel.appex produced, 0 compile errors, full module graph (arm64 sim). NOT yet CEO-verified on device \u2192 needs Xcode build + TestFlight. Root cause was: forced-reconcile refused TRANSIENT kernel states, so a zombie stuck in .connecting kept UI on 'Connected' + timer running; foreground subscription refresh fired THROUGH the dead tunnel (~29s hang). Fix: VPNConnectionManager.reconcileStuckTransientToReconnecting + syncStateFromSystem stuck-transient detection (both protocols) \u2192 drives .reconnecting; ConnectionViewModel stops duration/stats/heartbeat timers on .reconnecting; CasperVPNApp foreground sync ordered BEFORE API calls + gated on !isTransitioning (no through-dead-tunnel hang).",
+      "resultingHandoff": "xd-654 \u2192 [QA]: device-test no-freeze on the new build"
     },
     {
       "id": "xd-653",
@@ -20243,9 +20247,25 @@
       "to": "[IOS]",
       "title": "Handoff from CTO: Double-VPN/CC restricted-region drop UNRECOVERABLE despite Auto-Connect: app-skip (DPI-avoidance) + on-demand-miss (silent obfs death, no network event)",
       "description": "Device log text-7A94C4B8B788 (prod, MH Paris\u2192Amsterdam, geo=LB restricted). POSITIVE: masking CONFIRMED ACTIVE in MH ('\ud83c\udf10 CDN-fronting ACTIVE \u2014 Obfs4Transport dials .cloudfront with Bearer JWT; bare relay IP NOT exposed'), held ~45min/55MB. DROP: obfs 'resume-exhausted (No message available on STREAM)' \u2192 tunnel teardown \u2192 Disconnected. NON-RECOVERY (CEO has Auto-Connect ON yet stays dropped): (1) app-level auto-reconnect SKIPPED \u2014 VPNConnectionManager.swift:518 'Skipping auto-reconnect: user in restricted region (DPI-fingerprint avoidance)' fires repeatedly; (2) iOS on-demand (the intended restricted-region recovery, VPNConnectionManager:300-302) did NOT fire because the obfs WS died over a STABLE network (no NWPath change to trigger the on-demand rule). Result: silent-obfs-death in a restricted region = unrecoverable by either layer = the documented 'hard residual'. DESIGN TENSION (needs CEO call): skip-reconnect (stealth: rapid reconnects=DPI fingerprint) vs recover (user needs VPN MOST in restricted region; staying disconnected leaks/blocks them). ANTI-CENSORSHIP-CORRECT FIX: don't SKIP \u2014 reconnect with JITTERED backoff + entry-domain ROTATION (recovers the user without the rapid-reconnect fingerprint), OR have a transport-death watchdog re-arm/trigger reconnect (not just network-change on-demand). Relates: caspercloak-background-recovery-needs-ondemand, caspercloak-disconnect-relay-ping (resume-exhausted mode).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-06-18T14:06:49Z",
+      "createdDate": "2026-06-18",
+      "completedDate": "2026-06-18",
+      "completedAt": "2026-06-18",
+      "completedBy": "[CTO]",
+      "resolution": "LAYERS 2+3 DONE. Implemented by 3 skilled agents (isolated worktrees), integrated to `development` (commits 804757266 L2, 72f81698d L3, 88f00702f L1), pushed origin/development. VERIFIED: full xcodebuild green \u2014 CasperVPN.app + CasperVPNTunnel.appex produced, 0 compile errors, full module graph (arm64 sim). NOT yet CEO-verified on device \u2192 needs Xcode build + TestFlight. L2 (reconnect): replaced the blunt 'Skipping auto-reconnect: restricted region' skip with a JITTERED (base 8s\u00d7attempt cap 90s, \u00b140% jitter, 12-attempt bound) + entry-domain ROTATING reconnect (DomainPoolSelector.restrictedReconnectRotation; offset 0 == identical to today for normal connects), plus a MultiHopManager.$status subscription so a SILENT obfs death (no NWPath change) now triggers recovery; manual-disconnect respected 3 ways. L3 (kill switch): KS already wired for explicit-KS users; fixed the one gap \u2014 restricted-region CC users with on-demand armed but KS OFF were leaking during the reconnect gap \u2192 now force includeAllNetworks=true (fail-closed) for restricted CC. POSITIVE side-finding: the same device log CONFIRMED masking is ACTIVE in Multi-Hop (CF-fronted, bare relay IP not exposed).",
+      "resultingHandoff": "xd-654 \u2192 [QA]: device-test restricted-region reconnect + kill-switch leak-safety"
+    },
+    {
+      "id": "xd-654",
+      "from": "[CTO]",
+      "to": "[QA]",
+      "title": "Handoff from CTO: Device-test the 3 restricted-region survival fixes (L1 no-freeze / L2 jittered-rotating reconnect / L3 kill-switch fail-closed) on a new build",
+      "description": "Source: device logs text-69B871E7A80B (bg\u2192fg freeze) + text-7A94C4B8B788 (Double-VPN restricted drop). Build: development @ 88f00702f (3 commits), xcodebuild green (app+appex, 0 errors). Needs a TestFlight/Xcode build (CEO). TESTS \u2014 L1: connect CasperCloak, background 10+ min, kill network, reopen \u2192 MUST show 'Reconnecting\u2026' within ~1-2s, duration timer STOPPED (no stale 9h), NO ~29s freeze (UI responsive immediately). Regression: healthy 30s background \u2192 reopen stays Connected, timer correct. L2: CasperCloak in a restricted region (geo LB/AE), Auto-Connect ON, force a drop \u2192 MUST reconnect within the jittered window (~5-11s first attempt), log shows rotating entry offset across attempts; MANUAL disconnect MUST NOT reconnect; normal (non-restricted) connect still uses the usual sticky domain. L3: KS OFF + restricted region, CasperCloak connected, force tunnel down \u2192 during the reconnect gap a request MUST fail-closed (no egress on the real IP); explicit-KS users + non-restricted users unchanged.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-06-18T21:32:07Z",
       "createdDate": "2026-06-18",
       "completedDate": null
     }
