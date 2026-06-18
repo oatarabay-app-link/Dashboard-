@@ -20289,7 +20289,7 @@
       "from": "[CTO]",
       "to": "[QA]",
       "title": "Handoff from CTO: Device-test the 3 restricted-region survival fixes (L1 no-freeze / L2 jittered-rotating reconnect / L3 kill-switch fail-closed) on a new build",
-      "description": "Source: device logs text-69B871E7A80B (bg\u2192fg freeze) + text-7A94C4B8B788 (Double-VPN restricted drop). Build: development @ 88f00702f (3 commits), xcodebuild green (app+appex, 0 errors). Needs a TestFlight/Xcode build (CEO). TESTS \u2014 L1: connect CasperCloak, background 10+ min, kill network, reopen \u2192 MUST show 'Reconnecting\u2026' within ~1-2s, duration timer STOPPED (no stale 9h), NO ~29s freeze (UI responsive immediately). Regression: healthy 30s background \u2192 reopen stays Connected, timer correct. L2: CasperCloak in a restricted region (geo LB/AE), Auto-Connect ON, force a drop \u2192 MUST reconnect within the jittered window (~5-11s first attempt), log shows rotating entry offset across attempts; MANUAL disconnect MUST NOT reconnect; normal (non-restricted) connect still uses the usual sticky domain. L3: KS OFF + restricted region, CasperCloak connected, force tunnel down \u2192 during the reconnect gap a request MUST fail-closed (no egress on the real IP); explicit-KS users + non-restricted users unchanged.",
+      "description": "[CONSOLIDATED GATE \u2014 covers the ENTIRE iOS CC cluster: xd-638 self-heal/watchdog + xd-642 viability-drop + xd-647 on-demand + xd-654 L1/L2/L3, ALL in this one build (development HEAD 88f00702f, xcodebuild green). One device-test finalizes all of them.] Source: device logs text-69B871E7A80B (bg\u2192fg freeze) + text-7A94C4B8B788 (Double-VPN restricted drop). Build: development @ 88f00702f (3 commits), xcodebuild green (app+appex, 0 errors). Needs a TestFlight/Xcode build (CEO). TESTS \u2014 L1: connect CasperCloak, background 10+ min, kill network, reopen \u2192 MUST show 'Reconnecting\u2026' within ~1-2s, duration timer STOPPED (no stale 9h), NO ~29s freeze (UI responsive immediately). Regression: healthy 30s background \u2192 reopen stays Connected, timer correct. L2: CasperCloak in a restricted region (geo LB/AE), Auto-Connect ON, force a drop \u2192 MUST reconnect within the jittered window (~5-11s first attempt), log shows rotating entry offset across attempts; MANUAL disconnect MUST NOT reconnect; normal (non-restricted) connect still uses the usual sticky domain. L3: KS OFF + restricted region, CasperCloak connected, force tunnel down \u2192 during the reconnect gap a request MUST fail-closed (no egress on the real IP); explicit-KS users + non-restricted users unchanged.",
       "status": "pending",
       "priority": "P0",
       "createdAt": "2026-06-18T21:32:07Z",
@@ -20298,6 +20298,12 @@
     }
   ],
   "importantNotes": [
+    {
+      "date": "2026-06-18",
+      "priority": "P0",
+      "by": "[QA]",
+      "message": "[QA LAUNCH-READINESS 2026-06-18 \u2014 CC stability + stealth] \u2705 STEALTH server-side PRODUCTION-READY (live-verified): CF Worker fronting 12 entries+secret; relays ping_interval=None+active 5/5 reachable; StealthEnforcement OFF (correctly gated on iOS adoption). \u2705 BACKEND deployed+healthy: heartbeat-revive (xd-646) + data-cap (xd-637) both on origin/production + running image; /health 200. \u2705 iOS CC client CODE-COMPLETE + BUILD-GREEN: ALL fixes (xd-638 self-heal/watchdog, xd-642 viability-drop, xd-647 on-demand, xd-654 L1 no-freeze/L2 jittered-rotating-reconnect/L3 fail-closed) consolidated on development HEAD 88f00702f; xcodebuild green. dev is 17 commits ahead of prod. \u23f3 REMAINING GATES TO LAUNCH: (1) CEO device-test the ONE consolidated dev build (xd-654 CC checklist + xd-640 masking checklist) \u2014 finalizes the entire iOS CC cluster; (2) on pass \u2192 promote development\u2192production \u2192 TestFlight/App Store; (3) AFTER adoption \u2192 flip StealthEnforcement ON. QA finalized \ud83d\udd35: xd-637/644/645/646 + consolidated xd-638/642/647. Open device gates: xd-654, xd-640."
+    },
     {
       "date": "2026-06-17",
       "priority": "P1",
