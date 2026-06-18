@@ -20187,9 +20187,25 @@
       "to": "[IOS]",
       "title": "Handoff from CTO: BLOCKER: iOS CC tunnel does NOT consume cloudfront_url \u2014 connects to bare relay IP \u2192 blocked in restricted region (UAE device proof 2026-06-18)",
       "description": "Device log text-27B9E05308B1 (prod build 2026-06-18a, UAE/AE): app forced CasperCloak, backend minted cloudfront_url=wss://edge.intellitiy.com/s6 (+ rotation working), control-plane masked via cdn.capablitys.com. BUT PacketTunnelProvider/Obfs4Transport dialed obfs4_bridge_address=91.194.84.79:443 (BARE relay IP), ignoring cloudfront_url \u2192 'CasperCloak connection timed out' (UAE blocks the bare IP). FIX: wire Obfs4Transport.TransportTarget.cloudfront(url:bearerToken:) (Policy A always-prefer-CF) to actually dial the CF edge from cloudfront_url+cloudfront_auth_token. Edge is verified 12/12 (audit #6); backend mints correctly. This is the ONLY gap left for end-to-end masking. DO NOT ship to App Store until this lands + a UAE device shows TCP to a 104.x/188.114.x CF IP.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P0",
       "createdAt": "2026-06-18T04:14:50Z",
+      "createdDate": "2026-06-18",
+      "completedDate": "2026-06-18",
+      "completedAt": "2026-06-18",
+      "completedBy": "[CTO]",
+      "resolution": "RETRACTED \u2014 MISDIAGNOSED. iOS CF-consumption code is PRESENT + correct (Obfs4Transport.selectTransportTarget\u2192.cloudfront\u2192dials cfURL+Bearer, verified in source). My 'iOS doesn't consume cloudfront_url' was a misread of a MISLEADING main-app log ('Bridge=91.194.84.79' + 'consumes when shipped' are app-side strings, NOT the transport's actual dial; the device export lacks the decisive [CC-CONNECT-TRACE target=cf/direct] line). Edge verified LIVE (edge.intellitiy.com\u2192188.114.x CF, /healthz ok). NOT an iOS rebuild.",
+      "resultingHandoff": "xd-NEXT to [QA]: proper masking diagnosis needs (a) FULL device Console log w/ [CC-CONNECT-TRACE target=...] to see real dial target, (b) prod backend session logs for the 03:55 'terminated by administrator' (heartbeat-revive deployed 2026-06-17 but session still reaped)."
+    },
+    {
+      "id": "xd-650",
+      "from": "[CTO]",
+      "to": "[QA]",
+      "title": "Handoff from CTO: Masking test INCONCLUSIVE on prod build 2026-06-18a (UAE) \u2014 need proper trace, NOT an iOS fix",
+      "description": "Supersedes retracted xd-649. Device log text-27B9E05308B1 (geo=AE): 03:52 CC connect 16s TIMEOUT to edge.intellitiy.com (CF rotation domain \u2014 LIVE from other nets, 188.114.x); 03:55 CC CONNECTED+handshake=ok+74KB traffic then backend heartbeat 'Session terminated by administrator' ~4s later. iOS CF-consume code verified correct in source; this export lacks [CC-CONNECT-TRACE target=] so dial-target unconfirmed. NEEDED: (1) full device Console log (Settings\u2192export or macOS Console) incl. [CC-CONNECT-TRACE]/[CasperCloak \ud83c\udf10 CDN-fronted target] lines; (2) prod backend logs ~2026-06-18T00:56Z for serverId 13f1a013 \u2014 why admin-terminated despite heartbeat-revive deploy (commit on prod). DO NOT ship until masking is confirmed end-to-end (TCP to a 104.x/188.114.x CF IP + holds).",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-06-18T04:22:47Z",
       "createdDate": "2026-06-18",
       "completedDate": null
     }
