@@ -20208,6 +20208,18 @@
       "createdAt": "2026-06-18T04:22:47Z",
       "createdDate": "2026-06-18",
       "completedDate": null
+    },
+    {
+      "id": "xd-651",
+      "from": "[CTO]",
+      "to": "[IOS]",
+      "title": "Handoff from CTO: CC cutdown ROOT CAUSE: heartbeat outraces backend ConnectionLog creation \u2192 false 'terminated by administrator' \u2192 iOS tears down a healthy tunnel",
+      "description": "DB-proven (user 2eecd0e6, D\u00fcsseldorf 13f1a013, 2026-06-18): device heartbeat fired 00:56:02.33 + got sessionActive:false at 00:56:02.60, but the ConnectionLog wasn't created until 00:56:02.73 (~130ms LATER). Session went ACTIVE (Status=0) at 00:56:10. So the 'terminated by administrator' was a RACE (heartbeat before log-create), churned further by 'RADIUS Start dedup (xd-513)'. iOS tore down a tunnel that was fine. NOT masking/ping/1h-sweeper. FIX (iOS primary): do NOT tear down on a SINGLE sessionActive:false right after connect \u2014 grace/retry the heartbeat 1-2x (the first heartbeat post-connect can outrun the backend log). Backend secondary: heartbeat should not return 'terminated' for a session whose /connect or config-fetch landed in the last ~10s (grace window), and/or create the ConnectionLog synchronously in /connect before the tunnel reports Connected.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-06-18T04:33:09Z",
+      "createdDate": "2026-06-18",
+      "completedDate": null
     }
   ],
   "importantNotes": [
