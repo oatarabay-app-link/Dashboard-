@@ -20202,7 +20202,7 @@
       "from": "[CTO]",
       "to": "[QA]",
       "title": "Handoff from CTO: Masking test INCONCLUSIVE on prod build 2026-06-18a (UAE) \u2014 need proper trace, NOT an iOS fix",
-      "description": "Supersedes retracted xd-649. Device log text-27B9E05308B1 (geo=AE): 03:52 CC connect 16s TIMEOUT to edge.intellitiy.com (CF rotation domain \u2014 LIVE from other nets, 188.114.x); 03:55 CC CONNECTED+handshake=ok+74KB traffic then backend heartbeat 'Session terminated by administrator' ~4s later. iOS CF-consume code verified correct in source; this export lacks [CC-CONNECT-TRACE target=] so dial-target unconfirmed. NEEDED: (1) full device Console log (Settings\u2192export or macOS Console) incl. [CC-CONNECT-TRACE]/[CasperCloak \ud83c\udf10 CDN-fronted target] lines; (2) prod backend logs ~2026-06-18T00:56Z for serverId 13f1a013 \u2014 why admin-terminated despite heartbeat-revive deploy (commit on prod). DO NOT ship until masking is confirmed end-to-end (TCP to a 104.x/188.114.x CF IP + holds).",
+      "description": "CONSOLIDATED honest state (supersedes retracted xd-649 + xd-651). CERTAIN from this session: (1) masking INFRA healthy \u2014 edge 12/12, backend mints CF URLs + domain rotation LIVE (served edge.intellitiy.com), control-plane masked via cdn.capablitys.com, relay ping_interval=None on all 13. (2) iOS self-heal on 'terminated' WORKS (recreates log, no teardown \u2014 log lines 950-962). (3) 03:55 prod session: obfs handshake=ok but PROBE[3s]=NO WG HANDSHAKE (tx6500/rx73868) \u2014 connected-but-no-inner-WG-handshake; outcome-after-3s unknown (log ends). (4) 03:52 prod session: 16s CONNECT TIMEOUT to edge.intellitiy.com (CF rotation domain, verified live from other nets). UNCERTAIN (the partial in-app export lacks the decisive lines; I misread it 3x): whether the tunnel dialed CF or bare IP (no [CC-CONNECT-TRACE target=]), and the real user-experienced cutdown. NEEDED before any ship/root-cause: (a) FULL device Console log (macOS Console, not in-app export) with [CC-CONNECT-TRACE target=]/[CasperCloak \ud83c\udf10 CDN-fronted]/WG-handshake lines; (b) controlled re-test capturing connect\u2192handshake\u2192steady-state. DO NOT ship until masking confirmed (TCP to 104.x/188.114.x CF IP) + WG handshake completes + holds.",
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-06-18T04:22:47Z",
@@ -20215,11 +20215,15 @@
       "to": "[IOS]",
       "title": "Handoff from CTO: CC cutdown ROOT CAUSE: heartbeat outraces backend ConnectionLog creation \u2192 false 'terminated by administrator' \u2192 iOS tears down a healthy tunnel",
       "description": "DB-proven (user 2eecd0e6, D\u00fcsseldorf 13f1a013, 2026-06-18): device heartbeat fired 00:56:02.33 + got sessionActive:false at 00:56:02.60, but the ConnectionLog wasn't created until 00:56:02.73 (~130ms LATER). Session went ACTIVE (Status=0) at 00:56:10. So the 'terminated by administrator' was a RACE (heartbeat before log-create), churned further by 'RADIUS Start dedup (xd-513)'. iOS tore down a tunnel that was fine. NOT masking/ping/1h-sweeper. FIX (iOS primary): do NOT tear down on a SINGLE sessionActive:false right after connect \u2014 grace/retry the heartbeat 1-2x (the first heartbeat post-connect can outrun the backend log). Backend secondary: heartbeat should not return 'terminated' for a session whose /connect or config-fetch landed in the last ~10s (grace window), and/or create the ConnectionLog synchronously in /connect before the tunnel reports Connected.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P0",
       "createdAt": "2026-06-18T04:33:09Z",
       "createdDate": "2026-06-18",
-      "completedDate": null
+      "completedDate": "2026-06-18",
+      "completedAt": "2026-06-18",
+      "completedBy": "[CTO]",
+      "resolution": "RETRACTED \u2014 WRONG (3rd misread of this partial log). iOS does NOT tear down on 'terminated by administrator'; ConnectionViewModel.swift:703-708 ALREADY self-heals (recreates ConnectionLog, keeps tunnel). Device log lines 950-962 PROVE it: after the false-terminated at 00:56:02.60, iOS logged 'Logging connection' \u2192 POST /connect \u2192 'Connected successfully' (id 1b38c017) and continued (bandwidth checks at 00:56:05). No teardown happened.",
+      "resultingHandoff": "Folded into xd-650. The partial in-app log export has caused 3 wrong root-causes (iOS-CF-consume, rotation-domain, teardown); proper diagnosis REQUIRES the full device Console log + a controlled re-test."
     }
   ],
   "importantNotes": [
