@@ -20224,6 +20224,18 @@
       "completedBy": "[CTO]",
       "resolution": "RETRACTED \u2014 WRONG (3rd misread of this partial log). iOS does NOT tear down on 'terminated by administrator'; ConnectionViewModel.swift:703-708 ALREADY self-heals (recreates ConnectionLog, keeps tunnel). Device log lines 950-962 PROVE it: after the false-terminated at 00:56:02.60, iOS logged 'Logging connection' \u2192 POST /connect \u2192 'Connected successfully' (id 1b38c017) and continued (bandwidth checks at 00:56:05). No teardown happened.",
       "resultingHandoff": "Folded into xd-650. The partial in-app log export has caused 3 wrong root-causes (iOS-CF-consume, rotation-domain, teardown); proper diagnosis REQUIRES the full device Console log + a controlled re-test."
+    },
+    {
+      "id": "xd-652",
+      "from": "[CTO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CTO: Enable masking IP-burn auto-rotation (prereq to flip StealthEnforcement ON)",
+      "description": "CEO chose 'enable rotation, THEN flip StealthEnforcement' (2026-06-18). Verified prod state shows auto-rotation is NOT functional yet \u2014 3 concrete prereqs: (1) CF REPOINT NOT WIRED: CloudflareDnsService.IsConfigured=false because env CloudflareDns__ApiToken is unset on the prod caspervpn-api container -> RepointAsync is a silent no-op ('CloudflareDns not configured - skipping repoint'). FIX: wire the EXISTING pompesh.com CF token (credentials.md CF section, token ID 5e879ca4cf33f9560edf7bc279965905, DNS:Edit on pompesh zone) as env CloudflareDns__ApiToken; confirm CloudflareDns__PompeshZoneId; recreate container; verify IsConfigured=true. (2) REPOINT UNVERIFIED LIVE: MaskingIpPromotionLogs has only 'add_reserve' rows, no burn->promote cutover. After (1), do a controlled RepointAsync test (repoint a spare/test A-record to a reserve and back; confirm CF A-record updates) \u2014 this is the 'verified live' gate the flag comment requires. (3) 6 of 12 NODES HAVE ZERO COLD RESERVE (Amsterdam, Dusseldorf, Los Angeles, Mexico City, Paris, Singapore) -> a burn there cannot auto-heal. Provision 1 ColdReserve IP per bare node from OneProvider + add via the admin masking-IP add_reserve endpoint (MaskingIps table; pool currently 12 Active + 10 ColdReserve, uneven: HK/Montreal/SaoPaulo/Tokyo=2, Miami/Sydney=1). THEN set env MaskingIp__AutoPromoteEnabled=true (>=0.90 confidence, 3/day, 6h cooldown) + recreate; confirm IpBurnDetectionService auto-path engages. Detection+alerting already LIVE (IpBurnDetectionService 15-min sweep -> LiveAlert >=0.80 in admin Alerts tab; BlockDetectionHostedService running) but alerts are admin-tab SSE only, NOT push/email \u2014 optionally wire APNS/email. ONCE rotation is functional + verified, hand back so StealthEnforcement__Enabled=true can be flipped (low incremental risk: iOS client already force-CC; relay CC fixes live; backend gate is defense-in-depth). All are prod config changes (env + container recreate) under SUBMISSION_FREEZE -> use the freeze-override path. \u26d4 Token wiring handles a SECRET \u2014 do it without echoing the value in any transcript/log.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-06-18T13:12:37Z",
+      "createdDate": "2026-06-18",
+      "completedDate": null
     }
   ],
   "importantNotes": [
