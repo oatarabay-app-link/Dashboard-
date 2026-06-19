@@ -20318,6 +20318,12 @@
       "date": "2026-06-19",
       "priority": "P0",
       "by": "[iOS]",
+      "message": "[iOS/CTO 2026-06-19 P0 INCIDENT+FIX] CEO 'phone has NO INTERNET after the build' (VPN connecting\u2192off loop, survives hotspot+restart). ROOT CAUSE = my L3 kill-switch over-reach (72f81698d): for restricted-region CasperCloak with Kill-Switch OFF, it FORCED includeAllNetworks=true (fail-closed). When the CC tunnel couldn't establish (here: Sign-in-with-Apple/login failed \u2192 no config), the pre-existing on-demand arm retried forever while includeAllNetworks blocked ALL traffic \u2192 total internet lockout persisting across app-kill/hotspot/restart (VPN config persists on device). FIX (03a3a81d7, on production via FF, build GREEN, 0 fail-closed refs): removed the forced-killswitch branch \u2014 leak-safety is now strictly OPT-IN via the explicit Kill Switch. NEVER force includeAllNetworks on a user who didn't enable it. USER RECOVERY: Settings\u2192VPN\u2192delete the CasperVPN config (or delete the app) \u2192 internet returns instantly. Live App Store users UNAFFECTED (shipped app is older, lacks L3). Needs CEO rebuild after Apple-signin sorted."
+    },
+    {
+      "date": "2026-06-19",
+      "priority": "P0",
+      "by": "[iOS]",
       "message": "[iOS/CTO 2026-06-19] ROOT-CAUSED the CEO 'reopen \u2192 dropped+disconnected' report (device log text-C9A1EE40F4E0): the L1 fix only covered kernel-stuck-.connecting; the case actually hit is recoverIfZombieOnForeground (CC tunnel dies in deep background \u2192 reopen \u2192 tear down + reconnect ~4s), which published .disconnected so the user saw a 'Disconnected' flash. FIX (775f892b2, on production via FF, build GREEN): gated the 4 publish points (disconnect 1473, kernel .disconnected 2864, connect 1041, kernel .connecting 2841) behind isZombieReconnecting so that teardown\u2192reconnect holds a steady 'Reconnecting\u2026' and only shows 'Disconnected' on genuine failure. NEEDS: CEO rebuild (Xcode\u2192TestFlight) \u2014 prior build lacked this. Does NOT prevent the background tunnel death itself (obfs-over-TCP limit; durable fix = MASQUE)."
     },
     {
