@@ -20431,6 +20431,18 @@
       "createdAt": "2026-06-21T22:19:45Z",
       "createdDate": "2026-06-21",
       "completedDate": null
+    },
+    {
+      "id": "xd-666",
+      "from": "[IOS]",
+      "to": "[QA]",
+      "title": "Handoff from IOS: xd-666 restricted-region flag Keychain-DURABLE (build-verified) \u2014 kills the WireGuard-fallback slow window",
+      "description": "BUILD-VERIFIED (xcodebuild arm64 Release iphoneos -> BUILD SUCCEEDED, CasperVPN.app) + pushed dev+prod. ROOT (CEO 'traffic slow' 2026-06-21): app dropped CasperCloak->WireGuard and ran ~15min on DPI-blocked WG. Gate is force-CC at VPNConnectionManager:1037 (if userInRestrictedRegion). That flag is escalate-only sticky in UserDefaults \u2014 but UserDefaults is WIPED on reinstall (CEO reinstalls each test) AND once connected the geo re-detection egresses the tunnel exit (cf-ray=MRS/Marseille => backend sees Europe not AE) so it couldn't re-escalate => flag false => WG. FIX (escalate-only, regression-safe, non-restricted users untouched): setBackendRestrictedRegion(true) now ALSO writes the flag to KEYCHAIN (survives reinstall); restoreStickyRegionFromKeychain() runs in AppDelegate.didFinishLaunching BEFORE any connect/geo so the first connect already forces CasperCloak. No connect/auto-connect/kill-switch path touched. BUILD MARKER 2026-06-21c. QA VALIDATE on a Clean-Build-Folder build from AE: (1) NO 'upgrading WireGuard->CasperCloak' mid-session; protocol stays CasperCloak (no WireGuard sessionIds); (2) bytesDownloaded grows healthily (not 20MB-up/0.5MB-down asymmetry); (3) after reinstall the FIRST connect is CasperCloak (flag restored from Keychain); (4) regression: a non-restricted region still connects normally (flag never set). STILL OPEN: verify de-3 relay runs jitter-removed caspercloak_ws.py (xd-665).",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-06-21T22:52:30Z",
+      "createdDate": "2026-06-21",
+      "completedDate": null
     }
   ],
   "importantNotes": [
