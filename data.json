@@ -20371,6 +20371,18 @@
       "createdAt": "2026-06-21T20:13:46Z",
       "createdDate": "2026-06-21",
       "completedDate": null
+    },
+    {
+      "id": "xd-661",
+      "from": "[IOS]",
+      "to": "[QA]",
+      "title": "Handoff from IOS: xd-661 AUTO UN-BRICK on launch \u2014 build-verified (KS launch-reconcile clears stale includeAllNetworks)",
+      "description": "BUILD-VERIFIED (xcodebuild arm64 Release iphoneos -> BUILD SUCCEEDED, CasperVPN.app produced) + pushed dev+prod. PROBLEM: a device bricked by a PRIOR build's fail-closed config (saved NEVPNManager/tunnel profile includeAllNetworks=YES + on-demand) stays bricked across app reinstall/update because the profile lives at the OS level; the per-toggle self-heal (xd-389) never runs because the user can't reach the KS toggle without internet. CEO CONFIRMED: 'I HAD TO CLEAN VPN CONFIGURATION TO BE ABLE TO SIGN IN' (2026-06-21). FIX: KillSwitchManager.reconcileSavedProfilesOnLaunch() called from AppDelegate.didFinishLaunchingWithOptions BEFORE sign-in; purely LOCAL (no network) so it runs while bricked; when KS OFF it rewrites any saved profile with includeAllNetworks==true back to false (fail-OPEN) -> internet restored, no manual delete. Narrow: only KS-off, only profiles in the bricking state (no healthy-launch blip), KS-ON untouched. BUILD MARKER 2026-06-21b. VALIDATE: (1) enable KS -> connect -> disable KS -> force-quit -> relaunch -> internet works (includeAllNetworks cleared, log '\ud83d\udd13 KS launch-reconcile'); (2) KS ON stays fail-closed (regression); (3) restricted-region CC still connects.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-06-21T20:51:49Z",
+      "createdDate": "2026-06-21",
+      "completedDate": null
     }
   ],
   "importantNotes": [
