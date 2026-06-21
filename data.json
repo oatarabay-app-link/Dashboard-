@@ -20383,6 +20383,30 @@
       "createdAt": "2026-06-21T20:51:49Z",
       "createdDate": "2026-06-21",
       "completedDate": null
+    },
+    {
+      "id": "xd-662",
+      "from": "[BACKEND]",
+      "to": "[IOS]",
+      "title": "Handoff from BACKEND: ROBUST fix: iOS must re-fetch a FRESH CF JWT on reconnect (TTL band-aid applied prod)",
+      "description": "ROOT of CEO 'frozen on Connecting after a while' (2026-06-21, build cf-fronting): CC fronting IS active (Obfs4Transport.selectTransportTarget Policy A picks .cloudfront when cloudfront_url+token present \u2014 confirmed backend sends both, tunnel receives both). The CF Worker JWT TTL was 15min (CloudfrontFrontingService MintCloudfrontJwt, JwtTtlMinutes??15). On reconnect after a long session the tunnel REUSES the cached (expired) token from providerConfiguration -> Worker 401 -> Policy A has NO fallback -> retry loop = frozen. MITIGATION DONE: prod JwtTtlMinutes=1440 (24h) in override.yml, api recreated --no-build, verified healthy. ROBUST FIX (this handoff): the app reconnect path (L2 jittered reconnect / on-demand re-arm) must re-call servers config to mint a FRESH token and restart the tunnel, instead of the tunnel reconnecting with the stale cached providerConfiguration. Then TTL can return to short. Also consider Policy C soft-pin (documented-unimplemented) so a CF failure falls back rather than looping.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-06-21T21:36:16Z",
+      "createdDate": "2026-06-21",
+      "completedDate": null
+    },
+    {
+      "id": "xd-663",
+      "from": "[CTO]",
+      "to": "[QA]",
+      "title": "Handoff from CTO: Investigate heartbeat 'session terminated' AT connect (the 'invalid VPN state' on login)",
+      "description": "CEO build cf-fronting 2026-06-21: at 20:43:47 the CC handshake VERIFIED (connected) but at the SAME second the heartbeat logged 'server reports session terminated for 13f1a013-...' (Dusseldorf). App-connected vs backend-session-terminated mismatch = likely the 'invalid VPN state' error the CEO saw on login. CEO now has active monthly sub, limit=0 (unlimited) so NOT over-limit. Candidate causes: stale prior-session reap / session-TTL (xd-646 revive may not cover this path) / a connect that races a still-terminating old session. Reproduce + confirm whether the session-TTL revive applies; if not, fix the connect-time session creation to supersede the terminated prior session cleanly.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-06-21T21:36:16Z",
+      "createdDate": "2026-06-21",
+      "completedDate": null
     }
   ],
   "importantNotes": [
