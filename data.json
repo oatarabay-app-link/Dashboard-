@@ -20311,6 +20311,18 @@
       "completedBy": "[QA]",
       "resolution": "QA PASS (code-verified + runtime smoke, 2026-06-19). StealthEnforcement gate VERIFIED FIRING origin-direct (localhost:8080, CF-IPCountry spoof honored off-CF): IR -> 409 region_requires_stealth/requiredProtocol=caspercloak/regionRestricted=true; US -> 200 (gate fires ONLY for restricted regions; valid minted JWT proves it's the gate not auth). Admin badge data LIVE: grid returns autoPromote{enabled:true,minConfidence:0.9,maxPerDay:3,cooldownHours:6} -> Masking IPs page shows 'Auto-rotation: ON'. Auto-rotation wired: AutoPromote=true + CF token active + repoint verified live. Masking A-/A (2026-06-18 audit; this deploy recreated api+admin-react only, did NOT touch relays/Worker -> fronting 101 + decoy 701B unchanged). Tier: TESTED (blue).",
       "resultingHandoff": "CEO \ud83d\udfe2 step (real-world): >=10 real region_requires_stealth 409s from a restricted region (AE/LB) + CC device test on build 2026-06-18a (also supplies masking \u00a74.5 real-traffic). Ops follow-up xd-652 (OneProvider 6 reserve IPs for full rotation coverage)."
+    },
+    {
+      "id": "xd-656",
+      "from": "[CTO]",
+      "to": "[QA]",
+      "title": "Handoff from CTO: CC SLOWNESS in UAE root-caused \u2014 client dialed BARE relay IPs (no CF-fronting in 2026-06-17 build); fresh build fixes",
+      "description": "CEO log 06-20 (build 2026-06-17-cc-bg-recovery), region AE. ROOT of 'slow + can't establish handshake': the client dialed BARE relay IPs (91.194.84.79:443, 51.158.147.210:443, 163.172.62.64, 103.75.119.122) \u2014 the CF-fronting WS-adapter was ABSENT ('CDN-fronting eligible (Worker URL forwarded; iOS WS-adapter consumes when shipped)'). UAE censor blocks/throttles bare datacenter IPs -> TCP connect timeouts + handshake-gate failures across DE/NL/FR/SYD -> ~73min retry storm (15:50->17:03) before one connected. Control-plane front cdn.capablitys.com ALSO timed out -> failover. NOT the relays (healthy, ping=None, 0 restarts) and NOT throughput (jitter removed). FIX: current HEAD Obfs4Transport NOW consumes cloudfront_url+cloudfront_auth_token -> dials .cloudfront (CF Worker, neutral SNI, CF anycast \u2014 uncensorable); backend already forwards both fields; Worker verified 101. So a FRESH BUILD from HEAD fixes slowness (fronting) + brick (includeAllNetworks revert 03a3a81d7) + freeze/reconnect (L1/L2 + on-demand clobber fix). QA/CEO VERIFY in UAE on a Clean-Build-Folder build: tunnel log BUILD TAG=2026-06-21-cf-fronting+brickfix (bumped; was stale at 2026-06-17 in HEAD), app BUILD MARKER 2026-06-18a, CC connect shows '\ud83c\udf10 CDN-fronted target: wss://<Worker>' NOT 'Attempting TCP connect to <bare IP>'/'Direct relay target'. This build also supplies masking \u00a74.5 real-traffic. SECONDARY [DEVOPS]: harden a UAE-reachable control-plane front (cdn.capablitys.com throttled in UAE).",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-06-21T19:41:11Z",
+      "createdDate": "2026-06-21",
+      "completedDate": null
     }
   ],
   "importantNotes": [
