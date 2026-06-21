@@ -20414,11 +20414,15 @@
       "to": "[IOS]",
       "title": "Handoff from CTO: SLOW traffic root: restricted-region session ran on WireGuard (DPI-blocked) ~15min before force-CC upgrade",
       "description": "CEO 'traffic slow' (build cf-fronting, prod api, 2026-06-21 log 21:24-22:12, region AE). VERIFIED: connection now HOLDS (JWT-TTL fix worked, sessionDuration climbs, no freeze-loop). SLOWNESS root: app DROPPED CasperCloak(sid d1f07b05)->WireGuard(sid 2366228b) at 21:24:42 and ran on WIREGUARD for ~15min until 'upgrading WireGuard->CasperCloak' fired at 21:39:05. WG is DPI-blocked in UAE -> downstream barely returns (heartbeats: 20.6MB up / 0.54MB down asymmetry = sends but blocked-WG drops the return). FIX: in a restricted region the RECONNECT path (network-change + zombie reconnect) must ALWAYS re-establish CasperCloak, never land on WG. Today force-CC upgrade is too late/intermittent (only fired once, 15min in). COMPOUNDING: 29x spurious 'network change (Cellular->Cellular)' restricted-region reconnect triggers in ~48min (NWPathMonitor same-type churn) + auth 401 thundering-herd recurring (xd-659).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P0",
       "createdAt": "2026-06-21T22:19:45Z",
       "createdDate": "2026-06-21",
-      "completedDate": null
+      "completedDate": "2026-06-22",
+      "completedAt": "2026-06-22",
+      "completedBy": "[IOS]",
+      "resolution": "Churn fix DONE: restricted-region reconnect now gated on a REAL interface transition or VPN-down (VPNConnectionManager). The WG-fallback half was fixed server-side by xd-667 (sticky region). Build-verified arm64. BUILD MARKER 2026-06-22a.",
+      "resultingHandoff": "xd-670 to QA for validation"
     },
     {
       "id": "xd-665",
@@ -20477,6 +20481,18 @@
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-06-22T00:43:35Z",
+      "createdDate": "2026-06-22",
+      "completedDate": null
+    },
+    {
+      "id": "xd-670",
+      "from": "[IOS]",
+      "to": "[QA]",
+      "title": "Handoff from IOS: xd-670 Validate reconnect-churn gate (build-verified) \u2014 no spurious Cellular\u2192Cellular reconnects",
+      "description": "BUILD-VERIFIED (xcodebuild arm64 -> BUILD SUCCEEDED, CasperVPN.app) + pushed dev+prod. Gates beginRestrictedRegionReconnectIfNeeded so it fires only on a REAL interface transition (from!=to) OR when !isAnyVPNActive; a same-interface NWPath blip on a healthy tunnel is skipped (was logging ENGAGED/coalescing 25-29x/session = needless work + periodic DPI retry signature). VALIDATE on a Clean-Build-Folder build (BUILD MARKER 2026-06-22a) from AE: (1) on a STABLE network with CasperCloak connected -> NO 'network change (Cellular->Cellular)' reconnect/coalesce spam; (2) Wi-Fi<->Cellular switch STILL reconnects; (3) kill the tunnel on same network -> still recovers (foreground probe / !isAnyVPNActive arm); (4) restricted-region force-CC intact. Cosmetic/stability polish \u2014 slowness already resolved (xd-667/xd-669).",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-06-22T00:52:31Z",
       "createdDate": "2026-06-22",
       "completedDate": null
     }
