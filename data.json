@@ -20443,6 +20443,30 @@
       "createdAt": "2026-06-21T22:52:30Z",
       "createdDate": "2026-06-21",
       "completedDate": null
+    },
+    {
+      "id": "xd-667",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: xd-667 sticky regionRestricted DEPLOYED+SERVER-VERIFIED \u2014 fixes WG-fallback slow (no rebuild needed)",
+      "description": "DEPLOYED prod (api rebuilt healthy) + SERVER-VERIFIED: minted CEO JWT + curl /api/servers with CF-IPCountry:DE (simulating tunnel exit) -> regionRestricted=TRUE (sticky from stored AE); CONTROL user same request -> FALSE (no regression). ROOT: once connected every API req egresses the VPN exit (cf-ray=DUS) so live CF-IPCountry=DE -> regionRestricted=false -> client never force-CC -> ran DPI-blocked WireGuard (CEO 'traffic slow', 40x WG/7x CC). FIX: ResolveRegionRestrictedStickyAsync persists a pre-tunnel restricted determination onto User.LastLoginCountry + honors it on tunnel-masked requests (escalate-only; ServersController:136 + smart-recommend). CEO LastLoginCountry seeded AE (was EMPTY). SERVER-SIDE -> works with CEO CURRENT build 2026-06-21c, just reconnect to re-fetch /servers. VALIDATE from AE: protocol=CasperCloak only, healthy download. OPEN: de-3 relay jitter (xd-665).",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-06-21T23:30:07Z",
+      "createdDate": "2026-06-21",
+      "completedDate": null
+    },
+    {
+      "id": "xd-668",
+      "from": "[BACKEND]",
+      "to": "[BACKEND]",
+      "title": "Handoff from BACKEND: Hardening: make RecordLoginAttribution escalate-only (don't clobber restrictive LastLoginCountry)",
+      "description": "Follow-up to xd-667. AuthService.RecordLoginAttributionAsync:1296 sets LastLoginCountry=CF-IPCountry unconditionally; a tunneled login could overwrite AE->DE, defeating sticky. Make escalate-only (don't overwrite when existing is restrictive; needs IsRestrictiveCountryAsync). Low pri \u2014 sticky helper re-captures on pre-tunnel /servers.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-06-21T23:30:07Z",
+      "createdDate": "2026-06-21",
+      "completedDate": null
     }
   ],
   "importantNotes": [
