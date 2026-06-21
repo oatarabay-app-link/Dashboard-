@@ -20335,6 +20335,42 @@
       "createdAt": "2026-06-21T19:48:55Z",
       "createdDate": "2026-06-21",
       "completedDate": null
+    },
+    {
+      "id": "xd-658",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: xd-657 over-limit CYCLE-aware fix DEPLOYED prod (verify) \u2014 was lifetime false-block",
+      "description": "DEPLOYED+verified PROD 2026-06-21 17:12 (api healthy, /health 200). OptimizedVpnServerService:980 + VpnServerService:600 now check CURRENT-CYCLE limit/used (was lifetime DataUsedBytes>=DataLimitBytes -> permanent false 'Data limit exceeded' after a cycle reset; CEO disconnected at 1.3MB used/512MB cycle). Mirrors FIX AY (cycle limit, plan fallback, review+unlimited(0) bypass). VALIDATE: free/expired account whose LIFETIME use exceeded the cap but CYCLE use is under it now gets a config (no 400). rebuild cmd on brain: cd /root/Casper/Casper-Code && docker compose build api && docker compose up -d api. ENV GAP: DEV brain 188.166.174.132 SSH key-denied to factory key -> dev branch has the code but dev api NOT rebuilt; needs dev-brain access to rebuild.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-06-21T20:13:46Z",
+      "createdDate": "2026-06-21",
+      "completedDate": null
+    },
+    {
+      "id": "xd-659",
+      "from": "[CTO]",
+      "to": "[IOS]",
+      "title": "Handoff from CTO: Auth 401 thundering-herd \u2014 add single-flight refresh coalescing",
+      "description": "CEO log 06-21 18:13:25: 5x HTTP 401 + 5x 'token expired-attempting refresh' in ONE second. Root: when the access token expires but a refresh token EXISTS, N concurrent pollers (/bandwidth/live @3s, heartbeat @30s, data-limit @60s) each independently 401 then each fire their own refresh = thundering herd. The #auth-resilience guard (APIClient.swift:168, 2026-06-16) only short-circuits when FULLY logged out (no refresh token) \u2014 it does NOT coalesce concurrent refreshes. FIX: single-flight refresh (one in-flight refresh; queue other requests until it resolves; retry once with the new token). Lower severity (refresh eventually succeeds) but causes log-flood + churn.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-06-21T20:13:46Z",
+      "createdDate": "2026-06-21",
+      "completedDate": null
+    },
+    {
+      "id": "xd-660",
+      "from": "[CTO]",
+      "to": "[IOS]",
+      "title": "Handoff from CTO: APNs entitlement missing \u2014 push notifications broken",
+      "description": "CEO log: 'APNs registration failed: no valid aps-environment entitlement string found' + 'no APNs token available - skipping register'. The build's entitlements lack aps-environment (or provisioning profile missing push). Fix CasperVPN.entitlements + the provisioning profile so push works. Not VPN-stability but a real gap.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-06-21T20:13:46Z",
+      "createdDate": "2026-06-21",
+      "completedDate": null
     }
   ],
   "importantNotes": [
