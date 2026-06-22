@@ -20555,6 +20555,18 @@
       "createdAt": "2026-06-22T22:46:34Z",
       "createdDate": "2026-06-22",
       "completedDate": null
+    },
+    {
+      "id": "xd-676",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: Verify live byte counter fix (sync now reads /wireguard/peer-stats, not /clients)",
+      "description": "BACKEND fixed the root cause of /api/bandwidth/live reading 0 for CasperCloak + stale for direct WG. WireGuardUsageSyncService was reading Flask GET /clients, which strips wg transfer counters, so it skipped every peer and never wrote ConnectionLog.BytesUploaded/Downloaded (dead since #4 / commit c38ea5aa). Fix: new IVpnServerControlService.ListPeerStatsAsync calls GET /wireguard/peer-stats (returns rx_bytes/tx_bytes/last_handshake) and the sync now uses it. Files: backend-dotnet-core/Services/VpnServerControlService.cs, WireGuardUsageSyncService.cs, VpnServerService.cs, appsettings.json. Build verified 0 errors. SAFETY: no retroactive caps (WireGuardPeerUsages empty \u2192 first delta=0), double-count guard added (sync sets BandwidthRecorded so disconnect skips), and the DESTRUCTIVE over-limit WG-peer cut is gated behind WireGuardUsage:EnforceDataCap=false (default) so it stays dormant. STATUS: pushed to origin/development (cfdb98c86); dev CI deploy queued behind busy uk-lon runner; NOT deployed to prod (awaiting CEO review per live-env-protection \u2014 feeds cap enforcement). QA TO VERIFY after deploy: (1) docker logs caspervpn-api shows [wg-sync] 'mapped pubkey...(deterministic)' lines; (2) BandwidthUsageLogs rows at ~20s cadence per active user; (3) /api/bandwidth/live bytesUploaded/Downloaded climb live for a CasperCloak session AND a direct WG session; (4) confirm NO spurious data-cap on free users (CurrentCycleDataUsedBytes climbs at a sane rate, no unexpected wg-peer removals while EnforceDataCap=false); (5) confirm no double-count: a WG session's cycle usage at disconnect \u2248 sum of in-session deltas (not 2\u00d7). Direction: wg rx_bytes(data_in)=client UPLOAD, tx_bytes(data_out)=client DOWNLOAD.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-06-22T23:43:46Z",
+      "createdDate": "2026-06-22",
+      "completedDate": null
     }
   ],
   "importantNotes": [
