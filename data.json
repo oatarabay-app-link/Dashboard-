@@ -20543,6 +20543,18 @@
       "createdAt": "2026-06-22T22:32:45Z",
       "createdDate": "2026-06-22",
       "completedDate": null
+    },
+    {
+      "id": "xd-675",
+      "from": "[DEVOPS]",
+      "to": "[QA]",
+      "title": "Handoff from DEVOPS: Verify BBR/TCP high-latency tuning on all 13 nodes (CasperCloak throughput)",
+      "description": "DevOps applied/verified BBR + fq qdisc + 16MB socket buffers + tcp_mtu_probing=1 across all 13 nodes to improve CasperCloak throughput for high-RTT (UAE ~95-220ms) users. FINDING: the 12 relays were already tuned+persisted (/etc/sysctl.d/99-cc-speed.conf) by a prior session; this session tuned the remaining node \u2014 the BRAIN UK-LON 178.62.101.221 (which runs a CC relay + terminates wg0/wg1). Brain BEFORE: cc=cubic,qdisc=fq_codel,rmem/wmem_max=212992,mtu_probing=0. Brain AFTER: cc=bbr,qdisc=fq,rmem/wmem_max=16777216,tcp_rmem='4096 131072 16777216',tcp_wmem='4096 16384 16777216',mtu_probing=1 (persisted in /etc/sysctl.d/99-caspervpn-bbr.conf + /etc/modules-load.d/bbr.conf; sysctl --system applied). Non-disruptive: no service restarts; live eth0/wg0/wg1 kept existing qdisc; CC :443/:9443 listeners intact; api.caspervpn.com/health=200; CEO 10h soak (live wg1 peers, handshakes <125s) undisturbed. ALL 13 nodes now uniform: cc=bbr,qdisc=fq,rmem_max=wmem_max=16MB,mtu_probing=1. QA TO VERIFY: (a) re-confirm all 13 nodes report bbr/fq/16MB via sysctl (sweep script pattern in devops session-log 2026-06-22); (b) CC :443 TLS handshake answers on each relay; (c) ideally a real UAE/high-RTT device throughput before/after on a CC connection (anticensorship skill: verify-with-real-logs \u2014 synthetic check != real-world masked throughput). RESIDUAL: relays lack BBR module pin in /etc/modules-load.d (sysctl auto-loads bbr fine; low reboot risk; left as-is to avoid editing 12 prod relay configs during soak). All changes runtime-reversible (rm drop-in + sysctl --system).",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-06-22T22:46:34Z",
+      "createdDate": "2026-06-22",
+      "completedDate": null
     }
   ],
   "importantNotes": [
