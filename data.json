@@ -20567,6 +20567,18 @@
       "createdAt": "2026-06-22T23:43:46Z",
       "createdDate": "2026-06-22",
       "completedDate": null
+    },
+    {
+      "id": "xd-677",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: Verify live byte counter fix on device (CC + direct WG sessions)",
+      "description": "[BACKEND] Fixed + DEPLOYED to prod (commit f9d16d74). Root cause: WireGuardUsageSyncService read Flask /clients which STRIPS wg transfer counters -> ConnectedClientDto.DataIn/DataOut null -> guard skipped every peer -> ConnectionLog.BytesUploaded/Downloaded (source of /api/bandwidth/live + device heartbeat) never written for any live WG/CasperCloak session (CC read 0/0; direct-WG read frozen stale residual e.g. 25027476). Fix: sync now reads /wireguard/peer-stats (rx_bytes/tx_bytes/last_handshake). Files: VpnServerControlService.cs (new ListPeerStatsAsync+PeerStatsResponse), WireGuardUsageSyncService.cs, VpnServerService.cs (legacy double-count guard \u00a79.6), appsettings.json. SAFETY: the destructive over-limit WG-peer cut is gated behind WireGuardUsage:EnforceDataCap (default FALSE) so accurate bytes do NOT retroactively cut/cap free users; verified 0 cut events post-deploy, 0 users in 80-100% band, no retroactive jump (peers seed at current counter, first delta=0). QA TO VERIFY: on a real device, connect via CasperCloak AND via direct WireGuard; confirm the heartbeat bytesUploaded/bytesDownloaded and /api/bandwidth/live climb (non-zero, ~every 20s) for BOTH, and that no free user is spuriously disconnected/capped. Backend already confirmed active ConnectionLogs now carry non-zero bytes (e.g. user 2eecd0e6 43480/7680). Awaiting CEO device \ud83d\udfe2.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-06-23T00:57:22Z",
+      "createdDate": "2026-06-23",
+      "completedDate": null
     }
   ],
   "importantNotes": [
