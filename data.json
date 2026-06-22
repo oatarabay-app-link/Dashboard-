@@ -20390,11 +20390,12 @@
       "to": "[IOS]",
       "title": "Handoff from BACKEND: ROBUST fix: iOS must re-fetch a FRESH CF JWT on reconnect (TTL band-aid applied prod)",
       "description": "ROOT of CEO 'frozen on Connecting after a while' (2026-06-21, build cf-fronting): CC fronting IS active (Obfs4Transport.selectTransportTarget Policy A picks .cloudfront when cloudfront_url+token present \u2014 confirmed backend sends both, tunnel receives both). The CF Worker JWT TTL was 15min (CloudfrontFrontingService MintCloudfrontJwt, JwtTtlMinutes??15). On reconnect after a long session the tunnel REUSES the cached (expired) token from providerConfiguration -> Worker 401 -> Policy A has NO fallback -> retry loop = frozen. MITIGATION DONE: prod JwtTtlMinutes=1440 (24h) in override.yml, api recreated --no-build, verified healthy. ROBUST FIX (this handoff): the app reconnect path (L2 jittered reconnect / on-demand re-arm) must re-call servers config to mint a FRESH token and restart the tunnel, instead of the tunnel reconnecting with the stale cached providerConfiguration. Then TTL can return to short. Also consider Policy C soft-pin (documented-unimplemented) so a CF failure falls back rather than looping.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-06-21T21:36:16Z",
       "createdDate": "2026-06-21",
-      "completedDate": null
+      "completedDate": null,
+      "iosNote": "[iOS 2026-06-23] FIX SHIPPED to dev+prod branches (BUILD MARKER 2026-06-23b). App-driven reconnects already re-fetch a fresh CF JWT; the remaining gap was a CC session FROZEN on .connecting/.reconnecting (Worker 401 from expired JWT) which recoverIfZombieOnForeground skipped (guards isConnected) and reconcileStuckTransientToReconnecting only relabeled. Added VPNConnectionManager.recoverIfCasperCloakStuckOnForeground() (foreground, CC-only, >12s-stuck, guarded) \u2192 tear down + connect(to:) \u2192 fresh /caspercloak-config token; wired in CasperVPNApp scenePhase. Build green arm64. NOT live until CEO Xcode\u2192TestFlight. Prod TTL=1440 stays as belt-and-suspenders."
     },
     {
       "id": "xd-663",
@@ -20538,11 +20539,12 @@
       "to": "[IOS]",
       "title": "Handoff from CTO: Multi-Hop: anti-DPI entry-rotation changes the EXIT country + UI shows stale server (CEO 'connected France, IP Germany')",
       "description": "CEO log 2026-06-22 (build 2026-06-21c, 10h stable on multi-hop). VALIDATED: 'connected to France but IP showed Germany' = the actual exit RELAY changed. DB ConnectionLogs show the CEO's exit hopped LA(US)->Dusseldorf(DE)->Paris(FR)->Amsterdam(NL) over a few hours. After turn-off+reconnect at 22:21 the restricted-region reconnect ENGAGED with 'entry rotation (max 12 attempts)'. In CasperCloak each entry domain s<N>.pompesh.com maps 1:1 to a specific relay/exit (s6=Dusseldorf/DE, s7=Paris/FR, ...), so rotating the entry domain ALSO rotates the exit country -> the public IP follows the rotated relay (Germany) while the app still displays the originally-selected server (France). Two problems: (1) the anti-DPI rotation changes the user's EXIT COUNTRY (a chosen 'France' doesn't stick); (2) the UI shows a STALE server (displayed France != actual relay Germany). RIGHT FIX (scope carefully, do NOT break the 10h-stable path): rotate only the stealth ENTRY (CF-fronting domain / obfs hop) while keeping the inner WG EXIT pinned to the user's chosen server; AND update the displayed server to the ACTUAL active relay. Geo verified: Paris IP=FR(Scaleway), Dusseldorf IP=DE(Essen). Proximity ranking xd-671 confirmed LIVE (servers ping-ordered Dusseldorf93/Amsterdam96/Paris97/SG108...). Traffic: counter stuck at 0 (accounting bug) -> throughput not measurable from logs; a WG burst showed 915KB up/199KB down; 10h session stable.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P2",
       "createdAt": "2026-06-22T22:32:45Z",
       "createdDate": "2026-06-22",
-      "completedDate": null
+      "completedDate": null,
+      "iosNote": "[iOS 2026-06-23] FIX SHIPPED to dev+prod (BUILD MARKER 2026-06-23b). \u26d4 MECHANISM CORRECTED: the stated cause (entry-domain rotation walking s1-s12 \u2192 rotates exit) is FALSIFIED for current prod data \u2014 every server's CasperCloakDomainPool is a SINGLE-element list of its own domain (verified live DB), so DomainPoolSelector rotation is a no-op (%1==0) and cannot change the exit. REAL cause: VPNConnectionManager.connect(to:) Phase-3 alternate fallback re-homes a FAILED CasperCloak server onto a different-COUNTRY alternate (getAlternateServers orders same-country-first but NOT same-country-only; France has 1 node \u2192 falls to Dusseldorf by load \u2192 German exit). FIX: gate the Phase-3 cross-country re-home for CasperCloak (pin viable alternates to chosen countryCode). UI already binds connectedServer so the display is correct once the exit is pinned. MH path needs NO change (connect(route:) uses the pinned route; CC\u2192WG fallback keeps the same route). Build green arm64. NOT live until CEO Xcode\u2192TestFlight."
     },
     {
       "id": "xd-675",
@@ -20591,6 +20593,21 @@
       "createdAt": "2026-06-23T01:56:48Z",
       "createdDate": "2026-06-23",
       "completedDate": null
+    },
+    {
+      "id": "xd-679",
+      "from": "[iOS]",
+      "to": "[QA]",
+      "status": "pending",
+      "priority": "P1",
+      "title": "Test pin-the-exit (CasperCloak no cross-country re-home) + JWT-refresh-on-reconnect on a fresh build (BUILD MARKER 2026-06-23b)",
+      "description": "iOS shipped two CasperCloak reconnect fixes to development+production (BUILD MARKER 2026-06-23b; build green arm64, .app+.appex produced). Validate on a CLEAN-BUILD-FOLDER device build (confirm '\ud83d\udd16 BUILD MARKER 2026-06-23b' near top of exported log; a stale build = retest void). (1) PIN-THE-EXIT: in a restricted region (or force-CC), pick a single-server CasperCloak server in a country with only ONE node (e.g. France/Paris), run a long session, induce a drop/reconnect \u2192 the public exit IP MUST stay that country (never silently become a neighbor like Germany), AND the in-app server card must show the same country. Before the fix, a failed CC connect re-homed to a different-country alternate by load. (2) JWT-REFRESH: long CC session beyond the CF-Worker JWT TTL, background for hours, reopen \u2192 tunnel must RECOVER to Connected with a fresh token (no permanent 'Connecting' freeze); log shows [cc-jwt-recovery] tearing down + reconnecting. (3) NO REGRESSION: non-restricted quick-connect on WireGuard \u2014 if the chosen server is down, the cross-country alternate fallback MUST still work (unchanged). Also confirm: kill switch still opt-in (no includeAllNetworks brick), churn-gate intact, single-server bg-recovery intact. Files: VPNConnectionManager.swift (Phase-3 gate + recoverIfCasperCloakStuckOnForeground), CasperVPNApp.swift (scenePhase wiring), AppDelegate.swift (marker). CLIENT-ONLY \u2014 not live until CEO Xcode\u2192TestFlight. Relates xd-662 (FIX 2) + xd-674 (FIX 1, mechanism corrected vs original handoff).",
+      "taskRef": "xd-662",
+      "criteriaIdx": [],
+      "createdAt": "2026-06-22T23:33:39Z",
+      "dueBy": "2026-06-25T23:33:39Z",
+      "handoffTo": "[CEO]",
+      "handoffNote": "After QA pass, CEO device-tests on a restricted-region build and marks \ud83d\udfe2: France stays France on CC reconnect; no Connecting-freeze after long bg."
     }
   ],
   "importantNotes": [
