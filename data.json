@@ -20656,6 +20656,30 @@
       "createdAt": "2026-06-24T01:35:07Z",
       "createdDate": "2026-06-24",
       "completedDate": null
+    },
+    {
+      "id": "xd-684",
+      "from": "[IOS]",
+      "to": "[QA]",
+      "title": "Handoff from IOS: Test build 2026-06-24b (xd-686): user no longer kicked out on a transient/network refresh failure",
+      "description": "ROOT FOUND + FIXED: AuthService.ensureValidSession() returned false (\u2192 AppCoordinator logout 'redirecting to login') on ANY refresh error \u2014 INCLUDING a network/timeout (the refresh request times out through a stuck/connecting CC tunnel; device logs show 'subscription refresh failed: Network error: The request timed out' constantly). The refresh token was VALID; the request just couldn't reach the server. Fix: only return false on a GENUINE auth rejection (APIError.unauthorized 401 / AuthError.noRefreshToken); a network/transient error now KEEPS the session and lets the normal 401-retry recover. TestFlight log AD82751A (21.5h, build 06-17/21) confirmed resilient builds survive (16x 401 all refreshed, 0 logout). TEST 24b: induce a tunnel-stuck state + foreground \u2192 confirm you are NOT kicked to Login; only a real token rejection should log out.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-06-24T01:53:01Z",
+      "createdDate": "2026-06-24",
+      "completedDate": null
+    },
+    {
+      "id": "xd-685",
+      "from": "[IOS]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from IOS: Deploy relay session-resumption (#52) \u2014 CONFIRMED connection-break root",
+      "description": "CONFIRMED relay-side: Sydney relay caspercloak_ws.py has ZERO session-resumption support (grep X-CC-Session|resume|grace|reuse = 0 matches). So when the obfs WS drops on a network PATH CHANGE, the client's resume cannot be honored \u2192 'transport state -> error(resume-exhausted (better-path))' \u2192 the CC session TEARS DOWN on every path change (= the CEO's 'connection keeps breaking'). Per the anti-censorship skill, #52 session-resumption was BUILT + offline-proven (Build 56, both relay variants) but the LIVE RELAY DEPLOY was HELD pending repo<->live relay-drift reconciliation. ACTION: deploy the #52 relay variant under the skill's CAREFUL rollout \u2014 Bangkok-first, CORRECT websockets variant per node (DE/NL/FR=Py3.8/ws13.1 v13 variant, others v16; re-pushing v16 to a Py3.8 node RE-BREAKS it), 3-way source sync, then >=10 real RESUME logs/12h verify. Do NOT bulk-push blind. Relays currently unchanged since 06-16.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-06-24T01:53:01Z",
+      "createdDate": "2026-06-24",
+      "completedDate": null
     }
   ],
   "importantNotes": [
