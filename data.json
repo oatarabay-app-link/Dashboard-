@@ -20620,6 +20620,18 @@
       "createdAt": "2026-06-23T03:19:03Z",
       "createdDate": "2026-06-23",
       "completedDate": null
+    },
+    {
+      "id": "xd-681",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: Free-cap live-change enabler (build-verified, pushed dev+prod, AWAITING DEPLOY) \u2014 test cascade + dynamic 402",
+      "description": "BUILD-VERIFIED (dotnet build CasperVPN.csproj -c Release -> Build succeeded, 0 errors) + pushed dev+prod. NOT deployed, NO DB change, cap value UNCHANGED (512MiB). Enables changing the free cap LIVE from the admin panel later (no iOS build, no per-change redeploy). TWO changes: (1) SubscriptionService.UpdatePlanAsync (lines 259-330): when UpdatePlanRequest.DataLimitBytes is provided AND differs, cascades the new limit to all users on that plan via EF8 ExecuteUpdateAsync \u2014 sets BOTH DataLimitBytes + CurrentCycleDataLimitBytes (applies immediately, not just next cycle), preserves CurrentCycleDataUsedBytes (usage untouched), 0=unlimited honored, only fires on actual change. (2) ServersController.cs:101 + VpnController.cs:82: the 402 over-limit message now renders usage.FormattedLimit (cycle-aware: CurrentCycleDataLimitBytes>0 ? that : planLimit, run through BandwidthMonitoringService.FormatBytes) instead of hardcoded '512 MB'. MultiHopController.cs:101 already generic (no change). TEST AFTER DEPLOY: in admin Package Management change Free plan DataLimitBytes -> verify (a) existing free users' CurrentCycleDataLimitBytes updates immediately, (b) the 402 message shows the NEW size, (c) paid/unlimited (limit=0) users unaffected, (d) usage counters preserved. CAVEAT: cascade overwrites any per-user DataLimitOverride on that plan (consistent with existing AdminController:1596 plan-assign behavior; rare edge case).",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-06-23T04:11:19Z",
+      "createdDate": "2026-06-23",
+      "completedDate": null
     }
   ],
   "importantNotes": [
