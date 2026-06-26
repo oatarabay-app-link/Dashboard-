@@ -20732,6 +20732,18 @@
       "createdAt": "2026-06-26T22:20:11Z",
       "createdDate": "2026-06-26",
       "completedDate": null
+    },
+    {
+      "id": "xd-690",
+      "from": "[DEVOPS]",
+      "to": "[QA]",
+      "title": "Handoff from DEVOPS: Apple App Store Server API creds now LIVE \u2014 reconcile receipt capture",
+      "description": "DELIVERED (DevOps, 2026-06-26): Apple App Store Server API credentials are now LIVE in prod caspervpn-api. ROOT CAUSE: the trio (Apple__IssuerId, Apple__SubscriptionKeyId, Apple__SubscriptionSigningKeyPath) + apple.p8 mount lived ONLY in the dead docker-compose.override.yml, which auto-deploy never merges (explicit `-f docker-compose.yml` suppresses the override) -> live container had EMPTY Apple Server-API creds -> AppleReceiptService.BackfillFromAppStoreServerAsync was a logged no-op (Configured=false) -> App Store receipt under-capture. APPLIED + VERIFIED LIVE (measured): surgical `up -d --no-deps --no-build api` (freeze intact, brain NOT git-reset). printenv shows IssuerId(len36)/SubscriptionKeyId=U287A7XF65/SubscriptionSigningKeyPath=/app/apple.p8; /app/apple.p8 present + readable by appuser ('-----BEGIN PRIVATE KEY-----'); /health=200; StealthEnforcement stays false; CryptoSync/Activation unchanged (blank, no regression). Tracked in production docker-compose.yml commit bf6bfafc (durable for CI/freeze-lift). .p8 stays brain-only at secrets/apple.p8 (never committed). QA TO DO (CEO-gated PAYMENTS): (1) Trigger POST /api/admin/payments/backfill-apple (admin auth); idempotent, ledger-rows-only, never touches entitlement. Confirm response Configured=true (was false). (2) Compare DB capture vs App Store Connect. READ-ONLY BASELINE NOW: Payments Method=AppleIAP(4) = 346 rows / $3413.86 (only method present). Post-backfill count/sum should rise toward App Store renewal history. (3) Report delta. STAY \ud83d\udfe1 until CEO verifies \ud83d\udfe2. FILES: docker-compose.yml (prod bf6bfafc + brain local); AppleReceiptService.cs:292; AdminController.cs:62. RESIDUAL: backfill is manual-trigger only (no scheduler) -> recommend a periodic reconcile job as a follow-up task.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-06-26T22:48:49Z",
+      "createdDate": "2026-06-26",
+      "completedDate": null
     }
   ],
   "importantNotes": [
