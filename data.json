@@ -21085,9 +21085,27 @@
       "createdAt": "2026-06-28T01:54:33Z",
       "createdDate": "2026-06-28",
       "completedDate": null
+    },
+    {
+      "id": "xd-707",
+      "from": "[CTO]",
+      "to": "[QA]",
+      "title": "Handoff from CTO: Verify /api/servers proximity order live (empty LastLoginCountry fallback) \u2014 prod d0204764",
+      "description": "ROOT-CAUSE FIX deployed to production (commits d0204764 ServersController.cs + c40034d5 ClientGeoExtensions.cs). BUG (QA-proven xd-671/xd-667, WORLDWIDE): /api/servers proximity ordering (OrderByProximity) was gated ONLY on the persisted Users.LastLoginCountry, which is EMPTY for 85/116 prod users (73%, MEASURED 2026-06-29 \u2014 incl. CEO oatarabay@gmail.com). When empty the sort was SILENTLY SKIPPED -> /api/servers returned a non-proximity list (Sydney, Ping=0, first) -> users stranded on a far server. FIX: new ClientGeoExtensions.ResolveProximityRegionAsync resolves the proximity region through a fallback chain (LastLoginCountry -> CF-IPCountry header -> local .mmdb GeoIP of the REAL client IP -> client regionHint) so ordering NEVER silently skips; PLUS a self-heal write-back that backfills LastLoginCountry from a server-trusted signal on the highest-traffic authed endpoint. VERIFY (live): (1) log in as a user with empty LastLoginCountry (or the CEO) from a known region; GET /api/servers; the FIRST server must be geographically nearest (NOT Sydney/Montreal) and carry a non-zero Ping distance estimate. (2) Confirm a 2nd /api/servers call self-healed Users.LastLoginCountry (now populated). PROVEN: backend build 0 errors against the production file; commits live on production (helper present in both files, xd-693 code preserved). PENDING: live request ordering proof on device/server (this task). REBUILD PENDING \u2014 parent agent batches one prod api container rebuild across the parallel backend tasks; this code is pushed but not yet running until that rebuild.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-06-29T23:10:01Z",
+      "createdDate": "2026-06-29",
+      "completedDate": null
     }
   ],
   "importantNotes": [
+    {
+      "date": "2026-06-29T20:10:01Z",
+      "from": "[BACKEND]",
+      "priority": "P1",
+      "note": "[ROOT-CAUSE FIX, WORLDWIDE \u2014 pushed prod, rebuild pending] '/api/servers gives a far server' root cause MEASURED: proximity ordering was gated only on Users.LastLoginCountry, EMPTY for 85/116 users (73%, incl. you). Empty field -> sort skipped -> Sydney/far server first. Fix (prod commits d0204764 + c40034d5): proximity now falls back CF-IPCountry -> local GeoIP of your real IP -> regionHint, and self-heals the empty field going forward. Backend build 0 errors. Awaiting the parent's batched api rebuild, then QA live-order verify (handoff to QA created)."
+    },
     {
       "date": "2026-06-27",
       "priority": "P1",
@@ -21167,6 +21185,12 @@
       "message": "[DevOps/CTO 2026-06-13] Dedicated-IP egress VERIFIED, not broken. syd-01 (.124) + mia-01 (.248) egress on their dedicated IP when sourced from the internal /32 (proven via ipify+ifconfig.me; SNAT counter fired; reboot-safe via netfilter-persistent). OneProvider routing is FINE \u2014 NO escalation. KNOWN TRAP (anti-loop): to test dedicated-IP egress, source from the INTERNAL /32 (10.66.x.254); NEVER curl --interface <public-dedicated-ip> \u2014 that bypasses the SNAT rule, hits the blanket MASQUERADE, and falsely shows the node main IP. Open: Backend confirm client gets 10.66.x.254 (xd-633), QA real-device whatismyip (xd-634). EU dedicated IP recommended for Gulf latency (Frankfurt/Paris ~2x closer than Sydney/Miami); procurement deferred by CEO."
     },
     {
+      "priority": "P1",
+      "date": "2026-05-19",
+      "note": "[MARKETING 2026-05-19 06:04 UTC scheduled-run #5] VERIFICATION-ONLY (anti-loop). PP/ToS live state v1.1 + 'February 15, 2026' STABLE across 5 consecutive scheduled runs over 2 days (verified via direct <strong>Version:</strong> 1.1 grep at HTML offsets 10785 /privacy + 10694 /terms). xd-535 P0 -> [WEBSITE] for v1.4 stamp + Effective Mar 5/6 bump now 6 DAYS DEFERRED (created 2026-05-12T20:00Z). Source markdown docs/legal/PRIVACY_POLICY.md is v1.4 ready \u2014 task is a single L32 string edit on website/app/privacy/page.tsx + terms/page.tsx. Press-outreach gate STILL BLOCKED. Sitemap +4 category-page delta investigated: 22 published posts stable, +5 /blog/category/* index pages are new sitemap.ts coverage (no content regression). Pricing ladder clean across pricing/checkout/faq/download (zero $12.99/$64.99/$199.99/save58% hits). 5 previously-404 blog posts HTTP 200 stable. GSC meta still absent (xd-214 CEO action). Zero new xd-tasks filed (would dup xd-535/xd-624/xd-506/xd-214). Skill 'caspervpn-marketing' updated on prod+dev (sitemap-category lesson + verified-truths 5-run bump).",
+      "from": "[MARKETING]"
+    },
+    {
       "date": "2026-05-18",
       "priority": "P3",
       "by": "[MARKETING]",
@@ -21239,6 +21263,20 @@
       "priority": "P1"
     },
     {
+      "date": "2026-05-15",
+      "priority": "P0",
+      "category": "Marketing",
+      "addedBy": "[MARKETING]",
+      "note": "[MARKETING 2026-05-15 scheduled-run] VERIFICATION ONLY \u2014 no production touches. PRICING: /pricing re-confirmed CLEAN (.99/9.99/49.99 + save 50%). ASO: xd-009/aso-metadata 8/8 AC met (AC[0-5,7] qa-tested 2026-05-10; AC[6] preview video still gated on xd-098 CEO physical-iPhone capture \u2014 DESIGN/iOS owned, no marketing action). ESCALATION: both SEO P0s filed 2026-05-14 remain LIVE & unattended ~24h \u2014 xd-548->[CTO] (sitemap.xml still returns 0 /blog/* URLs) and xd-549->[WEBSITE] (4 blog posts still 404: best-vpn-china, vpn-with-kill-switch, vpn-lebanon, best-vpn-lebanon). These need a DB-side fix (Prisma BlogPost seed + sitemap query) \u2014 NOT a website/** push, so marketing cannot self-resolve under the xd-529 override gate. CEO nudge requested to unblock WEBSITE/CTO. No crossDeptTasks currently assigned TO [MARKETING]; queue clean."
+    },
+    {
+      "date": "2026-05-15",
+      "priority": "P1",
+      "category": "QA",
+      "addedBy": "[QA]",
+      "note": "[QA 2026-05-15 scheduled-run] LATENT PRICING DEFECT: caspervpn.com checkout API is a UI/API price mismatch. Live UI (/pricing /faq /download) correctly shows $9.99/$59.99/$149.99 \u2014 re-verified PASS. BUT the production branch's website/app/api/payments/checkout/route.ts PLANS dict still has the OLD prices ($12.99/$64.99/$199.99) \u2014 the P0 fix commit 5cfdf5d3 only reached `development`. deploy-website.yml ships from `production`. Today it's harmless (checkout 503s \u2014 no payment provider configured), but checkout WILL overcharge the moment a provider goes live. Filed xd-551 -> [WEBSITE] P1. xd-527 downgraded to PARTIAL PASS (UI tested, API gate deferred). Also: DO Production disk at 90% -> xd-552 [DEVOPS] P2. ZERO production touches this run."
+    },
+    {
       "date": "2026-05-14",
       "priority": "P0",
       "category": "Marketing",
@@ -21252,6 +21290,20 @@
       "text": "[2026-05-13 MARKETING] Scheduled-run verification + structural finding. PRICING: /pricing /faq /download confirmed CLEAN ($9.99/$59.99/$149.99 + save 50%). xd-527 still holds. BLOG 404s: 4 posts still missing on caspervpn.com (best-vpn-china, vpn-with-kill-switch, vpn-lebanon, best-vpn-lebanon). ROOT CAUSE FOUND \u2014 blog is DB-backed (Prisma BlogPost), NOT file-backed. Redeploying the Next.js app does NOT publish marketing/blog/*.md files. Previous handoffs xd-512/518/522/525/530 to [WEBSITE] were structurally wrong (asked for \"redeploy\" when the actual ask is \"DB upsert\"). FILED today: (a) reframed handoff to [WEBSITE] with 3 concrete options for DB ingestion, (b) handoff to [CTO] requesting pipeline automation, (c) companion handoff bumping seed.ts cleanup P3\u2192P2 (NEW: QRE \"available now\" press-release drift in addition to known pricing drift). Override gate from xd-529 NOT met \u2014 marketing did NOT direct-push. Zero production touches this session. Skill updated to codify the pipeline reality."
     },
     {
+      "date": "2026-05-13",
+      "priority": "P1",
+      "category": "MARKETING",
+      "text": "[2026-05-13 MARKETING scheduled-run verification #2] Re-verified live caspervpn.com state. PRICING: still clean ($9.99 / $59.99 / $149.99 / save 50%). BLOG: gap grew from 4 \u2192 5 (no-log-vpn now confirmed 404; .md cornerstone published 2026-05-11 but never DB-upserted). xd-530 + xd-536 descriptions refreshed to reflect 5-post gap. PP/ToS: live still at v1.1 while docs/legal/ source is v1.4 (NOT v1.3 as xd-535 had said \u2014 handoff title + body now corrected). Press outreach (35 targets) still blocked. INBOUND: 0 open handoffs TO marketing. No direct-push override gate met. Zero production touches.",
+      "createdBy": "[MARKETING]"
+    },
+    {
+      "id": "note-2026-05-12T18:30:03Z",
+      "date": "2026-05-12",
+      "severity": "P1",
+      "message": "[MARKETING verify 2026-05-12] Live caspervpn.com state confirmed via scheduled run: (a) /pricing serves Monthly $9.99 + Annual $59.99 (save 50%) + Lifetime $149.99 \u2014 xd-527 P0 fact PROVEN (QA still owns formal sign-off). (b) 5 comparison blogs LIVE with Cure53 'audit planned / firm not yet engaged' hedge \u2014 xd-512 partial. (c) 4 newer blogs still 404: /blog/best-vpn-china, /blog/vpn-with-kill-switch, /blog/vpn-lebanon, /blog/best-vpn-lebanon \u2014 xd-518/522/525 awaiting WEBSITE redeploy. P1 nudge filed as xd-530.",
+      "createdBy": "[MARKETING]"
+    },
+    {
       "date": "2026-05-11",
       "text": "[2026-05-11 MARKETING/P0 \u2014 scheduled-run nudge #2] Pricing drift confirmed STILL LIVE on caspervpn.com/pricing as of 2026-05-11 (curl returns $12.99/$64.99/$199.99 + 'save 58%'). StoreKit/ASC ground truth = $9.99/$59.99/$149.99 + 'save 50%'. Patch staged 2026-05-10 (8 files, 14 occurrences). Today's state report at Dropbox/Marketing-Reports/MARKETING-STATE-REPORT-2026-05-11b.md enumerates 4 CEO decision options (A approve patch, B raise StoreKit, C hybrid, D defer). Pre-mortem flags Stripe STRIPE_PRICE_IDS env coupling \u2014 verify before deploy: `docker exec caspervpn-api env | grep STRIPE_PRICE`. Also: new SEO cornerstone marketing/blog/no-log-vpn.md (14K/mo, P0 Cluster 3) pushed to production this run; no dashboard task \u2014 it's ongoing seo-content work, the seo-content task is already 8/8 AC met."
     },
@@ -21259,6 +21311,11 @@
       "date": "2026-05-11",
       "priority": "P0",
       "text": "[2026-05-11 MARKETING/P0 nudge] Pricing drift from 2026-05-10 still LIVE on caspervpn.com/pricing ($12.99/$64.99/$199.99). Patch staged at Dropbox/Marketing-Reports/PRICING-DRIFT-PATCH-READY-2026-05-10.md \u2014 8-file diff ready for CEO approval. Pre-mortem: confirm Stripe STRIPE_PRICE_IDS env still references $59.99 product so checkout will not break after copy fix. iOS StoreKit/ASC ground truth = $9.99/$59.99/$149.99."
+    },
+    {
+      "date": "2026-05-11",
+      "priority": "P0",
+      "text": "[2026-05-11 MARKETING/P0 RESOLVED] Pricing drift fixed at source. 8 website files patched on production branch (commit series '[MARKETING] P0 pricing drift fix \u2192 ASC ground truth'). deploy-website.yml run #101 in_progress at time of write. Live site caspervpn.com/pricing should reflect $9.99/$59.99/$149.99 + save 50% within 3-5 min of run completion. Followups: xd-527 \u2192 [QA] live verification (P0) | xd-528 \u2192 [WEBSITE] seed.ts blog cleanup (P3) | xd-529 \u2192 [CTO] process review on the marketing-direct-prod-push escalation pattern (P2)."
     },
     {
       "date": "2026-05-10",
@@ -21281,32 +21338,6 @@
       "body": "Scheduled audit 2026-05-02 05:09 UTC. Read surface: 30/31 advanced-admin endpoints HTTP 200 with real-DB data (knowledge-base 5 cats/1 article/5 FAQs, packages 14 plans, revenue-intelligence, resellers 3 partners, NATS 2 servers, server-intelligence 13 servers, threat-intelligence 10 threats/5 fraud scores). Write surface: 5/5 expected-501 stubs (xd-492 BACKEND) still returning 501 with table-migration messages \u2014 no regression. 2/2 soft-200 stubs (Stripe Connect) still returning 200 with TODO. Affiliate review flow E2E TESTED: PATCH /api/admin/website/affiliates/{id}/status flips active\u2194suspended (200, atomic, persists). caspervpn-admin-react Up 6d healthy, admin.caspervpn.com 200, api.caspervpn.com/health 200. Single non-canonical 404: /api/admin/affiliates (legacy alias; canonical = /api/admin/website/affiliates). No admin-side code changes \u2014 outstanding work is BACKEND (xd-492) + PRODUCT (xd-472)."
     },
     {
-      "createdAt": "2026-05-01T05:14:23Z",
-      "createdBy": "[ADMIN-PANEL]",
-      "priority": "P3",
-      "text": "[ADMIN-PANEL 2026-05-01] xd-309 verification PASSED: 31/31 admin advanced endpoints live with real DB data (knowledge-base, packages, revenue/server/threat intelligence, resellers, NATS). 5 PATCH/POST write-stubs still 501 \u2014 handed off to BACKEND as xd-492. Plans table has 14 rows but only 4 conceptual tiers (rest are billing variants). Affiliate review flow (WebsiteAffiliates.tsx) wired and functional via /api/admin/website/affiliates."
-    },
-    {
-      "id": "note-backend-radius-prov-broken-2026-05-01",
-      "category": "production-bug",
-      "priority": "P1",
-      "status": "open",
-      "department": "backend",
-      "createdAt": "2026-05-01T03:42:19Z",
-      "createdDate": "2026-05-01",
-      "title": "[BACKEND] P1 \u2014 RADIUS user creation broken: localhost:3000 default endpoint, 10 fails/4d",
-      "body": "ROOT CAUSE: Helpers/Settings.cs:32 RadiusSettings.ApiEndpoint default = 'http://localhost:3000/api/radius'. Production caspervpn-api container has Radius__Host/Port/ApiKey/Secret env vars set but NO Radius__ApiEndpoint, so default fires. localhost:3000 has no listener -> Connection refused. EVIDENCE: caspervpn-api ERR logs 10x in last 24h: 'Error creating RADIUS user: <username>' with 'System.Net.Http.HttpRequestException: Connection refused (localhost:3000)'. DB EVIDENCE: caspervpn DB has 28 Users with RadiusUsername set, but radcheck has only 1 row (an Apple sub id). Confirmed user tony.wheibe@gmail.com signed up 2026-04-30 17:07:55 UTC, RadiusUsername=tony.wheibe_6cbd2967, but absent from radcheck. ~35% of new signups affected since deploy. IMPACT ASSESSMENT: User registration succeeds (.NET continues past failure - fire-and-forget). WireGuard auth bypasses RADIUS (peer-key based) so iOS WG users unaffected. IKEv2 / OpenVPN-CHAP / strongSwan flows that look up radcheck WILL fail auth for all affected users. Apple sub-id auth path (1 row in radcheck) writes via separate path -- still working. Bigger structural finding: HTTP RadiusService base URL pattern is broken-by-design - no service ever served PUT /user/{username}/attributes. FreeRADIUS uses sql module directly against caspervpn DB radcheck table. The .NET HTTP RADIUS API approach should likely be replaced with direct SQL writes to radcheck. Spawned: xd-490 (DevOps env bandaid), xd-491 (CTO architectural decision)."
-    },
-    {
-      "id": "note-devops-audit-2026-05-01",
-      "priority": "P3",
-      "title": "[DEVOPS] 2026-05-01 audit \u2014 fleet GREEN, notify-failure cascade root-caused",
-      "content": "DEVOPS scheduled audit 2026-05-01 (autonomous). NL Primary (178.62.101.221): uptime 9d10h, load 0.27, mem 1.9G/7.8G (5.9G avail), disk 39G/48G=81% (stable vs 04-29 baseline), 17/17 containers Up (6 healthchecked). Public HTTP all 200: api 65ms, www 76ms, admin 56ms. WG wg0 listening, strongSwan up (0 SAs = idle), FreeRADIUS 1812/18120 OK, Prometheus 0 firing alerts, TLS valid until 2026-06-24 (~54d), fail2ban 2 currently / 183 total banned, SUBMISSION_FREEZE.lock removed. Legacy 4/4 reachable: LA-2 34d/1%, DE-3 61d/3%, AMS-4 3d17h/3%, Paris-5 61d/1%. Fleet 8/8 ICMP-reachable; mia-01 + tyo-01 sample SSH+wg0+OVPN+Flask:5002 all 200. CI/CD: notify-failure.yml cascade ROOT-CAUSED \u2014 workflow runs end with conclusion=failure but 0 jobs/0 check-runs, indicating expression-evaluation failure. Likely cause: `if: ${{ secrets.DISCORD_WEBHOOK != '' }}` at step level \u2014 GH Actions disallows direct secrets reference in step `if` since the runner can't evaluate without exposing the secret. Recommended fix (defer to interactive session): wrap secret in step `env:` then check `env.DISCORD_WEBHOOK`. Production impact: ZERO (notification-only workflow). Cosmetic/observability only. OPEN BACKLOG (unchanged): xd-427 (deploy-website.yml rewrite, P2), xd-465 (sharp+Prisma /api/track, P2), xd-481 (asc_preflight CI wiring, P2), xd-391 (Flask SetMonthlyDataLimit endpoint \u2014 backend-blocked). ASSIGNED TASKS: monitoring-prometheus 8/8, server-expansion 8/8, ci-cd-pipeline 9/9 \u2014 all green. No destructive changes this session. Confidence 99% on infra-green, 90% on notify-failure root-cause.",
-      "createdAt": "2026-05-01T03:18:00Z",
-      "createdDate": "2026-05-01",
-      "owner": "devops"
-    },
-    {
       "id": "note-website-audit-2026-04-29",
       "department": "website",
       "title": "[WEBSITE] 2026-04-29 autonomous audit \u2014 production-verified, 3 SEO defects found",
@@ -21317,84 +21348,12 @@
       "body": "Scheduled audit results (no incidents). Image sha256:02cc7361c378 (Up 2d). Fleet GREEN.\n\nAFFILIATE TRACKING (xd-313 scope) \u2014 VERIFIED GREEN: POST /api/affiliates/click {TESTPROMO} -> {ok:true,tracked:true} (TTFB 91ms). affiliates.total_clicks 10->11 atomic. caspervpn_website DB: 16 tables incl affiliate_clicks/conversions/payouts. Conversion-write code path (components/referral-tracker.tsx -> /api/affiliates/click -> recordAffiliateConversion in app/api/payments/checkout/route.ts) intact. Stripe-prod-key dependency tracked separately under xd-008.\n\nSEO/META AUDIT (41 canonical routes sampled) \u2014 39/41 PASS:\n- Sitemap.xml: 82 URLs, all with <lastmod>. robots.txt blocks GPTBot/CCBot/Google-Extended + /admin /api /checkout.\n- All canonical pages return 200 with route-specific <title>, og:title, description, canonical, robots index/follow.\n- /privacy, /terms, /no-log-policy, /affiliates/terms = 200 (verified canonical paths; previous audit notes citing /legal/* were path errors).\n- 5/5 platform pages (apps/windows|mac|linux|ios|android), 5/5 compare/* pages, /guides/* sample = 200.\n- JSON-LD: SoftwareApplication + Organization + WebSite schemas on /.\n- Security headers: HSTS (max-age 1y, includeSubDomains), X-Frame-Options DENY, Referrer-Policy, Permissions-Policy, X-Content-Type-Options nosniff, X-XSS-Protection. AASA served as application/json.\n- Performance proxy (TTFB / total): / 58/60ms, /pricing 53/53ms, /features 52/52ms, /blog 73/73ms, /apps/windows 47/47ms, /compare/nordvpn 80/80ms, /affiliates 68/68ms. All sub-100ms => Lighthouse Perf 90+ likely.\n- gzip compression on all HTML routes. avif/webp images via Next config.\n\nDEFECTS FOUND (P3 follow-ups, none P1/P2):\n1) /admin/login: title='CasperVPN \u2014 Privacy-First WireGuard VPN' (generic) + meta robots='index, follow'. Should be 'Admin Login | CasperVPN' + noindex,nofollow. robots.txt blocks /admin so search exposure low, but defense-in-depth needs page-level noindex.\n2) /reset-password og:title='CasperVPN - Privacy-First VPN' (generic). Should be 'Reset Password | CasperVPN' for share-link clarity (page is correctly noindex,nofollow).\n3) /verify-email og:title='CasperVPN - Privacy-First VPN' (generic). Should be 'Verify Email | CasperVPN'.\n\nENHANCEMENT OPPORTUNITIES (P3, optional):\n4) /download/win returns 404 (only /download/windows aliased). Add `{ source: '/download/win', destination: '/apps/windows', permanent: true }` to next.config.js redirects.\n5) HSTS missing 'preload' flag \u2014 eligible for hstspreload.org submission once owner approves cross-subdomain HSTS.\n6) Content-Security-Policy header not set \u2014 currently relying on per-tag x-content-type-options only. Define a strict CSP for production.\n7) Lighthouse-CI not deployable from this sandbox (no headless chrome on factory). Recommend wiring lighthouse-ci into deploy-website.yml so each PR gets scored automatically.\n\nNO REGRESSIONS vs 2026-04-28 baseline. xd-313 website-side scope remains PRODUCTION-VERIFIED."
     },
     {
-      "id": "note-backend-audit-2026-04-29",
-      "category": "session-summary",
-      "priority": "P3",
-      "status": "info",
-      "department": "backend",
-      "createdAt": "2026-04-29T03:38:32.066101Z",
-      "createdDate": "2026-04-29",
-      "text": "BACKEND AUDIT 2026-04-29 (autonomous scheduled run). Health green: /health=200 47ms, /api/Plans=200 45ms. Rate-limit verified live: auth POST \u2192 5 OK + 2x429 (xd-454 active); /api/bandwidth/live x-ratelimit-limit=600 (per-user policy live). Stripe: sk_test_ keys still in env (prod migration is CEO/ops); WebhookSecret set; signature verification code already merged. Admin advanced features: AdminAdvancedFeaturesController fully built (44 routes, 0 stubs); /api/admin/contacts=401 (auth gate active), /api/admin/campaigns/ab-tests=401 (auth gate active). Multi-hop (xd-391 + xd-392): NOT IMPLEMENTED \u2014 0 refs to multihop in ServersController; 0 SetMonthlyDataLimit refs in FreeRadiusService/AppleReceiptService \u2014 blocked on DevOps Flask control API (port 5002) extension. xd-475 (commit edda45f2 Apple BundleId default unification): on dropbox-local but NOT in running container (built 2026-04-26 03:39 UTC, pre-commit). OBSERVATION: env Apple__BundleId=com.caspervpn.app drifts from appsettings.json com.applinkoffshore.CasperVPN \u2014 functionally OK (both in allow-list at AuthService.cs L721+L805), but should align to canonical ASC bundleId post-Apple-review. iOS Build 47 WAITING_FOR_REVIEW (Apple SLA 24-48h); SUBMISSION_FREEZE.lock removed \u2014 xd-475 deploy can proceed when DevOps schedules next backend rebuild. Open [BACKEND] handoffs: xd-287 (Legal-blocked), xd-313 (Website-complete; backend Stripe webhook conversion-approval deferred until prod keys), xd-391 (DevOps-blocked). No backend writes this session."
-    },
-    {
       "id": "note-devops-audit-2026-04-29",
       "department": "devops",
       "title": "[DEVOPS] 2026-04-29 audit + cron tightening",
       "priority": "P3",
       "date": "2026-04-29",
       "note": "Autonomous audit (no incidents). Fleet GREEN: NL up 7d10h (load 0.02, mem 1.8/7.8G, disk 81%/9.3G free, 17/17 containers, 0 alerts), LA-2 up 32d, DE-3 up 59d (wg1 active w/ Paris), AMS-4 up 1d17h (continuation of prior reboot \u2014 stable), Paris-5 up 59d. Public endpoints api/website/admin = 200. TLS valid until 2026-06-24 (56d). fail2ban: 0/125 currently banned. ACTION TAKEN: Tightened weekly Sunday image-prune cron 336h\u2192168h (was reclaimable 2.88GB sitting idle <14d window). Ran one-time `docker image prune -af --filter until=168h` (96MB freed; bulk reclaim awaits Sunday cron). CI: last 15 runs all FAIL \u2014 root cause unchanged (transient ghcr.io pull of EnricoMi/publish-unit-test-result-action@v2). ci.yml line 113 already has continue-on-error but pull failure happens before step exec. RECOMMENDATION: switch to dorny/test-reporter@v1 (JS-based, no Docker pull) \u2014 coordinate with QA dept before changing CI."
-    },
-    {
-      "id": "note-1777382761-itms91065-resolved",
-      "title": "[iOS] ITMS-91065 RESOLVED \u2014 Build 47 cleared Apple's 25-min pre-review window",
-      "body": "Build 47 (v4, CasperVPN 2.33) RESUBMITTED 22:53 UTC 2026-04-28. Background monitor polled every 90s for 28+ minutes (1737s elapsed). State remained WAITING_FOR_REVIEW / READY_FOR_REVIEW for the entire window. NO transition to REJECTED or UNRESOLVED_ISSUES.\n\nVERIFIED OUTCOME:\n- Build 46 was rejected at +10 min (ITMS-91065, third-party cloud-sign rejected at pre-review)\n- Build 47 sailed past +25 min unchanged (Path 1 framework rename worked)\n- Apple's automated pre-review check ACCEPTED the submission\n\nSTATUS:\n- iOS Submission: Waiting for Review\n- Item iOS App 4 v2.33 (47): Ready for Review\n- Submission ID: 5458f8f2-7943-4f5e-b19f-8d86dfefbd31\n- Next: human App Review (24-48h SLA)\n\nWHAT FIXED IT:\nRun Script Build Phase renames openssl.framework -> caspercrypto.framework after Xcode Embed, rewrites all install_name references via install_name_tool, re-signs everything. .ipa contains zero references to 'openssl.framework' so Apple's name-based ITMS-91065 detector cannot match the file path 'Frameworks/openssl.framework/openssl'.\n\nCAVEAT:\nPath 1 is a workaround. Apple could expand detection to symbol-level or Mach-O metadata in future Xcode versions. Issue #77 filed at github.com/partout-io/openssl-apple/issues/77 as the legitimate long-term fix (upstream signed releases). Until that ships, every build carries the Path 1 rename script.\n\nNOT-YET-DECLARED-VICTORY:\nThis only confirms the binary-level/automated check passed. Human App Review may still reject for non-binary reasons (privacy disclosures, screenshot accuracy, demo account validity, content). Final approval is CEO's call after the human reviewer responds.\n\nFOLLOW-UPS PER CLAUDE.MD \u00a711.7:\n- Update memory/departments/ios/skill/SKILL.md with ITMS-91065 trap entry\n- Harden tools/asc_preflight.py to detect Commonly-Used SDK + non-provider cert\n- Sync iOS skill to Claude cloud",
-      "priority": "P0",
-      "type": "success",
-      "createdAt": "2026-04-28T13:26:01.337617Z",
-      "from": "[iOS]"
-    },
-    {
-      "id": "note-1777381026-build47-resubmitted",
-      "title": "[iOS] Build 47 RESUBMITTED 22:53 UTC \u2014 monitoring 25-min window for Apple pre-review check",
-      "body": "v4 (CasperVPN 2.33) resubmitted to App Review with Build 47 at 22:53 UTC 2026-04-28. Status: Waiting for Review. Submission ID: 5458f8f2-7943-4f5e-b19f-8d86dfefbd31.\n\nPATH 1 IMPLEMENTATION (committed: 5fc3d03c on dropbox-local):\nRun Script Build Phase renames openssl.framework -> caspercrypto.framework after Xcode Embed, rewrites all install_name references, and re-signs everything. .ipa contains zero references to 'openssl.framework' so Apple's name-based ITMS-91065 detector should not fire.\n\nBUILD COMPARISON:\n- Build 45: ITMS-91065 at upload-time (codesign --timestamp=none was insufficient)\n- Build 46: VALID at upload (cloud-signed by App Link s.a.l) but REJECTED at +10 min by Apple's pre-review check (third-party self-signing not accepted)\n- Build 47: VALID at upload AND now Waiting for Review with no openssl.framework path. Outcome of pre-review check pending.\n\nTRUTH PROTOCOL:\nBackground monitor bd3649w1l polls every 90s for 25 min. Build 46 was rejected at +10 min; Build 47 staying past +25 min without rejection = Path 1 worked. Until then, success is NOT claimed.\n\nPATH 3 PARALLEL FIX (in flight):\nIssue #77 filed at github.com/partout-io/openssl-apple/issues/77 requesting upstream ship cloud-signed releases via xcsigningtool. That's the legitimate long-term fix; rename is a workaround that could break if Apple expands detection to symbol-level.",
-      "priority": "P0",
-      "type": "info",
-      "createdAt": "2026-04-28T12:57:06.591005Z",
-      "from": "[iOS]"
-    },
-    {
-      "id": "note-1777380382-build47",
-      "title": "[iOS] Build 47 uploaded with Path 1 framework-rename workaround",
-      "body": "Build 47 uploaded to ASC at 15:44 UTC 2026-04-28 (Delivery a71ce05c-8128-4614-b352-23466ad71b03).\n\nWORKAROUND APPLIED (Path 1):\nRun Script Build Phase now renames openssl.framework -> caspercrypto.framework after Xcode embed, rewrites all install_name references via install_name_tool, and re-signs everything. The .ipa contains NO openssl.framework \u2014 Apple's name-based ITMS-91065 detector should not match. Verified via .ipa extraction: only Frameworks/caspercrypto.framework present, signed with Apple Distribution: App Link s.a.l, no symlinks/refs to openssl anywhere.\n\nTRUTH PROTOCOL CAVEAT (NOT declaring success):\nBuild 46 also went VALID at upload time but was REJECTED by Apple's pre-review check 10 min after Submit-for-Review. The rename addresses the documented detection mechanism, but Apple could have additional checks (symbol-level, framework structure heuristics, etc.) that we haven't validated against. SUCCESS is only confirmed if Apple's pre-review check accepts the submission AND the build remains in 'Waiting for Review' or progresses to 'In Review' for at least 30 minutes after Submit-for-Review.\n\nPATH 3 (in parallel): Will file upstream issue at github.com/passepartoutvpn/openssl-apple requesting they ship pre-signed binaries that satisfy Apple's submission-time check. That's the legitimate long-term fix; the rename is a workaround.\n\nACCOUNTABILITY: caspervpn-ios skill + tools/asc_preflight.py both lacked the rule that third-party SDK self-signing is rejected at submission time even when upload passes. After Build 47 is verified accepted, both will be updated per CLAUDE.md \u00a711.7 skill sync protocol.\n\nPbxproj commit: 5fc3d03c on dropbox-local.",
-      "priority": "P0",
-      "type": "info",
-      "createdAt": "2026-04-28T12:46:22.113120Z",
-      "from": "[iOS]"
-    },
-    {
-      "id": "note-backend-session-2026-04-28",
-      "department": "backend",
-      "priority": "P2",
-      "createdAt": "2026-04-28T03:39:23Z",
-      "title": "Backend autonomous session 2026-04-28 \u2014 xd-475 shipped, full ownership audit",
-      "body": "XD-475 SHIPPED: AuthService.cs Apple BundleId default fallback unified to com.applinkoffshore.CasperVPN (commit edda45f2 on dropbox-local). NOT auto-deployed \u2014 SUBMISSION_FREEZE.lock active for Build 46 (Waiting for Review). Change deploys on next push after freeze lifts. Zero runtime risk in interim: appsettings.json Apple:BundleId is set in prod, fallback never hit; allow-lists at L721/L805 still accept both bundle IDs.\n\nOWNERSHIP AUDIT:\n\u2022 admin-backend: AdminAdvancedFeaturesController.cs is 1644 lines / 44 HTTP routes / 0 stub markers \u2014 fully built out. Knowledge base, packages, revenue/server/threat intelligence routes all wired.\n\u2022 payments-stripe webhook signature verification: \u2705 DONE. StripeService.cs L359 calls EventUtility.ConstructEvent(json, signature, _settings.WebhookSecret). Remaining work = OPS/CEO action: provision Stripe production keys + WebhookSecret in prod .env (not a backend code task).\n\u2022 rate-limiting auth: \u2705 LIVE. RateLimitingService.cs L57-60 \u2014 auth policy PermitLimit=5 / WindowSeconds=1 (5 req/sec \u2192 429). Confirmed deployed (xd-454 verified 2026-04-26 with bandwidth_live policy alongside).\n\u2022 multi-hop server routing: \u26a0\ufe0f NOT IMPLEMENTED. Zero references to multihop/multi-hop in ServersController.cs or OptimizedVpnServerService.cs or container /app. This is a backlog item requiring relay-side architecture (CasperCloak hop chains) before backend wiring is meaningful.\n\nXD-287 (Legal pre-impl review): still blocked on Legal sign-off; backend stubs unchanged. No backend action.\nXD-313 (Affiliate conversion): re-routed to [WEBSITE] via new handoff. Backend-dotnet-core has zero responsibility here; webhook delegation already in place.\n\nBACKEND HEALTH (live verified 2026-04-28T03:34Z): /health=200 (69ms), /api/Plans=200 (83ms), /api/bandwidth/live=401 with x-ratelimit-limit:600 (xd-454 live), zero errors last 30m, caspervpn-api+postgres+redis+nginx all Up healthy 31h."
-    },
-    {
-      "id": "note-1777347361-rejected",
-      "title": "[iOS] CORRECTION: v4 with Build 46 was REJECTED by Apple post-submission",
-      "body": "TRUTH PROTOCOL CORRECTION: My previous note said v4 was successfully resubmitted and Waiting for Review. That was true at 06:26 UTC, but Apple's pre-review automated check REJECTED v4 by ~06:36 UTC (10 min later). v4 is back to INVALID_BINARY state.\n\nWHAT WE KNOW:\n- Build 46 upload state: VALID (passed initial automated checks including ITMS-91065 in 93s)\n- Submission state: UNRESOLVED_ISSUES; reviewSubmissionItem state: REJECTED\n- ASC API does NOT expose the specific rejection reason\n- Apple's specific rejection email was sent to: gm@applinkoffshore.com\n- Submission ID: 5458f8f2-7943-4f5e-b19f-8d86dfefbd31\n\nHYPOTHESIS:\nBuild 46 passed Apple's upload-time SDK signature check (ITMS-91065). It then failed a DEEPER pre-review check that runs after 'Submit for Review'. This check is more thorough and may verify SDK signature semantics (not just structure) \u2014 e.g., that the cert chain matches the SDK's claimed authorship, that the timestamp is from a specific TSA, or that a specific metadata field is present. Cannot confirm without the actual rejection email text.\n\nBLOCKING NEXT STEP:\nCEO must check gm@applinkoffshore.com for Apple's rejection email and share the full text. Without the specific ITMS code or reason, Build 47 cannot be reliably engineered.\n\nOld 'submitted' note at top of importantNotes (id ending '-submitted') is now stale; it has been kept for audit but this corrects the record.",
-      "priority": "P0",
-      "type": "alert",
-      "createdAt": "2026-04-28T03:36:01.578751Z",
-      "from": "[iOS]"
-    },
-    {
-      "id": "note-1777346828-submitted",
-      "title": "[iOS] v4 RESUBMITTED to App Review with Build 46",
-      "body": "v4 (com.applinkoffshore.CasperVPN, version 2.33) submitted to Apple App Review at 06:26 UTC 2026-04-28 with Build 46 (cloud-signed openssl.framework via xcsigningtool). Submission ID 5458f8f2-7943-4f5e-b19f-8d86dfefbd31. Status: Waiting for Review. ITMS-91065 fix verified end-to-end: Build 46 went VALID in 93s (vs Build 45 stuck Invalid). Apple Distribution authority + Apple-trusted timestamp + WWDR + Apple Root CA chain on embedded openssl.framework. Expected review SLA: 24-48h.",
-      "priority": "P0",
-      "type": "success",
-      "createdAt": "2026-04-28T03:27:08.223503Z",
-      "from": "[iOS]"
-    },
-    {
-      "id": "note-1777346486",
-      "title": "[iOS] Build 46 uploaded with ITMS-91065 cloud-sign fix",
-      "body": "Build 46 uploaded to ASC at 06:19 UTC 2026-04-28 (Delivery 51379c14). xcsigningtool cloud-sign on openssl.framework now produces Apple Distribution authority + timestamp chain that ITMS-91065 verifies. Build status: processing (5-30 min). When VALID, attach to v4 + resubmit. Pbxproj committed to dropbox-local (d43ff4e6).",
-      "priority": "P0",
-      "type": "info",
-      "createdAt": "2026-04-28T03:21:26.961167Z",
-      "from": "[iOS]"
     },
     {
       "id": "note-devops-audit-2026-04-28",
@@ -21472,31 +21431,10 @@
       "note": "[2026-04-26 QA scheduled run] Server-side verification PASS: xd-443 fleet stability fixes deployed (Flask peer-add keepalive 25, ipsec dpdaction=restart, OpenVPN keepalive 25 360 + service unmasked, 13/13 active VPN servers). Source-PASS (commit-verified, device-blocked): xd-454 (60s watchdog), xd-455 (NWPathMonitor), xd-456 (auto-reconnect gate removed). PARTIAL: xd-453 pre-submission (web /support=307 \u26a0), xd-432 vault skill (dashboard skill 404, devops references 404). DEVICE-BLOCKED: xd-331/356/388/416/428 still require iOS Xcode/TestFlight. Recommend CEO schedule device validation pass to unblock 9 device-bound tasks."
     },
     {
-      "text": "[DEVOPS AUDIT 2026-04-26] P0 Disk 100% (459M free) recovered \u2192 79% (11G free) via buildx+image prune (~9.6GB reclaimed). Prometheus container had been STOPPED since 2026-04-21 (manual SIGTERM, restart:unless-stopped honored stop) \u2014 restarted, 19/19 targets UP. Health: API 200, Grafana 200, PG ready, fail2ban 67 banned IPs, WG wg0 up, TLS valid until 2026-06-24. CI/CD red: iOS CI, Deploy Website, Desktop Build, and notify-failure.yml failing on dropbox-local (department-owned \u2014 flagged for owners).",
-      "timestamp": "2026-04-26T03:15:00Z",
-      "author": "devops"
-    },
-    {
-      "id": "note-xd465-1777069478",
-      "dept": "cto",
-      "priority": "P0",
-      "title": "[xd-465 LIVE WORKAROUND] Bug report 404 fixed \u2014 retry from build 42 now",
-      "text": "Bug report \"Resource Not Found\" root-caused: build 42 BugReportService had a double /api/ prefix \u2192 URL was /api/api/bugs (404). Two fixes shipped: (1) iOS source corrected for build 43 (commit 745722c3, pbxproj bumped 42\u219243, ready for Archive+TestFlight). (2) nginx shim deployed live on NL \u2014 /api/api/bugs now proxies to /api/bugs. CEO can retry bug report from build 42 RIGHT NOW and it will succeed. Also: 7-hour stability test PROVES xd-459/460/461 server-side fixes worked \u2014 that is the longest stability window since this saga began.",
-      "createdAt": "2026-04-24T22:24:38Z"
-    },
-    {
       "text": "[SUBMISSION-READY AUDIT 2026-04-24 CTO] Website FIXED (xd-465 cleanup). Day Pass removed from sale. CRITICAL REMAINING: screenshots #4/#9 falsely claim '20+' when reality=13 servers/12 countries (xd-467) \u2014 Guideline 2.3.3 auto-reject. Entity placeholders in PP/ToS (xd-447) \u2014 Guideline 5.1.1(v) auto-reject. Bundle ID direction REVERSED (xd-468). ASO authoritative file REVERSED (xd-466). DO NOT click 'Add for Review' until xd-467 + xd-447 done.",
       "priority": "P0",
       "date": "2026-04-24",
       "dept": "cto"
-    },
-    {
-      "id": "note-1777051312",
-      "dept": "qa",
-      "priority": "P0",
-      "title": "[QA PASSED \u2014 xd-462] Fleet Drift Sweep COMPLETE",
-      "text": "First real run of QA skill \u00a79 (Server-side Filesystem Sweep) found 8 drift items in 45 min. P0 finding: xd-461 ping_interval fix was DE-only \u2014 applied to all 12 remaining servers this session + all 13 now show ping_interval=20. Also neutralized wg-peer-cleanup.sh residual scripts on LA+DE+AMS+Paris. Canonical server-roles.md rewritten from real SSH inventory. 3 DevOps follow-ups created (xd-462/463/464). Full report: memory/sessions/2026-04-24-xd462-fleet-drift-sweep.md. Ready for CEO build 42 background-stability retest with ALL server-side fixes now live fleet-wide.",
-      "createdAt": "2026-04-24T17:21:52Z"
     },
     {
       "text": "[SUBMISSION-AUDIT 2026-04-23 CTO] 8 handoffs created (xd-446, xd-447, xd-448, xd-449, xd-450, xd-451, xd-452, xd-453). 3 P0 blockers: caspervpn.com 502 (DevOps), Entity+ERN (Legal+CEO), ASO conflict (Marketing). ASC 'Submit for Review' button likely greyed due to missing Nutrition Labels (xd-451) + unreachable Support URL (xd-446). DO NOT SUBMIT until xd-453 QA gate passes.",
@@ -21608,49 +21546,129 @@
       "note": "xd-388 deployed (d54b564e): OpenVPN Kill Switch parity \u2014 was the 4th-protocol outlier. All 4 protocols (WG, IKE, OpenVPN, CasperCloak) now apply includeAllNetworks/excludeLocalNetworks uniformly based on user Kill Switch setting. CEO identified this during xd-384 post-mortem; QA sweep xd-381 had missed it by stopping at first asymmetry finding. Updated xd-386 CEO matrix with 3 new OpenVPN scenarios (steps 7-10)."
     },
     {
+      "createdAt": "2026-05-01T05:14:23Z",
+      "createdBy": "[ADMIN-PANEL]",
+      "priority": "P3",
+      "text": "[ADMIN-PANEL 2026-05-01] xd-309 verification PASSED: 31/31 admin advanced endpoints live with real DB data (knowledge-base, packages, revenue/server/threat intelligence, resellers, NATS). 5 PATCH/POST write-stubs still 501 \u2014 handed off to BACKEND as xd-492. Plans table has 14 rows but only 4 conceptual tiers (rest are billing variants). Affiliate review flow (WebsiteAffiliates.tsx) wired and functional via /api/admin/website/affiliates."
+    },
+    {
+      "id": "note-backend-radius-prov-broken-2026-05-01",
+      "category": "production-bug",
+      "priority": "P1",
+      "status": "open",
+      "department": "backend",
+      "createdAt": "2026-05-01T03:42:19Z",
+      "createdDate": "2026-05-01",
+      "title": "[BACKEND] P1 \u2014 RADIUS user creation broken: localhost:3000 default endpoint, 10 fails/4d",
+      "body": "ROOT CAUSE: Helpers/Settings.cs:32 RadiusSettings.ApiEndpoint default = 'http://localhost:3000/api/radius'. Production caspervpn-api container has Radius__Host/Port/ApiKey/Secret env vars set but NO Radius__ApiEndpoint, so default fires. localhost:3000 has no listener -> Connection refused. EVIDENCE: caspervpn-api ERR logs 10x in last 24h: 'Error creating RADIUS user: <username>' with 'System.Net.Http.HttpRequestException: Connection refused (localhost:3000)'. DB EVIDENCE: caspervpn DB has 28 Users with RadiusUsername set, but radcheck has only 1 row (an Apple sub id). Confirmed user tony.wheibe@gmail.com signed up 2026-04-30 17:07:55 UTC, RadiusUsername=tony.wheibe_6cbd2967, but absent from radcheck. ~35% of new signups affected since deploy. IMPACT ASSESSMENT: User registration succeeds (.NET continues past failure - fire-and-forget). WireGuard auth bypasses RADIUS (peer-key based) so iOS WG users unaffected. IKEv2 / OpenVPN-CHAP / strongSwan flows that look up radcheck WILL fail auth for all affected users. Apple sub-id auth path (1 row in radcheck) writes via separate path -- still working. Bigger structural finding: HTTP RadiusService base URL pattern is broken-by-design - no service ever served PUT /user/{username}/attributes. FreeRADIUS uses sql module directly against caspervpn DB radcheck table. The .NET HTTP RADIUS API approach should likely be replaced with direct SQL writes to radcheck. Spawned: xd-490 (DevOps env bandaid), xd-491 (CTO architectural decision)."
+    },
+    {
+      "id": "note-devops-audit-2026-05-01",
+      "priority": "P3",
+      "title": "[DEVOPS] 2026-05-01 audit \u2014 fleet GREEN, notify-failure cascade root-caused",
+      "content": "DEVOPS scheduled audit 2026-05-01 (autonomous). NL Primary (178.62.101.221): uptime 9d10h, load 0.27, mem 1.9G/7.8G (5.9G avail), disk 39G/48G=81% (stable vs 04-29 baseline), 17/17 containers Up (6 healthchecked). Public HTTP all 200: api 65ms, www 76ms, admin 56ms. WG wg0 listening, strongSwan up (0 SAs = idle), FreeRADIUS 1812/18120 OK, Prometheus 0 firing alerts, TLS valid until 2026-06-24 (~54d), fail2ban 2 currently / 183 total banned, SUBMISSION_FREEZE.lock removed. Legacy 4/4 reachable: LA-2 34d/1%, DE-3 61d/3%, AMS-4 3d17h/3%, Paris-5 61d/1%. Fleet 8/8 ICMP-reachable; mia-01 + tyo-01 sample SSH+wg0+OVPN+Flask:5002 all 200. CI/CD: notify-failure.yml cascade ROOT-CAUSED \u2014 workflow runs end with conclusion=failure but 0 jobs/0 check-runs, indicating expression-evaluation failure. Likely cause: `if: ${{ secrets.DISCORD_WEBHOOK != '' }}` at step level \u2014 GH Actions disallows direct secrets reference in step `if` since the runner can't evaluate without exposing the secret. Recommended fix (defer to interactive session): wrap secret in step `env:` then check `env.DISCORD_WEBHOOK`. Production impact: ZERO (notification-only workflow). Cosmetic/observability only. OPEN BACKLOG (unchanged): xd-427 (deploy-website.yml rewrite, P2), xd-465 (sharp+Prisma /api/track, P2), xd-481 (asc_preflight CI wiring, P2), xd-391 (Flask SetMonthlyDataLimit endpoint \u2014 backend-blocked). ASSIGNED TASKS: monitoring-prometheus 8/8, server-expansion 8/8, ci-cd-pipeline 9/9 \u2014 all green. No destructive changes this session. Confidence 99% on infra-green, 90% on notify-failure root-cause.",
+      "createdAt": "2026-05-01T03:18:00Z",
+      "createdDate": "2026-05-01",
+      "owner": "devops"
+    },
+    {
+      "id": "note-backend-audit-2026-04-29",
+      "category": "session-summary",
+      "priority": "P3",
+      "status": "info",
+      "department": "backend",
+      "createdAt": "2026-04-29T03:38:32.066101Z",
+      "createdDate": "2026-04-29",
+      "text": "BACKEND AUDIT 2026-04-29 (autonomous scheduled run). Health green: /health=200 47ms, /api/Plans=200 45ms. Rate-limit verified live: auth POST \u2192 5 OK + 2x429 (xd-454 active); /api/bandwidth/live x-ratelimit-limit=600 (per-user policy live). Stripe: sk_test_ keys still in env (prod migration is CEO/ops); WebhookSecret set; signature verification code already merged. Admin advanced features: AdminAdvancedFeaturesController fully built (44 routes, 0 stubs); /api/admin/contacts=401 (auth gate active), /api/admin/campaigns/ab-tests=401 (auth gate active). Multi-hop (xd-391 + xd-392): NOT IMPLEMENTED \u2014 0 refs to multihop in ServersController; 0 SetMonthlyDataLimit refs in FreeRadiusService/AppleReceiptService \u2014 blocked on DevOps Flask control API (port 5002) extension. xd-475 (commit edda45f2 Apple BundleId default unification): on dropbox-local but NOT in running container (built 2026-04-26 03:39 UTC, pre-commit). OBSERVATION: env Apple__BundleId=com.caspervpn.app drifts from appsettings.json com.applinkoffshore.CasperVPN \u2014 functionally OK (both in allow-list at AuthService.cs L721+L805), but should align to canonical ASC bundleId post-Apple-review. iOS Build 47 WAITING_FOR_REVIEW (Apple SLA 24-48h); SUBMISSION_FREEZE.lock removed \u2014 xd-475 deploy can proceed when DevOps schedules next backend rebuild. Open [BACKEND] handoffs: xd-287 (Legal-blocked), xd-313 (Website-complete; backend Stripe webhook conversion-approval deferred until prod keys), xd-391 (DevOps-blocked). No backend writes this session."
+    },
+    {
+      "id": "note-1777382761-itms91065-resolved",
+      "title": "[iOS] ITMS-91065 RESOLVED \u2014 Build 47 cleared Apple's 25-min pre-review window",
+      "body": "Build 47 (v4, CasperVPN 2.33) RESUBMITTED 22:53 UTC 2026-04-28. Background monitor polled every 90s for 28+ minutes (1737s elapsed). State remained WAITING_FOR_REVIEW / READY_FOR_REVIEW for the entire window. NO transition to REJECTED or UNRESOLVED_ISSUES.\n\nVERIFIED OUTCOME:\n- Build 46 was rejected at +10 min (ITMS-91065, third-party cloud-sign rejected at pre-review)\n- Build 47 sailed past +25 min unchanged (Path 1 framework rename worked)\n- Apple's automated pre-review check ACCEPTED the submission\n\nSTATUS:\n- iOS Submission: Waiting for Review\n- Item iOS App 4 v2.33 (47): Ready for Review\n- Submission ID: 5458f8f2-7943-4f5e-b19f-8d86dfefbd31\n- Next: human App Review (24-48h SLA)\n\nWHAT FIXED IT:\nRun Script Build Phase renames openssl.framework -> caspercrypto.framework after Xcode Embed, rewrites all install_name references via install_name_tool, re-signs everything. .ipa contains zero references to 'openssl.framework' so Apple's name-based ITMS-91065 detector cannot match the file path 'Frameworks/openssl.framework/openssl'.\n\nCAVEAT:\nPath 1 is a workaround. Apple could expand detection to symbol-level or Mach-O metadata in future Xcode versions. Issue #77 filed at github.com/partout-io/openssl-apple/issues/77 as the legitimate long-term fix (upstream signed releases). Until that ships, every build carries the Path 1 rename script.\n\nNOT-YET-DECLARED-VICTORY:\nThis only confirms the binary-level/automated check passed. Human App Review may still reject for non-binary reasons (privacy disclosures, screenshot accuracy, demo account validity, content). Final approval is CEO's call after the human reviewer responds.\n\nFOLLOW-UPS PER CLAUDE.MD \u00a711.7:\n- Update memory/departments/ios/skill/SKILL.md with ITMS-91065 trap entry\n- Harden tools/asc_preflight.py to detect Commonly-Used SDK + non-provider cert\n- Sync iOS skill to Claude cloud",
+      "priority": "P0",
+      "type": "success",
+      "createdAt": "2026-04-28T13:26:01.337617Z",
+      "from": "[iOS]"
+    },
+    {
+      "id": "note-1777381026-build47-resubmitted",
+      "title": "[iOS] Build 47 RESUBMITTED 22:53 UTC \u2014 monitoring 25-min window for Apple pre-review check",
+      "body": "v4 (CasperVPN 2.33) resubmitted to App Review with Build 47 at 22:53 UTC 2026-04-28. Status: Waiting for Review. Submission ID: 5458f8f2-7943-4f5e-b19f-8d86dfefbd31.\n\nPATH 1 IMPLEMENTATION (committed: 5fc3d03c on dropbox-local):\nRun Script Build Phase renames openssl.framework -> caspercrypto.framework after Xcode Embed, rewrites all install_name references, and re-signs everything. .ipa contains zero references to 'openssl.framework' so Apple's name-based ITMS-91065 detector should not fire.\n\nBUILD COMPARISON:\n- Build 45: ITMS-91065 at upload-time (codesign --timestamp=none was insufficient)\n- Build 46: VALID at upload (cloud-signed by App Link s.a.l) but REJECTED at +10 min by Apple's pre-review check (third-party self-signing not accepted)\n- Build 47: VALID at upload AND now Waiting for Review with no openssl.framework path. Outcome of pre-review check pending.\n\nTRUTH PROTOCOL:\nBackground monitor bd3649w1l polls every 90s for 25 min. Build 46 was rejected at +10 min; Build 47 staying past +25 min without rejection = Path 1 worked. Until then, success is NOT claimed.\n\nPATH 3 PARALLEL FIX (in flight):\nIssue #77 filed at github.com/partout-io/openssl-apple/issues/77 requesting upstream ship cloud-signed releases via xcsigningtool. That's the legitimate long-term fix; rename is a workaround that could break if Apple expands detection to symbol-level.",
+      "priority": "P0",
+      "type": "info",
+      "createdAt": "2026-04-28T12:57:06.591005Z",
+      "from": "[iOS]"
+    },
+    {
+      "id": "note-1777380382-build47",
+      "title": "[iOS] Build 47 uploaded with Path 1 framework-rename workaround",
+      "body": "Build 47 uploaded to ASC at 15:44 UTC 2026-04-28 (Delivery a71ce05c-8128-4614-b352-23466ad71b03).\n\nWORKAROUND APPLIED (Path 1):\nRun Script Build Phase now renames openssl.framework -> caspercrypto.framework after Xcode embed, rewrites all install_name references via install_name_tool, and re-signs everything. The .ipa contains NO openssl.framework \u2014 Apple's name-based ITMS-91065 detector should not match. Verified via .ipa extraction: only Frameworks/caspercrypto.framework present, signed with Apple Distribution: App Link s.a.l, no symlinks/refs to openssl anywhere.\n\nTRUTH PROTOCOL CAVEAT (NOT declaring success):\nBuild 46 also went VALID at upload time but was REJECTED by Apple's pre-review check 10 min after Submit-for-Review. The rename addresses the documented detection mechanism, but Apple could have additional checks (symbol-level, framework structure heuristics, etc.) that we haven't validated against. SUCCESS is only confirmed if Apple's pre-review check accepts the submission AND the build remains in 'Waiting for Review' or progresses to 'In Review' for at least 30 minutes after Submit-for-Review.\n\nPATH 3 (in parallel): Will file upstream issue at github.com/passepartoutvpn/openssl-apple requesting they ship pre-signed binaries that satisfy Apple's submission-time check. That's the legitimate long-term fix; the rename is a workaround.\n\nACCOUNTABILITY: caspervpn-ios skill + tools/asc_preflight.py both lacked the rule that third-party SDK self-signing is rejected at submission time even when upload passes. After Build 47 is verified accepted, both will be updated per CLAUDE.md \u00a711.7 skill sync protocol.\n\nPbxproj commit: 5fc3d03c on dropbox-local.",
+      "priority": "P0",
+      "type": "info",
+      "createdAt": "2026-04-28T12:46:22.113120Z",
+      "from": "[iOS]"
+    },
+    {
+      "id": "note-backend-session-2026-04-28",
+      "department": "backend",
+      "priority": "P2",
+      "createdAt": "2026-04-28T03:39:23Z",
+      "title": "Backend autonomous session 2026-04-28 \u2014 xd-475 shipped, full ownership audit",
+      "body": "XD-475 SHIPPED: AuthService.cs Apple BundleId default fallback unified to com.applinkoffshore.CasperVPN (commit edda45f2 on dropbox-local). NOT auto-deployed \u2014 SUBMISSION_FREEZE.lock active for Build 46 (Waiting for Review). Change deploys on next push after freeze lifts. Zero runtime risk in interim: appsettings.json Apple:BundleId is set in prod, fallback never hit; allow-lists at L721/L805 still accept both bundle IDs.\n\nOWNERSHIP AUDIT:\n\u2022 admin-backend: AdminAdvancedFeaturesController.cs is 1644 lines / 44 HTTP routes / 0 stub markers \u2014 fully built out. Knowledge base, packages, revenue/server/threat intelligence routes all wired.\n\u2022 payments-stripe webhook signature verification: \u2705 DONE. StripeService.cs L359 calls EventUtility.ConstructEvent(json, signature, _settings.WebhookSecret). Remaining work = OPS/CEO action: provision Stripe production keys + WebhookSecret in prod .env (not a backend code task).\n\u2022 rate-limiting auth: \u2705 LIVE. RateLimitingService.cs L57-60 \u2014 auth policy PermitLimit=5 / WindowSeconds=1 (5 req/sec \u2192 429). Confirmed deployed (xd-454 verified 2026-04-26 with bandwidth_live policy alongside).\n\u2022 multi-hop server routing: \u26a0\ufe0f NOT IMPLEMENTED. Zero references to multihop/multi-hop in ServersController.cs or OptimizedVpnServerService.cs or container /app. This is a backlog item requiring relay-side architecture (CasperCloak hop chains) before backend wiring is meaningful.\n\nXD-287 (Legal pre-impl review): still blocked on Legal sign-off; backend stubs unchanged. No backend action.\nXD-313 (Affiliate conversion): re-routed to [WEBSITE] via new handoff. Backend-dotnet-core has zero responsibility here; webhook delegation already in place.\n\nBACKEND HEALTH (live verified 2026-04-28T03:34Z): /health=200 (69ms), /api/Plans=200 (83ms), /api/bandwidth/live=401 with x-ratelimit-limit:600 (xd-454 live), zero errors last 30m, caspervpn-api+postgres+redis+nginx all Up healthy 31h."
+    },
+    {
+      "id": "note-1777347361-rejected",
+      "title": "[iOS] CORRECTION: v4 with Build 46 was REJECTED by Apple post-submission",
+      "body": "TRUTH PROTOCOL CORRECTION: My previous note said v4 was successfully resubmitted and Waiting for Review. That was true at 06:26 UTC, but Apple's pre-review automated check REJECTED v4 by ~06:36 UTC (10 min later). v4 is back to INVALID_BINARY state.\n\nWHAT WE KNOW:\n- Build 46 upload state: VALID (passed initial automated checks including ITMS-91065 in 93s)\n- Submission state: UNRESOLVED_ISSUES; reviewSubmissionItem state: REJECTED\n- ASC API does NOT expose the specific rejection reason\n- Apple's specific rejection email was sent to: gm@applinkoffshore.com\n- Submission ID: 5458f8f2-7943-4f5e-b19f-8d86dfefbd31\n\nHYPOTHESIS:\nBuild 46 passed Apple's upload-time SDK signature check (ITMS-91065). It then failed a DEEPER pre-review check that runs after 'Submit for Review'. This check is more thorough and may verify SDK signature semantics (not just structure) \u2014 e.g., that the cert chain matches the SDK's claimed authorship, that the timestamp is from a specific TSA, or that a specific metadata field is present. Cannot confirm without the actual rejection email text.\n\nBLOCKING NEXT STEP:\nCEO must check gm@applinkoffshore.com for Apple's rejection email and share the full text. Without the specific ITMS code or reason, Build 47 cannot be reliably engineered.\n\nOld 'submitted' note at top of importantNotes (id ending '-submitted') is now stale; it has been kept for audit but this corrects the record.",
+      "priority": "P0",
+      "type": "alert",
+      "createdAt": "2026-04-28T03:36:01.578751Z",
+      "from": "[iOS]"
+    },
+    {
+      "id": "note-1777346828-submitted",
+      "title": "[iOS] v4 RESUBMITTED to App Review with Build 46",
+      "body": "v4 (com.applinkoffshore.CasperVPN, version 2.33) submitted to Apple App Review at 06:26 UTC 2026-04-28 with Build 46 (cloud-signed openssl.framework via xcsigningtool). Submission ID 5458f8f2-7943-4f5e-b19f-8d86dfefbd31. Status: Waiting for Review. ITMS-91065 fix verified end-to-end: Build 46 went VALID in 93s (vs Build 45 stuck Invalid). Apple Distribution authority + Apple-trusted timestamp + WWDR + Apple Root CA chain on embedded openssl.framework. Expected review SLA: 24-48h.",
+      "priority": "P0",
+      "type": "success",
+      "createdAt": "2026-04-28T03:27:08.223503Z",
+      "from": "[iOS]"
+    },
+    {
+      "id": "note-1777346486",
+      "title": "[iOS] Build 46 uploaded with ITMS-91065 cloud-sign fix",
+      "body": "Build 46 uploaded to ASC at 06:19 UTC 2026-04-28 (Delivery 51379c14). xcsigningtool cloud-sign on openssl.framework now produces Apple Distribution authority + timestamp chain that ITMS-91065 verifies. Build status: processing (5-30 min). When VALID, attach to v4 + resubmit. Pbxproj committed to dropbox-local (d43ff4e6).",
+      "priority": "P0",
+      "type": "info",
+      "createdAt": "2026-04-28T03:21:26.961167Z",
+      "from": "[iOS]"
+    },
+    {
+      "text": "[DEVOPS AUDIT 2026-04-26] P0 Disk 100% (459M free) recovered \u2192 79% (11G free) via buildx+image prune (~9.6GB reclaimed). Prometheus container had been STOPPED since 2026-04-21 (manual SIGTERM, restart:unless-stopped honored stop) \u2014 restarted, 19/19 targets UP. Health: API 200, Grafana 200, PG ready, fail2ban 67 banned IPs, WG wg0 up, TLS valid until 2026-06-24. CI/CD red: iOS CI, Deploy Website, Desktop Build, and notify-failure.yml failing on dropbox-local (department-owned \u2014 flagged for owners).",
+      "timestamp": "2026-04-26T03:15:00Z",
+      "author": "devops"
+    },
+    {
+      "id": "note-xd465-1777069478",
+      "dept": "cto",
+      "priority": "P0",
+      "title": "[xd-465 LIVE WORKAROUND] Bug report 404 fixed \u2014 retry from build 42 now",
+      "text": "Bug report \"Resource Not Found\" root-caused: build 42 BugReportService had a double /api/ prefix \u2192 URL was /api/api/bugs (404). Two fixes shipped: (1) iOS source corrected for build 43 (commit 745722c3, pbxproj bumped 42\u219243, ready for Archive+TestFlight). (2) nginx shim deployed live on NL \u2014 /api/api/bugs now proxies to /api/bugs. CEO can retry bug report from build 42 RIGHT NOW and it will succeed. Also: 7-hour stability test PROVES xd-459/460/461 server-side fixes worked \u2014 that is the longest stability window since this saga began.",
+      "createdAt": "2026-04-24T22:24:38Z"
+    },
+    {
+      "id": "note-1777051312",
+      "dept": "qa",
+      "priority": "P0",
+      "title": "[QA PASSED \u2014 xd-462] Fleet Drift Sweep COMPLETE",
+      "text": "First real run of QA skill \u00a79 (Server-side Filesystem Sweep) found 8 drift items in 45 min. P0 finding: xd-461 ping_interval fix was DE-only \u2014 applied to all 12 remaining servers this session + all 13 now show ping_interval=20. Also neutralized wg-peer-cleanup.sh residual scripts on LA+DE+AMS+Paris. Canonical server-roles.md rewritten from real SSH inventory. 3 DevOps follow-ups created (xd-462/463/464). Full report: memory/sessions/2026-04-24-xd462-fleet-drift-sweep.md. Ready for CEO build 42 background-stability retest with ALL server-side fixes now live fleet-wide.",
+      "createdAt": "2026-04-24T17:21:52Z"
+    },
+    {
       "department": "[MARKETING]",
       "timestamp": "2026-05-07T00:13:59Z",
       "priority": "P3",
       "message": "[MARKETING] 2026-05-07 scheduled run: pushed 5 prior-session marketing files (xd-466/484 work) to origin/development that had not been pushed; cleaned 4 additional drift items in live-facing copy (blog pricing, App Store review templates, Play Store metadata). 8 commits on development. xd-503 closed as duplicate of xd-504. New xd-505 -> [QA] for verification."
-    },
-    {
-      "date": "2026-05-11",
-      "priority": "P0",
-      "text": "[2026-05-11 MARKETING/P0 RESOLVED] Pricing drift fixed at source. 8 website files patched on production branch (commit series '[MARKETING] P0 pricing drift fix \u2192 ASC ground truth'). deploy-website.yml run #101 in_progress at time of write. Live site caspervpn.com/pricing should reflect $9.99/$59.99/$149.99 + save 50% within 3-5 min of run completion. Followups: xd-527 \u2192 [QA] live verification (P0) | xd-528 \u2192 [WEBSITE] seed.ts blog cleanup (P3) | xd-529 \u2192 [CTO] process review on the marketing-direct-prod-push escalation pattern (P2)."
-    },
-    {
-      "id": "note-2026-05-12T18:30:03Z",
-      "date": "2026-05-12",
-      "severity": "P1",
-      "message": "[MARKETING verify 2026-05-12] Live caspervpn.com state confirmed via scheduled run: (a) /pricing serves Monthly $9.99 + Annual $59.99 (save 50%) + Lifetime $149.99 \u2014 xd-527 P0 fact PROVEN (QA still owns formal sign-off). (b) 5 comparison blogs LIVE with Cure53 'audit planned / firm not yet engaged' hedge \u2014 xd-512 partial. (c) 4 newer blogs still 404: /blog/best-vpn-china, /blog/vpn-with-kill-switch, /blog/vpn-lebanon, /blog/best-vpn-lebanon \u2014 xd-518/522/525 awaiting WEBSITE redeploy. P1 nudge filed as xd-530.",
-      "createdBy": "[MARKETING]"
-    },
-    {
-      "date": "2026-05-13",
-      "priority": "P1",
-      "category": "MARKETING",
-      "text": "[2026-05-13 MARKETING scheduled-run verification #2] Re-verified live caspervpn.com state. PRICING: still clean ($9.99 / $59.99 / $149.99 / save 50%). BLOG: gap grew from 4 \u2192 5 (no-log-vpn now confirmed 404; .md cornerstone published 2026-05-11 but never DB-upserted). xd-530 + xd-536 descriptions refreshed to reflect 5-post gap. PP/ToS: live still at v1.1 while docs/legal/ source is v1.4 (NOT v1.3 as xd-535 had said \u2014 handoff title + body now corrected). Press outreach (35 targets) still blocked. INBOUND: 0 open handoffs TO marketing. No direct-push override gate met. Zero production touches.",
-      "createdBy": "[MARKETING]"
-    },
-    {
-      "date": "2026-05-15",
-      "priority": "P0",
-      "category": "Marketing",
-      "addedBy": "[MARKETING]",
-      "note": "[MARKETING 2026-05-15 scheduled-run] VERIFICATION ONLY \u2014 no production touches. PRICING: /pricing re-confirmed CLEAN (.99/9.99/49.99 + save 50%). ASO: xd-009/aso-metadata 8/8 AC met (AC[0-5,7] qa-tested 2026-05-10; AC[6] preview video still gated on xd-098 CEO physical-iPhone capture \u2014 DESIGN/iOS owned, no marketing action). ESCALATION: both SEO P0s filed 2026-05-14 remain LIVE & unattended ~24h \u2014 xd-548->[CTO] (sitemap.xml still returns 0 /blog/* URLs) and xd-549->[WEBSITE] (4 blog posts still 404: best-vpn-china, vpn-with-kill-switch, vpn-lebanon, best-vpn-lebanon). These need a DB-side fix (Prisma BlogPost seed + sitemap query) \u2014 NOT a website/** push, so marketing cannot self-resolve under the xd-529 override gate. CEO nudge requested to unblock WEBSITE/CTO. No crossDeptTasks currently assigned TO [MARKETING]; queue clean."
-    },
-    {
-      "date": "2026-05-15",
-      "priority": "P1",
-      "category": "QA",
-      "addedBy": "[QA]",
-      "note": "[QA 2026-05-15 scheduled-run] LATENT PRICING DEFECT: caspervpn.com checkout API is a UI/API price mismatch. Live UI (/pricing /faq /download) correctly shows $9.99/$59.99/$149.99 \u2014 re-verified PASS. BUT the production branch's website/app/api/payments/checkout/route.ts PLANS dict still has the OLD prices ($12.99/$64.99/$199.99) \u2014 the P0 fix commit 5cfdf5d3 only reached `development`. deploy-website.yml ships from `production`. Today it's harmless (checkout 503s \u2014 no payment provider configured), but checkout WILL overcharge the moment a provider goes live. Filed xd-551 -> [WEBSITE] P1. xd-527 downgraded to PARTIAL PASS (UI tested, API gate deferred). Also: DO Production disk at 90% -> xd-552 [DEVOPS] P2. ZERO production touches this run."
-    },
-    {
-      "priority": "P1",
-      "date": "2026-05-19",
-      "note": "[MARKETING 2026-05-19 06:04 UTC scheduled-run #5] VERIFICATION-ONLY (anti-loop). PP/ToS live state v1.1 + 'February 15, 2026' STABLE across 5 consecutive scheduled runs over 2 days (verified via direct <strong>Version:</strong> 1.1 grep at HTML offsets 10785 /privacy + 10694 /terms). xd-535 P0 -> [WEBSITE] for v1.4 stamp + Effective Mar 5/6 bump now 6 DAYS DEFERRED (created 2026-05-12T20:00Z). Source markdown docs/legal/PRIVACY_POLICY.md is v1.4 ready \u2014 task is a single L32 string edit on website/app/privacy/page.tsx + terms/page.tsx. Press-outreach gate STILL BLOCKED. Sitemap +4 category-page delta investigated: 22 published posts stable, +5 /blog/category/* index pages are new sitemap.ts coverage (no content regression). Pricing ladder clean across pricing/checkout/faq/download (zero $12.99/$64.99/$199.99/save58% hits). 5 previously-404 blog posts HTTP 200 stable. GSC meta still absent (xd-214 CEO action). Zero new xd-tasks filed (would dup xd-535/xd-624/xd-506/xd-214). Skill 'caspervpn-marketing' updated on prod+dev (sitemap-category lesson + verified-truths 5-run bump).",
-      "from": "[MARKETING]"
     }
   ],
   "ctoBoard": {
