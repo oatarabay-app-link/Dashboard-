@@ -21112,6 +21112,18 @@
       "dueBy": "2026-07-02T20:13:46Z",
       "handoffTo": "[CEO]",
       "handoffNote": "After QA pass: CEO device-verify a Lebanon connection now goes DIRECT (full speed, no CC) and a restricted-region connection still forces CC. Mark \ud83d\udfe2."
+    },
+    {
+      "id": "xd-709",
+      "from": "[IOS]",
+      "to": "[QA]",
+      "title": "Handoff from IOS: Verify over-cap user sees Upgrade paywall on config-fetch 402 (all protocols)",
+      "description": "Backend now returns HTTP 402 DATA_CAP_REACHED on the config-FETCH endpoints (GET /servers/{id}/config, /ikev2-config, /openvpn-config, /caspercloak-config), not just /connect + /wireguard-config. iOS commit 46f6fae2a (branch claude/happy-mcnulty-6e1c1c -> development) routes that 402 to the existing data-cap paywall (DataLimitExceededView) on EVERY connect path instead of a generic error / retry-storm / spinner hang.\n\nFiles: ios-app-v2/CasperVPN/CasperVPN/Core/Services/{APIClient.swift, VPNConnectionManager.swift, SmartConnectManager.swift}.\n\nDEVICE TEST (needs a FREE account already OVER its 512MB cap; paid/limit=0 are exempt by design): with the over-cap account, tap Connect and verify the Upgrade paywall (DataLimitExceededView) appears \u2014 NOT a generic 'couldn't connect' alert and NOT a hang \u2014 on EACH protocol: (1) WireGuard, (2) IKEv2, (3) OpenVPN, (4) CasperCloak, (5) Quick Connect (auto/SmartConnect), (6) dedicated-IP-over-CasperCloak path if the account owns a DI. Confirm the connection STOPS cleanly (no multi-protocol/alternate retry-storm, no spinner stuck on 'Connecting', no black screen). SAFETY: confirm internet still works after the 402 (kill switch/includeAllNetworks must NOT engage \u2014 fail-open). Capture device console if anything hangs. Build-verified only (arm64, 0 errors); awaiting CEO \ud83d\udfe2.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-06-30T01:28:47Z",
+      "createdDate": "2026-06-30",
+      "completedDate": null
     }
   ],
   "importantNotes": [
