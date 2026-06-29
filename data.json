@@ -21097,9 +21097,29 @@
       "createdAt": "2026-06-29T23:10:01Z",
       "createdDate": "2026-06-29",
       "completedDate": null
+    },
+    {
+      "id": "xd-708",
+      "from": "[CTO]",
+      "to": "[QA]",
+      "status": "pending",
+      "priority": "P1",
+      "title": "Validate worldwide force-CC list: LB removed (4 layers + both DBs), Gulf SA/BH/OM/VN kept",
+      "description": "WORLDWIDE force-CC (restricted-regions) list update \u2014 T2 of the CEO directive. REMOVED Lebanon (LB) from ALL FOUR layers byte-identically: (1) iOS MultiHopManager.restrictedRegions [development branch], (2) backend GeoIpService.RestrictiveCountries HashSet [production], (3) RestrictedCountryService.SeedCountries [production], (4) GeoIpServiceTests canonical 19->18 regression set [production]. Also DELETEd the LB row from restricted_countries on BOTH prod (caspervpn-postgres/caspervpn) and dev (caspervpn-dev-postgres/caspervpn_dev) DBs + FLUSHDB Redis on both (list is Redis-cached 2-5min). Canonical list is now 18: AE BH BY CN CU EG IR KP MM OM PK RU SA TJ TM TR UZ VN. Basis for LB removal: Lebanon throttles carrier UDP (Tier-3, perf-only) but does NOT block/DPI VPN protocols (CEO field note + T1 research + anticensorship skill Tier-3). GULF (SA/BH/OM/VN): KEPT ALL FOUR after OONI/Freedom-House verification \u2014 SA actively DPI-blocks WG/OpenVPN since mid-2024 (ML/entropy); VN signature-DPI blocks/throttles OpenVPN+WG; OM state-ISP blocks VPNs (forbidden, TRA-license-only); BH = website/IP-level VPN-service blocking, protocol-DPI unproven but no clear evidence it does NOT IP-block VPNs -> err KEEP. PROVEN: backend BUILD 0 errors; iOS BUILD SUCCEEDED; both git pushes verified (prod 35d9ac95, dev 29f7bb09); both DBs=18 + Redis flushed. QA ACTION: (a) confirm api rebuild landed the change (PARENT batches ONE api rebuild across parallel backend tasks \u2014 verify running DLL via strings -e l for 18-country list, no LB); (b) verify a Lebanon-geo /api/servers + connect now recommends a DIRECT (non-CC) protocol; (c) verify a SA/UAE/restricted-geo request still forces CC (409 region_requires_stealth on plain WG when StealthEnforcement on, or recommendedProtocol=caspercloak); (d) spot-check restricted_countries table = 18 rows, no LB, on prod+dev. PENDING: api rebuild (parent) + CEO device \ud83d\udfe2.",
+      "taskRef": "force-cc-worldwide-list",
+      "criteriaIdx": [],
+      "createdAt": "2026-06-29T20:13:46Z",
+      "dueBy": "2026-07-02T20:13:46Z",
+      "handoffTo": "[CEO]",
+      "handoffNote": "After QA pass: CEO device-verify a Lebanon connection now goes DIRECT (full speed, no CC) and a restricted-region connection still forces CC. Mark \ud83d\udfe2."
     }
   ],
   "importantNotes": [
+    {
+      "date": "2026-06-29",
+      "text": "[CTO 2026-06-29] WORLDWIDE force-CC list updated (T2). REMOVED only Lebanon (LB) from all 4 layers (iOS restrictedRegions, backend GeoIpService HashSet, RestrictedCountryService seed, regression test) + both prod & dev DB restricted_countries rows + Redis flush. Reason: LB = carrier UDP THROTTLE (Tier-3), not a VPN-protocol block \u2014 forcing CC worldwide for a throttle-only market hurt the default path. GULF VERIFIED & KEPT (OONI/Freedom House): SA (active DPI on WG/OpenVPN since mid-2024) KEEP; VN (signature-DPI blocks/throttles) KEEP; OM (state-ISP blocks VPNs, license-only) KEEP; BH (website/IP-level VPN blocking; no clear evidence it does NOT IP-block VPNs -> err KEEP) KEEP. Canonical now 18: AE BH BY CN CU EG IR KP MM OM PK RU SA TJ TM TR UZ VN. PROVEN: backend build 0 errors, iOS BUILD SUCCEEDED, prod push 35d9ac95 (backend) + dev push 29f7bb09 (iOS), both DBs=18 rows + Redis flushed. PENDING (NOT yet live): the prod api CONTAINER rebuild is batched by the parent across parallel backend tasks \u2014 until it rebuilds, the running DLL still has the old fallback HashSet (though the DB delete + Redis flush already stop LB enforcement via the PRIMARY DB-list path). Then CEO \ud83d\udfe2 (xd-708\u2192QA).",
+      "priority": "high"
+    },
     {
       "date": "2026-06-29T20:10:01Z",
       "from": "[BACKEND]",
