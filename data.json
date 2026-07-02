@@ -21254,11 +21254,15 @@
       "to": "[QA]",
       "title": "Handoff from ADMIN-PANEL: Validate Users-page plan/country/recurring filter controls (admin.caspervpn.com)",
       "description": "DEPLOYED prod commit fec5a854, live bundle main.3adbbb67.js. Verify: Plan dropdown (Weekly=3,Monthly=4), Country input (IR=16, case-insensitive), 'Recurring only' toggle backend recurring=true=6 vs baseline 122 (confirm cohort). Admin FE now builds again after restoring UserListFilterParams/ProtocolOverride contracts a prior [skip ci] promote regressed. Files: Users.tsx, adminService.ts, types/index.ts, AdminController.cs.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-07-02T01:11:03Z",
       "createdDate": "2026-07-02",
-      "completedDate": null
+      "completedDate": "2026-07-03",
+      "completedAt": "2026-07-03",
+      "completedBy": "[QA]",
+      "resolution": "QA PASS (runtime-verified live, independent of build agent): Users on-page filters \u2014 recurring=true\u21926, planId Weekly\u21923/Monthly\u21924, country IR\u219216, bundle main.ae73164c.js grep-confirms 'Recurring only'/'All plans'. Tier: tested \ud83d\udd35.",
+      "resultingHandoff": "importantNote \u2192 CEO for \ud83d\udfe2"
     },
     {
       "id": "xd-716",
@@ -21266,14 +21270,25 @@
       "to": "[QA]",
       "title": "Handoff from ADMIN-PANEL: Re-test all dashboard drill-downs + ConnectionLogs/Analytics/Subscriptions filters on bundle main.ae73164c.js",
       "description": "[ADMIN][BACKEND] commit f8828693 (prod, deploy-verified) fixed the 5 audited gaps + 1 found-in-flight: (1) Dashboard 'Recurring Subscriptions' card now drills to /users?recurring=true (6 recurring); (2) Analytics date range applies (was silent 400->unranged fallback; ranged vs unranged now differ, e.g. userGrowth 24/65 vs 26/69); (3) ConnectionLogs filters are REAL: dates (7d=1125 vs 1882 all), status (active=1/disconnected=1727), protocol (WG=1607/IKEv2=7/CC=205), User-Email box works via user= (real email=629 rows; unknown email=empty 200, not 400); Export CSV was 400 on default params - now 200 (1126 lines); (4) Subscriptions Active tab: server-side TablePagination + Status + Plan dropdowns (121 total, page2=21 previously-unreachable rows; Active=119/Expired=2; Free=113), sandbox toggle intact; (5) 'Active Users (30d)' tile drills to /users?activeWithinDays=30 (=77, matches tile + DB). QA: on admin.caspervpn.com hard-refresh (bundle main.ae73164c.js), click both dashboard cards, exercise every ConnectionLogs filter incl. an email + Export CSV, page past row 100 on Subscriptions Active tab + both dropdowns, and confirm the Users 'Active <=30d' chip appears/removes. Files: AdminService.cs, AdminController.cs, EnterpriseAdminController.cs, Dashboard.tsx, Subscriptions.tsx, Users.tsx, adminService.ts, types/index.ts.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-07-02T01:47:33Z",
       "createdDate": "2026-07-02",
-      "completedDate": null
+      "completedDate": "2026-07-03",
+      "completedAt": "2026-07-03",
+      "completedBy": "[QA]",
+      "resolution": "QA PASS (runtime-verified live): 5 drill-down/filter gaps \u2014 ConnectionLogs no-filter 1961\u2192WG 1684\u2192active 1, bad-email 200 (was 400); Analytics ranged HTTP 200 (was 400); activeWithinDays=30\u219276<124; Recurring card\u2192/users?recurring=true; Subscriptions pagination+Status/Plan controls. Tier: tested \ud83d\udd35.",
+      "resultingHandoff": "importantNote \u2192 CEO for \ud83d\udfe2"
     }
   ],
   "importantNotes": [
+    {
+      "id": "note-qa-2026-07-02",
+      "date": "2026-07-02",
+      "author": "[QA]",
+      "priority": "P1",
+      "text": "[QA PASSED 2026-07-02] Admin drill-downs + Users filters + over-cap enforcement \u2014 ALL runtime-verified live by QA (independent counts): ConnLogs protocol=1684/status=1/email=200; Analytics ranged=200; users activeWithinDays=76, recurring=6, planId 3/4, country 16; bundle main.ae73164c.js. Data-cap: over-cap /config=402 all protocols + wg-sync cut proven + 15-min monitor logs OK (12 over-cap users flat) + EnforceDataCap=true. READY FOR CEO \ud83d\udfe2 \u2014 hard-refresh admin.caspervpn.com (expect ae73164c). STILL PENDING device: iOS xd-706 (protocol-override routing) + xd-709 (402\u2192paywall) are BUILD-verified only \u2014 need CEO Lebanon TestFlight test (QA cannot device-test)."
+    },
     {
       "date": "2026-06-29",
       "text": "[CTO 2026-06-29 20:15Z] \u26a0\ufe0f force-CC LB removal \u2014 RACE FLAG for prod. My backend fix is on origin/production (35d9ac95) + dev iOS (29f7bb09); both BUILDS passed; both DBs were set to 18/no-LB + Redis flushed. BUT the prod api was recreated at 20:14Z by the parent's batched rebuild from the brain's LAGGING checkout (8dfdb76a, older than my fix) \u2192 it RE-SEEDED the old 19-list and re-added LB (proven: row reason = old 'Touch/Alfa' text). I re-deleted it (prod 18/0 now). EnsureSeededAsync is additive-only (never deletes), so the REQUIRED ORDER is: rebuild prod api from CURRENT origin/production FIRST, THEN delete the LB row + FLUSHDB once. Until the rebuild carries my code, the LB row reappears on every prod api restart. The 4 CODE layers (prod backend + dev iOS) and the dev DB are correct and stable. xd-708 has the full runbook.",
