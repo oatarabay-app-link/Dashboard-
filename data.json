@@ -21279,6 +21279,18 @@
       "completedBy": "[QA]",
       "resolution": "QA PASS (runtime-verified live): 5 drill-down/filter gaps \u2014 ConnectionLogs no-filter 1961\u2192WG 1684\u2192active 1, bad-email 200 (was 400); Analytics ranged HTTP 200 (was 400); activeWithinDays=30\u219276<124; Recurring card\u2192/users?recurring=true; Subscriptions pagination+Status/Plan controls. Tier: tested \ud83d\udd35.",
       "resultingHandoff": "importantNote \u2192 CEO for \ud83d\udfe2"
+    },
+    {
+      "id": "xd-717",
+      "from": "[CTO]",
+      "to": "[QA]",
+      "title": "Handoff from CTO: Verify over-cap data-cap enforcement \u2014 client-key blind-spot fix",
+      "description": "Verify no over-cap Free user can tunnel. ROOT (2026-07-06): wg-sync's peer->user resolver only derived deterministic keys for the polled server, so CLIENT-generated pubkeys were unmappable -> the existing over-cap cut never reached them -> 11 over-cap Free users bypassing fleet-wide (yako 7977%, nima 7384%, tamarasleem 910%, etc.). LIVE enforcement now: /opt/caspervpn/datacap_enforcement_sweep.sh (cron */3 on the brain) resolves each live peer via md5(pubkey)->ConnectionLog->user and cuts over-cap ones (proven: 5 cut this session, HTTP 200). PERMANENT backend fix committed to prod SOURCE b1ca3590 (WireGuardUsageSyncService md5 fallback, builds 0 errors) but NOT container-deployed (brain disk 99%). QA TO VERIFY: (1) tail /var/log/datacap-enforcer.log for CUT lines on real reconnects; (2) confirm an over-cap Free user's CurrentCycleDataUsedBytes goes flat while they attempt to connect; (3) after the backend deploys (disk grown), confirm '[wg-sync] mapped ... connlog-md5 client-key fallback' + the in-process cut fire. BLOCKER for permanent layer: grow the DO volume (brain disk floored at 99%).",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-07-06T22:58:51Z",
+      "createdDate": "2026-07-06",
+      "completedDate": null
     }
   ],
   "importantNotes": [
