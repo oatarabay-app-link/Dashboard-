@@ -21343,11 +21343,15 @@
       "to": "[IOS]",
       "title": "Handoff from DEVOPS: Basel (paid, UAE) wrongful logout + cold-login unreachable \u2014 2 iOS bugs (ship xd-686 + UAE cold-login front)",
       "description": "PAID subscriber Basel Saker (baselsaker55@gmail.com, UID 79675a02, UAE/iPhone iOS 26.5.1) app logged out + 'Apple Sign In failed' on 5G, cannot re-login. INVESTIGATED SERVER-SIDE (DevOps/Backend, 2026-07-07): account 100% HEALTHY (IsActive, valid RefreshToken->2026-08-05, sub active->2026-07-24, 0 failed logins). NOT datacap (sweep spares limit=0=unlimited; never in enforcer log). NOT the Apple Server-API creds change (sign-in path AppleSignInAsync->ValidateAppleIdentityTokenAsync reads only Apple:BundleId+Apple:JwksUrl). Backend + BOTH fronts healthy (cdn.capablitys.com + api.caspervpn.com /api/auth/apple -> 400 empty-body; /health 200). But 0 Apple validations reached backend in 24h -> his request dies at his network edge. TWO iOS BUGS TO FIX: (1) WRONGFUL LOGOUT: AppCoordinator.checkAuthenticationStatus (line 277) clears tokens when ensureValidSession() returns false. AuthService.ensureValidSession() was FIXED 2026-06-24 (xd-686) to KEEP session on network/transient failure + only logout on genuine 401/noRefreshToken. CONFIRM the PRODUCTION App Store build Basel has includes xd-686 (his UserAgent lacks a version). If his build predates it, constant UAE refresh-timeouts evict him = the logout trigger. SHIP xd-686 to prod if not already live. (2) COLD-LOGIN UNREACHABLE FROM UAE: prod app hits cdn.capablitys.com (neutral CF front) first, latches to api.caspervpn.com (branded, UAE-blocked) on connection failure and stays until relaunch (Config.swift:41, APIClient.swift:328). IMMEDIATE user workaround being tested: force-quit+reopen resets to the neutral front. IF cold login STILL fails after force-quit -> cdn.capablitys.com is blocked in UAE -> need CasperCloak/domain-front for the pre-login auth path (coordinate w/ anti-censorship). Goal: a UAE user with a dead session must be able to re-login WITHOUT another VPN. Do NOT tell users to use another VPN. REPO under submission freeze \u2014 shipping is CEO-gated. || CONFIRMED 2026-07-08 (artifact): Basel logged in from UAE (LastLoginAt 2026-07-08 04:29Z AE, healthy since) WITHOUT another VPN via force-quit/relaunch -> cdn.capablitys.com IS reachable from UAE. So bug (2) is CONFIRMED the one-shot host latch, NOT a blocked front. PRECISE FIX: reset Config._activeAPIBaseOverride=nil when showing the login screen / before any cold unauthenticated auth request, so a logged-out UAE user always starts on the neutral front (no manual relaunch). Bug (1) wrongful-logout (confirm xd-686 shipped) still stands.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P0",
       "createdAt": "2026-07-07T12:32:22Z",
       "createdDate": "2026-07-07",
-      "completedDate": null
+      "completedDate": "2026-07-10",
+      "completedAt": "2026-07-10",
+      "completedBy": "[DEVOPS]",
+      "resolution": "FINALIZED into specific agent-owned tasks (CEO 2026-07-09). Root causes CONFIRMED: (1) cold-login = one-shot front-latch (Basel logged in from UAE via relaunch, artifact LastLoginAt 2026-07-08); (2) logout = pre-xd-686 build behavior (confirm shipped). DVPN not-showing = CLIENT-side (server pool 12/12 healthy); force-CC resolution = soft sticky-region shipped + StealthEnforcement held false until CC device-proven; speed = jitter removed fleet-wide (no regression), device throughput pending.",
+      "resultingHandoff": "xd-721\u2192IOS, xd-722\u2192IOS, xd-723\u2192IOS, xd-724\u2192IOS, xd-725\u2192QA"
     },
     {
       "id": "xd-720",
@@ -21359,6 +21363,66 @@
       "priority": "P1",
       "createdAt": "2026-07-07T12:32:22Z",
       "createdDate": "2026-07-07",
+      "completedDate": null
+    },
+    {
+      "id": "xd-721",
+      "from": "[DEVOPS]",
+      "to": "[IOS]",
+      "title": "Handoff from DEVOPS: [agent: caspervpn-ios] Front-latch reset on login screen (Basel cold-login)",
+      "description": "CONFIRMED root cause (Basel, UAE, 2026-07-08 login artifact): the one-shot API front latch (Config._activeAPIBaseOverride, Config.swift:41) pins the app to the UAE-blocked brand host api.caspervpn.com after a connection blip and only resets on relaunch \u2192 a logged-out UAE user is stuck until force-quit. FIX: reset _activeAPIBaseOverride=nil when the login screen appears / before any unauthenticated (cold) auth request, so a fresh login always starts on the neutral front cdn.capablitys.com (PROVEN reachable from UAE by Basel's successful relaunch login). Owner: caspervpn-ios. Repo under submission freeze \u2014 CEO-gated ship.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-07-10T00:30:28Z",
+      "createdDate": "2026-07-10",
+      "completedDate": null
+    },
+    {
+      "id": "xd-722",
+      "from": "[DEVOPS]",
+      "to": "[IOS]",
+      "title": "Handoff from DEVOPS: [agent: caspervpn-ios] Verify/ship xd-686 no-wrongful-logout in PROD App Store build",
+      "description": "AuthService.ensureValidSession() (xd-686, 2026-06-24) returns true (keep session) on network/transient refresh failure, false (logout) ONLY on genuine 401/noRefreshToken; AppCoordinator:277 clears tokens when it returns false. CONFIRM the shipped App Store build users are on INCLUDES xd-686 (Basel's UserAgent lacked a version). If a pre-2026-06-24 build is live, constant UAE refresh-timeouts still evict users = the original logout. Ship xd-686 to prod if not live. Owner: caspervpn-ios.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-07-10T00:30:28Z",
+      "createdDate": "2026-07-10",
+      "completedDate": null
+    },
+    {
+      "id": "xd-723",
+      "from": "[DEVOPS]",
+      "to": "[IOS]",
+      "title": "Handoff from DEVOPS: [agent: caspervpn-ios] DVPN /multihop/routes client robustness (2-build discrepancy)",
+      "description": "MEASURED server-side: route pool HEALTHY now (12/12 Online, CC-capable, Load<80) so backend offers full DVPN. One app build shows DVPN, the other does not on the SAME backend => client-side. PENDING the CEO's 2 device logs to pinpoint: /multihop/routes fetch not completing (front-latch/connectivity, same class as 719a), auth 403 (no Active subscription), or a decode-shape mismatch between the build and MultiHopRoutesResponse. Also handle the DYNAMIC Load<80 gate gracefully (show 'temporarily unavailable' vs blank). Owner: caspervpn-ios. BLOCKED on the 2 logs.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-07-10T00:30:28Z",
+      "createdDate": "2026-07-10",
+      "completedDate": null
+    },
+    {
+      "id": "xd-724",
+      "from": "[DEVOPS]",
+      "to": "[IOS]",
+      "title": "Handoff from DEVOPS: [agent: caspervpn-ios + caspervpn-anticensorship] Force-CC restricted-region on-device validation",
+      "description": "The soft sticky-region force-CC is shipped (backend xd-667 ResolveRegionRestrictedStickyAsync ServersController:158/901; iOS xd-666 Keychain flag MultiHopManager:195). StealthEnforcement HARD gate stays false (verified live) until CC is device-proven (forcing CC while unreliable bricks users). VALIDATE on-device from a restricted region (UAE/LB): app forces CC, does NOT fall back to plain WG, IP/region correct, no brick. Only after this passes is flipping StealthEnforcement=true even a discussion. Owner: caspervpn-ios w/ caspervpn-anticensorship. Needs restricted-region device.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-07-10T00:30:28Z",
+      "createdDate": "2026-07-10",
+      "completedDate": null
+    },
+    {
+      "id": "xd-725",
+      "from": "[DEVOPS]",
+      "to": "[QA]",
+      "title": "Handoff from DEVOPS: [agent: caspervpn-qa] On-device CasperCloak speed test (external, not in-app counter)",
+      "description": "Per-packet obfs jitter REMOVED fleet-wide 2026-06-17 (13/13, UK-LON still jitter=0 verified 2026-07-09) \u2014 the ~0.4 Mbps relay cap is gone (PROVEN server-side). In-app throughput reads 0 for CC (WG usage-sync doesn't attribute CC bytes) so MEASURE WITH fast.com/external per protocol+region. Report delivered Mbps; compare CC vs plain WG vs direct. Structural ceiling (WG-over-TCP-over-CF HOL + RTT) is expected; QUIC/MASQUE is the future lever. Owner: caspervpn-qa. Needs device.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-07-10T00:30:28Z",
+      "createdDate": "2026-07-10",
       "completedDate": null
     }
   ],
