@@ -21424,6 +21424,18 @@
       "createdAt": "2026-07-10T00:30:28Z",
       "createdDate": "2026-07-10",
       "completedDate": null
+    },
+    {
+      "id": "xd-726",
+      "from": "[DEVOPS]",
+      "to": "[IOS]",
+      "title": "Handoff from DEVOPS: Double VPN fails in Lebanon: MH CF-fronted entry times out (POSIX 60) while bare-relay single-hop works \u2014 bare-relay MH fallback + UI state fix",
+      "description": "MEASURED 2026-07-10 (device logs + server probes). Paid user (id 2eecd0e6, regionHint=LB Lebanon, 4G) Double VPN (Multi-Hop) fails: UI 'Connection Error CasperCloak Obfs4TransportError error 3' (=.notConnected). PROVEN server-side ALL HEALTHY: origin POST /api/multihop/connect=200 (client-seen 502 was a TRANSIENT Cloudflare->origin blip on a slow 1.5-1.8s response, NOT persistent); CF Worker fronted WS upgrade ws-edge.applinks-edge.workers.dev/s5 & /s12 = HTTP 101 (JWT valid, upgrade OK, minted with live CloudfrontFronting__JwtSecret); MH entry relay s5 (51.158.147.210:443)=200. MEASURED CLIENT FAILURE: obfs NWConnection to the CF Worker sits nwstate=waiting -> POSIX 60 ETIMEDOUT +11.5s, path=satisfied ifaces=[cellular]; backend diagnostic MultiHopProtocolServedClient failureCategory=handshake-timeout latencyMs=19832; even the WireGuard fallback failed (LB UDP throttle). DISCRIMINATOR: single-hop CC dials the BARE relay IP directly and CONNECTS (Log B); Multi-Hop routes the entry hop through the CF Worker front (CF anycast 188.114.x) and TIMES OUT (Log C). => Double VPN fails because its CF-fronted entry is unreachable/throttled from Lebanese cellular, while single VPN works direct. LB is Tier-3 (throttle, NOT DPI-block) so the bare relay is SAFE there \u2014 fronting only adds a throttled anycast hop. FIX (iOS + backend, NOT origin \u2014 origin/Worker/relay are healthy): in Tier-3 throttle regions (LB) let Multi-Hop use the BARE-RELAY entry (like single-hop) OR fall back to bare-relay entry when the CF-fronted entry times out ~2 attempts (MultiHopController.BuildCloudfrontHop gates on EntryIdByServerName; iOS Obfs4Transport MH entry selection). Distinct from the POSIX-53/TFO bg-reconnect saga (that is 24e-24q, ECONNABORTED; THIS is POSIX-60 ETIMEDOUT foreground MH). PLUS UI BUG: app shows 'Double VPN Connected' (green) simultaneously with the Connection Error + 0bps + 00:00:00 timer \u2014 optimistic connected-state before transport confirms; fix the MH state machine to not show Connected until the obfs handshake completes. NEEDS: a Lebanon-side probe to PROVE the CF-anycast throttle (cannot test from fleet).",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-07-10T01:23:43Z",
+      "createdDate": "2026-07-10",
+      "completedDate": null
     }
   ],
   "importantNotes": [
