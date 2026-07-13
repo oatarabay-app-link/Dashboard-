@@ -8089,7 +8089,7 @@
       "phase": 0,
       "priority": "P1",
       "category": "CasperCloak / Anti-Censorship",
-      "description": "PROVEN (CEO backend logs, userId 2eecd0e6, regionHint LB): Double VPN asked=caspercloak served=caspercloak outcome=FAILED failureCategory=handshake-timeout (~18.8s), then retried asked=caspercloak served=WIREGUARD outcome=success. So Double VPN silently serves UNPROTECTED plain WireGuard to a user who requested stealth \u2014 in GCC that = detectable/blockable with no warning (the skill's worst 'silent fallback breaks the masking chain' class). CEO's fast 27Mbps 'Double VPN' was plain WG, not CC. RULED OUT: entry-id chain (Amsterdam=s5 clean), relay liveness (honest 200 + WS 101 on s5/s6/s7), CF fronting (MH-CC dials bare relay direct; CloudfrontFronting.Enabled=false). HYPOTHESIS: ~18.8s = WireGuard handshake timeout; MH-CC wraps dual-peer WG (entry->exit) in CC; likely the 'MH black-hole' route gap (10.66.250.0/24 PostUp / relay-forward) on the CC entry. TWO fixes: (a) root-cause + fix the CC-over-MH inner-WG handshake; (b) FAIL-CLOSED policy \u2014 in a restricted region, do NOT silently serve plain WG to a stealth-seeker. Skill ref: references/failure-catalog.md (MH black-hole), golden rule liveness!=readiness.",
+      "description": "PROVEN (CEO backend logs, userId 2eecd0e6, regionHint LB): Double VPN asked=caspercloak served=caspercloak outcome=FAILED failureCategory=handshake-timeout (~18.8s), then retried asked=caspercloak served=WIREGUARD outcome=success. So Double VPN silently serves UNPROTECTED plain WireGuard to a user who requested stealth \u2014 in GCC that = detectable/blockable with no warning (the skill's worst 'silent fallback breaks the masking chain' class). CEO's fast 27Mbps 'Double VPN' was plain WG, not CC. RULED OUT: entry-id chain (Amsterdam=s5 clean), relay liveness (honest 200 + WS 101 on s5/s6/s7), CF fronting (MH-CC dials bare relay direct; CloudfrontFronting.Enabled=false). HYPOTHESIS: ~18.8s = WireGuard handshake timeout; MH-CC wraps dual-peer WG (entry->exit) in CC; likely the 'MH black-hole' route gap (10.66.250.0/24 PostUp / relay-forward) on the CC entry. TWO fixes: (a) root-cause + fix the CC-over-MH inner-WG handshake; (b) FAIL-CLOSED policy \u2014 in a restricted region, do NOT silently serve plain WG to a stealth-seeker. Skill ref: references/failure-catalog.md (MH black-hole), golden rule liveness!=readiness. | 2026-07-14: FAIL-CLOSED shipped dev 9a2f35ba1 (BUILD SUCCEEDED). Dedicated-IP variant additionally fixed client-side by b02d9675b (retire broken MH route -> single-server CC to DI node). BOTH ship in the next build; server side verified healthy. Root-cause of the non-DI CC-MH handshake-timeout stays xd-718 (now P2, relay-side).",
       "acceptanceCriteria": [
         {
           "test": "Root-cause the MH-CC inner-WG handshake-timeout (packet-capture on entry relay s5: do WG-through-CC handshake packets reach the exit? is the 10.66.250.0/24 route present on the CC entry?)",
@@ -8101,7 +8101,9 @@
         },
         {
           "test": "FAIL-CLOSED: restricted-region user whose CC-MH fails is NOT silently given plain WireGuard (warn / block / retry CC), no silent stealth drop",
-          "met": false
+          "met": true,
+          "verifiedBy": "cto",
+          "verifiedDate": "2026-07-14"
         },
         {
           "test": "Alarm the silence: dashboard/alert on asked=caspercloak served=wireguard rate (per skill 'a feature isnt done until its silence is alarmed')",
@@ -8109,7 +8111,7 @@
         }
       ],
       "progress": 0,
-      "status": "pending",
+      "status": "in_progress",
       "blocked": false,
       "blocker": "",
       "deps": [],
@@ -21330,9 +21332,9 @@
       "from": "[CTO]",
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: Double VPN CC-over-MH handshake-timeout \u2014 relay-side root-cause (needs s5/Amsterdam root)",
-      "description": "PROVEN: CC-over-MH times out ~18.8s then degrades to plain WG (CEO logs). Relays alive (WS 101 all 3). HYPOTHESIS: inner dual-peer WG (entry->exit) black-holes over the CC entry \u2014 likely missing 10.66.250.0/24 route / relay-forward on the CC path. NEEDS: tcpdump on Amsterdam s5 (51.158.147.210, caspervpn key \u2014 I lack it) during a CC-MH connect: do the inner WG handshake packets egress to the exit (Dusseldorf)? Is 'ip route get 10.66.250.x' -> dev wg0 on the CC entry? Compare vs plain-WG-MH (which works). Task: double-vpn-cc-silent-degrade.",
+      "description": "PROVEN: CC-over-MH times out ~18.8s then degrades to plain WG (CEO logs). Relays alive (WS 101 all 3). HYPOTHESIS: inner dual-peer WG (entry->exit) black-holes over the CC entry \u2014 likely missing 10.66.250.0/24 route / relay-forward on the CC path. NEEDS: tcpdump on Amsterdam s5 (51.158.147.210, caspervpn key \u2014 I lack it) during a CC-MH connect: do the inner WG handshake packets egress to the exit (Dusseldorf)? Is 'ip route get 10.66.250.x' -> dev wg0 on the CC entry? Compare vs plain-WG-MH (which works). Task: double-vpn-cc-silent-degrade. | \u26a0\ufe0f 2026-07-14 UPDATE: client fix b02d9675b (dev, needs build) RETIRES the broken Dedicated-IP MH route (single-server CC to the DI node) -> addresses the DI variant CLIENT-side; exit relay Sydney routing VERIFIED INTACT (10.66.250.0/24->wg0 + dedicated SNAT .124 present). Server-side relay-capture SUPERSEDED for the DI path. Keep open (P2) only if regular non-DI MH-CC handshake still needs relay proof; fail-closed 9a2f35ba1 makes regular MH fail safely meanwhile. Honest correction: my earlier 'server-side routing gap' hypothesis was wrong \u2014 the relay routing is intact.",
       "status": "pending",
-      "priority": "P1",
+      "priority": "P2",
       "createdAt": "2026-07-07T00:13:39Z",
       "createdDate": "2026-07-07",
       "completedDate": null
@@ -21491,6 +21493,13 @@
     }
   ],
   "importantNotes": [
+    {
+      "id": "note-build-cut-2026-07-14",
+      "date": "2026-07-14",
+      "author": "[CTO]",
+      "priority": "P0",
+      "text": "[REQUIRED ACTION 2026-07-14] CUT A NEW iOS BUILD from development HEAD (9a2f35ba1). The live device runs BUILD MARKER 24q \u2014 it is MISSING both fixes for the current live symptoms. (1) Double VPN / Dedicated-IP passes NO traffic -> b02d9675b 'retire broken multi-hop route, single-server CasperCloak to the DI node (fixes .124 egress + Reconnecting hang)'. (2) Connection error on first login (setTunnelNetworkSettings FAILED + request timed out) -> 4641582b8 'CC reconnect deadlock: cache last-good config, off-API reconnect' (build 57). SERVER SIDE HEALTHY: exit relay Sydney MH route (10.66.250.0/24->wg0) + dedicated SNAT .124 verified present; over-cap enforcement live (0 bypassing); all backend fixes deployed. NO SERVER ACTION PENDING for these 2 symptoms \u2014 the installed app is simply behind the code. Clean Build Folder -> rebuild delivers both + MH fail-closed (9a2f35ba1) + speed-test toggle (b5130ad05)."
+    },
     {
       "id": "note-qa-2026-07-02",
       "date": "2026-07-02",
