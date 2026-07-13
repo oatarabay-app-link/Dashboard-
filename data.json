@@ -21452,6 +21452,42 @@
       "createdAt": "2026-07-13T23:56:07Z",
       "createdDate": "2026-07-13",
       "completedDate": null
+    },
+    {
+      "id": "xd-728",
+      "from": "[CTO]",
+      "to": "[BACKEND]",
+      "title": "Handoff from CTO: Fix WG liveness gate so keepalive-only TX isn't counted as 'live' (false connected-0MB)",
+      "description": "ROOT CAUSE (measured prod 2026-07-13/14, read-only): 'users connected with 0 MB' = abandoned WG peers kept falsely 'live'. WireGuardUsageSyncService.cs:218 isLive=(delta>0 || handshake<3min); persistent-keepalive TX (~20 B/s) on a dead peer keeps delta>0 TRUE -> LastSeenAt refreshed every poll -> BandwidthReconcileService zombie-sweep (gates LastSeenAt<45min) NEVER fires -> row 'connected' for days. BytesUploaded stays EXACTLY 0 (deltaRx=0), BytesDownloaded accrues keepalive TX (uniform ~7.9MB across users). Accounting arithmetic itself is CORRECT (lines 299-302); the LIVENESS gate is the bug. FIX: require fresh handshake (<3min) OR RX-delta above a keepalive floor, NOT delta>0, so the existing sweep can age these out. Scope small (11 rows/5 users). Do NOT touch the byte arithmetic. Needs build+deploy+CEO approval. See harness memory connected-zero-mb-keepalive-liveness-gate.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-07-14T00:19:09Z",
+      "createdDate": "2026-07-14",
+      "completedDate": null
+    },
+    {
+      "id": "xd-729",
+      "from": "[CTO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CTO: Reap stale/abandoned WG peers on fleet nodes (handshake age > rekey window)",
+      "description": "Same investigation: abandoned WireGuard peer entries are never removed from the node interfaces (handshakes frozen days-to-64-days; e.g. Amsterdam holds peers 64 days stale). These leaked peers ARE what the server keeps sending keepalives to, producing the false 'connected 0 MB' rows. FIX: periodic reaping of WG peers whose latest-handshake age exceeds the rekey window (e.g. >10min with frozen RX) across the fleet. MEASURE via node Flask /wireguard/peer-stats API (token VpnApi__Token) \u2014 host `wg show wg0` misses namespaced nodes. Read-only diagnosis only so far; nothing changed on prod.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-07-14T00:19:09Z",
+      "createdDate": "2026-07-14",
+      "completedDate": null
+    },
+    {
+      "id": "xd-730",
+      "from": "[CTO]",
+      "to": "[IOS]",
+      "title": "Handoff from CTO: Root-cause client bg-drop-without-teardown that abandons server WG peers (connected-0MB upstream)",
+      "description": "UPSTREAM SOURCE of the 'connected 0 MB' cohort (backend/devops fixes only clean the symptom). Clients (e.g. millesbennett@gmail.com) open a ConnectionLog then the tunnel carries ZERO bytes ever (bu=0/bd=0, closed auto-reconcile-stale(xd-507)/Timeout, no WireGuardPeerUsages row, NOT over-cap) \u2014 a genuine client-side connect / bg-drop-without-clean-teardown failure that leaves the server peer abandoned. Ties to cc-bg-reconnect-tfo-root and cc-reconnect-deadlock-config-refetch. NEEDS on-device console (idevicesyslog) per CLAUDE.md 7.1 to prove WHY the client abandons the peer (that step = HYPOTHESIS, not yet measured). App is NOT working for these users while it recurs.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-07-14T00:19:09Z",
+      "createdDate": "2026-07-14",
+      "completedDate": null
     }
   ],
   "importantNotes": [
