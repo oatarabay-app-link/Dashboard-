@@ -21490,6 +21490,42 @@
       "createdAt": "2026-07-14T00:19:09Z",
       "createdDate": "2026-07-14",
       "completedDate": null
+    },
+    {
+      "id": "xd-731",
+      "from": "[CTO]",
+      "to": "[BACKEND]",
+      "title": "Handoff from CTO: API file-log flood: EF Core INFO SQL logging ~1GB/day fills root disk",
+      "description": "MEASURED 2026-07-14: caspervpn-api /app/logs held 3.3GB after 3 days (du -sh), file tail = '[INF] Executed DbCommand' (every SQL query logged). Growth ~200KB/10s. This drove the DiskSpaceLow alert firing since 07-12; the 07-13 xd-728 deploy reset the writable layer (fresh container) but the defect persists and regrows ~1GB/day. FIX: appsettings Serilog override 'Microsoft.EntityFrameworkCore.Database.Command': 'Warning' + bound file retention (retainedFileCountLimit/fileSizeLimitBytes) or drop the file sink entirely (stdout already goes to docker logs which rotate). VERIFY after deploy: docker exec caspervpn-api du -sh /app/logs stays flat over 24h.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-07-15T00:41:58Z",
+      "createdDate": "2026-07-15",
+      "completedDate": null
+    },
+    {
+      "id": "xd-732",
+      "from": "[CTO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CTO: postgres-exporter: fold into compose + post-credential-change consumer checklist",
+      "description": "ROOT-CAUSED 2026-07-14: PostgresDown fired 6 days (since 07-07) because postgres-exporter \u2014 a raw docker-run container, invisible to compose \u2014 had a stale casper_prod password ('pq: password authentication failed'). Postgres itself was healthy throughout. FIXED same day: recreated with the live API password, pg_up 1 measured, no host port published. MAKE DURABLE: (1) define postgres-exporter in docker-compose.monitoring.yml with the password from env file so restarts/rotations propagate; (2) add post-credential-change verification to rotate-secrets.sh: after any casper_prod/key/PSK change verify ALL consumers re-auth \u2014 API container, postgres-exporter pg_up==1, FreeRADIUS sql module (the fleet-wide IKEv2 outage class, see ikev2-eap memory), wg-radius-accounting.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-07-15T00:41:58Z",
+      "createdDate": "2026-07-15",
+      "completedDate": null
+    },
+    {
+      "id": "xd-733",
+      "from": "[CTO]",
+      "to": "[QA]",
+      "title": "Handoff from CTO: Validate the new system-check routine (L3 security sweep + L4 daily triage task)",
+      "description": "Deliverables 2026-07-14: (1) scripts/security-sweep-weekly.sh deployed to UK-LON /opt/caspervpn/security_sweep_weekly.sh, cron Sun 03:30 UTC, first run launched \u2014 verify the report email arrived at oatarabay@gmail.com and the FINDINGS section is sane; (2) master spec memory/context/system-check-routine.md \u2014 verify layer map matches live crontab; (3) Claude scheduled task casper-system-check (daily 07:34 Mac-local) \u2014 verify its first run triages alerts and creates xd-tasks per the ownership table. Also verify PostgresDown resolved in Alertmanager and DiskSpaceLow behavior after the BACKEND log fix ships.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-07-15T00:41:58Z",
+      "createdDate": "2026-07-15",
+      "completedDate": null
     }
   ],
   "importantNotes": [
@@ -22086,6 +22122,12 @@
       "timestamp": "2026-05-07T00:13:59Z",
       "priority": "P3",
       "message": "[MARKETING] 2026-05-07 scheduled run: pushed 5 prior-session marketing files (xd-466/484 work) to origin/development that had not been pushed; cleaned 4 additional drift items in live-facing copy (blog pricing, App Store review templates, Play Store metadata). 8 commits on development. xd-503 closed as duplicate of xd-504. New xd-505 -> [QA] for verification."
+    },
+    {
+      "date": "2026-07-14",
+      "from": "[CTO]",
+      "priority": "P1",
+      "note": "[CTO] SYSTEM-CHECK ROUTINE LIVE + CEO DECISION NEEDED. (1) PostgresDown had fired 6 days unnoticed \u2014 root-caused (exporter stale password, DB was healthy), fixed, pg_up 1 measured. The gap was the triage loop, not detection: new daily Claude task casper-system-check now triages every alert >24h into an owned xd-task. New weekly security sweep (Sun 03:30) emails a heartbeat report. Master spec: memory/context/system-check-routine.md. (2) DECISION: UK-LON 48G root disk floors ~84% clean, so DiskSpaceLow(>80%) fires permanently = alert fatigue (it buried PostgresDown). RECOMMEND growing the DO volume; alternative is rebasing warn threshold 80->90. (3) API SQL-logging flood (~1GB/day) handed to BACKEND as P1."
     }
   ],
   "ctoBoard": {
