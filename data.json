@@ -21461,11 +21461,15 @@
       "to": "[BACKEND]",
       "title": "Handoff from CTO: Fix WG liveness gate so keepalive-only TX isn't counted as 'live' (false connected-0MB)",
       "description": "ROOT CAUSE (measured prod 2026-07-13/14, read-only): 'users connected with 0 MB' = abandoned WG peers kept falsely 'live'. WireGuardUsageSyncService.cs:218 isLive=(delta>0 || handshake<3min); persistent-keepalive TX (~20 B/s) on a dead peer keeps delta>0 TRUE -> LastSeenAt refreshed every poll -> BandwidthReconcileService zombie-sweep (gates LastSeenAt<45min) NEVER fires -> row 'connected' for days. BytesUploaded stays EXACTLY 0 (deltaRx=0), BytesDownloaded accrues keepalive TX (uniform ~7.9MB across users). Accounting arithmetic itself is CORRECT (lines 299-302); the LIVENESS gate is the bug. FIX: require fresh handshake (<3min) OR RX-delta above a keepalive floor, NOT delta>0, so the existing sweep can age these out. Scope small (11 rows/5 users). Do NOT touch the byte arithmetic. Needs build+deploy+CEO approval. See harness memory connected-zero-mb-keepalive-liveness-gate.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-07-14T00:19:09Z",
       "createdDate": "2026-07-14",
-      "completedDate": null
+      "completedDate": "2026-07-20",
+      "completedAt": "2026-07-20",
+      "completedBy": "[CTO]",
+      "resolution": "SHIPPED + PROVEN on prod. WireGuardUsageSyncService isLive gate delta>0 -> deltaRx>0 (commit ea99848e). Keepalive TX no longer counts as liveness, so dead tunnels stop refreshing LastSeenAt and age out to the 45-min zombie sweep. Verified on live prod: peer.LastSyncAt advancing (sync alive) + peer.RxBytes flat (deltaRx=0) + ConnectionLogs.LastSeenAt frozen & going stale. Billing + fresh-handshake branch + data-cap enforcement unchanged; no regression (PersistentKeepalive=25 keeps live-idle clients deltaRx>0). api health 200, container healthy.",
+      "resultingHandoff": "xd-731 to [DEVOPS] (prod auto-deploy pipeline broken: SUBMISSION_FREEZE blocks CI + brain checkout drift). xd-729 [DEVOPS] peer reaping and xd-730 [iOS] bg-teardown remain open."
     },
     {
       "id": "xd-729",
@@ -21525,6 +21529,18 @@
       "priority": "P1",
       "createdAt": "2026-07-15T00:41:58Z",
       "createdDate": "2026-07-15",
+      "completedDate": null
+    },
+    {
+      "id": "xd-734",
+      "from": "[CTO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CTO: Production backend deploy pipeline is BROKEN (CI frozen + brain checkout drift)",
+      "description": "Found while deploying xd-728. (1) auto-deploy.yml has failed at the freeze-check job on the last 3 production pushes (07-06, 07-10, 07-13) because SUBMISSION_FREEZE.lock has been ACTIVE since 2026-05-23 \u2014 deploy-do-production is SKIPPED every time, so NO backend deploy has landed via CI in ~8 days while commits kept merging to production. (2) The brain deploy checkout /root/Casper/Casper-Code had drifted: HEAD b1ca3590 (07-06) with a STAGED DeviceLimitService.cs change (the 07-10 hardening) \u2014 i.e. the running container was built from an uncommitted working-tree state, so git HEAD did NOT describe the running bytes. I reconciled it to origin/production this session (guarded: verified prod already contained the staged hardening so the reset was loss-free). NEEDED: decide the freeze policy (either lift/re-arm around deploys as documented in SUBMISSION_FREEZE.lock, or add a contract-neutral bypass path), and add a guard so the brain checkout can never deploy from a dirty/behind working tree (e.g. fail the deploy if `git status --porcelain` is non-empty or HEAD != origin/production). Manual recipe that works today: guard -> git fetch+reset --hard origin/production -> docker compose -f docker-compose.yml build api (CACHED, never --no-cache: 48G disk floors ~88%) -> up -d --no-deps api -> nginx -s reload (rebuilt api gets a new internal IP).",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-07-20T22:44:36Z",
+      "createdDate": "2026-07-20",
       "completedDate": null
     }
   ],
