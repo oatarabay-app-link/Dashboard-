@@ -21542,6 +21542,18 @@
       "createdAt": "2026-07-20T22:44:36Z",
       "createdDate": "2026-07-20",
       "completedDate": null
+    },
+    {
+      "id": "xd-735",
+      "from": "[DEVOPS]",
+      "to": "[IOS]",
+      "title": "Handoff from DEVOPS: CC slow/unstable + phone STUCK in bg (LB): CF-Worker recovery path times out (URLSession baseline now DEAD 9s) -> 309s zombie; bare-relay CC for Tier-3 + fast escalation",
+      "description": "MEASURED 2026-07-14..20 device log (build 2026-06-24q, paid user 2eecd0e6, regionHint=LB Lebanon, cellular). CEO report: app slow+unstable when connected, phone STUCK when VPN in bg. ROOT (measured): CasperCloak transport + its 24o recovery both depend on the CF-Worker path ws-edge.applinks-edge.workers.dev, which TIMES OUT from this Lebanese cellular network. Evidence: '[CC-RECONNECT] recovery FAILED after 309.4s: couldn't pass traffic on Paris (handshake gate)' + 'zombie confirmed (2 probes failed)'; '[CC-DIAL] urlsession-probe=ERR timed out in 9006ms' (was the reliable ~250ms baseline the ENTIRE 24e-24q effort relied on!); '[CC-DIAL] RESULT ws=timeout elapsed=11.9s'; 'warm-get result=ERR timed out in 2502ms'. => the 24o warm-GET recovery CANNOT WORK by design because the URLSession-to-Worker baseline it assumes is now dead \u2192 309s zombie \u2192 phone stuck in bg; reconnect churn \u2192 slow/unstable. SERVER SIDE PROVEN HEALTHY (so NOT infra): CF Worker WS upgrade /s5 = HTTP 101 from brain; Paris (163.172.62.64, s7.pompesh.com) Status=Online Load=0. SAME root as xd-726 (CF-fronted path times out from LB) now extended to SINGLE-HOP CC recovery. FIX (iOS, NOT infra): (1) in Tier-3 throttle regions (LB) route CC transport+recovery to the BARE relay directly (LB throttles, does NOT DPI-block, bare relay is safe \u2014 same as single-hop Log B) instead of the CF-Worker/warm-GET path; (2) when the warm-GET/URLSession probe ITSELF times out, escalate to clean-restart/node-switch FAST \u2014 do NOT sit in the 309s zombie budget; (3) the '309s recovery' + 'handshake gate' zombie budget is far too long for a user actively waiting. POSSIBLE INFRA MITIGATION (devops, hypothesis): try the custom CF front domain edge.pompesh.com vs ws-edge.applinks-edge.workers.dev if workers.dev is specifically throttled in LB (needs a LB-side probe to confirm). DISTINCT from POSIX-53/TFO bg-reconnect [[cc-bg-reconnect-tfo-root]] (that's ECONNABORTED; here the Worker PATH itself times out, POSIX-60-class). NEEDS a Lebanon-side [CC-DIAL] wifi-vs-cellular probe to PROVE the carrier throttle. NOTE: byte-accounting shows 9.65TB (WG cumulative double-count artifact, separate) \u2014 NOT the slowness cause.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-07-20T23:07:55Z",
+      "createdDate": "2026-07-20",
+      "completedDate": null
     }
   ],
   "importantNotes": [
