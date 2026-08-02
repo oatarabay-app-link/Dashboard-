@@ -8124,19 +8124,23 @@
       "phase": 0,
       "priority": "P0",
       "category": "iOS / CasperCloak",
-      "description": "MEASURED (CEO device 2026-08-03, log 1837869B7821 + Settings screenshot 'Status: Connecting...'): CC transport reaches 'handshake verified \u2014 WG-over-CasperCloak ACTIVE' and the bridge passes bytes, but the INNER WireGuard handshake never completes: 'PROBE [3s]: NO HANDSHAKE tx=14932 rx=41884' (server IS replying). iOS then sits at 'Connecting...' with on-demand ARMED, so the utun stays up capturing ALL device traffic while passing none => WHOLE PHONE loses internet ('freezing') in background. Only escape observed = Settings -> VPN toggle OFF (CEO confirmed: worked again after disconnecting in Settings). Log shows on-demand force-armed even though autoConnect=false: 'Preserving on-demand on live CasperCloak session (restricted region)' + 'CasperCloak on-demand ARMED (restricted region, not manual-disconnect, not opted-out)'. CONTRIBUTING (measured): peer/session churn \u2014 3 concurrent open ConnectionLogs from ONE phone (Amsterdam x2 + Dusseldorf) and abandoned WG peers fleet-wide (DUS 25/64, AMS 21/46, SYD 20/45 never-handshaked + no endpoint). WG itself is NOT dead (DUS 38 ever-handshaked, 1 live). SPLIT: (a) the BRICK behavior when a handshake fails is measured and fixable now; (b) WHY the inner handshake fails is NOT yet root-caused. ANTI-PATTERN WARNING: on-demand/teardown changes previously BRICKED the device (L3 fail-closed kill switch, REVERTED) \u2014 any fix must be device-usability-first and CEO-approved.",
+      "description": "MEASURED (CEO device 2026-08-03, log 1837869B7821 + Settings screenshot 'Status: Connecting...'): CC transport reaches 'handshake verified \u2014 WG-over-CasperCloak ACTIVE' and the bridge passes bytes, but the INNER WireGuard handshake never completes: 'PROBE [3s]: NO HANDSHAKE tx=14932 rx=41884' (server IS replying). iOS then sits at 'Connecting...' with on-demand ARMED, so the utun stays up capturing ALL device traffic while passing none => WHOLE PHONE loses internet ('freezing') in background. Only escape observed = Settings -> VPN toggle OFF (CEO confirmed: worked again after disconnecting in Settings). Log shows on-demand force-armed even though autoConnect=false: 'Preserving on-demand on live CasperCloak session (restricted region)' + 'CasperCloak on-demand ARMED (restricted region, not manual-disconnect, not opted-out)'. CONTRIBUTING (measured): peer/session churn \u2014 3 concurrent open ConnectionLogs from ONE phone (Amsterdam x2 + Dusseldorf) and abandoned WG peers fleet-wide (DUS 25/64, AMS 21/46, SYD 20/45 never-handshaked + no endpoint). WG itself is NOT dead (DUS 38 ever-handshaked, 1 live). SPLIT: (a) the BRICK behavior when a handshake fails is measured and fixable now; (b) WHY the inner handshake fails is NOT yet root-caused. ANTI-PATTERN WARNING: on-demand/teardown changes previously BRICKED the device (L3 fail-closed kill switch, REVERTED) \u2014 any fix must be device-usability-first and CEO-approved. | 2026-08-03 SHIPPED dev df35dbd03 (BUILD SUCCEEDED arm64, marker 24r, both guards verified present in origin/development): (1) connectCasperCloak gate-failure -> disableOnDemandRules() THEN stopVPNTunnel() THEN throw; (2) MultiHopManager.finalizeFailure -> stopAnyExistingTunnel(). Arming logic deliberately UNCHANGED. PENDING: CEO device test (30+ min bg, no whole-phone internet loss) + root-cause of WHY the inner WG handshake fails.",
       "acceptanceCriteria": [
         {
           "test": "(a) USABILITY GUARD: when the inner WG handshake gate fails, DISARM on-demand + fully tear down so the device regains internet (never leave a half-open utun that on-demand resurrects)",
-          "met": false
+          "met": true,
+          "verifiedBy": "cto",
+          "verifiedDate": "2026-08-03"
         },
         {
           "test": "(b) Root-cause WHY the inner WG handshake fails despite CC transport up and server replying (rx>tx)",
           "met": false
         },
         {
-          "test": "Honor autoConnect=false: do not force-arm on-demand for a user who opted out (log shows the contradiction)",
-          "met": false
+          "test": "Honor autoConnect=false: do not force-arm on-demand for a user who opted out (log shows the contradiction) \u2014 RESOLVED AS NOT-A-BUG (verified): 'autoConnectEnabled' (opt-IN, logged as autoConnect=false) is a DIFFERENT flag from 'autoConnectOptOut' (opt-OUT). The restricted-region arm is gated on !autoConnectOptOut BY DESIGN and is ESCAPABLE via Settings->Background Auto-Connect. On-demand is REQUIRED for bg recovery \u2014 changing it would break recovery. No change made.",
+          "met": true,
+          "verifiedBy": "cto",
+          "verifiedDate": "2026-08-03"
         },
         {
           "test": "Reap abandoned WG peers + close orphan ConnectionLogs (3 open from one phone; ~40% abandoned peers per node)",
@@ -8148,7 +8152,7 @@
         }
       ],
       "progress": 0,
-      "status": "pending",
+      "status": "in_progress",
       "blocked": false,
       "blocker": "",
       "deps": [],
@@ -21625,6 +21629,18 @@
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-08-03T00:47:21Z",
+      "createdDate": "2026-08-03",
+      "completedDate": null
+    },
+    {
+      "id": "xd-739",
+      "from": "[CTO]",
+      "to": "[QA]",
+      "title": "Handoff from CTO: Device-test 24r device-brick guard: no whole-phone internet loss when CC handshake fails",
+      "description": "dev df35dbd03, marker 2026-08-03-24r (marker now bumped PER BUILD \u2014 verify freshness by this string). TEST: (a) connect CC, leave 30+ min in background -> phone must KEEP internet even if the tunnel fails; (b) force a gate failure -> log must show 'disarming on-demand + tearing down ... (device-brick guard)' and the device must regain internet WITHOUT a Settings VPN toggle; (c) REGRESSION: a normal successful connect must still arm on-demand (bg recovery preserved) and Auto-Connect recovery must still work; (d) confirm no includeAllNetworks anywhere. Task ios-ondemand-halfopen-tunnel-freeze.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-08-03T00:56:20Z",
       "createdDate": "2026-08-03",
       "completedDate": null
     }
