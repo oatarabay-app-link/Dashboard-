@@ -21643,6 +21643,42 @@
       "createdAt": "2026-08-03T00:56:20Z",
       "createdDate": "2026-08-03",
       "completedDate": null
+    },
+    {
+      "id": "xd-740",
+      "from": "[CTO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CTO: Deploy signup-abuse defense to DEV + confirm verification mail reaches an inbox",
+      "description": "Branch dev/email-verification-2026-08-10 @ c5c370e1d (builds clean, 0 errors; NOT deployed). Deploy to dev and confirm migration 20260810000000 applies (5 Users columns + 2 indexes, backfills the 55 mailinator rows to IsDisposableEmail=true). THEN THE BLOCKER: the email-verification gate ships DISABLED (EmailVerification:GateVpnAccess=false) because this gate on a silently-broken mail pipeline would lock out EVERY new signup. Resend reported last_event=delivered on 4 test sends but nobody has confirmed a message ARRIVING in a real inbox. Send a verification mail to a real external inbox (gmail + icloud, check spam) and report back. Also set Security__Registration__AttributionKey to a random 32+ char secret in dev and prod env; it falls back to Jwt:SecretKey when unset, which works but couples IP-hash rotation to the JWT secret.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-08-11T00:16:32Z",
+      "createdDate": "2026-08-11",
+      "completedDate": null
+    },
+    {
+      "id": "xd-741",
+      "from": "[CTO]",
+      "to": "[QA]",
+      "title": "Handoff from CTO: Verify signup-abuse acceptance criteria on dev",
+      "description": "After DevOps deploys dev/email-verification-2026-08-10. Test: (1) POST /api/auth/register with x@mailinator.com -> 400 errorCode DISPOSABLE_EMAIL; (2) register with a normal gmail -> succeeds, and the Users row has RegistrationIpHash, RegistrationSubnetHash, RegistrationCountry, RegistrationUserAgent populated (hashes, NOT raw IPs); (3) 6 registrations within an hour from one IP -> 6th gets 429 SIGNUP_RATE_LIMITED; (4) with EmailVerification__GateVpnAccess=true, an unverified post-cutoff account gets 403 AUTH_1006 from ALL of: /api/servers/{id}/config, /wireguard-config, /ikev2-config, /openvpn-config, /connect, /caspercloak-config, /api/vpn/config, /api/vpn/connect, /api/multihop/connect, AND the RADIUS path (IKEv2/OpenVPN must fail with 'Email not verified'); (5) a PRE-cutoff unverified account (e.g. nima.niroo20@gmail.com, 180 sessions) still connects \u2014 grandfathering must hold; (6) an Apple/Google SSO account is never gated; (7) admin GET /api/admin/users?suspectedAbuse=true returns the 55 in the {success,data} envelope. Unit-level logic already covered: 54/54 in a standalone harness. This is the on-deploy pass.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-08-11T00:16:32Z",
+      "createdDate": "2026-08-11",
+      "completedDate": null
+    },
+    {
+      "id": "xd-742",
+      "from": "[CTO]",
+      "to": "[IOS]",
+      "title": "Handoff from CTO: Handle 403 AUTH_1006 (EMAIL_NOT_VERIFIED) on config fetch",
+      "description": "Backend now returns 403 with errorCode AUTH_1006 and a JSON body {success:false, errorCode, message, email, resendEndpoint:'/api/auth/resend-verification'} from every VPN config/connect endpoint when the account is unverified. Currently DISABLED server-side (EmailVerification:GateVpnAccess=false) so there is no rush, but the client should show the message verbatim with a one-tap Resend action rather than a generic connection failure \u2014 otherwise a user who never verified just sees the tunnel fail. Also note registration can now return 400 DISPOSABLE_EMAIL (field:'email') and 429 SIGNUP_RATE_LIMITED; the signup form should surface both inline instead of a generic error.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-08-11T00:16:32Z",
+      "createdDate": "2026-08-11",
+      "completedDate": null
     }
   ],
   "importantNotes": [
