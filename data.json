@@ -21650,11 +21650,15 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: Deploy signup-abuse defense to DEV + confirm verification mail reaches an inbox",
       "description": "Branch dev/email-verification-2026-08-10 @ c5c370e1d (builds clean, 0 errors; NOT deployed). Deploy to dev and confirm migration 20260810000000 applies (5 Users columns + 2 indexes, backfills the 55 mailinator rows to IsDisposableEmail=true). THEN THE BLOCKER: the email-verification gate ships DISABLED (EmailVerification:GateVpnAccess=false) because this gate on a silently-broken mail pipeline would lock out EVERY new signup. Resend reported last_event=delivered on 4 test sends but nobody has confirmed a message ARRIVING in a real inbox. Send a verification mail to a real external inbox (gmail + icloud, check spam) and report back. Also set Security__Registration__AttributionKey to a random 32+ char secret in dev and prod env; it falls back to Jwt:SecretKey when unset, which works but couples IP-hash rotation to the JWT secret.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-08-11T00:16:32Z",
       "createdDate": "2026-08-11",
-      "completedDate": null
+      "completedDate": "2026-08-12",
+      "completedAt": "2026-08-12",
+      "completedBy": "[CTO]",
+      "resolution": "Superseded and exceeded: the consolidated branch (email-verification gate + signup-abuse defense) is DEPLOYED TO PRODUCTION and enforcement is ENABLED, not just dev. Prod api rebuilt+recreated 2026-08-11 22:50Z, healthy, /health 200. Migration AddSignupAbuseAttribution applied (5 columns + 2 indexes; 60 mailinator rows flagged, 0 false positives). Verified in the running DLL. BLOCKER FOUND AND FIXED FIRST: the migration carried neither [DbContext] nor [Migration] attribute, so EF never discovered it \u2014 Migrate() logged success and created nothing, and the new model would then have thrown 42703 on EVERY Users query (login, registration, config issuance, admin). Reproduced on a copy of the live schema before shipping.",
+      "resultingHandoff": "xd-745 to [QA] (verify enforcement on prod), xd-746 to [DEVOPS] (self-hosted runner is gone)"
     },
     {
       "id": "xd-741",
@@ -21707,9 +21711,39 @@
       "createdAt": "2026-08-12T01:40:18Z",
       "createdDate": "2026-08-12",
       "completedDate": null
+    },
+    {
+      "id": "xd-745",
+      "from": "[CTO]",
+      "to": "[QA]",
+      "title": "Handoff from CTO: Verify email-verification enforcement live on PRODUCTION",
+      "description": "Enforcement went live on prod 2026-08-11 23:00Z. Please independently re-verify.\n\nALREADY PROVEN BY [CTO] ON PROD (re-check, don't assume):\n  - NEW unverified password account -> GET /api/servers/{id}/config = 403 AUTH_1006 with message 'Verify your email to connect...'; /api/vpn/config also 403.\n  - Same account backdated to before the cutoff -> 200 + working WireGuard config (grandfathering; CreatedAt is the only difference).\n  - Verified account -> 200 + working config.\n  - RADIUS /api/radius/authenticate (IKEv2/OpenVPN): unverified post-cutoff -> success=false 'Email not verified'; grandfathered -> success=true. Proven in isolation, NOT yet re-proven on prod \u2014 please cover this one on prod specifically.\n\nSTILL OPEN / WORTH CHECKING:\n  - Real-device signup->verify->connect flow end-to-end on the shipped iOS build (app still shows a generic failure until xd-742 lands).\n  - Confirm no existing paying user is affected: 0 unverified accounts hold a paid plan as of go-live, and all 31 unverified real accounts predate the cutoff.\n\nCONFIG: EmailVerification:GateVpnAccess=true, EnforceForAccountsCreatedAfter=2026-08-11T23:00:00Z, ExcludeDisposableFromGrandfather=false.\nKILL SWITCH: set env EmailVerification__GateVpnAccess=false on caspervpn-api and recreate \u2014 disables the gate with no rebuild.\n\nTEST ACCOUNTS LEFT ON PROD (mine, safe to delete): oatarabay+cvpnverify-a/b/c*, oatarabay+cvpngate-*, oatarabay+cvpngrand-* @gmail.com. The cvpngrand one has a deliberately backdated CreatedAt (2026-07-01).",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-08-12T02:03:41Z",
+      "createdDate": "2026-08-12",
+      "completedDate": null
+    },
+    {
+      "id": "xd-746",
+      "from": "[CTO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CTO: PRODUCTION AUTO-DEPLOY IS BROKEN \u2014 0 self-hosted runners registered",
+      "description": "auto-deploy.yml job deploy-do-production requires runs-on: [self-hosted, uk-lon]. GitHub reports total_count=0 runners for the repo, and UK-LON has no actions.runner.* systemd unit. The job queues forever and never starts.\n\nEVIDENCE: workflow_dispatch run 31542739682 \u2014 freeze-check succeeded, deploy-do-production sat 'queued' 9+ minutes with other (ubuntu-latest) workflows running normally on the same repo; cancelled manually.\n\nIMPACT: every 'push to production auto-deploys' assumption in CLAUDE.md 5 is currently FALSE. Today's release had to be deployed by hand on UK-LON. Anyone who pushes and walks away believes they shipped and has not.\n\nASK: re-register the self-hosted runner on UK-LON with labels [self-hosted, uk-lon] and confirm by re-running auto-deploy.yml; or, if self-hosted runners are being retired deliberately, change the job to an ubuntu-latest runner + SSH and update CLAUDE.md 5.\n\nNOTE for whoever deploys by hand meanwhile: the workflow uses 'build api admin-react --no-cache'. Prod disk is 48G at ~74-76%; a --no-cache build of both has historically spiked past 95%. Today I built 'api' only, cached \u2014 sufficient and it left disk at 74%.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-08-12T02:03:41Z",
+      "createdDate": "2026-08-12",
+      "completedDate": null
     }
   ],
   "importantNotes": [
+    {
+      "date": "2026-08-11",
+      "author": "[CTO]",
+      "priority": "P1",
+      "note": "EMAIL VERIFICATION ENFORCEMENT IS LIVE ON PRODUCTION (2026-08-11 23:00Z). New accounts must verify before they can obtain a VPN config on ANY protocol (WireGuard/IKEv2/OpenVPN/CasperCloak/multi-hop + the RADIUS path). All 31 existing unverified real accounts are grandfathered by CreatedAt and were NOT cut off; none holds a paid plan. 3 Google users who were stranded unverified (SSO account-LINKING set GoogleId but never the verified flag) were fixed in code and backfilled. Mail delivery was proven end-to-end BEFORE enabling: 4 live registrations through the app's own path, Resend last_event=delivered on all 4. NEAR MISS: the accompanying migration was missing its [Migration] attribute, so EF would have silently created no columns and every Users query would have thrown 42703 \u2014 a full API outage. Caught and fixed by testing against a copy of the live schema before shipping. SEPARATE P1: production auto-deploy is broken (0 self-hosted runners) \u2014 see the [DEVOPS] handoff."
+    },
     {
       "id": "note-build-cut-2026-07-14",
       "date": "2026-07-14",
