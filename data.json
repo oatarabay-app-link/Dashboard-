@@ -21686,9 +21686,25 @@
       "to": "[IOS]",
       "title": "Handoff from CTO: Double VPN 403 shows as silent 'not working' \u2014 surface the subscription paywall instead",
       "description": "MEASURED (CEO log 9F74EA9F4965, build 24r): GET /api/multihop/routes -> 403 {'error':'Active subscription required'} (premium gate BY DESIGN, MultiHopController:128/239). The app logged only 'HTTP 403 Forbidden' + 'API Error: Access denied' and showed the user NOTHING actionable -> CEO reasonably read it as 'Double VPN broken'. FIX: route the multihop 403 to the subscription paywall / a clear 'Double VPN requires an active subscription' state (same pattern as the 402 DATA_CAP_REACHED -> paywall routing in 7f3f38ef5). NOT a Double-VPN defect \u2014 account applinks123@gmail.com sub Status=Expired since 2026-06-30 (Environment=Sandbox test account); the CEO's main account (privaterelay/oatarabay) is Active until 2026-08-13.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-08-12T01:20:55Z",
+      "createdDate": "2026-08-12",
+      "completedDate": "2026-08-12",
+      "completedAt": "2026-08-12",
+      "completedBy": "[CTO]",
+      "resolution": "SHIPPED dev b0a7dac9e (BUILD SUCCEEDED arm64, marker 24s; verified in origin/development). APIClient maps 403 'Active subscription required' -> new APIError.subscriptionRequired (mirrors the 402 DATA_CAP_REACHED->paywall pattern) with an actionable message; NotificationService exhaustive switch updated; MultiHopManager.fetchAvailableServers sets lastErrorMessage + status=.error so MultiHopView's existing alert shows a renew prompt instead of silence.",
+      "resultingHandoff": "xd-744 (QA device-test premium gating + paywall prompts)"
+    },
+    {
+      "id": "xd-744",
+      "from": "[CTO]",
+      "to": "[QA]",
+      "title": "Handoff from CTO: Device-test premium gating: Kill Switch + Auto-Connect + Double VPN paywall prompts",
+      "description": "dev 031b369ef, marker 2026-08-12-24t. TEST on a FREE/LAPSED account (applinks123@gmail.com, sub expired 2026-06-30): (a) Double VPN -> renew prompt, NOT a silent dead screen (24s/xd-743); (b) toggling Kill Switch ON -> 'Kill Switch is a Premium feature' alert + View Plans opens SubscriptionView, toggle stays OFF; (c) same for Auto-Connect; (d) subtitles read 'Premium \u2014 ...'. CARVE-OUT REGRESSION CHECKS (critical): (e) a user who ALREADY had Kill Switch ON and then lapses must NOT be auto-disabled (no silent traffic leak) \u2014 only OFF->ON is blocked; (f) 'Auto-Connect (keep VPN alive in background)' must remain TOGGLEABLE for free users (restricted-region bg recovery must NOT be gated); (g) on a PAID account all three behave exactly as before.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-08-12T01:40:18Z",
       "createdDate": "2026-08-12",
       "completedDate": null
     }
