@@ -21735,6 +21735,18 @@
       "createdAt": "2026-08-12T02:03:41Z",
       "createdDate": "2026-08-12",
       "completedDate": null
+    },
+    {
+      "id": "xd-747",
+      "from": "[DEVOPS]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from DEVOPS: P0 OUTAGE: ALL 6 CasperCloak fronts return 502 (WS upgrade) \u2014 restricted users can't connect; only edge.pompesh.com (not in pool) works",
+      "description": "P0 OUTAGE \u2014 MEASURED 2026-08-20 (device logs 24r + server probes). App CANNOT connect CasperCloak for restricted-region users. ROOT: ALL 6 active CensorshipFallbackDomains (Purpose=3) fronts return HTTP 502 on the WS upgrade FROM A CLEAN NETWORK (brain): ws-edge.applinks-edge.workers.dev(=CloudfrontFronting.WorkerUrlBase), edge.profitechlb.com, edge.intellitiy.com, edge.shortaalmashahir.com, edge.capablitys.com, edge.huminteligent.com \u2014 ALL 502. The Worker is alive (invalid JWT->401) but its fetch to the relay origin fails->502. Relay origins HEALTHY: Dusseldorf 91.194.84.79:443->200; and edge.pompesh.com/s6 -> full 101 + Sec-WebSocket-Accept (works end-to-end at WS layer). BUT edge.pompesh.com is NOT in the active client pool. So every restricted user dials a 502 front -> obfs handshake fails (client: POSIX-53 abort + ws=timeout 17s to edge.shortaalmashahir.com) -> SmartConnect exhausts nodes -> 'connection error'. Build 24r device-brick guard WORKS (tears down half-open tunnel, no hard freeze). NOT Lebanon/carrier (measured from brain); ws-edge was 101 on 2026-07-20 -> REGRESSED to 502 since. Supersedes the xd-735/726 'LB throttle' framing as the CURRENT blocker. FIX (2 levers): (1) FAST config unblock \u2014 repoint CloudfrontFronting.WorkerUrlBase wss://ws-edge...workers.dev -> wss://edge.pompesh.com (proven 101) + add edge.pompesh.com to active CensorshipFallbackDomains + disable the 6 x 502 fronts. Surgical tracked docker-compose.yml env + recreate (JWT-TTL pattern). CEO-gated (core connect path). (2) DURABLE \u2014 fix the CF Worker origin-fetch/route that 502s for ws-edge + the 5 cover domains (infrastructure/cloudflare-worker/src/{index,routing,jwt}.ts + Cloudflare/wrangler access); the Worker regressed in the last month. RESIDUAL/HONEST: edge.pompesh.com proven at WS layer only from brain \u2014 full obfs+WG through it + LB reachability NOT device-verified. NEEDS CEO go to apply lever 1, and CF access for lever 2.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-08-20T22:36:02Z",
+      "createdDate": "2026-08-20",
+      "completedDate": null
     }
   ],
   "importantNotes": [
