@@ -21787,6 +21787,18 @@
       "createdAt": "2026-08-20T23:37:52Z",
       "createdDate": "2026-08-20",
       "completedDate": null
+    },
+    {
+      "id": "xd-751",
+      "from": "[DEVOPS]",
+      "to": "[IOS]",
+      "title": "Handoff from DEVOPS: Manual disconnect does not stick \u2014 on-demand RE-ARMS ~2s later and reconnects itself (3x proven); make manual-disconnect sticky",
+      "description": "MEASURED 2026-08-20 device log (build 24r). CEO: 'disconnecting from Settings, the app keeps reconnecting on its own'. PROVEN RACE \u2014 the app disarms on manual disconnect then RE-ARMS on-demand ~2s later, 3x in one log:\n  23:18:22 'Externally-signaled manual disconnect - auto-reconnect disarmed + connectedServer cleared'\n  23:18:22 'CasperCloak status: Disconnected'\n  23:18:24 'CasperCloak on-demand ARMED (restricted region, NOT MANUAL-DISCONNECT, not opted-out)'  <-- re-arms\n  23:18:24 'CasperCloak status: Connecting' -> 23:18:26 'Connected'\nRepeats 23:18:44->23:18:47 and 23:21:02->23:21:25. The re-arm gate evaluates 'not manual-disconnect' as TRUE only ~2s after the manual-disconnect path ran => the manual-disconnect flag is NOT sticky/persisted across the re-arm evaluation (race between the disconnect teardown clearing state and the restricted-region auto-arm re-evaluating). Effect: user cannot turn the VPN off from iOS Settings - the OS re-establishes it via NEOnDemandRuleConnect. FIX: make the manual-disconnect intent STICKY (persist a timestamped flag; the restricted-region auto-arm must refuse to re-arm for N minutes after ANY user-initiated disconnect, and until an explicit user-initiated connect). Also disarm on-demand BEFORE tearing the tunnel down so no network event can re-trigger it mid-teardown. WORKAROUND THAT WORKS (proven in the same log): Settings -> Background Auto-Connect OFF -> 23:33:08 'autoConnectOptOut=true' -> 23:36:19 'CasperCloak on-demand disabled - user has not opted into kill switch or auto-connect'. SEPARATE, SAME LOG: the 'reconnecting + freeze' in this capture was still the expired-cert nodes (entry relay = s5 x5, ServerAddress 163.172.62.64 = Paris); this log PRE-DATES the 23:35 mitigation that de-listed Amsterdam+Paris, so it cannot show the improvement - needs a fresh device test. Also seen: '[zombie-recovery] two consecutive foreground probes FAILED while .connected'.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-08-20T23:47:32Z",
+      "createdDate": "2026-08-20",
+      "completedDate": null
     }
   ],
   "importantNotes": [
