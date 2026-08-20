@@ -21742,9 +21742,37 @@
       "to": "[DEVOPS]",
       "title": "Handoff from DEVOPS: P0 OUTAGE: ALL 6 CasperCloak fronts return 502 (WS upgrade) \u2014 restricted users can't connect; only edge.pompesh.com (not in pool) works",
       "description": "P0 OUTAGE \u2014 MEASURED 2026-08-20 (device logs 24r + server probes). App CANNOT connect CasperCloak for restricted-region users. ROOT: ALL 6 active CensorshipFallbackDomains (Purpose=3) fronts return HTTP 502 on the WS upgrade FROM A CLEAN NETWORK (brain): ws-edge.applinks-edge.workers.dev(=CloudfrontFronting.WorkerUrlBase), edge.profitechlb.com, edge.intellitiy.com, edge.shortaalmashahir.com, edge.capablitys.com, edge.huminteligent.com \u2014 ALL 502. The Worker is alive (invalid JWT->401) but its fetch to the relay origin fails->502. Relay origins HEALTHY: Dusseldorf 91.194.84.79:443->200; and edge.pompesh.com/s6 -> full 101 + Sec-WebSocket-Accept (works end-to-end at WS layer). BUT edge.pompesh.com is NOT in the active client pool. So every restricted user dials a 502 front -> obfs handshake fails (client: POSIX-53 abort + ws=timeout 17s to edge.shortaalmashahir.com) -> SmartConnect exhausts nodes -> 'connection error'. Build 24r device-brick guard WORKS (tears down half-open tunnel, no hard freeze). NOT Lebanon/carrier (measured from brain); ws-edge was 101 on 2026-07-20 -> REGRESSED to 502 since. Supersedes the xd-735/726 'LB throttle' framing as the CURRENT blocker. FIX (2 levers): (1) FAST config unblock \u2014 repoint CloudfrontFronting.WorkerUrlBase wss://ws-edge...workers.dev -> wss://edge.pompesh.com (proven 101) + add edge.pompesh.com to active CensorshipFallbackDomains + disable the 6 x 502 fronts. Surgical tracked docker-compose.yml env + recreate (JWT-TTL pattern). CEO-gated (core connect path). (2) DURABLE \u2014 fix the CF Worker origin-fetch/route that 502s for ws-edge + the 5 cover domains (infrastructure/cloudflare-worker/src/{index,routing,jwt}.ts + Cloudflare/wrangler access); the Worker regressed in the last month. RESIDUAL/HONEST: edge.pompesh.com proven at WS layer only from brain \u2014 full obfs+WG through it + LB reachability NOT device-verified. NEEDS CEO go to apply lever 1, and CF access for lever 2.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P0",
       "createdAt": "2026-08-20T22:36:02Z",
+      "createdDate": "2026-08-20",
+      "completedDate": "2026-08-20",
+      "completedAt": "2026-08-20",
+      "completedBy": "[DEVOPS]",
+      "resolution": "RESOLVED 2026-08-20 [DEVOPS]. TRUE ROOT CAUSE (proven, NOT the carrier/Worker theories): the wildcard TLS cert *.pompesh.com ON THE RELAYS EXPIRED Aug 14 2026 (notBefore May 16). The CF Worker validates TLS on its origin fetch -> validation fails -> no .webSocket -> the Worker returns its own 502 'backend did not upgrade' (index.ts:142) on EVERY front. Proof chain: 6/6 fronts 502 from the BRAIN (clean net) => not carrier; 502 body = our Worker's string; invalid JWT -> 401 (Worker alive, auth fine) => origin fetch is the failure; curl https://s6.pompesh.com/cc -> 'certificate has expired'; curl -k -> 101 (relay was healthy all along); BRAIN cert was VALID Jul 15 -> Oct 13 the whole time. WHY: certbot.timer renewed on the brain ~Jul 15 OUTSIDE wildcard-renew.sh; our script only calls distribute-cert.sh AFTER it renews itself, so it logged 'no renewal needed \u2014 exiting cleanly' weekly and NEVER fanned the new cert to the 13 relays. Monitor blind spot: it checked the BRAIN's cert, not what relays SERVE -> reported '58 days healthy' 2 days after prod died. FIX APPLIED: FORCE_FANOUT=1 distribute-cert.sh -> 10/12 nodes VERIFIED (sao,tyo,sgp,hkg,mtl,syd,mex,US-LA,DE-DU,bkk). VERIFIED AFTER: s6 cert notAfter Oct 13; TLS-validated https://s6.pompesh.com/cc -> 101; ALL 7 fronts /s6 -> 101. STILL OPEN: NL-AM2 (s5 Amsterdam) + FR-PA (s7 Paris) still 502 \u2014 distribution FAILS 'stage dir' because those 2 nodes use the non-root caspervpn user, /etc/letsencrypt/live is drwx------ root root, and there is NO passwordless sudo; no root key works from the brain. NEEDS CEO root credentials. ANALYSIS + RUNBOOK: memory/context/infra-checks.md (pushed c2f23626).",
+      "resultingHandoff": "xd-(next) to [DEVOPS]: restore s5/s7 cert (root creds) + close monitoring gaps G1-G5 from infra-checks.md"
+    },
+    {
+      "id": "xd-748",
+      "from": "[DEVOPS]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from DEVOPS: Restore cert on NL-AM2 (s5) + FR-PA (s7) \u2014 still 502; needs root creds",
+      "description": "Amsterdam (51.158.147.210) and Paris (163.172.62.64) still serve the EXPIRED *.pompesh.com cert -> entries s5 and s7 return 502 through every front (verified 2026-08-20). distribute-cert.sh fails 'FAIL: stage dir': those 2 nodes are configured with the non-root 'caspervpn' user; /etc/letsencrypt/live is drwx------ root root; sudo -n = 'a password is required'; root@ rejected for vpn_nodes, casper_fleet_admin AND id_ed25519 keys. NEEDS: a root SSH key for those 2 nodes OR passwordless sudo scoped to the cert path. Then: cd /opt/caspervpn/wildcard-cert && FORCE_FANOUT=1 ./distribute-cert.sh (or manual per infra-checks.md \u00a74.1) and verify entries s5/s7 return 101 per \u00a74.2. The valid cert (Jul 15 -> Oct 13) is already on the brain.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-08-20T23:14:49Z",
+      "createdDate": "2026-08-20",
+      "completedDate": null
+    },
+    {
+      "id": "xd-749",
+      "from": "[DEVOPS]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from DEVOPS: Close cert/monitoring gaps G1-G5 (infra-checks.md) so a 6-day silent outage cannot recur",
+      "description": "From memory/context/infra-checks.md \u00a75: G1 wildcard-renew.sh checks the BRAIN's cert not the RELAYS' (it reported 'healthy' while prod was dead) -> probe the SERVED cert on all 12 relays, alert <21d or any mismatch vs brain. G2 distribute-cert.sh only runs post-renew -> make distribution UNCONDITIONAL+idempotent every weekly pass (certbot.timer renews silently and skips it). G3 fan-out failures are silent (FAN-OUT INCOMPLETE 2026-06-14 never alerted, never retried) -> alert + retry. G4 = the s5/s7 root-creds task. G5 no end-to-end fronted-path monitor -> cron the \u00a74.2 probe hourly, alert on any non-101. Also G6: VpnServers.Status is stale (UpdatedAt months old) so server health/routing runs on dead data.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-08-20T23:14:49Z",
       "createdDate": "2026-08-20",
       "completedDate": null
     }
