@@ -21401,7 +21401,7 @@
       "from": "[DEVOPS]",
       "to": "[DEVOPS]",
       "title": "Handoff from DEVOPS: Grow brain DO volume \u2014 disk hit 100% today (48G floors ~88%)",
-      "description": "Brain (UK-LON 178.62.101.221) disk hit 100% FULL today 2026-07-07 04:51Z (docker exec failed with 'no space left on device' in /var/log/datacap-enforcer.log; datacap sweep SKIPPED during the spike). Now 91% (43G/48G, /var/lib/docker=32G). Chronic: the 48G volume floors ~88% from the running stack (see brain-disk-routine-and-floor). caspervpn-disk-guard daily prune already runs. DURABLE FIX = grow the DO block volume. Not the cause of the Basel login incident, but a real P0-class risk (a full-disk spike can 500 auth/DB writes for ALL users). CEO-gated (resize).",
+      "description": "Brain (UK-LON 178.62.101.221) disk hit 100% FULL today 2026-07-07 04:51Z (docker exec failed with 'no space left on device' in /var/log/datacap-enforcer.log; datacap sweep SKIPPED during the spike). Now 91% (43G/48G, /var/lib/docker=32G). Chronic: the 48G volume floors ~88% from the running stack (see brain-disk-routine-and-floor). caspervpn-disk-guard daily prune already runs. DURABLE FIX = grow the DO block volume. Not the cause of the Basel login incident, but a real P0-class risk (a full-disk spike can 500 auth/DB writes for ALL users). CEO-gated (resize). || ESCALATION 2026-08-23: the disk hit 100% AGAIN and this time took the API DOWN (503 fleet-wide, no user could connect) \u2014 3rd event. Root cause was unbounded backup retention (15.2GB), now partially cleared to 81%. Growing the volume is no longer optional-nice-to-have; with 1.1GB/day of backups a 48G disk refills in ~5 days. CEO console action still owed.",
       "status": "completed",
       "priority": "P1",
       "createdAt": "2026-07-07T12:32:22Z",
@@ -21798,6 +21798,30 @@
       "priority": "P1",
       "createdAt": "2026-08-20T23:47:32Z",
       "createdDate": "2026-08-20",
+      "completedDate": null
+    },
+    {
+      "id": "xd-752",
+      "from": "[DEVOPS]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from DEVOPS: Add retention to the backup crons (root cause of the 2026-08-23 API outage)",
+      "description": "The brain fills because BOTH backup jobs keep every run forever: /root/backups/postgres (daily ~1.1GB + weekly) and /root/Casper/Casper-Code/backups (daily repo tarball ~1.1GB). 15.2GB accumulated -> disk 100% -> API 503 fleet-wide outage 2026-08-23. FIX: add retention to both cron jobs \u2014 keep 3 daily + 4 weekly DB dumps, and 2 repo tarballs (the repo is in GitHub; tarballs are near-worthless). Also alarm when a backup artifact is anomalously small (today's were 27MB vs 1.1GB = silent failure caused by the full disk). Until then the disk will refill in ~5 days.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-08-23T22:47:26Z",
+      "createdDate": "2026-08-23",
+      "completedDate": null
+    },
+    {
+      "id": "xd-753",
+      "from": "[DEVOPS]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from DEVOPS: Alarm on brain disk >90% within minutes, not once daily at 03:30",
+      "description": "caspervpn-disk-guard runs daily 03:30 and alerts >85%. The 2026-08-23 fill happened between windows and took the API down for ~6+ minutes before it was noticed by a human. Add a short-interval (*/5) disk check that alerts at >90% and auto-prunes backups by retention. See infra-checks.md L1/L5.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-08-23T22:47:26Z",
+      "createdDate": "2026-08-23",
       "completedDate": null
     }
   ],
