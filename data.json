@@ -21806,11 +21806,15 @@
       "to": "[DEVOPS]",
       "title": "Handoff from DEVOPS: Add retention to the backup crons (root cause of the 2026-08-23 API outage)",
       "description": "The brain fills because BOTH backup jobs keep every run forever: /root/backups/postgres (daily ~1.1GB + weekly) and /root/Casper/Casper-Code/backups (daily repo tarball ~1.1GB). 15.2GB accumulated -> disk 100% -> API 503 fleet-wide outage 2026-08-23. FIX: add retention to both cron jobs \u2014 keep 3 daily + 4 weekly DB dumps, and 2 repo tarballs (the repo is in GitHub; tarballs are near-worthless). Also alarm when a backup artifact is anomalously small (today's were 27MB vs 1.1GB = silent failure caused by the full disk). Until then the disk will refill in ~5 days.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P0",
       "createdAt": "2026-08-23T22:47:26Z",
       "createdDate": "2026-08-23",
-      "completedDate": null
+      "completedDate": "2026-08-23",
+      "completedAt": "2026-08-23",
+      "completedBy": "[DEVOPS]",
+      "resolution": "DONE + ROOT CAUSE CORRECTED. My first read ('backups have no retention') was WRONG: pg_backup.sh keeps 7 daily + 4 weekly and scripts/backup.sh keeps 7 days of tarballs. The REAL root cause is BandwidthUsageLogs = 37,404,776 rows / 5,936 MB (heap 3.3GB + idx 2.6GB) = 99% of the 5,976 MB database, growing at a MEASURED 497,735 rows/day (~80 MB/day) since 2026-05-27 with NO retention. That inflated the pg volume AND every dump (27MB -> 1.1GB), so a 7-day x 2-set backup policy sized for a 27MB artifact became 15.2GB and filled the 48G disk -> API 503 fleet-wide. FIXED: installed /opt/caspervpn/bandwidth-retention.sh (BATCHED delete, 50k/batch, 600s budget, ANALYZE after) + cron 'KEEP_DAYS=30 daily 04:15'. 30d covers a full billing cycle and BOUNDS the table at ~15M rows/~2.4GB instead of unbounded. Also fixed catastrophically stale planner stats (n_live_tup said 7,715 for a 37.4M-row table; last_autovacuum=NEVER) via ANALYZE \u2014 a suspected contributor to the long-reported app slowness, worth re-testing. Backup retention windows left as-is; they are correct once the artifact shrinks.",
+      "resultingHandoff": "xd-753 (disk >90% */5 alarm) + a new backend task to reduce the 500k rows/day write rate via aggregation."
     },
     {
       "id": "xd-753",
@@ -21821,6 +21825,18 @@
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-08-23T22:47:26Z",
+      "createdDate": "2026-08-23",
+      "completedDate": null
+    },
+    {
+      "id": "xd-754",
+      "from": "[DEVOPS]",
+      "to": "[BACKEND]",
+      "title": "Handoff from DEVOPS: Reduce BandwidthUsageLogs write rate (497,735 rows/day) \u2014 aggregate instead of one row per poll",
+      "description": "MEASURED 2026-08-23: BandwidthUsageLogs takes 497,735 rows/day (~80 MB/day) for only 275 users / 785 WG peers \u2014 roughly one row per peer per ~2.7 minutes, i.e. a row per sync poll regardless of whether usage changed. It reached 37.4M rows / 5.9GB = 99% of the entire database and was the root cause of the 2026-08-23 disk-full API outage (503 fleet-wide). A 30-day retention cron now BOUNDS it (~15M rows / 2.4GB) but the write rate itself is the underlying inefficiency. ASK: (a) skip the insert when the byte delta is 0 (keepalive-only peers write rows forever \u2014 see connected-zero-mb-keepalive-liveness-gate); (b) or roll up to hourly/daily aggregates and keep raw rows only for the current cycle. Either would cut volume by ~10-50x. ALSO: this table had last_autovacuum=NEVER and n_live_tup=7,715 vs 37.4M real rows \u2014 confirm autovacuum settings are adequate for a table with this insert rate.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-08-23T23:03:24Z",
       "createdDate": "2026-08-23",
       "completedDate": null
     }
