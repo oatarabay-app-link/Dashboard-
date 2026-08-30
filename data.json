@@ -21879,6 +21879,18 @@
       "createdAt": "2026-08-30T22:13:28Z",
       "createdDate": "2026-08-30",
       "completedDate": null
+    },
+    {
+      "id": "xd-758",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: Verify GET /api/user is fast AND usage figures still correct after the xd-758 hot-path fix",
+      "description": "DEPLOYED prod 2026-08-30 (image sha256:9e680622, healthy, /health 200 local+public). CHANGE: UserService.GetUserAsync no longer calls ComputeLiveBandwidthAsync. WHY: MEASURED p95 124,943ms / max 127,026ms on GET /api/user \u2014 it SUMs a user's entire BandwidthUsageLogs history (44.7M rows; one user owns 1,063,646) and pg_stat_activity showed concurrent SUMs blocked on IO/DataFileRead. This was the user-visible 'app freezes / won't connect / very slow'. A covering index only reached 27s, still unusable. SAFETY ARGUMENT TO VERIFY: Users.DataUsedBytes is (a) incremented on every write by BandwidthMonitoringService.RecordUsageAsync and VpnServerService, and (b) reconciled every 30 min by BandwidthReconcileService (whose header states it exists so direct reads are accurate). QA MUST CHECK: (1) GET /api/user now returns in ms; (2) a user's displayed usage matches the aggregate within ~30 min (compare app value vs SELECT SUM(BytesUsed) for that user); (3) admin GetUserDetailsAsync still shows the live value (unchanged path); (4) data-cap enforcement still fires for a Free user; (5) no 'iOS shows X / admin shows Y' divergence re-emerges after 1-2 hours. IF drift appears, revert = restore the ComputeLiveBandwidthAsync call in GetUserAsync (documented inline).",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-08-30T22:36:28Z",
+      "createdDate": "2026-08-30",
+      "completedDate": null
     }
   ],
   "importantNotes": [
