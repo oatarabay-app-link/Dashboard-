@@ -21834,11 +21834,15 @@
       "to": "[BACKEND]",
       "title": "Handoff from DEVOPS: Reduce BandwidthUsageLogs write rate (497,735 rows/day) \u2014 aggregate instead of one row per poll",
       "description": "MEASURED 2026-08-23: BandwidthUsageLogs takes 497,735 rows/day (~80 MB/day) for only 275 users / 785 WG peers \u2014 roughly one row per peer per ~2.7 minutes, i.e. a row per sync poll regardless of whether usage changed. It reached 37.4M rows / 5.9GB = 99% of the entire database and was the root cause of the 2026-08-23 disk-full API outage (503 fleet-wide). A 30-day retention cron now BOUNDS it (~15M rows / 2.4GB) but the write rate itself is the underlying inefficiency. ASK: (a) skip the insert when the byte delta is 0 (keepalive-only peers write rows forever \u2014 see connected-zero-mb-keepalive-liveness-gate); (b) or roll up to hourly/daily aggregates and keep raw rows only for the current cycle. Either would cut volume by ~10-50x. ALSO: this table had last_autovacuum=NEVER and n_live_tup=7,715 vs 37.4M real rows \u2014 confirm autovacuum settings are adequate for a table with this insert rate.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-08-23T23:03:24Z",
       "createdDate": "2026-08-23",
-      "completedDate": null
+      "completedDate": "2026-08-30",
+      "completedAt": "2026-08-30",
+      "completedBy": "[BACKEND]",
+      "resolution": "STEP 1 DEPLOYED TO PRODUCTION 2026-08-30 (protocol \u00a75). Change: BandwidthMonitoringService.RecordUsageAsync now only appends a BandwidthUsageLog row when bytesUsed > 0. The Users counters (DataUsedBytes / CurrentCycleDataUsedBytes) are still updated unconditionally, so ACCOUNTING IS UNCHANGED (adding 0 is a no-op) \u2014 this only stops writing empty history rows for idle/keepalive-only peers. VERIFIED: local `dotnet build -c Release` = 0 Errors (worked around the global.json SDK-8.0.0 pin, file restored byte-identical); diff touched ONLY that file (+28/-7); pushed under session lock to production b003f0b1 + development 54489c00; cached api-only image built on UK-LON (EXIT=0, sha256:887c0c41...); container recreated and CONFIRMED running that exact image id (was afd2d93d -> now 887c0c41 \u2014 image-id match is the proof, since this change adds no string literal to grep in the DLL); healthy in 12s; /health 200 local AND public. Pre-deploy baseline measured: 10,357 rows per 10 minutes (~1.49M/day); post-deploy rate being measured. NOT DONE (step 2): the hourly-upsert restructure, which must ship WITH xd-755.",
+      "resultingHandoff": "xd-755 (cycle-scope the all-time SUM) then step 2 hourly upsert; plus a QA handoff to confirm user-facing usage figures are unchanged."
     },
     {
       "id": "xd-755",
@@ -21861,6 +21865,18 @@
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-08-30T21:09:26Z",
+      "createdDate": "2026-08-30",
+      "completedDate": null
+    },
+    {
+      "id": "xd-757",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: Verify data-usage figures are UNCHANGED after the xd-754 step-1 zero-byte guard",
+      "description": "DEPLOYED to prod 2026-08-30 (image sha256:887c0c41, api healthy, /health 200). BandwidthMonitoringService.RecordUsageAsync no longer inserts a BandwidthUsageLog row when bytesUsed == 0. The per-user counters are still incremented unconditionally, so displayed usage SHOULD be identical. WHAT TO CHECK: (1) a user's usage in the app and in admin matches what it showed before (pick 2-3 active users); (2) /api/bandwidth/live still returns sane values; (3) the data cap still enforces for a Free/limited user (the cap reads Users.CurrentCycleDataUsedBytes, NOT this table \u2014 confirm that is still true in practice); (4) admin revenue/usage dashboards unaffected. CONTEXT: this table had 44.6M rows growing ~1M/day (8.4GB = 99% of the DB) and caused two fleet-wide API outages (2026-08-23, 2026-08-30) by filling the 48G brain disk. Related: xd-755 (UserService.cs:86 sums this table ALL-TIME with no date filter \u2014 a real correctness issue that also blocks shortening retention below 30 days).",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-08-30T22:13:28Z",
       "createdDate": "2026-08-30",
       "completedDate": null
     }
