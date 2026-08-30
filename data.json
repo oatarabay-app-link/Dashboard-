@@ -21839,6 +21839,30 @@
       "createdAt": "2026-08-23T23:03:24Z",
       "createdDate": "2026-08-23",
       "completedDate": null
+    },
+    {
+      "id": "xd-755",
+      "from": "[DEVOPS]",
+      "to": "[BACKEND]",
+      "title": "Handoff from DEVOPS: BandwidthUsageLogs retention is capped at 30d by an ALL-TIME SUM in UserService \u2014 fix the query, then retention can shrink",
+      "description": "BLOCKER FOUND 2026-08-30 while sizing retention. UserService.cs:86 runs `SELECT SUM(\"BytesUsed\") FROM \"BandwidthUsageLogs\" WHERE \"UserId\"={0}` with **NO date filter** (all-time), and BandwidthMonitoringService.cs:177 sums from start-of-month. So ANY retention shorter than ~31 days SILENTLY REDUCES the data-usage figure users see \u2014 a correctness bug, not just a display issue. That pins retention at 30 days MINIMUM, which pins the table at ~30M rows / ~6GB on a 48G disk that also holds ~5GB of backups. MEASURED: 44,607,670 rows, growing ~1M rows/day; 97% of rows are inside 30 days so retention can never reclaim much. FIX (unblocks everything): (a) make the UserService sum CYCLE-SCOPED (>= CurrentCycleStartDate) instead of all-time \u2014 it should already be, since the cap is per-cycle; and/or (b) maintain a per-user rollup table so raw rows are only needed for the current cycle. THEN retention can drop to 7-14 days and the table falls to ~1-2GB, ending the recurring disk outages. Pairs with xd-754 (cut the write rate).",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-08-30T21:09:26Z",
+      "createdDate": "2026-08-30",
+      "completedDate": null
+    },
+    {
+      "id": "xd-756",
+      "from": "[DEVOPS]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from DEVOPS: Make bandwidth-retention resilient + alarm when it cannot run",
+      "description": "The retention cron FAILED SILENTLY on 3 of 6 runs (Aug 27, 29, 30) with 'No such container: caspervpn-postgres' \u2014 because the disk was already full and postgres was down, i.e. it fails exactly when it is most needed. It logged 'deleted 0 rows' and nobody was alerted. FIX: (a) if postgres is unreachable, EMAIL/alert instead of exiting 0; (b) retry after a short delay; (c) run it more than once a day while the table is oversized; (d) alarm if deleted-rows is 0 while rows-older-than-window is > 0. Also DONE this session: added the missing index ix_bwlogs_recordedat on RecordedAt \u2014 deletes went from 56k rows/600s to 774k rows/54s (~150x). Without that index the retention could never keep up with the ~1M rows/day insert rate.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-08-30T21:09:26Z",
+      "createdDate": "2026-08-30",
+      "completedDate": null
     }
   ],
   "importantNotes": [
