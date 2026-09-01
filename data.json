@@ -21891,6 +21891,18 @@
       "createdAt": "2026-08-30T22:36:28Z",
       "createdDate": "2026-08-30",
       "completedDate": null
+    },
+    {
+      "id": "xd-759",
+      "from": "[DEVOPS]",
+      "to": "[IOS]",
+      "title": "Handoff from DEVOPS: DEVICE BRICK (24t): orphan sweep keeps on-demand armed with NO tunnel-health check -> stuck 'Connecting' utun eats all phone traffic",
+      "description": "ROOT CAUSE IDENTIFIED 2026-09-01, build 2026-08-12-24t (device log CD53B3A12CE3). CEO: 'left connected in bg -> whole phone internet dropped and phone froze'. This is the documented device-brick class, but via a PATH THE 24r/24t GUARD DOES NOT COVER.\n\nMEASURED SEQUENCE (2026-09-01, times UTC):\n  20:48:12 CasperCloak: Connecting CSPK transport to relay (91.194.84.79)\n  20:48:13 [CC-DIAL] nwstate=waiting(POSIXErrorCode 53: Software caused connection abort) +1402ms\n  20:48:14 Tearing down UDP bridge; setTunnelNetworkSettings CALLED with nil -> **FAILED** (NE error)\n  20:47:33 (resume) Foreground sync: tunnel kernel status = Connecting\n  20:47:33 'stuck-transient zombie (published=connected, kernel=Connecting on resume)'\n  20:47:33 'Preserving on-demand on live CasperCloak session (restricted region) \u2014 Layer 1 background recovery stays armed'\n  20:47:33 'FIX 4 orphan sweep: restricted region \u2014 keeping on-demand armed on CasperCloak profile'\n\nTHE GAP: VPNConnectionManager.swift:445 does `if isCasperCloak && !bgAutoConnectOptedOut { continue }` \u2014 it preserves on-demand UNCONDITIONALLY for CasperCloak in a restricted region, with NO health check on the tunnel. So when the transport aborts (POSIX 53) and the tunnel is left stuck in 'Connecting' (and setTunnelNetworkSettings(nil) FAILED, so the settings were never cleared), on-demand keeps the utun alive/re-armed. The utun then captures ALL device traffic and passes NONE => whole-phone internet loss, escapable only via Settings > VPN off. The 24r/24t brick-guard disarms on HANDSHAKE-GATE FAILURE \u2014 but here the failure is a TRANSPORT abort BEFORE the gate ever runs, so the guard never engages.\n\nFIX (3 parts): (1) the orphan sweep must NOT preserve on-demand when the tunnel is not actually passing traffic \u2014 gate the `continue` on a health check (kernel status == .connected AND a recent handshake), not merely on isCasperCloak+restricted; (2) treat a FAILED setTunnelNetworkSettings(nil) as a hard error that forces a full teardown + disarm (today it is logged and ignored, leaving stale settings); (3) extend the brick-guard to the TRANSPORT-abort path (POSIX 53 / obfs failure), not just the handshake-gate path \u2014 same disarm-then-stop ordering. NEVER force includeAllNetworks (reverted L3 anti-pattern).\n\nNOTE ON A FALSE LEAD: the '\u274c NO HANDSHAKE tx/rx' probe lines in the 2026-08-30 section are NOT proof of this bug \u2014 MultiHopWireGuardConfig.swift:565 documents that a single-pass UAPI parser prints a FALSE 'NO HANDSHAKE' while the authoritative gate logs PASSED; probeMaxHandshakeEpoch exists to fix exactly that. Do not diagnose from those lines alone.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-09-01T23:55:34Z",
+      "createdDate": "2026-09-01",
+      "completedDate": null
     }
   ],
   "importantNotes": [
