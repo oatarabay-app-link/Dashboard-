@@ -21926,9 +21926,25 @@
       "to": "[PRODUCT]",
       "title": "Handoff from CTO: PRODUCT DECISION: should a lapsed subscriber drop to the 512MB free cap instantly?",
       "description": "Surfaced by xd-760. Today the moment an Apple receipt expires the user is cut to tier=free / limit=536870912 with no grace. Combined with the (now-fixed) usage ratchet this produced an instant hard lockout for a paying customer whose subscription had simply lapsed. Even with xd-760 fixed, a genuinely heavy user who lapses is locked out mid-use with no warning. OPTIONS: (a) keep instant cutoff; (b) grace window (e.g. 24-72h) at reduced speed; (c) reset the cycle counter on downgrade so the user gets a fresh 512MB rather than inheriting the paid cycle's usage. CEO/Product call \u2014 NOT a bug fix, do not implement unilaterally.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-09-09T22:39:50Z",
+      "createdDate": "2026-09-09",
+      "completedDate": "2026-09-09",
+      "completedAt": "2026-09-09",
+      "completedBy": "[CTO]",
+      "resolution": "RETRACTED as a product decision \u2014 the CEO was right that a subscribed user must never drop to 512MB. The instant downgrade is the backend genuinely believing the user is expired, because the LIFETIME entitlement was CLOBBERED by a last-receipt-wins bug in AppleReceiptService. Reframed as xd-762 [BACKEND] P0 with proof.",
+      "resultingHandoff": "xd-762 to [BACKEND] P0 (last-receipt-wins clobber + data repair)"
+    },
+    {
+      "id": "xd-762",
+      "from": "[CTO]",
+      "to": "[BACKEND]",
+      "title": "Handoff from CTO: P0 BILLING: Lifetime entitlement CLOBBERED by last-receipt-wins in AppleReceiptService \u2014 CEO's own $149.99 lifetime now shows Monthly",
+      "description": "ROOT CAUSE (measured on prod DB 2026-09-09): AppleReceiptService.ValidateAndSyncAsync uses ONE Subscription row per user (`user.Subscription`) and its else-branch OVERWRITES PlanId/Status/EndDate/BillingInterval with WHATEVER receipt arrives \u2014 last-receipt-wins, no ranking. A Lifetime (+100y EndDate) is clobbered by the next Weekly/Monthly renewal, or by an OLDER receipt replayed later from StoreKit Transaction.all (order not chronological). The idempotency guard (Payments.Metadata contains TransactionId -> 'Transaction already processed' -> IsValid=true) then prevents the lifetime from EVER being re-applied.\n\nPROOF: user 001648...@privaterelay.appleid.com (id 2eecd0e6, the CEO's Apple-ID account) paid $149.99 for com.caspervpn.lifetime on 2026-06-18, env=PRODUCTION (Apple JWS environment = real purchase). 19 payments were batch-replayed that day; the row is NOW plan=Monthly status=Active end=2026-09-10 -> this paid-lifetime customer drops to free on 09-10. The ENTIRE database contains ZERO Lifetime subscription rows while the Lifetime plan is live and purchasable.\n\nWHY THE CEO SAW 'expired -> subscribe' ON applinks123: StoreKit shows the lifetime on ANY backend account signed in with that Apple ID, but the backend user-scopes entitlements by design (currentTier() comment: 'prevents Apple ID StoreKit entitlements from granting premium to wrong user'). applinks123's only row is an expired sandbox Weekly (status=6, expired 08-23), so the downgrade there was correct per backend data. The bug is on the 001648 account where the lifetime actually landed.\n\nFIX (backend): (1) NEVER let a receipt overwrite an ACTIVE subscription with a lower-value one \u2014 rank by BillingInterval (Lifetime > Yearly > SixMonth > Monthly > Weekly) and/or only overwrite when incoming EndDate > existing EndDate; (2) longer-term: allow multiple rows per user and select 'best active' in GetUserAsync; (3) DATA REPAIR: restore 2eecd0e6's row to Lifetime (EndDate +100y) \u2014 CEO CONFIRMATION REQUIRED before touching a billing row; (4) audit query for any other Production user whose lifetime/yearly payment no longer matches their row (today: only this one).",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-09-09T22:58:12Z",
       "createdDate": "2026-09-09",
       "completedDate": null
     }
