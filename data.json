@@ -22026,9 +22026,28 @@
       "createdAt": "2026-09-10T22:48:11Z",
       "createdDate": "2026-09-10",
       "completedDate": null
+    },
+    {
+      "id": "xd-769",
+      "from": "[CTO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CTO: Brain disk P0: 93% after reclaim \u2014 grow the 48G volume before the next dump cycle",
+      "description": "MEASURED 2026-09-10: disk hit 97% (1.7G free); reclaimed the superseded daily dump -> 93% (3.4G free). Breakdown: 20G docker volumes (postgres, DB=12GB), 5.7G /root/Casper/Casper-Code clone, 4.1G->2.4G /root/backups/postgres, ~3G images (0 dangling, all tagged+in use, so prune buys nothing). Dumps are 1.7G each because BandwidthUsageLogs = 51.4M rows; xd-754 IS live (0 zero-byte rows/24h; growth 2.3M->164k rows/day) so the table should shrink over ~30 days as retention ages rows out. NEEDED: (a) grow the DO volume (48G floors ~88-93% with the normal stack \u2014 documented in brain-disk-routine-and-floor), (b) consider gzip on dumps, (c) alert at 90% not 95%. This has caused TWO fleet-wide outages.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-09-10T22:51:37Z",
+      "createdDate": "2026-09-10",
+      "completedDate": null
     }
   ],
   "importantNotes": [
+    {
+      "id": "note-disk-97-2026-09-10",
+      "date": "2026-09-10",
+      "author": "[CTO]",
+      "priority": "P0",
+      "text": "[DISK P0 \u2014 ACTED 2026-09-10] Brain disk hit 97% (1.7G free) \u2014 the SAME condition that took the API down fleet-wide (503) on 2026-08-23 and 2026-08-30. Tonight's 03:00 pg_dump writes 1.7G and rotation runs AFTER the write, so it would have hit ~100%. ACTION: removed the SUPERSEDED daily_2026-09-09 dump (today's 09-10 dump validated complete first: pg_restore -l = 769 entries; the script's own rotation keeps only the 2 newest dailies, so this is exactly what it would have done tonight). Disk 97% -> 93% (3.4G free). NOT a durable fix: dumps are 1.7G because BandwidthUsageLogs holds 51.4M rows. GOOD NEWS (measured): xd-754 IS live \u2014 zero-byte rows in 24h = 0 and growth collapsed 2,297,452 -> 164,245 rows/day (93% drop), so the table should shrink toward ~5M as the 30-day retention ages rows out, and dumps shrink with it. DURABLE FIX still owed: grow the 48G volume (xd-763)."
+    },
     {
       "date": "2026-08-11",
       "author": "[CTO]",
