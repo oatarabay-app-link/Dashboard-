@@ -22090,6 +22090,18 @@
       "createdAt": "2026-09-11T00:29:31Z",
       "createdDate": "2026-09-11",
       "completedDate": null
+    },
+    {
+      "id": "xd-774",
+      "from": "[CTO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CTO: P0 SPEED: retire the CF WORKER from the CasperCloak data plane \u2014 native Cloudflare proxy per relay hostname (no per-message JS, no CPU ceiling)",
+      "description": "WHY (measured 2026-09-12, xd-770): a real CC WebSocket at a steady 4 Mbps through ws-edge.applinks-edge.workers.dev/s6 is CLOSED after 125.7s (code 1006, no close frame) while the same stream DIRECT to s6.pompesh.com holds indefinitely; at ~1 KB/s both hold 10 min. The Worker pipes every packet through serial JS (index.ts:169-211, await blob.arrayBuffer() per message) and dies under sustained throughput \u2014 this is the ~10s redial cycle behind the 1.0-1.5 Mbps CF-road runs on the CEO's phone (xd-763). Nothing that keeps the Worker in the packet path can fix this: parallel streams would multiply CPU and die faster; raising limits.cpu_ms only delays it.\n\nTHE FIX: Cloudflare proxies WebSockets NATIVELY at the edge (all plans) with no Worker, no per-message JS and no CPU budget. Give each relay its own orange-clouded fronted hostname (e.g. edge-s6.pompesh.com A -> 91.194.84.79, proxied=true) and point the CasperCloak config's cloudfrontUrl at wss://edge-s6.pompesh.com/ instead of the Worker path. On the wire the client sees exactly what it sees today (SNI = a neutral pompesh host at a CF anycast IP, CF's TLS) \u2014 the JA3S anti-pattern #15 concerns orange-clouding the DIRECT s<N> hostnames, NOT a dedicated fronted hostname; the fronted road is already CF-terminated. The Worker's two jobs move: ROUTING becomes DNS (one hostname per relay; CloudfrontFrontingService maps entryId -> hostname instead of /s<N>), and the JWT gate either moves to the relay (validate Authorization: Bearer with the same HS256 secret before CSPK \u2014 small Python change, 3-way lockstep + v13 variant) or is dropped (the PSK handshake + honest-decoy already gate real use). Keep the Worker for one release as a fallback front.\n\nSTEPS: (1) CEO/DevOps confirm the mechanism in the CF dashboard: Workers -> ws-edge -> Logs/Metrics around the drop timestamp, look for error 1102 'exceeded resource limits' / CPU time (2 min; or hand the CTO a CF API token with Workers:Read). (2) Create edge-s6.pompesh.com proxied -> s6; relay accepts the Host; run /tmp/cchr.py wss://edge-s6.pompesh.com/ from the brain for 10 min at 4 Mbps \u2014 MUST hold like direct. (3) Backend: CloudfrontFrontingService emits the hostname form for tiers that keep CF; iOS needs no change (it dials whatever cloudfrontUrl says \u2014 verify the Worker-specific path handling in Obfs4Transport tolerates a bare host). (4) Roll to the remaining CC nodes, then measure on the CEO's phone: Cloudflare road should now match the direct road (8-10 Mbps) with no redials. (5) Only then revisit parallel streams (xd-712/xd-766) \u2014 and only for the lossy-last-mile gain, never for the Worker. NOTE: CF proxied WS has a 100s idle timeout \u2014 our keepalives cover it; verify with a 10-min idle hold too.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-09-12T00:49:57Z",
+      "createdDate": "2026-09-12",
+      "completedDate": null
     }
   ],
   "importantNotes": [
