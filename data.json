@@ -22159,7 +22159,8 @@
       "createdDate": "2026-09-12",
       "completedDate": null,
       "notes": [
-        "[QA 2026-09-14] server-side PASS holds (NativeFront env true, image b52566d9, RestartCount 0); device test BLOCKED."
+        "[QA 2026-09-14] server-side PASS holds (NativeFront env true, image b52566d9, RestartCount 0); device test BLOCKED.",
+        "[CTO 2026-09-14 telemetry] Real-user check from BandwidthUsageLogs + ConnectionLogs: ZERO CasperCloak sessions from AE/SA/BH/OM/KW/QA in the last 7 days \u2014 the only Gulf traffic is ONE AE account on plain WireGuard (protocol 0, 69 sessions, 11.4 GB/week, per-tick active p50 16.1 Mbps, max 58 Mbps to D\u00fcsseldorf), i.e. UDP WireGuard works for that user. The native front therefore still has no Gulf evidence either way; the nightly report /root/reports/throughput-latest.txt (04:40 UTC) will show the first Gulf CC session automatically."
       ]
     },
     {
@@ -22209,7 +22210,10 @@
       "priority": "P0",
       "createdAt": "2026-09-14T22:49:25Z",
       "createdDate": "2026-09-14",
-      "completedDate": null
+      "completedDate": null,
+      "notes": [
+        "[CTO 2026-09-14 20:40Z verification] df: 43G used / 4.7G free (91%). `docker system df` reclaimable = 0 (disk-guard keeps it clean; builder prune reclaimed 0B). Backups on disk: /root/Casper/Casper-Code/backups/ 20260914_020001.tar.gz 1.85 GB + 20260913_020001.tar.gz 1.82 GB (next tar 02:00 UTC); /root/backups/postgres/ 4.2 GB incl. manual_test_20260412.dump (April) and weekly_2026-08-16_0300.dump. Deleting any backup needs the CEO's or DevOps' explicit go; the durable fix is the DO volume resize (xd-720)."
+      ]
     },
     {
       "id": "xd-779",
@@ -22288,6 +22292,18 @@
       "completedDate": null,
       "handoffTo": "[CEO]",
       "handoffNote": "CEO \ud83d\udfe2 after the Lebanon check; Gulf behaviour rides on real-user telemetry (xd-767) until a Gulf phone exists."
+    },
+    {
+      "id": "xd-785",
+      "from": "[CTO]",
+      "to": "[QA]",
+      "title": "Handoff from CTO: IR accounts: 2 weeks of keepalive-only WireGuard ticks and 0-byte sessions \u2014 zombie peers or a blocked road? Measure with peer-stats before anyone touches the front",
+      "description": "FOUND 2026-09-14 in the nightly throughput data (not a regression from the 09-12 native front \u2014 the pattern is identical every day since 08-31): 3-5 accounts with LastLoginCountry=IR produce 5k-13k BandwidthUsageLogs ticks/day with ~1 KB per tick (max tick 0.0-1.7 MB, 10-16 MB/day TOTAL across all of them), and their ConnectionLogs show plain-WireGuard (protocol 0) sessions of ~60 min with 0 bytes plus one CasperCloak session (09-05, iOS 26.6.0) whose bytes are not recorded in ConnectionLogs. HYPOTHESES (unmeasured): (a) abandoned WG peers never removed on the nodes (keepalive TX keeps the tick alive \u2014 see memory connected-zero-mb-keepalive-liveness-gate); (b) Iran blocks plain WireGuard UDP so those sessions never pass traffic (expected \u2014 IR is tier Fronted and must use CasperCloak); (c) the CasperCloak road itself does not pass traffic from Iran. TEST: node Flask /wireguard/peer-stats for those peers (last_handshake age, rx/tx), count IR CC sessions in the next 7 days via /root/reports/throughput-latest.txt, and if a real IR CC session shows 0 bytes -> escalate to [DEVOPS]/[CTO] as a front problem. Do NOT change the front on this evidence.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-09-14T23:41:40Z",
+      "createdDate": "2026-09-14",
+      "completedDate": null
     }
   ],
   "importantNotes": [
