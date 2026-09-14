@@ -22274,6 +22274,20 @@
       "completedDate": null,
       "handoffTo": "[CTO]",
       "handoffNote": "CTO builds the branch the numbers select (parallel streams vs tunnel-path instrumentation)."
+    },
+    {
+      "id": "xd-784",
+      "from": "[CTO]",
+      "to": "[QA]",
+      "title": "Handoff from CTO: Verify build 24y on device: Fast Route is tier-aware (hidden + ignored in fronted-only regions) and self-heals (failed direct dial retries once via the front with a notice)",
+      "description": "CEO decision 2026-09-14: '1 should ship'. DELIVERED (build 2026-09-14-24y, development + production, arm64 build SUCCEEDED, strings verified): (1) ServerService.fetchCasperCloakConfig now decodes the backend's stealthTier/stealthTierCountry (xd-764 fields) and stores the tier (MultiHopManager.lastStealthTier, UserDefaults 'ccLastStealthTier'); log line 'CasperCloak config: stealthTier=<T> country=<C> fastRouteAllowed=<bool>'. (2) MultiHopManager.directRelayRequestedAndAllowed = ccForceDirectRelay && fastRouteAllowedByTier && !ccFallbackToFrontOnce is now the single decision at all three road-choice sites (VPNConnectionManager, ProtocolManager, MultiHopManager entry hop). In a Fronted-tier region the user's Fast Route is IGNORED (log '[FAST-ROUTE] ignored: region tier=Fronted is fronted-only'). Unknown tier (never connected) behaves as before. (3) VPNConnectionManager.connectCasperCloak is now a wrapper: if the attempt was a DIRECT dial, the front was available, and it failed (not a 402), it sets the one-shot ccFallbackToFrontOnce, shows NotificationService.showInfo('Fast Route couldn't reach <server> directly. Using the secure route for this connection.'), and retries the SAME server once via the front; logs '[FAST-ROUTE] direct relay to <server> failed \u2026 retrying once via the fronted road' then '\u2026 fallback via the fronted road succeeded'. (4) Settings > Connection: the Fast Route row and footer are hidden when the stored tier is Fronted; footer copy now says the route self-heals. ON DEVICE \u2014 Lebanon (tier Throttle, backend mints no front): Fast Route stays VISIBLE; toggling it changes nothing (LB is already direct) \u2014 expected. The fallback cannot fire in LB (no front to fall back to) \u2014 expected; log must show 'stealthTier=Throttle'. A FRONTED-tier phone (IR/CN/RU \u2014 none available) would hide the row and log '[FAST-ROUTE] ignored'. A GULF phone (DirectFirst) with Fast Route ON: expect '[CC-TARGET] target=directRelay'; if the direct dial fails, expect the notice + '[FAST-ROUTE] fallback via the fronted road succeeded' and '[CC-TARGET] target=cloudfront host=s<N>-edge.pompesh.com'. Simulate the fallback anywhere with a front: turn Fast Route ON and block the relay's direct address on the network (or pick a relay whose direct port is filtered) \u2014 the retry via the front must connect. PASS = Lebanon behaviour unchanged + log lines present; Gulf/fronted cases stay CODE-VERIFIED until a device exists.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-09-14T23:27:22Z",
+      "createdDate": "2026-09-14",
+      "completedDate": null,
+      "handoffTo": "[CEO]",
+      "handoffNote": "CEO \ud83d\udfe2 after the Lebanon check; Gulf behaviour rides on real-user telemetry (xd-767) until a Gulf phone exists."
     }
   ],
   "importantNotes": [
