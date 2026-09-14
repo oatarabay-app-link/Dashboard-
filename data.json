@@ -21303,7 +21303,8 @@
       "completedDate": null,
       "progressNote": "PART 1 SHIPPED dev b5130ad05 (BUILD SUCCEEDED arm64): ccForceDirectRelay flag gates all 3 cloudfront_url setters + Settings->Troubleshooting toggle 'Speed test: bypass Cloudflare'. Enables the CF-vs-direct device split-test. PART 2 PENDING: parallel-streams client (2-4x). Awaiting CEO speed numbers.",
       "notes": [
-        "[CTO 2026-09-14] Part 1 SHIPPED: the force-direct toggle exists since 24u and is now the user-facing 'Fast Route' (Settings > Connection, build 24w/24x). Part 2 (parallel-streams client, 2-4x interim) NOT started \u2014 needs the relay side xd-766 first."
+        "[CTO 2026-09-14] Part 1 SHIPPED: the force-direct toggle exists since 24u and is now the user-facing 'Fast Route' (Settings > Connection, build 24w/24x). Part 2 (parallel-streams client, 2-4x interim) NOT started \u2014 needs the relay side xd-766 first.",
+        "[CTO 2026-09-14] Relay ceiling measured \u226564 Mbps single-stream from the brain (xd-765). Phone gets ~6. Pending xd-784 (single-connection test on the CEO line) to confirm the per-flow cap before building parallel streams. NOTE: relay edits on DE-DUS/US-LA/NL/FR need DevOps root (fleet key accepted only on the 8 OneProvider nodes)."
       ]
     },
     {
@@ -21316,7 +21317,10 @@
       "priority": "P2",
       "createdAt": "2026-07-02T00:19:36Z",
       "createdDate": "2026-07-02",
-      "completedDate": null
+      "completedDate": null,
+      "notes": [
+        "[CTO 2026-09-14] Relay ceiling measured \u226564 Mbps single-stream from the brain (xd-765). Phone gets ~6. Pending xd-784 (single-connection test on the CEO line) to confirm the per-flow cap before building parallel streams. NOTE: relay edits on DE-DUS/US-LA/NL/FR need DevOps root (fleet key accepted only on the 8 OneProvider nodes)."
+      ]
     },
     {
       "id": "xd-714",
@@ -22014,11 +22018,15 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: SPEED step 1: relay micro-levers \u2014 compression=None + TCP_NODELAY on the CC relay, one node first, then fleet",
       "description": "MEASURED 2026-09-10 on brain /opt/caspercloak/relay_ws.py (315L): `compression=` NOT set in websockets.serve() -> permessage-deflate is at library default ON, wasting CPU+latency on obfs-encrypted (incompressible) bytes; NO TCP_NODELAY on the accepted socket (Nagle batches small WG packets). Both were identified 2026-06-27 and never applied. Honest magnitude: 10-30%, latency more than bandwidth; stealth-safe (obfs4 is the stealth layer, not WS compression). DO: (1) add compression=None to websockets.serve(); (2) set TCP_NODELAY on each accepted connection's socket (ws.transport.get_extra_info('socket').setsockopt(IPPROTO_TCP, TCP_NODELAY, 1)); (3) Bangkok-first rule (skill anti-pattern 11): bkk-01/dev relay -> smoke (real CSOK handshake, not is-active) -> D\u00fcsseldorf s6 -> CEO re-runs fast.com direct-road 3x -> fleet. 3-way lockstep (skill anti-pattern 10): canonical relay + fleet-onboarding.sh heredoc + v13 variant for the Py3.8 nodes (DE/NL/FR). Verify per skill \u00a77: >=10 real CSOK + 0 '426' in 12h. Evidence: split-test 2026-09-10 (xd-763), references/caspercloak-throughput.md \u00a74-D.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-09-10T22:36:48Z",
       "createdDate": "2026-09-10",
-      "completedDate": null
+      "completedDate": "2026-09-14",
+      "completedAt": "2026-09-14",
+      "completedBy": "[CTO]",
+      "resolution": "MEASURED 2026-09-14 20:2xZ from the brain (UK) to s6 D\u00fcsseldorf with a real CasperCloak WS session (/tmp/ccmax.py, 1200-byte frames, 25 s per step): DIRECT relay achieved 8.0 / 15.9 / 32.0 / 63.9 Mbps for targets 8/16/32/64, no close; the NATIVE Cloudflare front (s6-edge.pompesh.com) achieved 8.0 / 15.9 / 32.0 Mbps (64 step in the log). A single WS stream through the relay sustains \u226564 Mbps, i.e. ~10x the CEO's phone (6.0 direct / 5.3 fronted, xd-763). The relay is NOT the ceiling, so compression=None/TCP_NODELAY cannot raise the phone's throughput; they would only trim latency. Also: I have no root on DE-DUS (91.194.84.79 refuses casper_fleet_admin from the Mac and from the brain; only the 8 OneProvider nodes accept it), so relay edits on s6 are DevOps-only regardless.",
+      "resultingHandoff": "xd-784 (CEO 2-minute single-stream phone test that decides parallel streams) + the existing xd-712 part 2 / xd-766 (parallel streams) which this measurement now points at."
     },
     {
       "id": "xd-766",
@@ -22030,7 +22038,10 @@
       "priority": "P0",
       "createdAt": "2026-09-10T22:36:48Z",
       "createdDate": "2026-09-10",
-      "completedDate": null
+      "completedDate": null,
+      "notes": [
+        "[CTO 2026-09-14] Relay ceiling measured \u226564 Mbps single-stream from the brain (xd-765). Phone gets ~6. Pending xd-784 (single-connection test on the CEO line) to confirm the per-flow cap before building parallel streams. NOTE: relay edits on DE-DUS/US-LA/NL/FR need DevOps root (fleet key accepted only on the 8 OneProvider nodes)."
+      ]
     },
     {
       "id": "xd-767",
@@ -22249,6 +22260,20 @@
       "completedDate": null,
       "handoffTo": "[QA]",
       "handoffNote": "QA: confirm the next scheduled run's vault writes land on GitHub (no local-only files in the clone)."
+    },
+    {
+      "id": "xd-783",
+      "from": "[CTO]",
+      "to": "[CEO]",
+      "title": "Handoff from CTO: SPEED DECIDER (2 minutes, Lebanon phone, NO VPN): is ONE connection capped at ~6 Mbps on your line? If yes, parallel streams is the fix; if no, the tunnel path is",
+      "description": "WHY: xd-763 measured 23 Mbps without VPN (fast.com = many parallel connections) vs 6.0 Mbps direct / 5.3 fronted through CasperCloak (which carries everything inside ONE TCP connection). The relay itself sustains 64 Mbps on one stream from the UK (xd-765 measurement), so the suspect is the Lebanon last mile limiting a SINGLE TCP connection (loss/throttle per flow). TEST (VPN OFF, cellular, same place/time as your usual tests): open Safari and load https://speed.cloudflare.com/__down?bytes=200000000 (one 200 MB file over ONE connection); watch the download speed in the Safari downloads popover or time it. Repeat 2x. Then repeat with VPN ON (CasperCloak, D\u00fcsseldorf). READ: (a) single connection without VPN \u2248 6 Mbps -> the LINE caps one flow -> parallel streams (xd-712 part 2 + xd-766: N WebSockets per session) is the right lever; (b) single connection without VPN \u2248 20+ Mbps -> the tunnel path is losing ~3x -> instrument the tunnel (per-hop RTT/loss) before building anything. Send the numbers (or the exported log) and I'll take the matching branch. This replaces guessing with one measurement (\u00a77.1).",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-09-14T23:25:34Z",
+      "createdDate": "2026-09-14",
+      "completedDate": null,
+      "handoffTo": "[CTO]",
+      "handoffNote": "CTO builds the branch the numbers select (parallel streams vs tunnel-path instrumentation)."
     }
   ],
   "importantNotes": [
