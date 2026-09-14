@@ -21369,7 +21369,10 @@
       "priority": "P1",
       "createdAt": "2026-07-06T22:58:51Z",
       "createdDate": "2026-07-06",
-      "completedDate": null
+      "completedDate": null,
+      "notes": [
+        "[QA 2026-09-14] WATCH: sweep */3 live, over-cap client-keyed users 160, last cut 09-12 12:06Z, 0 cuts since."
+      ]
     },
     {
       "id": "xd-718",
@@ -21573,7 +21576,10 @@
       "priority": "P1",
       "createdAt": "2026-07-15T00:41:58Z",
       "createdDate": "2026-07-15",
-      "completedDate": null
+      "completedDate": null,
+      "notes": [
+        "[QA 2026-09-14] PARTIAL 11th: L3 weekly ran 09-13 03:33Z (email 200); L4 daily triage still absent."
+      ]
     },
     {
       "id": "xd-734",
@@ -21725,7 +21731,10 @@
       "priority": "P1",
       "createdAt": "2026-08-12T02:03:41Z",
       "createdDate": "2026-08-12",
-      "completedDate": null
+      "completedDate": null,
+      "notes": [
+        "[QA 2026-09-14] FAIL-RESIDUAL: 58/58 unverified writers > 100 KB/24h (all mailinator, pre-08-15). API gate holds; client keys do not. Handoff to [BACKEND]."
+      ]
     },
     {
       "id": "xd-746",
@@ -21881,7 +21890,10 @@
       "priority": "P1",
       "createdAt": "2026-08-30T22:13:28Z",
       "createdDate": "2026-08-30",
-      "completedDate": null
+      "completedDate": null,
+      "notes": [
+        "[QA 2026-09-14] PASS no-op: 0 zero-byte rows of 2,461,154 in 24h."
+      ]
     },
     {
       "id": "xd-758",
@@ -21893,7 +21905,13 @@
       "priority": "P0",
       "createdAt": "2026-08-30T22:36:28Z",
       "createdDate": "2026-08-30",
-      "completedDate": null
+      "completedDate": null,
+      "notes": [
+        "[QA 2026-09-14] PASS 4th: 5x GET /api/user 8.0-16.1 ms, 200, usage fields present -> qa-tested."
+      ],
+      "qaVerdict": "PASS",
+      "verifiedBy": "qa-tested",
+      "verifiedDate": "2026-09-14"
     },
     {
       "id": "xd-759",
@@ -22121,7 +22139,10 @@
       "priority": "P0",
       "createdAt": "2026-09-12T03:07:07Z",
       "createdDate": "2026-09-12",
-      "completedDate": null
+      "completedDate": null,
+      "notes": [
+        "[QA 2026-09-14] server-side PASS holds (NativeFront env true, image b52566d9, RestartCount 0); device test BLOCKED."
+      ]
     },
     {
       "id": "xd-776",
@@ -22159,6 +22180,54 @@
       "completedBy": "[QA]",
       "resolution": "QA PASSED on build 24x (24w had a truncation defect found by the simulator render and fixed before the CEO test). Evidence in the description. Device pass by CEO pending for \ud83d\udfe2.",
       "resultingHandoff": "CEO device test via importantNotes ([QA PASSED] note); no new xd-task \u2014 the CEO's \ud83d\udfe2 is the next step."
+    },
+    {
+      "id": "xd-778",
+      "from": "[QA]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from QA: [QA 09-14] P0 DISK: ENOSPC forecast 2026-09-16 ~02:00Z \u2014 apply zero-loss lever + retention on crontab line",
+      "description": "5.24 GB free 09-14 06:10Z. Chain A holds 2 tars (09-13 survives -mtime race to 09-16); chain B daily_2026-09-13 is a HARDLINK of weekly_2026-09-13 so its prune reclaims 0. Tonight net +3.74 GB -> ~1.4 GB free; 09-16 02:00Z chain A peak 2x1.87=3.74 GB -> ENOSPC (disk-guard.sh:69 kills containers). Lever now: rm /root/Casper/Casper-Code/backups/20260913_020001.tar.gz (+1.82 GB, dup of weekly_09-13 dump). Durable: BACKUP_RETENTION_DAYS on crontab line, KEEP_DAYS 30->7 (xd-756).",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-09-14T22:49:25Z",
+      "createdDate": "2026-09-14",
+      "completedDate": null
+    },
+    {
+      "id": "xd-779",
+      "from": "[QA]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from QA: [QA 09-14] P1 ALERTING DEAD: Resend 429 storm 22,046/24h (1.75x worse than 09-14 r1) \u2014 bridge re-forwards every notify",
+      "description": "journalctl -u alertmanager-resend-bridge --since '24 hours ago' | grep -c status=429 = 22046. 10 active alerts (DiskSpaceLow, CriticalCPU 97.78% since 09-10, bkk-01 46.16.129.246 fully down since 05:36Z) \u2014 none delivered. Fix: dedupe/rate-limit in the bridge (group_wait/repeat_interval + 429 backoff) and re-verify one test alert lands.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-09-14T22:49:25Z",
+      "createdDate": "2026-09-14",
+      "completedDate": null
+    },
+    {
+      "id": "xd-780",
+      "from": "[QA]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from QA: [QA 09-14] P1 CriticalCPU 97.78% on do-production since 09-10 19:07Z (load 4.7-5.0 at 07:22Z) \u2014 un-owned",
+      "description": "Alertmanager CriticalCPU active since 2026-09-10T19:07Z, HighCPU since 09-07. top at 07:22Z: dockerd 30%, postgres 30%, dotnet 30%, node_exporter 15%, transient awk 69% (fleet_health_loop). Identify the sustained consumer (pidstat 60s) and cap it; correlate with the 09-10 BUL gap and the 09-12 api rebuild.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-09-14T22:49:25Z",
+      "createdDate": "2026-09-14",
+      "completedDate": null
+    },
+    {
+      "id": "xd-781",
+      "from": "[QA]",
+      "to": "[BACKEND]",
+      "title": "Handoff from QA: [QA 09-14] xd-745 RESIDUAL: 58 pre-enforcement unverified @mailinator accounts still tunnel (client-key blind spot) \u2014 revoke peers for IsEmailVerified=false",
+      "description": "24h BUL: 58/58 unverified writers > 100 KB (median 12.5 MB, max 21.8 MB, ~18,000 rows/day each across 8-9 servers, ~1.2 KB/row keepalive). Accounts created 07-28..08-11, before the 08-15 gate. The 403 AUTH_1006 gate blocks config FETCH only; provisioned WireGuard/CC peers keep running. Mirror datacap_enforcement_sweep.sh: cut peers + revoke client keys where NOT IsEmailVerified. xd-745 stays pending until unverified >100 KB/24h = 0 for 3 days.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-09-14T22:49:25Z",
+      "createdDate": "2026-09-14",
+      "completedDate": null
     }
   ],
   "importantNotes": [
