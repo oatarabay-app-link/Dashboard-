@@ -22464,6 +22464,42 @@
       "createdAt": "2026-09-15T23:42:56Z",
       "createdDate": "2026-09-15",
       "completedDate": null
+    },
+    {
+      "id": "xd-796",
+      "from": "[CTO]",
+      "to": "[QA]",
+      "title": "Handoff from CTO: Operations tab (xd-795): verify the new admin page shows routine status + reports, and that the API endpoint is live after tonight's deploy",
+      "description": "CEO 2026-09-15: 'make sure routines run to keep space free and logs saved for legal requirements and accessed via admin panel via its own tab'. DELIVERED: brain writes /root/reports/routines-status.json every 15 min (/opt/caspervpn/routines_status.sh: disk, DB size, usage rows, inactive users, last evidence of every cron: nightly tar, pg dump, pre-prunes, legal archive, usage-log retention/compaction, farm guard, throughput + connectivity reports, datacap sweep); daily connectivity-by-country report at 05:00 UTC (/opt/caspervpn/connectivity_report.sh \u2192 /root/reports/connectivity-latest.txt, verdict per country: BLOCKED? / ZERO-TRAFFIC / FAILING / ok); backend AdminOpsController (GET /api/admin/ops/status, /reports, /report/{name}; whitelist; /root/reports bind-mounted read-only at /app/reports); admin panel page Operations (sidebar under Connection Logs) with disk/DB cards, routines table with freshness badges, report viewer. Deploy launched 2026-09-15 21:11Z as a background job (log /root/reports/deploy-ops-tab.log). QA: (1) log in to the admin panel \u2192 Operations: cards populated, status file 'fresh', routines table shows last runs; (2) click connectivity-latest.txt / throughput-latest.txt / farm-guard.log \u2014 text loads; (3) curl /api/admin/ops/status unauthenticated \u2192 401; (4) if the reports folder shows 'not mounted', check the compose mount + container user (appuser uid 1000 must read /root/reports files, 0644). Existing 'Connection Logs' tab already serves the legal per-user session lookup (GET /api/admin/connection-logs, export) \u2014 confirm it works with an email filter.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-09-16T00:12:15Z",
+      "createdDate": "2026-09-16",
+      "completedDate": null
+    },
+    {
+      "id": "xd-797",
+      "from": "[CTO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CTO: Gulf speed without a Gulf phone: run the CasperCloak throughput sweep from a Gulf vantage point (1-hour VPS in Bahrain/UAE) against s6 direct and the native front",
+      "description": "CEO 2026-09-15: 'we don't have a device in the Gulf and we need to resolve the speed issue\u2026 to upload a new build'. What we can measure without a phone: rent a small VPS for an hour in AWS me-south-1 (Bahrain) or Azure UAE North, copy /tmp/ccmax.py from the brain (python3 + websockets), run: python3 ccmax.py wss://s6.pompesh.com/ DIRECT 8 25; \u202616/32/64; then the same against wss://s6-edge.pompesh.com/ (native front). From the brain both roads sustain 64 Mbps single-stream (xd-765). A Gulf VPS number tells us whether the Gulf\u2192D\u00fcsseldorf path (not the relay) caps the road, and whether the native front adds a tax from there. NOT covered: mobile-carrier DPI/throttling (needs a real phone) \u2014 real-user evidence will come from the nightly throughput report (/root/reports/throughput-latest.txt) and the 24z failure categories once the App Store build ships. Also ask the UAE customer (Basel) for a fast.com number on the new build when it is out.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-09-16T00:12:15Z",
+      "createdDate": "2026-09-16",
+      "completedDate": null
+    },
+    {
+      "id": "xd-798",
+      "from": "[CTO]",
+      "to": "[BACKEND]",
+      "title": "Handoff from CTO: Block-detection covers CasperCloak: CountryBlockStatuses shows CasperCloak 0% success for EVERY country (no probe/aggregation for proto 3) \u2014 feed it from ConnectFailureEvents cc-* categories + the daily connectivity verdicts",
+      "description": "Seen 2026-09-15: CountryBlockStatuses.Protocols has {Protocol:3, Status:3, SuccessRate:0.0} for AE/CN/IR/RU/SA alike \u2014 the aggregator never learned CasperCloak, so the admin Block Detection dashboard is blind for the one protocol censored users depend on. With build 24z the app reports cc-<phase>-<road> categories (accepted by DiagnosticsController). Implement: per-country CasperCloak success = sessions with traffic vs connect failures (24h), category breakdown, and expose it on the existing BlockDetectionDashboard; reuse the SQL in /opt/caspervpn/connectivity_report.sh. Deploy with the next backend release.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-09-16T00:12:15Z",
+      "createdDate": "2026-09-16",
+      "completedDate": null
     }
   ],
   "importantNotes": [
