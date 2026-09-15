@@ -22576,6 +22576,30 @@
       "createdAt": "2026-09-16T00:49:27Z",
       "createdDate": "2026-09-16",
       "completedDate": null
+    },
+    {
+      "id": "xd-802",
+      "from": "[CTO]",
+      "to": "[QA]",
+      "title": "Handoff from CTO: Free tier = 3 servers (D\u00fcsseldorf, Los Angeles, Singapore): verify locks + prompt on a free account and 403 on the API; the trio is a DB flag editable in the admin panel",
+      "description": "CEO 2026-09-16: 'for free users can we make only 3 servers accessible, chosen by default'. DELIVERED: (1) backend ServersController.CheckServerTierAsync \u2014 an IsPremium server is refused to accounts that are not unlimited (paid/admin; review accounts exempt) with 403 errorCode PREMIUM_SERVER and the message 'Active subscription required\u2026' which the iOS APIClient already maps to APIError.subscriptionRequired \u2192 the branded premium prompt; wired into /config, /ikev2-config, /openvpn-config, /connect, /wireguard-config and /caspercloak-config; (2) the iOS server list ALREADY locks isPremium servers for free accounts (isLocked = isPremium && !canAccessPremiumServers) and shows the paywall on tap \u2014 no app build needed for the lock; (3) DB: VpnServers.IsPremium=true for every server except D\u00fcsseldorf (DE, CasperCloak s6), Los Angeles (US, s12), Singapore (SG, s3) \u2014 all three are CasperCloak-capable so restricted-region free users keep a working stealth road on every continent; Amsterdam/Paris have no CasperCloak so they are premium. Changing the trio = flip IsPremium in the admin panel (Servers) \u2014 no rebuild. QA on a FREE account (applinks123 is free): server list shows 10 locked servers + 3 open; tapping a locked one shows the premium prompt; connecting to the 3 works; curl a premium server's /caspercloak-config with a free JWT \u2192 403 PREMIUM_SERVER; a PAID account sees no locks and connects anywhere. Watch the API log for '[PREMIUM_SERVER]' lines after the deploy.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-09-16T01:01:28Z",
+      "createdDate": "2026-09-16",
+      "completedDate": null
+    },
+    {
+      "id": "xd-803",
+      "from": "[CTO]",
+      "to": "[QA]",
+      "title": "Handoff from CTO: Build 25a on the CEO phone: admin protocol pin now unlocks WireGuard everywhere (no forced CasperCloak, no OS auto-start of Double VPN)",
+      "description": "CEO 2026-09-16 on 24z: after sign-out/in the Settings picker unlocked (Debug builds allow it via devAllowInsecureProtocols) but the app still auto-connected Double VPN and connected with CasperCloak. ROOT CAUSE (code): the admin pin (Users.ProtocolOverride = [ikev2,wireguard] on applinks123 since June) was applied only in getCurrentUser(); a sign-in via /auth/login or Apple/Google never stored it, so MultiHopManager.userInRestrictedRegion stayed TRUE (sticky flag) \u2192 connect() forced CasperCloak (VPNConnectionManager:1099) and the OS on-demand rule saved by an earlier restricted session kept auto-starting Double VPN. FIX 25a: the pin is applied wherever a User carrying it is decoded (User.swift decoder hook, never clears); a pin without caspercloak clears the sticky restricted flag (UserDefaults + Keychain) and disarms on-demand on every saved profile ('[ADMIN-PIN] \u2026' log line). CEO TEST: Clean Build Folder \u2192 run 25a \u2192 sign out and in once \u2192 log must contain 'BUILD MARKER 2026-09-16-25a' and 'Protocol override from /me: ikev2,wireguard' or '[ADMIN-PIN] pin excludes CasperCloak'; Settings > Protocol > WireGuard; connect to D\u00fcsseldorf \u2192 the log shows a WireGuard tunnel (no '[CC-TARGET]' line); no Double VPN auto-start after backgrounding. Then fast.com \u2192 the WireGuard-in-Lebanon number decides the speed work (29 Mbps single-connection baseline).",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-09-16T01:01:28Z",
+      "createdDate": "2026-09-16",
+      "completedDate": null
     }
   ],
   "importantNotes": [
