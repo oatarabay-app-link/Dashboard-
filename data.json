@@ -22352,6 +22352,18 @@
       "createdAt": "2026-09-15T22:12:27Z",
       "createdDate": "2026-09-15",
       "completedDate": null
+    },
+    {
+      "id": "xd-788",
+      "from": "[CTO]",
+      "to": "[BACKEND]",
+      "title": "Handoff from CTO: xd-754 STEP 2 (hourly upsert) \u2014 the ONLY thing that makes 6-month retention possible",
+      "description": "CEO 2026-09-15 asked whether guaranteed cleanup + 6-month retention of legally-required logs solves the disk. MEASURED ANSWER: not at the current WRITE RATE. Daily rows: 09-08 2,443,305 | 09-11 1,902,051 | 09-12 2,591,175 | 09-13 2,407,370 | 09-14 2,456,842 | 09-15 1,967,270 (~2.4M/day). 30-day retention already = 53.7M rows / 9.8GB. At 180-day retention and this rate: ~432M rows ~= 79GB, MORE THAN THE ENTIRE 48GB DISK. xd-754 step 1's guard IS working (zero-byte rows in 24h = 0) but it only blocks EXACTLY-zero rows: 2,450,836 of ~2.45M rows/day are keepalive-grade (<10KB) but NON-zero, so idle peers still write one row per ~90s sync tick (220 distinct users/day). FIX = the step-2 structural half already named in commit 54489c009: hourly UPSERT per (user,server) instead of per-tick INSERT => ~40x fewer rows (2.4M/day -> ~60k/day). THEN 6-month retention = ~10.8M rows ~= 2GB and the CEO's plan works comfortably. NOTE: BandwidthUsageLogs is USAGE TELEMETRY, not a legal log \u2014 ConnectionLogs (the connection record) is only 5,157 rows and can hold 6 months trivially. Nobody needs 90-second granularity for 6 months. Pairs with xd-769 (grow volume) and the pg_backup.sh rotate-before-write fix.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-09-15T22:24:09Z",
+      "createdDate": "2026-09-15",
+      "completedDate": null
     }
   ],
   "importantNotes": [
