@@ -23052,6 +23052,30 @@
       "createdAt": "2026-09-16T01:37:36Z",
       "createdDate": "2026-09-16",
       "completedDate": null
+    },
+    {
+      "id": "xd-814",
+      "from": "[IOS]",
+      "to": "[QA]",
+      "title": "Handoff from IOS: Test build 25c (xd-814): choosing a locked server shows the Premium card and never starts a connection",
+      "description": "WHAT SHIPPED (dev+prod, build marker 2026-09-16-25c, arm64 build EXIT=0, 7/7 log-signature strings in CasperVPN.debug.dylib): (1) VPNConnectionManager.connect(to:) now refuses a premium-only server on a free account BEFORE any tunnel/config work (throws APIError.subscriptionRequired; log '[PREMIUM-GATE] refused connect to <server>'); (2) ConnectionViewModel.connect/quickConnect, the iPhone ServerDetailSheet Connect button and the iPad detail pane show PremiumFeaturePromptView(.premiumServer) instead of connecting (logs '[PREMIUM-GATE] home connect\u2026 / detail-sheet connect\u2026 / iPad detail connect\u2026'); (3) a backend 403 PREMIUM_SERVER (APIError.subscriptionRequired) short-circuits the protocol/alternate cascade in VPNConnectionManager (primary catch, fallback loop, /caspercloak-config) exactly like the 402 data-cap path \u2014 no more ~7 retries x 30s; (4) SmartConnectManager filters premium-only recommendations out for free accounts ('[PREMIUM-GATE] SmartConnect: skipping N'); (5) BACKEND (prod image aaad2a1cc26b, healthy, public /health 200): POST /servers/smart-recommend drops premium-only servers for accounts that may not use them (shared CanUsePremiumServersAsync = review account OR unlimited plan; API log '[PREMIUM_SERVER] smart-recommend: dropped N \u2026'). WHY: measured 2026-09-15 22:58-23:06Z one free user (riverzenlb@) hit the 403 gate 16 times on Amsterdam/Paris/Sydney/Sao Paulo/Hong Kong in 8 minutes = the cascade retrying a terminal refusal = the CEO's 'app gets stuck' report; every VpnServers row has ServerAccessLevel=1 so the service's access-level filter never excluded premium servers and the +10 premium score made a locked server the #1 Quick Connect pick. TEST (free account, Clean Build Folder first, device console from the start): A) Servers tab: tap a lock-glyph server -> Premium card, NO 'Connecting\u2026', existing tunnel untouched. B) Open that server's detail sheet -> Connect -> Premium card, no connection. C) Home with a remembered premium server -> Connect -> Premium card. D) Quick Connect -> lands on D\u00fcsseldorf/Los Angeles/Singapore only; app log shows '[PREMIUM-GATE] SmartConnect: skipping'. E) Premium account: no locks, every server connects (regression). F) Backend: `docker logs caspervpn-api | grep 'smart-recommend: dropped'` fires for a free account's Quick Connect. PASS = no '[PREMIUM-GATE] 403' line ever appears on the new build for a free account (the local gates catch it first) and no hang. Files: APIClient.swift, VPNConnectionManager.swift, SmartConnectManager.swift, ConnectionViewModel.swift, ConnectionView.swift, ServerListView.swift, ServerListView_iPad.swift, AppDelegate.swift, backend ServersController.cs.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-09-16T02:37:30Z",
+      "createdDate": "2026-09-16",
+      "completedDate": null
+    },
+    {
+      "id": "xd-815",
+      "from": "[BACKEND]",
+      "to": "[BACKEND]",
+      "title": "Handoff from BACKEND: xd-814 follow-up: apply CanUsePremiumServersAsync to the legacy GET/POST /servers/recommended (Android/Desktop) + confirm dev API rebuilt",
+      "description": "smart-recommend now drops premium-only servers for free accounts (prod, image aaad2a1cc26b). The legacy /servers/recommended endpoint (ServersController ~L275, used by no shipped client today; iOS filters client-side in ServerService.getRecommendedServer) still returns the +10-scored premium pick to free accounts. Apply the same predicate there (pick the best NON-premium online server when the account may not use premium) and verify the dev API container was actually rebuilt with the change (dev CI can advance git without rebuilding \u2014 see memory dev-deploy-git-reset-no-rebuild; verify with strings -e l on the DLL for 'smart-recommend: dropped').",
+      "status": "pending",
+      "priority": "P3",
+      "createdAt": "2026-09-16T02:37:30Z",
+      "createdDate": "2026-09-16",
+      "completedDate": null
     }
   ],
   "importantNotes": [
