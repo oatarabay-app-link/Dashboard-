@@ -22612,6 +22612,30 @@
       "createdAt": "2026-09-16T01:34:13Z",
       "createdDate": "2026-09-16",
       "completedDate": null
+    },
+    {
+      "id": "xd-805",
+      "from": "[CTO]",
+      "to": "[BACKEND]",
+      "title": "Handoff from CTO: Dedicated-IP entitlement is NOT tied to Apple billing + ClaimFromIapAsync accepts SANDBOX purchases",
+      "description": "PROVEN 2026-09-16 (Apple Server API + prod DB + code): DedicatedIpService.HandleSubscriptionWebhookAsync (renewed/payment_failed/cancelled/expired + grace + release) has ZERO production callers; AppleReceiptService's ASSN handler (DID_RENEW/EXPIRED/DID_FAIL_TO_RENEW) never notifies it and DedicatedIp has no expiry column -> any customer who cancels keeps the DI forever. ClaimFromIapAsync accepted a Sandbox JWS: the CEO's Sydney DI (103.75.119.124, user 2eecd0e6) is a $0 sandbox txn 2000001191649076 that Apple EXPIRED 2026-06-22 23:00 UTC (customer cancelled) yet is still Allocated. FIX: (a) in the ASSN handler, for com.caspervpn.dedicated.* call HandleSubscriptionWebhookAsync(originalTransactionId, mapped event) on DID_RENEW / EXPIRED / GRACE_PERIOD_EXPIRED / DID_FAIL_TO_RENEW / REFUND; (b) daily reconcile job: for every Allocated DI with Provider=Apple query GET https://api.storekit.itunes.apple.com/inApps/v1/subscriptions/{originalTxn} (ES256 JWT: Apple__IssuerId + kid Apple__SubscriptionKeyId=U287A7XF65 + /app/apple.p8; aud appstoreconnect-v1; bid) and start grace/release on EXPIRED/REVOKED \u2014 notifications get missed; (c) reject environment=Sandbox in ClaimFromIapAsync on production (or bind a flagged non-scarce test IP). Do NOT release the CEO's Sydney allocation without his explicit yes (decision pending). Verify: unit-test the mapping (Tests project must compile first \u2014 see backend-test-project-wont-compile) + a sandbox EXPIRED replay on dev shows the DI enter grace then Released.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-09-16T01:35:11Z",
+      "createdDate": "2026-09-16",
+      "completedDate": null
+    },
+    {
+      "id": "xd-806",
+      "from": "[CTO]",
+      "to": "[IOS]",
+      "title": "Handoff from CTO: Dedicated-IP 'Routing' picker is cosmetic + Double-VPN exit=own DI node reaches the July black-hole",
+      "description": "Since b02d9675b (retire multi-hop DI -> single-server CC to the DI node) ConnectionViewModel.connect() ignores DedicatedIPManager.routingMode, yet ProfileView.swift ~L201 still shows the Auto/Direct/Multi-Hop Picker + hint -> a control that does nothing. AND a DI holder can pick their own DI node (Sydney: Online, CC-capable, Load 0) as a Double-VPN EXIT: MultiHopController still pins the dedicated /32 on both hops and the entry node has no kernel route for it (Flask add-client adds none) -> 'entry server did not respond' / stuck Reconnecting (proven July). PENDING CEO DIRECTION: (A) build DI-as-Double-VPN-exit properly = DevOps entry-node route-add at DI-exit registration, Bangkok-first, then re-enable the option; or (B) remove the Picker (or reword to 'always direct + stealth where censored') and refuse exit==own-DI-node in the Double-VPN picker/backend with a clear message. Do NOT re-enable buildDedicatedIPRoute until (A) lands.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-09-16T01:35:11Z",
+      "createdDate": "2026-09-16",
+      "completedDate": null
     }
   ],
   "importantNotes": [
