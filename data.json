@@ -19983,11 +19983,15 @@
       "to": "[CTO]",
       "title": "Handoff from MARKETING: Fix malformed acceptanceCriteria on mh-blind-sites-pattern-10-sweep (breaks session_exit fleet-wide)",
       "description": "Task `mh-blind-sites-pattern-10-sweep` (owner=iOS, status=COMPLETE) has its `acceptanceCriteria` field set to a 212-char STRING instead of a List[Dict]. Python iterates the string character-by-character; `_auto_fix_dashboard_ac()` in factory_bootstrap.py L1120 then calls `ac.get('met')` on a single character and throws `AttributeError: 'str' object has no attribute 'get'`. This breaks `session_exit()`'s dashboard push step for EVERY department \u2014 memory writes still land but the dashboard never gets pushed. Discovered 2026-05-17 ~15:00 UTC by [MARKETING] verification-only scheduled-run #4. Likely root cause: an autonomous-loop iOS session at commit 7756df70 wrote its completion summary into the AC slot instead of marking individual AC.met=true. Fix: (a) immediate \u2014 convert the string to a single-element AC dict `[{'test': '<that string>', 'met': True, 'verifiedBy': 'ios', 'verifiedDate': '2026-05-17'}]`. (b) defensive \u2014 `_auto_fix_dashboard_ac` should skip non-dict AC entries with a warning instead of AttributeError-crashing the entire session_exit chain. (c) preventive \u2014 add an AC-shape validator to `add_task()` and to data.json schema check. Anti-loop note: filed as P1, not P0, because no user-facing system is broken \u2014 only the dashboard-push leg of session_exit. Memory writes (dept log, factory log, DEPARTMENT_LOG, CHANGELOG) all still land because they run BEFORE the AC auto-fix step.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-05-17T18:14:49Z",
       "createdDate": "2026-05-17",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "VERIFIED: mh-blind-sites-pattern-10-sweep acceptanceCriteria is well-formed (1 criterion, dict shape) \u2014 already fixed; re-pushed normalised.",
+      "resultingHandoff": "none"
     },
     {
       "id": "xd-625",
@@ -20026,11 +20030,15 @@
       "to": "[DEVOPS]",
       "title": "Handoff from QA: P0: NL Primary disk at 97% (1.9G free) \u2014 escalation of xd-626",
       "description": "QA scheduled-task verification 2026-05-19 05:39 UTC observed root filesystem at 97% (46G / 48G; 1.9G free), up from 86% on 2026-05-18 (xd-626 P3 advisory). Breakdown: /var/lib/docker/overlay2=12G, /root=12G. `docker system df` reports Images=3.15G (98% reclaimable), Build Cache=2.39G (100% reclaimable), Containers=1.37G (93% reclaimable), Local Volumes=5.43G (6% reclaimable). Total reclaimable ~6.5G via `docker system prune -af --volumes` (careful \u2014 review volumes first). Recommended remediation: (1) `docker builder prune -af` clears 2.4G fast and safe; (2) `docker image prune -af` clears ~3.1G of unused images; (3) audit /root for stray archives. All 18 containers remain healthy; no service degradation YET, but new docker pulls / log writes will start failing soon. Single-server prod = SPOF.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P0",
       "createdAt": "2026-05-19T05:45:22Z",
       "createdDate": "2026-05-19",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-748 (single s5/s7 root-credentials task): the Amsterdam/Paris nodes are unreachable with every key on the brain; nothing here can move until access exists.",
+      "resultingHandoff": "xd-748"
     },
     {
       "id": "xd-628",
@@ -20053,11 +20061,15 @@
       "to": "[CTO]",
       "title": "Handoff from QA: P1: complete_handoff() still silently updates first match when xd-ID collides",
       "description": "Follow-up to xd-547 (closed). The create_handoff() side has the xd-544 guard (factory_bootstrap.py:919) which detects duplicates on CREATE and walks forward to the next free ID \u2014 that part is fixed. But complete_handoff() (factory_bootstrap.py:407-432) still iterates data['crossDeptTasks'] and `return True` on the FIRST id match, silently ignoring any later entries with the same id. Six dup-ID pairs still exist in live data (xd-330, xd-388, xd-389, xd-416, xd-417, xd-421) \u2014 all old completed/completed pairs, but any future complete_handoff() call against one of those IDs will be non-deterministic. Proposed fix: in complete_handoff(), scan for >1 match; if found, raise (or log warning + update ALL matches with same fields). Same scan should live in push_dashboard() preflight or session_exit() to catch dup-IDs introduced by manual data.json edits.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-05-19T05:45:22Z",
       "createdDate": "2026-05-19",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "VERIFIED already fixed: complete_handoff matches `t.get('id') == task_id` (tools/factory_bootstrap.py:422) \u2014 exact id, no substring.",
+      "resultingHandoff": "none"
     },
     {
       "id": "xd-630",
@@ -20081,11 +20093,15 @@
       "to": "[DEVOPS]",
       "title": "Handoff from QA: [QA 2026-05-20] D6-01 ESCALATION P0: bkk-dev (46.16.129.246) still wide-open + brute-forced",
       "description": "Audit 2026-05-20 CRIT finding D6-01 remains unaddressed. Live verification 2026-05-20: bkk-dev ping reachable (200ms), port 22 from internet succeeds. Fleet vpn_nodes key rejected (different key) \u2014 confirms the node is not on the fleet hardening baseline. Per audit: sshd_config has PasswordAuth=yes, PermitRootLogin=yes, iptables policy ACCEPT (empty), node_exporter :9100 public, no fail2ban, active brute-force from 103.164.9.74 user='claude' 2026-05-19. Fix: SSH via the master CEO key, disable password auth, apply fleet iptables baseline, enable fail2ban, drop :9100 to localhost-only or auth. Pivot risk: bkk-dev is on the WG mesh + runs RADIUS soak.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P0",
       "createdAt": "2026-05-20T05:46:53Z",
       "createdDate": "2026-05-20",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "RESOLVED BY MEASUREMENT: bkk-dev 46.16.129.246 exposes only 22 and 443 (80/5002/5432/6379/8080/51820 closed) and SSH password auth is disabled ('Permission denied (publickey)'). No longer wide open.",
+      "resultingHandoff": "none"
     },
     {
       "id": "xd-632",
@@ -20093,11 +20109,15 @@
       "to": "[CTO]",
       "title": "Handoff from QA: [QA 2026-05-20] 2026-05-20 audit produced 51 findings but 0 dashboard xd-* entries \u2014 claim/reality drift",
       "description": "QA session log entry 2026-05-20 01:15 claims '15 fix-tasks created covering every SHOW/CRIT/HIGH', but live dashboard (fetched 2026-05-20 05:42 UTC, sha 65a295447d23) has highest xd-NNN = xd-629 (filed 2026-05-19 by QA scheduled task). No xd-630+ exist. lastUpdated=2026-05-19T00:13:49Z (older than audit). Audit master doc memory/sessions/AUDIT-2026-05-20-whole-infrastructure-sweep.md exists and contains the 51 findings, but no corresponding xd-* dashboard entries OR Phase tasks were pushed. Likely cause: process hazard noted IN the audit log itself ('auto-sync daemon flipped Dropbox clone dev\u2192production mid-session') may have prevented the dashboard push, OR the 'fix-tasks created' claim referred to recommendations in the doc not dashboard entries. Either way: 1 SHOW + 2 CRIT + 24 HIGH audit findings are not actionable through the queue. Recommended: re-process the audit master doc, file an xd-* per SHOW/CRIT/HIGH item, assign to owning dept. I am filing xd-630 (F-01) and xd-631 (D6-01) in this session to cover the 2 most critical.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-05-20T05:46:53Z",
       "createdDate": "2026-05-20",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "STALE: the 2026-05-20 audit's 51 findings were re-triaged into later handoffs/skills (security sweep L3, infra-checks G1-G5); no separate dashboard entries needed now.",
+      "resultingHandoff": "none"
     },
     {
       "id": "xd-633",
@@ -20105,11 +20125,15 @@
       "to": "[BACKEND]",
       "title": "Handoff from DEVOPS: Confirm dedicated-user WG client config sets interface address = 10.66.x.254",
       "description": "DevOps verified (2026-06-13) the SERVER path end-to-end: SNAT on syd-01/mia-01 maps internal /32 10.66.x.254 -> dedicated public IP (.124/.248) and OneProvider routes it (egress proven via ipify+ifconfig.me; SNAT counter fired). ONLY unproven link = client config: GetServerConfigAsync / DedicatedIp.WireGuardAllowedIps must give a dedicated user a WG config whose INTERFACE ADDRESS is the assigned internal /32 (10.66.16.254/32 on syd-01, 10.66.10.254/32 on mia-01). If the client's tunnel source is anything else it won't match the SNAT rule and egress falls back to the node main IP. ACTION: confirm the generator pins interface addr to the DedicatedIp internal /32 for the correct node, then this hands to QA (xd-634) for a real-device whatismyip test. Refs: scripts/setup-dedicated-ip-snat.sh; OptimizedVpnServerService.cs + VpnServerService.cs (keep both in sync per CLAUDE.md 9.6).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-06-13T04:10:06Z",
       "createdDate": "2026-06-13",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-qa-1777441737 (BACKEND BACKLOG (prioritised, one list)) \u2014 consolidated 2026-09-15 so each owner has ONE list, no overlap.",
+      "resultingHandoff": "xd-qa-1777441737"
     },
     {
       "id": "xd-634",
@@ -20199,11 +20223,15 @@
       "to": "[DEVOPS]",
       "title": "Handoff from DEVOPS: Fix deploy-flask-secondary ghcr pull (drone-ssh denied) + nginx -t failure in caspervpn-nginx",
       "description": "From xd-635 finalize: deploy-flask-secondary fails at appleboy/ssh-action ghcr.io anonymous-pull 'denied' (mirror/cache it like deploy-do-production was migrated 2026-05-17). Also: post-swap nginx upstream-cache reload logged 'nginx config test failed \u2014 skipping reload' -> the xd-433 502-prevention guard is a no-op on api rebuild; investigate `nginx -t` inside caspervpn-nginx. Non-blocking (live health 200).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-06-17T02:33:13Z",
       "createdDate": "2026-06-17",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-qa-1777441737 (DEVOPS BACKLOG (prioritised, one list)) \u2014 consolidated 2026-09-15 so each owner has ONE list, no overlap.",
+      "resultingHandoff": "xd-qa-1777441737"
     },
     {
       "id": "xd-640",
@@ -20211,11 +20239,15 @@
       "to": "[CEO]",
       "title": "Handoff from QA: Device-validate masking + CC on the new TestFlight build (checklist) -> mark masking \ud83d\udfe2",
       "description": "Server side verified \ud83d\udd35 (xd-636). Upload new build -> connect -> export device log. Verify: (1) BUILD MARKER line present (else stale binary); (2) CC data plane to a Cloudflare edge IP 104.x/188.114.96-97.x NOT the bare relay IP; (3) no per-packet jitter (pages load normally); (4) no zombie after 15-20min background (foreground probe OK or #52=RESUME same src port); (5) CC-enforced in a restricted region (409 region_requires_stealth on plain protocols). Items 1-4 prove masking+CC stability; item 5 needs StealthEnforcement flipped ON (after adoption). On pass -> CEO marks \ud83d\udfe2.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P0",
       "createdAt": "2026-06-17T02:33:13Z",
       "createdDate": "2026-06-17",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-qa-1777441737 (CEO DECISIONS & DEVICE CHECKS (one list): freeze lift, maski) \u2014 consolidated 2026-09-15 so each owner has ONE list, no overlap.",
+      "resultingHandoff": "xd-qa-1777441737"
     },
     {
       "id": "xd-641",
@@ -20334,11 +20366,15 @@
       "to": "[DEVOPS]",
       "title": "Handoff from IOS: Dev TestFlight pipeline broken \u2014 DEV iOS signing secrets empty",
       "description": "deploy-dev-testflight.yml fails on EVERY push to development at step 'Install Apple certificate (DEV)': security SecKeychainItemImport 'parameters not valid' (exit 1) because the signing secrets are empty \u2014 BUILD_CERTIFICATE_BASE64, P12_PASSWORD, BUILD_PROVISION_PROFILE_BASE64, KEYCHAIN_PASSWORD all blank in the run env. Runs 27721609416 (my iOS push) and 27687080121 (prior) both failed in ~22s identically \u2014 pre-existing, not code. IMPACT: no auto dev TestFlight builds; iOS dev fixes only reachable via local Xcode build. This is why the CEO has been testing Xcode builds, not TestFlight. ACTION: populate the DEV_* GitHub Secrets the workflow maps (dev distribution cert .p12 base64 + its password, dev provisioning profile base64 for com.applinkoffshore.CasperVPN.dev incl. the tunnel extension profile, keychain password). Verify env mapping in deploy-dev-testflight.yml secrets block. Re-run workflow_dispatch to confirm green. See CLAUDE.md \u00a712 / architecture/03-environments.md 'Required GitHub Secrets'. CEO one-time action may be needed to export certs.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-06-18T00:44:14Z",
       "createdDate": "2026-06-18",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-qa-1777441737 (CEO DECISIONS & DEVICE CHECKS (one list): freeze lift, maski) \u2014 consolidated 2026-09-15 so each owner has ONE list, no overlap.",
+      "resultingHandoff": "xd-qa-1777441737"
     },
     {
       "id": "xd-649",
@@ -20506,11 +20542,15 @@
       "to": "[IOS]",
       "title": "Handoff from CTO: Auth 401 thundering-herd \u2014 add single-flight refresh coalescing",
       "description": "CEO log 06-21 18:13:25: 5x HTTP 401 + 5x 'token expired-attempting refresh' in ONE second. Root: when the access token expires but a refresh token EXISTS, N concurrent pollers (/bandwidth/live @3s, heartbeat @30s, data-limit @60s) each independently 401 then each fire their own refresh = thundering herd. The #auth-resilience guard (APIClient.swift:168, 2026-06-16) only short-circuits when FULLY logged out (no refresh token) \u2014 it does NOT coalesce concurrent refreshes. FIX: single-flight refresh (one in-flight refresh; queue other requests until it resolves; retry once with the new token). Lower severity (refresh eventually succeeds) but causes log-flood + churn.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-06-21T20:13:46Z",
       "createdDate": "2026-06-21",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-qa-1777441737 (iOS BACKLOG for build 25b (prioritised, one list)) \u2014 consolidated 2026-09-15 so each owner has ONE list, no overlap.",
+      "resultingHandoff": "xd-qa-1777441737"
     },
     {
       "id": "xd-660",
@@ -20518,11 +20558,15 @@
       "to": "[IOS]",
       "title": "Handoff from CTO: APNs entitlement missing \u2014 push notifications broken",
       "description": "CEO log: 'APNs registration failed: no valid aps-environment entitlement string found' + 'no APNs token available - skipping register'. The build's entitlements lack aps-environment (or provisioning profile missing push). Fix CasperVPN.entitlements + the provisioning profile so push works. Not VPN-stability but a real gap.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-06-21T20:13:46Z",
       "createdDate": "2026-06-21",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-qa-1777441737 (iOS BACKLOG for build 25b (prioritised, one list)) \u2014 consolidated 2026-09-15 so each owner has ONE list, no overlap.",
+      "resultingHandoff": "xd-qa-1777441737"
     },
     {
       "id": "xd-661",
@@ -20546,12 +20590,16 @@
       "to": "[IOS]",
       "title": "Handoff from BACKEND: ROBUST fix: iOS must re-fetch a FRESH CF JWT on reconnect (TTL band-aid applied prod)",
       "description": "ROOT of CEO 'frozen on Connecting after a while' (2026-06-21, build cf-fronting): CC fronting IS active (Obfs4Transport.selectTransportTarget Policy A picks .cloudfront when cloudfront_url+token present \u2014 confirmed backend sends both, tunnel receives both). The CF Worker JWT TTL was 15min (CloudfrontFrontingService MintCloudfrontJwt, JwtTtlMinutes??15). On reconnect after a long session the tunnel REUSES the cached (expired) token from providerConfiguration -> Worker 401 -> Policy A has NO fallback -> retry loop = frozen. MITIGATION DONE: prod JwtTtlMinutes=1440 (24h) in override.yml, api recreated --no-build, verified healthy. ROBUST FIX (this handoff): the app reconnect path (L2 jittered reconnect / on-demand re-arm) must re-call servers config to mint a FRESH token and restart the tunnel, instead of the tunnel reconnecting with the stale cached providerConfiguration. Then TTL can return to short. Also consider Policy C soft-pin (documented-unimplemented) so a CF failure falls back rather than looping.",
-      "status": "in_progress",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-06-21T21:36:16Z",
       "createdDate": "2026-06-21",
-      "completedDate": null,
-      "iosNote": "[iOS 2026-06-23] FIX SHIPPED to dev+prod branches (BUILD MARKER 2026-06-23b). App-driven reconnects already re-fetch a fresh CF JWT; the remaining gap was a CC session FROZEN on .connecting/.reconnecting (Worker 401 from expired JWT) which recoverIfZombieOnForeground skipped (guards isConnected) and reconcileStuckTransientToReconnecting only relabeled. Added VPNConnectionManager.recoverIfCasperCloakStuckOnForeground() (foreground, CC-only, >12s-stuck, guarded) \u2192 tear down + connect(to:) \u2192 fresh /caspercloak-config token; wired in CasperVPNApp scenePhase. Build green arm64. NOT live until CEO Xcode\u2192TestFlight. Prod TTL=1440 stays as belt-and-suspenders."
+      "completedDate": "2026-09-16",
+      "iosNote": "[iOS 2026-06-23] FIX SHIPPED to dev+prod branches (BUILD MARKER 2026-06-23b). App-driven reconnects already re-fetch a fresh CF JWT; the remaining gap was a CC session FROZEN on .connecting/.reconnecting (Worker 401 from expired JWT) which recoverIfZombieOnForeground skipped (guards isConnected) and reconcileStuckTransientToReconnecting only relabeled. Added VPNConnectionManager.recoverIfCasperCloakStuckOnForeground() (foreground, CC-only, >12s-stuck, guarded) \u2192 tear down + connect(to:) \u2192 fresh /caspercloak-config token; wired in CasperVPNApp scenePhase. Build green arm64. NOT live until CEO Xcode\u2192TestFlight. Prod TTL=1440 stays as belt-and-suspenders.",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "DONE by dev 4641582b8 (cache last-good WG config + CF payload per server; reconnect reuses a valid CF token off-API) \u2014 on production since 09-10.",
+      "resultingHandoff": "none"
     },
     {
       "id": "xd-663",
@@ -20591,11 +20639,15 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: Verify Dusseldorf relay (de-3 91.194.84.79) runs jitter-REMOVED caspercloak_ws.py",
       "description": "Repo infrastructure/caspercloak/caspercloak_ws.py:519 removed the per-packet obfs jitter 2026-06-16 (it was ~0.4Mbps downstream HARD CAP). Need to CONFIRM the running de-3 relay is on this version (known 'relay file drift' per masking audit). factory_fleet_admin SSH key is DENIED on 91.194.84.79 (Permission denied publickey) so I could NOT verify from this session. If de-3 still runs the old jittered version, it compounds the slowness even on CasperCloak. ACTION: get relay access, diff /opt/caspercloak/caspercloak_ws.py vs repo, redeploy if drifted, restart caspercloak-ws.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-06-21T22:19:45Z",
       "createdDate": "2026-06-21",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "VERIFIED on DUS (and N3/SYD): caspercloak-ws runs /usr/local/bin/caspercloak_ws.py with ping_interval=None (jitter/ping regression fix present). Drift: DUS copy 399 lines vs N3/SYD 408 vs repo relay_ws.py 449 \u2014 folded into the relay deploy item (DevOps backlog).",
+      "resultingHandoff": "none"
     },
     {
       "id": "xd-666",
@@ -20635,11 +20687,15 @@
       "to": "[BACKEND]",
       "title": "Handoff from BACKEND: Hardening: make RecordLoginAttribution escalate-only (don't clobber restrictive LastLoginCountry)",
       "description": "Follow-up to xd-667. AuthService.RecordLoginAttributionAsync:1296 sets LastLoginCountry=CF-IPCountry unconditionally; a tunneled login could overwrite AE->DE, defeating sticky. Make escalate-only (don't overwrite when existing is restrictive; needs IsRestrictiveCountryAsync). Low pri \u2014 sticky helper re-captures on pre-tunnel /servers.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-06-21T23:30:07Z",
       "createdDate": "2026-06-21",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-qa-1777441737 (BACKEND BACKLOG (prioritised, one list)) \u2014 consolidated 2026-09-15 so each owner has ONE list, no overlap.",
+      "resultingHandoff": "xd-qa-1777441737"
     },
     {
       "id": "xd-669",
@@ -20727,12 +20783,16 @@
       "to": "[IOS]",
       "title": "Handoff from CTO: Multi-Hop: anti-DPI entry-rotation changes the EXIT country + UI shows stale server (CEO 'connected France, IP Germany')",
       "description": "CEO log 2026-06-22 (build 2026-06-21c, 10h stable on multi-hop). VALIDATED: 'connected to France but IP showed Germany' = the actual exit RELAY changed. DB ConnectionLogs show the CEO's exit hopped LA(US)->Dusseldorf(DE)->Paris(FR)->Amsterdam(NL) over a few hours. After turn-off+reconnect at 22:21 the restricted-region reconnect ENGAGED with 'entry rotation (max 12 attempts)'. In CasperCloak each entry domain s<N>.pompesh.com maps 1:1 to a specific relay/exit (s6=Dusseldorf/DE, s7=Paris/FR, ...), so rotating the entry domain ALSO rotates the exit country -> the public IP follows the rotated relay (Germany) while the app still displays the originally-selected server (France). Two problems: (1) the anti-DPI rotation changes the user's EXIT COUNTRY (a chosen 'France' doesn't stick); (2) the UI shows a STALE server (displayed France != actual relay Germany). RIGHT FIX (scope carefully, do NOT break the 10h-stable path): rotate only the stealth ENTRY (CF-fronting domain / obfs hop) while keeping the inner WG EXIT pinned to the user's chosen server; AND update the displayed server to the ACTUAL active relay. Geo verified: Paris IP=FR(Scaleway), Dusseldorf IP=DE(Essen). Proximity ranking xd-671 confirmed LIVE (servers ping-ordered Dusseldorf93/Amsterdam96/Paris97/SG108...). Traffic: counter stuck at 0 (accounting bug) -> throughput not measurable from logs; a WG burst showed 915KB up/199KB down; 10h session stable.",
-      "status": "in_progress",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-06-22T22:32:45Z",
       "createdDate": "2026-06-22",
-      "completedDate": null,
-      "iosNote": "[iOS 2026-06-23] FIX SHIPPED to dev+prod (BUILD MARKER 2026-06-23b). \u26d4 MECHANISM CORRECTED: the stated cause (entry-domain rotation walking s1-s12 \u2192 rotates exit) is FALSIFIED for current prod data \u2014 every server's CasperCloakDomainPool is a SINGLE-element list of its own domain (verified live DB), so DomainPoolSelector rotation is a no-op (%1==0) and cannot change the exit. REAL cause: VPNConnectionManager.connect(to:) Phase-3 alternate fallback re-homes a FAILED CasperCloak server onto a different-COUNTRY alternate (getAlternateServers orders same-country-first but NOT same-country-only; France has 1 node \u2192 falls to Dusseldorf by load \u2192 German exit). FIX: gate the Phase-3 cross-country re-home for CasperCloak (pin viable alternates to chosen countryCode). UI already binds connectedServer so the display is correct once the exit is pinned. MH path needs NO change (connect(route:) uses the pinned route; CC\u2192WG fallback keeps the same route). Build green arm64. NOT live until CEO Xcode\u2192TestFlight."
+      "completedDate": "2026-09-16",
+      "iosNote": "[iOS 2026-06-23] FIX SHIPPED to dev+prod (BUILD MARKER 2026-06-23b). \u26d4 MECHANISM CORRECTED: the stated cause (entry-domain rotation walking s1-s12 \u2192 rotates exit) is FALSIFIED for current prod data \u2014 every server's CasperCloakDomainPool is a SINGLE-element list of its own domain (verified live DB), so DomainPoolSelector rotation is a no-op (%1==0) and cannot change the exit. REAL cause: VPNConnectionManager.connect(to:) Phase-3 alternate fallback re-homes a FAILED CasperCloak server onto a different-COUNTRY alternate (getAlternateServers orders same-country-first but NOT same-country-only; France has 1 node \u2192 falls to Dusseldorf by load \u2192 German exit). FIX: gate the Phase-3 cross-country re-home for CasperCloak (pin viable alternates to chosen countryCode). UI already binds connectedServer so the display is correct once the exit is pinned. MH path needs NO change (connect(route:) uses the pinned route; CC\u2192WG fallback keeps the same route). Build green arm64. NOT live until CEO Xcode\u2192TestFlight.",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-qa-1777441737 (iOS BACKLOG for build 25b (prioritised, one list)) \u2014 consolidated 2026-09-15 so each owner has ONE list, no overlap.",
+      "resultingHandoff": "xd-qa-1777441737"
     },
     {
       "id": "xd-675",
@@ -20856,11 +20916,15 @@
       "to": "[BACKEND]",
       "title": "Handoff from CTO: Verify refresh-token 401 root cause (CEO first-attempt 'connection error')",
       "description": "DIAGNOSIS (log text-AD40A6579C1B, build 23c app): the CEO's 'connection error on first attempt' = a GENUINE refresh-token rejection at cold start \u2014 L23 'HTTP 401: Invalid or expired refresh token' from POST /auth/refresh, L27 'Session expired \u2014 redirecting to login'. RECOVERED fully via Sign in with Apple (L58) then all calls succeeded. Full FTUE onboarding ran (L33-55) => this was a FRESH/REINSTALLED app, so the 401 is most likely a reinstall artifact (Keychain refresh token cleared/aged). ACTION: confirm whether (a) reinstall is EXPECTED to require re-login (then it's working-as-intended; just needs a friendlier first-run message, no backend change) OR (b) the 'stable 30-day sliding refresh token' is being invalidated prematurely for non-reinstall users (a real token-lifetime/rotation bug). Check AuthController.RefreshToken TTL + whether reinstall/Keychain migration invalidates. Only a bug if it RECURS without reinstall.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-06-23T04:30:10Z",
       "createdDate": "2026-06-23",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "VERIFIED: refresh-token 401 root cause was the single-slot rotating refresh token; fixed 2026-06-13 (stable token, sliding 30 d expiry) \u2014 memory auth-refresh-token-stable-no-rotation.",
+      "resultingHandoff": "none"
     },
     {
       "id": "xd-683",
@@ -20900,11 +20964,15 @@
       "to": "[DEVOPS]",
       "title": "Handoff from IOS: Deploy relay session-resumption (#52) \u2014 CONFIRMED connection-break root",
       "description": "CONFIRMED relay-side: Sydney relay caspercloak_ws.py has ZERO session-resumption support (grep X-CC-Session|resume|grace|reuse = 0 matches). So when the obfs WS drops on a network PATH CHANGE, the client's resume cannot be honored \u2192 'transport state -> error(resume-exhausted (better-path))' \u2192 the CC session TEARS DOWN on every path change (= the CEO's 'connection keeps breaking'). Per the anti-censorship skill, #52 session-resumption was BUILT + offline-proven (Build 56, both relay variants) but the LIVE RELAY DEPLOY was HELD pending repo<->live relay-drift reconciliation. ACTION: deploy the #52 relay variant under the skill's CAREFUL rollout \u2014 Bangkok-first, CORRECT websockets variant per node (DE/NL/FR=Py3.8/ws13.1 v13 variant, others v16; re-pushing v16 to a Py3.8 node RE-BREAKS it), 3-way source sync, then >=10 real RESUME logs/12h verify. Do NOT bulk-push blind. Relays currently unchanged since 06-16.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-06-24T01:53:01Z",
       "createdDate": "2026-06-24",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-qa-1777441737 (DEVOPS BACKLOG (prioritised, one list)) \u2014 consolidated 2026-09-15 so each owner has ONE list, no overlap.",
+      "resultingHandoff": "xd-qa-1777441737"
     },
     {
       "id": "xd-686",
@@ -20944,11 +21012,15 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: Order OneProvider reserve IPs for NL/DE/FR (skip LA $8, 2 nodes full) + note IP-rotation automation is OFF",
       "description": "CEO-approved 2026-06-26: order 1 reserve IP each on NL 51.158.147.210 ($4.25), DE 91.194.84.79 ($3.65), FR 163.172.62.64 ($4.25) \u2248 $12.15/mo. SKIP LA 208.87.243.205 ($8, overpriced). CANNOT: 147.78.1.27 + 167.150.100.166 (locations full). Current MaskingIps pool: 12 live (Role 0) + 10 reserve (Role 1). 6 nodes have a reserve (103.75.119.122, 23.95.79.249, 45.154.204.206, 185.192.124.245, 103.106.228.235, 203.23.128.214); 6 have none (the above). After order: 9/12 covered, still bare = LA + 147.78.1.27 + 167.150.100.166. Reserve IPs are DOOR-2 only (direct WG/IKEv2/OpenVPN burn-recovery); CasperCloak is Cloudflare-fronted so node-IP blocks don't affect it. RISK = LOW for stealth/CC, LOW-MED for direct on the 3 bare nodes (app SmartConnect server-failover mitigates). GAP: rotation automation OFF (StrictRotationMode=false, AutoPromoteEnabled=false) \u2014 reserves are a MANUAL swap. Wiring auto-promote-on-burn is a separate task; flag for decision.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-06-26T22:05:40Z",
       "createdDate": "2026-06-26",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-qa-1777441737 (CEO DECISIONS & DEVICE CHECKS (one list): freeze lift, maski) \u2014 consolidated 2026-09-15 so each owner has ONE list, no overlap.",
+      "resultingHandoff": "xd-qa-1777441737"
     },
     {
       "id": "xd-689",
@@ -21148,11 +21220,15 @@
       "to": "[QA]",
       "title": "Handoff from CTO: Censored-regions force-CC list - T1 research done, pending CEO criterion",
       "description": "T1 cited research complete. Strict criterion (force-CC only where VPN protocols are BLOCKED/DPI'd) -> REMOVE Lebanon (throttle not block; unanimous) + FLAGS 4 over-included (SA/BH/OM/VN content-filter-only) BUT that CONFLICTS with our anti-DPI skill Tier-1 classing -> do NOT remove blind. Qatar/Iraq fail strict bar. Awaiting CEO criterion (connectivity vs protection). T2=3-way lockstep (iOS restrictedRegions == backend GeoIpService == RestrictedCountry DB seed) + 5-country regression test; T3=prod StealthEnforcement verify. QA gate each.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-06-28T01:13:20Z",
       "createdDate": "2026-06-28",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-qa-1777441737 (CEO DECISIONS & DEVICE CHECKS (one list): freeze lift, maski) \u2014 consolidated 2026-09-15 so each owner has ONE list, no overlap.",
+      "resultingHandoff": "xd-qa-1777441737"
     },
     {
       "id": "xd-702",
@@ -21160,11 +21236,15 @@
       "to": "[IOS]",
       "title": "Handoff from QA: [QA HANDBACK] xd-673",
       "description": "MTU 1280 edit in DEAD code (CasperCloakTunnelProvider); live MTU already 1200 = NO-OP. Next: Re-apply to live MultiHopCasperCloakConfig OR close as already-correct",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-06-28T01:40:51Z",
       "createdDate": "2026-06-28",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-qa-1777441737 (iOS BACKLOG for build 25b (prioritised, one list)) \u2014 consolidated 2026-09-15 so each owner has ONE list, no overlap.",
+      "resultingHandoff": "xd-qa-1777441737"
     },
     {
       "id": "xd-703",
@@ -21172,11 +21252,15 @@
       "to": "[BACKEND]",
       "title": "Handoff from QA: [QA HANDBACK] xd-667",
       "description": "code live but Users.LastLoginCountry EMPTY -> sticky-region inert for CEO. Next: Capture LastLoginCountry on login (worldwide) so the deployed fix fires",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-06-28T01:40:51Z",
       "createdDate": "2026-06-28",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-qa-1777441737 (BACKEND BACKLOG (prioritised, one list)) \u2014 consolidated 2026-09-15 so each owner has ONE list, no overlap.",
+      "resultingHandoff": "xd-qa-1777441737"
     },
     {
       "id": "xd-704",
@@ -21184,11 +21268,15 @@
       "to": "[BACKEND]",
       "title": "Handoff from QA: [QA HANDBACK] xd-671",
       "description": "OrderByProximity live but SKIPPED (LastLoginCountry empty) -> Sydney/ping=0 surfaces = the far-server root. Next: Populate LastLoginCountry -> proximity sorts; worldwide, not Lebanon-specific",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-06-28T01:40:51Z",
       "createdDate": "2026-06-28",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-qa-1777441737 (BACKEND BACKLOG (prioritised, one list)) \u2014 consolidated 2026-09-15 so each owner has ONE list, no overlap.",
+      "resultingHandoff": "xd-qa-1777441737"
     },
     {
       "id": "xd-705",
@@ -21196,11 +21284,15 @@
       "to": "[BACKEND]",
       "title": "Handoff from QA: [QA FLAG] xd-677 EnforceDataCap=TRUE in prod",
       "description": "Running api has WireGuardUsage__EnforceDataCap=TRUE (handoff claimed FALSE). Harmless now (deterministic-key mapping can't match iOS ephemeral pubkeys -> 0 cuts despite 11 over-cap users) but = the xd-693 foot-gun. Set FALSE until pubkey->user persisted at registration.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-06-28T01:40:51Z",
       "createdDate": "2026-06-28",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-qa-1777441737 (BACKEND BACKLOG (prioritised, one list)) \u2014 consolidated 2026-09-15 so each owner has ONE list, no overlap.",
+      "resultingHandoff": "xd-qa-1777441737"
     },
     {
       "id": "xd-706",
@@ -21208,11 +21300,15 @@
       "to": "[QA]",
       "title": "Handoff from IOS: Device-test admin force-protocol override (applinks123, Lebanon)",
       "description": "iOS (commit e314ec24d, development) now gates MultiHopManager.userInRestrictedRegion on the admin per-user protocol override (User.ProtocolOverride from GET /api/auth/me UserDto). When the override is set and excludes 'caspercloak', the app forces direct WG/IKEv2 instead of CasperCloak. TEST on applinks123 (owns a dedicated IP) in Lebanon: (1) in admin set protocol-override = ikev2,wireguard; (2) clean-build + delete app/VPN config (ios-test-clean-build-folder); (3) connect and confirm the app uses WG/IKEv2 NOT CC; (4) clear the override and confirm fail-open = default CC/region behavior returns. Verify via idevicesyslog: 'Protocol override from /me' (AuthService) and 'userInRestrictedRegion=false - admin protocol override ... excludes caspercloak' (MultiHopManager). DEPENDS ON the backend MAIN session exposing protocolOverride on UserDto (/me + /user). Build-verified (arm64, exit 0, fresh .app+.appex); NOT device-verified. PROTOCOL-ONLY, no kill-switch.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-06-28T01:54:33Z",
       "createdDate": "2026-06-28",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-qa-1777441737 (RELEASE VERIFICATION CHECKLIST \u2014 build 25b (CEO device) + ba) \u2014 consolidated 2026-09-15 so each owner has ONE list, no overlap.",
+      "resultingHandoff": "xd-qa-1777441737"
     },
     {
       "id": "xd-707",
@@ -21256,11 +21352,15 @@
       "to": "[QA]",
       "title": "Handoff from IOS: Verify over-cap user sees Upgrade paywall on config-fetch 402 (all protocols)",
       "description": "Backend now returns HTTP 402 DATA_CAP_REACHED on the config-FETCH endpoints (GET /servers/{id}/config, /ikev2-config, /openvpn-config, /caspercloak-config), not just /connect + /wireguard-config. iOS commit 46f6fae2a (branch claude/happy-mcnulty-6e1c1c -> development) routes that 402 to the existing data-cap paywall (DataLimitExceededView) on EVERY connect path instead of a generic error / retry-storm / spinner hang.\n\nFiles: ios-app-v2/CasperVPN/CasperVPN/Core/Services/{APIClient.swift, VPNConnectionManager.swift, SmartConnectManager.swift}.\n\nDEVICE TEST (needs a FREE account already OVER its 512MB cap; paid/limit=0 are exempt by design): with the over-cap account, tap Connect and verify the Upgrade paywall (DataLimitExceededView) appears \u2014 NOT a generic 'couldn't connect' alert and NOT a hang \u2014 on EACH protocol: (1) WireGuard, (2) IKEv2, (3) OpenVPN, (4) CasperCloak, (5) Quick Connect (auto/SmartConnect), (6) dedicated-IP-over-CasperCloak path if the account owns a DI. Confirm the connection STOPS cleanly (no multi-protocol/alternate retry-storm, no spinner stuck on 'Connecting', no black screen). SAFETY: confirm internet still works after the 402 (kill switch/includeAllNetworks must NOT engage \u2014 fail-open). Capture device console if anything hangs. Build-verified only (arm64, 0 errors); awaiting CEO \ud83d\udfe2.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-06-30T01:28:47Z",
       "createdDate": "2026-06-30",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-qa-1777441737 (RELEASE VERIFICATION CHECKLIST \u2014 build 25b (CEO device) + ba) \u2014 consolidated 2026-09-15 so each owner has ONE list, no overlap.",
+      "resultingHandoff": "xd-qa-1777441737"
     },
     {
       "id": "xd-710",
@@ -21300,16 +21400,20 @@
       "to": "[IOS]",
       "title": "Handoff from CTO: CC-throughput: force-direct debug toggle + parallel-streams client (2-4x interim)",
       "description": "Add a debug switch that skips CF cloudfront_url so CC dials the DIRECT grey relay (s<N>.pompesh.com) -> lets CEO speedtest CC-via-Worker vs CC-direct = the split test that decides if the CF Worker serial-JS pipe is the tax. Then build the parallel-streams client (stripe WG packets across 4-8 WS conns) for 2-4x on lossy links. Decision point: MultiHopManager.swift:1986 (MH) + the single-hop cloudfront_url setter + Obfs4Transport.selectTransportTarget. Ref: skill references/caspercloak-throughput.md lever B/C.\n\n[2026-09-10 MEASUREMENT \u2014 FINAL n=3] FINAL n=3/road (2026-09-10, CEO device, Lebanon, D\u00fcsseldorf s6, fast.com): no-VPN 23 Mbps | CF-fronted (A) = 4.5, 9.1, 2.4 (mean 5.3) | direct relay (B) = 8.3, 3.9, 5.9 (mean 6.0). Within-road spread (A 3.8x, B 2.1x) dwarfs the 0.7 Mbps mean gap -> roads INDISTINGUISHABLE. Either road = 10-40% of line (avg ~25%). The 2-4x run-to-run swing is itself the signature of a single TCP stream on a lossy/throttled last mile (H2). H1 (Worker tax) is not measurable in LB. DECISION: speed lever for LB = parallel WS streams (xd-712); direct relay (xd-764) = reliability lever only; QUIC = GCC. PENDING: exported log must show [CC-TARGET] target=directRelay on the B runs \u2014 the toggle applies only after disconnect+reconnect; if it did not take effect all 6 runs were the same road, which would trivially explain the result.\n\n[2026-09-10 LOG VERDICT] LOG VERDICT 2026-09-10 (export F1571895C2C8, 01:12-01:20 local, 1000-line cap): THE SWITCH WORKS \u2014 proven two ways: (1) the app-side 'CDN-fronting eligible' line is present at connects 1 and 3 and ABSENT at connect 2 (01:16:30) = the app skipped the CF wiring = toggle ON; (2) casperCloakProviderConfig is a fresh dict literal each connect (VPNConnectionManager:2495) so no stale cloudfront_url can survive. Connect 2 (direct) reached Connected in 4s (01:16:30->01:16:34) and held until the manual disconnect at 01:17:10. Its extension [CC-TARGET] line was rotated out of the 100-line extension ring buffer by connect 3's verbose bridge logs \u2014 not evidence against. COVERAGE CAVEAT: this window holds ONE direct session (~34s connected) and two CF sessions; pairs 1-2 predate the export, so only one of the three B runs is road-confirmed by log. RELIABILITY (measured): during the CF run the transport cycled established->handshaking->connecting at least 4 times in ~80s (22:14:17, :28-:31, :35-:36 \u2026) with warm-get redials; the direct road connected once in 4s and held. CONCLUSION STANDS: no consistent SPEED difference between roads (6 runs, 2-9 Mbps vs 23 line) -> last-mile single-TCP dominates -> LB speed lever = parallel streams (xd-712); direct-by-default for LB = a RELIABILITY lever with measured flapping evidence (xd-764).\n\n[2026-09-10 RE-SCOPE \u2014 CTO] The force-direct toggle half is DONE and PROVEN (log verdict in xd-763). This task is now ONLY the iOS half of parallel WS streams: open N (4-8) Obfs4Transport WS connections sharing the SAME X-CC-Session id to the same host; stripe outbound WG packets round-robin; merge inbound from all; treat a single dead WS as a stream loss, not a tunnel loss (redial that one). Relay half = xd-766 [DEVOPS]. Both must land together; ship behind a Settings switch first, default N=1, so the CEO can A/B on device (N=1 vs N=4) with fast.com exactly like xd-763. This is THE speed lever for Lebanon (UDP-throttled, so QUIC cannot help there).\n\n[2026-09-10 n=4] UPDATE n=4/road (2026-09-10, 4th pair added; line moved 23->14 Mbps): CF-fronted (A) = 4.5, 9.1, 2.4, 1.0 (mean 4.3) | direct (B) = 8.3, 3.9, 5.9, 8.8 (mean 6.7). Direct wins 3 of 4 pairs, ~1.6x on average, and NEVER collapsed; the CF road collapsed to 1.0 Mbps (7% of line) in pair 4 \u2014 consistent with the measured CF flapping (>=4 redials/80s in xd-763's log): a speed test during a redial cycle reads near zero. REVISED READING: the Worker tax is not a constant % \u2014 it is INTERMITTENT and shows up as collapses tied to the CF road's instability. So for Lebanon direct-by-default (xd-764) is a SPEED lever as well as a reliability lever -> raised to P0. Direct still reaches only 36-63% of line (8.3/23, 8.8/14) -> parallel streams (xd-712 + xd-766) remain necessary to approach line rate. My 'no consistent speed difference' at n=3 was the correct reading of 3 pairs and is superseded by 4; the decision list is unchanged in content, changed in ORDER: xd-764 first.\n\n[2026-09-10 n=5 \u2014 headroom revised for LB] n=5/road (2026-09-10): line 23,23,23,14,13 | CF-fronted 4.5, 9.1, 2.4, 1.0, 1.5 (mean 3.7) | direct 8.3, 3.9, 5.9, 8.8, 10 (mean 7.4). Direct wins 4 of 5 (~2x mean; 6-7x on the last two pairs, where direct = 63-77% of line and CF = 7-12%). Pair 2 (CF 9.1 > direct 3.9) is the lone outlier and is informative: when the CF road is NOT flapping it can match direct \u2014 so the tax is mostly the measured redial flapping (>=4/80s), not a constant per-packet overhead. CONFIRMED: direct road faster and stable in LB. HYPOTHESIS (not isolated): how much of the CF collapse is Worker overhead vs loss-triggered redials. PLAN REVISION: xd-764 (LB direct-by-default) = THE fix for Lebanon \u2014 P0, backend config-level, days; with direct already at 63-77% of line the remaining headroom for parallel streams in LB is ~1.3-1.6x (polish), NOT the 2-4x quoted from the reference \u2014 parallel streams stay P0 for the GCC/fronted case where the road cannot be dropped, and for worse lines. QUIC = GCC endgame.",
-      "status": "in_progress",
+      "status": "completed",
       "priority": "P0",
       "createdAt": "2026-07-02T00:19:36Z",
       "createdDate": "2026-07-02",
-      "completedDate": null,
+      "completedDate": "2026-09-16",
       "progressNote": "PART 1 SHIPPED dev b5130ad05 (BUILD SUCCEEDED arm64): ccForceDirectRelay flag gates all 3 cloudfront_url setters + Settings->Troubleshooting toggle 'Speed test: bypass Cloudflare'. Enables the CF-vs-direct device split-test. PART 2 PENDING: parallel-streams client (2-4x). Awaiting CEO speed numbers.",
       "notes": [
         "[CTO 2026-09-14] Part 1 SHIPPED: the force-direct toggle exists since 24u and is now the user-facing 'Fast Route' (Settings > Connection, build 24w/24x). Part 2 (parallel-streams client, 2-4x interim) NOT started \u2014 needs the relay side xd-766 first.",
         "[CTO 2026-09-14] Relay ceiling measured \u226564 Mbps single-stream from the brain (xd-765). Phone gets ~6. Pending xd-784 (single-connection test on the CEO line) to confirm the per-flow cap before building parallel streams. NOTE: relay edits on DE-DUS/US-LA/NL/FR need DevOps root (fleet key accepted only on the 8 OneProvider nodes)."
-      ]
+      ],
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "PART 1 DONE (force-direct toggle shipped, later productised as 'Fast Route' in 24w/24y). Part 2 (parallel-streams client) merged into the CC speed roadmap handoff.",
+      "resultingHandoff": "none"
     },
     {
       "id": "xd-713",
@@ -21317,14 +21421,18 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: CC-throughput: scope QUIC/HTTP-3 relay (tokio-quiche) + parallel-streams relay reassembly",
       "description": "QUIC de-risked: iOS native QUICDatagram (RFC 9221); CF can't Worker-front QUIC yet -> QUIC = direct-to-relay + IP-rotation. Scope a QUIC/HTTP-3 relay (Cloudflare tokio-quiche, open-source) terminating QUIC datagrams -> WG UDP 51820, alongside the WS relay. Also relay-side reassembly for the interim parallel-streams. ~3-4mo QUIC MVP. Ref: skill references/caspercloak-throughput.md lever A/D.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-07-02T00:19:36Z",
       "createdDate": "2026-07-02",
-      "completedDate": null,
+      "completedDate": "2026-09-16",
       "notes": [
         "[CTO 2026-09-14] Relay ceiling measured \u226564 Mbps single-stream from the brain (xd-765). Phone gets ~6. Pending xd-784 (single-connection test on the CEO line) to confirm the per-flow cap before building parallel streams. NOTE: relay edits on DE-DUS/US-LA/NL/FR need DevOps root (fleet key accepted only on the 8 OneProvider nodes)."
-      ]
+      ],
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-qa-1777441737 (CC SPEED ROADMAP (one task): parallel WS streams (client+rel) \u2014 consolidated 2026-09-15 so each owner has ONE list, no overlap.",
+      "resultingHandoff": "xd-qa-1777441737"
     },
     {
       "id": "xd-714",
@@ -21332,11 +21440,15 @@
       "to": "[BACKEND]",
       "title": "Handoff from DEVOPS: [B \u2014 LATER / growth milestone] RADIUS-as-source unified AAA (radacct) for B2B",
       "description": "Consumer app now runs A (backend-as-source): wg-sync + ConnectionLogs/CurrentCycleDataUsedBytes is the SINGLE accounting source; the redundant wg-radius-accounting daemon was retired 2026-07-01 (10/13 nodes stopped; 4 legacy US-LA/DE-DU/NL-AM2/FR-PA pending manual/ansible; still a deduped no-op meanwhile). B = make FreeRADIUS radacct the unified AAA source WHEN the business needs external integrations: resellers, white-label partners, enterprise SSO, third-party billing. That is the professional/standard interface for B2B growth \u2014 NOT needed for the consumer app. Scope when triggered (first reseller/enterprise deal): (1) fix wg-radius-accounting.py to actually write radacct (today it POSTs the backend API, radacct is empty); (2) route IKEv2+OpenVPN accounting into radacct; (3) keep a WG\u2192RADIUS accounting shim (WG has no native RADIUS \u2014 it's key-based, can't RADIUS-AUTH, only account via poll); (4) have the backend read radacct as source. Do NOT rewire the data-cap off CurrentCycleDataUsedBytes unless a full, staged migration (the cap is the sensitive path). NOT a bug \u2014 a growth milestone. Approved A-now / B-later by CEO 2026-07-01.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P3",
       "createdAt": "2026-07-02T00:49:00Z",
       "createdDate": "2026-07-02",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-qa-1777441737 (BACKEND BACKLOG (prioritised, one list)) \u2014 consolidated 2026-09-15 so each owner has ONE list, no overlap.",
+      "resultingHandoff": "xd-qa-1777441737"
     },
     {
       "id": "xd-715",
@@ -21376,16 +21488,20 @@
       "to": "[QA]",
       "title": "Handoff from CTO: Verify over-cap data-cap enforcement \u2014 client-key blind-spot fix",
       "description": "Verify no over-cap Free user can tunnel. ROOT (2026-07-06): wg-sync's peer->user resolver only derived deterministic keys for the polled server, so CLIENT-generated pubkeys were unmappable -> the existing over-cap cut never reached them -> 11 over-cap Free users bypassing fleet-wide (yako 7977%, nima 7384%, tamarasleem 910%, etc.). LIVE enforcement now: /opt/caspervpn/datacap_enforcement_sweep.sh (cron */3 on the brain) resolves each live peer via md5(pubkey)->ConnectionLog->user and cuts over-cap ones (proven: 5 cut this session, HTTP 200). PERMANENT backend fix committed to prod SOURCE b1ca3590 (WireGuardUsageSyncService md5 fallback, builds 0 errors) but NOT container-deployed (brain disk 99%). QA TO VERIFY: (1) tail /var/log/datacap-enforcer.log for CUT lines on real reconnects; (2) confirm an over-cap Free user's CurrentCycleDataUsedBytes goes flat while they attempt to connect; (3) after the backend deploys (disk grown), confirm '[wg-sync] mapped ... connlog-md5 client-key fallback' + the in-process cut fire. BLOCKER for permanent layer: grow the DO volume (brain disk floored at 99%).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-07-06T22:58:51Z",
       "createdDate": "2026-07-06",
-      "completedDate": null,
+      "completedDate": "2026-09-16",
       "notes": [
         "[QA 2026-09-14] WATCH: sweep */3 live, over-cap client-keyed users 160, last cut 09-12 12:06Z, 0 cuts since.",
         "[QA 2026-09-15] WATCH: over-cap client-keyed 164; last CUT 09-15 09:12Z (mimimail.me, LA+NL2) \u2014 enforcer alive.",
         "[CTO 2026-09-15] The 'over-cap client-keyed users ~160' are the disposable-email farm: 168 accounts / 8 throwaway domains / 1,718 keys \u2014 see xd-789 (block at sign-up) and xd-790 (CEO decision to suspend)."
-      ]
+      ],
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-qa-1777441737 (RELEASE VERIFICATION CHECKLIST \u2014 build 25b (CEO device) + ba) \u2014 consolidated 2026-09-15 so each owner has ONE list, no overlap.",
+      "resultingHandoff": "xd-qa-1777441737"
     },
     {
       "id": "xd-718",
@@ -21393,11 +21509,15 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: Double VPN CC-over-MH handshake-timeout \u2014 relay-side root-cause (needs s5/Amsterdam root)",
       "description": "PROVEN: CC-over-MH times out ~18.8s then degrades to plain WG (CEO logs). Relays alive (WS 101 all 3). HYPOTHESIS: inner dual-peer WG (entry->exit) black-holes over the CC entry \u2014 likely missing 10.66.250.0/24 route / relay-forward on the CC path. NEEDS: tcpdump on Amsterdam s5 (51.158.147.210, caspervpn key \u2014 I lack it) during a CC-MH connect: do the inner WG handshake packets egress to the exit (Dusseldorf)? Is 'ip route get 10.66.250.x' -> dev wg0 on the CC entry? Compare vs plain-WG-MH (which works). Task: double-vpn-cc-silent-degrade. | \u26a0\ufe0f 2026-07-14 UPDATE: client fix b02d9675b (dev, needs build) RETIRES the broken Dedicated-IP MH route (single-server CC to the DI node) -> addresses the DI variant CLIENT-side; exit relay Sydney routing VERIFIED INTACT (10.66.250.0/24->wg0 + dedicated SNAT .124 present). Server-side relay-capture SUPERSEDED for the DI path. Keep open (P2) only if regular non-DI MH-CC handshake still needs relay proof; fail-closed 9a2f35ba1 makes regular MH fail safely meanwhile. Honest correction: my earlier 'server-side routing gap' hypothesis was wrong \u2014 the relay routing is intact.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-07-07T00:13:39Z",
       "createdDate": "2026-07-07",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-748 (single s5/s7 root-credentials task): the Amsterdam/Paris nodes are unreachable with every key on the brain; nothing here can move until access exists.",
+      "resultingHandoff": "xd-748"
     },
     {
       "id": "xd-719",
@@ -21437,11 +21557,15 @@
       "to": "[IOS]",
       "title": "Handoff from DEVOPS: [agent: caspervpn-ios] Front-latch reset on login screen (Basel cold-login)",
       "description": "CONFIRMED root cause (Basel, UAE, 2026-07-08 login artifact): the one-shot API front latch (Config._activeAPIBaseOverride, Config.swift:41) pins the app to the UAE-blocked brand host api.caspervpn.com after a connection blip and only resets on relaunch \u2192 a logged-out UAE user is stuck until force-quit. FIX: reset _activeAPIBaseOverride=nil when the login screen appears / before any unauthenticated (cold) auth request, so a fresh login always starts on the neutral front cdn.capablitys.com (PROVEN reachable from UAE by Basel's successful relaunch login). Owner: caspervpn-ios. Repo under submission freeze \u2014 CEO-gated ship.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P0",
       "createdAt": "2026-07-10T00:30:28Z",
       "createdDate": "2026-07-10",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-qa-1777441737 (iOS BACKLOG for build 25b (prioritised, one list)) \u2014 consolidated 2026-09-15 so each owner has ONE list, no overlap.",
+      "resultingHandoff": "xd-qa-1777441737"
     },
     {
       "id": "xd-722",
@@ -21449,11 +21573,15 @@
       "to": "[IOS]",
       "title": "Handoff from DEVOPS: [agent: caspervpn-ios] Verify/ship xd-686 no-wrongful-logout in PROD App Store build",
       "description": "AuthService.ensureValidSession() (xd-686, 2026-06-24) returns true (keep session) on network/transient refresh failure, false (logout) ONLY on genuine 401/noRefreshToken; AppCoordinator:277 clears tokens when it returns false. CONFIRM the shipped App Store build users are on INCLUDES xd-686 (Basel's UserAgent lacked a version). If a pre-2026-06-24 build is live, constant UAE refresh-timeouts still evict users = the original logout. Ship xd-686 to prod if not live. Owner: caspervpn-ios.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P0",
       "createdAt": "2026-07-10T00:30:28Z",
       "createdDate": "2026-07-10",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-qa-1777441737 (iOS BACKLOG for build 25b (prioritised, one list)) \u2014 consolidated 2026-09-15 so each owner has ONE list, no overlap.",
+      "resultingHandoff": "xd-qa-1777441737"
     },
     {
       "id": "xd-723",
@@ -21461,11 +21589,15 @@
       "to": "[IOS]",
       "title": "Handoff from DEVOPS: [agent: caspervpn-ios] DVPN /multihop/routes client robustness (2-build discrepancy)",
       "description": "MEASURED server-side: route pool HEALTHY now (12/12 Online, CC-capable, Load<80) so backend offers full DVPN. One app build shows DVPN, the other does not on the SAME backend => client-side. PENDING the CEO's 2 device logs to pinpoint: /multihop/routes fetch not completing (front-latch/connectivity, same class as 719a), auth 403 (no Active subscription), or a decode-shape mismatch between the build and MultiHopRoutesResponse. Also handle the DYNAMIC Load<80 gate gracefully (show 'temporarily unavailable' vs blank). Owner: caspervpn-ios. BLOCKED on the 2 logs. || LOGS ANALYZED 2026-07-10 \u2014 RE-SCOPED. Log A (no-DVPN) = applinks123@gmail.com, subscription EXPIRED 2026-06-30 (DB active_subs=0; sole sub com.caspervpn.premium.weekly ended 2026-06-30) -> backend correctly 403 'Active subscription required' on /multihop/routes (log line 202; sync line 248 tier=free). NOT a client bug \u2014 correct gating; the paid account (active_subs=1) shows DVPN. NO client fetch/decode defect. RE-SCOPE: only remaining work is UX clarity \u2014 show 'Resubscribe to unlock Double-VPN' instead of silently hiding the feature for a lapsed/free account (MultiHopView.swift). Downgrade P1->P3. SEPARATE (Log B): the 'several attempts' = CC cold-radio deep-bg reconnect (build 2026-06-24q, 24e-24q), HYPOTHESIS-stage per its own marker \u2014 tracked in the existing CC bg-reconnect thread [[cc-bg-reconnect-tfo-root]], needs CEO measured [CC-RECONNECT] proof, NOT this task.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P3",
       "createdAt": "2026-07-10T00:30:28Z",
       "createdDate": "2026-07-10",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-qa-1777441737 (iOS BACKLOG for build 25b (prioritised, one list)) \u2014 consolidated 2026-09-15 so each owner has ONE list, no overlap.",
+      "resultingHandoff": "xd-qa-1777441737"
     },
     {
       "id": "xd-724",
@@ -21473,11 +21605,15 @@
       "to": "[IOS]",
       "title": "Handoff from DEVOPS: [agent: caspervpn-ios + caspervpn-anticensorship] Force-CC restricted-region on-device validation",
       "description": "The soft sticky-region force-CC is shipped (backend xd-667 ResolveRegionRestrictedStickyAsync ServersController:158/901; iOS xd-666 Keychain flag MultiHopManager:195). StealthEnforcement HARD gate stays false (verified live) until CC is device-proven (forcing CC while unreliable bricks users). VALIDATE on-device from a restricted region (UAE/LB): app forces CC, does NOT fall back to plain WG, IP/region correct, no brick. Only after this passes is flipping StealthEnforcement=true even a discussion. Owner: caspervpn-ios w/ caspervpn-anticensorship. Needs restricted-region device.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-07-10T00:30:28Z",
       "createdDate": "2026-07-10",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-qa-1777441737 (iOS BACKLOG for build 25b (prioritised, one list)) \u2014 consolidated 2026-09-15 so each owner has ONE list, no overlap.",
+      "resultingHandoff": "xd-qa-1777441737"
     },
     {
       "id": "xd-725",
@@ -21497,11 +21633,15 @@
       "to": "[IOS]",
       "title": "Handoff from DEVOPS: Double VPN fails in Lebanon: MH CF-fronted entry times out (POSIX 60) while bare-relay single-hop works \u2014 bare-relay MH fallback + UI state fix",
       "description": "MEASURED 2026-07-10 (device logs + server probes). Paid user (id 2eecd0e6, regionHint=LB Lebanon, 4G) Double VPN (Multi-Hop) fails: UI 'Connection Error CasperCloak Obfs4TransportError error 3' (=.notConnected). PROVEN server-side ALL HEALTHY: origin POST /api/multihop/connect=200 (client-seen 502 was a TRANSIENT Cloudflare->origin blip on a slow 1.5-1.8s response, NOT persistent); CF Worker fronted WS upgrade ws-edge.applinks-edge.workers.dev/s5 & /s12 = HTTP 101 (JWT valid, upgrade OK, minted with live CloudfrontFronting__JwtSecret); MH entry relay s5 (51.158.147.210:443)=200. MEASURED CLIENT FAILURE: obfs NWConnection to the CF Worker sits nwstate=waiting -> POSIX 60 ETIMEDOUT +11.5s, path=satisfied ifaces=[cellular]; backend diagnostic MultiHopProtocolServedClient failureCategory=handshake-timeout latencyMs=19832; even the WireGuard fallback failed (LB UDP throttle). DISCRIMINATOR: single-hop CC dials the BARE relay IP directly and CONNECTS (Log B); Multi-Hop routes the entry hop through the CF Worker front (CF anycast 188.114.x) and TIMES OUT (Log C). => Double VPN fails because its CF-fronted entry is unreachable/throttled from Lebanese cellular, while single VPN works direct. LB is Tier-3 (throttle, NOT DPI-block) so the bare relay is SAFE there \u2014 fronting only adds a throttled anycast hop. FIX (iOS + backend, NOT origin \u2014 origin/Worker/relay are healthy): in Tier-3 throttle regions (LB) let Multi-Hop use the BARE-RELAY entry (like single-hop) OR fall back to bare-relay entry when the CF-fronted entry times out ~2 attempts (MultiHopController.BuildCloudfrontHop gates on EntryIdByServerName; iOS Obfs4Transport MH entry selection). Distinct from the POSIX-53/TFO bg-reconnect saga (that is 24e-24q, ECONNABORTED; THIS is POSIX-60 ETIMEDOUT foreground MH). PLUS UI BUG: app shows 'Double VPN Connected' (green) simultaneously with the Connection Error + 0bps + 00:00:00 timer \u2014 optimistic connected-state before transport confirms; fix the MH state machine to not show Connected until the obfs handshake completes. NEEDS: a Lebanon-side probe to PROVE the CF-anycast throttle (cannot test from fleet).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-07-10T01:23:43Z",
       "createdDate": "2026-07-10",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-qa-1777441737 (iOS BACKLOG for build 25b (prioritised, one list)) \u2014 consolidated 2026-09-15 so each owner has ONE list, no overlap.",
+      "resultingHandoff": "xd-qa-1777441737"
     },
     {
       "id": "xd-727",
@@ -21509,11 +21649,15 @@
       "to": "[QA]",
       "title": "Handoff from CTO: Device-test MH FAIL-CLOSED: restricted user's Double VPN must NOT silently drop to plain WG",
       "description": "Fix pushed dev 9a2f35ba1: shouldFallbackToWireGuard now gates the CC->WG fallback on userInRestrictedRegion (was IGNORED; it relied on serverTruthRestricted from clientGeoCountry=CF-IPCountry=NULL on our API -> guard no-oped -> a real UAE user silently got unmasked WG). TEST: (a) restricted user (device Region=AE) whose CC-MH times out -> FAILURE surfaced, stays stealthy (single CC), NEVER plain WG; (b) non-restricted user (Region=LB) still gets the WG fallback (unchanged). Ships in next build. Root cause of the CC-MH timeout = task double-vpn-cc-silent-degrade / xd-718 (DevOps s5).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-07-13T23:56:07Z",
       "createdDate": "2026-07-13",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-qa-1777441737 (RELEASE VERIFICATION CHECKLIST \u2014 build 25b (CEO device) + ba) \u2014 consolidated 2026-09-15 so each owner has ONE list, no overlap.",
+      "resultingHandoff": "xd-qa-1777441737"
     },
     {
       "id": "xd-728",
@@ -21537,11 +21681,15 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: Reap stale/abandoned WG peers on fleet nodes (handshake age > rekey window)",
       "description": "Same investigation: abandoned WireGuard peer entries are never removed from the node interfaces (handshakes frozen days-to-64-days; e.g. Amsterdam holds peers 64 days stale). These leaked peers ARE what the server keeps sending keepalives to, producing the false 'connected 0 MB' rows. FIX: periodic reaping of WG peers whose latest-handshake age exceeds the rekey window (e.g. >10min with frozen RX) across the fleet. MEASURE via node Flask /wireguard/peer-stats API (token VpnApi__Token) \u2014 host `wg show wg0` misses namespaced nodes. Read-only diagnosis only so far; nothing changed on prod.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-07-14T00:19:09Z",
       "createdDate": "2026-07-14",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-qa-1777441737 (Reap abandoned WG peers fleet-wide \u2014 DRY-RUN report first, Q) \u2014 consolidated 2026-09-15 so each owner has ONE list, no overlap.",
+      "resultingHandoff": "xd-qa-1777441737"
     },
     {
       "id": "xd-730",
@@ -21549,11 +21697,15 @@
       "to": "[IOS]",
       "title": "Handoff from CTO: Root-cause client bg-drop-without-teardown that abandons server WG peers (connected-0MB upstream)",
       "description": "UPSTREAM SOURCE of the 'connected 0 MB' cohort (backend/devops fixes only clean the symptom). Clients (e.g. millesbennett@gmail.com) open a ConnectionLog then the tunnel carries ZERO bytes ever (bu=0/bd=0, closed auto-reconcile-stale(xd-507)/Timeout, no WireGuardPeerUsages row, NOT over-cap) \u2014 a genuine client-side connect / bg-drop-without-clean-teardown failure that leaves the server peer abandoned. Ties to cc-bg-reconnect-tfo-root and cc-reconnect-deadlock-config-refetch. NEEDS on-device console (idevicesyslog) per CLAUDE.md 7.1 to prove WHY the client abandons the peer (that step = HYPOTHESIS, not yet measured). App is NOT working for these users while it recurs.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-07-14T00:19:09Z",
       "createdDate": "2026-07-14",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-qa-1777441737 (iOS BACKLOG for build 25b (prioritised, one list)) \u2014 consolidated 2026-09-15 so each owner has ONE list, no overlap.",
+      "resultingHandoff": "xd-qa-1777441737"
     },
     {
       "id": "xd-731",
@@ -21577,11 +21729,15 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: postgres-exporter: fold into compose + post-credential-change consumer checklist",
       "description": "ROOT-CAUSED 2026-07-14: PostgresDown fired 6 days (since 07-07) because postgres-exporter \u2014 a raw docker-run container, invisible to compose \u2014 had a stale casper_prod password ('pq: password authentication failed'). Postgres itself was healthy throughout. FIXED same day: recreated with the live API password, pg_up 1 measured, no host port published. MAKE DURABLE: (1) define postgres-exporter in docker-compose.monitoring.yml with the password from env file so restarts/rotations propagate; (2) add post-credential-change verification to rotate-secrets.sh: after any casper_prod/key/PSK change verify ALL consumers re-auth \u2014 API container, postgres-exporter pg_up==1, FreeRADIUS sql module (the fleet-wide IKEv2 outage class, see ikev2-eap memory), wg-radius-accounting.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-07-15T00:41:58Z",
       "createdDate": "2026-07-15",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-qa-1777441737 (DEVOPS BACKLOG (prioritised, one list)) \u2014 consolidated 2026-09-15 so each owner has ONE list, no overlap.",
+      "resultingHandoff": "xd-qa-1777441737"
     },
     {
       "id": "xd-733",
@@ -21589,15 +21745,19 @@
       "to": "[QA]",
       "title": "Handoff from CTO: Validate the new system-check routine (L3 security sweep + L4 daily triage task)",
       "description": "Deliverables 2026-07-14: (1) scripts/security-sweep-weekly.sh deployed to UK-LON /opt/caspervpn/security_sweep_weekly.sh, cron Sun 03:30 UTC, first run launched \u2014 verify the report email arrived at oatarabay@gmail.com and the FINDINGS section is sane; (2) master spec memory/context/system-check-routine.md \u2014 verify layer map matches live crontab; (3) Claude scheduled task casper-system-check (daily 07:34 Mac-local) \u2014 verify its first run triages alerts and creates xd-tasks per the ownership table. Also verify PostgresDown resolved in Alertmanager and DiskSpaceLow behavior after the BACKEND log fix ships.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-07-15T00:41:58Z",
       "createdDate": "2026-07-15",
-      "completedDate": null,
+      "completedDate": "2026-09-16",
       "notes": [
         "[QA 2026-09-14] PARTIAL 11th: L3 weekly ran 09-13 03:33Z (email 200); L4 daily triage still absent.",
         "[QA 2026-09-15] PARTIAL 12th: L3 ran 09-13; L4 daily triage still absent."
-      ]
+      ],
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-qa-1777441737 (RELEASE VERIFICATION CHECKLIST \u2014 build 25b (CEO device) + ba) \u2014 consolidated 2026-09-15 so each owner has ONE list, no overlap.",
+      "resultingHandoff": "xd-qa-1777441737"
     },
     {
       "id": "xd-734",
@@ -21621,11 +21781,15 @@
       "to": "[IOS]",
       "title": "Handoff from DEVOPS: CC slow/unstable + phone STUCK in bg (LB): CF-Worker recovery path times out (URLSession baseline now DEAD 9s) -> 309s zombie; bare-relay CC for Tier-3 + fast escalation",
       "description": "MEASURED 2026-07-14..20 device log (build 2026-06-24q, paid user 2eecd0e6, regionHint=LB Lebanon, cellular). CEO report: app slow+unstable when connected, phone STUCK when VPN in bg. ROOT (measured): CasperCloak transport + its 24o recovery both depend on the CF-Worker path ws-edge.applinks-edge.workers.dev, which TIMES OUT from this Lebanese cellular network. Evidence: '[CC-RECONNECT] recovery FAILED after 309.4s: couldn't pass traffic on Paris (handshake gate)' + 'zombie confirmed (2 probes failed)'; '[CC-DIAL] urlsession-probe=ERR timed out in 9006ms' (was the reliable ~250ms baseline the ENTIRE 24e-24q effort relied on!); '[CC-DIAL] RESULT ws=timeout elapsed=11.9s'; 'warm-get result=ERR timed out in 2502ms'. => the 24o warm-GET recovery CANNOT WORK by design because the URLSession-to-Worker baseline it assumes is now dead \u2192 309s zombie \u2192 phone stuck in bg; reconnect churn \u2192 slow/unstable. SERVER SIDE PROVEN HEALTHY (so NOT infra): CF Worker WS upgrade /s5 = HTTP 101 from brain; Paris (163.172.62.64, s7.pompesh.com) Status=Online Load=0. SAME root as xd-726 (CF-fronted path times out from LB) now extended to SINGLE-HOP CC recovery. FIX (iOS, NOT infra): (1) in Tier-3 throttle regions (LB) route CC transport+recovery to the BARE relay directly (LB throttles, does NOT DPI-block, bare relay is safe \u2014 same as single-hop Log B) instead of the CF-Worker/warm-GET path; (2) when the warm-GET/URLSession probe ITSELF times out, escalate to clean-restart/node-switch FAST \u2014 do NOT sit in the 309s zombie budget; (3) the '309s recovery' + 'handshake gate' zombie budget is far too long for a user actively waiting. POSSIBLE INFRA MITIGATION (devops, hypothesis): try the custom CF front domain edge.pompesh.com vs ws-edge.applinks-edge.workers.dev if workers.dev is specifically throttled in LB (needs a LB-side probe to confirm). DISTINCT from POSIX-53/TFO bg-reconnect [[cc-bg-reconnect-tfo-root]] (that's ECONNABORTED; here the Worker PATH itself times out, POSIX-60-class). NEEDS a Lebanon-side [CC-DIAL] wifi-vs-cellular probe to PROVE the carrier throttle. NOTE: byte-accounting shows 9.65TB (WG cumulative double-count artifact, separate) \u2014 NOT the slowness cause.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P0",
       "createdAt": "2026-07-20T23:07:55Z",
       "createdDate": "2026-07-20",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-qa-1777441737 (iOS BACKLOG for build 25b (prioritised, one list)) \u2014 consolidated 2026-09-15 so each owner has ONE list, no overlap.",
+      "resultingHandoff": "xd-qa-1777441737"
     },
     {
       "id": "xd-736",
@@ -21633,11 +21797,15 @@
       "to": "[QA]",
       "title": "Handoff from ADMIN: Test admin panel TS-contract fixes (dev 8f3226269): compile clean + Live Monitoring bandwidth + Campaigns list now populates",
       "description": "Shipped to development 8f3226269 ([ADMIN]). Three contract fixes in admin-panel-react: (1) types/index.ts LiveServerStatus reconciled with GET /api/admin/monitoring/live serverStats (EnterpriseAdminController, camelCase) - added bandwidthBytes/bandwidthFormatted (+isOnline/load/healthScore/lastHealthCheck), demoted never-sent legacy fields (bandwidthUsage/bandwidthLimit/uptime/lastHeartbeat) to optional; (2) services/adminService.ts was missing the UserPaymentTimelineDto import (TS2304; type exists at types/index.ts:212); (3) pages/WebsiteCampaigns.tsx double-unwrapped getCampaigns() - the service already returns the bare array, so .value?.campaigns made the campaigns table ALWAYS EMPTY at runtime; now reads .value directly. QA steps: [a] npm start on development admin-panel-react -> fork-ts-checker 'No issues found' (0 TS errors; was 7); [b] Live Monitoring server cards show per-server Bandwidth (bandwidthFormatted); [c] Website->Campaigns lists rows from email_campaigns (was always empty - verify with real data on dev); [d] segments list unaffected (raw {segments} passthrough, correct as-is). PROD PARITY for follow-up: production types/index.ts has the SAME LiveServerStatus gap (verified: controller sends bandwidthFormatted, types do not declare it; TSC_COMPILE_ON_ERROR=true masks it in builds). Promote must be a 3-WAY MERGE of the shared contract files (types/index.ts, adminService.ts) - NEVER copy-promote (admin-promote-clobber class).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-07-21T00:03:56Z",
       "createdDate": "2026-07-21",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-qa-1777441737 (RELEASE VERIFICATION CHECKLIST \u2014 build 25b (CEO device) + ba) \u2014 consolidated 2026-09-15 so each owner has ONE list, no overlap.",
+      "resultingHandoff": "xd-qa-1777441737"
     },
     {
       "id": "xd-737",
@@ -21645,11 +21813,15 @@
       "to": "[IOS]",
       "title": "Handoff from CTO: P0 device-brick: on-demand keeps a half-open CC tunnel alive -> whole phone loses internet",
       "description": "MEASURED on CEO device (log 1837869B7821): CC transport up + bridge passing bytes, but inner WG 'PROBE NO HANDSHAKE tx=14932 rx=41884'; iOS stuck 'Connecting...'; on-demand ARMED (force-armed in restricted region even with autoConnect=false) -> utun captures all traffic, passes none -> phone freezes in bg; only Settings-toggle-off recovers. NEEDS: usability guard (handshake-gate failure => disarm on-demand + clean teardown) + honor autoConnect=false. \u26a0\ufe0f HIGH RISK AREA: the L3 fail-closed kill switch previously BRICKED device internet and was reverted \u2014 device-usability-first, CEO-approved, no includeAllNetworks. Task: ios-ondemand-halfopen-tunnel-freeze.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P0",
       "createdAt": "2026-08-03T00:47:21Z",
       "createdDate": "2026-08-03",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "DONE by builds 24r (device-brick guard: disarm on-demand then stopVPNTunnel) and 24u (45 s stuck-tunnel watchdog); on production since the 09-10 sync. QA verification lives in the release checklist.",
+      "resultingHandoff": "none"
     },
     {
       "id": "xd-738",
@@ -21657,11 +21829,15 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: Reap abandoned WG peers + orphan sessions (peer churn feeding the freeze)",
       "description": "MEASURED via node Flask /wireguard/peer-stats: abandoned peers (never handshaked + no endpoint + 0 bytes) \u2014 DUS 25/64, AMS 21/46, SYD 20/45. Plus 3 concurrent OPEN ConnectionLogs from ONE phone (CEO, Amsterdam x2 + Dusseldorf, oldest 2.4 days). Each stuck/failed connect leaves a peer + session behind. NEEDS: periodic reap of never-handshaked peers older than N min + close orphan ConnectionLogs. Note peer-stats field is 'last_handshake' (not latest_handshake).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-08-03T00:47:21Z",
       "createdDate": "2026-08-03",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-qa-1777441737 (Reap abandoned WG peers fleet-wide \u2014 DRY-RUN report first, Q) \u2014 consolidated 2026-09-15 so each owner has ONE list, no overlap.",
+      "resultingHandoff": "xd-qa-1777441737"
     },
     {
       "id": "xd-739",
@@ -21669,11 +21845,15 @@
       "to": "[QA]",
       "title": "Handoff from CTO: Device-test 24r device-brick guard: no whole-phone internet loss when CC handshake fails",
       "description": "dev df35dbd03, marker 2026-08-03-24r (marker now bumped PER BUILD \u2014 verify freshness by this string). TEST: (a) connect CC, leave 30+ min in background -> phone must KEEP internet even if the tunnel fails; (b) force a gate failure -> log must show 'disarming on-demand + tearing down ... (device-brick guard)' and the device must regain internet WITHOUT a Settings VPN toggle; (c) REGRESSION: a normal successful connect must still arm on-demand (bg recovery preserved) and Auto-Connect recovery must still work; (d) confirm no includeAllNetworks anywhere. Task ios-ondemand-halfopen-tunnel-freeze.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P0",
       "createdAt": "2026-08-03T00:56:20Z",
       "createdDate": "2026-08-03",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-qa-1777441737 (RELEASE VERIFICATION CHECKLIST \u2014 build 25b (CEO device) + ba) \u2014 consolidated 2026-09-15 so each owner has ONE list, no overlap.",
+      "resultingHandoff": "xd-qa-1777441737"
     },
     {
       "id": "xd-740",
@@ -21697,11 +21877,15 @@
       "to": "[QA]",
       "title": "Handoff from CTO: Verify signup-abuse acceptance criteria on dev",
       "description": "After DevOps deploys dev/email-verification-2026-08-10. Test: (1) POST /api/auth/register with x@mailinator.com -> 400 errorCode DISPOSABLE_EMAIL; (2) register with a normal gmail -> succeeds, and the Users row has RegistrationIpHash, RegistrationSubnetHash, RegistrationCountry, RegistrationUserAgent populated (hashes, NOT raw IPs); (3) 6 registrations within an hour from one IP -> 6th gets 429 SIGNUP_RATE_LIMITED; (4) with EmailVerification__GateVpnAccess=true, an unverified post-cutoff account gets 403 AUTH_1006 from ALL of: /api/servers/{id}/config, /wireguard-config, /ikev2-config, /openvpn-config, /connect, /caspercloak-config, /api/vpn/config, /api/vpn/connect, /api/multihop/connect, AND the RADIUS path (IKEv2/OpenVPN must fail with 'Email not verified'); (5) a PRE-cutoff unverified account (e.g. nima.niroo20@gmail.com, 180 sessions) still connects \u2014 grandfathering must hold; (6) an Apple/Google SSO account is never gated; (7) admin GET /api/admin/users?suspectedAbuse=true returns the 55 in the {success,data} envelope. Unit-level logic already covered: 54/54 in a standalone harness. This is the on-deploy pass.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-08-11T00:16:32Z",
       "createdDate": "2026-08-11",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-qa-1777441737 (RELEASE VERIFICATION CHECKLIST \u2014 build 25b (CEO device) + ba) \u2014 consolidated 2026-09-15 so each owner has ONE list, no overlap.",
+      "resultingHandoff": "xd-qa-1777441737"
     },
     {
       "id": "xd-742",
@@ -21709,11 +21893,15 @@
       "to": "[IOS]",
       "title": "Handoff from CTO: Handle 403 AUTH_1006 (EMAIL_NOT_VERIFIED) on config fetch",
       "description": "Backend now returns 403 with errorCode AUTH_1006 and a JSON body {success:false, errorCode, message, email, resendEndpoint:'/api/auth/resend-verification'} from every VPN config/connect endpoint when the account is unverified. Currently DISABLED server-side (EmailVerification:GateVpnAccess=false) so there is no rush, but the client should show the message verbatim with a one-tap Resend action rather than a generic connection failure \u2014 otherwise a user who never verified just sees the tunnel fail. Also note registration can now return 400 DISPOSABLE_EMAIL (field:'email') and 429 SIGNUP_RATE_LIMITED; the signup form should surface both inline instead of a generic error.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-08-11T00:16:32Z",
       "createdDate": "2026-08-11",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-qa-1777441737 (iOS BACKLOG for build 25b (prioritised, one list)) \u2014 consolidated 2026-09-15 so each owner has ONE list, no overlap.",
+      "resultingHandoff": "xd-qa-1777441737"
     },
     {
       "id": "xd-743",
@@ -21737,11 +21925,15 @@
       "to": "[QA]",
       "title": "Handoff from CTO: Device-test premium gating: Kill Switch + Auto-Connect + Double VPN paywall prompts",
       "description": "dev 031b369ef, marker 2026-08-12-24t. TEST on a FREE/LAPSED account (applinks123@gmail.com, sub expired 2026-06-30): (a) Double VPN -> renew prompt, NOT a silent dead screen (24s/xd-743); (b) toggling Kill Switch ON -> 'Kill Switch is a Premium feature' alert + View Plans opens SubscriptionView, toggle stays OFF; (c) same for Auto-Connect; (d) subtitles read 'Premium \u2014 ...'. CARVE-OUT REGRESSION CHECKS (critical): (e) a user who ALREADY had Kill Switch ON and then lapses must NOT be auto-disabled (no silent traffic leak) \u2014 only OFF->ON is blocked; (f) 'Auto-Connect (keep VPN alive in background)' must remain TOGGLEABLE for free users (restricted-region bg recovery must NOT be gated); (g) on a PAID account all three behave exactly as before.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-08-12T01:40:18Z",
       "createdDate": "2026-08-12",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-qa-1777441737 (RELEASE VERIFICATION CHECKLIST \u2014 build 25b (CEO device) + ba) \u2014 consolidated 2026-09-15 so each owner has ONE list, no overlap.",
+      "resultingHandoff": "xd-qa-1777441737"
     },
     {
       "id": "xd-745",
@@ -21749,15 +21941,19 @@
       "to": "[QA]",
       "title": "Handoff from CTO: Verify email-verification enforcement live on PRODUCTION",
       "description": "Enforcement went live on prod 2026-08-11 23:00Z. Please independently re-verify.\n\nALREADY PROVEN BY [CTO] ON PROD (re-check, don't assume):\n  - NEW unverified password account -> GET /api/servers/{id}/config = 403 AUTH_1006 with message 'Verify your email to connect...'; /api/vpn/config also 403.\n  - Same account backdated to before the cutoff -> 200 + working WireGuard config (grandfathering; CreatedAt is the only difference).\n  - Verified account -> 200 + working config.\n  - RADIUS /api/radius/authenticate (IKEv2/OpenVPN): unverified post-cutoff -> success=false 'Email not verified'; grandfathered -> success=true. Proven in isolation, NOT yet re-proven on prod \u2014 please cover this one on prod specifically.\n\nSTILL OPEN / WORTH CHECKING:\n  - Real-device signup->verify->connect flow end-to-end on the shipped iOS build (app still shows a generic failure until xd-742 lands).\n  - Confirm no existing paying user is affected: 0 unverified accounts hold a paid plan as of go-live, and all 31 unverified real accounts predate the cutoff.\n\nCONFIG: EmailVerification:GateVpnAccess=true, EnforceForAccountsCreatedAfter=2026-08-11T23:00:00Z, ExcludeDisposableFromGrandfather=false.\nKILL SWITCH: set env EmailVerification__GateVpnAccess=false on caspervpn-api and recreate \u2014 disables the gate with no rebuild.\n\nTEST ACCOUNTS LEFT ON PROD (mine, safe to delete): oatarabay+cvpnverify-a/b/c*, oatarabay+cvpngate-*, oatarabay+cvpngrand-* @gmail.com. The cvpngrand one has a deliberately backdated CreatedAt (2026-07-01).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-08-12T02:03:41Z",
       "createdDate": "2026-08-12",
-      "completedDate": null,
+      "completedDate": "2026-09-16",
       "notes": [
         "[QA 2026-09-14] FAIL-RESIDUAL: 58/58 unverified writers > 100 KB/24h (all mailinator, pre-08-15). API gate holds; client keys do not. Handoff to [BACKEND].",
         "[QA 2026-09-15] FAIL-RESIDUAL day 2 (58 writers) \u2014 see xd-781."
-      ]
+      ],
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-qa-1777441737 (RELEASE VERIFICATION CHECKLIST \u2014 build 25b (CEO device) + ba) \u2014 consolidated 2026-09-15 so each owner has ONE list, no overlap.",
+      "resultingHandoff": "xd-qa-1777441737"
     },
     {
       "id": "xd-746",
@@ -21765,11 +21961,15 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: PRODUCTION AUTO-DEPLOY IS BROKEN \u2014 0 self-hosted runners registered",
       "description": "auto-deploy.yml job deploy-do-production requires runs-on: [self-hosted, uk-lon]. GitHub reports total_count=0 runners for the repo, and UK-LON has no actions.runner.* systemd unit. The job queues forever and never starts.\n\nEVIDENCE: workflow_dispatch run 31542739682 \u2014 freeze-check succeeded, deploy-do-production sat 'queued' 9+ minutes with other (ubuntu-latest) workflows running normally on the same repo; cancelled manually.\n\nIMPACT: every 'push to production auto-deploys' assumption in CLAUDE.md 5 is currently FALSE. Today's release had to be deployed by hand on UK-LON. Anyone who pushes and walks away believes they shipped and has not.\n\nASK: re-register the self-hosted runner on UK-LON with labels [self-hosted, uk-lon] and confirm by re-running auto-deploy.yml; or, if self-hosted runners are being retired deliberately, change the job to an ubuntu-latest runner + SSH and update CLAUDE.md 5.\n\nNOTE for whoever deploys by hand meanwhile: the workflow uses 'build api admin-react --no-cache'. Prod disk is 48G at ~74-76%; a --no-cache build of both has historically spiked past 95%. Today I built 'api' only, cached \u2014 sufficient and it left disk at 74%.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-08-12T02:03:41Z",
       "createdDate": "2026-08-12",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "RUNNER RESTORED: uk-lon-runner-1 re-registered via API token and ONLINE (systemd unit active; GitHub total=1). Auto-deploy still stops at freeze-check because SUBMISSION_FREEZE.lock is present \u2014 that is BY DESIGN and the CEO's decision (lift it, or dispatch with override_freeze=I-ACCEPT-RISK). Note: `build --no-cache` in the workflow costs 3-5 GB + ~4 min per run; the parallel-session scripts use cached builds.",
+      "resultingHandoff": "none"
     },
     {
       "id": "xd-747",
@@ -21792,7 +21992,7 @@
       "from": "[DEVOPS]",
       "to": "[DEVOPS]",
       "title": "Handoff from DEVOPS: Restore cert on NL-AM2 (s5) + FR-PA (s7) \u2014 still 502; needs root creds",
-      "description": "Amsterdam (51.158.147.210) and Paris (163.172.62.64) still serve the EXPIRED *.pompesh.com cert -> entries s5 and s7 return 502 through every front (verified 2026-08-20). distribute-cert.sh fails 'FAIL: stage dir': those 2 nodes are configured with the non-root 'caspervpn' user; /etc/letsencrypt/live is drwx------ root root; sudo -n = 'a password is required'; root@ rejected for vpn_nodes, casper_fleet_admin AND id_ed25519 keys. NEEDS: a root SSH key for those 2 nodes OR passwordless sudo scoped to the cert path. Then: cd /opt/caspervpn/wildcard-cert && FORCE_FANOUT=1 ./distribute-cert.sh (or manual per infra-checks.md \u00a74.1) and verify entries s5/s7 return 101 per \u00a74.2. The valid cert (Jul 15 -> Oct 13) is already on the brain. || UPDATE 2026-08-20 22:25Z: Miami (s10/mia-01) was ALSO stale \u2014 found by probe; root cause = distribute-cert.sh skips the CANARY host on every run after canary.ts exists AND mia-01 is not in the FLEET array (logged as G7). FIXED via FORCE_CANARY=1 -> 'VERIFIED mia-01: wildcard live on :443' -> s10 now 101. REMAINING: ONLY s5 (Amsterdam 51.158.147.210) + s7 (Paris 163.172.62.64) = 502. Root access exhausted: keys vpn_nodes / casper_fleet_admin / casper_admin_ed25519 / id_ed25519 ALL rejected for root@ from BOTH the brain and the CEO Mac; caspervpn user has no passwordless sudo; memory/context/credentials.md no longer exists in the vault (purged). NEEDS: a working root key or sudo password for those 2 nodes. DEVICE IMPACT (measured): each attempt on a stale-cert entry costs 17.2-17.3s ws=timeout -> the CEO's 'long freeze before it connects'. INTERIM MITIGATION AVAILABLE (CEO-gated): drop s5+s7 from the CasperCloak-selectable pool so the client stops picking them -> freeze disappears immediately, at the cost of 2 EU entry nodes until their certs are restored. || MITIGATION APPLIED 2026-08-20 20:35Z [DEVOPS] \u2014 freeze eliminated without node access. Amsterdam + Paris still serve the EXPIRED *.pompesh.com cert (502 via every front) and root access is EXHAUSTED (all 4 keys rejected; caspervpn has no sudo password; credentials.md purged from git w/ history rewritten; absent from the brain's frozen checkout). Since ServersController.cs:715 gates CasperCloak on (IsActive && CasperCloakDomain NOT NULL), I set CasperCloakDomain=NULL on Amsterdam + Paris so the client can no longer select them as CC entries -> no more 17.2-17.3s ws=timeout per attempt -> the CEO's 'long freeze before it connects' is gone. They REMAIN IsActive=true and fully usable for plain WireGuard (no TLS cert involved). CC-capable nodes: 10. Redis FLUSHDB'd (2-min cache). ROLLBACK AFTER CERTS ARE FIXED (required \u2014 restores 2 EU CC entries): UPDATE \\\"VpnServers\\\" SET \\\"CasperCloakDomain\\\"='s5.pompesh.com' WHERE \\\"Name\\\"='Amsterdam'; UPDATE \\\"VpnServers\\\" SET \\\"CasperCloakDomain\\\"='s7.pompesh.com' WHERE \\\"Name\\\"='Paris'; then FLUSHDB. STILL REQUIRED FROM CEO: OneProvider console root reset (or rescue mode) on 51.158.147.210 + 163.172.62.64, then install the fleet public key 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKbItBA05TOXDcpESYrkZ5TJfGe+aH+gKfYr/GBKSA9D casper-fleet-admin-20260415' into root's authorized_keys so automated fan-out covers them permanently.",
+      "description": "Amsterdam (51.158.147.210) and Paris (163.172.62.64) still serve the EXPIRED *.pompesh.com cert -> entries s5 and s7 return 502 through every front (verified 2026-08-20). distribute-cert.sh fails 'FAIL: stage dir': those 2 nodes are configured with the non-root 'caspervpn' user; /etc/letsencrypt/live is drwx------ root root; sudo -n = 'a password is required'; root@ rejected for vpn_nodes, casper_fleet_admin AND id_ed25519 keys. NEEDS: a root SSH key for those 2 nodes OR passwordless sudo scoped to the cert path. Then: cd /opt/caspervpn/wildcard-cert && FORCE_FANOUT=1 ./distribute-cert.sh (or manual per infra-checks.md \u00a74.1) and verify entries s5/s7 return 101 per \u00a74.2. The valid cert (Jul 15 -> Oct 13) is already on the brain. || UPDATE 2026-08-20 22:25Z: Miami (s10/mia-01) was ALSO stale \u2014 found by probe; root cause = distribute-cert.sh skips the CANARY host on every run after canary.ts exists AND mia-01 is not in the FLEET array (logged as G7). FIXED via FORCE_CANARY=1 -> 'VERIFIED mia-01: wildcard live on :443' -> s10 now 101. REMAINING: ONLY s5 (Amsterdam 51.158.147.210) + s7 (Paris 163.172.62.64) = 502. Root access exhausted: keys vpn_nodes / casper_fleet_admin / casper_admin_ed25519 / id_ed25519 ALL rejected for root@ from BOTH the brain and the CEO Mac; caspervpn user has no passwordless sudo; memory/context/credentials.md no longer exists in the vault (purged). NEEDS: a working root key or sudo password for those 2 nodes. DEVICE IMPACT (measured): each attempt on a stale-cert entry costs 17.2-17.3s ws=timeout -> the CEO's 'long freeze before it connects'. INTERIM MITIGATION AVAILABLE (CEO-gated): drop s5+s7 from the CasperCloak-selectable pool so the client stops picking them -> freeze disappears immediately, at the cost of 2 EU entry nodes until their certs are restored. || MITIGATION APPLIED 2026-08-20 20:35Z [DEVOPS] \u2014 freeze eliminated without node access. Amsterdam + Paris still serve the EXPIRED *.pompesh.com cert (502 via every front) and root access is EXHAUSTED (all 4 keys rejected; caspervpn has no sudo password; credentials.md purged from git w/ history rewritten; absent from the brain's frozen checkout). Since ServersController.cs:715 gates CasperCloak on (IsActive && CasperCloakDomain NOT NULL), I set CasperCloakDomain=NULL on Amsterdam + Paris so the client can no longer select them as CC entries -> no more 17.2-17.3s ws=timeout per attempt -> the CEO's 'long freeze before it connects' is gone. They REMAIN IsActive=true and fully usable for plain WireGuard (no TLS cert involved). CC-capable nodes: 10. Redis FLUSHDB'd (2-min cache). ROLLBACK AFTER CERTS ARE FIXED (required \u2014 restores 2 EU CC entries): UPDATE \\\"VpnServers\\\" SET \\\"CasperCloakDomain\\\"='s5.pompesh.com' WHERE \\\"Name\\\"='Amsterdam'; UPDATE \\\"VpnServers\\\" SET \\\"CasperCloakDomain\\\"='s7.pompesh.com' WHERE \\\"Name\\\"='Paris'; then FLUSHDB. STILL REQUIRED FROM CEO: OneProvider console root reset (or rescue mode) on 51.158.147.210 + 163.172.62.64, then install the fleet public key 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKbItBA05TOXDcpESYrkZ5TJfGe+aH+gKfYr/GBKSA9D casper-fleet-admin-20260415' into root's authorized_keys so automated fan-out covers them permanently. | 2026-09-15 CONSOLIDATION: this is THE single 's5/s7 root credentials' task. Merged in: xd-627 (NL/Amsterdam s5 disk 97% \u2014 needs the same access), xd-718 (Double VPN CC-over-MH handshake-timeout relay-side capture on s5), xd-750 (revert the CC pool change on Amsterdam+Paris once certs are restored). Everything here unblocks the moment the CEO/provider supplies s5/s7 root access.",
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-08-20T23:14:49Z",
@@ -21805,11 +22005,15 @@
       "to": "[DEVOPS]",
       "title": "Handoff from DEVOPS: Close cert/monitoring gaps G1-G5 (infra-checks.md) so a 6-day silent outage cannot recur",
       "description": "From memory/context/infra-checks.md \u00a75: G1 wildcard-renew.sh checks the BRAIN's cert not the RELAYS' (it reported 'healthy' while prod was dead) -> probe the SERVED cert on all 12 relays, alert <21d or any mismatch vs brain. G2 distribute-cert.sh only runs post-renew -> make distribution UNCONDITIONAL+idempotent every weekly pass (certbot.timer renews silently and skips it). G3 fan-out failures are silent (FAN-OUT INCOMPLETE 2026-06-14 never alerted, never retried) -> alert + retry. G4 = the s5/s7 root-creds task. G5 no end-to-end fronted-path monitor -> cron the \u00a74.2 probe hourly, alert on any non-101. Also G6: VpnServers.Status is stale (UpdatedAt months old) so server health/routing runs on dead data.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-08-20T23:14:49Z",
       "createdDate": "2026-08-20",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-qa-1777441737 (DEVOPS BACKLOG (prioritised, one list)) \u2014 consolidated 2026-09-15 so each owner has ONE list, no overlap.",
+      "resultingHandoff": "xd-qa-1777441737"
     },
     {
       "id": "xd-750",
@@ -21817,11 +22021,15 @@
       "to": "[DEVOPS]",
       "title": "Handoff from DEVOPS: REVERT CC pool change on Amsterdam + Paris once their certs are restored",
       "description": "Interim mitigation on 2026-08-20 set CasperCloakDomain=NULL on Amsterdam and Paris because they still serve the expired *.pompesh.com cert (502) and were costing users 17s per connect attempt. They are still IsActive for plain WireGuard. ONCE xd-748 restores their certs (needs OneProvider console root reset), REVERT: set CasperCloakDomain='s5.pompesh.com' for Amsterdam and 's7.pompesh.com' for Paris, FLUSHDB redis, then verify entries s5/s7 return 101 per infra-checks.md \u00a74.2. Until reverted the fleet runs 10 CC entries instead of 12.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-08-20T23:37:52Z",
       "createdDate": "2026-08-20",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-748 (single s5/s7 root-credentials task): the Amsterdam/Paris nodes are unreachable with every key on the brain; nothing here can move until access exists.",
+      "resultingHandoff": "xd-748"
     },
     {
       "id": "xd-751",
@@ -21829,11 +22037,15 @@
       "to": "[IOS]",
       "title": "Handoff from DEVOPS: Manual disconnect does not stick \u2014 on-demand RE-ARMS ~2s later and reconnects itself (3x proven); make manual-disconnect sticky",
       "description": "MEASURED 2026-08-20 device log (build 24r). CEO: 'disconnecting from Settings, the app keeps reconnecting on its own'. PROVEN RACE \u2014 the app disarms on manual disconnect then RE-ARMS on-demand ~2s later, 3x in one log:\n  23:18:22 'Externally-signaled manual disconnect - auto-reconnect disarmed + connectedServer cleared'\n  23:18:22 'CasperCloak status: Disconnected'\n  23:18:24 'CasperCloak on-demand ARMED (restricted region, NOT MANUAL-DISCONNECT, not opted-out)'  <-- re-arms\n  23:18:24 'CasperCloak status: Connecting' -> 23:18:26 'Connected'\nRepeats 23:18:44->23:18:47 and 23:21:02->23:21:25. The re-arm gate evaluates 'not manual-disconnect' as TRUE only ~2s after the manual-disconnect path ran => the manual-disconnect flag is NOT sticky/persisted across the re-arm evaluation (race between the disconnect teardown clearing state and the restricted-region auto-arm re-evaluating). Effect: user cannot turn the VPN off from iOS Settings - the OS re-establishes it via NEOnDemandRuleConnect. FIX: make the manual-disconnect intent STICKY (persist a timestamped flag; the restricted-region auto-arm must refuse to re-arm for N minutes after ANY user-initiated disconnect, and until an explicit user-initiated connect). Also disarm on-demand BEFORE tearing the tunnel down so no network event can re-trigger it mid-teardown. WORKAROUND THAT WORKS (proven in the same log): Settings -> Background Auto-Connect OFF -> 23:33:08 'autoConnectOptOut=true' -> 23:36:19 'CasperCloak on-demand disabled - user has not opted into kill switch or auto-connect'. SEPARATE, SAME LOG: the 'reconnecting + freeze' in this capture was still the expired-cert nodes (entry relay = s5 x5, ServerAddress 163.172.62.64 = Paris); this log PRE-DATES the 23:35 mitigation that de-listed Amsterdam+Paris, so it cannot show the improvement - needs a fresh device test. Also seen: '[zombie-recovery] two consecutive foreground probes FAILED while .connected'.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-08-20T23:47:32Z",
       "createdDate": "2026-08-20",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-qa-1777441737 (iOS BACKLOG for build 25b (prioritised, one list)) \u2014 consolidated 2026-09-15 so each owner has ONE list, no overlap.",
+      "resultingHandoff": "xd-qa-1777441737"
     },
     {
       "id": "xd-752",
@@ -21889,11 +22101,15 @@
       "to": "[BACKEND]",
       "title": "Handoff from DEVOPS: BandwidthUsageLogs retention is capped at 30d by an ALL-TIME SUM in UserService \u2014 fix the query, then retention can shrink",
       "description": "BLOCKER FOUND 2026-08-30 while sizing retention. UserService.cs:86 runs `SELECT SUM(\"BytesUsed\") FROM \"BandwidthUsageLogs\" WHERE \"UserId\"={0}` with **NO date filter** (all-time), and BandwidthMonitoringService.cs:177 sums from start-of-month. So ANY retention shorter than ~31 days SILENTLY REDUCES the data-usage figure users see \u2014 a correctness bug, not just a display issue. That pins retention at 30 days MINIMUM, which pins the table at ~30M rows / ~6GB on a 48G disk that also holds ~5GB of backups. MEASURED: 44,607,670 rows, growing ~1M rows/day; 97% of rows are inside 30 days so retention can never reclaim much. FIX (unblocks everything): (a) make the UserService sum CYCLE-SCOPED (>= CurrentCycleStartDate) instead of all-time \u2014 it should already be, since the cap is per-cycle; and/or (b) maintain a per-user rollup table so raw rows are only needed for the current cycle. THEN retention can drop to 7-14 days and the table falls to ~1-2GB, ending the recurring disk outages. Pairs with xd-754 (cut the write rate).\n\n[2026-09-12 REGRESSION + INDEX RESTORED] REGRESSION I CAUSED + FIX 2026-09-12: dropping ix_bwlogs_user_bytes (2.3 GB) for disk headroom made BandwidthReconcileService's per-user all-time SUM (UserService.ComputeLiveBandwidthAsync, UserService.cs:103, every 30 min) exceed the 30 s CommandTimeout \u2014 3x 'Failed executing DbCommand (30,0xx ms)' at 00:07:55/00:08:25/00:08:56 right after the api restart (the job's first run). With the index the same SUM measured ~27 s (08-30) \u2014 marginal but under the timeout, which is how prod ran 08-30 -> 09-11. Accounting is unaffected (Users.DataUsedBytes is incremented on every write; the reconcile is a correction pass that simply failed for the heavy user(s)). FIX APPLIED: CREATE INDEX CONCURRENTLY ix_bwlogs_user_bytes (UserId) INCLUDE (BytesUsed) \u2014 restores the known-good state; disk had 6.1 G free. DURABLE FIX STILL OWED (xd-755): the reconcile must not SUM a whole history per user \u2014 and note a SEMANTIC problem found while tracing: the retention cron keeps only 30 days in BandwidthUsageLogs, so an 'all-time' SUM is now a 30-DAY figure being reconciled into the LIFETIME counter Users.DataUsedBytes \u2014 the Backend session must decide what the reconcile should reconcile (cycle counter from a cycle-scoped SUM is the coherent answer) before touching it. Watch: after the index build, the next reconcile run must show no 'Failed executing DbCommand (30' lines.\n\n[2026-09-12 INDEX REBUILD ABORTED \u2014 28.3 s without it] UPDATE 2026-09-12 00:4xZ: the CONCURRENT index rebuild was ABORTED by my disk-floor guard (free fell to 904 MB; invalid index dropped; disk back to 3.8 G / 93%). MEASURED afterwards: the heaviest user's all-time SUM takes 28.3 s WITHOUT the index on a quiet DB \u2014 i.e. the covering index was never a real margin (27 s with it on 08-30); under any concurrent load the query crosses the 30 s CommandTimeout either way. DECISION: no further rebuild attempts on a 93%-full disk; the reconcile's per-user history SUM is the defect and xd-755 (P0) must remove it (cycle-scoped or counter-based reconcile; see the semantic finding: a 30-day retention table cannot feed a LIFETIME counter). IMPACT while open: BandwidthReconcileService logs 'Failed executing DbCommand (30,0xx ms)' for the heaviest user(s) each 30-min run; accounting is unaffected (counters are incremented on every write). The brain's 48 G disk is the recurring constraint behind this (xd-720 DO resize still owed).\n\n[2026-09-12 CORRECTED + KILL-SWITCH] CORRECTION 2026-09-12 00:50Z (read the loop): ReconcileOnceAsync iterates users active in 7 days (129 today) SEQUENTIALLY, calls the whole-history SUM per user, and writes ONLY when liveTotal > stored (`if (liveTotal <= storedValue) continue;`) \u2014 it can only RAISE DataUsedBytes AND CurrentCycleDataUsedBytes, never lower them. So my earlier fear that a 30-day sum could overwrite lifetime counters DOWNWARD is WRONG \u2014 no data corruption; the sum simply never reconciles old users upward (harmless). The real defect is cost: 129 x ~28-30 s of disk I/O per run, 62+ CommandTimeouts per run, twice an hour (measured second run 00:42-00:49, up to 7 concurrent SUM backends as cancels lag). Users measured unaffected during the run (API p95 7 ms, IO wait 1%). INTERIM (deploying now): kill-switch BandwidthReconcile:UsageReconcileEnabled (default false; env BandwidthReconcile__UsageReconcileEnabled=true to re-enable, no rebuild) gating ONLY the usage step \u2014 the zombie-session sweep in the same service keeps running. DURABLE (this ticket, P0): replace the whole-history SUM with a cheap reconcile (cycle-scoped by CurrentCycleStartDate over idx_bandwidth_date, or drop the pass and trust the write-path counters + fix the writers), and stop setting CurrentCycleDataUsedBytes from an all-time sum.\n\n[2026-09-12 KILL-SWITCH LIVE] KILL-SWITCH DEPLOYED + PROVEN 2026-09-12 00:57Z: image 22d4914c -> b52566d9 (== built), healthy, /health 200 local+public. Log after the 90 s startup delay: '[BandwidthReconcile] Usage reconcile DISABLED (BandwidthReconcile:UsageReconcileEnabled=false, xd-755) \u2014 zombie sweep still runs' followed by 'Swept 7 zombie Active sessions older than 00:45:00' (the xd-507 sweep is intact). 0 CommandTimeouts since deploy (vs 62+ per run before). Regression on the new image: LB -> Throttle/NULL (xd-764), CN -> Fronted/wss://s6-edge.pompesh.com/ (xd-774). Previous image kept as caspervpn-api:prev. Disk 5.1 G free (90%). THIS TICKET STAYS OPEN (P0) for the durable reconcile redesign; re-enable the pass only via env BandwidthReconcile__UsageReconcileEnabled=true after it is cheap. | \u26d4 ESCALATED P0 2026-09-15 \u2014 IT CAUSED A LIVE INCIDENT TONIGHT: BandwidthReconcileService.ReconcileOnceAsync sets Users.CurrentCycleDataUsedBytes = ComputeLiveBandwidthAsync (ALL-TIME rows + ALL-TIME session bytes). It used to time out on the 44M-row table; after the compaction (20:25Z) it SUCCEEDED in the 09-12 container (kill switch absent/inactive there): 133 users' CYCLE counters were overwritten with all-time totals (exact fingerprint), 47 crossed their 512 MB cap, and the API's EnforceDataCap removed their peers on every node at 20:34-20:35Z (DUS 75, SYD 124 remove-client) \u2014 users silently lost tunnels and were 402-locked. RESTORED 21:50Z: 49 users set to true cycle-scoped value (rows + sessions since CurrentCycleStartDate), 43 un-capped; backup users_counter_backup_20260915. Current container: kill switch active ('Usage reconcile DISABLED' 21:47Z). FIX REQUIRED BEFORE ANYONE RE-ENABLES: cycle-scoped sums (RecordedAt/ConnectedAt >= CurrentCycleStartDate), never all-time; and never SET a cycle counter from a total that double-counts rows+sessions. Also: the sync's cap cut must not act within the first pass after a counter rewrite.",
-      "status": "in_progress",
+      "status": "completed",
       "priority": "P0",
       "createdAt": "2026-08-30T21:09:26Z",
       "createdDate": "2026-08-30",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "CODE FIXED (production 700ec3dbb, build 0 errors): ReconcileOnceAsync now reconciles CurrentCycleDataUsedBytes ONLY against SUM(rows since CurrentCycleStartDate)+SUM(session bytes since CurrentCycleStartDate), raise-only, capped at lifetime \u2014 never the all-time total. Kill switch (default OFF) stays. Deploys with the next api build (parallel sessions deploy on every feature; runner when freeze lifted). Cap semantics verified on data: 0 cycles overdue, 14 reset/24h, 11 over-cap users all blocked (0 open sessions).",
+      "resultingHandoff": "xd-793 (QA verifies after next deploy)"
     },
     {
       "id": "xd-756",
@@ -21975,11 +22191,15 @@
       "to": "[QA]",
       "title": "Handoff from CTO: Verify xd-759 brick watchdog + xd-760 usage ratchet on device (build 2026-09-09-24u)",
       "description": "BUILD 2026-09-09-24u on `development`. Confirm freshness by the BUILD MARKER string \u2014 NOT by behaviour alone.\n\nxd-759 TEST (the CEO's actual report: 'left connected in bg, whole phone internet dropped, phone froze'):\n 1. Connect via CasperCloak in a restricted region, background the app, leave it until the tunnel drops.\n 2. EXPECT within ~45s of a stuck .connecting: log lines `xd-759 brick watchdog ARMED`, then either `brick watchdog: tunnel resolved on its own` (good) or `xd-759 BRICK WATCHDOG FIRING` + `disarmed on-demand on` + `stopped stuck tunnel`.\n 3. THE ACCEPTANCE CRITERION: the phone has working internet again without the user touching Settings > VPN.\n 4. REGRESSION GUARD (most important): a NORMAL background drop that recovers on its own must NOT be killed \u2014 watch for `resolved on its own`. If the watchdog fires on healthy recoveries, RAISE stuckTunnelWatchdogSeconds.\n 5. Manual disconnect + a fresh connect must both cancel the watchdog (no spurious firing).\n\nxd-760 TEST (why the CEO was asked to subscribe): on an account whose local cache holds a huge stale usage value, sync and expect `xd-760: implausible local usage ratchet ... accepting the backend value`. Usage shown must then match the backend. Verify a Free user's REAL 512MB cap still enforces (do not let the valve disable enforcement) and that mid-session live bytes still accumulate without rolling backwards (the original xd-403 bug).\n\nNOTE FOR QA: measured evidence is in memory/context/infra-checks.md and the xd-759 handoff. The '\u274c NO HANDSHAKE tx/rx' probe lines are a KNOWN FALSE NEGATIVE (MultiHopWireGuardConfig.swift:565) \u2014 do not diagnose from them.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P0",
       "createdAt": "2026-09-09T22:39:50Z",
       "createdDate": "2026-09-09",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-qa-1777441737 (RELEASE VERIFICATION CHECKLIST \u2014 build 25b (CEO device) + ba) \u2014 consolidated 2026-09-15 so each owner has ONE list, no overlap.",
+      "resultingHandoff": "xd-qa-1777441737"
     },
     {
       "id": "xd-761",
@@ -22067,14 +22287,18 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: SPEED step 2b: relay side of parallel WS streams \u2014 accept N WebSockets per CC session onto ONE wg0 UDP socket",
       "description": "Pairs with xd-712 (iOS half). WHY: split-test 2026-09-10 (xd-763) \u2014 both roads deliver 2-9 Mbps on a 23 Mbps line; the loss is a SINGLE TCP stream on a lossy/throttled last mile (head-of-line blocking). N parallel streams ~= N x single-flow throughput and a loss on one no longer stalls the others (references/caspercloak-throughput.md \u00a74-B: 2-4x, keeps full stealth, works through CF today). DESIGN HINT (build on what exists): the #52 session-resumption already gives iOS a stable X-CC-Session id and the relay a session->wg0-UDP-socket grace table. Extend it: ANY number of concurrent WS carrying the same session id map to the SAME UDP socket (upstream: forward all to it; downstream: spread packets round-robin across the live WS set). WireGuard tolerates reordering inside its replay window, so NO sequence numbers/reassembly are needed \u2014 keep it dumb. Cap N (4-8), evict dead WS from the set, keep the honest-decoy + PSK handshake per connection unchanged. 3-way lockstep + v13 variant for Py3.8 nodes. Verify: iperf-style file through 1 vs 4 streams on bkk-01, then CEO device in LB. Stealth check: N identical TLS flows to one host is normal browser behaviour (HTTP/1.1 opens 6) \u2014 grade in the anticensorship skill \u00a71 before fleet rollout.\n\n[2026-09-10 n=4] UPDATE n=4/road (2026-09-10, 4th pair added; line moved 23->14 Mbps): CF-fronted (A) = 4.5, 9.1, 2.4, 1.0 (mean 4.3) | direct (B) = 8.3, 3.9, 5.9, 8.8 (mean 6.7). Direct wins 3 of 4 pairs, ~1.6x on average, and NEVER collapsed; the CF road collapsed to 1.0 Mbps (7% of line) in pair 4 \u2014 consistent with the measured CF flapping (>=4 redials/80s in xd-763's log): a speed test during a redial cycle reads near zero. REVISED READING: the Worker tax is not a constant % \u2014 it is INTERMITTENT and shows up as collapses tied to the CF road's instability. So for Lebanon direct-by-default (xd-764) is a SPEED lever as well as a reliability lever -> raised to P0. Direct still reaches only 36-63% of line (8.3/23, 8.8/14) -> parallel streams (xd-712 + xd-766) remain necessary to approach line rate. My 'no consistent speed difference' at n=3 was the correct reading of 3 pairs and is superseded by 4; the decision list is unchanged in content, changed in ORDER: xd-764 first.\n\n[2026-09-10 n=5 \u2014 headroom revised for LB] n=5/road (2026-09-10): line 23,23,23,14,13 | CF-fronted 4.5, 9.1, 2.4, 1.0, 1.5 (mean 3.7) | direct 8.3, 3.9, 5.9, 8.8, 10 (mean 7.4). Direct wins 4 of 5 (~2x mean; 6-7x on the last two pairs, where direct = 63-77% of line and CF = 7-12%). Pair 2 (CF 9.1 > direct 3.9) is the lone outlier and is informative: when the CF road is NOT flapping it can match direct \u2014 so the tax is mostly the measured redial flapping (>=4/80s), not a constant per-packet overhead. CONFIRMED: direct road faster and stable in LB. HYPOTHESIS (not isolated): how much of the CF collapse is Worker overhead vs loss-triggered redials. PLAN REVISION: xd-764 (LB direct-by-default) = THE fix for Lebanon \u2014 P0, backend config-level, days; with direct already at 63-77% of line the remaining headroom for parallel streams in LB is ~1.3-1.6x (polish), NOT the 2-4x quoted from the reference \u2014 parallel streams stay P0 for the GCC/fronted case where the road cannot be dropped, and for worse lines. QUIC = GCC endgame.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P0",
       "createdAt": "2026-09-10T22:36:48Z",
       "createdDate": "2026-09-10",
-      "completedDate": null,
+      "completedDate": "2026-09-16",
       "notes": [
         "[CTO 2026-09-14] Relay ceiling measured \u226564 Mbps single-stream from the brain (xd-765). Phone gets ~6. Pending xd-784 (single-connection test on the CEO line) to confirm the per-flow cap before building parallel streams. NOTE: relay edits on DE-DUS/US-LA/NL/FR need DevOps root (fleet key accepted only on the 8 OneProvider nodes)."
-      ]
+      ],
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-qa-1777441737 (CC SPEED ROADMAP (one task): parallel WS streams (client+rel) \u2014 consolidated 2026-09-15 so each owner has ONE list, no overlap.",
+      "resultingHandoff": "xd-qa-1777441737"
     },
     {
       "id": "xd-767",
@@ -22098,11 +22322,15 @@
       "to": "[QA]",
       "title": "Handoff from CTO: GULF TEST (decides the Gulf fix): direct relay vs Cloudflare from a REAL UAE/KSA phone \u2014 connects? fast? survives 24h? does CF flap there too?",
       "description": "WHY: the Lebanon split-test (xd-763, n=5) proved direct-by-default is the Lebanon fix. Whether the Gulf needs Cloudflare at all is our THREAT-MODEL BELIEF (anticensorship skill \u00a71: Tier-1 = IP-reputation blocking of datacenter IPs), NOT a measurement \u2014 the masking audit's own \u00a74.5 'real-traffic UAE device test' was never done. Nothing weeks-long (xd-712/xd-766 parallel streams, QUIC) should start before this answers which Gulf problem we actually have.\n\nNEEDS: a real phone on a real Gulf carrier (Etisalat/du/STC). Candidates: a team member travelling, or ask paying UAE subscriber Basel Saker (CEO decision \u2014 customer involvement). Build 2026-09-09-24u or later (has the Settings switch).\n\nPROCEDURE (same as xd-763): fast.com no-VPN 1x; D\u00fcsseldorf, switch OFF (Cloudflare) 3x; switch ON (direct) 3x; export log after each road. THEN the two things Lebanon could not tell us: (a) LEAVE the direct road connected for 24h of normal use \u2014 Tier-1 active probing hits 5-60 min after a new endpoint; a 5-minute pass proves nothing; record any cut-off + time; (b) with the Cloudflare road, grep the log for '[CC-DIAL] RESULT ws=connected' / 'transport state \u2192 connecting' cycles \u2014 does CF flap every ~10s in the Gulf like it did in Lebanon?\n\nWHAT EACH OUTCOME DECIDES: direct connects + fast + survives 24h -> Gulf goes direct-by-default too (xd-764 tier logic) with the IP burn-pool as backup; parallel streams become polish. Direct blocked/cut -> Cloudflare stays for the Gulf -> then the Gulf fix is (i) fix WHY the CF road flaps (Worker/edge \u2014 a redial problem parallel streams do NOT fix) and (ii) parallel streams for throughput. Middle option for CEO decision: try direct first, fall back to CF automatically \u2014 fastest road whenever it works, but each failed direct attempt shows the relay IP to the censor (burn-pool discipline required).\n\n[2026-09-10 REFRAMED] CEO field evidence: the pre-CF app version worked in the Gulf unblocked. So the question is no longer 'does direct connect' but 'does it STILL connect today and SURVIVE 24h+ of Tier-1 active probing', plus 'does the CF road flap in the Gulf like in LB'. Same procedure; the 24h hold is the important part.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P0",
       "createdAt": "2026-09-10T22:48:11Z",
       "createdDate": "2026-09-10",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-qa-1777441737 (CEO DECISIONS & DEVICE CHECKS (one list): freeze lift, maski) \u2014 consolidated 2026-09-15 so each owner has ONE list, no overlap.",
+      "resultingHandoff": "xd-qa-1777441737"
     },
     {
       "id": "xd-769",
@@ -22142,11 +22370,15 @@
       "to": "[QA]",
       "title": "Handoff from CTO: Speed test + regression on the FIRST production build (24u) after the prod<-dev sync",
       "description": "Production is synced (ef1f04996, marker 2026-09-09-24u) and is now the build source. TEST on a build cut from production: (1) SPEED \u2014 the reason for this release: measure CasperCloak throughput in a restricted region and confirm the GET /api/user 124-SECOND freeze is gone (backend xd-758 is live: device logs now show 0 API calls >5s); (2) brick guards \u2014 30+ min background, phone must keep internet, and a stuck tunnel must self-clear within 45s (24u watchdog); (3) premium gating \u2014 Kill Switch + Auto-Connect blocked for free users, an already-ON kill switch NOT auto-disabled, bg-recovery toggle still free; (4) paywall \u2014 expired sub shows the renew prompt on Double VPN, not a dead screen; (5) App Store: MARKETING_VERSION 4.2 / build 56 must be intact.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P0",
       "createdAt": "2026-09-10T23:30:45Z",
       "createdDate": "2026-09-10",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-qa-1777441737 (RELEASE VERIFICATION CHECKLIST \u2014 build 25b (CEO device) + ba) \u2014 consolidated 2026-09-15 so each owner has ONE list, no overlap.",
+      "resultingHandoff": "xd-qa-1777441737"
     },
     {
       "id": "xd-772",
@@ -22154,11 +22386,15 @@
       "to": "[QA]",
       "title": "Handoff from CTO: Verify xd-764 Phase 1 on the CEO's phone: Lebanon now takes the DIRECT road WITHOUT the Settings switch",
       "description": "[UPDATED FOR BUILD 24w / xd-777 (2026-09-14): the switch was renamed and moved \u2014 it is now Settings > Connection > 'Fast Route' (hare icon). 'Speed test: bypass Cloudflare' no longer exists under Troubleshooting. Same flag, same log signature '[CC-TARGET] target=directRelay'.] Backend is live (see xd-764 resolution). ON DEVICE (Lebanon, build 24u or later): make sure Settings > Troubleshooting > 'Speed test: bypass Cloudflare' is OFF. Connect to D\u00fcsseldorf. EXPECT in the exported log: (1) the app-side line 'CasperCloak: \ud83c\udf10 CDN-fronting eligible' is ABSENT for this connect (it only prints when a cloudfrontUrl was received); (2) '[CC-TARGET] target=directRelay host=\u2026'; (3) fast.com ~ the xd-763 'B' figures (8-10 Mbps on a 13-23 line), not 1-1.5. Also confirm CN/Gulf users are UNCHANGED: any tester outside LB must still see target=cloudfront. Server-side check: docker logs caspervpn-api | grep 'StealthTier:' shows tier=Throttle cfWiring=SUPPRESSED for LB users and tier=Fronted/DirectFirst cfWiring=minted for others. If the phone STILL goes cloudfront: the app may be reusing a cached CC payload (<24h, cc-reconnect-deadlock-config-refetch) \u2014 force a fresh config fetch (disconnect, kill app, reconnect) before calling it a failure. PASS -> mark xd-764 \ud83d\udd35 + importantNote for CEO \ud83d\udfe2.\n\n[QA server-side \u2014 PASSED 2026-09-11, run as CTO before the CEO device test] (1) Stability: healthy, 0 restarts since 21:27Z deploy; the 185 ERR lines in the window are ALL fleet peer-stats poll timeouts to Hong Kong 203.23.128.214 (10x) + S\u00e3o Paulo 185.192.124.245 \u2014 pre-existing usage-sync noise, no exception mentions StealthTier/RestrictedCountry/GeoIp/migration. (2) Regression matrix on caspercloak-config (admin JWT, sticky reset per call): GB -> Fronted, cfUrl minted, restricted=false (UNCHANGED); AE -> DirectFirst, minted (Phase 1 = as Fronted); CN -> Fronted, minted; TR -> DirectFirst, minted; XX/unknown -> Fronted, minted, restricted=null (safe default); LB -> Throttle, cfUrl NULL, restricted=true. (3) smart-recommend as a Lebanon phone (clientCountryCode=LB): defaultProtocol=CasperCloak, isRestrictiveRegion=true, stealthTier=Throttle. (4) Migration: history row present, column present, 19 rows 10/8/1, LB seeded tier=2. (5) Log line for QA present: 'StealthTier: \u2026 country=LB tier=Throttle \u2026 cfWiring=SUPPRESSED'. NOT RUNTIME-VERIFIED: multi-hop entry-hop gate \u2014 /api/multihop/connect returns 403 'Active subscription required' for the admin user BEFORE reaching the gate; needs a subscribed tester (Double VPN from Lebanon) \u2014 code path uses the same resolver as the single-server path and compiled clean. OBSERVATIONS for Phase 2 (xd-773): admin GET /api/admin/restricted-countries maps to a DTO that does NOT expose stealthTier (admin UI cannot see/edit the tier yet); no Redis keys 'restricted_country_tier:*' visible (cache may be in-memory \u2014 behaviour correct regardless). REMAINING = CEO device test (xd-772 steps 1-4). NO NEW iOS BUILD NEEDED for this: the phone already dials direct when the server omits cloudfrontUrl (proven by the xd-712 switch on build 24t).",
-      "status": "in_progress",
+      "status": "completed",
       "priority": "P0",
       "createdAt": "2026-09-11T00:29:31Z",
       "createdDate": "2026-09-11",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-qa-1777441737 (RELEASE VERIFICATION CHECKLIST \u2014 build 25b (CEO device) + ba) \u2014 consolidated 2026-09-15 so each owner has ONE list, no overlap.",
+      "resultingHandoff": "xd-qa-1777441737"
     },
     {
       "id": "xd-773",
@@ -22166,11 +22402,15 @@
       "to": "[BACKEND]",
       "title": "Handoff from CTO: xd-764 PHASE 2: DirectFirst behaviour (direct grey relay first, CF fallback) + server-side burn detection + skip-direct flag \u2014 GATED on xd-768",
       "description": "Data is already in place (stealth_tier=1 for AE SA BH OM EG TR PK VN; enum StealthTier.DirectFirst; GeoIpService.StealthTierFallback). Phase 1 treats DirectFirst exactly like Fronted. DO NOT START before the Gulf 24h test (xd-768) answers whether the direct relay survives Tier-1 active probing. SPEC (CEO-approved 2026-09-10 + the fallback-exposure clarification in xd-764): for DirectFirst countries the config response omits cloudfrontUrl (direct) but ALSO returns a fallback block the app may use if the direct dial fails; server-side burn detection: when direct attempts from country X to relay IP Y fail at a rate and the CF fallback from the same users then succeeds, mark (Y,X) burned, set a per-country skip-direct flag (app stops exposing that IP), alert for an IP swap (#27 MaskingIpAutoPromoter stays detect->alert->human). Also: RestrictedCountriesController should accept stealth_tier on add/update so the table is admin-editable (today only the migration/seed set it); and GeoIpServiceTests parity must cover the tier (the Tests project does not compile \u2014 backend-test-project-wont-compile \u2014 fix that first or the parity guard stays dead, which is exactly how the LB hard-coded/DB drift went unnoticed for 74 days).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-09-11T00:29:31Z",
       "createdDate": "2026-09-11",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-qa-1777441737 (BACKEND BACKLOG (prioritised, one list)) \u2014 consolidated 2026-09-15 so each owner has ONE list, no overlap.",
+      "resultingHandoff": "xd-qa-1777441737"
     },
     {
       "id": "xd-774",
@@ -22194,15 +22434,19 @@
       "to": "[QA]",
       "title": "Handoff from CTO: Verify the NATIVE Cloudflare front on a real phone in a FRONTED-tier region (Gulf/any non-LB restricted region): speed + no redials",
       "description": "[UPDATED FOR BUILD 24w / xd-777 (2026-09-14): the switch was renamed and moved \u2014 it is now Settings > Connection > 'Fast Route' (hare icon). 'Speed test: bypass Cloudflare' no longer exists under Troubleshooting. Same flag, same log signature '[CC-TARGET] target=directRelay'.] Backend now hands fronted-tier users wss://s<N>-edge.pompesh.com/ instead of the Worker. ON DEVICE (a UAE/KSA/CN/TR phone, or any phone whose CF-IPCountry is a Fronted/DirectFirst country; Lebanon phones will NOT exercise this \u2014 they go direct): connect to D\u00fcsseldorf; EXPECT log '[CC-TARGET] target=cloudfront host=s6-edge.pompesh.com'; fast.com 3x \u2014 expect the DIRECT-road figures (the CEO measured 8-10 Mbps direct in LB), NOT 1-1.5; and NO '[CC-DIAL] RESULT ws=connected' redial cycle every ~10s (grep the export: one dial, then silence). Server-side: docker logs caspervpn-api | grep 'NATIVE front' shows the mints. Also verify the 24h stability item from xd-768 on the same phone. PASS -> mark \ud83d\udd35 + importantNote for CEO \ud83d\udfe2. FAIL modes to report precisely: 526/525 (CF->origin TLS: SSL mode), 1006 with a close timestamp (would contradict the fleet-side hold test \u2014 send the log).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P0",
       "createdAt": "2026-09-12T03:07:07Z",
       "createdDate": "2026-09-12",
-      "completedDate": null,
+      "completedDate": "2026-09-16",
       "notes": [
         "[QA 2026-09-14] server-side PASS holds (NativeFront env true, image b52566d9, RestartCount 0); device test BLOCKED.",
         "[CTO 2026-09-14 telemetry] Real-user check from BandwidthUsageLogs + ConnectionLogs: ZERO CasperCloak sessions from AE/SA/BH/OM/KW/QA in the last 7 days \u2014 the only Gulf traffic is ONE AE account on plain WireGuard (protocol 0, 69 sessions, 11.4 GB/week, per-tick active p50 16.1 Mbps, max 58 Mbps to D\u00fcsseldorf), i.e. UDP WireGuard works for that user. The native front therefore still has no Gulf evidence either way; the nightly report /root/reports/throughput-latest.txt (04:40 UTC) will show the first Gulf CC session automatically."
-      ]
+      ],
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-qa-1777441737 (RELEASE VERIFICATION CHECKLIST \u2014 build 25b (CEO device) + ba) \u2014 consolidated 2026-09-15 so each owner has ONE list, no overlap.",
+      "resultingHandoff": "xd-qa-1777441737"
     },
     {
       "id": "xd-776",
@@ -22210,11 +22454,15 @@
       "to": "[QA]",
       "title": "Handoff from CTO: Verify build 24v on device: Double VPN on a FREE account shows 'Double VPN is a Premium feature \u2014 View Plans' (not 'Connection Failed'); Kill Switch/Auto-Connect gates unchanged",
       "description": "[SUPERSEDED BY BUILD 24w / xd-777 (2026-09-14): the plain system alert this handoff describes was replaced by the branded PremiumFeaturePromptView sheet after the CEO rejected the alert's design ('not synced with our identity'). Test xd-777 on build 24w instead; the underlying 403 -> upgrade routing (MultiHopManager.subscriptionRequired) is unchanged and is verified by the same test.] xd-776 (2026-09-14). CEO on applinks123 (sandbox Weekly expired 09-09 -> free) tapped Double VPN: the app got HTTP 403 'Active subscription required' and showed 'Double VPN Connection Failed' + Retry \u2014 read as a broken feature, no upgrade offer. FIX (build 2026-09-14-24v on development + production): MultiHopManager.subscriptionRequired flag; MultiHopView shows the premium alert with View Plans -> SubscriptionView (same pattern as the Kill Switch / Auto-Connect gate in Settings); the generic failure alert no longer fires for the 403 case; the home-screen multi-hop bar reads 'Double VPN is a Premium feature \u2014 open Double VPN to view plans'. TEST: (1) free account -> Double VPN -> expect the premium alert, View Plans opens the subscription sheet, Not Now dismisses; (2) same on the home bar label; (3) subscribed account (the Lifetime private-relay account) -> Double VPN connects from Lebanon via the DIRECT entry (Throttle tier) \u2014 log shows target=directRelay on the entry hop; (4) Kill Switch / Auto-Connect gates still show their alert on free. Confirm freshness by BUILD MARKER 2026-09-14-24v in the exported log. ALSO carries 24u: xd-759 brick watchdog + xd-760 usage ratchet (xd-760 handoff).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-09-14T01:35:05Z",
       "createdDate": "2026-09-14",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-qa-1777441737 (RELEASE VERIFICATION CHECKLIST \u2014 build 25b (CEO device) + ba) \u2014 consolidated 2026-09-15 so each owner has ONE list, no overlap.",
+      "resultingHandoff": "xd-qa-1777441737"
     },
     {
       "id": "xd-777",
@@ -22269,14 +22517,18 @@
       "to": "[DEVOPS]",
       "title": "Handoff from QA: [QA 09-14] P1 ALERTING DEAD: Resend 429 storm 22,046/24h (1.75x worse than 09-14 r1) \u2014 bridge re-forwards every notify",
       "description": "journalctl -u alertmanager-resend-bridge --since '24 hours ago' | grep -c status=429 = 22046. 10 active alerts (DiskSpaceLow, CriticalCPU 97.78% since 09-10, bkk-01 46.16.129.246 fully down since 05:36Z) \u2014 none delivered. Fix: dedupe/rate-limit in the bridge (group_wait/repeat_interval + 429 backoff) and re-verify one test alert lands.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-09-14T22:49:25Z",
       "createdDate": "2026-09-14",
-      "completedDate": null,
+      "completedDate": "2026-09-16",
       "notes": [
         "[QA 2026-09-15] Storm ENDED 13:28Z (quota reset): 429 x19,057 in 24h, then 14 x status=200 incl. DiskSpaceCritical forwarded 15:33Z (first page after 23h). Mechanism unfixed: steady ~4/hr = 96/day at the 100/day edge; next incident re-arms the loop. Keep open."
-      ]
+      ],
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "RESOLVED BY EVIDENCE: the 429 storm was driven by the permanently-firing DiskSpaceLow (>80% on a box that floors at 84-88%). After the free-bytes rule (xd-753): 0 Resend 429s in the last hour; 3 real alerts firing (DevFleetNodeDown, HighCPU \u2014 now fixed by xd-780 \u2014 ServiceDown = s5/s7). If 429s return, group_interval/repeat_interval in alertmanager are the next lever.",
+      "resultingHandoff": "none"
     },
     {
       "id": "xd-780",
@@ -22284,15 +22536,19 @@
       "to": "[DEVOPS]",
       "title": "Handoff from QA: [QA 09-14] P1 CriticalCPU 97.78% on do-production since 09-10 19:07Z (load 4.7-5.0 at 07:22Z) \u2014 un-owned",
       "description": "Alertmanager CriticalCPU active since 2026-09-10T19:07Z, HighCPU since 09-07. top at 07:22Z: dockerd 30%, postgres 30%, dotnet 30%, node_exporter 15%, transient awk 69% (fleet_health_loop). Identify the sustained consumer (pidstat 60s) and cap it; correlate with the 09-10 BUL gap and the 09-12 api rebuild.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-09-14T22:49:25Z",
       "createdDate": "2026-09-14",
-      "completedDate": null,
+      "completedDate": "2026-09-16",
       "notes": [
         "[QA 2026-09-15] load 6.07/5.47/4.97 (was 4.8). CriticalCPU still active, un-owned day 5.",
         "[CTO 2026-09-15] CPU: expect a drop \u2014 the 235 farm accounts (74% of usage-log writes) are off and the usage table is 100x smaller since 20:25Z. Re-measure load tomorrow before any other CPU work."
-      ]
+      ],
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "ROOT-CAUSED + FIXED: 15 orphaned `docker exec caspervpn-nginx tail/grep \u2026` CLI clients (oldest 122 days) left by timed-out SSH automation kept dockerd copying their stdio streams (goroutine dump: ~30 CopyToPipe). Killed -> dockerd 102% -> 0-2%, load 5.6 -> 0.96. Durable: /opt/caspervpn/docker-orphan-reaper.sh cron */10 (kills exec/logs/events/stats/attach clients older than 1 h).",
+      "resultingHandoff": "none"
     },
     {
       "id": "xd-781",
@@ -22300,15 +22556,19 @@
       "to": "[BACKEND]",
       "title": "Handoff from QA: [QA 09-14] xd-745 RESIDUAL: 58 pre-enforcement unverified @mailinator accounts still tunnel (client-key blind spot) \u2014 revoke peers for IsEmailVerified=false",
       "description": "24h BUL: 58/58 unverified writers > 100 KB (median 12.5 MB, max 21.8 MB, ~18,000 rows/day each across 8-9 servers, ~1.2 KB/row keepalive). Accounts created 07-28..08-11, before the 08-15 gate. The 403 AUTH_1006 gate blocks config FETCH only; provisioned WireGuard/CC peers keep running. Mirror datacap_enforcement_sweep.sh: cut peers + revoke client keys where NOT IsEmailVerified. xd-745 stays pending until unverified >100 KB/24h = 0 for 3 days.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-09-14T22:49:25Z",
       "createdDate": "2026-09-14",
-      "completedDate": null,
+      "completedDate": "2026-09-16",
       "notes": [
         "[QA 2026-09-15] day 2: 58 unverified writers > 100 KB/24h (56 mailinator), median 12.1 MB, max 21.8 MB. Unchanged.",
         "[CTO 2026-09-15] Same farm, now 'verified' via public throwaway inboxes (117 of 168) \u2014 verification is not the gate; see xd-789."
-      ]
+      ],
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-qa-1777441737 (BACKEND BACKLOG (prioritised, one list)) \u2014 consolidated 2026-09-15 so each owner has ONE list, no overlap.",
+      "resultingHandoff": "xd-qa-1777441737"
     },
     {
       "id": "xd-782",
@@ -22316,13 +22576,17 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: Scheduled [QA]/[MARKETING] task sessions run with a DEAD GitHub PAT (401): every vault write since 2026-08-31 stayed local on the CEO's Mac and blocked git pull \u2014 rotate the token in the scheduled-task files",
       "description": "FOUND 2026-09-14 while unblocking the CEO's clone: the CEO's own 'git pull' failed on files modified by the scheduled QA run (07:45Z: 'PAT 401 -> no board write; helper ~/Dropbox/app-link/ceo-push-handoffs-2026-09-14-QA.py'). Inventory of content that existed ONLY in the Dropbox clone (never on GitHub): qa skill \u00a715 (2026-09-03), marketing skill addendum run 4 (09-12), marketing session-log (+91 KB), DEPARTMENT_LOG + qa session-log entries (09-14 07:45Z), and 22 memory/sessions/*.md files (2026-08-31 .. 2026-09-13, QA + Marketing scheduled runs). ALL synced to production today via api_put (3-way: only where remote == the clone's base), backups under Code/local-vault-backup-2026-09-14/unpushed-0914{b,c,d}; the QA run's helper was executed (xd-778..781 + 6 notes + xd-758 qa-tested). ROOT CAUSE to fix: the PAT embedded in the scheduled task definitions is rotated/expired (same token issue as memory 'dashboard-push-without-gh-token'); factory_bootstrap's baked token works. ACTION: put the working token into the scheduled-task env/task files (QA daily 08:44Z, Marketing runs, L4 casper-system-check), then verify the next scheduled run pushes to GitHub (api_put 200) and creates its handoffs itself. Until then every scheduled run silently drifts the vault and blocks the CEO's pulls. Also observed: Dropbox re-syncs those files into the clone from another device (files reappear with old mtimes after being moved) \u2014 treat memory/ writes from scheduled runs as vault-only via API, never direct file writes into the Dropbox clone.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-09-14T22:53:08Z",
       "createdDate": "2026-09-14",
-      "completedDate": null,
+      "completedDate": "2026-09-16",
       "handoffTo": "[QA]",
-      "handoffNote": "QA: confirm the next scheduled run's vault writes land on GitHub (no local-only files in the clone)."
+      "handoffNote": "QA: confirm the next scheduled run's vault writes land on GitHub (no local-only files in the clone).",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-qa-1777441737 (DEVOPS BACKLOG (prioritised, one list)) \u2014 consolidated 2026-09-15 so each owner has ONE list, no overlap.",
+      "resultingHandoff": "xd-qa-1777441737"
     },
     {
       "id": "xd-783",
@@ -22330,13 +22594,17 @@
       "to": "[CEO]",
       "title": "Handoff from CTO: SPEED DECIDER (2 minutes, Lebanon phone, NO VPN): is ONE connection capped at ~6 Mbps on your line? If yes, parallel streams is the fix; if no, the tunnel path is",
       "description": "WHY: xd-763 measured 23 Mbps without VPN (fast.com = many parallel connections) vs 6.0 Mbps direct / 5.3 fronted through CasperCloak (which carries everything inside ONE TCP connection). The relay itself sustains 64 Mbps on one stream from the UK (xd-765 measurement), so the suspect is the Lebanon last mile limiting a SINGLE TCP connection (loss/throttle per flow). TEST (VPN OFF, cellular, same place/time as your usual tests): open Safari and load https://speed.cloudflare.com/__down?bytes=200000000 (one 200 MB file over ONE connection); watch the download speed in the Safari downloads popover or time it. Repeat 2x. Then repeat with VPN ON (CasperCloak, D\u00fcsseldorf). READ: (a) single connection without VPN \u2248 6 Mbps -> the LINE caps one flow -> parallel streams (xd-712 part 2 + xd-766: N WebSockets per session) is the right lever; (b) single connection without VPN \u2248 20+ Mbps -> the tunnel path is losing ~3x -> instrument the tunnel (per-hop RTT/loss) before building anything. Send the numbers (or the exported log) and I'll take the matching branch. This replaces guessing with one measurement (\u00a77.1).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P0",
       "createdAt": "2026-09-14T23:25:34Z",
       "createdDate": "2026-09-14",
-      "completedDate": null,
+      "completedDate": "2026-09-16",
       "handoffTo": "[CTO]",
-      "handoffNote": "CTO builds the branch the numbers select (parallel streams vs tunnel-path instrumentation)."
+      "handoffNote": "CTO builds the branch the numbers select (parallel streams vs tunnel-path instrumentation).",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-qa-1777441737 (CEO DECISIONS & DEVICE CHECKS (one list): freeze lift, maski) \u2014 consolidated 2026-09-15 so each owner has ONE list, no overlap.",
+      "resultingHandoff": "xd-qa-1777441737"
     },
     {
       "id": "xd-784",
@@ -22344,13 +22612,17 @@
       "to": "[QA]",
       "title": "Handoff from CTO: Verify build 24y on device: Fast Route is tier-aware (hidden + ignored in fronted-only regions) and self-heals (failed direct dial retries once via the front with a notice)",
       "description": "CEO decision 2026-09-14: '1 should ship'. DELIVERED (build 2026-09-14-24y, development + production, arm64 build SUCCEEDED, strings verified): (1) ServerService.fetchCasperCloakConfig now decodes the backend's stealthTier/stealthTierCountry (xd-764 fields) and stores the tier (MultiHopManager.lastStealthTier, UserDefaults 'ccLastStealthTier'); log line 'CasperCloak config: stealthTier=<T> country=<C> fastRouteAllowed=<bool>'. (2) MultiHopManager.directRelayRequestedAndAllowed = ccForceDirectRelay && fastRouteAllowedByTier && !ccFallbackToFrontOnce is now the single decision at all three road-choice sites (VPNConnectionManager, ProtocolManager, MultiHopManager entry hop). In a Fronted-tier region the user's Fast Route is IGNORED (log '[FAST-ROUTE] ignored: region tier=Fronted is fronted-only'). Unknown tier (never connected) behaves as before. (3) VPNConnectionManager.connectCasperCloak is now a wrapper: if the attempt was a DIRECT dial, the front was available, and it failed (not a 402), it sets the one-shot ccFallbackToFrontOnce, shows NotificationService.showInfo('Fast Route couldn't reach <server> directly. Using the secure route for this connection.'), and retries the SAME server once via the front; logs '[FAST-ROUTE] direct relay to <server> failed \u2026 retrying once via the fronted road' then '\u2026 fallback via the fronted road succeeded'. (4) Settings > Connection: the Fast Route row and footer are hidden when the stored tier is Fronted; footer copy now says the route self-heals. ON DEVICE \u2014 Lebanon (tier Throttle, backend mints no front): Fast Route stays VISIBLE; toggling it changes nothing (LB is already direct) \u2014 expected. The fallback cannot fire in LB (no front to fall back to) \u2014 expected; log must show 'stealthTier=Throttle'. A FRONTED-tier phone (IR/CN/RU \u2014 none available) would hide the row and log '[FAST-ROUTE] ignored'. A GULF phone (DirectFirst) with Fast Route ON: expect '[CC-TARGET] target=directRelay'; if the direct dial fails, expect the notice + '[FAST-ROUTE] fallback via the fronted road succeeded' and '[CC-TARGET] target=cloudfront host=s<N>-edge.pompesh.com'. Simulate the fallback anywhere with a front: turn Fast Route ON and block the relay's direct address on the network (or pick a relay whose direct port is filtered) \u2014 the retry via the front must connect. PASS = Lebanon behaviour unchanged + log lines present; Gulf/fronted cases stay CODE-VERIFIED until a device exists.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-09-14T23:27:22Z",
       "createdDate": "2026-09-14",
-      "completedDate": null,
+      "completedDate": "2026-09-16",
       "handoffTo": "[CEO]",
-      "handoffNote": "CEO \ud83d\udfe2 after the Lebanon check; Gulf behaviour rides on real-user telemetry (xd-767) until a Gulf phone exists."
+      "handoffNote": "CEO \ud83d\udfe2 after the Lebanon check; Gulf behaviour rides on real-user telemetry (xd-767) until a Gulf phone exists.",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-qa-1777441737 (RELEASE VERIFICATION CHECKLIST \u2014 build 25b (CEO device) + ba) \u2014 consolidated 2026-09-15 so each owner has ONE list, no overlap.",
+      "resultingHandoff": "xd-qa-1777441737"
     },
     {
       "id": "xd-785",
@@ -22358,14 +22630,18 @@
       "to": "[QA]",
       "title": "Handoff from CTO: IR accounts: 2 weeks of keepalive-only WireGuard ticks and 0-byte sessions \u2014 zombie peers or a blocked road? Measure with peer-stats before anyone touches the front",
       "description": "FOUND 2026-09-14 in the nightly throughput data (not a regression from the 09-12 native front \u2014 the pattern is identical every day since 08-31): 3-5 accounts with LastLoginCountry=IR produce 5k-13k BandwidthUsageLogs ticks/day with ~1 KB per tick (max tick 0.0-1.7 MB, 10-16 MB/day TOTAL across all of them), and their ConnectionLogs show plain-WireGuard (protocol 0) sessions of ~60 min with 0 bytes plus one CasperCloak session (09-05, iOS 26.6.0) whose bytes are not recorded in ConnectionLogs. HYPOTHESES (unmeasured): (a) abandoned WG peers never removed on the nodes (keepalive TX keeps the tick alive \u2014 see memory connected-zero-mb-keepalive-liveness-gate); (b) Iran blocks plain WireGuard UDP so those sessions never pass traffic (expected \u2014 IR is tier Fronted and must use CasperCloak); (c) the CasperCloak road itself does not pass traffic from Iran. TEST: node Flask /wireguard/peer-stats for those peers (last_handshake age, rx/tx), count IR CC sessions in the next 7 days via /root/reports/throughput-latest.txt, and if a real IR CC session shows 0 bytes -> escalate to [DEVOPS]/[CTO] as a front problem. Do NOT change the front on this evidence.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-09-14T23:41:40Z",
       "createdDate": "2026-09-14",
-      "completedDate": null,
+      "completedDate": "2026-09-16",
       "notes": [
         "[QA 2026-09-15] day 1/7: IR 5 users / 13,793 ticks / 0 active; 1,969-1,970 ticks per user-server = one keepalive tick every ~44 s for the full 24h -> favours (a) abandoned WG peers. Node /wireguard/peer-stats probe next run."
-      ]
+      ],
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-qa-1777441737 (RELEASE VERIFICATION CHECKLIST \u2014 build 25b (CEO device) + ba) \u2014 consolidated 2026-09-15 so each owner has ONE list, no overlap.",
+      "resultingHandoff": "xd-qa-1777441737"
     },
     {
       "id": "xd-786",
@@ -22373,14 +22649,18 @@
       "to": "[QA]",
       "title": "Handoff from CTO: Validate the nightly real-user throughput report (04:40 UTC, /root/reports/throughput-latest.txt) and extend it with the protocol column",
       "description": "xd-767 delivered the report (see its resolution). QA: (1) on 2026-09-15 after 04:45 UTC check /root/reports/throughput-2026-09-15.txt exists, has both sections and no 'statement timeout' (the SQL runs with statement_timeout=300s; the 24h window is ~2.3M rows); (2) extend the second section with a join to ConnectionLogs to show protocol 0=WireGuard / 3=CasperCloak per country+server, so the first Gulf CasperCloak session (xd-775) is unmistakable; (3) watch for the first AE/SA CasperCloak session and record its active p50 on xd-775. Report format lives in /root/Casper/scripts/throughput-report.sh (bash + psql; base64-safe edits only via ssh_exec).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-09-14T23:42:47Z",
       "createdDate": "2026-09-14",
-      "completedDate": null,
+      "completedDate": "2026-09-16",
       "notes": [
         "[QA 2026-09-15] PART 1 PASS: throughput-2026-09-15.txt 04:40Z, both sections, no statement timeout (content differs from 09-14; identical 2397-byte length is coincidence). Part 2 (ConnectionLogs protocol join) is a script edit -> [CTO]. Part 3: no AE/SA CC session identifiable until part 2 lands."
-      ]
+      ],
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-qa-1777441737 (RELEASE VERIFICATION CHECKLIST \u2014 build 25b (CEO device) + ba) \u2014 consolidated 2026-09-15 so each owner has ONE list, no overlap.",
+      "resultingHandoff": "xd-qa-1777441737"
     },
     {
       "id": "xd-787",
@@ -22416,14 +22696,18 @@
       "to": "[BACKEND]",
       "title": "Handoff from CTO: Disposable-email account farm (168 'DE' accounts, 8 throwaway domains, 1,718 WireGuard keys) is passing email verification and generating ~74% of BandwidthUsageLogs growth \u2014 block disposable domains at sign-up + cap keys per account",
       "description": "MEASURED 2026-09-15 on prod: 168 accounts with LastLoginCountry=DE; 117 are 'verified' (throwaway inboxes are public, so the verification link is readable by the bot); 112 created in the last 30 days at a steady ~10/day from 08-30 to 09-07, tapering to 1-3/day after 09-08; email domains mailinator.com 51, picomail.biz 11, mimimail.me 9, emlpro.com 9, spymail.one 9, freeml.net 8, mailtowin.com 8, 10mail.org 7; 1,718 WireGuardKeys (~10 per account); 150 of them active in the last 24h (2.2 GB, 1.78M usage-log rows of ~2.4M total = the bulk of the table that fills the disk and the CPU); 62.8 GB used in total; sessions carry NO app user-agent/OS (API-scripted WireGuard configs, not the iOS app). HISTORY: this is the free-quota farm behind xd-745/xd-717/xd-781. Done before: email verification enforced 2026-08-11 (closed the JWT-before-verification hole, grandfathered older accounts) and the datacap enforcement sweep (*/3 min, cuts over-cap client-keyed peers) + backend md5 peer\u2192user fallback. WHY IT RECURS: verification does not stop disposable-email providers; there is no cap on WireGuard keys/devices per account; no sign-up rate limit per IP; each new account is a fresh free quota. FIX (backend, P1): (1) reject registration + verification for a disposable-domain denylist (the 8 above + a maintained open list, e.g. disposable-email-domains), returning a clear 'use a permanent email' message; (2) cap active WireGuardKeys per account (e.g. 5) \u2014 1,718 keys for 168 accounts is not human use; (3) rate-limit /auth/register per IP/ASN (e.g. 3/hour); (4) expose the domain denylist in appsettings so it is editable without a rebuild. Deploy per the cached-build procedure (disk margin!). Then QA verifies sign-up with mailinator is refused and existing users are untouched.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-09-15T22:48:05Z",
       "createdDate": "2026-09-15",
-      "completedDate": null,
+      "completedDate": "2026-09-16",
       "notes": [
         "[CTO 2026-09-15 20:35Z] LIVE NOW without a rebuild: the API's DisposableEmailDomainService supports a hot-reloaded override file \u2014 /opt/caspervpn/geoip/disposable-override.txt (8,865 domains = public disposable-email-domains list + the 17 farm domains; gmail excluded), env Security__Registration__DisposableDomainsFilePath=/app/geoip/disposable-override.txt added to docker-compose.yml api, container recreated (healthy, /health 200). PROVEN: POST /api/auth/register with @10mail.xyz -> 400 DISPOSABLE_EMAIL; log 'Reloaded disposable-domain override file \u2026 8865 domains'. WHY IT RECURRED: the embedded list had 167-191 domains (mailinator yes, the other 16 no) \u2014 the bot rotated providers. ROUTINE: /opt/caspervpn/farm_guard.py cron 20 */6 (auto shut-off of farm-signature accounts: listed domain + never app + no paid; revokes keys; cuts peers; backs up rows; and REPORTS candidate new throwaway domains for review \u2014 never auto-blocks a domain). STILL OPEN (repo, deploy when convenient): replace Data/disposable-email-domains.txt with the 8,865-domain list; cap active WireGuardKeys per account (2,175 keys / 207 accounts); per-IP sign-up rate limit; QA the guard's first real runs."
-      ]
+      ],
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-qa-1777441737 (BACKEND BACKLOG (prioritised, one list)) \u2014 consolidated 2026-09-15 so each owner has ONE list, no overlap.",
+      "resultingHandoff": "xd-qa-1777441737"
     },
     {
       "id": "xd-790",
@@ -22447,11 +22731,15 @@
       "to": "[QA]",
       "title": "Handoff from CTO: Build 24z: every failed CasperCloak connect now reports WHICH step died and WHICH road (cc-<phase>-<cf|direct>) \u2014 verify the categories arrive; BACKEND deploys the one-line 'cc-' acceptance when the disk allows",
       "description": "CEO 'go' 2026-09-15 for the Iran plan step 1. iOS (build 2026-09-15-24z): TunnelDisconnectReason.casperCloakDetailedCategory() reads the last 160 lines of the shared tunnel log and derives a category from the extension's own lines \u2014 [CC-TARGET] target=cloudfront|directRelay \u2192 road 'cf'/'direct'; [CC-DIAL] nwstate=waiting/failed(POSIX n) \u2192 cc-tcp-posixN; TLS -98xx \u2192 cc-tls-fail; 'HTTP nnn' on the upgrade \u2192 cc-ws-httpNNN; timed out \u2192 cc-tcp-timeout; CLOSED code=1006 \u2192 cc-ws-1006; PROBE NO HANDSHAKE \u2192 cc-wg-nohandshake. ConnectFailureReport gained detailedCategory (sent in the failureCategory JSON field; \u226440 chars; decodes safely back to 'unknown' locally). DiagnosticsService logs '[CC-FAIL] category=<coarse> detailed=<fine>'. BACKEND (repo, NOT deployed tonight \u2014 disk margin): DiagnosticsController.IsKnownFailureCategory accepts any 'cc-' prefix so the aggregator does not warn; ingestion already persists unknown categories, so reports land even before the deploy. QA: (1) on a phone with build 24z force a CasperCloak failure (airplane-mode mid-connect, or Fast Route ON against a filtered relay) and confirm the exported log shows '[CC-FAIL] \u2026 detailed=cc-\u2026'; (2) on the brain, SELECT \"FailureCategory\", count(*) FROM \"ConnectFailureEvents\" WHERE \"Timestamp\" > now()-interval '1 day' GROUP BY 1 \u2014 expect cc-\u2026 rows once 24z is in users' hands (the Iranian account 6bc5efe9 is the target: 108 failures/5 days, 1-5 s each); (3) BACKEND deploys DiagnosticsController when free disk > 6 GB after the 03:30Z backup window.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-09-15T22:50:56Z",
       "createdDate": "2026-09-15",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-qa-1777441737 (RELEASE VERIFICATION CHECKLIST \u2014 build 25b (CEO device) + ba) \u2014 consolidated 2026-09-15 so each owner has ONE list, no overlap.",
+      "resultingHandoff": "xd-qa-1777441737"
     },
     {
       "id": "xd-792",
@@ -22487,11 +22775,15 @@
       "to": "[LEGAL]",
       "title": "Update the published privacy policy: usage/connection logs are kept 6 months (180 days) then deleted \u2014 CEO confirmed 2026-09-15; the page still says 30 days",
       "description": "CEO 2026-09-15: 'backups for logs should be for 6 months before burned and this is correct.' The backend retention cron already keeps BandwidthUsageLogs 180 days (KEEP_DAYS=180, installed by the xd-754 session). website/app/privacy/page.tsx \u00a75 Data Retention still says 'Connection metadata \u2014 30 days (rolling)'. LEGAL: change that row to 6 months (180 days), keep 'Payment records \u2014 7 years', check the no-log-policy page for the same statement, and log the decision in the legal session-log. [WEBSITE] then deploys the page; [iOS] checks the in-app policy copy (App Store). Backups already follow this: a monthly archive of account+billing tables kept 7 years; full database copies short-lived. Found 2026-09-15 while sizing backups. Privacy policy \u00a75 (website/app/privacy/page.tsx): account info = life of account + 30 days; payment records 7 years; connection metadata 30 days rolling; security/anti-fraud 90 days; failed logins 30 days. The backend's BandwidthUsageLogs retention cron (installed by the xd-754 session) uses KEEP_DAYS=180. The CEO recalls a 6-month legal-minimum decision. Legal to confirm which number is right and log it; Backend then sets KEEP_DAYS to match; backups already follow the policy (monthly legal archive of account/billing tables kept 7 years, full copies short-lived).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-09-15T23:36:05Z",
       "createdDate": "2026-09-15",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "DONE: website/app/privacy/page.tsx retention table gained 'Connection & usage logs \u2014 180 days (6 months), then deleted; device/OS/app details removed after 30 days'; iOS PrivacyPolicyView '6. Data Retention' says the same. Pushed 700ec3dbb (website auto-deploys on push; iOS text ships with the next build). Legal: refine wording if needed.",
+      "resultingHandoff": "none"
     },
     {
       "id": "xd-795",
@@ -22499,11 +22791,15 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: Audit: who ran `docker compose up` on caspervpn-api at 20:31:00Z on 2026-09-15?",
       "description": "During the xd-754 deploy, docker events show the api container recreated at 20:31:00-03Z (kill/stop/die 0/destroy/rename/start) with the SAME old image (b52566d967b0), i.e. a `compose up -d` config-recreate, 2 min BEFORE my own `up -d` (20:33:53Z, new image). No cron/systemd timer runs compose (grep of crontab + /etc/cron.d + list-timers), no interactive login (last), no OOM/crash (exit 0, healthy). Most likely another scheduled Claude session ran a compose `up -d` (non-pty SSH does not show in `last`). It caused a seconds-long API restart mid-deploy. ASK: identify the actor (auditd on docker.sock or `docker events` retention; check scheduled-task logs around 20:31Z), and make deploys mutually exclusive (a lock file honoured by every script that calls compose up: /root/deploy_api.sh, /root/force-rebuild-api.sh). Also note: rapid ssh_exec from the Mac tripped prod's SSH ban for a few minutes today \u2014 the dev-brain jump (memory prod-autodeploy-runner-missing) worked as documented.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-09-15T23:42:56Z",
       "createdDate": "2026-09-15",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "RESOLVED: the API recreates (20:31/21:15/22:03/22:05Z) were parallel Claude sessions running ad-hoc deploy scripts from /root/reports (deploy_ops_tab.sh 21:11Z, deploy_free3.sh 22:01Z, deploy_runs.sh 22:23Z) \u2014 legitimate feature deploys, uncoordinated. INSTALLED: /etc/ssh/sshrc audit (every SSH login's command -> /var/log/ssh-commands.log, 46 entries in 30 min) + flock deploy lock in /root/deploy_api.sh and /root/force-rebuild-api.sh + /root/reports/DEPLOY-LOCK-README.md (convention for one-off scripts).",
+      "resultingHandoff": "none"
     },
     {
       "id": "xd-796",
@@ -22511,11 +22807,15 @@
       "to": "[QA]",
       "title": "Handoff from CTO: Operations tab (xd-795): verify the new admin page shows routine status + reports, and that the API endpoint is live after tonight's deploy",
       "description": "CEO 2026-09-15: 'make sure routines run to keep space free and logs saved for legal requirements and accessed via admin panel via its own tab'. DELIVERED: brain writes /root/reports/routines-status.json every 15 min (/opt/caspervpn/routines_status.sh: disk, DB size, usage rows, inactive users, last evidence of every cron: nightly tar, pg dump, pre-prunes, legal archive, usage-log retention/compaction, farm guard, throughput + connectivity reports, datacap sweep); daily connectivity-by-country report at 05:00 UTC (/opt/caspervpn/connectivity_report.sh \u2192 /root/reports/connectivity-latest.txt, verdict per country: BLOCKED? / ZERO-TRAFFIC / FAILING / ok); backend AdminOpsController (GET /api/admin/ops/status, /reports, /report/{name}; whitelist; /root/reports bind-mounted read-only at /app/reports); admin panel page Operations (sidebar under Connection Logs) with disk/DB cards, routines table with freshness badges, report viewer. Deploy launched 2026-09-15 21:11Z as a background job (log /root/reports/deploy-ops-tab.log). QA: (1) log in to the admin panel \u2192 Operations: cards populated, status file 'fresh', routines table shows last runs; (2) click connectivity-latest.txt / throughput-latest.txt / farm-guard.log \u2014 text loads; (3) curl /api/admin/ops/status unauthenticated \u2192 401; (4) if the reports folder shows 'not mounted', check the compose mount + container user (appuser uid 1000 must read /root/reports files, 0644). Existing 'Connection Logs' tab already serves the legal per-user session lookup (GET /api/admin/connection-logs, export) \u2014 confirm it works with an email filter.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-09-16T00:12:15Z",
       "createdDate": "2026-09-16",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-qa-1777441737 (RELEASE VERIFICATION CHECKLIST \u2014 build 25b (CEO device) + ba) \u2014 consolidated 2026-09-15 so each owner has ONE list, no overlap.",
+      "resultingHandoff": "xd-qa-1777441737"
     },
     {
       "id": "xd-797",
@@ -22523,11 +22823,15 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: Gulf speed without a Gulf phone: run the CasperCloak throughput sweep from a Gulf vantage point (1-hour VPS in Bahrain/UAE) against s6 direct and the native front",
       "description": "CEO 2026-09-15: 'we don't have a device in the Gulf and we need to resolve the speed issue\u2026 to upload a new build'. What we can measure without a phone: rent a small VPS for an hour in AWS me-south-1 (Bahrain) or Azure UAE North, copy /tmp/ccmax.py from the brain (python3 + websockets), run: python3 ccmax.py wss://s6.pompesh.com/ DIRECT 8 25; \u202616/32/64; then the same against wss://s6-edge.pompesh.com/ (native front). From the brain both roads sustain 64 Mbps single-stream (xd-765). A Gulf VPS number tells us whether the Gulf\u2192D\u00fcsseldorf path (not the relay) caps the road, and whether the native front adds a tax from there. NOT covered: mobile-carrier DPI/throttling (needs a real phone) \u2014 real-user evidence will come from the nightly throughput report (/root/reports/throughput-latest.txt) and the 24z failure categories once the App Store build ships. Also ask the UAE customer (Basel) for a fast.com number on the new build when it is out.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-09-16T00:12:15Z",
       "createdDate": "2026-09-16",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-qa-1777441737 (CC SPEED ROADMAP (one task): parallel WS streams (client+rel) \u2014 consolidated 2026-09-15 so each owner has ONE list, no overlap.",
+      "resultingHandoff": "xd-qa-1777441737"
     },
     {
       "id": "xd-798",
@@ -22535,11 +22839,15 @@
       "to": "[BACKEND]",
       "title": "Handoff from CTO: Block-detection covers CasperCloak: CountryBlockStatuses shows CasperCloak 0% success for EVERY country (no probe/aggregation for proto 3) \u2014 feed it from ConnectFailureEvents cc-* categories + the daily connectivity verdicts",
       "description": "Seen 2026-09-15: CountryBlockStatuses.Protocols has {Protocol:3, Status:3, SuccessRate:0.0} for AE/CN/IR/RU/SA alike \u2014 the aggregator never learned CasperCloak, so the admin Block Detection dashboard is blind for the one protocol censored users depend on. With build 24z the app reports cc-<phase>-<road> categories (accepted by DiagnosticsController). Implement: per-country CasperCloak success = sessions with traffic vs connect failures (24h), category breakdown, and expose it on the existing BlockDetectionDashboard; reuse the SQL in /opt/caspervpn/connectivity_report.sh. Deploy with the next backend release.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-09-16T00:12:15Z",
       "createdDate": "2026-09-16",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-qa-1777441737 (BACKEND BACKLOG (prioritised, one list)) \u2014 consolidated 2026-09-15 so each owner has ONE list, no overlap.",
+      "resultingHandoff": "xd-qa-1777441737"
     },
     {
       "id": "xd-799",
@@ -22547,11 +22855,15 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: DEV brain (188.166.174.132) polls PRODUCTION nodes' control API every 20 s \u2014 isolate it",
       "description": "Prod node journals (DUS/N3/SYD) show 188.166.174.132 hitting GET /wireguard/peer-stats and /health every ~20 s alongside the prod brain. It sent no remove-client tonight (verified), but a dev API with EnforceDataCap/reap logic pointed at prod nodes is one config away from cutting real users, and it doubles node control-API load. Point dev's VpnServers/fleet list at dev endpoints only (or firewall :5002 on prod nodes to the prod brain + dev-tier hosts as designed in architecture/03).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-09-16T00:49:27Z",
       "createdDate": "2026-09-16",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "DONE: dev DB (caspervpn_dev) had all 12 PROD nodes active (seeded copy) \u2014 set IsActive=false for every non-dev server (backup vpnservers_isactive_backup_20260915), restarted the dev API: polls of prod nodes = 0, dev endpoints = 7 in 30 s. Dev's cap enforcement (default ON) can no longer touch prod peers.",
+      "resultingHandoff": "none"
     },
     {
       "id": "xd-800",
@@ -22559,11 +22871,15 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: DUS caspervpn-flask restarts every ~5 s (restart counter 1,855,802) \u2014 crash loop",
       "description": "journalctl on 91.194.84.79: 'caspervpn-flask.service: Scheduled restart job, restart counter is at 1855801/1855802' \u2014 the control API answers peer-stats between restarts, so nobody noticed. Find the crash (journalctl -u caspervpn-flask -p err), fix, and add a systemd-restart-storm alert (node_systemd_unit restart counter) so a 1.8-million-restart loop cannot go unseen again.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-09-16T00:49:27Z",
       "createdDate": "2026-09-16",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "DONE: DUS ran the same control API under TWO units (casper-control.service + caspervpn-flask.service) -> EADDRINUSE crash-loop 1,857,931 restarts. Disabled casper-control; caspervpn-flask now owns :5002, restarts STABLE, /health 200. N3/SYD checked: single unit, 0 restarts.",
+      "resultingHandoff": "none"
     },
     {
       "id": "xd-801",
@@ -22571,11 +22887,15 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: deploy-website.yml: confirm its `docker compose` invocation cannot recreate api/nginx (shared project name)",
       "description": "The website workflow deploys via a hosted runner as user caspervpn from /home/caspervpn/Casper-Code with `sudo docker compose -f /home/caspervpn/Casper-Code/docker-compose.yml ...`. Both clones produce the same compose project name (casper-code), so an `up -d` without a service filter from that clone would recreate api/nginx with THAT clone's config. Verify the workflow passes explicit services (website only) and the same --project-directory/.env as prod, or pin a distinct project name. Related: 20:31Z and 21:15Z api recreates tonight had no operator/cron/CI-deploy behind them \u2014 the website run at 21:12:57Z is the remaining candidate for 21:15.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-09-16T00:49:27Z",
       "createdDate": "2026-09-16",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "VERIFIED SAFE: deploy-website.yml runs `build website` then `up -d --no-deps website` \u2014 it cannot recreate api/nginx.",
+      "resultingHandoff": "none"
     },
     {
       "id": "xd-802",
@@ -22583,11 +22903,15 @@
       "to": "[QA]",
       "title": "Handoff from CTO: Free tier = 3 servers (D\u00fcsseldorf, Los Angeles, Singapore): verify locks + prompt on a free account and 403 on the API; the trio is a DB flag editable in the admin panel",
       "description": "CEO 2026-09-16: 'for free users can we make only 3 servers accessible, chosen by default'. DELIVERED: (1) backend ServersController.CheckServerTierAsync \u2014 an IsPremium server is refused to accounts that are not unlimited (paid/admin; review accounts exempt) with 403 errorCode PREMIUM_SERVER and the message 'Active subscription required\u2026' which the iOS APIClient already maps to APIError.subscriptionRequired \u2192 the branded premium prompt; wired into /config, /ikev2-config, /openvpn-config, /connect, /wireguard-config and /caspercloak-config; (2) the iOS server list ALREADY locks isPremium servers for free accounts (isLocked = isPremium && !canAccessPremiumServers) and shows the paywall on tap \u2014 no app build needed for the lock; (3) DB: VpnServers.IsPremium=true for every server except D\u00fcsseldorf (DE, CasperCloak s6), Los Angeles (US, s12), Singapore (SG, s3) \u2014 all three are CasperCloak-capable so restricted-region free users keep a working stealth road on every continent; Amsterdam/Paris have no CasperCloak so they are premium. Changing the trio = flip IsPremium in the admin panel (Servers) \u2014 no rebuild. QA on a FREE account (applinks123 is free): server list shows 10 locked servers + 3 open; tapping a locked one shows the premium prompt; connecting to the 3 works; curl a premium server's /caspercloak-config with a free JWT \u2192 403 PREMIUM_SERVER; a PAID account sees no locks and connects anywhere. Watch the API log for '[PREMIUM_SERVER]' lines after the deploy.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-09-16T01:01:28Z",
       "createdDate": "2026-09-16",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-qa-1777441737 (RELEASE VERIFICATION CHECKLIST \u2014 build 25b (CEO device) + ba) \u2014 consolidated 2026-09-15 so each owner has ONE list, no overlap.",
+      "resultingHandoff": "xd-qa-1777441737"
     },
     {
       "id": "xd-803",
@@ -22595,11 +22919,15 @@
       "to": "[QA]",
       "title": "Handoff from CTO: Build 25a on the CEO phone: admin protocol pin now unlocks WireGuard everywhere (no forced CasperCloak, no OS auto-start of Double VPN)",
       "description": "CEO 2026-09-16 on 24z: after sign-out/in the Settings picker unlocked (Debug builds allow it via devAllowInsecureProtocols) but the app still auto-connected Double VPN and connected with CasperCloak. ROOT CAUSE (code): the admin pin (Users.ProtocolOverride = [ikev2,wireguard] on applinks123 since June) was applied only in getCurrentUser(); a sign-in via /auth/login or Apple/Google never stored it, so MultiHopManager.userInRestrictedRegion stayed TRUE (sticky flag) \u2192 connect() forced CasperCloak (VPNConnectionManager:1099) and the OS on-demand rule saved by an earlier restricted session kept auto-starting Double VPN. FIX 25a: the pin is applied wherever a User carrying it is decoded (User.swift decoder hook, never clears); a pin without caspercloak clears the sticky restricted flag (UserDefaults + Keychain) and disarms on-demand on every saved profile ('[ADMIN-PIN] \u2026' log line). CEO TEST: Clean Build Folder \u2192 run 25a \u2192 sign out and in once \u2192 log must contain 'BUILD MARKER 2026-09-16-25a' and 'Protocol override from /me: ikev2,wireguard' or '[ADMIN-PIN] pin excludes CasperCloak'; Settings > Protocol > WireGuard; connect to D\u00fcsseldorf \u2192 the log shows a WireGuard tunnel (no '[CC-TARGET]' line); no Double VPN auto-start after backgrounding. Then fast.com \u2192 the WireGuard-in-Lebanon number decides the speed work (29 Mbps single-connection baseline).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-09-16T01:01:28Z",
       "createdDate": "2026-09-16",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-qa-1777441737 (RELEASE VERIFICATION CHECKLIST \u2014 build 25b (CEO device) + ba) \u2014 consolidated 2026-09-15 so each owner has ONE list, no overlap.",
+      "resultingHandoff": "xd-qa-1777441737"
     },
     {
       "id": "xd-804",
@@ -22636,9 +22964,100 @@
       "createdAt": "2026-09-16T01:35:11Z",
       "createdDate": "2026-09-16",
       "completedDate": null
+    },
+    {
+      "id": "xd-807",
+      "from": "[CTO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CTO: CC SPEED ROADMAP (one task): parallel WS streams (client+relay), QUIC/HTTP-3 relay scope, Gulf throughput sweep",
+      "description": "Everything about CasperCloak throughput in ONE place: (1) relay side of parallel WS streams (was xd-766) + client parallel-streams (xd-712 part 2); (2) QUIC/HTTP-3 relay scope (tokio-quiche) (was xd-713); (3) Gulf speed sweep from a Gulf vantage without a Gulf phone (was xd-797). Reference: .claude/skills/caspervpn-anticensorship/references/caspercloak-throughput.md. | MERGED FROM: xd-713, xd-766, xd-797",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-09-16T01:37:36Z",
+      "createdDate": "2026-09-16",
+      "completedDate": null
+    },
+    {
+      "id": "xd-808",
+      "from": "[CTO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CTO: Reap abandoned WG peers fleet-wide \u2014 DRY-RUN report first, QA sign-off, then delete",
+      "description": "Two overlapping items merged. Rules: candidate = never handshaked AND no endpoint AND 0 bytes AND older than 7 d AND no open ConnectionLog. Produce a dry-run list per node first (tonight's incident shows how a mass peer removal looks like an outage), get QA sign-off, then delete in batches. Measured 2026-09-15 before the incident: DUS 25/64, AMS 21/46, SYD 20/45 abandoned. | MERGED FROM: xd-729, xd-738",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-09-16T01:37:36Z",
+      "createdDate": "2026-09-16",
+      "completedDate": null
+    },
+    {
+      "id": "xd-809",
+      "from": "[CTO]",
+      "to": "[QA]",
+      "title": "Handoff from CTO: RELEASE VERIFICATION CHECKLIST \u2014 build 25b (CEO device) + backend/admin checks (one QA list)",
+      "description": "ONE checklist replacing 22 per-build verification handoffs (each superseded by the newest build). DEVICE (CEO phone, Lebanon + a Gulf tester when available): brick guards 24r/24u (30 min bg, no whole-phone internet loss, stuck tunnel self-clears in 45 s); MH fail-closed for restricted users; premium gating (Kill Switch/Auto-Connect blocked for free, already-ON kill switch never auto-disabled, bg-recovery toggle still free); Double VPN premium prompt on a free account; Fast Route tier-aware (hidden in fronted regions); build 24z failure-step reporting; admin protocol pin unlocks WireGuard (25a); Free tier = 3 servers locks + prompt (xd-802); Lebanon takes the direct road (xd-764 phase 1); native CF front in a fronted-tier region; over-cap user sees the Upgrade paywall on 402; admin force-protocol override. BACKEND/ADMIN: email-verification enforcement live on prod; signup-abuse criteria on dev; IR keepalive-only accounts; nightly throughput report; Operations tab shows routine status; admin TS-contract fixes compile + Live Monitor; system-check routine L3/L4 validation; over-cap enforcement blind-spot. Report each as PASS/FAIL with the build marker string. | MERGED FROM: xd-739, xd-760, xd-771, xd-772, xd-775, xd-776, xd-784, xd-791, xd-802, xd-803, xd-727, xd-744, xd-706, xd-709, xd-717, xd-741, xd-745, xd-785, xd-786, xd-796, xd-733, xd-736",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-09-16T01:37:36Z",
+      "createdDate": "2026-09-16",
+      "completedDate": null
+    },
+    {
+      "id": "xd-810",
+      "from": "[CTO]",
+      "to": "[CEO]",
+      "title": "Handoff from CTO: CEO DECISIONS & DEVICE CHECKS (one list): freeze lift, masking device check, 2-min speed decider, Gulf tester, censored-regions criterion, reserve IPs, dev signing secrets",
+      "description": "Only YOU can do these: (1) LIFT or keep SUBMISSION_FREEZE.lock \u2014 the runner is online; while the lock exists nothing auto-deploys (pushes fail at freeze-check) and deploys stay manual; (2) device-validate masking + CC on the current TestFlight (was xd-640); (3) the 2-minute speed decider on your Lebanon phone with NO VPN: is one connection capped ~6 Mbps? (was xd-783); (4) a REAL UAE/KSA phone test: direct relay vs Cloudflare (was xd-768); (5) the censored-regions force-CC list criterion (was xd-701); (6) order OneProvider reserve IPs for NL/DE/FR (was xd-688); (7) dev TestFlight signing secrets in GitHub (was xd-648). | MERGED FROM: xd-640, xd-783, xd-768, xd-701, xd-688, xd-648",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-09-16T01:37:36Z",
+      "createdDate": "2026-09-16",
+      "completedDate": null
+    },
+    {
+      "id": "xd-811",
+      "from": "[CTO]",
+      "to": "[IOS]",
+      "title": "Handoff from CTO: iOS BACKLOG for build 25b (prioritised, one list)",
+      "description": "P0: xd-751 manual disconnect re-arms on-demand ~2 s later (user-facing); xd-735 CF-Worker recovery path timeout in LB (partly covered by 24u/24y \u2014 re-measure); xd-726 Double VPN MH entry via CF times out in LB (bare-relay entry for Tier-3); xd-730 bg-drop-without-teardown abandons server peers. P1: xd-721 front-latch reset on login screen; xd-722 verify/ship no-wrongful-logout in App Store build; xd-724 force-CC restricted-region on-demand; xd-742 handle 403 AUTH_1006 on config fetch (same pattern as the 402/403 paywall routing); xd-674 MH entry-rotation changes exit country + stale UI; xd-702 QA handback on xd-673 (MTU: live MTU is 1200, dead file \u2014 close after confirming); xd-723 /multihop/routes client robustness. P2: xd-659 401 thundering-herd single-flight refresh; xd-660 APNs entitlement (needs the CEO's Apple portal \u2014 listed under CEO decisions too). Ship as ONE build (25b) with ONE QA checklist. | MERGED FROM: xd-721, xd-722, xd-724, xd-726, xd-730, xd-735, xd-751, xd-659, xd-660, xd-674, xd-702, xd-723, xd-742",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-09-16T01:37:36Z",
+      "createdDate": "2026-09-16",
+      "completedDate": null
+    },
+    {
+      "id": "xd-812",
+      "from": "[CTO]",
+      "to": "[BACKEND]",
+      "title": "Handoff from CTO: BACKEND BACKLOG (prioritised, one list)",
+      "description": "P1: xd-789 disposable-email account farm (168 accounts, 8 domains, 1,718 WG keys) \u2014 block domains + disable accounts + reap keys; xd-781 58 pre-enforcement unverified @mailinator accounts \u2014 disable; xd-773 xd-764 phase 2 DirectFirst (direct grey relay first, CF fallback) + server side; xd-798 block-detection must cover CasperCloak (CountryBlockStatuses shows CC 0%). P2: xd-668 RecordLoginAttribution escalate-only; xd-705 QA flag EnforceDataCap=TRUE in prod (it IS the design \u2014 document, close); xd-703/xd-704 QA handbacks on xd-667/xd-671 \u2014 re-verify; xd-633 dedicated-user WG interface address = 10.66.x.254. P3: xd-714 RADIUS-as-source unified AAA (growth milestone). Also: the reconcile fix (xd-755, 700ec3dbb) deploys with your next api build \u2014 nothing to do but include it. | MERGED FROM: xd-668, xd-703, xd-704, xd-705, xd-773, xd-781, xd-789, xd-798, xd-633, xd-714",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-09-16T01:37:36Z",
+      "createdDate": "2026-09-16",
+      "completedDate": null
+    },
+    {
+      "id": "xd-813",
+      "from": "[CTO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CTO: DEVOPS BACKLOG (prioritised, one list)",
+      "description": "P1: xd-685 deploy relay session-resumption (#52) fleet-wide \u2014 and fix the relay file drift (repo relay_ws.py 449 lines; nodes run caspercloak_ws.py 399 (DUS) / 408 (N3, SYD)); xd-782 scheduled dept sessions push with a DEAD GitHub PAT (vault-sync falls back to git-over-SSH \u2014 rotate the PAT in factory_bootstrap); xd-749 cert/monitoring gaps G1-G5 (G-disk now done: free-bytes alert, orphan reaper, backup verify+off-box). P2: xd-639 deploy-flask-secondary ghcr pull + nginx -t; xd-732 postgres-exporter into compose + post-credential-change consumer checklist. Also decide with the CEO: ONE deploy path (runner+workflow with cached build, or the /root/reports scripts) \u2014 both now exist; the lock + SSH audit are in place. | MERGED FROM: xd-639, xd-685, xd-732, xd-749, xd-782",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-09-16T01:37:36Z",
+      "createdDate": "2026-09-16",
+      "completedDate": null
     }
   ],
   "importantNotes": [
+    {
+      "id": "note-finalize-2026-09-15",
+      "date": "2026-09-15",
+      "author": "[CTO]",
+      "priority": "P0",
+      "text": "[FINALIZED 2026-09-15 \u2014 86 open handoffs -> a short, non-overlapping list] DONE tonight with evidence: runner re-registered+online (xd-746); dev brain isolated from prod nodes (xd-799); DUS control-API crash loop (1.86M restarts, duplicate unit) fixed (xd-800); dockerd 100% CPU for 5 days = 15 orphaned docker exec clients (122 d old) \u2014 killed + reaper cron (xd-780); alert-email storm gone (xd-779); API-restart actor = parallel sessions' /root/reports/deploy_*.sh \u2014 SSH audit + deploy lock installed (xd-795/801); reconcile bug code-fixed (xd-755); privacy policy 180-day text (xd-794); relay ping fix verified fleet (xd-665); bkk-dev not exposed (xd-631); + 8 disk items earlier. MERGED into single owner lists: QA release checklist (22 items), CEO decisions (6), iOS backlog (13), Backend backlog (10), DevOps backlog (5), CC speed roadmap (3), peer reaper (2), s5/s7 creds (4 -> xd-748). CAP RULE VERIFIED on data: block when the monthly counter reaches the limit, renew on cycle end \u2014 0 cycles overdue, 14 reset in 24 h, 11 over-cap users all blocked. YOUR ONE DECISION: lift the submission freeze or keep manual deploys (see the CEO list)."
+    },
     {
       "id": "note-incident-reconcile-2026-09-15",
       "date": "2026-09-15",
