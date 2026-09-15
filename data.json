@@ -22364,11 +22364,15 @@
       "to": "[BACKEND]",
       "title": "Handoff from CTO: xd-754 STEP 2 (hourly upsert) \u2014 the ONLY thing that makes 6-month retention possible",
       "description": "CEO 2026-09-15 asked whether guaranteed cleanup + 6-month retention of legally-required logs solves the disk. MEASURED ANSWER: not at the current WRITE RATE. Daily rows: 09-08 2,443,305 | 09-11 1,902,051 | 09-12 2,591,175 | 09-13 2,407,370 | 09-14 2,456,842 | 09-15 1,967,270 (~2.4M/day). 30-day retention already = 53.7M rows / 9.8GB. At 180-day retention and this rate: ~432M rows ~= 79GB, MORE THAN THE ENTIRE 48GB DISK. xd-754 step 1's guard IS working (zero-byte rows in 24h = 0) but it only blocks EXACTLY-zero rows: 2,450,836 of ~2.45M rows/day are keepalive-grade (<10KB) but NON-zero, so idle peers still write one row per ~90s sync tick (220 distinct users/day). FIX = the step-2 structural half already named in commit 54489c009: hourly UPSERT per (user,server) instead of per-tick INSERT => ~40x fewer rows (2.4M/day -> ~60k/day). THEN 6-month retention = ~10.8M rows ~= 2GB and the CEO's plan works comfortably. NOTE: BandwidthUsageLogs is USAGE TELEMETRY, not a legal log \u2014 ConnectionLogs (the connection record) is only 5,157 rows and can hold 6 months trivially. Nobody needs 90-second granularity for 6 months. Pairs with xd-769 (grow volume) and the pg_backup.sh rotate-before-write fix. | 2026-09-15 PROGRESS (CTO): CODE SHIPPED to origin/production 3fccfc049 (dotnet build 0 errors): hourly UPSERT writer with 42P10 savepoint fallback; DataPurge 180 d configurable; guarded EF migration + Manual SQL twin; tested resumable runbook infrastructure/scripts/bandwidth-compact-hourly.sh; live retention cron + backup.sh 1-day hotfix captured into git. DRY-RUN on prod in progress: day 2026-08-16 = 1,483,906 rows -> 11,815 (125x), bytes 109,600,586,472 == 109,600,586,472 exact. 7-day sample: 13,972,146 -> 176,461 rows (79x). NEXT: dry-run VERIFY OK -> run (swap) -> deploy api (cached, api only, rollback tag) -> crontab KEEP_DAYS=180 -> confirm no 42P10 warnings + disk freed.",
-      "status": "in_progress",
+      "status": "completed",
       "priority": "P0",
       "createdAt": "2026-09-15T22:24:09Z",
       "createdDate": "2026-09-15",
-      "completedDate": null
+      "completedDate": "2026-09-15",
+      "completedAt": "2026-09-15",
+      "completedBy": "[CTO]",
+      "resolution": "DONE END-TO-END 2026-09-15. Writer: hourly UPSERT (production 3fccfc049) deployed 20:33:53Z as image d72a197f36e8 (rollback tag caspervpn-api:rollback-20260915). History compacted on prod with the tested runbook: dry-run 31/31 days byte-exact (2,058,771,221,548 B), per-user mismatches 0; swap under lock with exact grand-total check (2,067,153,736,388 == 2,067,153,736,388); 53,545,437 rows / 9.8 GB -> 514,635 rows / 119 MB; disk 88% -> 68% (72% after the docker build, 14 G free). LIVE PROOF after deploy: migration 20260915000000 applied, unique index present, 42P10 warnings 0, errors 0, API 0.08-0.15 s; old writer's last rows all stamped 20:33:53, zero non-hourly rows since; current-hour bucket = 1,256 rows (= live user+server pairs) accumulating +20,106,672 B in 30 s. Retention now 180 d (cron KEEP_DAYS=180 + DataPurge 180 d). Docs: system-check-routine.md + infra-checks.md \u00a76 updated (7e27754be).",
+      "resultingHandoff": "xd-792 DevOps (backup rotate-before-write, dump-size watch, free-GB alert); xd-793 QA (7-day verification); xd-794 DevOps (audit the unattended 20:31 compose recreate)"
     },
     {
       "id": "xd-789",
@@ -22448,9 +22452,28 @@
       "createdAt": "2026-09-15T23:36:05Z",
       "createdDate": "2026-09-15",
       "completedDate": null
+    },
+    {
+      "id": "xd-795",
+      "from": "[CTO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CTO: Audit: who ran `docker compose up` on caspervpn-api at 20:31:00Z on 2026-09-15?",
+      "description": "During the xd-754 deploy, docker events show the api container recreated at 20:31:00-03Z (kill/stop/die 0/destroy/rename/start) with the SAME old image (b52566d967b0), i.e. a `compose up -d` config-recreate, 2 min BEFORE my own `up -d` (20:33:53Z, new image). No cron/systemd timer runs compose (grep of crontab + /etc/cron.d + list-timers), no interactive login (last), no OOM/crash (exit 0, healthy). Most likely another scheduled Claude session ran a compose `up -d` (non-pty SSH does not show in `last`). It caused a seconds-long API restart mid-deploy. ASK: identify the actor (auditd on docker.sock or `docker events` retention; check scheduled-task logs around 20:31Z), and make deploys mutually exclusive (a lock file honoured by every script that calls compose up: /root/deploy_api.sh, /root/force-rebuild-api.sh). Also note: rapid ssh_exec from the Mac tripped prod's SSH ban for a few minutes today \u2014 the dev-brain jump (memory prod-autodeploy-runner-missing) worked as documented.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-09-15T23:42:56Z",
+      "createdDate": "2026-09-15",
+      "completedDate": null
     }
   ],
   "importantNotes": [
+    {
+      "id": "note-disk-root-cause-fixed-2026-09-15",
+      "date": "2026-09-15",
+      "author": "[CTO]",
+      "priority": "P0",
+      "text": "[RESOLVED AT THE ROOT 2026-09-15] The brain disk refills are fixed where they were caused, not where they showed. Cause: the usage sync wrote one BandwidthUsageLogs row per live peer every 20 s (100,041 rows in one hour from 1,250 user+server pairs); the nightly delete lost the race (1.8M deleted vs 2.4M written per day). Fix: one row per user/server/HOUR (byte totals identical), history compacted with a tested runbook (31/31 days byte-exact, per-user mismatches 0, automatic rollback on any mismatch): 53.5M rows / 9.8 GB -> 514,635 rows / 119 MB; disk 88% -> 68%. Retention is now 6 MONTHS (180 d) for both BandwidthUsageLogs and ConnectionLogs and costs ~1 GB instead of the 79 GB it would have. Deployed and verified live (no fallback warnings, hourly rows accumulating). The cleanup routine and the server-only backup hotfix are now in git. Growing the volume (xd-769) is no longer urgent; remaining routine gaps -> xd-792 (DevOps); 7-day watch -> xd-793 (QA)."
+    },
     {
       "date": "2026-09-15",
       "from": "[MARKETING]",
