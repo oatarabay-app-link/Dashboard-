@@ -20010,11 +20010,15 @@
       "to": "[DEVOPS]",
       "title": "Handoff from QA: Handoff from QA: NL Primary disk at 86% (7.0G free, /) \u2014 watch threshold",
       "description": "Routine prod smoke 2026-05-18 05:42 UTC. NL Primary (178.62.101.221, ubuntu-api-server-casper) root filesystem is 86% used with 7.0G free. Memory 1.9G/7.8G, load 0.46/0.29/0.24 \u2014 all healthy. TLS certs for api/caspervpn/admin valid until 2026-06-24 (Let's Encrypt should auto-renew ~37 days). Not yet at the 90% red threshold but trending. Recommend a `docker system prune -af --volumes` audit + glitchtip + prometheus retention sweep + caspervpn-postgres WAL/log cleanup. No action blocker; advisory only.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P3",
       "createdAt": "2026-05-18T05:43:52Z",
       "createdDate": "2026-05-18",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "DUPLICATE of xd-627 (same NL node disk). Kept xd-627.",
+      "resultingHandoff": "none"
     },
     {
       "id": "xd-627",
@@ -21557,11 +21561,15 @@
       "to": "[BACKEND]",
       "title": "Handoff from CTO: API file-log flood: EF Core INFO SQL logging ~1GB/day fills root disk",
       "description": "MEASURED 2026-07-14: caspervpn-api /app/logs held 3.3GB after 3 days (du -sh), file tail = '[INF] Executed DbCommand' (every SQL query logged). Growth ~200KB/10s. This drove the DiskSpaceLow alert firing since 07-12; the 07-13 xd-728 deploy reset the writable layer (fresh container) but the defect persists and regrows ~1GB/day. FIX: appsettings Serilog override 'Microsoft.EntityFrameworkCore.Database.Command': 'Warning' + bound file retention (retainedFileCountLimit/fileSizeLimitBytes) or drop the file sink entirely (stdout already goes to docker logs which rotate). VERIFY after deploy: docker exec caspervpn-api du -sh /app/logs stays flat over 24h.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-07-15T00:41:58Z",
       "createdDate": "2026-07-15",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "DONE (verified 2026-09-15): EF SQL flood gone \u2014 0 'Executed DbCommand' lines in 10 min; container json-log 2.5 MB; in-container /app/logs 1.7 MB (bounded Serilog sink).",
+      "resultingHandoff": "none"
     },
     {
       "id": "xd-732",
@@ -21597,11 +21605,15 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: Production backend deploy pipeline is BROKEN (CI frozen + brain checkout drift)",
       "description": "Found while deploying xd-728. (1) auto-deploy.yml has failed at the freeze-check job on the last 3 production pushes (07-06, 07-10, 07-13) because SUBMISSION_FREEZE.lock has been ACTIVE since 2026-05-23 \u2014 deploy-do-production is SKIPPED every time, so NO backend deploy has landed via CI in ~8 days while commits kept merging to production. (2) The brain deploy checkout /root/Casper/Casper-Code had drifted: HEAD b1ca3590 (07-06) with a STAGED DeviceLimitService.cs change (the 07-10 hardening) \u2014 i.e. the running container was built from an uncommitted working-tree state, so git HEAD did NOT describe the running bytes. I reconciled it to origin/production this session (guarded: verified prod already contained the staged hardening so the reset was loss-free). NEEDED: decide the freeze policy (either lift/re-arm around deploys as documented in SUBMISSION_FREEZE.lock, or add a contract-neutral bypass path), and add a guard so the brain checkout can never deploy from a dirty/behind working tree (e.g. fail the deploy if `git status --porcelain` is non-empty or HEAD != origin/production). Manual recipe that works today: guard -> git fetch+reset --hard origin/production -> docker compose -f docker-compose.yml build api (CACHED, never --no-cache: 48G disk floors ~88%) -> up -d --no-deps api -> nginx -s reload (rebuilt api gets a new internal IP).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-07-20T22:44:36Z",
       "createdDate": "2026-07-20",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "DUPLICATE of xd-746 (same broken pipeline). Kept xd-746 as the single deploy-pipeline task. New fact: the self-hosted runner unit exists but is inactive/dead, and auto-deploy's freeze-check job fails on every push (SUBMISSION_FREEZE.lock) so the deploy job is skipped \u2014 nothing auto-deploys; deploys tonight were manual (CTO) and the website workflow (hosted runner as user caspervpn).",
+      "resultingHandoff": "none"
     },
     {
       "id": "xd-735",
@@ -21845,11 +21857,15 @@
       "to": "[DEVOPS]",
       "title": "Handoff from DEVOPS: Alarm on brain disk >90% within minutes, not once daily at 03:30",
       "description": "caspervpn-disk-guard runs daily 03:30 and alerts >85%. The 2026-08-23 fill happened between windows and took the API down for ~6+ minutes before it was noticed by a human. Add a short-interval (*/5) disk check that alerts at >90% and auto-prunes backups by retention. See infra-checks.md L1/L5.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-08-23T22:47:26Z",
       "createdDate": "2026-08-23",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "DONE 2026-09-15: DiskSpaceLow/DiskSpaceCritical rewritten to FREE BYTES (< 8 GB warn / < 3 GB critical, 5m/2m) in /opt/caspervpn/monitoring/prometheus/alerts.yml (promtool OK, loaded, both rules verified via /api/v1/rules) + repo copy. The old >80% rule was permanently firing (box floors 84-88%). Delivery still gated by xd-779 (Resend 429).",
+      "resultingHandoff": "none"
     },
     {
       "id": "xd-754",
@@ -21872,7 +21888,7 @@
       "from": "[DEVOPS]",
       "to": "[BACKEND]",
       "title": "Handoff from DEVOPS: BandwidthUsageLogs retention is capped at 30d by an ALL-TIME SUM in UserService \u2014 fix the query, then retention can shrink",
-      "description": "BLOCKER FOUND 2026-08-30 while sizing retention. UserService.cs:86 runs `SELECT SUM(\"BytesUsed\") FROM \"BandwidthUsageLogs\" WHERE \"UserId\"={0}` with **NO date filter** (all-time), and BandwidthMonitoringService.cs:177 sums from start-of-month. So ANY retention shorter than ~31 days SILENTLY REDUCES the data-usage figure users see \u2014 a correctness bug, not just a display issue. That pins retention at 30 days MINIMUM, which pins the table at ~30M rows / ~6GB on a 48G disk that also holds ~5GB of backups. MEASURED: 44,607,670 rows, growing ~1M rows/day; 97% of rows are inside 30 days so retention can never reclaim much. FIX (unblocks everything): (a) make the UserService sum CYCLE-SCOPED (>= CurrentCycleStartDate) instead of all-time \u2014 it should already be, since the cap is per-cycle; and/or (b) maintain a per-user rollup table so raw rows are only needed for the current cycle. THEN retention can drop to 7-14 days and the table falls to ~1-2GB, ending the recurring disk outages. Pairs with xd-754 (cut the write rate).\n\n[2026-09-12 REGRESSION + INDEX RESTORED] REGRESSION I CAUSED + FIX 2026-09-12: dropping ix_bwlogs_user_bytes (2.3 GB) for disk headroom made BandwidthReconcileService's per-user all-time SUM (UserService.ComputeLiveBandwidthAsync, UserService.cs:103, every 30 min) exceed the 30 s CommandTimeout \u2014 3x 'Failed executing DbCommand (30,0xx ms)' at 00:07:55/00:08:25/00:08:56 right after the api restart (the job's first run). With the index the same SUM measured ~27 s (08-30) \u2014 marginal but under the timeout, which is how prod ran 08-30 -> 09-11. Accounting is unaffected (Users.DataUsedBytes is incremented on every write; the reconcile is a correction pass that simply failed for the heavy user(s)). FIX APPLIED: CREATE INDEX CONCURRENTLY ix_bwlogs_user_bytes (UserId) INCLUDE (BytesUsed) \u2014 restores the known-good state; disk had 6.1 G free. DURABLE FIX STILL OWED (xd-755): the reconcile must not SUM a whole history per user \u2014 and note a SEMANTIC problem found while tracing: the retention cron keeps only 30 days in BandwidthUsageLogs, so an 'all-time' SUM is now a 30-DAY figure being reconciled into the LIFETIME counter Users.DataUsedBytes \u2014 the Backend session must decide what the reconcile should reconcile (cycle counter from a cycle-scoped SUM is the coherent answer) before touching it. Watch: after the index build, the next reconcile run must show no 'Failed executing DbCommand (30' lines.\n\n[2026-09-12 INDEX REBUILD ABORTED \u2014 28.3 s without it] UPDATE 2026-09-12 00:4xZ: the CONCURRENT index rebuild was ABORTED by my disk-floor guard (free fell to 904 MB; invalid index dropped; disk back to 3.8 G / 93%). MEASURED afterwards: the heaviest user's all-time SUM takes 28.3 s WITHOUT the index on a quiet DB \u2014 i.e. the covering index was never a real margin (27 s with it on 08-30); under any concurrent load the query crosses the 30 s CommandTimeout either way. DECISION: no further rebuild attempts on a 93%-full disk; the reconcile's per-user history SUM is the defect and xd-755 (P0) must remove it (cycle-scoped or counter-based reconcile; see the semantic finding: a 30-day retention table cannot feed a LIFETIME counter). IMPACT while open: BandwidthReconcileService logs 'Failed executing DbCommand (30,0xx ms)' for the heaviest user(s) each 30-min run; accounting is unaffected (counters are incremented on every write). The brain's 48 G disk is the recurring constraint behind this (xd-720 DO resize still owed).\n\n[2026-09-12 CORRECTED + KILL-SWITCH] CORRECTION 2026-09-12 00:50Z (read the loop): ReconcileOnceAsync iterates users active in 7 days (129 today) SEQUENTIALLY, calls the whole-history SUM per user, and writes ONLY when liveTotal > stored (`if (liveTotal <= storedValue) continue;`) \u2014 it can only RAISE DataUsedBytes AND CurrentCycleDataUsedBytes, never lower them. So my earlier fear that a 30-day sum could overwrite lifetime counters DOWNWARD is WRONG \u2014 no data corruption; the sum simply never reconciles old users upward (harmless). The real defect is cost: 129 x ~28-30 s of disk I/O per run, 62+ CommandTimeouts per run, twice an hour (measured second run 00:42-00:49, up to 7 concurrent SUM backends as cancels lag). Users measured unaffected during the run (API p95 7 ms, IO wait 1%). INTERIM (deploying now): kill-switch BandwidthReconcile:UsageReconcileEnabled (default false; env BandwidthReconcile__UsageReconcileEnabled=true to re-enable, no rebuild) gating ONLY the usage step \u2014 the zombie-session sweep in the same service keeps running. DURABLE (this ticket, P0): replace the whole-history SUM with a cheap reconcile (cycle-scoped by CurrentCycleStartDate over idx_bandwidth_date, or drop the pass and trust the write-path counters + fix the writers), and stop setting CurrentCycleDataUsedBytes from an all-time sum.\n\n[2026-09-12 KILL-SWITCH LIVE] KILL-SWITCH DEPLOYED + PROVEN 2026-09-12 00:57Z: image 22d4914c -> b52566d9 (== built), healthy, /health 200 local+public. Log after the 90 s startup delay: '[BandwidthReconcile] Usage reconcile DISABLED (BandwidthReconcile:UsageReconcileEnabled=false, xd-755) \u2014 zombie sweep still runs' followed by 'Swept 7 zombie Active sessions older than 00:45:00' (the xd-507 sweep is intact). 0 CommandTimeouts since deploy (vs 62+ per run before). Regression on the new image: LB -> Throttle/NULL (xd-764), CN -> Fronted/wss://s6-edge.pompesh.com/ (xd-774). Previous image kept as caspervpn-api:prev. Disk 5.1 G free (90%). THIS TICKET STAYS OPEN (P0) for the durable reconcile redesign; re-enable the pass only via env BandwidthReconcile__UsageReconcileEnabled=true after it is cheap.",
+      "description": "BLOCKER FOUND 2026-08-30 while sizing retention. UserService.cs:86 runs `SELECT SUM(\"BytesUsed\") FROM \"BandwidthUsageLogs\" WHERE \"UserId\"={0}` with **NO date filter** (all-time), and BandwidthMonitoringService.cs:177 sums from start-of-month. So ANY retention shorter than ~31 days SILENTLY REDUCES the data-usage figure users see \u2014 a correctness bug, not just a display issue. That pins retention at 30 days MINIMUM, which pins the table at ~30M rows / ~6GB on a 48G disk that also holds ~5GB of backups. MEASURED: 44,607,670 rows, growing ~1M rows/day; 97% of rows are inside 30 days so retention can never reclaim much. FIX (unblocks everything): (a) make the UserService sum CYCLE-SCOPED (>= CurrentCycleStartDate) instead of all-time \u2014 it should already be, since the cap is per-cycle; and/or (b) maintain a per-user rollup table so raw rows are only needed for the current cycle. THEN retention can drop to 7-14 days and the table falls to ~1-2GB, ending the recurring disk outages. Pairs with xd-754 (cut the write rate).\n\n[2026-09-12 REGRESSION + INDEX RESTORED] REGRESSION I CAUSED + FIX 2026-09-12: dropping ix_bwlogs_user_bytes (2.3 GB) for disk headroom made BandwidthReconcileService's per-user all-time SUM (UserService.ComputeLiveBandwidthAsync, UserService.cs:103, every 30 min) exceed the 30 s CommandTimeout \u2014 3x 'Failed executing DbCommand (30,0xx ms)' at 00:07:55/00:08:25/00:08:56 right after the api restart (the job's first run). With the index the same SUM measured ~27 s (08-30) \u2014 marginal but under the timeout, which is how prod ran 08-30 -> 09-11. Accounting is unaffected (Users.DataUsedBytes is incremented on every write; the reconcile is a correction pass that simply failed for the heavy user(s)). FIX APPLIED: CREATE INDEX CONCURRENTLY ix_bwlogs_user_bytes (UserId) INCLUDE (BytesUsed) \u2014 restores the known-good state; disk had 6.1 G free. DURABLE FIX STILL OWED (xd-755): the reconcile must not SUM a whole history per user \u2014 and note a SEMANTIC problem found while tracing: the retention cron keeps only 30 days in BandwidthUsageLogs, so an 'all-time' SUM is now a 30-DAY figure being reconciled into the LIFETIME counter Users.DataUsedBytes \u2014 the Backend session must decide what the reconcile should reconcile (cycle counter from a cycle-scoped SUM is the coherent answer) before touching it. Watch: after the index build, the next reconcile run must show no 'Failed executing DbCommand (30' lines.\n\n[2026-09-12 INDEX REBUILD ABORTED \u2014 28.3 s without it] UPDATE 2026-09-12 00:4xZ: the CONCURRENT index rebuild was ABORTED by my disk-floor guard (free fell to 904 MB; invalid index dropped; disk back to 3.8 G / 93%). MEASURED afterwards: the heaviest user's all-time SUM takes 28.3 s WITHOUT the index on a quiet DB \u2014 i.e. the covering index was never a real margin (27 s with it on 08-30); under any concurrent load the query crosses the 30 s CommandTimeout either way. DECISION: no further rebuild attempts on a 93%-full disk; the reconcile's per-user history SUM is the defect and xd-755 (P0) must remove it (cycle-scoped or counter-based reconcile; see the semantic finding: a 30-day retention table cannot feed a LIFETIME counter). IMPACT while open: BandwidthReconcileService logs 'Failed executing DbCommand (30,0xx ms)' for the heaviest user(s) each 30-min run; accounting is unaffected (counters are incremented on every write). The brain's 48 G disk is the recurring constraint behind this (xd-720 DO resize still owed).\n\n[2026-09-12 CORRECTED + KILL-SWITCH] CORRECTION 2026-09-12 00:50Z (read the loop): ReconcileOnceAsync iterates users active in 7 days (129 today) SEQUENTIALLY, calls the whole-history SUM per user, and writes ONLY when liveTotal > stored (`if (liveTotal <= storedValue) continue;`) \u2014 it can only RAISE DataUsedBytes AND CurrentCycleDataUsedBytes, never lower them. So my earlier fear that a 30-day sum could overwrite lifetime counters DOWNWARD is WRONG \u2014 no data corruption; the sum simply never reconciles old users upward (harmless). The real defect is cost: 129 x ~28-30 s of disk I/O per run, 62+ CommandTimeouts per run, twice an hour (measured second run 00:42-00:49, up to 7 concurrent SUM backends as cancels lag). Users measured unaffected during the run (API p95 7 ms, IO wait 1%). INTERIM (deploying now): kill-switch BandwidthReconcile:UsageReconcileEnabled (default false; env BandwidthReconcile__UsageReconcileEnabled=true to re-enable, no rebuild) gating ONLY the usage step \u2014 the zombie-session sweep in the same service keeps running. DURABLE (this ticket, P0): replace the whole-history SUM with a cheap reconcile (cycle-scoped by CurrentCycleStartDate over idx_bandwidth_date, or drop the pass and trust the write-path counters + fix the writers), and stop setting CurrentCycleDataUsedBytes from an all-time sum.\n\n[2026-09-12 KILL-SWITCH LIVE] KILL-SWITCH DEPLOYED + PROVEN 2026-09-12 00:57Z: image 22d4914c -> b52566d9 (== built), healthy, /health 200 local+public. Log after the 90 s startup delay: '[BandwidthReconcile] Usage reconcile DISABLED (BandwidthReconcile:UsageReconcileEnabled=false, xd-755) \u2014 zombie sweep still runs' followed by 'Swept 7 zombie Active sessions older than 00:45:00' (the xd-507 sweep is intact). 0 CommandTimeouts since deploy (vs 62+ per run before). Regression on the new image: LB -> Throttle/NULL (xd-764), CN -> Fronted/wss://s6-edge.pompesh.com/ (xd-774). Previous image kept as caspervpn-api:prev. Disk 5.1 G free (90%). THIS TICKET STAYS OPEN (P0) for the durable reconcile redesign; re-enable the pass only via env BandwidthReconcile__UsageReconcileEnabled=true after it is cheap. | \u26d4 ESCALATED P0 2026-09-15 \u2014 IT CAUSED A LIVE INCIDENT TONIGHT: BandwidthReconcileService.ReconcileOnceAsync sets Users.CurrentCycleDataUsedBytes = ComputeLiveBandwidthAsync (ALL-TIME rows + ALL-TIME session bytes). It used to time out on the 44M-row table; after the compaction (20:25Z) it SUCCEEDED in the 09-12 container (kill switch absent/inactive there): 133 users' CYCLE counters were overwritten with all-time totals (exact fingerprint), 47 crossed their 512 MB cap, and the API's EnforceDataCap removed their peers on every node at 20:34-20:35Z (DUS 75, SYD 124 remove-client) \u2014 users silently lost tunnels and were 402-locked. RESTORED 21:50Z: 49 users set to true cycle-scoped value (rows + sessions since CurrentCycleStartDate), 43 un-capped; backup users_counter_backup_20260915. Current container: kill switch active ('Usage reconcile DISABLED' 21:47Z). FIX REQUIRED BEFORE ANYONE RE-ENABLES: cycle-scoped sums (RecordedAt/ConnectedAt >= CurrentCycleStartDate), never all-time; and never SET a cycle counter from a total that double-counts rows+sessions. Also: the sync's cap cut must not act within the first pass after a counter rewrite.",
       "status": "in_progress",
       "priority": "P0",
       "createdAt": "2026-08-30T21:09:26Z",
@@ -21885,11 +21901,15 @@
       "to": "[DEVOPS]",
       "title": "Handoff from DEVOPS: Make bandwidth-retention resilient + alarm when it cannot run",
       "description": "The retention cron FAILED SILENTLY on 3 of 6 runs (Aug 27, 29, 30) with 'No such container: caspervpn-postgres' \u2014 because the disk was already full and postgres was down, i.e. it fails exactly when it is most needed. It logged 'deleted 0 rows' and nobody was alerted. FIX: (a) if postgres is unreachable, EMAIL/alert instead of exiting 0; (b) retry after a short delay; (c) run it more than once a day while the table is oversized; (d) alarm if deleted-rows is 0 while rows-older-than-window is > 0. Also DONE this session: added the missing index ix_bwlogs_recordedat on RecordedAt \u2014 deletes went from 56k rows/600s to 774k rows/54s (~150x). Without that index the retention could never keep up with the ~1M rows/day insert rate.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-08-30T21:09:26Z",
       "createdDate": "2026-08-30",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "DONE by xd-754 step 2: retention now completes in 1 s at KEEP_DAYS=180 (was hitting its 600 s budget nightly), plus an in-app twin (DataPurgeService 180 d, every 6 h) so the window holds even if the host cron is lost. Scripts in git: infrastructure/scripts/bandwidth-retention.sh.",
+      "resultingHandoff": "none"
     },
     {
       "id": "xd-757",
@@ -21897,15 +21917,19 @@
       "to": "[QA]",
       "title": "Handoff from BACKEND: Verify data-usage figures are UNCHANGED after the xd-754 step-1 zero-byte guard",
       "description": "DEPLOYED to prod 2026-08-30 (image sha256:887c0c41, api healthy, /health 200). BandwidthMonitoringService.RecordUsageAsync no longer inserts a BandwidthUsageLog row when bytesUsed == 0. The per-user counters are still incremented unconditionally, so displayed usage SHOULD be identical. WHAT TO CHECK: (1) a user's usage in the app and in admin matches what it showed before (pick 2-3 active users); (2) /api/bandwidth/live still returns sane values; (3) the data cap still enforces for a Free/limited user (the cap reads Users.CurrentCycleDataUsedBytes, NOT this table \u2014 confirm that is still true in practice); (4) admin revenue/usage dashboards unaffected. CONTEXT: this table had 44.6M rows growing ~1M/day (8.4GB = 99% of the DB) and caused two fleet-wide API outages (2026-08-23, 2026-08-30) by filling the 48G brain disk. Related: xd-755 (UserService.cs:86 sums this table ALL-TIME with no date filter \u2014 a real correctness issue that also blocks shortening retention below 30 days).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-08-30T22:13:28Z",
       "createdDate": "2026-08-30",
-      "completedDate": null,
+      "completedDate": "2026-09-16",
       "notes": [
         "[QA 2026-09-14] PASS no-op: 0 zero-byte rows of 2,461,154 in 24h.",
         "[QA 2026-09-15] PASS no-op 2nd: 0 zero-byte rows of 2,431,394 in 24h."
-      ]
+      ],
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-793 (single 7-day QA verification covering usage figures unchanged, GET /api/user fast, rows/day ~30-40k, disk stable).",
+      "resultingHandoff": "xd-793"
     },
     {
       "id": "xd-758",
@@ -21913,17 +21937,21 @@
       "to": "[QA]",
       "title": "Handoff from BACKEND: Verify GET /api/user is fast AND usage figures still correct after the xd-758 hot-path fix",
       "description": "DEPLOYED prod 2026-08-30 (image sha256:9e680622, healthy, /health 200 local+public). CHANGE: UserService.GetUserAsync no longer calls ComputeLiveBandwidthAsync. WHY: MEASURED p95 124,943ms / max 127,026ms on GET /api/user \u2014 it SUMs a user's entire BandwidthUsageLogs history (44.7M rows; one user owns 1,063,646) and pg_stat_activity showed concurrent SUMs blocked on IO/DataFileRead. This was the user-visible 'app freezes / won't connect / very slow'. A covering index only reached 27s, still unusable. SAFETY ARGUMENT TO VERIFY: Users.DataUsedBytes is (a) incremented on every write by BandwidthMonitoringService.RecordUsageAsync and VpnServerService, and (b) reconciled every 30 min by BandwidthReconcileService (whose header states it exists so direct reads are accurate). QA MUST CHECK: (1) GET /api/user now returns in ms; (2) a user's displayed usage matches the aggregate within ~30 min (compare app value vs SELECT SUM(BytesUsed) for that user); (3) admin GetUserDetailsAsync still shows the live value (unchanged path); (4) data-cap enforcement still fires for a Free user; (5) no 'iOS shows X / admin shows Y' divergence re-emerges after 1-2 hours. IF drift appears, revert = restore the ComputeLiveBandwidthAsync call in GetUserAsync (documented inline).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P0",
       "createdAt": "2026-08-30T22:36:28Z",
       "createdDate": "2026-08-30",
-      "completedDate": null,
+      "completedDate": "2026-09-16",
       "notes": [
         "[QA 2026-09-14] PASS 4th: 5x GET /api/user 8.0-16.1 ms, 200, usage fields present -> qa-tested."
       ],
       "qaVerdict": "PASS",
       "verifiedBy": "qa-tested",
-      "verifiedDate": "2026-09-14"
+      "verifiedDate": "2026-09-14",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "MERGED into xd-793 (single 7-day QA verification covering usage figures unchanged, GET /api/user fast, rows/day ~30-40k, disk stable).",
+      "resultingHandoff": "xd-793"
     },
     {
       "id": "xd-759",
@@ -22082,11 +22110,15 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: Brain disk P0: 93% after reclaim \u2014 grow the 48G volume before the next dump cycle",
       "description": "MEASURED 2026-09-10: disk hit 97% (1.7G free); reclaimed the superseded daily dump -> 93% (3.4G free). Breakdown: 20G docker volumes (postgres, DB=12GB), 5.7G /root/Casper/Casper-Code clone, 4.1G->2.4G /root/backups/postgres, ~3G images (0 dangling, all tagged+in use, so prune buys nothing). Dumps are 1.7G each because BandwidthUsageLogs = 51.4M rows; xd-754 IS live (0 zero-byte rows/24h; growth 2.3M->164k rows/day) so the table should shrink over ~30 days as retention ages rows out. NEEDED: (a) grow the DO volume (48G floors ~88-93% with the normal stack \u2014 documented in brain-disk-routine-and-floor), (b) consider gzip on dumps, (c) alert at 90% not 95%. This has caused TWO fleet-wide outages.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P0",
       "createdAt": "2026-09-10T22:51:37Z",
       "createdDate": "2026-09-10",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "SUPERSEDED: disk is 55% / 22 GB free after fixing the write rate (xd-754 step 2) + junk removal (Prometheus WAL 5.7 GB, runner caches 2.6 GB, build cache 1.8 GB, superseded dumps). Growing the volume is no longer needed.",
+      "resultingHandoff": "none"
     },
     {
       "id": "xd-770",
@@ -22215,17 +22247,21 @@
       "to": "[DEVOPS]",
       "title": "Handoff from QA: [QA 09-14] P0 DISK: ENOSPC forecast 2026-09-16 ~02:00Z \u2014 apply zero-loss lever + retention on crontab line",
       "description": "5.24 GB free 09-14 06:10Z. Chain A holds 2 tars (09-13 survives -mtime race to 09-16); chain B daily_2026-09-13 is a HARDLINK of weekly_2026-09-13 so its prune reclaims 0. Tonight net +3.74 GB -> ~1.4 GB free; 09-16 02:00Z chain A peak 2x1.87=3.74 GB -> ENOSPC (disk-guard.sh:69 kills containers). Lever now: rm /root/Casper/Casper-Code/backups/20260913_020001.tar.gz (+1.82 GB, dup of weekly_09-13 dump). Durable: BACKUP_RETENTION_DAYS on crontab line, KEEP_DAYS 30->7 (xd-756).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P0",
       "createdAt": "2026-09-14T22:49:25Z",
       "createdDate": "2026-09-14",
-      "completedDate": null,
+      "completedDate": "2026-09-16",
       "notes": [
         "[CTO 2026-09-14 20:40Z verification] df: 43G used / 4.7G free (91%). `docker system df` reclaimable = 0 (disk-guard keeps it clean; builder prune reclaimed 0B). Backups on disk: /root/Casper/Casper-Code/backups/ 20260914_020001.tar.gz 1.85 GB + 20260913_020001.tar.gz 1.82 GB (next tar 02:00 UTC); /root/backups/postgres/ 4.2 GB incl. manual_test_20260412.dump (April) and weekly_2026-08-16_0300.dump. Deleting any backup needs the CEO's or DevOps' explicit go; the durable fix is the DO volume resize (xd-720).",
         "[QA 2026-09-15] LEVER APPLIED BY QA 16:22Z: rm backups/20260914_020001.tar.gz (+1.85 GB, dup of chain-B daily_2026-09-14; chain-A cron would have pruned it 09-16 02:11Z). Free 2.66 -> 4.51 GB. Buys ONE night: 09-17 02:00Z ENOSPC again (2.4 GB vs 3.73 peak) unless chain-A prune moves BEFORE the pg_dump (backup.sh line 76 -> above line 33) \u2014 set -e means an ENOSPC tar leaves staging+partial tar (=09-02 deadlock class). STILL OWED.",
         "[CTO 2026-09-15 19:5xZ] Retention reshaped so every nightly write has room: chain-A tar keeps ONE copy (BACKUP_RETENTION_DAYS=0) + pre-prune crons at 01:50 (old tars) and 02:50 (keep newest daily dump) before the 02:00/03:00 writes. Effective policy: 1 nightly tar + 1-2 daily dumps + 2 weekly dumps. Disk 4.7 GB free; the 09-17 02:00Z failure is averted by ordering, not by more disk. Structural fix (off-box copies or bigger volume) still owed \u2014 xd-756 owner DEVOPS. ALSO: the scheduled QA/Marketing runs' COUNT(DISTINCT \u2026) over the 53M-row usage table spills ~1.5 GB of Postgres temp files each run (seen 19:41Z) \u2014 a disk and CPU hazard in itself; they should query pg_class estimates instead.",
         "[CTO 2026-09-15 20:35Z] DISK: 14 GB free (72%). Cause = the OTHER session's xd-754 step 2 compaction of BandwidthUsageLogs on prod at 20:24Z (53,545,437 -> 510,786 rows, 9.8 GB -> 119 MB, 'VERIFY OK bytes equal', per /var/log/bandwidth-compact.log; their cron sets bandwidth-retention KEEP_DAYS=180). NOT my work \u2014 reported, not claimed. Backups now: chain-A 1 tar (retention 0 + 01:50 pre-prune), chain-B 1-2 daily + 2 weekly (02:50 pre-prune), plus NEW monthly legal-minimum archive of account/billing tables only (/root/backups/scripts/legal_archive.sh, 1st of month 04:30, kept 7 years, first file 200 KB) per the published privacy policy (payments 7 years; connection metadata 30 days). NOTE for [LEGAL]/[BACKEND]: the policy says connection metadata 30 days but the new retention cron keeps usage rows 180 days \u2014 reconcile."
-      ]
+      ],
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "SUPERSEDED: the forecast ENOSPC did not happen \u2014 root cause removed 2026-09-15 (hourly BandwidthUsageLogs, 9.8 GB -> 119 MB); disk 55%.",
+      "resultingHandoff": "none"
     },
     {
       "id": "xd-779",
@@ -22423,18 +22459,22 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: Backup routine: rotate BEFORE writing, watch dump size, alert on free GB (the last disk gaps)",
       "description": "Root cause of the disk refills is FIXED (xd-754 step 2: BandwidthUsageLogs hourly, 9.8 GB -> 119 MB, disk 88% -> 68%), so growing the volume (xd-769) is no longer urgent. Three routine gaps remain, all measured 2026-09-15: (1) /root/backups/scripts/pg_backup.sh rotates AFTER writing the new dump (ls -t daily_*.dump | tail -n +3 | xargs rm) - with 1.7 GB dumps on a 1.7 GB-free disk that was a self-inflicted outage trigger; reorder to delete the oldest daily FIRST, then dump (dumps will now be ~100-200 MB again, but keep the order safe). (2) Nothing measures backup size: add /root/backups total + newest dump size to the L1 fleet_health_loop or L2 parity email. (3) DiskSpaceLow (>80%) fires permanently because the box floors at 84-88%: alert on FREE BYTES (< 5 GB warn, < 2 GB critical) instead. Also gzip dumps. The routine scripts are now in git: infrastructure/scripts/bandwidth-retention.sh (cron KEEP_DAYS=180 as of today), infrastructure/scripts/bandwidth-compact-hourly.sh (tested runbook), scripts/backup.sh (1-day tar retention hotfix captured).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-09-15T23:30:11Z",
       "createdDate": "2026-09-15",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[CTO]",
+      "resolution": "DONE 2026-09-15: pg_backup.sh rotates BEFORE writing, free-space guard, pg_restore verify, archive_* exempt (test run: 21 MB in 5 s, verified); nightly off-box copy to the dev brain (offsite-sync.sh 03:30, md5-verified, 3.5 GB); nginx access-log rotation added (none existed); alert on free GB (xd-753). Scripts committed to production.",
+      "resultingHandoff": "none"
     },
     {
       "id": "xd-793",
       "from": "[CTO]",
       "to": "[QA]",
       "title": "Handoff from CTO: Verify for 7 days: BandwidthUsageLogs grows ~30k rows/day (not 2.4M) and disk stays ~68%",
-      "description": "After xd-754 step 2 (hourly upsert writer deployed 2026-09-15, history compacted 53.5M -> 514,635 rows). CHECK DAILY for a week on UK-LON: (a) SELECT COUNT(*) FROM \"BandwidthUsageLogs\" WHERE \"RecordedAt\" > now() - interval '24 hours' -> expect tens of thousands, NOT millions; (b) rows in the current hour: SELECT COUNT(*) FROM \"BandwidthUsageLogs\" WHERE \"RecordedAt\" = date_trunc('hour', now()) -> roughly the number of live user+server pairs (hundreds to ~1,500), and every row's RecordedAt is ON the hour; (c) docker logs caspervpn-api | grep -c 42P10 -> must be 0 (a non-zero count means the unique index is missing and the writer fell back to per-tick appends); (d) df -h / -> ~68%, and /var/log/bandwidth-retention.log shows the 04:15 run finishing in seconds (no 'time budget reached'); (e) iOS live meter (/api/bandwidth/live) and admin user-detail usage still show sane, climbing numbers (totals are SUM-identical by design; per-hour rows just accumulate within the hour). Report any 42P10 or a rows/day above ~100k as FAILED back to CTO.",
+      "description": "After xd-754 step 2 (hourly upsert writer deployed 2026-09-15, history compacted 53.5M -> 514,635 rows). CHECK DAILY for a week on UK-LON: (a) SELECT COUNT(*) FROM \"BandwidthUsageLogs\" WHERE \"RecordedAt\" > now() - interval '24 hours' -> expect tens of thousands, NOT millions; (b) rows in the current hour: SELECT COUNT(*) FROM \"BandwidthUsageLogs\" WHERE \"RecordedAt\" = date_trunc('hour', now()) -> roughly the number of live user+server pairs (hundreds to ~1,500), and every row's RecordedAt is ON the hour; (c) docker logs caspervpn-api | grep -c 42P10 -> must be 0 (a non-zero count means the unique index is missing and the writer fell back to per-tick appends); (d) df -h / -> ~68%, and /var/log/bandwidth-retention.log shows the 04:15 run finishing in seconds (no 'time budget reached'); (e) iOS live meter (/api/bandwidth/live) and admin user-detail usage still show sane, climbing numbers (totals are SUM-identical by design; per-hour rows just accumulate within the hour). Report any 42P10 or a rows/day above ~100k as FAILED back to CTO. | MERGED IN (2026-09-15): xd-757 (usage figures unchanged after step-1) + xd-758 (GET /api/user fast + usage correct). ALSO VERIFY: the 49 users whose cycle counters were restored on 2026-09-15 ~21:50Z (backup table users_counter_backup_20260915) show sane usage in the app; over-cap count stays ~11 (was falsely 54).",
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-09-15T23:30:11Z",
@@ -22500,9 +22540,52 @@
       "createdAt": "2026-09-16T00:12:15Z",
       "createdDate": "2026-09-16",
       "completedDate": null
+    },
+    {
+      "id": "xd-799",
+      "from": "[CTO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CTO: DEV brain (188.166.174.132) polls PRODUCTION nodes' control API every 20 s \u2014 isolate it",
+      "description": "Prod node journals (DUS/N3/SYD) show 188.166.174.132 hitting GET /wireguard/peer-stats and /health every ~20 s alongside the prod brain. It sent no remove-client tonight (verified), but a dev API with EnforceDataCap/reap logic pointed at prod nodes is one config away from cutting real users, and it doubles node control-API load. Point dev's VpnServers/fleet list at dev endpoints only (or firewall :5002 on prod nodes to the prod brain + dev-tier hosts as designed in architecture/03).",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-09-16T00:49:27Z",
+      "createdDate": "2026-09-16",
+      "completedDate": null
+    },
+    {
+      "id": "xd-800",
+      "from": "[CTO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CTO: DUS caspervpn-flask restarts every ~5 s (restart counter 1,855,802) \u2014 crash loop",
+      "description": "journalctl on 91.194.84.79: 'caspervpn-flask.service: Scheduled restart job, restart counter is at 1855801/1855802' \u2014 the control API answers peer-stats between restarts, so nobody noticed. Find the crash (journalctl -u caspervpn-flask -p err), fix, and add a systemd-restart-storm alert (node_systemd_unit restart counter) so a 1.8-million-restart loop cannot go unseen again.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-09-16T00:49:27Z",
+      "createdDate": "2026-09-16",
+      "completedDate": null
+    },
+    {
+      "id": "xd-801",
+      "from": "[CTO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CTO: deploy-website.yml: confirm its `docker compose` invocation cannot recreate api/nginx (shared project name)",
+      "description": "The website workflow deploys via a hosted runner as user caspervpn from /home/caspervpn/Casper-Code with `sudo docker compose -f /home/caspervpn/Casper-Code/docker-compose.yml ...`. Both clones produce the same compose project name (casper-code), so an `up -d` without a service filter from that clone would recreate api/nginx with THAT clone's config. Verify the workflow passes explicit services (website only) and the same --project-directory/.env as prod, or pin a distinct project name. Related: 20:31Z and 21:15Z api recreates tonight had no operator/cron/CI-deploy behind them \u2014 the website run at 21:12:57Z is the remaining candidate for 21:15.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-09-16T00:49:27Z",
+      "createdDate": "2026-09-16",
+      "completedDate": null
     }
   ],
   "importantNotes": [
+    {
+      "id": "note-incident-reconcile-2026-09-15",
+      "date": "2026-09-15",
+      "author": "[CTO]",
+      "priority": "P0",
+      "text": "[INCIDENT 20:25-21:50Z, RESOLVED] Side effect of the disk fix: once BandwidthUsageLogs was small, the OLD API's usage reconcile (a whole-history SUM that used to time out) finally ran and overwrote 133 users' CYCLE counters with ALL-TIME totals; 47 crossed the 512 MB cap and the cap enforcement removed their peers on every node at 20:34Z (silent tunnel loss + 402 lock-out). Found by measurement (no session closes, sweep cut 0, counters == all-time sums), corrected at 21:50Z: 49 users restored to true cycle-scoped usage (backup table kept), 43 un-capped, 11 remain legitimately over cap. The current API has the reconcile switched OFF (verified on its 21:47Z tick). xd-755 escalated to P0 for the code fix. DISK (the original ask): 97% -> 55% (22 GB free) with the root cause removed (hourly rows), retention 6 months, backups 21 MB and verified, nightly off-box copy to the dev brain, Prometheus capped at 3 GB, disk alert now in free GB. Task list consolidated: closed xd-769/778/734/753/756/731/792/626, merged 757+758 into 793."
+    },
     {
       "id": "note-disk-root-cause-fixed-2026-09-15",
       "date": "2026-09-15",
