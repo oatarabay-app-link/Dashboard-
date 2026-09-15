@@ -21379,7 +21379,8 @@
       "completedDate": null,
       "notes": [
         "[QA 2026-09-14] WATCH: sweep */3 live, over-cap client-keyed users 160, last cut 09-12 12:06Z, 0 cuts since.",
-        "[QA 2026-09-15] WATCH: over-cap client-keyed 164; last CUT 09-15 09:12Z (mimimail.me, LA+NL2) \u2014 enforcer alive."
+        "[QA 2026-09-15] WATCH: over-cap client-keyed 164; last CUT 09-15 09:12Z (mimimail.me, LA+NL2) \u2014 enforcer alive.",
+        "[CTO 2026-09-15] The 'over-cap client-keyed users ~160' are the disposable-email farm: 168 accounts / 8 throwaway domains / 1,718 keys \u2014 see xd-789 (block at sign-up) and xd-790 (CEO decision to suspend)."
       ]
     },
     {
@@ -22221,7 +22222,8 @@
       "completedDate": null,
       "notes": [
         "[CTO 2026-09-14 20:40Z verification] df: 43G used / 4.7G free (91%). `docker system df` reclaimable = 0 (disk-guard keeps it clean; builder prune reclaimed 0B). Backups on disk: /root/Casper/Casper-Code/backups/ 20260914_020001.tar.gz 1.85 GB + 20260913_020001.tar.gz 1.82 GB (next tar 02:00 UTC); /root/backups/postgres/ 4.2 GB incl. manual_test_20260412.dump (April) and weekly_2026-08-16_0300.dump. Deleting any backup needs the CEO's or DevOps' explicit go; the durable fix is the DO volume resize (xd-720).",
-        "[QA 2026-09-15] LEVER APPLIED BY QA 16:22Z: rm backups/20260914_020001.tar.gz (+1.85 GB, dup of chain-B daily_2026-09-14; chain-A cron would have pruned it 09-16 02:11Z). Free 2.66 -> 4.51 GB. Buys ONE night: 09-17 02:00Z ENOSPC again (2.4 GB vs 3.73 peak) unless chain-A prune moves BEFORE the pg_dump (backup.sh line 76 -> above line 33) \u2014 set -e means an ENOSPC tar leaves staging+partial tar (=09-02 deadlock class). STILL OWED."
+        "[QA 2026-09-15] LEVER APPLIED BY QA 16:22Z: rm backups/20260914_020001.tar.gz (+1.85 GB, dup of chain-B daily_2026-09-14; chain-A cron would have pruned it 09-16 02:11Z). Free 2.66 -> 4.51 GB. Buys ONE night: 09-17 02:00Z ENOSPC again (2.4 GB vs 3.73 peak) unless chain-A prune moves BEFORE the pg_dump (backup.sh line 76 -> above line 33) \u2014 set -e means an ENOSPC tar leaves staging+partial tar (=09-02 deadlock class). STILL OWED.",
+        "[CTO 2026-09-15 19:5xZ] Retention reshaped so every nightly write has room: chain-A tar keeps ONE copy (BACKUP_RETENTION_DAYS=0) + pre-prune crons at 01:50 (old tars) and 02:50 (keep newest daily dump) before the 02:00/03:00 writes. Effective policy: 1 nightly tar + 1-2 daily dumps + 2 weekly dumps. Disk 4.7 GB free; the 09-17 02:00Z failure is averted by ordering, not by more disk. Structural fix (off-box copies or bigger volume) still owed \u2014 xd-756 owner DEVOPS. ALSO: the scheduled QA/Marketing runs' COUNT(DISTINCT \u2026) over the 53M-row usage table spills ~1.5 GB of Postgres temp files each run (seen 19:41Z) \u2014 a disk and CPU hazard in itself; they should query pg_class estimates instead."
       ]
     },
     {
@@ -22266,7 +22268,8 @@
       "createdDate": "2026-09-14",
       "completedDate": null,
       "notes": [
-        "[QA 2026-09-15] day 2: 58 unverified writers > 100 KB/24h (56 mailinator), median 12.1 MB, max 21.8 MB. Unchanged."
+        "[QA 2026-09-15] day 2: 58 unverified writers > 100 KB/24h (56 mailinator), median 12.1 MB, max 21.8 MB. Unchanged.",
+        "[CTO 2026-09-15] Same farm, now 'verified' via public throwaway inboxes (117 of 168) \u2014 verification is not the gate; see xd-789."
       ]
     },
     {
@@ -22362,6 +22365,30 @@
       "status": "pending",
       "priority": "P0",
       "createdAt": "2026-09-15T22:24:09Z",
+      "createdDate": "2026-09-15",
+      "completedDate": null
+    },
+    {
+      "id": "xd-789",
+      "from": "[CTO]",
+      "to": "[BACKEND]",
+      "title": "Handoff from CTO: Disposable-email account farm (168 'DE' accounts, 8 throwaway domains, 1,718 WireGuard keys) is passing email verification and generating ~74% of BandwidthUsageLogs growth \u2014 block disposable domains at sign-up + cap keys per account",
+      "description": "MEASURED 2026-09-15 on prod: 168 accounts with LastLoginCountry=DE; 117 are 'verified' (throwaway inboxes are public, so the verification link is readable by the bot); 112 created in the last 30 days at a steady ~10/day from 08-30 to 09-07, tapering to 1-3/day after 09-08; email domains mailinator.com 51, picomail.biz 11, mimimail.me 9, emlpro.com 9, spymail.one 9, freeml.net 8, mailtowin.com 8, 10mail.org 7; 1,718 WireGuardKeys (~10 per account); 150 of them active in the last 24h (2.2 GB, 1.78M usage-log rows of ~2.4M total = the bulk of the table that fills the disk and the CPU); 62.8 GB used in total; sessions carry NO app user-agent/OS (API-scripted WireGuard configs, not the iOS app). HISTORY: this is the free-quota farm behind xd-745/xd-717/xd-781. Done before: email verification enforced 2026-08-11 (closed the JWT-before-verification hole, grandfathered older accounts) and the datacap enforcement sweep (*/3 min, cuts over-cap client-keyed peers) + backend md5 peer\u2192user fallback. WHY IT RECURS: verification does not stop disposable-email providers; there is no cap on WireGuard keys/devices per account; no sign-up rate limit per IP; each new account is a fresh free quota. FIX (backend, P1): (1) reject registration + verification for a disposable-domain denylist (the 8 above + a maintained open list, e.g. disposable-email-domains), returning a clear 'use a permanent email' message; (2) cap active WireGuardKeys per account (e.g. 5) \u2014 1,718 keys for 168 accounts is not human use; (3) rate-limit /auth/register per IP/ASN (e.g. 3/hour); (4) expose the domain denylist in appsettings so it is editable without a rebuild. Deploy per the cached-build procedure (disk margin!). Then QA verifies sign-up with mailinator is refused and existing users are untouched.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-09-15T22:48:05Z",
+      "createdDate": "2026-09-15",
+      "completedDate": null
+    },
+    {
+      "id": "xd-790",
+      "from": "[CTO]",
+      "to": "[CEO]",
+      "title": "Handoff from CTO: DECISION: suspend the 168 disposable-email farm accounts and revoke their 1,718 WireGuard keys now (frees the datacap sweep, the usage-log growth and CPU), or leave them until the sign-up block ships?",
+      "description": "See xd-789 for the measurement. These accounts are not paying customers (throwaway inboxes, ~10 sign-ups/day by script, no app user-agent, 62.8 GB consumed on free quotas). Option A (recommended): suspend them (IsActive=false + revoke keys + cut peers via the existing enforcer path) \u2014 reversible per account if a real person complains; Option B: leave them and only block new sign-ups (xd-789); Option C: both. A needs your yes because it deactivates accounts. Side effect of A: the usage-log table stops growing ~1.8M rows/day, which is the main pressure on the 48 GB disk and part of the 97% CPU (xd-780).",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-09-15T22:48:05Z",
       "createdDate": "2026-09-15",
       "completedDate": null
     }
