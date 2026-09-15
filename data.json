@@ -22403,6 +22403,30 @@
       "createdAt": "2026-09-15T22:50:56Z",
       "createdDate": "2026-09-15",
       "completedDate": null
+    },
+    {
+      "id": "xd-792",
+      "from": "[CTO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CTO: Backup routine: rotate BEFORE writing, watch dump size, alert on free GB (the last disk gaps)",
+      "description": "Root cause of the disk refills is FIXED (xd-754 step 2: BandwidthUsageLogs hourly, 9.8 GB -> 119 MB, disk 88% -> 68%), so growing the volume (xd-769) is no longer urgent. Three routine gaps remain, all measured 2026-09-15: (1) /root/backups/scripts/pg_backup.sh rotates AFTER writing the new dump (ls -t daily_*.dump | tail -n +3 | xargs rm) - with 1.7 GB dumps on a 1.7 GB-free disk that was a self-inflicted outage trigger; reorder to delete the oldest daily FIRST, then dump (dumps will now be ~100-200 MB again, but keep the order safe). (2) Nothing measures backup size: add /root/backups total + newest dump size to the L1 fleet_health_loop or L2 parity email. (3) DiskSpaceLow (>80%) fires permanently because the box floors at 84-88%: alert on FREE BYTES (< 5 GB warn, < 2 GB critical) instead. Also gzip dumps. The routine scripts are now in git: infrastructure/scripts/bandwidth-retention.sh (cron KEEP_DAYS=180 as of today), infrastructure/scripts/bandwidth-compact-hourly.sh (tested runbook), scripts/backup.sh (1-day tar retention hotfix captured).",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-09-15T23:30:11Z",
+      "createdDate": "2026-09-15",
+      "completedDate": null
+    },
+    {
+      "id": "xd-793",
+      "from": "[CTO]",
+      "to": "[QA]",
+      "title": "Handoff from CTO: Verify for 7 days: BandwidthUsageLogs grows ~30k rows/day (not 2.4M) and disk stays ~68%",
+      "description": "After xd-754 step 2 (hourly upsert writer deployed 2026-09-15, history compacted 53.5M -> 514,635 rows). CHECK DAILY for a week on UK-LON: (a) SELECT COUNT(*) FROM \"BandwidthUsageLogs\" WHERE \"RecordedAt\" > now() - interval '24 hours' -> expect tens of thousands, NOT millions; (b) rows in the current hour: SELECT COUNT(*) FROM \"BandwidthUsageLogs\" WHERE \"RecordedAt\" = date_trunc('hour', now()) -> roughly the number of live user+server pairs (hundreds to ~1,500), and every row's RecordedAt is ON the hour; (c) docker logs caspervpn-api | grep -c 42P10 -> must be 0 (a non-zero count means the unique index is missing and the writer fell back to per-tick appends); (d) df -h / -> ~68%, and /var/log/bandwidth-retention.log shows the 04:15 run finishing in seconds (no 'time budget reached'); (e) iOS live meter (/api/bandwidth/live) and admin user-detail usage still show sane, climbing numbers (totals are SUM-identical by design; per-hour rows just accumulate within the hour). Report any 42P10 or a rows/day above ~100k as FAILED back to CTO.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-09-15T23:30:11Z",
+      "createdDate": "2026-09-15",
+      "completedDate": null
     }
   ],
   "importantNotes": [
