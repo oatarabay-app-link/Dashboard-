@@ -23294,9 +23294,27 @@
       "createdAt": "2026-09-17T01:53:18Z",
       "createdDate": "2026-09-17",
       "completedDate": null
+    },
+    {
+      "id": "xd-832",
+      "from": "[CTO]",
+      "to": "[QA]",
+      "title": "Handoff from CTO: iOS 4.2 (57) is in App Review \u2014 watch for approval, then verify the live release",
+      "description": "SUBMITTED 2026-09-17: version 4.2, build 57, AUTOMATIC release on approval, PHASED 7-day rollout. Apple quotes up to 48 h. WHEN THE APPROVAL EMAIL ARRIVES: (1) confirm the App Store listing flips to 'Ready for Distribution' and the phased rollout starts; (2) install from the PUBLIC App Store (not TestFlight) and confirm the launch log marker \u2014 EXPECTED 2026-09-17-25g; if it reads 25f, build 57 predates the Lebanon Advisory work and that feature is absent from the release (not a breakage \u2014 file a follow-up build); (3) smoke-test the three things this release is about: Double VPN pre-selects the dedicated IP as destination, the home card still shows the route after a force-quit + relaunch, and in Lebanon the Settings protocol picker is unlocked with CasperCloak still the Auto default; (4) watch Crashes in App Store Connect for the first 48 h of the rollout. IF ANYTHING IS WRONG: pause the phased release from the version page (pausable up to 30 days) before it reaches more users.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-09-17T02:34:03Z",
+      "createdDate": "2026-09-17",
+      "completedDate": null
     }
   ],
   "importantNotes": [
+    {
+      "date": "2026-09-16",
+      "text": "[RELEASE 2026-09-17] iOS 4.2 (build 57) SUBMITTED TO APP REVIEW \u2014 status now 'Waiting for Review'. Done in App Store Connect on the CEO's instruction ('u do it' then 'release right away'). Created version 4.2, attached build 4.2 (57) \u2014 the newest upload, Sep 17 02:14, NOT build 56 \u2014 wrote user-facing release notes (dedicated IP over Double VPN; Double VPN visible after relaunch; protocol choice where the region allows; faster connections in filtered regions; stability + faster cold start), set AUTOMATIC release on approval with PHASED 7-day rollout, submitted. Apple: up to 48 h to review, email on completion; it then goes live automatically and rolls out over 7 days (pausable for up to 30 days from the version page). TWO THINGS I DID NOT DO, deliberately: (1) I did NOT accept the updated Apple Developer Program License Agreement \u2014 that is a company legal contract and only the Account Holder may accept it. A banner on the Apps page says the Account Holder must accept it 'in order to update your existing apps'; the submission nonetheless went through, so it did not block THIS one, but it should still be accepted (Business / account page) before it blocks a later submission. (2) I did NOT verify build 57 on a device \u2014 I recommended TestFlight first and the CEO chose to submit anyway. Build 57 was created ~20 min after the 25g push (Lebanon Advisory), so it very probably carries 25g, but this is UNVERIFIED: nothing in App Store Connect exposes the build marker. If 57 turns out to be 25f, the Lebanon protocol-picker change is simply absent \u2014 no breakage, and the phased rollout limits exposure. RISK CONTROL: phased release can be paused from the version page at any time; a bad build is replaced by uploading a new build and submitting again. Pre-existing and untouched: two old unresolved Apple review messages (2018, April) which did not block 4.1 in July; ITSAppUsesNonExemptEncryption=false in Info.plist (standard exemption, accepted for 4.1).",
+      "author": "[CTO]",
+      "priority": "high"
+    },
     {
       "date": "2026-09-16",
       "text": "[CEO DIRECTIVE 2026-09-17 \u2014 SECURITY POSTURE CHANGE, LEBANON ONLY] CEO: 'I don't think Lebanon throttles WireGuard; CasperCloak can be the DEFAULT while other protocols are choosable.' IMPLEMENTED + DEPLOYED 22:52Z: new StealthTier.Advisory (3) = CasperCloak recommended, NOT enforced. Lebanon moved to it (DB row 2->3, GeoIpService fallback, seed, migration 20260917000000 applied). Server now answers regionRestricted=FALSE for LB (verified live for the CEO: {'regionRestricted': False, 'stealthTier': 'Advisory', 'stealthTierCountry': 'LB', 'cloudfrontUrl': None}; api log 'country=LB tier=Advisory cfWiring=SUPPRESSED'). Effect on the phone (build 25g): sticky restricted flag clears (24q), protocol picker unlocks, no connect-time force; an untouched Auto still lands on CasperCloak, Double VPN still defaults to CasperCloak, direct-relay road kept. The CEO's account stamp was reset AE->LB (it was pinned UAE from an earlier login and would otherwise have stayed restricted). Blast radius: 10 LB-stamped users + live-LB users. IR/CN/AE/SA/... UNCHANGED (still enforced). HONEST CAVEAT recorded: the 'Touch/Alfa UDP throttle' reason behind the old Throttle tier was never measured with plain WireGuard; this design hedges it \u2014 anyone who picks WireGuard and finds it slow switches back, the default stays stealth. Reversal = set restricted_countries.stealth_tier=2 for LB (or the Down migration).",
