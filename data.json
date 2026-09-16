@@ -23177,11 +23177,15 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: Finish xd-816 on the two unreachable nodes (Dusseldorf + Los Angeles)",
       "description": "xd-816 is rolled out and PROVEN on 11 nodes, but Dusseldorf (91.194.84.79) and Los Angeles (208.87.243.205) both reject /root/.ssh/casper_fleet_admin with 'Permission denied (publickey)', so their control API still lacks the fix. IMPACT: a Double-VPN whose ENTRY is DUS or LA will still lose 100% of packets when the EXIT is a dedicated-IP node. TO DO: obtain working credentials for both (DUS has a known history of running the control API under TWO units -> EADDRINUSE restart loop, see fleet-ops-fixes-2026-09-15 \u2014 check `systemctl is-active caspervpn-flask casper-control` and disable the duplicate BEFORE restarting), then: scp the patcher, run it (idempotent, writes .bak-xd816, py_compile-gated), restart whichever unit is active, verify `grep -c _ensure_peer_route /opt/caspervpn/api/server.py` = 2 and a listener on 5002. The exact patch is in infrastructure/flask/server.py on production (function _ensure_peer_route + its call in add_wg_client_impl).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-09-16T21:14:46Z",
       "createdDate": "2026-09-16",
-      "completedDate": null
+      "completedDate": "2026-09-16",
+      "completedAt": "2026-09-16",
+      "completedBy": "[DEVOPS]",
+      "resolution": "DONE 2026-09-16 \u2014 CEO confirmed access exists; the working path was the DOCUMENTED key /root/.ssh/vpn_nodes from the brain (credentials.md lines 45-50), NOT casper_fleet_admin. Both nodes patched with the xd-816 _ensure_peer_route change (backup .bak-xd816, py_compile-gated, serving unit restarted). Dusseldorf 91.194.84.79: serving unit caspervpn-flask; patch FUNCTIONALLY VERIFIED \u2014 POST /wireguard/add-client with foreign /32 10.66.16.254 (node subnet is 10.66.68.1/24) -> route appeared on wg0; cleaned up after. LosAngeles 208.87.243.205: serving unit is casper-control (NOT caspervpn-flask); patch present + fires (verified post-change). ALL 13 NODES NOW CARRY THE FIX. PLUS an unrelated live fault fixed on LA: caspervpn-flask was a DUPLICATE unit stuck in an EADDRINUSE restart loop \u2014 1,958,711 restarts, MEASURED still climbing 4 restarts / 20 s (~17k/day) while casper-control held port 5002. Same fault class as the DUS incident in fleet-ops-fixes-2026-09-15 (there the duplicate was casper-control; here it is the mirror). Ran `systemctl disable --now caspervpn-flask`; AFTER: casper-control active, listener on 5002 = 1, /health 200, and an add-client still adds the route. Reversible (`systemctl enable --now caspervpn-flask`) if that unit is ever meant to be the primary \u2014 but then casper-control must be disabled first, never both.",
+      "resultingHandoff": "none \u2014 xd-816 fleet rollout is now complete on all 13 nodes"
     },
     {
       "id": "xd-824",
