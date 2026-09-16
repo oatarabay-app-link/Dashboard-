@@ -23194,6 +23194,18 @@
       "createdAt": "2026-09-16T21:17:07Z",
       "createdDate": "2026-09-16",
       "completedDate": null
+    },
+    {
+      "id": "xd-825",
+      "from": "[CTO]",
+      "to": "[IOS]",
+      "title": "Handoff from CTO: Launch watchdog does NOT bound to 10s \u2014 withTimeoutOrNil awaits the straggler (MEASURED 49.6s freeze)",
+      "description": "MEASURED in the CEO device log 2026-09-16 (build 25b, Lebanon): the 24f launch watchdog is INEFFECTIVE. AppCoordinator.swift:581 withTimeoutOrNil races the operation against a sleep inside withTaskGroup; it takes group.next() then cancelAll() \u2014 but withTaskGroup IMPLICITLY AWAITS ALL REMAINING CHILDREN before returning, and the straggler is a URLSession request with waitsForConnectivity=true routed into a DEAD zombie tunnel, which does not honour cancellation promptly. The timeout child produces its nil at 10s but the function cannot return until the hung refresh resolves. PROOF: launch 20:56:42.739 'Proactive token refresh on app launch' -> 20:57:32.336 'Token refreshed successfully' -> 20:57:32.337 'Launch session-validation watchdog FIRED (>10s)'. The watchdog line lands 49.6s after launch and AFTER the refresh succeeded \u2014 it never escaped early; the user sat on the AuthResolvingView spinner ~50s (the CEO force-quit the first launch at ~71s). FULL CHAIN: on-demand is deliberately kept armed in restricted regions even with autoConnect=false ('Preserving on-demand on live CasperCloak session (restricted region)' + 'FIX 4 orphan sweep'), so the OS keeps a CasperCloak tunnel up; that tunnel silently zombied (heartbeat bytesReceived:0 bytesSent:0, sessionDuration 871s, tunnel process up since 09:23:41Z); the 21h-expired access token then refreshed THROUGH the dead tunnel via cdn.capablitys.com and hung ~53s until the URLSession timeouts + front failover unwound. Zombie-recovery then correctly tore the tunnel down \u2014 that is the 'VPN cut off on reopen'; the tunnel was already dead, the app just made it official. FIX: make withTimeoutOrNil actually return at the deadline \u2014 resume a CheckedContinuation from whichever of {operation, sleep} finishes first (guard so it resumes exactly once) and let the loser be cancelled and abandoned, rather than structured-concurrency-awaiting it. Also consider giving the launch refresh its own ephemeral URLSession with waitsForConnectivity=false and a short timeout \u2014 it must not ride the tunnel it is validating. VERIFY: reproduce with a zombie tunnel; the spinner must clear in ~10s and the watchdog line must be logged at ~10s, not ~50s.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-09-16T21:18:59Z",
+      "createdDate": "2026-09-16",
+      "completedDate": null
     }
   ],
   "importantNotes": [
