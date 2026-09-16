@@ -23106,9 +23106,39 @@
       "createdAt": "2026-09-16T20:40:59Z",
       "createdDate": "2026-09-16",
       "completedDate": null
+    },
+    {
+      "id": "xd-818",
+      "from": "[CTO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CTO: Alert email is a SINGLE POINT OF FAILURE \u2014 add a second, independent alert channel",
+      "description": "MEASURED 2026-09-16 (L4 system-check). On 2026-09-15 11:28Z-13:28Z every alert email returned HTTP 429 {\"statusCode\":429,\"name\":\"monthly_quota_exceeded\"} from Resend; CriticalCPU / DiskSpaceCritical / DevFleetNodeDown all fired into the void. caspervpn-disk-guard hit the same 429 on 09-10 (daily quota), 09-14 and 09-15 (monthly) while the root disk was 90-96% \u2014 /var/log/caspervpn-disk-guard.log lines 1367/1415/1427. Nothing detected it: all 39 Prometheus rules were listed and NONE watched the alert channel's own delivery; it surfaced only because a human read /var/log/fleet-parity-check.log. ALSO PROVEN: the bridge and the API share ONE Resend account \u2014 key prefix re_dYDS4E appears both in /opt/caspervpn/monitoring/alertmanager_resend_bridge.py and in `docker exec caspervpn-api printenv Email__SmtpPassword`. One monthly quota therefore covers monitoring alerts AND user sign-up verification email. DONE THIS RUN (detection only): alert_delivery_textfile_exporter.sh + 60s systemd timer on UK-LON emitting casper_alert_email_sent_total{outcome}, casper_alert_email_last_success/failure_timestamp_seconds, casper_alert_bridge_active (verified live in Prometheus); new rule group casper-alerting-pipeline with AlertEmailDeliveryFailing + AlertBridgeDown (promtool SUCCESS 41 rules; SIGHUP reload, container not restarted; both health=ok state=inactive). In git: infrastructure/monitoring/scripts/alert_delivery_textfile_exporter.sh + .service + .timer, infrastructure/monitoring/alerts.yml. STILL OWED (DevOps): this new alert is delivered BY THE CHANNEL IT WATCHES \u2014 it makes the failure visible but cannot page anyone. Add a second channel that does not use Resend (the existing caspervpn-push container, a Telegram bot, or a webhook to a phone) and route severity=critical + component=alerting to it. Verify by forcing one non-200 and confirming the second channel delivers.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-09-16T21:00:00Z",
+      "createdDate": "2026-09-16",
+      "completedDate": null
+    },
+    {
+      "id": "xd-819",
+      "from": "[CTO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CTO: 6,457 orphaned .prom.tmp files in the node-exporter textfile collector \u2014 find the leaking writer, add a cleanup trap",
+      "description": "MEASURED 2026-09-16: `ls /var/lib/node_exporter/textfile_collector/ | wc -l` = 6458, of which 6457 match caspervpn_backend.prom.tmp.<PID>, all zero-byte, dated 2026-08-29 to 2026-09-02; directory inode 452K. node-exporter only reads *.prom so these are inert (node_textfile_scrape_error = 0 on every instance, checked) \u2014 hygiene and inode waste, not an outage. The leak appears to have STOPPED (newest orphan 09-02 05:33 while caspervpn_backend.prom is current) but nobody confirmed why and the litter was never cleared. ASK: (1) identify the writer of caspervpn_backend.prom and confirm it writes atomically with a cleanup trap \u2014 copy the pattern in the new alert_delivery_textfile_exporter.sh (`trap 'rm -f $TMP' EXIT`, temp template that does not end in .prom); (2) clear the litter with `find /var/lib/node_exporter/textfile_collector -name '*.prom.tmp.*' -size 0 -mtime +7 -delete` \u2014 deliberately NOT run by the unattended check, a 6.4k-file delete on prod should be a human keystroke; (3) re-count afterwards.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-09-16T21:00:00Z",
+      "createdDate": "2026-09-16",
+      "completedDate": null
     }
   ],
   "importantNotes": [
+    {
+      "date": "2026-09-16",
+      "author": "[CTO]",
+      "priority": "P1",
+      "note": "CEO DECISION \u2014 email plan. Our alert emails and our user sign-up confirmation emails go through ONE email account (same key, proven). That account ran out of its allowance twice this month: 10 Sept (daily) and 14-15 Sept (monthly). While it was out, alert emails were thrown away, including disk warnings sent while the server was 96% full. I checked whether real customers were hurt: no. Every sign-up that never confirmed its email in that period used a throwaway address from the spam wave, so no genuine customer was blocked. The risk is the next time. Two options: pay for a bigger email allowance, or give the alerts their own separate email account so app email and alarms can never starve each other. Detection is now in place either way (a new alarm fires if alert email stops being delivered), but that alarm is itself sent by email \u2014 so a second, non-email channel is the real fix (filed to DevOps)."
+    },
     {
       "id": "note-s5s7-restored-2026-09-16",
       "date": "2026-09-16",
