@@ -23282,9 +23282,27 @@
       "createdAt": "2026-09-17T01:26:41Z",
       "createdDate": "2026-09-17",
       "completedDate": null
+    },
+    {
+      "id": "xd-831",
+      "from": "[CTO]",
+      "to": "[QA]",
+      "title": "Handoff from CTO: Device-test build 25g in Lebanon: protocol picker unlocked, Auto = CasperCloak, Double VPN default = CasperCloak",
+      "description": "SHIPPED dev+prod + backend DEPLOYED 2026-09-17 22:52Z (Lebanon -> StealthTier.Advisory). EXPECT on a Lebanon phone signed in as the CEO's Apple account, build 25g (Clean Build Folder first): (1) after the first /caspercloak-config fetch the log shows 'CasperCloak config: stealthTier=Advisory country=LB' and regionRestricted=false, and the sticky restricted flag clears (24q log line); (2) Settings -> Protocol: ALL protocols selectable, with the new hint 'CasperCloak is recommended in your region and is used by default'; (3) with Protocol=Auto a single-server connect logs 'Selected protocol: CasperCloak - Your region recommends CasperCloak' and NO 'Region-restricted: upgrading' line; (4) pick WireGuard explicitly -> connects as plain WireGuard (measure the speed vs CasperCloak \u2014 this is the first real test of whether Touch/Alfa throttle UDP); (5) Double VPN still requests protocol=caspercloak (recommendedProtocol honours Advisory) \u2014 SG->AU must still egress 103.75.119.124 for a DI holder. REGRESSION: a UAE-stamped account must still get regionRestricted=true / DirectFirst and a locked picker. NOT compiled by me (swiftc -parse clean on all 4 files); backend compile-verified + deployed with 0 ERR lines.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-09-17T01:53:18Z",
+      "createdDate": "2026-09-17",
+      "completedDate": null
     }
   ],
   "importantNotes": [
+    {
+      "date": "2026-09-16",
+      "text": "[CEO DIRECTIVE 2026-09-17 \u2014 SECURITY POSTURE CHANGE, LEBANON ONLY] CEO: 'I don't think Lebanon throttles WireGuard; CasperCloak can be the DEFAULT while other protocols are choosable.' IMPLEMENTED + DEPLOYED 22:52Z: new StealthTier.Advisory (3) = CasperCloak recommended, NOT enforced. Lebanon moved to it (DB row 2->3, GeoIpService fallback, seed, migration 20260917000000 applied). Server now answers regionRestricted=FALSE for LB (verified live for the CEO: {'regionRestricted': False, 'stealthTier': 'Advisory', 'stealthTierCountry': 'LB', 'cloudfrontUrl': None}; api log 'country=LB tier=Advisory cfWiring=SUPPRESSED'). Effect on the phone (build 25g): sticky restricted flag clears (24q), protocol picker unlocks, no connect-time force; an untouched Auto still lands on CasperCloak, Double VPN still defaults to CasperCloak, direct-relay road kept. The CEO's account stamp was reset AE->LB (it was pinned UAE from an earlier login and would otherwise have stayed restricted). Blast radius: 10 LB-stamped users + live-LB users. IR/CN/AE/SA/... UNCHANGED (still enforced). HONEST CAVEAT recorded: the 'Touch/Alfa UDP throttle' reason behind the old Throttle tier was never measured with plain WireGuard; this design hedges it \u2014 anyone who picks WireGuard and finds it slow switches back, the default stays stealth. Reversal = set restricted_countries.stealth_tier=2 for LB (or the Down migration).",
+      "author": "[CTO]",
+      "priority": "high"
+    },
     {
       "date": "2026-09-16",
       "text": "[CEO 2026-09-17] Test dedicated IP RELEASED on CEO instruction. 103.75.119.124 (Sydney) is back in SELLABLE stock \u2014 pool went 1 -> 2 (Sydney + Miami 23.95.79.248). Set to Available(0) NOT Released(3) deliberately: nothing in the codebase promotes Released back to Available, and both the buy screen and the allocator query Available only, so Released would have been lost inventory. Its activation token was REVOKED and unlinked, because the idempotent re-claim self-heal would otherwise have re-bound the same IP to the CEO on his next receipt replay. Internal mapping 10.66.16.254/32 preserved (the exit SNAT needs it). The CEO's CURRENT tunnel still works \u2014 his wg peer was live (handshake 84s, rx 38,944) so it was deliberately NOT removed; his NEXT connect simply won't pin .124. Reversal, if ever needed: DedicatedIps a34f0c2f-b4ac-4cfb-b995-397cde89877e -> Status=1, AllocatedToUserId=2eecd0e6-c0f3-4ae2-a82b-ca04c71ff675, Provider=1, ProviderRef=2000001191649076; token fe7d3c09-dd4f-437f-99df-ab4f96b6dbea -> Status=1, DedicatedIpId=a34f0c2f.",
