@@ -23250,6 +23250,18 @@
       "createdAt": "2026-09-17T00:05:13Z",
       "createdDate": "2026-09-17",
       "completedDate": null
+    },
+    {
+      "id": "xd-829",
+      "from": "[CTO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CTO: Two DNS/cert monitors were watching retired hostnames \u2014 repointed to the live s<N>.pompesh.com endpoints",
+      "description": "MEASURED 2026-09-16 21:00-21:20Z (L4 system-check). The two DNS/cert monitors on the brain were pointed at RETIRED hostnames, so they emitted ~5 false alert emails/day AND were blind to the real certificate state. EVIDENCE: all 13 cc-*.caspervpn.com names return NXDOMAIN from the brain (dig @1.1.1.1 AND system resolver; api/www/s6-edge.pompesh.com resolve normally). They are genuinely retired, not dropped: VpnServers.CasperCloakDomain holds s<N>.pompesh.com for all 12 relays, and mia-01/sgp-01 have NO cc-* cert or renewal config (only s10/s3.pompesh.com). CONSEQUENCE: parity_monitor.sh cert_check returned 0 for all 12 relays -> a permanent false '11+0 = 11/12' deficit on 12 of 13 nodes every night (see /var/log/fleet-parity-check.log) plus a nightly failure email; subdomain-resolution-check.sh reported 'MISSING: cc-uk cc-us cc-de ...' every 6 h (4 emails/day, /var/log/subdomain-check.log). This is the alert-fatigue mechanism that buried PostgresDown for 6 days in the 2026-07-14 incident that created this routine, and it consumed the Resend quota documented in xd-818. FIXED THIS RUN (monitoring components only, root cause measured): both scripts repointed to the live names, backups kept as *.bak-20260916-210553, bash -n clean, and both now IN GIT on production+development (infrastructure/scripts/parity_monitor.sh, and subdomain-resolution-check.sh which was server-only = the xd-460 drift class). VERIFIED: the subdomain loop now reports 'MISSING: (none)' across 20 names. IMPORTANT / EXPECTED: tonight's 02:00Z parity run will report 10 nodes at 11/12 -- that is a TRUE POSITIVE, not a regression: those 10 relays serve a cert expiring 2026-10-13 (26 d), inside the 30-day threshold. It should clear to 12/12 after the 03:45Z one-shot fan-out tracked in xd-826. DEVOPS TO DO: (1) after the fan-out, confirm the next parity run reads 12/12 on all 13 nodes; (2) confirm no other fleet script still references cc-*.caspervpn.com (infrastructure/scripts/cc-domain-provision.sh still does, as do 4 parity_monitor.sh.bak-* files on the brain); (3) decide whether the cc-* DNS records should be formally decommissioned/documented so no future provisioning re-adds them.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-09-17T00:10:09Z",
+      "createdDate": "2026-09-17",
+      "completedDate": null
     }
   ],
   "importantNotes": [
