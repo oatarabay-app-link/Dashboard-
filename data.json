@@ -23478,7 +23478,7 @@
       "from": "[MARKETING]",
       "to": "[PRODUCT]",
       "title": "Handoff from MARKETING: Handoff from MARKETING: CEO DECISION \u2014 trial-only, remove the perpetual free data tier (supersedes the 2 GB proposal in xd-839)",
-      "description": "CEO 2026-09-17: 'why dont we just go with free trial and remove the free 2gb'. AGREED, and the evidence is stronger than the data maths. MEASURED: the app is NOT AVAILABLE in the Iranian, Russian or Chinese App Store (iTunes lookup returns 0 results for ir/ru/cn). Our three largest real user groups by connection count \u2014 Iran 24, Russia 5, China 2 \u2014 are on foreign Apple IDs and CANNOT purchase from us through Apple at all. A free tier exists to convert users into payers; in the markets consuming most of our free bandwidth, conversion is structurally impossible. Those are also our most expensive users (CasperCloak relay + obfuscation overhead). On the CEO's WhatsApp point: WhatsApp voice is ~0.3-0.5 MB/min (~18-30 MB/hour) and video ~3-5 MB/min (~180-300 MB/hour), so 0.5 GB is roughly 17-28 hours of voice or under 3 hours of video \u2014 long calls do drain it, and a cap that dies mid-call is a worse experience than no free tier at all. RECOMMENDATION: (1) 14-day full-Premium trial, NO credit card, in every storefront; (2) no perpetual free data tier; (3) hard paywall after the trial with a one-tap resubscribe screen; (4) handle Iran/Russia deliberately via a separate capped, sponsored-access programme rather than a commercial free tier \u2014 it is cheaper, controllable, and defensible in press. Configuration is an Introductory Offer in App Store Connect: no new build, no App Review submission.",
+      "description": "CEO 2026-09-17: 'why dont we just go with free trial and remove the free 2gb'. AGREED, and the evidence is stronger than the data maths. MEASURED: the app is NOT AVAILABLE in the Iranian, Russian or Chinese App Store (iTunes lookup returns 0 results for ir/ru/cn). Our three largest real user groups by connection count \u2014 Iran 24, Russia 5, China 2 \u2014 are on foreign Apple IDs and CANNOT purchase from us through Apple at all. A free tier exists to convert users into payers; in the markets consuming most of our free bandwidth, conversion is structurally impossible. Those are also our most expensive users (CasperCloak relay + obfuscation overhead). On the CEO's WhatsApp point: WhatsApp voice is ~0.3-0.5 MB/min (~18-30 MB/hour) and video ~3-5 MB/min (~180-300 MB/hour), so 0.5 GB is roughly 17-28 hours of voice or under 3 hours of video \u2014 long calls do drain it, and a cap that dies mid-call is a worse experience than no free tier at all. RECOMMENDATION: (1) 14-day full-Premium trial, NO credit card, in every storefront; (2) no perpetual free data tier; (3) hard paywall after the trial with a one-tap resubscribe screen; (4) handle Iran/Russia deliberately via a separate capped, sponsored-access programme rather than a commercial free tier \u2014 it is cheaper, controllable, and defensible in press. Configuration is an Introductory Offer in App Store Connect: no new build, no App Review submission.\n\n--- SUPERSEDED 2026-09-18 by CEO decision. DO NOT remove the free tier. FINAL MODEL: 7-day free trial (no credit card) for every new user, and when it ends the account drops to the EXISTING 0.5 GB/month free plan, which renews monthly \u2014 it is not removed. CEO's reasoning: 'even if we offer little data we still offer a free trial.' This keeps top-of-funnel and the review pipeline while giving new users a real taste of full Premium. NO APP BUILD IS NEEDED for any of this \u2014 verified in code: SubscriptionManager.swift:901-903 reads `user.currentCycleDataLimitBytes ?? user.dataLimitBytes` from the BACKEND and only falls back to the hardcoded 0.5 GB, so the allowance is a server-side value; and SubscriptionPackage.cs already has unused `HasFreeTrial` / `FreeTrialDays` fields. The trial itself is an Introductory Offer configured in App Store Connect \u2014 no build, no App Review submission. The allowance can be changed, removed or restored later by editing one server value.",
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-09-17T17:57:49Z",
@@ -23520,9 +23520,26 @@
       "createdAt": "2026-09-18T00:17:14Z",
       "createdDate": "2026-09-18",
       "completedDate": null
+    },
+    {
+      "id": "xd-850",
+      "from": "[MARKETING]",
+      "to": "[PRODUCT]",
+      "title": "Handoff from MARKETING: Handoff from MARKETING: CEO FINAL \u2014 7-day trial then drop to the existing 0.5 GB monthly free plan; update every copy surface",
+      "description": "CEO DECISION 2026-09-18, final. MODEL: (a) every new user gets 7 days of full Premium, NO credit card; (b) when the trial ends the account falls back to the EXISTING 0.5 GB/month free plan, renewing monthly \u2014 the free plan is NOT removed. WHY THIS IS CHEAP: no app build required. Verified in code \u2014 SubscriptionManager.swift:901-903 takes the limit from the backend (`currentCycleDataLimitBytes ?? dataLimitBytes`) and only falls back to the hardcoded value, so the allowance is a server value; SubscriptionPackage.cs line 198 sets the free package to 512 MiB and already carries unused HasFreeTrial/FreeTrialDays fields. The trial is an App Store Connect Introductory Offer: no build, no App Review. COPY SURFACES THAT MUST NOW SAY '0.5 GB free + 7-day free trial' (the CEO named these): App Store screenshots, App Store description, website, and in-app text. NOTE the website fix already written in commit dfb2dcfbe corrects 2 GB -> 0.5 GB and is STILL CORRECT \u2014 it just needs the trial line added on top, and it is still unpublished (see the [WEBSITE] P1). OPEN QUESTION FOR PRODUCT: whether a user who used the trial and lapsed returns to 0.5 GB automatically \u2014 confirm DataCycleResetService handles the downgrade path, since today every user is simply on the free package from signup.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-09-18T00:57:47Z",
+      "createdDate": "2026-09-18",
+      "completedDate": null
     }
   ],
   "importantNotes": [
+    {
+      "date": "2026-09-17",
+      "from": "[MARKETING]",
+      "text": "[CEO DECISION 2026-09-18 \u2014 HOW THE FREE PLAN WORKS FROM NOW ON] Every new user gets 7 days of the full paid product with no credit card. When the week ends they are NOT cut off \u2014 they drop to the small free plan we already have (0.5 GB a month, renewing every month). So everyone gets a real trial, and nobody is left with nothing. IMPORTANT AND CHEAP: this needs NO new version of the app. The data allowance is a setting on our own server, and the free week is a switch inside Apple's system \u2014 both can be changed, or changed back, in minutes. What does need doing is the wording: the App Store screenshots, the App Store description, the website and the in-app text must all say the same thing. The website correction is already written and still waiting to be published."
+    },
     {
       "date": "2026-09-17",
       "from": "[MARKETING]",
