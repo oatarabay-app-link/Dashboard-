@@ -23484,9 +23484,39 @@
       "createdAt": "2026-09-17T17:57:49Z",
       "createdDate": "2026-09-17",
       "completedDate": null
+    },
+    {
+      "id": "xd-847",
+      "from": "[MARKETING]",
+      "to": "[CTO]",
+      "title": "Handoff from MARKETING: Guard the SSH commit-tree path \u2014 it silently deletes the whole repo (proven today, 6,719 files)",
+      "description": "INCIDENT + FIX, both today. Marketing's 2026-09-17 session-2 commit 17347a6a pushed development back to THREE top-level entries: memory/ fell 365 -> 3 files, tools/ 46 -> 2, and website/, ios-app-v2/, backend-dotnet-core/, admin-panel-react/, Android/, desktop/, infrastructure/, tests/, docs/, marketing/, scripts/ vanished. 6,719 files / 948,276 lines recorded as deletions in one commit. ROOT CAUSE: the sandbox cannot push from the Dropbox-mounted clone (lock files), so sessions build commits with `git commit-tree` from a scratch worktree. That worktree held only the three paths the session wrote. write-tree over a PARTIAL directory produces a tree that git reads as 'everything else was deleted'. Nothing warned. RESTORED by Marketing this run: 3c034651 = tree of 5ceec3fd (run 1, same branch, full tree) with every path present at 6a659fda overlaid. Diff vs the broken tip is 6,719 additions / 0 modifications / 0 deletions; all four session-2 vault writes and both new tools preserved; fast-forward, no force, ancestry asserted. The Mac 5-min cron had not pulled, so the CEO's working tree was never touched. WHY THIS IS YOURS: the tooling is shared. Every department that pushes over SSH from a scratch dir can repeat this on production, where it would also take the live website down via deploy-website.yml. ASK: (1) add a guard to the shared push path that aborts when a commit's deletion count exceeds a threshold (say 50 files) unless explicitly forced; (2) prefer `git commit -- <explicit pathspecs>` over write-tree from a scratch dir; (3) add the trap to CLAUDE.md Section 7 Known Traps next to the empty-SHA refspec near-miss from earlier today - same family: a git primitive doing exactly what it was told about a tree the caller did not mean.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-09-17T21:19:11Z",
+      "createdDate": "2026-09-17",
+      "completedDate": null
+    },
+    {
+      "id": "xd-848",
+      "from": "[MARKETING]",
+      "to": "[WEBSITE]",
+      "title": "Handoff from MARKETING: [3rd re-file] Free-plan copy is still dark \u2014 the site advertises 2GB free while production enforces 512 MiB",
+      "description": "Unchanged for three consecutive scheduled runs (09-16 r3, 09-17 r1, 09-17 r3). Measured live 2026-09-17T18:05Z: /pricing renders '2GB Monthly Data' + '5 Locations'; /free-vpn renders '500MB/day' 13 times; robots.txt is 345 bytes with GPTBot/CCBot/Google-Extended disallowed and NO answer-engine allow-list; /llms.txt returns 404. Homepage md5 925d25b1 / 86,693 B, byte-identical to 09-16. EXPOSURE, not just drift: the advertised free allowance (2GB) is 4x what production actually enforces (512 MiB, xd-430, since April). That is a live consumer-protection claim mismatch and it sits next to xd-833 (the unqualified Quantum-Resistant Encryption claim). CEO set the canonical free plan on 09-16: 0.5 GB/month, 1 device, 3 locations. THE FIX ALREADY EXISTS AND IS TESTED: commit dfb2dcfbe on `development` rewrites every surface. It has never shipped because deploy-website.yml fires only on `production`, and dfb2dcfbe was authored on development. EXACT RECIPE (7 files, content-only, no logic): git checkout production && git checkout dfb2dcfbe -- website/app/best-vpn/page.tsx website/app/faq/page.tsx website/app/free-vpn/page.tsx website/lib/features-data.ts website/public/llms.txt website/public/robots.txt website/scripts/seed.ts && git commit -m '[WEBSITE] free plan 0.5GB/1 device/3 locations + AI answer-engine allow-list' && git push origin production. Do NOT merge development into production - the branches diverged at f6bc3a140 (189 vs 316 commits) and a merge is a separate, much larger decision. VERIFY AFTER DEPLOY: /pricing must show 0.5 GB and 3 locations; /free-vpn must contain zero occurrences of '500MB/day'; /llms.txt must return 200; robots.txt must Allow OAI-SearchBot, ChatGPT-User, PerplexityBot, ClaudeBot. SECOND PRIZE: robots.txt currently makes the site structurally uncitable by ChatGPT/Claude/Perplexity. The same commit fixes that - it is the cheapest AEO win available and costs one deploy.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-09-17T21:19:11Z",
+      "createdDate": "2026-09-17",
+      "completedDate": null
     }
   ],
   "importantNotes": [
+    {
+      "date": "2026-09-17",
+      "dept": "[MARKETING]",
+      "priority": "P0",
+      "note": "INCIDENT CLOSED IN-RUN: Marketing's own session-2 commit 17347a6a deleted 6,719 files (948,276 lines) from the `development` branch - the branch Obsidian reads and every scheduled run writes to. Only DEPARTMENT_LOG.md, memory/ (3 of 365 files) and tools/ (2 of 46) survived. Restored this run as 3c034651: 6,719 additions, 0 modifications, 0 deletions, fast-forward, ancestry asserted, all session-2 work preserved. Nothing was lost and your Mac never pulled the bad commit. Cause was `git commit-tree` run over a partial scratch worktree - a shared tool, so CTO P0 filed to guard it. Separately: the free-plan copy fix (dfb2dcfbe) is now dark for a THIRD run - the site still advertises 2GB free against 512 MiB enforced. One cherry-pick to `production` ships it; recipe is on the WEBSITE P0."
+    },
     {
       "date": "2026-09-17",
       "from": "[MARKETING]",
