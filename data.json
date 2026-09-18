@@ -23707,6 +23707,18 @@
       "createdAt": "2026-09-18T19:04:21Z",
       "createdDate": "2026-09-18",
       "completedDate": null
+    },
+    {
+      "id": "xd-864",
+      "from": "[DEVOPS]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from DEVOPS: Move record_backups_run cron after 04:15 so the Operations tab stops showing yesterday's off-site + retention lines",
+      "description": "Routines/disk/backups daily check 2026-09-18 (claude:routines-health). ALL 9 server routines ran inside their windows; status file generatedAt 2026-09-18T16:00:03Z (fresh). Disk 51% used, 25.3 GB free; tonight's two writes measured 21 MB (tar) + 21.5 MB (dump) = ~43 MB, so the projection is safe by three orders of magnitude. Farm guard: 0 accounts shut off, 0 new candidate throwaway domains since 2026-09-16 (mailpwr.com already blocked); blocklist 8,867 domains. Admin ops endpoint returns 401 as expected (alive). \n\nDEFECT TO FIX (residual of xd-824): record_backups_run.sh runs at cron '20 3 * * *' = 03:20Z, which is BEFORE offsite-sync.sh (03:30) and bandwidth-retention.sh (04:15). So the 'off-site' and 'usage-log retention' lines in /root/reports/backups-latest.txt \u2014 and therefore the admin Operations tab \u2014 are ALWAYS the PREVIOUS day's values. Measured today: the report showed off-site 2026-09-17T03:30:06Z while /var/log/offsite-sync.log already had [2026-09-18T03:30:07Z] offsite sync OK, remote size 3.6G. FIX: move the cron to after 04:15 (e.g. '30 4 * * *') so all four lines describe the same night. Low risk, additive, no user impact.\n\nNON-FINDING, recorded so the next run does not re-file it: 'weekly dump: none on disk' and routines-status newestWeekly=null are BY DESIGN. Weeklies are written Sundays only (pg_backup.sh line 31, DAY_OF_WEEK -eq 7) and retained 90 days OFF-SITE. Verified on the dev brain 188.166.174.132:/root/casper-backups/prod-postgres -> weekly_2026-09-13_0300.dump 1,814,683,718 bytes intact, plus 4 dailies and the 1.88 GB pre-compaction archive; that host is 24% full (60 GB free). Reading only the brain listing would have produced a false P0.\n\nOTHER ROUTINES' WARNS (not this routine's scope, owners noted): infra-inventory warn 04:20Z = 86 items, 0 critical, 1 warning, soonest expiry 'OneProvider Amsterdam - NL 51.158.147.210 in 7 days' (hosting bill -> casper-infra-expiry-daily / CEO). connectivity warn 05:00Z = '2 country(ies) look blocked, 1 with zero traffic (24 h)' -> casper-blocked-users-daily.\n\nSKILLS UPDATED (CLAUDE.md 11.7, pushed to production under the session lock): devops SKILL.md new 'Backup & disk pins (2026-09-18)' \u2014 artifact sizes are ~21 MB post-compaction so the spec's 1.9+1.9 GB projection is ~90x stale, grade by DELTA (10x jump = writer regrowth, 10x collapse = truncated write); weeklies live off-site only; backups-latest.txt is written before two of the jobs it reports. Mirrored to QA SKILL.md 15.5 + 15.6. One dated line in memory/context/skills-changelog.md.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-09-18T19:16:33Z",
+      "createdDate": "2026-09-18",
+      "completedDate": null
     }
   ],
   "importantNotes": [
