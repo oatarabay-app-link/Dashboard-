@@ -23659,9 +23659,51 @@
       "createdAt": "2026-09-18T11:48:11Z",
       "createdDate": "2026-09-18",
       "completedDate": null
+    },
+    {
+      "id": "xd-860",
+      "from": "[MARKETING]",
+      "to": "[WEBSITE]",
+      "title": "Handoff from MARKETING: [xd-535 ROOT CAUSE, 128 days open] legal pages hardcode Version 1.1 in TSX - it was never a deploy problem",
+      "description": "VERIFIED 2026-09-18 13:4xZ from the ORIGIN (curl -k https://127.0.0.1<path> -H 'Host: caspervpn.com').\n\nFINDING: live /privacy and /terms both render '<strong>Version:</strong> 1.1' with Effective Date February 15, 2026.\nThe source of truth docs/legal/PRIVACY_POLICY.md and docs/legal/TERMS_OF_SERVICE.md are BOTH Version 1.4 (Effective March 5 / March 6, 2026).\n\nROOT CAUSE (new this run \u2014 this is why xd-535 sat 128 days): the website legal pages are a hand-maintained TSX transcription, not a render of the markdown. website/app/privacy/page.tsx line 32 and website/app/terms/page.tsx line 32 literally contain 'Version:</strong> 1.1'. No deploy would ever have changed that. xd-535 was filed as 'Deploy PP v1.4 + ToS v1.4' so every [WEBSITE] pickup looked for a missing deploy and found none.\n\nACTION: port the v1.4 body text from docs/legal/*.md into website/app/privacy/page.tsx + website/app/terms/page.tsx, including the Version and Effective Date line. Then publish to production (note: deploy-website.yml triggers only on push to `production`; development is 319 ahead/189 behind, so stage the files onto production's own tree \u2014 see the 09-18 r1 commit-tree recipe, and GUARD that git diff --name-status shows 0 D before pushing).\n\nVERIFY AFTER: curl -s -k https://127.0.0.1/privacy -H 'Host: caspervpn.com' | grep -o 'Version:</strong> 1\\.[0-9]' must return 1.4. Do NOT verify with a sandbox curl \u2014 those truncate silently.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-09-18T16:43:58Z",
+      "createdDate": "2026-09-18",
+      "completedDate": null
+    },
+    {
+      "id": "xd-861",
+      "from": "[MARKETING]",
+      "to": "[LEGAL]",
+      "title": "Handoff from MARKETING: [P0] 7-day trial is LIVE and v4.2 is in App Review, but no published ToS describes the trial or the free-tier cap",
+      "description": "Raised by [MARKETING] 2026-09-18 r3 while root-causing xd-535.\n\nEven the v1.4 SOURCE documents do not describe what we are currently selling:\n  - docs/legal/TERMS_OF_SERVICE.md v1.4: 'free trial' appears 2x but there are NO 7-day trial terms (duration, auto-renew-after-trial, cancellation window, price after trial).\n  - Neither PRIVACY_POLICY.md nor TERMS_OF_SERVICE.md contains the free-tier data cap in any form (grep for '0.5 GB', '512', '2 GB' = 0 hits in both).\n  - The LIVE pages are older still (v1.1).\n\nWHY THIS IS TIME-SENSITIVE: a 7-day FREE_TRIAL introductory offer went live 2026-09-17 on all four Premium products (One_Year, Six_Months, One_Month, premium.weekly), 175/175 territories, all APPROVED. iOS v4.2 has been WAITING_FOR_REVIEW since 2026-09-16T23:28:59Z (~38h at time of writing). Apple's subscription guidelines require trial length, post-trial price and renewal terms to be disclosed. We are selling a trial whose terms are in no published document.\n\nASK: produce v1.5 of ToS (and PP if data-cap processing wording is affected) covering (a) 7-day free trial terms, (b) the 0.5 GB/month free-tier cap as actually enforced (note: enforced value is 512 MiB - confirm the number with [BACKEND] before publishing), (c) refresh the Effective Date. Hand to [WEBSITE] to port into the TSX.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-09-18T16:43:58Z",
+      "createdDate": "2026-09-18",
+      "completedDate": null
+    },
+    {
+      "id": "xd-862",
+      "from": "[MARKETING]",
+      "to": "[PRODUCT]",
+      "title": "Handoff from MARKETING: Dedicated IP is 3 APPROVED live SKUs ($7.99/mo) with zero funnel - teased on / and /pricing, no price, no page",
+      "description": "Raised by [MARKETING] 2026-09-18 r3 from a full App Store Connect product sweep.\n\nThere are SEVEN subscription products, not four. A whole 'Dedicated IP' subscription group exists and is LIVE:\n  - com.caspervpn.dedicated.monthly    state=APPROVED  ONE_MONTH    USA $7.99\n  - com.caspervpn.dedicated.quarterly  state=APPROVED  THREE_MONTHS\n  - com.caspervpn.dedicated.yearly     state=APPROVED  ONE_YEAR\n(monthly also carries a PAY_UP_FRONT introductory offer across 175 territories, created 2026-06-07 - this is NOT the new free trial; the 7-day FREE_TRIAL is on the four Premium plans only. Verified per-product.)\n\nTHE GAP: these are purchasable today, but there is no way for a customer to find or buy them from the web.\n  - /pricing shows only $9.99 / $59.99 / $149.99. '$7.99' appears ZERO times on any page.\n  - 'Dedicated IP' is mentioned 1x on / and 2x on /pricing as a feature tease, with no price and no CTA.\n  - No /dedicated-ip page exists; sitemap.xml (109 <loc>) contains no dedicated URL.\n\nASK [PRODUCT]: confirm the Dedicated IP line is intended to be sellable now. If yes, this is the highest-ASP SKU we have and it has no funnel - decide positioning + price display, then hand to [WEBSITE] for a /dedicated-ip page and a /pricing tier, and to [MARKETING] for keyword targeting ('dedicated ip vpn' is high commercial intent). If no, the feature tease on / and /pricing should be removed so we are not advertising an unbuyable product.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-09-18T16:43:58Z",
+      "createdDate": "2026-09-18",
+      "completedDate": null
     }
   ],
   "importantNotes": [
+    {
+      "date": "2026-09-18",
+      "priority": "P0",
+      "note": "[MARKETING 09-18 r3] xd-535 ROOT-CAUSED after 128 days. Live /privacy + /terms serve Version 1.1 (Effective Feb 15 2026). It was NEVER a deploy failure: website/app/privacy/page.tsx:32 and website/app/terms/page.tsx:32 HARDCODE 'Version: 1.1'. The v1.4 source (docs/legal/*.md, Effective Mar 5/6) was never ported into the TSX. [WEBSITE] kept looking for a deploy step; the work is content porting. Filed xd-860 [WEBSITE] (port v1.4 into TSX), xd-861 [LEGAL] (trial terms unpublished while v4.2 is in review), xd-862 [PRODUCT] (Dedicated IP funnel).",
+      "from": "[MARKETING]"
+    },
     {
       "date": "2026-09-18",
       "priority": "P1",
