@@ -23582,11 +23582,15 @@
       "to": "[IOS]",
       "title": "Handoff from MARKETING: [ROOT CAUSE of 11 ratings] The app has NO in-app rating prompt anywhere \u2014 add SKStoreReviewController",
       "description": "VERIFIED BY CODE SEARCH, not inferred: grep for SKStoreReviewController / requestReview / RequestReviewAction across ios-app-v2/CasperVPN (excluding LocalPackages) returns ZERO hits. The app has never once asked a user to rate it. That \u2014 not the App Store, and not only the per-storefront split \u2014 is why we sit at 11 ratings after months, all in LB/AE/NG. This is the single highest-leverage growth fix we have and it is ~15 lines. ASK: on the 3rd successful VPN connection (and not more than once per app version, Apple throttles to 3/year anyway), call `if let s = UIApplication.shared.connectedScenes.first as? UIWindowScene { AppStore.requestReview(in: s) }` (StoreKit 2; SKStoreReviewController.requestReview(in:) on older targets). Gate it on a UserDefaults connection counter, never show it after a failed connection or a disconnect, and never inside the paywall. Do NOT ship in 4.2 (already WAITING_FOR_REVIEW since 2026-09-16, version id f56ebbf2-8026-41b9-a21c-d3adbfd77584) \u2014 target 4.3. Gate for any ad spend: >=25 ratings at >=4.3 stars. Related: xd-844 (do NOT reset ratings on 4.2), xd-845 (reply to the legacy 1-2 star reviews).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P0",
       "createdAt": "2026-09-18T02:38:53Z",
       "createdDate": "2026-09-18",
-      "completedDate": null
+      "completedDate": "2026-09-18",
+      "completedAt": "2026-09-18",
+      "completedBy": "[IOS]",
+      "resolution": "SHIPPED to development + production 2026-09-18 (build marker 25h, version 4.3 build 58). Verified BEFORE writing that the app had never asked: zero hits for SKStoreReviewController/requestReview/RequestReviewAction. Implemented as an arm/fire pair, not the .connected observer the brief sketched \u2014 MEASURED reason: .connected is reached from 5 call sites and 3 of them (cold-start restore, foreground reconcile, UI-test mock) plus IKEv2 SA rekeys would have counted users who connected only once, which is how this feature earns 1-star reviews. Arm set only on a user-initiated connect, expires after 45s (connect budget is 30s), disarmed at 4 terminal failure points; presentation refuses on a dropped tunnel, in the background, or over any presented sheet (the paywall rule), without burning the version key. GAP FOUND AND FIXED during review: connectAttemptFailed() existed but was NEVER CALLED, so a failed attempt stayed armed for the session and a later OS-initiated on-demand connect could have been credited as a user success. PROOF: arm64 ** BUILD SUCCEEDED **; class + log strings + 25h marker present in CasperVPN.debug.dylib; VPNConnectionManager.o carries undefined refs to all three entry points; 12/12 counting-rule tests against the real file (tools/ios-tests/xd853/run.sh). PENDING: the sheet itself can only be confirmed on TestFlight (Debug builds no-op) -> QA. 4.2 untouched.",
+      "resultingHandoff": "xd-865 to [QA]: TestFlight verification on 4.3 (3rd-connect fire, no fire after failure, never over the paywall)"
     },
     {
       "id": "xd-854",
@@ -23717,6 +23721,18 @@
       "status": "pending",
       "priority": "P2",
       "createdAt": "2026-09-18T19:16:33Z",
+      "createdDate": "2026-09-18",
+      "completedDate": null
+    },
+    {
+      "id": "xd-865",
+      "from": "[IOS]",
+      "to": "[QA]",
+      "title": "Handoff from IOS: Verify the rating prompt fires on the 3rd successful connection and never after a failure \u2014 TestFlight build of 4.3",
+      "description": "DELIVERED 2026-09-18 [iOS] xd-853, build marker 2026-09-18-25h, version 4.3 (build 58). The app had NEVER asked anyone to rate it \u2014 verified by grep before writing: zero hits for SKStoreReviewController / requestReview / RequestReviewAction across the app's Swift files. WHAT SHIPPED: ReviewPromptManager asks on the user's 3rd SUCCESSFUL, USER-INITIATED connection, at most once per app version, 1.5s after the tunnel settles, via StoreKit 2 AppStore.requestReview(in: scene). Deliberately an arm/fire pair rather than a .connected observer \u2014 .connected is reached from 5 call sites and only 2 are a real user success (cold-start restore, foreground reconcile, IKEv2 rekey and the UI-test mock must never count). The arm is set only by a user-initiated connect (never a zombie/background recovery), expires after 45s, and is disarmed at 4 terminal failure points. Presentation refuses if the tunnel is no longer up, if there is no foreground scene, or if ANY sheet is presented (never over the paywall) \u2014 none of those stamp the version key, so a later clean moment still gets its chance. PROVEN HERE: arm64 device build ** BUILD SUCCEEDED **; the compiled CasperVPN.debug.dylib contains the class, its log strings and the 25h marker, and VPNConnectionManager.o carries undefined refs to all three entry points (connectAttemptStarted / tunnelDidReachConnected / connectAttemptFailed) so the wiring is in the binary, not just the source; 12/12 counting-rule tests pass against the REAL file via tools/ios-tests/xd853/run.sh (the app test target does not build, which is why the harness exists \u2014 an XCTest file is included at CasperVPNTests/ReviewPromptManagerTests.swift for when that target is fixed). QA TO DO, ON TESTFLIGHT NOT A DEBUG BUILD (AppStore.requestReview is a no-op in Debug on device for some iOS versions): (1) fresh install, connect successfully 3 times -> the rating sheet appears once, ~1.5s after the third connect; (2) relaunch and connect again -> it must NOT appear again; (3) fresh install, fail two connects (airplane mode mid-connect, or a premium server on a free account) -> nothing appears and the counter stays 0; (4) confirm it never appears over the paywall or any sheet; (5) grep the device log for 'Review prompt:' lines \u2014 they state the decision every time. Apple throttles to ~3 prompts per user per year regardless of what we call, so treat one appearance as the expected result. xd-844 STILL APPLIES: do NOT reset ratings when 4.3 ships \u2014 22 reviews at mean 3.95, 13 of them five-star. 4.2 was NOT touched: it stays WAITING_FOR_REVIEW with Apple. The version bump to 4.3 / build 58 lives only in the project file on the branches, not in the submitted binary.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-09-18T19:28:33Z",
       "createdDate": "2026-09-18",
       "completedDate": null
     }
