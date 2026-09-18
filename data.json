@@ -23551,11 +23551,15 @@
       "to": "[QA]",
       "title": "Handoff from MARKETING: Handoff from MARKETING: 7-day free trial is CONFIGURED AND LIVE \u2014 verify on device and align all copy",
       "description": "DONE 2026-09-18 via the App Store Connect API (key N82BB82TD6). Created subscriptionIntroductoryOffers offerMode=FREE_TRIAL, duration=ONE_WEEK, numberOfPeriods=1 on ALL FOUR Premium plans in ALL 175 territories: One_Year_Subscription (1187287436), Six_Months_Subscription (1187268143), One_Month_Subscription (1187266838), com.caspervpn.premium.weekly (6757987806). Verified by re-reading /introductoryOffers per plan = 175 each. NO APP BUILD WAS REQUIRED. QA TO VERIFY ON DEVICE: (a) a brand-new Apple ID sees '7 days free, then <price>' on all four plans; (b) an Apple ID that previously subscribed in the Premium group does NOT see it (Apple allows one introductory offer per customer per subscription GROUP \u2014 this is why all four can carry it without abuse); (c) after the trial ends the account falls back to the 0.5 GB/month free plan and is NOT cut off entirely; (d) paywall copy is gated on Product.SubscriptionInfo.isEligibleForIntroOffer so ineligible users are not shown a price they cannot get. SEPARATE FINDING FOR [PRODUCT]: the Annual plan has PRICES set in only 101 of 175 territories. A trial now exists in all 175, but in the 74 unpriced territories the plan may not be purchasable at all \u2014 worth confirming whether that is deliberate or a gap.\n\n--- CORRECTION 2026-09-18: the '74 unpriced territories' finding in this handoff is WRONG \u2014 there is NO gap. All four Premium plans are priced in ALL 175 territories. The original read used limit=200 WITHOUT following pagination; the Annual plan has 349 price records and 6 Months has 348 (current prices plus price history), so the first page covered only 101 unique territories and the remaining 74 looked absent. Re-queried following `links.next` to exhaustion: Annual 175/175, 6 Months 175/175, Monthly 175/175, Weekly 175/175. NOTHING TO FIX. LESSON FOR FUTURE ASC API READS: subscription price endpoints return historical records as well as current ones, so the record count far exceeds the territory count \u2014 always follow pagination before concluding anything is missing.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-09-18T02:01:04Z",
       "createdDate": "2026-09-18",
-      "completedDate": null
+      "completedDate": "2026-09-18",
+      "completedAt": "2026-09-18",
+      "completedBy": "[QA]",
+      "resolution": "QA PASS (code+data verified). 7-day trial chain verified end-to-end WITHOUT a device: (1) GRANT \u2014 AppleReceiptService.cs:216/230 sets Status=Active, EndDate=CurrentPeriodEnd=receipt.ExpiresDate; :245-248 sets user.DataLimitBytes + CurrentCycleDataLimitBytes = plan.DataLimitBytes and CurrentCycleEndDate=ExpiresDate. A trial receipt therefore grants full premium limits for exactly the 7 days Apple puts in ExpiresDate. (2) REVERT \u2014 SubscriptionExpiryService is registered at Program.cs:471, runs hourly (_checkInterval=1h); :118 sets Status=Expired and :128 resets User.DataLimitBytes + CurrentCycleDataLimitBytes to freePlan.DataLimitBytes. (3) freePlan resolves on prod: exactly ONE Plans row with Type=Free AND IsActive=true, DataLimitBytes=536870912 (512 MiB). (4) Prod cap distribution agrees: 258 of 266 active users at exactly 512 MiB, 8 at 0 (unlimited). MARKETING's 'NO APP BUILD REQUIRED' claim is CONFIRMED \u2014 the limit is a server value on the Users row. NOT YET OBSERVABLE: zero trial receipts have landed (only 3 subs expire in the next 14d, all pre-trial products: One_Month 09-24, premium.weekly 09-25). First real trial maturity ~09-24/25. ONE DEFECT FOUND -> xd-855.",
+      "resultingHandoff": "xd-855 to [BACKEND]"
     },
     {
       "id": "xd-852",
@@ -23563,11 +23567,14 @@
       "to": "[QA]",
       "title": "Handoff from MARKETING: Verify the published website copy on the live site (free plan 0.5GB + 7-day trial + llms.txt)",
       "description": "production is now e13a5857f and the container rebuilt. Please confirm on https://caspervpn.com : (1) pricing/free card reads 0.5GB Monthly Data and 3 Locations, never 2GB/5 Locations; (2) both Premium cards show '7-Day Free Trial' and the CTA 'Start 7-Day Free Trial'; (3) /faq plans answer names the trial AND says the free plan continues after it; (4) /free-vpn says 3 Server Locations (Germany, US, Singapore); (5) /llms.txt returns 200 and states the trial + drop-to-free; (6) /robots.txt allows OAI-SearchBot, PerplexityBot, ClaudeBot, Claude-SearchBot while still blocking GPTBot/CCBot/Google-Extended. Files: website/lib/features-data.ts, app/faq/page.tsx, app/free-vpn/page.tsx, app/best-vpn/page.tsx, public/llms.txt, public/robots.txt, scripts/seed.ts",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-09-18T02:38:53Z",
       "createdDate": "2026-09-18",
-      "completedDate": null
+      "completedDate": "2026-09-18",
+      "completedAt": "2026-09-18",
+      "completedBy": "[QA]",
+      "resolution": "QA PASS (live-verified independently of MARKETING's own claim, 2026-09-18 08:5xZ). curl of the three live pages: caspervpn.com/ (86,724 B), /pricing (62,828 B), /free-vpn (95,188 B). '2GB' = 0 hits on ALL THREE (this was the standing P0). '0.5GB|512MB' = 1 / 2 / 23 hits. 'free trial' = 4 and '7-day' = 4 on all three. /llms.txt HTTP 200 carrying both canonical facts (0.5 GB x2, 7-day free trial x2) \u2014 was 404. Soft-404 detector per the 09-16 trap: keyed on <title> and byte size, NOT a body grep \u2014 three DISTINCT titles and three DISTINCT sizes, so this is not the 09-13 incident signature (40,730 B identical on all paths). The 4-run copy gap is closed and CONFIRMED LIVE."
     },
     {
       "id": "xd-853",
@@ -23590,6 +23597,42 @@
       "status": "pending",
       "priority": "P2",
       "createdAt": "2026-09-18T02:38:53Z",
+      "createdDate": "2026-09-18",
+      "completedDate": null
+    },
+    {
+      "id": "xd-855",
+      "from": "[QA]",
+      "to": "[BACKEND]",
+      "title": "Handoff from QA: Apple free trials are recorded as Active, never Trialing \u2014 trial metrics will read 0 forever",
+      "description": "FOUND 2026-09-18 while verifying xd-851 (7-day trial launch). The trial GRANT and REVERT paths both work (see xd-851 evidence) \u2014 this is a metrics-integrity defect, not a user-impact one. EVIDENCE: SubscriptionStatus.Trialing (=4, Models/Subscription.cs:80) is assigned in exactly ONE place in the whole backend \u2014 StripeService.cs:513 ('trialing' => SubscriptionStatus.Trialing) \u2014 which is the DEAD Stripe path; every live purchase is Apple IAP. AppleReceiptService.cs:216 and :230 hardcode Status = SubscriptionStatus.Active for every receipt, and grep for is_trial_period / isTrialPeriod across the repo returns ZERO hits, so Apple's own trial flag is never read. MEANWHILE AdminMarketingController.cs:56, :573 and :648 all COUNT Status==Trialing to produce the trial and trial-conversion metrics. CONSEQUENCE, starting with the first trial signups: the admin trial counter and conversion rate stay pinned at 0, and every 7-day trialist is counted as an active PAYING subscriber in MRR/churn \u2014 i.e. the launch MARKETING just shipped is unmeasurable and revenue is overstated by the trial cohort. FIX: in AppleReceiptService, read the offer/trial flag from the decoded transaction (offerType / offerDiscountType == FREE_TRIAL, or the legacy is_trial_period) and set Status = Trialing while now < ExpiresDate, flipping to Active on the first paid renewal. SubscriptionExpiryService already handles the non-conversion exit correctly, so only the status label needs to change. VERIFY BY: start a sandbox trial, confirm the Subscriptions row reads Status=4, then confirm it reads 0 after the first renewal receipt.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-09-18T11:47:35Z",
+      "createdDate": "2026-09-18",
+      "completedDate": null
+    },
+    {
+      "id": "xd-856",
+      "from": "[QA]",
+      "to": "[BACKEND]",
+      "title": "Handoff from QA: Trial-expiry downgrade depends on FirstOrDefaultAsync over TWO 'Free' plan rows",
+      "description": "FOUND 2026-09-18 verifying xd-851. SubscriptionExpiryService.cs:104 resolves the fallback plan with db.Plans.FirstOrDefaultAsync(p => p.Type == PlanType.Free && p.IsActive) \u2014 no ordering, no uniqueness guard. Production currently has TWO rows named 'Free' with Type=0 and DataLimitBytes=536870912: one IsActive=true, one IsActive=false. It works TODAY only because exactly one is active. If anyone ever activates the second row (or deactivates the live one), freePlan resolves to null and :127 silently SKIPS the downgrade \u2014 the subscription flips to Expired but the user KEEPS premium CurrentCycleDataLimitBytes indefinitely. That is a revenue leak that would be invisible: no exception, no log line, status looks correct. FIX: make the lookup deterministic (.OrderBy(p => p.CreatedAt).FirstOrDefaultAsync) AND log an error when freePlan == null instead of falling through silently; optionally add a unique filtered index on (Type) WHERE IsActive. Low effort, prevents a silent-for-months class of bug.",
+      "status": "pending",
+      "priority": "P3",
+      "createdAt": "2026-09-18T11:47:35Z",
+      "createdDate": "2026-09-18",
+      "completedDate": null
+    },
+    {
+      "id": "xd-857",
+      "from": "[QA]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from QA: xd-820 throughput report has produced 0 rows for a 3rd consecutive day",
+      "description": "Measured 2026-09-18 08:5xZ. /root/reports/throughput-2026-09-17.txt and throughput-2026-09-18.txt are BOTH 486 bytes and the bodies are identical: the 'CENSORED-REGION COUNTRIES BY SERVER, last 24h' section reads '(0 rows)'. Compare 09-16 = 2,034 B and 09-14/09-15 = 2,397 B, i.e. the report stopped returning data after the BandwidthUsageLogs hourly-upsert rewrite (xd-793) landed \u2014 exactly what QA predicted on 09-16 and reported as CONFIRMED on 09-17. This is now the 3rd run. The gap-filter/join in throughput-report.sh still assumes the pre-rewrite per-heartbeat row shape. Note this is NOT a data outage: BandwidthUsageLogs is healthy (6 rows / 3 users / 113.4 MB / 2 servers in 24h, 0 off-hour rows) \u2014 the REPORT is what is broken. Per the method pin, byte-length alone is not proof; the bodies were diffed.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-09-18T11:47:35Z",
       "createdDate": "2026-09-18",
       "completedDate": null
     }
