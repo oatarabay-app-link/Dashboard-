@@ -23771,6 +23771,30 @@
       "createdAt": "2026-09-18T20:33:22Z",
       "createdDate": "2026-09-18",
       "completedDate": null
+    },
+    {
+      "id": "xd-869",
+      "from": "[IOS]",
+      "to": "[QA]",
+      "title": "Handoff from IOS: Test build 25i: app opens without the long wait + no phantom 'connection error' on the first attempt",
+      "description": "MEASURED CAUSE (CEO device log, build 25g, 2026-09-18 19:07-19:08 Beirut, Lebanon cellular). (a) LAUNCH: 19:07:49.679 app launched; the saved access token had expired 32h earlier so launch validation had to do a network round trip; that FIRST cold round trip took 14.54s/14.85s (every later call 0.14-1.7s); the 10s cap logged 'watchdog FIRED' only at 19:08:04.744 = +15.06s, i.e. THE CAP NEVER CUT. Root: withTimeoutOrNil raced inside withTaskGroup, which implicitly awaits its children, and the operation awaits the app-wide COALESCED refresh Task that cooperative cancellation cannot stop. FIX: detached one-shot race that returns AT the deadline; cap 10s -> 3s (fallback is non-destructive: cached session, no logout, no forced disconnect). (b) PHANTOM ERROR: at 19:08:11.188 the app showed 'Connection failed: OpenVPN (UDP): obfs4 transport error in active CC session - resume-exhausted (watchdog-handshake-stale)' \u2014 a CasperCloak line written 2026-09-17T12:32:40Z, 30.6 HOURS earlier \u2014 then CONNECTED at 19:08:15.669. Root: tunnel_debug.log is append-only and shared across sessions/protocols and TunnelDisconnectReason took its newest '\u274c' line with no freshness check. FIX: every recovered reason and CC category must carry a timestamp inside this attempt's window (file-mtime gate + per-line ISO stamp). The phantom also reached ConnectFailureEvents (2 rows, openvpn-udp/unknown, 2026-09-18 16:08:13Z); prod check: 100 'unknown' failures in 7 days, 21 of them followed by a SUCCESSFUL connection within 60s, so a fifth of that table is not real failures. TEST (Clean Build Folder first; marker must read 2026-09-18-25i): 1) force-quit, leave the app closed >1h so the token expires, reopen on cellular \u2014 the home screen must appear in about 3s even if the network is slow; if the wait happens the log must show 'watchdog FIRED (>3s' and the app must still be usable. 2) Connect from a cold start and watch the first attempt \u2014 no error alert unless the tunnel actually fails; a real failure must still show its real reason. 3) Quick Connect on a FREE account must return servers (backend now filters premium before the ranked cut; API log '[PREMIUM_SERVER] smart-recommend: dropped N \u2026 (M returned of K requested)') and the app log must NOT say 'Smart recommend: 0 servers'. 4) Regression: a genuine CasperCloak failure still reports its cc-<phase>-<road> category. Build: arm64 EXIT=0, marker + both log signatures verified in CasperVPN.debug.dylib. Files: AppCoordinator.swift, TunnelDisconnectReason.swift, VPNConnectionManager.swift, DiagnosticsService.swift, AppDelegate.swift, backend ServersController.cs.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-09-18T20:36:30Z",
+      "createdDate": "2026-09-18",
+      "completedDate": null
+    },
+    {
+      "id": "xd-870",
+      "from": "[CTO]",
+      "to": "[BACKEND]",
+      "title": "Handoff from CTO: RESCUED unpushed work: the Apple-receipt Lifetime-downgrade guard existed ONLY in the CEO's local checkout",
+      "description": "Found while updating the CEO's Xcode checkout on 2026-09-18: backend-dotnet-core/Services/AppleReceiptService.cs in the local clone carried 60 lines that were on NO branch \u2014 a guard (commented 'xd-866' in the code, which collides with the board's xd-866) so a weekly/monthly EXPIRED / DID_FAIL_TO_RENEW / REFUND notification can never downgrade or cancel a Lifetime plan row, via a new NegativeNotificationSkipReason() test distinct from PlanMutationSkipReason. It was one 'git checkout' away from being lost forever. I verified it COMPILES (dotnet build Release: Build succeeded, 0 errors) and pushed it to development and production unchanged; a byte-identical backup is at the scratch path recorded in the session log. ACTION FOR BACKEND: (1) confirm this is finished work and not a half-edit \u2014 it has no tests and no board task of its own; (2) re-point its code comments off the colliding 'xd-866' id; (3) QA the negative-notification paths against the last-receipt-wins incident (see memory apple-receipt-last-wins-lifetime-clobber). PROCESS FIX NEEDED: work that lives only in the CEO's clone is invisible and unbacked-up \u2014 push at the end of every session.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-09-18T20:36:30Z",
+      "createdDate": "2026-09-18",
+      "completedDate": null
     }
   ],
   "importantNotes": [
