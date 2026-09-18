@@ -23795,9 +23795,40 @@
       "createdAt": "2026-09-18T20:36:30Z",
       "createdDate": "2026-09-18",
       "completedDate": null
+    },
+    {
+      "id": "xd-871",
+      "from": "[BACKEND]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from BACKEND: Deploy xd-866 (a lifetime wrongly marked past due by another product's renewal failure) with the next API build",
+      "description": "P0 \u2014 SHIPPED TO BOTH BRANCHES 2026-09-18 (production d2cef222, development bc0c76cd), NOT YET DEPLOYED. Deploy with the next API build (01:00-06:00 UTC window, /root/deploy_api.sh under the lock, cached build). WHAT BROKE (measured, with artifacts): the CEO's own Lifetime account (Apple sign-in 001648...privaterelay, user 2eecd0e6) could not connect \u2014 the app showed 'Free data's up'. Chain: Apple sent DID_FAIL_TO_RENEW at 2026-09-17T21:17:28Z for com.caspervpn.premium.weekly (a SECOND product on the same Apple ID, charged $2.99/wk since 2026-08-06 on top of the lifetime he already owns); the DID_FAIL_TO_RENEW branch of AppleReceiptService had NO ownership guard, so it stamped Status=PastDue on the user's single Subscription row \u2014 which is the LIFETIME row (Subscriptions.UpdatedAt = 2026-09-17 21:17:28.954123, exact match). BandwidthMonitoringService then found no ACTIVE subscription and fell back to the Free plan's 512 MB (the user row's own DataLimitBytes=0 'unlimited' is ignored \u2014 the code only honours CurrentCycleDataLimitBytes when > 0, so 0 is indistinguishable from unset). Cycle usage reads 1,259,766,877,776 bytes (his cycle runs to 2126 so it never resets) -> 234,649% -> 402 DATA_CAP_REACHED. Live log: '[FIX AY] Bandwidth quota exceeded for user 2eecd0e6... used=1259766877776 limit=536870912 pct=234649.87' at 17:13:56Z and 17:14:04Z. He was also dropped from premium servers: '[PREMIUM_SERVER] smart-recommend: dropped 5 premium-only server(s) for free user 2eecd0e6... (0 left)'. THE FIX: new NegativeNotificationSkipReason(existing, productId) applied to DID_FAIL_TO_RENEW, EXPIRED, GRACE_PERIOD_EXPIRED and REFUND. PlanMutationSkipReason could NOT be reused \u2014 it returns null (=apply) as soon as the row is not Active, which is precisely the state the first bad notification leaves behind, so the next one would have been free to downgrade. The new rule is OWNERSHIP, not status: a notification may only degrade the plan row when it is about the product that owns it (AppleProductId match), plus a lifetime-row belt-and-braces clause. A refund OF the owning product still cancels correctly. Build: 0 errors. TIME BOMB IF NOT DEPLOYED: Apple retries a failed renewal for up to 60 days and then sends EXPIRED. The EXPIRED branch overwrites user.DataLimitBytes AND CurrentCycleDataLimitBytes with the Free plan's 512 MB \u2014 that would downgrade the lifetime PERMANENTLY, not just until a data repair. Anyone holding two Apple products (lifetime/annual + a weekly/monthly) is exposed; measured today only 1 user is in that state. DATA ALREADY REPAIRED (live, backed up to subs_backup_20260918): his row set Status=0 Active; the limit now resolves UNLIMITED; verified only 1 subscription row was touched and the 12 free users over their monthly cap are unchanged (the CEO's cap rule is intact). SECOND DEFECT, NOT FIXED HERE (own task): BandwidthMonitoringService ignores a user row that says unlimited (DataLimitBytes=0) and silently falls back to the Free plan when no subscription is Active. Decide whether 0-on-the-user-row should mean unlimited or whether the fallback should be explicit.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-09-18T20:38:07Z",
+      "createdDate": "2026-09-18",
+      "completedDate": null
+    },
+    {
+      "id": "xd-872",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: Verify xd-866 after deploy: a weekly failure must not touch a lifetime plan row",
+      "description": "After the xd-866 deploy, verify with the live log: a DID_FAIL_TO_RENEW / EXPIRED / REFUND for a product that does NOT own the plan row must log 'xd-866: ... left the plan subscription untouched: ...' and change nothing. Checks: (1) the CEO's account (Apple sign-in 001648...privaterelay) stays Status=0 Active and connects \u2014 before the repair it was refused with 402 DATA_CAP_REACHED at 234,649% of a 512 MB Free cap; (2) a genuine free user over the monthly cap is STILL blocked (12 such users today \u2014 the cap rule must not weaken); (3) a refund of the OWNING product still cancels that subscription; (4) watch for the weekly's EXPIRED notification arriving (Apple retries up to 60 days) and confirm it no longer downgrades the lifetime. Deploy tracked in xd-871.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-09-18T20:38:07Z",
+      "createdDate": "2026-09-18",
+      "completedDate": null
     }
   ],
   "importantNotes": [
+    {
+      "id": "note-lifetime-pastdue-2026-09-18",
+      "date": "2026-09-18",
+      "author": "[BACKEND]",
+      "priority": "P0",
+      "text": "[FIXED TODAY \u2014 YOUR ACCOUNT COULD NOT CONNECT] Your lifetime account was refused with 'free data is up'. Cause: you also have a weekly subscription running on the same Apple ID ($2.99 a week, charged every week since 6 August on top of the lifetime you already own). That weekly payment failed on 17 September. Our system keeps only ONE plan record per person, so the failed weekly payment marked YOUR LIFETIME as unpaid. Once it was unpaid the system treated you as a free user with a 512 MB allowance, saw a large usage figure, and blocked you. Your access is restored now (your plan is marked paid again, unlimited). Nothing else changed: the 12 free users who are over their monthly allowance are still correctly blocked. A code fix is written and waiting for the next server update: from then on, a failed payment for one product can never mark a different product unpaid. This matters beyond today \u2014 if Apple gives up on that weekly payment (it keeps retrying for up to 60 days) the old code would have downgraded your lifetime permanently. TWO THINGS FOR YOU: (1) decide whether to cancel that weekly subscription in your Apple settings \u2014 you are paying for what you already own for life; (2) you may need to sign out and back in once, as your app login had also expired."
+    },
     {
       "date": "2026-09-18",
       "author": "[MARKETING]",
