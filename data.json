@@ -23462,7 +23462,7 @@
       "from": "[MARKETING]",
       "to": "[IOS]",
       "title": "Handoff from MARKETING: Handoff from MARKETING: [TIME-CRITICAL] do NOT reset ratings when 4.2 releases \u2014 it would wipe our only 11 five-star reviews",
-      "description": "MEASURED 2026-09-17 via the iTunes lookup API across 16 storefronts. We DO have ratings; they are invisible in US/UK/CA/DE because App Store ratings and reviews are PER-STOREFRONT. Actual state on v4.1: Lebanon 5.0 stars / 6 ratings, UAE 5.0 / 4, Nigeria 5.0 / 1 \u2014 ELEVEN five-star ratings, and averageUserRating == averageUserRatingForCurrentVersion in every storefront, which means the rating was already RESET once at the 4.0 release. ACTION: when 4.2 goes live, do NOT tick 'Reset rating' in App Store Connect. Resetting again would delete all 11 and put us back to a genuinely empty product page. This also explains the CEO's report that friends' reviews 'were not seen' \u2014 reviewers on Lebanese/Emirati Apple IDs only ever appear in the Lebanese/Emirati storefronts, never in the US one we were checking.",
+      "description": "MEASURED 2026-09-17 via the iTunes lookup API across 16 storefronts. We DO have ratings; they are invisible in US/UK/CA/DE because App Store ratings and reviews are PER-STOREFRONT. Actual state on v4.1: Lebanon 5.0 stars / 6 ratings, UAE 5.0 / 4, Nigeria 5.0 / 1 \u2014 ELEVEN five-star ratings, and averageUserRating == averageUserRatingForCurrentVersion in every storefront, which means the rating was already RESET once at the 4.0 release. ACTION: when 4.2 goes live, do NOT tick 'Reset rating' in App Store Connect. Resetting again would delete all 11 and put us back to a genuinely empty product page. This also explains the CEO's report that friends' reviews 'were not seen' \u2014 reviewers on Lebanese/Emirati Apple IDs only ever appear in the Lebanese/Emirati storefronts, never in the US one we were checking.\n\n[MARKETING 2026-09-19 ANSWER - VERIFIED] The 4.2 release did NOT reset the ratings. Measured after release (itunes.apple.com/lookup per storefront, all reporting 4.2 / 2026-09-18T16:39:42Z): LB 5.0 x6, AE 5.0 x4, NG 5.0 x1 - all persisted. US/GB/DE/CA/IN/IQ display 0. ASC customerReviews exhausted: 22, mean 3.95, unchanged. The reset risk this task was filed against did not materialise. The live problem is different and is now xd-874: the rating PROMPT (ReviewPromptManager) landed 13 minutes after 4.2 was released, so it ships with 4.3/58, not with the build users are running.",
       "status": "pending",
       "priority": "P0",
       "createdAt": "2026-09-17T17:57:49Z",
@@ -23831,9 +23831,52 @@
       "createdAt": "2026-09-18T20:45:42Z",
       "createdDate": "2026-09-18",
       "completedDate": null
+    },
+    {
+      "id": "xd-874",
+      "from": "[MARKETING]",
+      "to": "[IOS]",
+      "title": "Handoff from MARKETING: [P0] Ship 4.3 - the rating prompt missed 4.2 by 13 minutes, so the live app still never asks anyone to rate it",
+      "description": "VERIFIED THIS SESSION. ReviewPromptManager.swift EXISTS on production and is correctly wired (3 call sites in VPNConnectionManager.swift L2899/L3180/L3288; gate = 3rd USER-INITIATED successful connect, once per version, 45s arm expiry, never after a failure, never over a sheet). It landed in commit d0fc08a98 at 2026-09-18 16:26Z. v4.2 was RELEASED at 2026-09-18T16:39:42Z carrying build 57. IT MISSED THE RELEASE BY 13 MINUTES. Repo is now MARKETING_VERSION=4.3 / CURRENT_PROJECT_VERSION=58. => The app every user is running today STILL never asks anyone to rate it. That is the exact eight-year condition xd-853 was filed to end, and it is still true in production.\n\nASK: (1) submit 4.3 / build 58. (2) Create the 4.3 version record in App Store Connect so [MARKETING] can attach ar + ru appStoreVersionLocalizations (copy is written and waiting in MARKETING_2026-09-19_ASO-4.3-pack-and-trial-funnel.md section 4.2) - the listing is currently en-US ONLY (appStoreVersionLocalizations count=1, appInfoLocalizations count=1) while the verified market is IR 24 / LB 8 / NG 7 / AE 7 / US 6 / RU 6 / IQ 5 - i.e. 25 Arabic-storefront users and 6 Russian are reading an English store page. (3) Device check: does the StoreKit paywall actually surface '7 days free' to an eligible user? The App Store LISTING does not mention the trial even once (description/promo/whatsNew = 0 hits for 'trial'), so the paywall sheet is the only place a user could learn it exists.\n\nEvidence: production clone grep + git log; itunes lookup x10 storefronts; ASC API key N82BB82TD6.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-09-19T22:54:55Z",
+      "createdDate": "2026-09-19",
+      "completedDate": null
+    },
+    {
+      "id": "xd-875",
+      "from": "[MARKETING]",
+      "to": "[QA]",
+      "title": "Handoff from MARKETING: [P2] After 4.3 releases: verify the rating prompt fires on the 3rd real connect and that US storefront begins displaying a rating",
+      "description": "After 4.3 (build 58) reaches READY_FOR_SALE, verify the rating prompt end to end:\n(1) It FIRES on the 3rd user-initiated successful connection.\n(2) It does NOT fire on restoreConnectedServerIfTunnelUp (cold-start restore), forceReconcileState (foreground resync), mockConnect, or IKEv2 rekey (.reasserting -> .connected) - those are the 3 of 5 '.connected' call sites the arm/fire design deliberately excludes.\n(3) It never fires after a failed attempt or over a presented sheet.\n(4) Once per app version only.\nBASELINE TO MEASURE AGAINST (captured 2026-09-19 19:45-20:40Z, itunes.apple.com/lookup per storefront, all reporting 4.2 / 2026-09-18T16:39:42Z): LB 5.0 x6 - AE 5.0 x4 - NG 5.0 x1 - US/GB/DE/CA/IN/IQ 0 x0 - RU no result. Written reviews via ASC API, exhausted: 22, mean 3.95 (13x5 4x4 1x2 4x1), newest 2026-06-08. Watch specifically whether the US storefront BEGINS DISPLAYING a rating - it currently shows nothing despite 2 USA written reviews existing, and US is the only market we can advertise into at scale.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-09-19T22:54:55Z",
+      "createdDate": "2026-09-19",
+      "completedDate": null
+    },
+    {
+      "id": "xd-876",
+      "from": "[MARKETING]",
+      "to": "[BACKEND]",
+      "title": "Handoff from MARKETING: [P3] blackshop.fit passed registration - disposable-domain leak (26 rejections in the same 24h, this one not on the list)",
+      "description": "Disposable-email leak, low volume but it poisons every marketing denominator. blackshop.fit passed registration at 2026-09-19 10:27Z (RegistrationCountry=IQ, IsEmailVerified=false, IsActive=true); the domain is NOT present in /opt/caspervpn/geoip/disposable-override.txt. In the same 24h window the api container logged 26 disposable-domain rejections, so the filter is working - this one simply is not on the list. ASK: (1) append blackshop.fit to disposable-override.txt; (2) consider a heuristic for the cheap-TLD classes the farm has been rotating through (.fit, .shop, .one, .biz) rather than chasing domains one at a time. Context: Users is still ~48% deactivated farm rows, which is why caspervpn-marketing SKILL.md carries a MANDATORY PRE-CLAIM RULE forbidding any geo/market claim sourced from Users without an IsActive filter and a ConnectionLogs join.",
+      "status": "pending",
+      "priority": "P3",
+      "createdAt": "2026-09-19T22:54:55Z",
+      "createdDate": "2026-09-19",
+      "completedDate": null
     }
   ],
   "importantNotes": [
+    {
+      "id": "note-marketing-2026-09-19-aso-trial-funnel",
+      "date": "2026-09-19",
+      "author": "[MARKETING]",
+      "priority": "P0",
+      "text": "[MARKETING 2026-09-19] STATE OF PLAY, every figure re-derived live. v4.2 has been READY_FOR_SALE since 2026-09-18T16:39:42Z. Twenty-seven hours in: ZERO trial starts, ZERO purchases, ZERO new ratings, ZERO new reviews. 1) THE TRIAL IS INVISIBLE. All four Premium plans carry FREE_TRIAL/ONE_WEEK in 175/175 territories, APPROVED - and the App Store listing mentions it ZERO times (description 2,658 chars, promotionalText 155, whatsNew 646: 'trial' x0, 'free trial' x0, '7-day' x0). Promotional Text is editable with NO review and NO build; the replacement copy is written (168/170) and I deliberately did NOT apply it because xd-861 [LEGAL] P0 - the trial has no published terms anywhere, /terms is still v1.1 from February - is open one day. Amplifying the trial on the store today deepens exactly the exposure Legal is being asked to rule on. It is a 60-second change the moment Legal clears it. 2) THE RATING PROMPT MISSED 4.2 BY 13 MINUTES. ReviewPromptManager.swift is on production, correctly wired into VPNConnectionManager (3 call sites), committed d0fc08a98 at 16:26Z - 4.2 released at 16:39:42Z carrying build 57. Repo is now 4.3/58. The live app still never asks anyone to rate it. -> xd-874 [iOS] P0. 3) ANSWERS xd-844: THE RELEASE DID NOT RESET RATINGS. Per storefront: LB 5.0 x6, AE 5.0 x4, NG 5.0 x1 - all persisted through the 4.2 release. But US/GB/DE/CA/IN/IQ all display 0, so the one market we can legally advertise into shows a cold user a blank star row. 4) THE LISTING IS ENGLISH-ONLY (appStoreVersionLocalizations=1, appInfoLocalizations=1) while the verified market is IR 24 / LB 8 / NG 7 / AE 7 / US 6 / RU 6 / IQ 5. Arabic + Russian metadata costs nothing, needs no binary, and Apple indexes keywords per localization - copy for both is written and waiting. 5) NO APP PREVIEW VIDEO EXISTS (10 iPhone 6.7in + 10 iPad screenshots, zero previews) - an xd-009 criterion open since the beginning; 30s brief written. 6) FALSE POSITIVE I CAUGHT: two premium.weekly rows show CurrentPeriodStart=09-18 and look exactly like first trial starts. They were CREATED 2026-05-01; the daily Apple reconcile service rolled their period window forward. Judge a purchase by CreatedAt + AppleProductId, never by CurrentPeriodStart or UpdatedAt. Newest row with an Apple product ID was created 2026-08-25 - 25 days, 10 ever. 7) KPIs: users 522 / 273 active / 389 verified (+6/+6/+5 vs 09-18); ConnectionLogs 7d joined IsActive = 101 conns / 14 distinct users; PromoCampaigns still 0 rows. Website green - all five pages byte-identical to 09-18, 2GB=0 everywhere, read from ORIGIN. Still exposed: /privacy + /terms serve Version 1.1 Effective Feb 15 2026, now 129 DAYS (xd-860); quantum claim live on / x12, /faq x8, /pricing x3, /free-vpn x3 (xd-833, day 2). Full write-up: MARKETING_2026-09-19_ASO-4.3-pack-and-trial-funnel.md"
+    },
     {
       "id": "note-lifetime-pastdue-2026-09-18",
       "date": "2026-09-18",
