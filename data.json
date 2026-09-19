@@ -22785,7 +22785,10 @@
       "priority": "P1",
       "createdAt": "2026-09-15T23:30:11Z",
       "createdDate": "2026-09-15",
-      "completedDate": null
+      "completedDate": null,
+      "qaNote": "DAY 5/7 PASS (2026-09-19). (a) 24h rows = 28 across 5 distinct users \u2014 target was tens of thousands, not millions; pre-fix was 2.4M/day. (b) current hour = 1 row, off-hour rows in 24h = 0 (every row lands exactly on the hour). (c) 42P10 in the api log = 0, so the unique index is intact and the writer has not fallen back to per-tick appends. (d) /var/log/bandwidth-retention.log 04:15:01 -> 04:15:04 'deleted 0 rows, table size now 122 MB', disk 52%. Table total 527,333 rows (was 53.5M before compaction). (e) iOS live meter + admin user-detail still PENDING \u2014 needs a signed-in app/admin session. KEEP OPEN until day 7 = 2026-09-21.",
+      "lastVerifiedBy": "[QA]",
+      "lastVerifiedDate": "2026-09-19"
     },
     {
       "id": "xd-794",
@@ -23127,7 +23130,10 @@
       "priority": "P1",
       "createdAt": "2026-09-16T20:40:59Z",
       "createdDate": "2026-09-16",
-      "completedDate": null
+      "completedDate": null,
+      "qaNote": "SERVER-SIDE PASS 2026-09-19; device half still blocked. Amsterdam s5.pompesh.com and Paris s7.pompesh.com both serve subject CN=*.pompesh.com notAfter Dec 12 2026 (84 days). DB: CasperCloakDomain is restored on Amsterdam (s5) and Paris (s7); 12 of 12 active nodes are CasperCloak-capable (the London brain correctly has none and IsActive=false). End-to-end front probe with a live fronting JWT: edge.pompesh.com /s5 -> 101 and /s7 -> 101 (a bare HTTP/2 curl returns 400 and an unauthenticated HTTP/1.1 curl returns 401 \u2014 both are expected, not failures). REMAINING: the Lebanon + Gulf device test picking Amsterdam/Paris as CasperCloak and as Double-VPN ENTRY. QA cannot do this from the server.",
+      "lastVerifiedBy": "[QA]",
+      "lastVerifiedDate": "2026-09-19"
     },
     {
       "id": "xd-818",
@@ -23211,11 +23217,15 @@
       "to": "[QA]",
       "title": "Handoff from DEVOPS: Routine run-recording repaired (backups/throughput/farm-guard now visible in the Operations tab) + mailpwr.com farm shut-off",
       "description": "Routines/disk/backups daily check 2026-09-16 (claude:routines-health). ALL 9 server routines ran inside their windows; disk 62% used, 19 GB free (tonight's writes are now ~42 MB total, not 3.8 GB, after the 09-15 compaction). FIXED + VERIFIED this run (rows confirmed in \"RoutineRuns\"): (1) throughput never recorded because the cron runs /root/Casper/scripts/throughput-report.sh while the record_run snippet had been appended on 09-15 to an orphan 223-byte /opt/caspervpn/throughput-report.sh fragment (now parked in /root/reports/); (2) farm_guard.py exited at line 58 on the no-changes path before its record_run block, so it only ever appeared in the tab on days it shut an account off; (3) the nightly tar 02:00, pg dump 03:00 and usage-log retention 04:15 never recorded at all -> new additive /opt/caspervpn/record_backups_run.sh, cron 20 3 * * *, writes /root/reports/backups-latest.txt. FARM GUARD: mailpwr.com added to /opt/caspervpn/geoip/disposable-override.txt (7 sign-ups, machine-generated 08f* local parts, 0 paid, 0 app use; the guard's candidate query already enforces >=3 signups / no-app / no-paid). The following real run then SHUT OFF 7 accounts, revoked 37 keys, cut 24 live peers across 11 nodes (row backups /root/reports/farm-guard/*-20260916-1814.*). PENDING/FYI, no action taken: 0 weekly database dumps on the brain (local weeklies removed during the 09-15 compaction work); pg_backup.sh recreates one next Sunday and the off-site copy on the dev brain still holds weekly_2026-09-13_0300.dump (1.8 GB) - verified by ls on the remote. Admin ops endpoint 401 (alive), api /health 200. QA ASK: tomorrow after 03:20 UTC confirm the Operations tab shows rows for backups, throughput and farm-guard, and that /root/reports/backups-latest.txt is fresh. Skill updated: memory/departments/devops/skill/SKILL.md new section R.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-09-16T21:17:07Z",
       "createdDate": "2026-09-16",
-      "completedDate": null
+      "completedDate": "2026-09-19",
+      "completedAt": "2026-09-19",
+      "completedBy": "[QA]",
+      "resolution": "QA-TESTED PASS 2026-09-19. RoutineRuns rows confirmed live on prod for all three routines that were previously invisible: throughput last ran 09-19 04:40 (ok), farm-guard 09-19 18:20 (ok, 8 runs/48h), backups 09-19 03:20 (ok, 2 runs/48h) via the new record_backups_run.sh at cron 20 3. Also recording: infra-inventory 09-19 04:20, connectivity 09-19 05:00, routines-status 192 runs/48h. The Operations tab now has a real run history for every nightly routine.",
+      "resultingHandoff": "none \u2014 verification only"
     },
     {
       "id": "xd-825",
@@ -23243,7 +23253,10 @@
       "priority": "P1",
       "createdAt": "2026-09-16T23:11:16Z",
       "createdDate": "2026-09-16",
-      "completedDate": null
+      "completedDate": null,
+      "qaNote": "ROUTINE HALF PROVEN 2026-09-19; admin UI render still unverified. infra_inventory_check.py is in crontab at 20 4 * * * and ran 2026-09-19T04:20:02Z. It checked 86 items: crit 0, warn 1, unknown 0, ok 85. Artifacts all fresh at 04:20: infra-inventory.json (28,717 B), -latest.txt (13,165 B), -state.json. RoutineRuns holds an 'infra-inventory' row for today. InfraHealthController (route api/admin/infrastructure) is present in the RUNNING api binary. The single warn is the Resend sending domain riverzenlb.com (partially_failed, not used for sending \u2014 user email and alerts both go through caspervpn.com), so it is not a CasperVPN defect. REMAINING: log into the admin panel and confirm Operations -> 'Infrastructure' actually renders these rows. That needs a prod admin session QA does not hold.",
+      "lastVerifiedBy": "[QA]",
+      "lastVerifiedDate": "2026-09-19"
     },
     {
       "id": "xd-827",
@@ -23263,11 +23276,15 @@
       "to": "[QA]",
       "title": "Handoff from DEVOPS: Verify the docker-orphan reaper now spares the over-limit capture (and still reaps real orphans)",
       "description": "PROVEN this run: /opt/caspervpn/docker-orphan-reaper.sh (*/10, xd-780) was killing the SUPERVISED 'docker logs -f' of /usr/local/bin/casper-overlimit-capture.sh every ~70 min \u2014 reaper log 18:10:01/19:20:01/20:30:02 matches /var/log/casper-overlimit-cuts.log 'log stream ended ... re-attaching' to the second. Cost: ~5 s blind gap in the over-limit capture per cycle, and every 'reaped 1' line was that one process, so a genuine orphan would have been indistinguishable. FIX INSTALLED 2026-09-16 21:03Z: the reaper skips docker clients whose PPID cmdline contains casper-overlimit-capture.sh and logs 'skipped N supervised client(s)' separately from 'reaped N'. Backup: /root/reports/docker-orphan-reaper.sh.bak-20260916. Proven before install on the live process (dry-run, lowered age threshold): 'skipped 1 supervised client(s)', 0 kills, while a deliberately spawned 'docker events' client printed WOULD_KILL. QA TO VERIFY (after 2026-09-16 21:30Z, when the child passes the 1 h age): (1) tail /var/log/docker-orphan-reaper.log shows 'skipped 1 supervised client(s)' and NO further 'reaped 1' lines; (2) grep 'attaching to caspervpn-api' /var/log/casper-overlimit-cuts.log shows re-attaches stop occurring on the ~70 min cadence; (3) dockerd CPU stays ~0 % (top -bn2 -p $(pidof dockerd)) and 'ps -eo pid,etimes,args | awk \"$3==\\\"docker\\\" && $2>3600\"' lists only the capture child; (4) a genuine orphan is still reaped (spawn 'setsid nohup docker events --since 0m &', wait past 1 h or dry-run with a lowered threshold, expect it killed). Rollback: cp /root/reports/docker-orphan-reaper.sh.bak-20260916 /opt/caspervpn/docker-orphan-reaper.sh\n\n[alert-triage 2026-09-17 13:40Z \u2014 DEVOPS evidence for QA] REAPER FIX VERIFIED HOLDING, measured on the brain: /var/log/docker-orphan-reaper.log has ZERO 'reaped' lines since the fix (last one '[2026-09-16T22:10:01Z] reaped 1 orphaned docker clients', i.e. before it went in) and 82 'skipped 1 supervised client(s) of casper-overlimit-capture.sh' lines today. The capture's client (pid 3495215, 'docker logs -f --since 0m 2398f6e2fe8c', ppid 2603581 = casper-overlimit-capture.sh) has now run UNBROKEN for 14 h 41 m; /var/log/casper-overlimit-cuts.log last re-attach is '[2026-09-16T22:51:28Z] attaching to caspervpn-api (2398f6e2fe8c)' \u2014 caused by the 22:51 API redeploy, not by a reap. Reaper still armed for real orphans (only ppid-matched children of that one supervisor are skipped). QA still owns closing this.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-09-17T00:05:13Z",
       "createdDate": "2026-09-17",
-      "completedDate": null
+      "completedDate": "2026-09-19",
+      "completedAt": "2026-09-19",
+      "completedBy": "[QA]",
+      "resolution": "QA-TESTED PASS 2026-09-19 \u2014 BOTH halves proven, not just the skip. (1) SPARES the supervised client: /var/log/docker-orphan-reaper.log carries 'skipped 1 supervised client(s) of casper-overlimit-capture.sh' on every 10-minute cycle (19:00:01, 19:10:01, 19:20:01, 19:30:02, 19:40:01, 19:50:01Z). (2) STILL REAPS real orphans: 'reaped 1 orphaned docker clients' at 09-18 14:30:02Z, 09-18 18:40:02Z and 09-19 15:30:01Z \u2014 so the fix is a filter, not a disable. (3) The symptom is gone: /var/log/casper-overlimit-cuts.log has NO 'log stream ended ... re-attaching' since 09-18 17:49, and that one was the legitimate api container rebuild, not a reaper kill. The ~5s blind gap per cycle is closed.",
+      "resultingHandoff": "none \u2014 verification only"
     },
     {
       "id": "xd-829",
@@ -23315,7 +23332,10 @@
       "priority": "P1",
       "createdAt": "2026-09-17T02:34:03Z",
       "createdDate": "2026-09-17",
-      "completedDate": null
+      "completedDate": null,
+      "qaNote": "APPROVAL CONFIRMED 2026-09-19 \u2014 iOS 4.2 IS LIVE ON THE APP STORE. iTunes lookup for id 1187243615 (US) returns version 4.2 with currentVersionReleaseDate 2026-09-18T16:39:42Z; release notes describe the Dedicated-IP-with-Double-VPN work, which is the right release. So step (1) of this handoff is DONE. Steps (2), (3) and (4) \u2014 install from the PUBLIC App Store and read the launch marker (expected 2026-09-17-25g), smoke-test the three release features, and watch Crashes for the first 48 hours of the phased rollout \u2014 all need a device and an App Store Connect session. The 48-hour crash window is running NOW and closes 2026-09-20 16:39Z.",
+      "lastVerifiedBy": "[QA]",
+      "lastVerifiedDate": "2026-09-19"
     },
     {
       "id": "xd-833",
@@ -23351,7 +23371,10 @@
       "priority": "P2",
       "createdAt": "2026-09-17T02:58:23Z",
       "createdDate": "2026-09-17",
-      "completedDate": null
+      "completedDate": null,
+      "qaNote": "PARTIAL 2026-09-19. The precondition is met: 4.2 released 2026-09-18T16:39:42Z, so the listing is live and the metadata can now be read on the product page. Not yet checkable from here: whether the promotional text renders above the description, and whether searching 'dedicated ip' surfaces CasperVPN \u2014 both need the storefront page, not the iTunes lookup API. Also flagged for whoever picks this up: the US storefront currently reports averageUserRating 0 and userRatingCount 0, which does not match the '22 reviews / mean 3.95' baseline stated in xd-859 \u2014 establish which storefront and which field that baseline came from before anyone treats a change in it as a signal.",
+      "lastVerifiedBy": "[QA]",
+      "lastVerifiedDate": "2026-09-19"
     },
     {
       "id": "xd-836",
@@ -23455,7 +23478,10 @@
       "priority": "P2",
       "createdAt": "2026-09-17T16:55:32Z",
       "createdDate": "2026-09-17",
-      "completedDate": null
+      "completedDate": null,
+      "qaNote": "PARTIAL \u2014 2nd consecutive run with the SAME residual. PASSING: the scrape job 'blackbox-relay-tls' is live with 12/12 targets UP, and probe_ssl_earliest_cert_expiry now resolves to 16 series instead of 4 \u2014 the 12 s<N>.pompesh.com relay endpoints are finally visible to SSLCertExpirySoon/Urgent, which is exactly the blind spot behind the 2026-08-20 fleet-wide 502. All 12 relay certs read 83.8 days out. parity_monitor.sh ran at 02:00:01Z on 09-19 (cron journal confirmed). STILL MISSING (unchanged since 09-18): there is no parity report artifact anywhere in /root/reports, and cert-expiry-scan.txt is still dated 09-17 13:34 \u2014 the cert scan remains ad-hoc, not daily. Filed to [DEVOPS] as a separate handoff this run.",
+      "lastVerifiedBy": "[QA]",
+      "lastVerifiedDate": "2026-09-19"
     },
     {
       "id": "xd-844",
@@ -23658,11 +23684,15 @@
       "to": "[QA]",
       "title": "Handoff from MARKETING: Website copy VERIFIED from origin (closes xd-852) + review baseline is 22/mean 3.95 not 11x5-star + sandbox-curl truncation trap",
       "description": "SCHEDULED VERIFY 2026-09-18 08:37Z [MARKETING]. Two corrections plus the method that produced them. This also gives xd-852 everything it needs to close.\n\n1) xd-852 (verify published website copy) -- VERIFIED BY MARKETING, from the origin, all five pages:\n     page        bytes    2GB  0.5GB  7-Day Free Trial  5 Locations  3 Locations\n     /           86,723    0     1          4                0            0\n     /pricing    62,827    0     2          4                0            1\n     /free-vpn   95,187    0    23          4                0            6\n     /faq        60,518    0     8          8                0            0\n     /download   41,451    0     0          1                0            0\n   /llms.txt 200 (1,995 B), /robots.txt 200 (936 B, answer-engine allow-list), sitemap 109 <loc>. The two 500MB hits on /free-vpn are the COMPETITOR column (\"200-500MB, often throttled\"), not our claim.\n\n2) APP STORE REVIEWS ARE 22, MEAN 3.95 -- not \"11 x 5-star\". From GET /v1/apps/1187243615/customerReviews, pagination exhausted:\n     5* x13 | 4* x4 | 2* x1 | 1* x4\n     territories: ARE 7, LBN 4, IND 2, USA 2, IRL/ITA/MYS/UKR/NGA/RUS/VNM 1 each\n     all seven 2026 reviews are 5* (LBN x3, ARE x3, IRL x1) -- newest is 2026-06-08, 102 days ago\n   The four 1* are legacy (ARE 2020 \"Inactive\"; RUS 2025-12 objects to mandatory signup). xd-845 already covers replying to them -- this just corrects the baseline it is working from.\n\n3) METHOD -- DO NOT verify caspervpn.com with a sandbox curl. It silently truncates: a 200 with a short body, where the cut tail removes the real <title> and leaves the Next.js embedded RSC 404 fallback as the first match. It read as a total site outage, then as \"/pricing still says 2GB\" -- both false. A 5-page sweep returned 51,081 bytes for EVERY page. Verify from the origin instead:\n     ssh_exec('curl -s -k https://127.0.0.1<path> -H \"Host: caspervpn.com\"')\n   If you only have the sandbox, fetch twice and compare byte counts; identical sizes across structurally different pages is the truncation tell.\n\n4) GA4 IS INSTALLED. G-B6WYQ82SGQ is in /_next/static/chunks/402-d960ab948f6c3220.js. Several runs (mine included) reported \"no GA4 measurement ID\" from grepping the rendered HTML, which contains only a gtag reference. Grep the chunks, not the HTML.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-09-18T11:48:11Z",
       "createdDate": "2026-09-18",
-      "completedDate": null
+      "completedDate": "2026-09-19",
+      "completedAt": "2026-09-19",
+      "completedBy": "[QA]",
+      "resolution": "QA-TESTED PASS 2026-09-19 \u2014 Marketing's figures reproduced INDEPENDENTLY by QA, and they match to the byte. Live public fetch of all five pages: / 86,723 B, /pricing 62,827 B, /free-vpn 95,187 B, /faq 60,518 B, /download 41,451 B. '2GB' = 0 hits on ALL five (the standing P0 copy error is gone). '7-day free trial' 4/4/4/8/1. Five DISTINCT titles and five DISTINCT byte sizes, so this is not the 09-13 soft-404 signature (one identical body on every path) \u2014 checked the right way per the 09-16 method pin. /llms.txt 200 (1,995 B), /robots.txt 200 (936 B), sitemap 109 <loc>, blog pagination.total 22, pricing $9.99 / $59.99 / $149.99. THIS ALSO CLOSES xd-852 \u2014 QA now has independent origin-verified evidence for it.",
+      "resultingHandoff": "xd-852 can be closed on this evidence; 1 new P3 to [LEGAL] on homepage quantum wording"
     },
     {
       "id": "xd-860",
@@ -23734,7 +23764,10 @@
       "priority": "P1",
       "createdAt": "2026-09-18T19:28:33Z",
       "createdDate": "2026-09-18",
-      "completedDate": null
+      "completedDate": null,
+      "qaNote": "CODE-VERIFIED 2026-09-19; device test still required. ReviewPromptManager.swift exists at ios-app-v2/CasperVPN/CasperVPN/Core/Services/ with AppStore.requestReview(in: scene) at line 169, and a companion ReviewPromptManagerTests.swift is present. The file's own header records the pre-write grep: zero hits for SKStoreReviewController / requestReview / RequestReviewAction across all 177 app Swift files, so this is genuinely the first review prompt in the app. REMAINING: on-device proof that it fires on the 3rd successful user-initiated connection and never after a failure. QA cannot run that from the server.",
+      "lastVerifiedBy": "[QA]",
+      "lastVerifiedDate": "2026-09-19"
     },
     {
       "id": "xd-866",
@@ -23818,7 +23851,10 @@
       "priority": "P1",
       "createdAt": "2026-09-18T20:38:07Z",
       "createdDate": "2026-09-18",
-      "completedDate": null
+      "completedDate": null,
+      "qaNote": "DEPLOY PROVEN + 2 of 4 CHECKS PASS 2026-09-19. THE FIX IS LIVE: the running /app/CasperVPN.dll (built 2026-09-18T17:49:41Z) contains the xd-866 literal 3 times and 'left the plan subscription untouched' 5 times as UTF-16; commit d2cef222e (17:36:26Z) is an ancestor of the deploy-clone HEAD, and the image was built 13 minutes after it. (1) CEO ACCOUNT HEALTHY: the Apple privaterelay account is Status=0 Active on the Lifetime plan, EndDate 2126-02-22, DataLimitBytes=0 (unlimited) \u2014 the 402 DATA_CAP_REACHED condition is gone. (2) THE CAP RULE DID NOT WEAKEN: datacap_enforcement_sweep.sh still runs every 3 minutes (19:42/19:45/19:48/19:51Z, 'over-cap client-keyed users=8, peers cut this run=0') and the monitor reads 'EnforceDataCap=true, over-cap users=12, none gaining data (enforcement holding)'. (3)+(4) NOT YET OBSERVABLE: zero xd-866 log lines in 48h because no DID_FAIL_TO_RENEW / EXPIRED / REFUND for a non-owning product has arrived since the deploy. Apple retries an expiry for up to 60 days, so this needs a real event. KEEP OPEN as a watch item \u2014 deployed is not the same as verified.",
+      "lastVerifiedBy": "[QA]",
+      "lastVerifiedDate": "2026-09-19"
     },
     {
       "id": "xd-873",
@@ -23867,9 +23903,71 @@
       "createdAt": "2026-09-19T22:54:55Z",
       "createdDate": "2026-09-19",
       "completedDate": null
+    },
+    {
+      "id": "xd-877",
+      "from": "[QA]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from QA: xd-843 residual, 2nd run: the relay-cert ALERT now works, but the daily cert REPORT still does not exist",
+      "description": "VERIFIED WORKING 2026-09-19 (so do not redo it): scrape job 'blackbox-relay-tls' 12/12 targets UP and probe_ssl_earliest_cert_expiry now resolves to 16 series (4 brain + 12 relays, all 83.8 d out). SSLCertExpirySoon/Urgent can finally fire for the s<N>.pompesh.com endpoints. STILL MISSING, unchanged from the 09-18 QA run: (a) parity_monitor.sh runs nightly at 02:00:01Z (cron journal confirms it on 09-19) but leaves NO artifact in /root/reports \u2014 there is nothing to read the morning after, so a 12/12 parity run cannot be evidenced by anyone who was not watching the journal; (b) /root/reports/cert-expiry-scan.txt is still dated 2026-09-17 13:34 and certscan.sh has no cron entry, so the cert scan is ad-hoc. ASK: have parity_monitor.sh write /root/reports/parity-latest.txt (and a RoutineRuns row, matching what xd-824 just did for backups/throughput/farm-guard), and put certscan.sh on a daily cron. Until then xd-843 cannot be closed.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-09-19T23:02:39Z",
+      "createdDate": "2026-09-19",
+      "completedDate": null
+    },
+    {
+      "id": "xd-878",
+      "from": "[QA]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from QA: xd-871 is already done \u2014 the xd-866 deploy landed 2026-09-18T17:49:41Z; close it",
+      "description": "xd-871 ([BACKEND] -> [DEVOPS], 'Deploy xd-866') is still pending on the board, but the deploy demonstrably happened. EVIDENCE: the running api image was created 2026-09-18T17:49:41Z; its /app/CasperVPN.dll contains the xd-866 literal 3x and 'left the plan subscription untouched' 5x (UTF-16); the source commit d2cef222e is timestamped 17:36:26Z and is an ancestor of the deploy-clone HEAD (20d8e1f27, 17:44:56Z); the build log /root/reports/deploy_xd857_build.log is dated 17:49 and that build swept the xd-866 commit in. caspervpn-api is healthy with RestartCount=0. No action needed beyond marking xd-871 complete.",
+      "status": "pending",
+      "priority": "P3",
+      "createdAt": "2026-09-19T23:02:39Z",
+      "createdDate": "2026-09-19",
+      "completedDate": null
+    },
+    {
+      "id": "xd-879",
+      "from": "[QA]",
+      "to": "[LEGAL]",
+      "title": "Handoff from QA: One unqualified 'Quantum Resistance Encryption' line on the homepage while xd-833 is open with Legal",
+      "description": "Checked because xd-841 point (e) forbids unqualified quantum claims while xd-833 is open. MOSTLY FINE: every quantum mention on /pricing, /faq and /free-vpn is explicitly forward-looking \u2014 'Quantum Resistance Encryption (Kyber1024 + X25519 hybrid) is coming soon', 'Our upcoming CasperCloak Quantum upgrade', 'CasperCloak (Quantum-Resistant, Coming Soon)'. THE ONE EXCEPTION: the homepage carries a bare list item reading 'Quantum Resistance Encryption' with no 'coming soon' qualifier on that line, alongside two other lines that DO carry it. A reader skimming the feature list could take it as a shipped feature. This is a wording call, not a defect \u2014 Legal should decide whether that single line needs the qualifier before xd-833 closes. Low urgency: the meta description and all other surfaces are correctly qualified.",
+      "status": "pending",
+      "priority": "P3",
+      "createdAt": "2026-09-19T23:02:39Z",
+      "createdDate": "2026-09-19",
+      "completedDate": null
+    },
+    {
+      "id": "xd-880",
+      "from": "[QA]",
+      "to": "[IOS]",
+      "title": "Handoff from QA: 4.2 is LIVE since 2026-09-18 16:39Z \u2014 the xd-832 device checks are unblocked and the crash window closes 09-20 16:39Z",
+      "description": "iTunes lookup id 1187243615 (US storefront) reads version 4.2, currentVersionReleaseDate 2026-09-18T16:39:42Z, release notes matching the Dedicated-IP + Double-VPN release. The 'watch for approval' half of xd-832 is therefore DONE. WHAT NEEDS A DEVICE NOW, in priority order: (1) install from the PUBLIC App Store, not TestFlight, and read the launch marker \u2014 expected 2026-09-17-25g; if it reads 25f then build 57 predates the Lebanon Advisory work and that feature is simply absent from this release (a follow-up build, not a breakage); (2) the three release features \u2014 Double VPN pre-selects the dedicated IP as destination, the home card still shows the route after a force-quit and relaunch, and in Lebanon the Settings protocol picker is unlocked with CasperCloak still the Auto default; (3) App Store Connect Crashes for the first 48 hours of the phased rollout \u2014 that window closes 2026-09-20 16:39Z, so it is time-boxed. Also still queued behind a device: xd-869 (build 25i launch delay + phantom error, P0), xd-865 (rating prompt on the 3rd connection), xd-830, xd-831, xd-814, xd-809, xd-804.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-09-19T23:02:39Z",
+      "createdDate": "2026-09-19",
+      "completedDate": null
     }
   ],
   "importantNotes": [
+    {
+      "id": "note-qa-2026-09-19",
+      "date": "2026-09-19",
+      "author": "[QA]",
+      "priority": "P1",
+      "text": "[QA CHECK 2026-09-19 \u2014 GOOD NEWS FIRST] Version 4.2 of the iPhone app went LIVE on the App Store yesterday at 16:39 UK time. Anyone can download it now. Three things are still worth doing on a phone in the next day: install it from the App Store (not TestFlight) and open it once, check the three new things this release was about, and watch the crash list \u2014 that watch window closes tomorrow evening. THE LIFETIME BILLING REPAIR IS REALLY ON THE SERVER: we opened the running program file and found the new protection inside it, so the repair is live, not just written. Your own account reads as a paid Lifetime account with no data limit. Free accounts that go over their allowance are still being stopped, so the repair did not weaken anything. One caveat: the protection has not had to act yet, because Apple has not sent another failed-payment message since the repair \u2014 Apple can retry for up to 60 days, so this stays on the watch list. EVERYTHING ELSE IS HEALTHY: all 19 services running, the website copy is correct on all five pages, and the bandwidth fix from last week is still holding \u2014 28 records a day instead of 2.4 million. Nothing for you to do today except the phone checks if you have 10 minutes."
+    },
+    {
+      "id": "note-qa-trap-dotnet-strings-2026-09-19",
+      "date": "2026-09-19",
+      "author": "[QA]",
+      "priority": "P2",
+      "text": "[METHOD TRAP \u2014 for engineers, saved a false alarm today] Checking whether a fix is inside the running .NET program with `strings` inside the container returns ZERO even when the fix IS there: .NET stores text as UTF-16 and the default scan only reads plain ASCII. Today that nearly produced a 'the lifetime fix was never deployed' alarm, which was wrong. The tell is that a control string you KNOW is in the binary also comes back zero. Correct method: `docker cp` the .dll out of the container and count both s.encode() and s.encode('utf-16-le') in Python. Always test a known control literal in the same breath as the one you are hunting."
+    },
     {
       "id": "note-marketing-2026-09-19-aso-trial-funnel",
       "date": "2026-09-19",
