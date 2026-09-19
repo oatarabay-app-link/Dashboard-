@@ -23765,7 +23765,7 @@
       "createdAt": "2026-09-18T19:28:33Z",
       "createdDate": "2026-09-18",
       "completedDate": null,
-      "qaNote": "CODE-VERIFIED 2026-09-19; device test still required. ReviewPromptManager.swift exists at ios-app-v2/CasperVPN/CasperVPN/Core/Services/ with AppStore.requestReview(in: scene) at line 169, and a companion ReviewPromptManagerTests.swift is present. The file's own header records the pre-write grep: zero hits for SKStoreReviewController / requestReview / RequestReviewAction across all 177 app Swift files, so this is genuinely the first review prompt in the app. REMAINING: on-device proof that it fires on the 3rd successful user-initiated connection and never after a failure. QA cannot run that from the server.",
+      "qaNote": "CODE-VERIFIED, AND NOT TESTABLE ON THE LIVE APP \u2014 2026-09-19. The code is real and correctly wired: ReviewPromptManager.swift was added in commit 7220bd29a at 2026-09-18T16:26:16Z; AppStore.requestReview(in: scene) sits at line 169; ReviewPromptManagerTests.swift accompanies it. In VPNConnectionManager.swift the arm is at L1133 (connectAttemptStarted, gated on isUserInitiated), the two FIRE sites are L2899 and L3180 (tunnelDidReachConnected), and four disarm-on-failure sites are L1193, L1215, L1638 and L3288 \u2014 consistent with the arm/fire design that deliberately excludes cold-start restore, foreground reconcile, IKEv2 rekey and the UI-test mock. BUT this handoff asks for a TestFlight build of 4.3 and no such build is published yet; the repo reads MARKETING_VERSION 4.3 / CURRENT_PROJECT_VERSION 58 while the App Store is serving 4.2 build 57. So this cannot be device-tested until 4.3 ships to TestFlight. Blocked on the build, not on a tester.",
       "lastVerifiedBy": "[QA]",
       "lastVerifiedDate": "2026-09-19"
     },
@@ -23890,7 +23890,10 @@
       "priority": "P2",
       "createdAt": "2026-09-19T22:54:55Z",
       "createdDate": "2026-09-19",
-      "completedDate": null
+      "completedDate": null,
+      "qaNote": "QA ACCEPTED 2026-09-19, with two corrections to the xd-874 write-up so nobody chases the wrong thing. (1) THE CONCLUSION IS CONFIRMED INDEPENDENTLY: the rating-prompt code (commit 7220bd29a, 2026-09-18T16:26:16Z) is NOT in the live app, because 4.2 shipped build 57 and build 57 was submitted for App Review on 2026-09-17. (2) CORRECTION \u2014 'missed the release by 13 minutes' is a coincidence of the release TIMESTAMP, not a near-miss: a build already in Apple's review queue since 09-17 could never have contained a commit written on 09-18. It missed the BUILD by over a day. Worth stating plainly so no one concludes a faster merge would have caught it. (3) CORRECTION \u2014 there are TWO fire call sites (VPNConnectionManager.swift L2899 and L3180, both tunnelDidReachConnected), not three; L3288 is a connectAttemptFailed disarm site. The counting rule itself is sound. QA will run the four checks in this handoff once 4.3 build 58 reaches TestFlight or READY_FOR_SALE. Baseline captured by QA the same day: US storefront id 1187243615 reads version 4.2, currentVersionReleaseDate 2026-09-18T16:39:42Z, averageUserRating 0, userRatingCount 0.",
+      "lastVerifiedBy": "[QA]",
+      "lastVerifiedDate": "2026-09-19"
     },
     {
       "id": "xd-876",
