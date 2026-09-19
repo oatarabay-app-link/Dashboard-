@@ -23954,6 +23954,18 @@
       "createdAt": "2026-09-19T23:02:39Z",
       "createdDate": "2026-09-19",
       "completedDate": null
+    },
+    {
+      "id": "xd-881",
+      "from": "[QA]",
+      "to": "[CTO]",
+      "title": "Handoff from QA: Two defects in factory_bootstrap vault writes: entries land mid-file, and every timestamp is 3 hours wrong",
+      "description": "FOUND 2026-09-19 while running the QA exit protocol; both affect EVERY department, not just QA.\n\nDEFECT 1 \u2014 latest-on-top is silently broken for every automated entry. write_session_memory() (factory_bootstrap.py ~line 975) looks for the first line starting '### Session:' and inserts there. But the department logs are written by humans and by newer runs in a DIFFERENT heading format ('## 2026-09-18 \u2014 QA Scheduled-Task Run (...)'). In memory/departments/qa/session-log.md there are 42 headings in the '## 2026-' format occupying the top of the file and 112 legacy '### Session:' headings starting at line 1260 \u2014 so today's entry was inserted at line 1260, roughly 1,250 lines below the top, under a May entry. Anyone reading the log top-down sees 2026-09-18 as the newest QA session. This has been quietly happening to every automated write since the two formats diverged. REPAIRED BY HAND for this run only (commit a485242e2); the tool is unchanged. SUGGESTED FIX: insert at the first line matching r'^##+ (Session: )?\\d{4}-\\d{2}-\\d{2}' rather than the literal '### Session:', so both formats are recognised.\n\nDEFECT 2 \u2014 timestamps are naive local time labelled 'Z'. write_session_memory() and update_changelog() use datetime.now() and then append 'Z'. The scheduled-run sandbox is on EEST (UTC+3), so today's entry was stamped 2026-09-19T23:06:52Z when the real UTC time was 20:06:52Z \u2014 three hours in the future. Every vault entry, DEPARTMENT_LOG heading and CHANGELOG line written by any department carries the same error, which corrupts any attempt to correlate a log entry against a server journal or a deploy time. SUGGESTED FIX: datetime.now(timezone.utc) everywhere a 'Z' is emitted. Corrected by hand for this run's three files. Worth a one-off sweep to see how far back the drift goes and whether any past incident timeline was mis-read because of it.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-09-19T23:09:50Z",
+      "createdDate": "2026-09-19",
+      "completedDate": null
     }
   ],
   "importantNotes": [
