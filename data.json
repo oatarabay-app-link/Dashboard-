@@ -23994,6 +23994,18 @@
       "createdAt": "2026-09-20T00:03:59Z",
       "createdDate": "2026-09-20",
       "completedDate": null
+    },
+    {
+      "id": "xd-884",
+      "from": "[CTO]",
+      "to": "[QA]",
+      "title": "Handoff from CTO: The UAE force-CasperCloak rule is UNMEASURED and our own data points the other way \u2014 settle it with one phone before the direct-first build",
+      "description": "CEO CHALLENGE 2026-09-19 ('why will protocols not work in UAE, wouldn't all be under stealth?'). He is right to push: I measured it instead of repeating the assumption, and THE DATA POINTS THE OPPOSITE WAY. MEASURED 2026-09-19 on prod (ConnectionLogs + ConnectFailureEvents, users whose LastLoginCountry='AE'): WireGuard (Protocol=0) 174 connections, 5 users, 2026-06-23 to 2026-09-06, 1,668 MB, session lengths averaging 45-111 minutes per month. CasperCloak (Protocol=3) 31 connections, 6 users, 12.5 MB total; June CC sessions averaged 0.4 MINUTES (24 s) and moved 0.0 MB; July CC shows one 3,183-minute zombie session. FAILURES: every recorded UAE connect failure is CasperCloak - 105 'unknown' + 5 cc-wg-nohandshake-direct + 2 ws-close-1006, and ZERO WireGuard failures. So in the UAE the protocol we FORCE is the one that fails and carries nothing, while the protocol we FORBID ran multi-hour sessions carrying 1.6 GB. WHERE THE RULE CAME FROM: restricted_countries.reason for AE reads 'TRA licensing - unlicensed VPNs blocked' - a LICENSING statement, not a technical measurement; and StealthTier.cs says in its own words that fronting was adopted as INSURANCE against the relay IP being found over time, 'not because direct was blocked (the pre-fronting app worked unblocked in the Gulf)'. Same shape as Lebanon, where the carrier-throttle justification for Throttle tier was also never measured and was lifted on 2026-09-17. TWO CAVEATS THAT STOP THIS BEING PROOF, state them in any summary: (1) LastLoginCountry is the user's LAST login country, so I cannot prove each session happened physically inside the UAE; (2) ConnectionLog.Protocol DEFAULTS to WireGuard when a client does not report one, so some Protocol=0 rows could be unreported rather than genuinely WireGuard - though correctly-labelled CasperCloak rows exist throughout, and 45-111 minute sessions carrying 1.6 GB are not a mislabelling artefact. n is 5-6 users, which is small. THE TEST THAT SETTLES IT (needs ONE phone physically in the UAE, on cellular AND on wifi): (a) sign in, Settings -> Protocol -> WireGuard, connect, hold 10 minutes, run a speed test, record whether it connects at all and the Mbps; (b) same phone, same server, Protocol -> CasperCloak with Fast Route OFF (the Cloudflare road, today's forced default), 10 minutes, speed test; (c) same, Fast Route ON (direct road); (d) repeat each 3 times and report mean AND spread - our own Lebanon data had a 3.8x within-road spread, so a single run proves nothing; (e) note the carrier. WHAT IT DECIDES: if WireGuard connects and holds in the UAE, then forcing CasperCloak there is costing users roughly half their line speed (and, on the Cloudflare road, up to 90%) for a reason we never verified - and the fix is a one-row tier change (Advisory, exactly what Lebanon got), NOT the direct-first build. If WireGuard is blocked, the direct-first build (xd-812) plus the speed levers (xd-882/xd-883) are the path and this is closed as confirmed. DO NOT flip the UAE tier on this data alone - the licensing risk to a user caught on a plain VPN protocol is a CEO call, and n=5. Feeds the CEO decision in xd-810.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-09-20T00:44:34Z",
+      "createdDate": "2026-09-20",
+      "completedDate": null
     }
   ],
   "importantNotes": [
