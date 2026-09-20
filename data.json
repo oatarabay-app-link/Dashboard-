@@ -24268,6 +24268,18 @@
       "createdAt": "2026-09-20T21:59:14Z",
       "createdDate": "2026-09-20",
       "completedDate": null
+    },
+    {
+      "id": "xd-895",
+      "from": "[CTO]",
+      "to": "[IOS]",
+      "title": "Handoff from CTO: 'VPN extension is not properly configured' alert fires 12 ms into a protocol switch and the tunnel then connects anyway \u2014 plus the 25i reason-freshness guard has a hole",
+      "description": "CEO device, App Store build 4.2 (marker 2026-09-17-25g), log exported 2026-09-20 21:57, screenshot attached to the session: the app shows 'Connected 00:00:02' with a 'Connection Error - VPN extension is not properly configured' alert on top of it. TWO SEPARATE DEFECTS IN ONE LOG. (1) PHANTOM ALERT ON PROTOCOL SWITCH - 21:25:14. Extension log immediately before: PROBE [6s] and [9s] NO HANDSHAKE, then a path update, watchdog stopped, then 'setTunnelNetworkSettings CALLED with nil (clearing)' -> 'setTunnelNetworkSettings FAILED: NEAgentErrorDomain error 1'. App then logs 'Protocol-switch: manager cache invalidated + reloaded (fresh count=1)' and 12 MILLISECONDS later '[CC-FAIL] server=Paris proto=wireGuard category=unknown detailed=none elapsedMs=12 err=VPN extension is not properly configured.' Then at 21:25:14.209 'Starting VPN tunnel', .217 Connecting, .384 CONNECTED - i.e. the tunnel came up 0.2 s after the error the user was shown. elapsedMs=12 is not a connection attempt; the failure belongs to the TEARDOWN of the previous tunnel while the manager was being reloaded, and it is being attributed to the NEW attempt. FIX DIRECTION: do not evaluate/raise networkExtensionNotConfigured while a protocol switch is reloading the manager (the reload is already logged one line earlier); and suppress any connect error whose elapsed time is below a floor (~250 ms) unless the tunnel is still down when the connect settles. (2) THE 25i FRESHNESS GUARD HAS A HOLE - 21:30:44. TunnelDisconnectReason.extract has TWO paths: Path 1 asks iOS for the session's last structured disconnect error, Path 2 tails the shared tunnel log. xd-869 added the 'since:' attempt-window guard to Path 2 ONLY. Path 1 is NOT time-gated, and the OS's 'last disconnect error' can be from a PREVIOUS disconnect - which is how '[CC-FAIL] ... elapsedMs=83134 err=VPN extension is not properly configured' appears after a run whose real failures were 'Failed to fetch config from API: networkError(The request timed out)' on WireGuard (47.9 s) and then IKEv2 (35.2 s). The user is told the extension is misconfigured when the truth is the API was unreachable. FIX: apply the same 'since' window to Path 1, or discard the OS error when the session has reconnected since it was recorded. (3) THE UNDERLYING REAL FAILURE in that second incident is the known config-refetch-through-a-dead-tunnel trap: at 21:29:21 'ensureManagerHealthForConnect: swapping stale tunnelManager ref', then the config fetch times out at 47.9 s, the IKEv2 fallback times out at 35.2 s and OpenVPN is cancelled - 83 s of the user watching nothing work while the old tunnel was still capturing traffic. Worth re-checking that the pre-connect teardown really releases the routes before the first API call. SHIP WITH 4.3 alongside xd-869 (25i) and the rating prompt (xd-874) - none of the three are in the store build today.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-09-20T22:06:20Z",
+      "createdDate": "2026-09-20",
+      "completedDate": null
     }
   ],
   "importantNotes": [
