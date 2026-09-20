@@ -8194,7 +8194,113 @@
       "progress": 0,
       "blocked": false,
       "blocker": "",
-      "acceptanceCriteria": [],
+      "acceptanceCriteria": [
+        {
+          "test": "BASELINE RECORDED before any change: 3+ PAIRED runs per road on a real device in the target country, reported as mean AND spread \u2014 a single run is rejected as evidence (our own Lebanon test had a 3.8x within-road spread). Baseline, Lebanon 2026-09-10, n=5 pairs: no-VPN 23 Mbps; Cloudflare road mean 3.7; direct road mean 7.4; direct reached only 36-63% of the line, so removing Cloudflare alone is NOT sufficient.",
+          "met": false,
+          "passed": false
+        },
+        {
+          "test": "SWITCH ON THE NATIVE FRONT \u2014 cheapest measured win, already built: the per-server fronted hostnames replace the old Cloudflare Worker for every fronted user. MEASURED: the Worker closed a 4 Mbps connection after 125.7 s; the native front held 600 s at 4.0 Mbps. Acceptance: on in production, a fronted user confirmed on the new road, no regression for Iran/Russia/China.",
+          "met": false,
+          "passed": false
+        },
+        {
+          "test": "PARALLEL STREAMS, CLIENT SIDE (2-4x, works TODAY through Cloudflare): stripe WireGuard packets across 4-8 parallel connections to one relay, with reassembly and automatic degrade-to-one. Acceptance: 2x or better vs single stream on the same device and line, 3 paired runs with mean and spread, battery/CPU delta recorded.",
+          "met": false,
+          "passed": false
+        },
+        {
+          "test": "PARALLEL STREAMS, RELAY SIDE: accept N connections as one session, reassemble into the single inner WireGuard socket, tolerate per-stream loss, reorder and teardown; interoperates with the client and degrades to one stream.",
+          "met": false,
+          "passed": false
+        },
+        {
+          "test": "QUIC/HTTP-3 GATE BEFORE ANY BUILD: from a Gulf vantage, prove a plain HTTP-3 flow to port 443 sustains throughput. Expected YES in the Gulf (UDP allowed), expected NO in Lebanon (carrier UDP throttle). Acceptance: go/no-go with the probe output quoted; if NO, the transport is not built.",
+          "met": false,
+          "passed": false
+        },
+        {
+          "test": "QUIC/HTTP-3 TRANSPORT (strategic 10-50x for the Gulf, only if the gate passes): no head-of-line blocking and a loss-tolerant congestion control we own end to end; HTTP/3 on 443 is mainstream web traffic so it survives Gulf inspection. TCP road stays as the automatic fallback for throttle regions.",
+          "met": false,
+          "passed": false
+        },
+        {
+          "test": "CHEAP RELAY WINS (10-30%, large for many simultaneous users): batch multiple packets per frame instead of one at a time, VERIFY (do not assume) whether TCP_NODELAY is set and set it, set explicit socket buffers, trim the 7-15% padding overhead on already-full frames.",
+          "met": false,
+          "passed": false
+        },
+        {
+          "test": "MTU AND FRAGMENTATION REVIEWED END TO END: CasperCloak already fragments at 1400 bytes across its layers and fragmentation is a throughput killer. Acceptance: effective MTU measured per road and per stream, and corrected.",
+          "met": false,
+          "passed": false
+        },
+        {
+          "test": "GULF-ADJACENT SERVER PRICED, PILOTED IF APPROVED: MEASURED 2026-09-19, nearest server to Dubai is 5,002 km (then 5,161 / 5,249 / 5,834). Single-stream throughput scales inversely with round-trip time, so distance sits UPSTREAM of every software lever and compounds with parallel streams. Acceptance: cost and availability for a ~1,500-2,000 km location; if approved, before/after round-trip time and throughput.",
+          "met": false,
+          "passed": false
+        },
+        {
+          "test": "OUTCOME TARGET: a stealth connection reaches at least 60% of the line on a real device in the target country, proven by 3 paired runs with mean and spread. Today the same measurement reads 17-40% on the Cloudflare road.",
+          "met": false,
+          "passed": false
+        },
+        {
+          "test": "STEALTH COST GRADED FOR EVERY SPEED CHANGE before it ships. Invisibility wants TCP/TLS, speed wants UDP \u2014 they pull opposite ways. No change ships without its stealth grade written down.",
+          "met": false,
+          "passed": false
+        },
+        {
+          "test": "CONNECTION-COUNT SIGNAL ASSESSED for parallel streams: 8 simultaneous TLS sessions to one host is itself unusual and detectable. Acceptance: the chosen number is justified against that risk and the dials are staggered.",
+          "met": false,
+          "passed": false
+        },
+        {
+          "test": "NO CHANGE BREAKS THE FIVE-LINK FRONTING CHAIN (the silent-failure class that has cost us time three times): server name, certificate, front record, relay config and app config must agree exactly \u2014 names treated as opaque, never trimmed, case-changed or accent-folded in one layer only.",
+          "met": false,
+          "passed": false
+        },
+        {
+          "test": "STEALTH IMPROVEMENT \u2014 ENCRYPTED CLIENT HELLO: the server name is still readable in the first packet of a normal connection; Encrypted Client Hello removes that last cleartext identifier. Named in our own threat table as a counter we have NOT adopted. Assess and adopt where the front supports it.",
+          "met": false,
+          "passed": false
+        },
+        {
+          "test": "STEALTH IMPROVEMENT \u2014 TLS FINGERPRINT STAYS MATCHED to the phone's own network stack: any new transport library changes our fingerprint and makes us stand out. Acceptance: fingerprint re-verified after every transport change, not once.",
+          "met": false,
+          "passed": false
+        },
+        {
+          "test": "STEALTH IMPROVEMENT \u2014 RANDOMISE THE TRAFFIC SHAPE: our padding ladder is a fixed set of sizes and our keepalive is a fixed 20-second beat; a constant rhythm is itself a signature. Acceptance: sizes and timing jittered, then re-graded.",
+          "met": false,
+          "passed": false
+        },
+        {
+          "test": "STEALTH IMPROVEMENT \u2014 ACTIVE-PROBE RESISTANCE RE-TESTED after every relay change: a censor connects to a suspected server and looks for a VPN-shaped error. Every node must answer like an ordinary web server and fail silently on a wrong key.",
+          "met": false,
+          "passed": false
+        },
+        {
+          "test": "STEALTH IMPROVEMENT \u2014 MACHINE-LEARNING CLASSIFIERS are our weakest area by our own grading; only cover traffic and behavioural variation counter them. Acceptance: a written position on whether we invest here, not silence.",
+          "met": false,
+          "passed": false
+        },
+        {
+          "test": "STEALTH IMPROVEMENT \u2014 NAMES AND CERTIFICATES ARE PERMANENT: every hostname we use stays in public certificate logs forever. Acceptance: cover domains rotate, burned names are never reused, and no name, record or reverse lookup ever contains anything VPN-like.",
+          "met": false,
+          "passed": false
+        },
+        {
+          "test": "STEALTH IMPROVEMENT \u2014 AUTOMATIC BURN DETECTION: when a server address stops working in one country, retire it there automatically instead of waiting for complaints. Acceptance: detection exists and is proven by a drill.",
+          "met": false,
+          "passed": false
+        },
+        {
+          "test": "STEALTH IMPROVEMENT \u2014 EVERYTHING STAYS ON PORT 443 WITH A REAL CERTIFICATE and provider diversity across countries, so blocking us means blocking ordinary web traffic.",
+          "met": false,
+          "passed": false
+        }
+      ],
       "weight": 1.28
     }
   ],
