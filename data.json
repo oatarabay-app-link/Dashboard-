@@ -26797,6 +26797,30 @@
       "createdAt": "2026-09-22T00:08:36Z",
       "createdDate": "2026-09-22",
       "completedDate": null
+    },
+    {
+      "id": "xd-943",
+      "from": "[CTO]",
+      "to": "[BACKEND]",
+      "title": "Handoff from CTO: A force-quit leaves the session OPEN for 45 minutes, so a free (1-device) user cannot register their next connection \u2014 and the heartbeat then tells the app 'session terminated' every 30 s",
+      "description": "MEASURED on the CEO's device 2026-09-22 00:29 (build 25j, free account). CHAIN: (1) the app was killed while connected twice during testing, leaving TWO ConnectionLogs rows with DisconnectedAt NULL (21:04:46Z and 21:08:05Z, both Amsterdam); (2) the Free plan allows MaxDevices=1, so DeviceLimitService.CanConnectAsync counted 2 >= 1 and POST /servers/{id}/connect returned 400 SRV_6001 'Device limit reached. Your plan allows 1 simultaneous device(s). You have 2 active' \u2014 NINE times; (3) because no session row was created, the 30-second heartbeat's `activeLog` was null, so the API answered sessionActive=false and the app logged 'Heartbeat: server reports session terminated' TEN times in 3 minutes. The tunnel itself was FINE throughout: kernel status Connected, extension diagnostics at 00:29:05 'handshake=OK, traffic=flowing', rx 115516 B. So the user sees a connection that works but a UI/telemetry state that says otherwise, and on any build that acts on sessionActive=false it would be torn down. WHY IT LINGERS: BandwidthReconcileService.ZombieSessionThreshold = 45 MINUTES, so an abandoned session holds a device slot for up to 45 min. For a 1-device free plan that means: force-quit the app, reconnect, and your session cannot register for up to 45 minutes. Blast radius today is small (2 open sessions, 1 user, fleet-wide \u2014 this account) because the CEO's account is the one being force-quit repeatedly, but every free user who kills the app hits the same rule. FIX (pick one, both cheap): (a) when POST /connect registers a new session for a user, first close that user's other open sessions for the SAME device/key (we already have the WireGuard key id) \u2014 a device can only have one live session by definition; or (b) treat a session with LastSeenAt older than ~3 minutes (2 missed 30 s heartbeats + margin) as dead for the purposes of the device-limit count, keeping the 45-minute sweeper for accounting. ALSO: the heartbeat should distinguish 'no session row' from 'terminated by an administrator' \u2014 today both return sessionActive=false with the message 'Session terminated by administrator', which is untrue in this case and would mislead the next investigation. IMMEDIATE: the two rows were closed by hand (DisconnectReason 'manual-reconcile: app killed, session abandoned (xd-943)') so the CEO's testing is unblocked.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-09-22T00:36:33Z",
+      "createdDate": "2026-09-22",
+      "completedDate": null
+    },
+    {
+      "id": "xd-944",
+      "from": "[CTO]",
+      "to": "[IOS]",
+      "title": "Handoff from CTO: A SECOND timeout that does not cut: the connectivity probe has a 5-second budget and took 88.5 seconds on the CEO's phone",
+      "description": "MEASURED 2026-09-22 00:32:06 (build 25j): '[ZOMBIE-PROBE] attempt=1 result=FAIL domain=NSURLErrorDomain code=-1001 desc=The request timed out. in 88501ms (budget 5s)'. The second attempt then answered in 1156 ms and the app correctly concluded 'transient blip, tunnel healthy (no teardown)' \u2014 but for ~90 seconds the app was sitting on a check it believed was bounded to 5. This is the SAME CLASS as xd-869 (the launch validation whose 10 s cap never cut) and it is now the second instance, so treat the pattern as systemic. WHY IT DOES NOT CUT: probeDataPlane sets URLSessionConfiguration.timeoutIntervalForRequest/ForResource = timeoutSeconds and waitsForConnectivity = false, but those clocks do not bound the phases that hang on a half-dead tunnel path (name resolution and connection setup can exceed the request timer; -1001 was raised only at 88.5 s). A configuration timeout is a REQUEST-level hint, not a wall-clock deadline. FIX: bound it the way xd-869 fixed the launch \u2014 run the probe DETACHED and race it against a real deadline, resuming a one-shot continuation from whichever finishes first (the helper already exists in AppCoordinator as withTimeoutOrNil + LaunchRaceOnce; lift it into a shared utility rather than copying it). Then assert the discipline in the log line: it already prints elapsed vs budget, so any future instance is one grep away ('in Nms (budget Ns)' where N*1000 << Nms). SWEEP WHILE YOU ARE THERE: grep the app for timeoutIntervalForRequest / timeoutIntervalForResource / 'budget' and check each one actually bounds wall-clock; the two found so far were both in recovery paths, which is exactly where a stuck app is most visible to the user.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-09-22T00:36:33Z",
+      "createdDate": "2026-09-22",
+      "completedDate": null
     }
   ],
   "importantNotes": [
