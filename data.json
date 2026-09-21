@@ -26785,6 +26785,18 @@
       "createdAt": "2026-09-21T16:18:19Z",
       "createdDate": "2026-09-21",
       "completedDate": null
+    },
+    {
+      "id": "xd-942",
+      "from": "[CTO]",
+      "to": "[IOS]",
+      "title": "Handoff from CTO: A FREE account can LOOK premium: the app falls back to the phone's Apple-ID purchases until the server's answer lands, and replays that Apple ID's receipts under whichever account is signed in",
+      "description": "CEO 2026-09-21/22: 'if the trial is not active, how can I access all servers and all features with a free account on the live app?' MEASURED: the SERVER never granted anything \u2014 riverzenlb@gmail.com (free) connected only to Singapore (free) in the last 30 h, 0 PREMIUM_SERVER refusals, every sync line reads 'tier=free'. So what the CEO saw was DISPLAY, and the code shows how: (1) SubscriptionManager.currentTier() returns backendSyncedTier when set, else `subscriptionStatus?.tier` \u2014 the StoreKit entitlement of the PHONE's APPLE ID (updateSubscriptionStatus), which is Apple-ID-scoped, not account-scoped. The CEO's Apple ID owns real products (Lifetime, weekly renewals 310003\u2026, dedicated IP), so on a free account the app can render every server unlocked and every feature on until the /user sync sets backendSyncedTier=.free (and again whenever it is nil: pre-login, after the logout reset, sync in flight). Device log 2026-09-21 03:06:40: on the FREE account, 'Backend receipt validation got 401 \u2014 JWT expired mid-purchase', 'Transaction 310003190052549 not finished \u2014 will retry' (that transaction is the LIFETIME account's weekly renewal, Payments row 2026-09-19 10:01:48) and 'Transaction.all replay \u2014 23 new receipt(s) to deliver' \u2014 i.e. the Apple ID's receipts were POSTed to /payments/validate-receipt under the free account's JWT. The backend deduped them (AppleReceiptService L757 matches Metadata by transaction id \u2192 already recorded on 2eecd0e6\u2026), so NO plan was granted to riverzenlb (its newest Payments rows are sandbox dedicated-IP tests from 2026-06-22). RISK: a receipt NOT yet recorded (fresh purchase, or a second CasperVPN account on the same Apple ID) WOULD bind to whichever account is signed in. FIX (iOS, P2): (a) never let the StoreKit tier stand in for a logged-in account whose backend sync has not confirmed it \u2014 while backendSyncedTier is nil for a signed-in user, treat the tier as .free for gating (keep the StoreKit tier only for the pre-login paywall/restore UX); (b) the Transaction.updates listener and Transaction.all replay must not post receipts for an account whose backend user id differs from the one that made the purchase \u2014 key the replay by user id (store the purchasing user id with lastStoreKitPurchase*), or ask the backend first whether the originalTransactionId is bound elsewhere and show 'this purchase belongs to another CasperVPN account'; (c) backend (small, [BACKEND] note): validate-receipt should REFUSE to attach a transaction whose originalTransactionId is already bound to a different UserId instead of silently deduping. QA: sign into a free account on a phone whose Apple ID owns Lifetime \u2014 every server must show a lock until the trial/plan is real; the API log must show no validate-receipt for that account.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-09-22T00:08:36Z",
+      "createdDate": "2026-09-22",
+      "completedDate": null
     }
   ],
   "importantNotes": [
