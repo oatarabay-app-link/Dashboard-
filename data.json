@@ -26845,6 +26845,30 @@
       "createdAt": "2026-09-22T01:14:58Z",
       "createdDate": "2026-09-22",
       "completedDate": null
+    },
+    {
+      "id": "xd-947",
+      "from": "[CTO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CTO: P1 ESCALATION of xd-863: the usage recorder has been effectively DEAD since 2026-09-16 and it made me report a false country blackout",
+      "description": "MEASURED 2026-09-22. BandwidthUsageLogs rows per day, ALL countries: 09-11 1,160 rows/199 users/16.4 GB \u00b7 09-12 28,667/209/91.3 GB \u00b7 09-13 29,286/216/91.2 GB \u00b7 09-14 29,679/215/99.0 GB \u00b7 09-15 38,762/221/68.5 GB \u00b7 **09-16 37 rows/5 users/360 MB** \u00b7 09-17 18/5/140 MB \u00b7 09-18 9/6/102 MB \u00b7 09-19 24/2/0.3 MB \u00b7 09-20 1/1/1.3 MB \u00b7 09-21 2/2/2.9 MB. The collapse lands exactly on the hourly-compaction rewrite (xd-793, 2026-09-15 ~20:00Z) that xd-863 and xd-857 already flagged \u2014 this raises it to P1 because of the consequences below, and because it is now SIX DAYS old. CONSEQUENCE 1 \u2014 it produces FALSE INTELLIGENCE: I reported to the CEO that Iran, Russia, China, the UAE and Saudi Arabia had passed 'not one byte' since the native-front switch. That was this dead instrument, not reality: Germany and Lebanon, which are provably active (1,080 and 241 sessions in 30 days), record almost nothing either. Any conclusion drawn from BandwidthUsageLogs since 09-16 must be re-derived from ConnectionLogs. CONSEQUENCE 2 \u2014 DATA CAPS AND BILLING: the free tier's 0.5 GB cap and the over-limit enforcement read usage. If usage is not being recorded, free users are effectively uncapped and paid-tier reporting is wrong. Verify what the cap path actually reads (Users.CurrentCycleDataUsedBytes vs this table) and whether the 402 gate can still fire. CONSEQUENCE 3 \u2014 the nightly throughput report (xd-820/857) has produced 0 rows for days, so the speed work has no field data either. ASK: restore per-session recording (or state clearly which table is now authoritative and repoint every reader \u2014 caps, admin, reports, the daily routines), then backfill or accept a documented gap for 09-16 onward. Until it is fixed, put a banner on the admin Operations page so nobody else reads those numbers as truth.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-09-22T01:34:18Z",
+      "createdDate": "2026-09-22",
+      "completedDate": null
+    },
+    {
+      "id": "xd-948",
+      "from": "[CTO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CTO: Iran: our stealth is NOT working there \u2014 212 failures against 15 sessions, only ONE of which carried real data (30 days, test accounts excluded)",
+      "description": "CEO asked 2026-09-22: 'why did these countries go silent, shouldn't our stealth protocol be working there'. MEASURED from ConnectionLogs + ConnectFailureEvents (NOT the broken usage recorder), real accounts only, 30 days: IRAN \u2014 40 accounts, 10 signed in, last sign-in 2026-09-19; 15 sessions of which only 1 carried more than 1 MB (max 508 MB, the rest ~0); 212 recorded failures, ALL CasperCloak, category 'unknown'. Failure timing: most die between 2 and 15 seconds, a substantial minority under 2 seconds, a few past 15 \u2014 i.e. the transport comes up and is then cut, not an instant refusal. The failures come from ONE to TWO determined users per day across 2-6 different servers, so this is a persistent individual being blocked rather than a whole population. Verdict: STEALTH IS FAILING IN IRAN. RUSSIA \u2014 26 accounts, 17 signed in, last 2026-09-20; 32 sessions, 4 over 1 MB (max 549 MB); 35 failures. Verdict: roughly half working \u2014 degraded, not blocked. UAE \u2014 8 accounts, 3 signed in, LAST SIGN-IN 2026-09-01; 5 sessions, 2 over 1 MB, average 233 MB, max 680 MB; 15 failures (newest 2026-08-26). Verdict: it WORKS when they try \u2014 they stopped coming back. That is churn, not censorship, and it is a product problem not a stealth one. CHINA \u2014 6 accounts, ZERO sign-ins in 30 days (last 2026-08-22), zero attempts, zero failures. SAUDI \u2014 3 accounts, last sign-in 2026-07-17. Nothing to block. CONTROL \u2014 Germany: 168 accounts, 1,080 sessions, 2 failures. WHY WE CANNOT SAY WHICH STEP FAILS: every Iranian failure is categorised 'unknown'. The self-describing CasperCloak categories (cc-<phase>-<road>, shipped 25g) are not populated on these rows, so we know the connection dies 2-15 s in but not whether it is the TLS handshake, the WebSocket upgrade, the Cloudflare edge or the inner WireGuard handshake. FIRST ACTION is therefore diagnostic, not a fix: confirm whether 25g/4.2 users in Iran are reporting detailed categories at all, and if not, why the field is empty. SECOND: the native Cloudflare front went live 2026-09-21 12:47Z and NO Iranian user has attempted a connection since 09-19, so it is untested there \u2014 it may already have changed this. Watch it (xd-937). THIRD: an external vantage check from inside Iran (see the anticensorship skill \u00a712 'measuring reachability from a censored country with no device') to establish whether s<N>-edge.pompesh.com and the relay IPs are reachable at all from Iranian networks today.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-09-22T01:34:18Z",
+      "createdDate": "2026-09-22",
+      "completedDate": null
     }
   ],
   "importantNotes": [
