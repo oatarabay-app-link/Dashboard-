@@ -25320,12 +25320,16 @@
       "to": "[BACKEND]",
       "title": "Handoff from QA: Native Cloudflare front is OFF in production despite xd-774 'Worker retired' - every fronted-tier user still rides the Worker that dies at 125.7s",
       "description": "MEASURED 2026-09-17 (blocked-users daily, read-only on UK-LON). xd-774 is marked completed with the\nresolution 'CF WORKER RETIRED FROM THE CASPERCLOAK DATA PLANE', and its 600 s / 4.0 Mbps hold test through\nwss://s6-edge.pompesh.com/ was real. BUT THE FLAG THAT PUTS USERS ON THAT ROAD IS OFF IN PRODUCTION, so every\nfronted-tier user is still handed the Worker URL - the path the SAME ticket measured dying at 125.7 s\n(code 1006) under sustained throughput. This is the 'wired != surfaced' / deploy-drift gap-class\n(anti-censorship skill 4.3 and 8).\n\nEVIDENCE - four independent artifacts, all from the RUNNING container:\n 1. docker exec caspervpn-api sh -c 'cat /app/appsettings.json' -> CloudfrontFronting.NativeFront.Enabled = false\n    (the base file also carries the note that it must only be flipped via env after the DNS records exist\n    and the 4 Mbps hold test passes - both of which xd-774 reports as done).\n 2. grep -c NativeFront /app/appsettings.Production.json -> 0. The Production override sets only\n    CloudfrontFronting.Enabled=true and JwtSecret. It does NOT override NativeFront.\n 3. docker exec caspervpn-api env | grep -c NativeFront -> 0, and grep -iE 'NativeFront' on\n    /root/Casper/Casper-Code/docker-compose.yml -> no match (compose pins only JwtSecret + JwtTtlMinutes=1440).\n 4. docker logs caspervpn-api --since 12h | grep -i 'native front' -> EMPTY, while the api's own outbound\n    health requests still go to https://ws-edge.applinks-edge.workers.dev/ every 15 min. xd-775 states the\n    'NATIVE front' log line is what appears when native mints happen; it never appears.\nCONFIRMED: CloudfrontFronting.Enabled IS true (via appsettings.Production.json, NOT the base file - the base\nfile says false and misled me on first read) and minting works - '[22:54:51 INF] StealthTier: ... country=AE\ntier=DirectFirst server=Sydney cfWiring=minted' and two StealthTier(MH) country=NG tier=Fronted\ncfWiring=minted lines. So fronting is live; it is the WORKER front that is live.\n\nWHO THIS HURTS: every Fronted-tier country (CN IR RU BY KP CU TM UZ TJ MM) plus DirectFirst fallbacks - i.e.\nexactly the users with no alternative road.\n\nASK (BACKEND, with DEVOPS for the deploy): (a) confirm whether the flag was never flipped or was reverted -\ngit log the compose/env and the deploy that followed 2026-09-12; (b) if the native front is still the intended\nroad, set CloudfrontFronting__NativeFront__Enabled=true in the compose env and redeploy, then paste one\n'NATIVE front' mint line plus one caspercloak-config response showing cloudfrontUrl = wss://s<N>-edge.pompesh.com/;\n(c) if it was reverted deliberately, say why and re-open xd-774 so the resolution stops claiming the Worker\nis retired. NOTE s5/s7 (Amsterdam/Paris) had no -edge record at xd-774 time because those relays were dead;\nthey were redeployed under xd-817, so their records need checking before any flip.\nDO NOT flip anything on my account - this routine measures and files only.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-09-17T16:44:37Z",
       "createdDate": "2026-09-17",
-      "completedDate": null,
-      "dueBy": "2026-09-24T16:44:37Z"
+      "completedDate": "2026-09-21",
+      "dueBy": "2026-09-24T16:44:37Z",
+      "completedAt": "2026-09-21",
+      "completedBy": "[CTO]",
+      "resolution": "NATIVE FRONT SWITCHED ON in production 2026-09-21T12:47Z (CEO decision 2026-09-21, conditional on helping Gulf users: the Gulf's DirectFirst tier still mints a front in code, so it rides this road). PROVEN: all 12 s<N>-edge.pompesh.com records read back from Cloudflare as A -> the correct relay IP, proxied (the one 000 on s2-edge was transient: 3 timed retries 200 in 0.77-0.87 s and a tcpdump on Tokyo showed Cloudflare's SYNs arriving). Env CloudfrontFronting__NativeFront__Enabled=true (compose, both branches; applied in place on the brain because another session holds live uncommitted website edits there), container 8fc977cf5e86 -> 7f5e583df604 healthy, public /health 200. A probe account pinned to IR/Fronted was handed wss://edge.shortaalmashahir.com/s6 BEFORE and wss://s6-edge.pompesh.com/ AFTER; a real HTTP/1.1 WebSocket upgrade through s6-edge returned 101. Reversible by removing the env line.",
+      "resultingHandoff": "watch handoff to QA/DevOps created in the same push"
     },
     {
       "id": "xd-837",
@@ -26713,6 +26717,42 @@
       "status": "pending",
       "priority": "P2",
       "createdAt": "2026-09-21T06:05:22Z",
+      "createdDate": "2026-09-21",
+      "completedDate": null
+    },
+    {
+      "id": "xd-937",
+      "from": "[CTO]",
+      "to": "[QA]",
+      "title": "Handoff from CTO: WATCH the native front for 7 days: fronted-tier users (Gulf, Iran, Russia, China) now ride s<N>-edge \u2014 confirm holds, no 1006 storm, and Iran/Russia traffic returns",
+      "description": "Switched on 2026-09-21T12:47Z (xd-836 closed with evidence). WHAT TO WATCH, daily in the blocked-users routine: (1) API log 'StealthTier: \u2026 cfWiring=minted' for country IR/RU/CN/AE \u2014 every one should now pair with an s<N>-edge URL (grep the caspercloak-config responses or the CC-TARGET lines in user logs: target=cloudfront host=s<N>-edge.pompesh.com); (2) ConnectFailureEvents category caspercloak-ws-close-1006 must NOT rise (the Worker's 125.7 s death signature); (3) BandwidthUsageLogs for IR/RU \u2014 both stopped passing traffic on 2026-09-07 (xd-868) while riding the Worker; if the native front was the cure they resume, if not xd-868 stays open; (4) relay-side: caspercloak_ws logs on s6/s3 for connections from Cloudflare ranges; (5) probe account probe-1789991690@caspervpn.com (IR-pinned) can be re-used for a synthetic check \u2014 password in /root/reports/probe.env on the brain (never in chat). Rollback = remove CloudfrontFronting__NativeFront__Enabled from docker-compose.yml and recreate the api container. NOTE for QA: a WS upgrade to s<N>-edge returns 101 even WITHOUT a bearer token \u2014 the relay authenticates inside the stream, so a 101 alone does not prove auth; it proves transport.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-09-21T16:07:09Z",
+      "createdDate": "2026-09-21",
+      "completedDate": null
+    },
+    {
+      "id": "xd-938",
+      "from": "[IOS]",
+      "to": "[QA]",
+      "title": "Handoff from IOS: Test build 25j (xd-929): the free trial \u2014 signup grants it, the paywall/subscription/premium card start it, home shows days left, expiry returns the account to Free",
+      "description": "BUILD 25j (marker 2026-09-21-25j; arm64 EXIT=0; strings verified: 'Start 7-day free trial' x2, 'Choose a plan to keep everything', '[TRIAL] start requested'). Pushed dev+prod. BACKEND on both branches (12 commits xd-929), DEV deploy + acceptance run in progress at filing time; PROD deploy staged (/root/reports/prod_trial_deploy.sh) pending the dev result. TEST MATRIX (Clean Build Folder first): A) brand-new email account -> after verification + login, Profile/Subscription shows 'Free Trial', home shows 'Free trial \u00b7 7 days left', every server unlocked (no lock glyphs), a premium server connects (backend 200 not 403), Settings shows premium features; B) an EXISTING free account that never had a trial -> paywall CTA reads 'Start 7-day free trial'; tapping it grants and closes the sheet; the Subscription screen and the premium card offer the same; C) tap again / another account that used it -> 409 'already used' surfaces as an alert, not a crash; D) a paid (lifetime/monthly) account -> NO trial offer anywhere (trialEligible=false), plans unchanged; E) expiry: on the DEV backend set the trial EndDate to the past and restart the api (the hourly sweep runs at startup) -> app shows Free again, locks return, premium config -> 403 PREMIUM_SERVER with the Premium card (25c gate); F) OLD APP 4.2 with a trial account: locks vanish (PlanType=Premium decodes as a premium tier) but Profile says 'Premium Yearly' \u2014 known cosmetic, fixed in 25j; G) StoreKit purchase during a trial replaces it (AppleReceiptService ranks Trial 0); H) the Apple introductory-offer label appears on the paywall only after the CEO configures one in App Store Connect (optional \u2014 the server-side trial does not need it). Log lines: app '[TRIAL] \u2026', backend '[TRIAL] granted/refused/ended'.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-09-21T16:07:09Z",
+      "createdDate": "2026-09-21",
+      "completedDate": null
+    },
+    {
+      "id": "xd-939",
+      "from": "[CTO]",
+      "to": "[WEBSITE]",
+      "title": "Handoff from CTO: Your live edits on the production server are UNCOMMITTED \u2014 push them before the next deploy (they blocked one today)",
+      "description": "Found 2026-09-21T12:09Z by the production deploy guard (clean-tree check), on /root/Casper/Casper-Code: staged 'M CLAUDE.md', 'A tools/shipped_build_probe.py', 'M website/app/privacy/page.tsx', 'M website/app/terms/page.tsx', plus unstaged 'M nginx/sites/website.conf'. They exist on NO branch. This is the same class as the 2026-09-18 rescues (Apple-receipt guard, relay-TLS probes): one checkout command away from being lost, and every other deploy on that box now has to work around them (today's native-front flip and the trial's backend deploy were done with in-place edits / a targeted checkout of backend-dotnet-core only, never touching your files). ACTION: finish, then push via api_put to production+development and reset those paths on the brain \u2014 or tell CTO to do it for you. Do not leave work on the server overnight.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-09-21T16:07:09Z",
       "createdDate": "2026-09-21",
       "completedDate": null
     }
