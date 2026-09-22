@@ -26931,11 +26931,15 @@
       "to": "[BACKEND]",
       "title": "Handoff from CTO: P0 \u2014 4.3 REJECTED: we tell every wifi user to use IKEv2, and IKEv2 has ONE successful session in 30 days. The Apple reviewer got it, it failed, we were rejected",
       "description": "MEASURED 2026-09-22 from App Store Connect + prod DB. TIMELINE: I submitted 4.3 (build 58) at 2026-09-21T22:14:11Z. The review account claude-dev@caspervpn.com signed in at 22:39:46Z from the US. At 22:41:44Z it logged ONE connect failure, protocol=ikev2, after 1,968 ms. It has had NO successful connection since 2026-09-16. Version state is now REJECTED; the review submission f1c71558 reads UNRESOLVED_ISSUES with its item REJECTED. ROOT CAUSE: OptimizedVpnServerService.GetSmartRecommendationsAsync line ~425 \u2014 `NetworkType == \"wifi\"` returns recommendedProtocol = \"IKEv2\" ('WiFi network \u2014 IKEv2 handles NAT traversal well'). VERIFIED LIVE just now: POST /servers/smart-recommend with networkType=wifi returns defaultProtocol=IKEv2. An App Store reviewer is ALWAYS on wifi, so the reviewer is always handed IKEv2. AND IKEv2 IS DEAD: ConnectionLogs, 30 days, fleet-wide \u2014 WireGuard 1,847 sessions (67 over 1 MB, newest today 13:36); CasperCloak 13; OpenVPN 4; **IKEv2 exactly 1 session, on 2026-09-08**. The only IKEv2 failure recorded in the last 7 days is the reviewer's. So our own recommendation engine hands the single most broken protocol to the one person who decides whether we ship. This is very likely why the 4.2 cycle also needed two attempts. IMMEDIATE FIX (one line, server-side, no app update, reversible): stop recommending IKEv2 on wifi \u2014 return WireGuard, which is what 1,847 sessions actually use. Keep IKEv2 selectable by hand. That alone would have let the reviewer connect. THEN, SEPARATELY: find out why IKEv2 is dead. The review account HAS RadiusUsername and RadiusPassword and a valid Monthly plan to 2027-04-01, so it is not an entitlement problem \u2014 look at FreeRADIUS/strongSwan (memory ikev2-eap-dual-bug-radius-sql-password: it has been dead fleet-wide before via a flat eap-radius config on 10 nodes and a stale sql password on all 13) and at xd-941 ('Error creating RADIUS user' at signup, filed today). Until it is proven working end to end on a device, IKEv2 should not be recommended to anyone. ALSO: the review account has IsReviewAccount = FALSE. It should be true so the reviewer is exempt from data caps and the premium-server gate. Set it before resubmitting. RESUBMIT PATH: fix the recommendation, verify with a wifi smart-recommend probe, set IsReviewAccount, then a new review submission can reuse build 58 \u2014 no new binary is needed unless we change app code.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P0",
       "createdAt": "2026-09-22T20:05:47Z",
       "createdDate": "2026-09-22",
-      "completedDate": null
+      "completedDate": "2026-09-22",
+      "completedAt": "2026-09-22",
+      "completedBy": "[CTO]",
+      "resolution": "DONE and PROVEN, two separate faults. (1) THE REJECTION CAUSE: /smart-recommend answered 'IKEv2' to every wifi client on an unmeasured claim ('WiFi network - IKEv2 handles NAT traversal well'); App Review connected on wifi and their single attempt failed after 1,968ms. Backend now recommends WireGuard on every network type - verified against live api.caspervpn.com: wifi/cellular/ethernet all return WireGuard (before: wifi -> IKEv2). Deployed image aa7d7fe5cd2c. (2) WHY IKEv2 WAS DEAD: every node ran rightauth=eap-radius, sending logins to FreeRADIUS on the brain whose radcheck table held 1 user, while the backend provisions users into each node's /etc/ipsec.secrets (~553 each) - the provisioning path and the authentication path addressed different stores. Switched to eap-mschapv2 on 11 of 12 nodes and proven by a real login per node. Also set IsReviewAccount=true on Apple's demo account claude-dev@caspervpn.com (it was false, so the reviewer could have hit premium/bandwidth walls). Also fixed: 3 telemetry tables were owned by devuser not casper_prod, so EF migrations on them failed 42501 forever while the API still reported healthy.",
+      "resultingHandoff": "xd-956 to [DEVOPS] (US-LA SSH recovery - last node still on the broken path), xd-957 to [QA] (app-side IKEv2 verification)"
     },
     {
       "id": "xd-954",
@@ -26960,9 +26964,38 @@
       "createdAt": "2026-09-22T20:09:36Z",
       "createdDate": "2026-09-22",
       "completedDate": null
+    },
+    {
+      "id": "xd-956",
+      "from": "[CTO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CTO: US-LA (208.87.243.205): SSH is refused \u2014 the node is the only one still on the broken IKEv2 login path",
+      "description": "xd-953 fixed IKEv2 fleet-wide by switching rightauth=eap-radius -> eap-mschapv2 (the RADIUS database held 1 user while each node's /etc/ipsec.secrets holds ~553). Applied and PROVEN by a real EAP login on 11 of 12 nodes. US-LA could not be fixed: tcp/22 refuses connections for BOTH fleet keys (casper_fleet_admin and vpn_nodes). The node itself is alive \u2014 its control API answers 200 on :5002 and its CasperCloak relay answers a WebSocket upgrade with 101 \u2014 so only sshd is down/blocked. WireGuard and CasperCloak keep working there; IKEv2 does not. NEEDED: recover SSH via the OneProvider console (CEO holds that login), then run: sed -i 's/^\\( *rightauth *= *\\)eap-radius/\\1eap-mschapv2/' /etc/ipsec.conf && ipsec reload. Verify with the routine: python3 /opt/caspervpn/protocol_health_check.py (it completes a REAL login per node).",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-09-22T21:23:33Z",
+      "createdDate": "2026-09-22",
+      "completedDate": null
+    },
+    {
+      "id": "xd-957",
+      "from": "[CTO]",
+      "to": "[QA]",
+      "title": "Handoff from CTO: Verify IKEv2 now connects from the app on every node (it could not authenticate anyone for months)",
+      "description": "xd-953: IKEv2 was unauthenticatable fleet-wide \u2014 1 session in 30 days against WireGuard's 1,847 \u2014 because every node sent logins to a RADIUS database holding 1 of ~553 users. Now rightauth=eap-mschapv2 on 11 of 12 nodes (US-LA pending SSH recovery). PROVEN server-side by a real EAP-MSCHAPv2 handshake per node ('EAP method EAP_MSCHAPV2 succeeded, MSK established' -> 'connection established successfully'). WHAT QA MUST DO: from the iOS app, pick IKEv2 in Settings and connect to several countries; confirm the tunnel comes up and carries traffic. That is the one thing the server-side proof does NOT cover (the app's own NEVPNProtocolIKEv2 path, its username/password handling and the PSK). Standing guard: infrastructure/scripts/protocol_health_check.py runs on the brain every 6h and mails support@ if any protocol serves zero nodes.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-09-22T21:23:33Z",
+      "createdDate": "2026-09-22",
+      "completedDate": null
     }
   ],
   "importantNotes": [
+    {
+      "date": "2026-09-22",
+      "priority": "P0",
+      "note": "4.3 REJECTION \u2014 CAUSE FOUND AND FIXED, NO NEW BUILD NEEDED FOR IT. Apple's reviewer signed in on wifi and their only connection attempt used IKEv2, which failed. Our server was telling every wifi user to use IKEv2, and IKEv2 could not log anyone in on any server - it had carried 1 connection in 30 days against WireGuard's 1,847. Both are fixed and tested on the live system: the server now recommends WireGuard, and IKEv2 logins now succeed on 11 of our 12 servers (Los Angeles needs its remote access restored first). A check now runs every 6 hours that actually logs in to each server and emails support if a protocol stops working anywhere."
+    },
     {
       "date": "2026-09-22",
       "dept": "[QA]",
