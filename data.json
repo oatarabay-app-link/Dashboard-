@@ -26975,11 +26975,15 @@
       "to": "[DEVOPS]",
       "title": "US-LA (208.87.243.205): SSH refused \u2014 we cannot manage or patch that node at all",
       "description": "tcp/22 refuses connections for BOTH fleet keys (casper_fleet_admin and vpn_nodes). The node is alive and serving users - control API 200 on :5002, CasperCloak WebSocket upgrade 101 - only sshd is down or firewalled. NOTE: the original premise of this task ('the only node still on the broken IKEv2 path') is WITHDRAWN - see the correction on xd-953; eap-radius was never broken and the fleet is back on it, so US-LA is in the same state as every other node. The real problem is that we cannot administer, patch or audit this node. NEEDED: recover SSH via the OneProvider console (CEO holds that login).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-09-22T21:23:33Z",
       "createdDate": "2026-09-22",
-      "completedDate": null
+      "completedDate": "2026-09-23",
+      "completedAt": "2026-09-23",
+      "completedBy": "[CTO]",
+      "resolution": "WITHDRAWN \u2014 my escalation was wrong. US-LA (208.87.243.205) is fully reachable and always was: ssh root@208.87.243.205 with the vpn_nodes key succeeds, and the vault already documented that exact key for this node. My 2026-09-22 conclusion ('tcp/22 refused, needs the OneProvider console') came from trying every key I had in sequence, which tripped fail2ban on the node and made a healthy host look dead (fail2ban still showed 3 banned IPs when I re-checked). VERIFIED 2026-09-23: hostname reached, rightauth=eap-radius (correct, matches the reverted fleet), 569 EAP users, charon running, 38 WireGuard peers. NOTHING is wrong with this node and NO provider console is needed. Root cause of the false alarm: I was guessing keys instead of reading the central list \u2014 which is the problem the CEO then told me to fix.",
+      "resultingHandoff": "Fixed at the root: memory/context/access-inventory.json is now the single routing table, factory_bootstrap resolves keys from it, and access_inventory_check.py re-proves every route daily"
     },
     {
       "id": "xd-957",
@@ -27004,9 +27008,26 @@
       "createdAt": "2026-09-22T21:31:47Z",
       "createdDate": "2026-09-22",
       "completedDate": null
+    },
+    {
+      "id": "xd-959",
+      "from": "[CTO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CTO: Close the two single-machine dependencies that make off-Mac sessions unreliable",
+      "description": "The central access inventory (memory/context/access-inventory.json) is live and proven: 26 routes verified, 0 broken, daily cron 40 4 * * * on the brain, alerts to support@. Two gaps remain, both the same shape \u2014 a credential that exists only on the CEO Mac, which is why scheduled tasks and Cowork sessions fall back to guessing: (1) memory/context/credentials.md holds every secret VALUE and is gitignored (.gitignore:94), so nothing off-Mac can read it. (2) GH_TOKEN is exported only from ~/.zshrc and ~/.zshenv, and tools/factory_bootstrap.py exits FATAL at import without it, so any off-Mac run that needs GitHub is dead on arrival. ALSO: the brain's SSH private key is embedded in factory_bootstrap.py (_NL_SSH_KEY_B64) \u2014 that is what makes the brain reachable from a fresh environment, and also a private key committed to the repo; it should be rotated into a secret store. PROPOSE a secret-delivery mechanism for off-Mac runs (env injection on the brain, or a secrets file with restricted permissions that the routines read) and confirm which of the 7 currently 'documented-but-unproven' routes can be given an automated check: Cloudflare, Namecheap, OneProvider, dashboard, admin panel, monitoring, dev DB.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-09-23T00:52:28Z",
+      "createdDate": "2026-09-23",
+      "completedDate": null
     }
   ],
   "importantNotes": [
+    {
+      "date": "2026-09-22",
+      "priority": "P1",
+      "note": "CORRECTION \u2014 the Los Angeles server is fine. Yesterday I said we had lost access to it and that you would need to sign in to the hosting company. That was wrong. We always had the right key; I had been trying the wrong ones, which made the server block me for a while. It is healthy and serving customers. To stop this repeating, there is now one master list of every part of our system and what opens it, and a check that runs every night and proves each one actually works. Right now 26 of them are proven working, none are broken, and 7 are listed honestly as not yet automatically checked."
+    },
     {
       "date": "2026-09-22",
       "priority": "P0",
