@@ -26924,6 +26924,18 @@
       "createdAt": "2026-09-22T05:42:28Z",
       "createdDate": "2026-09-22",
       "completedDate": null
+    },
+    {
+      "id": "xd-953",
+      "from": "[CTO]",
+      "to": "[BACKEND]",
+      "title": "Handoff from CTO: P0 \u2014 4.3 REJECTED: we tell every wifi user to use IKEv2, and IKEv2 has ONE successful session in 30 days. The Apple reviewer got it, it failed, we were rejected",
+      "description": "MEASURED 2026-09-22 from App Store Connect + prod DB. TIMELINE: I submitted 4.3 (build 58) at 2026-09-21T22:14:11Z. The review account claude-dev@caspervpn.com signed in at 22:39:46Z from the US. At 22:41:44Z it logged ONE connect failure, protocol=ikev2, after 1,968 ms. It has had NO successful connection since 2026-09-16. Version state is now REJECTED; the review submission f1c71558 reads UNRESOLVED_ISSUES with its item REJECTED. ROOT CAUSE: OptimizedVpnServerService.GetSmartRecommendationsAsync line ~425 \u2014 `NetworkType == \"wifi\"` returns recommendedProtocol = \"IKEv2\" ('WiFi network \u2014 IKEv2 handles NAT traversal well'). VERIFIED LIVE just now: POST /servers/smart-recommend with networkType=wifi returns defaultProtocol=IKEv2. An App Store reviewer is ALWAYS on wifi, so the reviewer is always handed IKEv2. AND IKEv2 IS DEAD: ConnectionLogs, 30 days, fleet-wide \u2014 WireGuard 1,847 sessions (67 over 1 MB, newest today 13:36); CasperCloak 13; OpenVPN 4; **IKEv2 exactly 1 session, on 2026-09-08**. The only IKEv2 failure recorded in the last 7 days is the reviewer's. So our own recommendation engine hands the single most broken protocol to the one person who decides whether we ship. This is very likely why the 4.2 cycle also needed two attempts. IMMEDIATE FIX (one line, server-side, no app update, reversible): stop recommending IKEv2 on wifi \u2014 return WireGuard, which is what 1,847 sessions actually use. Keep IKEv2 selectable by hand. That alone would have let the reviewer connect. THEN, SEPARATELY: find out why IKEv2 is dead. The review account HAS RadiusUsername and RadiusPassword and a valid Monthly plan to 2027-04-01, so it is not an entitlement problem \u2014 look at FreeRADIUS/strongSwan (memory ikev2-eap-dual-bug-radius-sql-password: it has been dead fleet-wide before via a flat eap-radius config on 10 nodes and a stale sql password on all 13) and at xd-941 ('Error creating RADIUS user' at signup, filed today). Until it is proven working end to end on a device, IKEv2 should not be recommended to anyone. ALSO: the review account has IsReviewAccount = FALSE. It should be true so the reviewer is exempt from data caps and the premium-server gate. Set it before resubmitting. RESUBMIT PATH: fix the recommendation, verify with a wifi smart-recommend probe, set IsReviewAccount, then a new review submission can reuse build 58 \u2014 no new binary is needed unless we change app code.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-09-22T20:05:47Z",
+      "createdDate": "2026-09-22",
+      "completedDate": null
     }
   ],
   "importantNotes": [
