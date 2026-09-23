@@ -25608,12 +25608,16 @@
       "to": "[BACKEND]",
       "title": "Handoff from QA: Apple free trials are recorded as Active, never Trialing \u2014 trial metrics will read 0 forever",
       "description": "[2026-09-23 MARKETING] Partly overtaken by xd-929: our OWN trial is now countable \u2014 `Subscriptions` joined to `Plans` where Name='Free Trial' shows **6 trials, all started 21-23 Sep**. That covers the in-app trial. What xd-855 still owns is the APPLE side: an App Store introductory offer still lands as Status=Active with no trial marker, so a paid-plan trial started through Apple cannot be told apart from a paid subscription. Both numbers now render on /admin/marketing.\n\n[2026-09-20 MARKETING] LAUNCH 30 SEP \u2014 this is gate G5 (trial starts must be countable). Requested by 09-26; fallback = Apple Sales & Trends via the App Store Connect API.\n\nFOUND 2026-09-18 while verifying xd-851 (7-day trial launch). The trial GRANT and REVERT paths both work (see xd-851 evidence) \u2014 this is a metrics-integrity defect, not a user-impact one. EVIDENCE: SubscriptionStatus.Trialing (=4, Models/Subscription.cs:80) is assigned in exactly ONE place in the whole backend \u2014 StripeService.cs:513 ('trialing' => SubscriptionStatus.Trialing) \u2014 which is the DEAD Stripe path; every live purchase is Apple IAP. AppleReceiptService.cs:216 and :230 hardcode Status = SubscriptionStatus.Active for every receipt, and grep for is_trial_period / isTrialPeriod across the repo returns ZERO hits, so Apple's own trial flag is never read. MEANWHILE AdminMarketingController.cs:56, :573 and :648 all COUNT Status==Trialing to produce the trial and trial-conversion metrics. CONSEQUENCE, starting with the first trial signups:\n\n--- CTO VERIFICATION 2026-09-23 ---\nVERIFIED STILL REAL (2026-09-23). Subscriptions.Status across production: 523 rows at status 0 (Active) and 6 at status 6; NOT ONE row sits at the Trialing status. The six current Free Trial users all show status 0. So trial state is not distinguishable from paid state in the data, and any trial metric built on status will be wrong.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-09-18T11:47:35Z",
       "createdDate": "2026-09-18",
-      "completedDate": null,
-      "dueBy": "2026-09-25T11:47:35Z"
+      "completedDate": "2026-09-24",
+      "dueBy": "2026-09-25T11:47:35Z",
+      "completedAt": "2026-09-24",
+      "completedBy": "[BACKEND]",
+      "resolution": "FIXED + PUSHED (not yet deployed). MEASURED on prod 2026-09-24: ZERO Subscription rows sit at Status=Trialing because TrialService writes Status=Active by design, so every trial metric read 0 while 7 accounts were mid-trial (Users.TrialStartedAt=7, BillingInterval=Trial=7). Worse, AdminController paidUsers counted Plan.Type != Free and the xd-929 'Free Trial' plan is Type=Premium/PriceMonthly=0 -- so the admin dashboard reported 12 paying subscribers when only 5 pay (2 Monthly + 2 Weekly + 1 Lifetime). Fixed 5 read-path counters across AdminMarketingController (funnel, 'trial' segment, trialUsers) and AdminController (paidUsers, recurring filter). Marketing-page counters filter on PriceMonthly > 0 and were already correct -- left untouched. Build: dotnet 8.0.125 -> 0 Error(s). DELIBERATELY NOT DONE: flipping TrialService to Status=Trialing. Trialing is a terminal state that 13 gates do not recognise -- it would cap trial users at 512 MB, 403 them off premium servers, fail their IKEv2/RADIUS auth, deny multi-hop, and stop trials ever expiring. That is a separate change requiring one shared entitling-status predicate + a device test.",
+      "resultingHandoff": "xd-982 to [QA] to confirm the corrected counters after the next backend deploy"
     },
     {
       "id": "xd-856",
@@ -25621,12 +25625,16 @@
       "to": "[BACKEND]",
       "title": "Handoff from QA: Trial-expiry downgrade depends on FirstOrDefaultAsync over TWO 'Free' plan rows",
       "description": "FOUND 2026-09-18 verifying xd-851. SubscriptionExpiryService.cs:104 resolves the fallback plan with db.Plans.FirstOrDefaultAsync(p => p.Type == PlanType.Free && p.IsActive) \u2014 no ordering, no uniqueness guard. Production currently has TWO rows named 'Free' with Type=0 and DataLimitBytes=536870912: one IsActive=true, one IsActive=false. It works TODAY only because exactly one is active. If anyone ever activates the second row (or deactivates the live one), freePlan resolves to null and :127 silently SKIPS the downgrade \u2014 the subscription flips to Expired but the user KEEPS premium CurrentCycleDataLimitBytes indefinitely. That is a revenue leak that would be invisible: no exception, no log line, status looks correct. FIX: make the lookup deterministic (.OrderBy(p => p.CreatedAt).FirstOrDefaultAsync) AND log an error when freePlan == null instead of falling through silently; optionally add a unique filtered index on (Type) WHERE IsActive. Low effort, prevents a silent-for-months class of bug.\n\n--- CTO VERIFICATION 2026-09-23 ---\nVERIFIED STILL REAL (2026-09-23). The Plans table genuinely contains TWO rows named 'Free' (one IsActive=false, one IsActive=true), plus two 'Test Plan' and two 'Enterprise' rows. A FirstOrDefaultAsync on name alone can therefore select the inactive row. Full current table: Free(1 device), Business(3), Enterprise(25), Weekly/Monthly/6-Month/Yearly/Lifetime/Free Trial all 3 devices.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-09-18T11:47:35Z",
       "createdDate": "2026-09-18",
-      "completedDate": null,
-      "dueBy": "2026-09-25T11:47:35Z"
+      "completedDate": "2026-09-24",
+      "dueBy": "2026-09-25T11:47:35Z",
+      "completedAt": "2026-09-24",
+      "completedBy": "[BACKEND]",
+      "resolution": "FIXED + PUSHED (not yet deployed). The ticket's premise was wrong -- the trial-expiry downgrade selects by Type+IsActive, not by name, and is deterministic. But name-keying is real in 3 other places. MEASURED: Plans holds 15 rows with DUPLICATE names -- Free x2, Enterprise x2, Test Plan x2 -- and 6 rows inactive. (a) UserService and (b) BandwidthMonitoringService picked the free plan by Name with no IsActive filter and no ORDER BY; latent only because both Free rows carry the same limit, and (b) feeds BOTH the 402 data-cap and the premium-server 403. (c) THE REAL DEFECT: SubscriptionsController.FindPlanByProductId ran its substring test BACKWARDS (plan name contains product id) with no IsActive filter -- real Google Play ids matched nothing so the Android receipt path has NEVER worked (always 400 'Plan not found'), while a short id like 'trial' matched 'free trial' and would have granted the unlimited, never-sold Trial plan. All three fixed; Trial and Free plans now explicitly excluded from receipt matching. Build: 0 Error(s). NOT done: the optional 9-site ORDER BY hardening -- deterministic today, pure hygiene, not worth the blast radius in the same change.",
+      "resultingHandoff": "xd-982 to [QA]; Android receipt path still needs a real Play sandbox purchase before launch"
     },
     {
       "id": "xd-857",
@@ -25866,12 +25874,16 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: GlitchTip has stored ZERO error detail since 2026-05-24 \u2014 crash counters still climb but every event body is gone (partition maintenance stopped); app-crash triage is blind",
       "description": "MEASURED 2026-09-18 by the daily system-check (L4), read-only on the brain.\n\nPROVEN (quoted artifacts, all from glitchtip-postgres on UK-LON):\n- Newest EVENT partition:      issue_events_issueevent_20260524\n- max(timestamp) in issue_events_issueevent = 2026-05-24 23:32:02+00 ; total rows = 987\n- Newest AGGREGATE partition:  issue_events_issueaggregate_20260608 (weekly: ..._20260525, _20260601, _20260608)\n- Per-day/24h aggregate queries for ANY issue over the last 14 days return ZERO rows.\n- The issue ROLLUP is still live: issue_events_issue id=2 \"WatchdogTermination: The OS watchdog terminated your\n  app\" count=67 last_seen=2026-09-18 16:36 ; id=28 AuthError loginFailed(\"Sign in was canceled\") count=46\n  last_seen=2026-09-18 06:36 ; id=58 APIError unauthorized count=10 last_seen=2026-09-18 09:46.\n- Retention env is NOT the explanation: glitchtip-web GLITCHTIP_MAX_EVENT_LIFE_DAYS=90 would keep everything\n  after ~2026-06-20; instead there is no partition at all past 05-24 (events) / 06-08 (aggregates).\n- glitchtip-worker runs ./bin/run-celery-with-beat.sh (beat is in-process with the worker); 0 error/exception\n  lines in its last 24h of logs; all 4 glitchtip containers Up 5 months, glitchtip-postgres (healthy).\n\nHYPOTHESIS (NOT proven this run \u2014 say so in any status): the daily/weekly partition-creation task stopped\nrunning around 2026-06-08, so new events have no partition to land in; only the issue row's count/last_seen\ncolumns (unpartitioned, updated in place) still move. NOT verified because: the worker log read and the\nbeat-schedule read were both cut by the brain's sshd rate limit, and django_celery_beat_periodictask does\nnot exist in this deployment (beat schedule is in-code, not in the DB).\n\nWHY IT MATTERS (this is a monitoring-layer blind spot, the 2026-07-14 incident class):\n- The system-check playbook step \"flag any GlitchTip issue with >10 events in 24h -> xd-task to the owning\n  dept\" CANNOT be executed as written: there is no per-24h count any more. The only visible number is the\n  issue's LIFETIME count, which is why this went unnoticed for ~117 days.\n- iOS/Android crash triage has no stack trace, no device, no app version, no release tag for anything after\n  2026-05-24. Concretely: the top cluster today is WatchdogTermination (an iOS launch/hang kill, the same\n  family as the launch-watchdog straggler item xd-825) and it CANNOT be attributed to a build.\n\nWHAT [DEVOPS] NEEDS TO DO (read-only diagnosis first, per CLAUDE.md 7.1):\n1. Read the worker log for the partition task: docker logs glitchtip-worker --since 720h 2>&1 | grep -iE\n   'partition|does not exist|IntegrityError'  (run it DETACHED to /root/reports/ \u2014 the 5-month log buffer\n   exceeds the 60 s ssh_exec cap, that is what blocked this run).\n2. Confirm whether beat is alive inside glitchtip-worker at all (the container has no `ps` binary; use\n   `docker top glitchtip-worker`).\n3. Then create the missing partitions / restore the maintenance task, and REPORT THE MEASUREMENT, not the\n   assumption.\n\nACCEPTANCE (all three, each with the artifact quoted):\n(a) a partition exists for today and for the next 7 days;\n(b) a NEW test event lands: after the fix, max(timestamp) in issue_events_issueevent is within 1 hour of now;\n(c) a per-24h count query returns non-zero for at least one live issue, so the daily routine's GlitchTip step\n    works again. Then hand back to [CTO]/[QA] so the routine can resume per-24h triage.\n\nFILED BY: casper-system-check (L4 daily), 2026-09-18. Full run report in the vault session log and in the\nadmin panel under Operations -> System check.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-09-18T20:45:42Z",
       "createdDate": "2026-09-18",
-      "completedDate": null,
-      "dueBy": "2026-09-25T20:45:42Z"
+      "completedDate": "2026-09-24",
+      "dueBy": "2026-09-25T20:45:42Z",
+      "completedAt": "2026-09-24",
+      "completedBy": "[DEVOPS]",
+      "resolution": "FIXED + PROVEN. GlitchTip kept COUNTING errors while storing ZERO detail since 2026-05-24 -- the worst kind of monitoring failure, because the dashboard looked alive. MEASURED: issue_events_issueevent is partitioned daily on UUIDv7 with NO default partition; the maintenance command builds only a 7-day runway and stopped running ~2026-05-17, so from 2026-05-24 every event-detail INSERT failed hard while the unpartitioned issue table kept incrementing (last_seen 2026-09-22 vs newest event 2026-05-24). Dumped the 987 historical events (43 MB, /root/backups/) BEFORE maintenance dropped them per the configured 90-day retention, then ran maintain_partitions -- newest partition now 2026-09-29. PROVEN with a ROLLED-BACK insert: the error moved from 'no partition of relation found for row' to a mere not-null complaint naming the partition it routed to (issue_events_issueevent_20260923_h0). Nothing created. DURABILITY: new EXTERNAL /etc/cron.d/glitchtip-partitions at 04:30 -- deliberately NOT the app's own 05:00 scheduler, which is the component that silently failed -- verified to run to exit=0. DETECTION: new check_telemetry() in the nightly inventory watches partition runway (crit at 0 days) and event freshness, and specifically flags the silent-failure signature 'issues fresh + events stale'. Live run confirms: OK runway 6 d; WARN stored events empty. NOT PROVEN: why the in-app scheduler stopped in May -- the logs rotated away. The external cron is built so it does not matter.",
+      "resultingHandoff": "none -- detection now covers the recurrence; xd-984 raised separately for the deploy lag"
     },
     {
       "id": "xd-874",
@@ -25908,12 +25920,16 @@
       "to": "[BACKEND]",
       "title": "Handoff from MARKETING: [P3] blackshop.fit passed registration - disposable-domain leak (26 rejections in the same 24h, this one not on the list)",
       "description": "Disposable-email leak, low volume but it poisons every marketing denominator. blackshop.fit passed registration at 2026-09-19 10:27Z (RegistrationCountry=IQ, IsEmailVerified=false, IsActive=true); the domain is NOT present in /opt/caspervpn/geoip/disposable-override.txt. In the same 24h window the api container logged 26 disposable-domain rejections, so the filter is working - this one simply is not on the list. ASK: (1) append blackshop.fit to disposable-override.txt; (2) consider a heuristic for the cheap-TLD classes the farm has been rotating through (.fit, .shop, .one, .biz) rather than chasing domains one at a time. Context: Users is still ~48% deactivated farm rows, which is why caspervpn-marketing SKILL.md carries a MANDATORY PRE-CLAIM RULE forbidding any geo/market claim sourced from Users without an IsActive filter and a ConnectionLogs join.\n\n--- CTO VERIFICATION 2026-09-23 ---\nVERIFIED STILL REAL (2026-09-23). blackshop.fit is NOT present in the embedded blocklist (backend-dotnet-core/Data/disposable-email-domains.txt, 191 domains), so the reported registration leak stands. DisposableEmailDomainService loads that list as an embedded resource \u2014 the fix is a list update plus whatever refresh mechanism is agreed.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P3",
       "createdAt": "2026-09-19T22:54:55Z",
       "createdDate": "2026-09-19",
-      "completedDate": null,
-      "dueBy": "2026-09-26T22:54:55Z"
+      "completedDate": "2026-09-24",
+      "dueBy": "2026-09-26T22:54:55Z",
+      "completedAt": "2026-09-24",
+      "completedBy": "[DEVOPS]",
+      "resolution": "FIXED + PROVEN LIVE. The ticket's premise was outdated: the repo file backend-dotnet-core/Data/disposable-email-domains.txt is 167 domains and is NOT the live blocklist. The live list is that plus /opt/caspervpn/geoip/disposable-override.txt (8,867 domains), hot-reloaded on mtime with no restart -- the refresh mechanism already existed and works. blackshop.fit was the single leak; appended atomically with a never-shrink guard (8,867 -> 8,868). PROVEN: POST /api/auth/register with that domain now returns 400 DISPOSABLE_EMAIL and the API logged 'Reloaded disposable-domain override file ...: 8868 domains'. No restart, no account created. Its one existing account is unverified, 0.00 MB, 0 connections -- zero harm; email verification held. BIGGER FIND, ALSO FIXED: that 8,868-domain file existed ONLY on the brain and in no backup -- a host rebuild would have silently dropped protection to 167 domains and resumed the ~188-account/26 GB signup wave it stopped, with no error anywhere. Snapshotted to infrastructure/data/ with a restore procedure. STILL OPEN: no automated refresh SOURCE; farm_guard.py only surfaces domains with >=3 accounts in 7 days, which is exactly why a 1-account domain was never flagged.",
+      "resultingHandoff": "xd-983 to [DEVOPS] for a weekly blocklist refresh with a line-count-must-not-shrink guard"
     },
     {
       "id": "xd-877",
@@ -27095,11 +27111,15 @@
       "to": "[DEVOPS]",
       "title": "Handoff from QA: [P2] sync-nginx-certs.sh logs a FALSE 'MISMATCH' on a successful sync \u2014 its self-check races the nginx reload",
       "description": "FOUND 2026-09-23 while verifying xd-933 (which PASSED \u2014 the cert sync itself works, see xd-933). DEFECT IS IN THE HOOK'S VERIFICATION STEP ONLY, not in the sync. At 2026-09-23T02:11:23Z the hook wrote two lines one second apart:\n  [2026-09-23T02:11:23Z] staged caspervpn.com -> expires Dec 22 01:12:49 2026 GMT\n  [2026-09-23T02:11:23Z] MISMATCH caspervpn.com: on-disk='Dec 22 01:12:49 2026 GMT' but nginx is SERVING='Jun 24 15:48:09 2026 GMT'\nMEASURED 3.5 h later: the origin serves Dec 22 on all 6 SNI names + no-SNI. So the sync SUCCEEDED and the MISMATCH line is a FALSE NEGATIVE \u2014 the hook re-reads the served cert immediately after issuing the nginx reload, but an nginx reload is asynchronous (old workers drain and keep serving the old context for a moment), so it reads the pre-reload worker.\nWHY THIS MATTERS (monitoring-integrity class, skill \u00a714): this is the ONE signal that tells anyone whether a cert sync worked. Left as-is it cries wolf on every future successful renewal (~every 60 d), and the next reader will either chase a non-existent outage or \u2014 worse \u2014 learn to ignore the line and miss a REAL mismatch. The log now contains a permanent false failure for an event that succeeded.\nFIX: in the verification block, poll-with-retry instead of reading once \u2014 re-open the 127.0.0.1:443 SNI connection every 1 s for up to ~10 s and only log MISMATCH if it still disagrees at the end; log OK (with the served expiry) on success so a good run is positively confirmed rather than silent.\nVERIFY: force a no-op run `DOMAINS=caspervpn.com /etc/letsencrypt/renewal-hooks/deploy/sync-nginx-certs.sh` and confirm the log records a positive OK line with notAfter=Dec 22 01:12:49 2026 GMT and no MISMATCH.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-09-23T05:38:39Z",
       "createdDate": "2026-09-23",
-      "completedDate": null
+      "completedDate": "2026-09-24",
+      "completedAt": "2026-09-24",
+      "completedBy": "[DEVOPS]",
+      "resolution": "FIXED + PROVEN BOTH WAYS. The MISMATCH was FALSE -- the sync had succeeded. MEASURED: 'staged' and the alarm carry the IDENTICAL second; the staged file is byte-identical to the system store; nginx RestartCount=0 yet now serves the new cert, so the hook's own reload did work. 'nginx -s reload' only delivers SIGHUP and returns immediately -- the master must re-parse config and load every cert (measured: nginx -t = 0.12-0.20 s) before workers cut over, so the single-shot probe read the OLD SSL context. Replaced with a bounded 15 s poll that logs the attempt count and distinguishes 'no cert' from 'wrong cert'. PROVEN on the live server: matching cert -> 'OK ... confirmed after 1s' rc=0; deliberately wrong cert -> 'MISMATCH ... after 15s' rc=1. A real failure is still caught -- important, because this alarm had found a REAL incident: nginx served an EXPIRED cert from ~Jun 24 until 2026-09-23 02:11 (a retired script kept republishing cert1). Cloudflare shielded public traffic; direct-to-origin TLS clients would have failed. The hook was server-only and in no backup -- now in infrastructure/scripts/.",
+      "resultingHandoff": "none -- self-contained; the hook is now committed so a host rebuild cannot lose it"
     },
     {
       "id": "xd-962",
@@ -27417,9 +27437,62 @@
       "createdDate": "2026-09-23",
       "completedDate": null,
       "dueBy": "2026-10-14T15:00:00Z"
+    },
+    {
+      "id": "xd-985",
+      "from": "[CTO]",
+      "to": "[QA]",
+      "title": "Handoff from CTO: Verify corrected admin counters after the next backend deploy (xd-855/856)",
+      "description": "After the backend is deployed, confirm on the admin dashboard: paying subscribers reads 5 (not 12) and trial users reads 7 (not 0). Truth measured directly on the prod DB 2026-09-24: 2 Monthly + 2 Weekly + 1 Lifetime paying; 7 accounts with BillingInterval=Trial and Users.TrialStartedAt set. Also confirm the 'trial' marketing segment returns those 7 people instead of nobody. NOTE: the code is pushed to the production branch but the brain's clone is 69 commits behind and the running API image predates it -- these numbers will NOT change until a real deploy happens (see xd-984).",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-09-24T01:59:08Z",
+      "createdDate": "2026-09-24",
+      "completedDate": null
+    },
+    {
+      "id": "xd-986",
+      "from": "[CTO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CTO: Weekly refresh source for the disposable-email blocklist (xd-876 follow-up)",
+      "description": "The hot-reload mechanism and the 8,868-domain override file both work; what is missing is an automated SOURCE. Pull a public disposable-domain list weekly, write it atomically (temp + mv) with a LINE-COUNT-MUST-NOT-SHRINK guard -- a truncated file that still PARSES is not an error to DisposableEmailDomainService, so it would silently reduce protection with no alert. Re-snapshot to infrastructure/data/disposable-override.txt afterwards so repo and host do not drift. Also consider lowering farm_guard.py's HAVING count(*)>=3 threshold: it is exactly why the 1-account domain blackshop.fit was never surfaced.",
+      "status": "pending",
+      "priority": "P3",
+      "createdAt": "2026-09-24T01:59:08Z",
+      "createdDate": "2026-09-24",
+      "completedDate": null
+    },
+    {
+      "id": "xd-987",
+      "from": "[CTO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CTO: P1: brain clone is 69 commits behind production and nothing auto-pulls it",
+      "description": "MEASURED 2026-09-24 on the brain: /root/Casper/Casper-Code is 69 commits behind origin/production, has no 'git pull' cron, and the running caspervpn-api image was built 2026-09-23T15:20 from that stale tree. So EVERY backend fix merged to production since then -- including xd-855/856 today -- is in GitHub but not running. This is the same class as the known 'push to production auto-deploys is FALSE' finding (the deploy job needs a [self-hosted, uk-lon] runner and there are 0 runners). Needs a decision and an owner: either restore the runner, or a reviewed manual deploy. 69 unreviewed commits should NOT be pulled and rebuilt blind -- review the range first.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-09-24T01:59:08Z",
+      "createdDate": "2026-09-24",
+      "completedDate": null
+    },
+    {
+      "id": "xd-988",
+      "from": "[CTO]",
+      "to": "[BACKEND]",
+      "title": "Handoff from CTO: P1: free accounts receive premium servers -- gate missing on 2 paths (xd-815 escalation)",
+      "description": "VERIFIED IN CODE 2026-09-24, deliberately NOT shipped -- shipping it blind would break live users. CanUsePremiumServersAsync has only TWO call sites (ServersController:103 and :401). (1) GetRecommendedServer (ServersController:296-314) calls the service with no gate at all. (2) VpnController /api/vpn/config has the quota gate (FIX AZ) and the stealth gate but NO tier gate -- it takes the ungated recommendation, or any serverId the caller names, and returns a WORKING config. That is a paid-feature bypass, not just a bad recommendation. MEASURED: all 12 online servers carry ServerAccessLevel=1, so the only access-level filter excludes NOTHING; 9 of 13 are IsPremium, and the ranker adds +10 for IsPremium then takes .First() -- so a free account gets a premium server ~100% of the time. TWO REASONS THIS NEEDS A DECISION BEFORE A PATCH: (a) CAPACITY -- only 3 online servers are non-premium; correcting the routing moves ~512 free accounts onto 3 nodes. That is a business/capacity call, not an engineering one. (b) CLIENT ORDER -- a new terminal 403 on the config path hangs the iOS connect cascade unless the client short-circuits it (previously measured at 16 refusals in 8 minutes for one free user = 'app stuck'). So the backend gate must ship WITH or AFTER the client change, never before. Also unfiltered: /servers/alternates, which iOS does call live.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-09-24T01:59:08Z",
+      "createdDate": "2026-09-24",
+      "completedDate": null
     }
   ],
   "importantNotes": [
+    {
+      "date": "2026-09-24",
+      "priority": "P1",
+      "note": "Admin dashboard numbers were wrong and are now fixed in code: it showed 12 paying customers when only 5 pay, and 0 people on free trial when 7 are. The 7 free trials were being counted as paying customers. IMPORTANT: this will not change on screen until the backend is deployed - the server is running code from before the fix and is 69 versions behind. Also fixed today: the certificate alarm that cried wolf, error-reporting that had been storing no detail since May while still showing counts, and a spam-signup domain. One thing NOT fixed on purpose: free accounts are being given paid servers. Fixing that would push about 500 free users onto 3 servers and could freeze the app for them, so it needs your decision first."
+    },
     {
       "date": "2026-09-23",
       "priority": "P0",
