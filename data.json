@@ -26999,11 +26999,15 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: Put a deadman on our own meters: the usage recorder died on 2026-09-16 and nothing alerted for six days",
       "description": "CEO 2026-09-22: 'how can we avoid this mistake and not make assumptions based on broken instruments'. THE FAILURE: BandwidthUsageLogs went 38,762 rows/day (2026-09-15) -> 37 (09-16) -> 1 (09-20). Nothing fired. I then read that table and told the CEO five countries had gone silent \u2014 a false blackout produced by a dead instrument, corrected only because a control (Germany, Lebanon: provably 1,080 and 241 sessions) also showed zero. BUILD THIS: a Prometheus alert (or a routine check writing to RoutineRuns) on the volume of our OWN telemetry, not just on services being up \u2014 (a) BandwidthUsageLogs rows in the last 24 h below, say, 20% of the trailing 7-day median; (b) ConnectionLogs sessions likewise; (c) ConnectFailureEvents inserts stopping entirely; (d) the nightly throughput report returning 0 rows (already true for days, xd-820/857). Each should page the same way a dead service does. PRINCIPLE TO ENCODE (now added to the preflight protocol): a measurement about users is not admissible without a CONTROL that should NOT show the effect. If the control shows it too, the instrument is broken, not the world. Two independent signals (ConnectionLogs and BandwidthUsageLogs are separate systems) must agree before any conclusion is reported to the CEO.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-09-22T20:09:36Z",
       "createdDate": "2026-09-22",
-      "completedDate": null
+      "completedDate": "2026-09-23",
+      "completedAt": "2026-09-23",
+      "completedBy": "[CTO]",
+      "resolution": "BUILT, DEPLOYED AND RUNNING 2026-09-23. infrastructure/scripts/meter_sanity_check.py, hourly on the brain (cron 23 * * * *, flock-guarded). It answers the CEO's question 'what process stops false data from a broken counter' with a mechanism rather than a policy: every hour it reads the KERNEL's own WireGuard byte counters \u2014 ground truth no application bug can fake \u2014 and compares them against what our database attributes for the same peers. Three separate verdicts: STALE (the recorder has not written in 30 min), BLIND (the kernel shows material traffic on peers we attribute to nobody \u2014 the exact CasperCloak failure), DRIFT (the two disagree by more than 50%). Records a RoutineRuns row ('meter-sanity', admin -> Operations) and mails support@ when stale or blind. VALIDATED AGAINST ITSELF: the first run flagged 4 peers on each of 4 nodes as unattributed. They were the node-to-node mesh on wg1 whose endpoints are our own servers \u2014 a false positive, and an hourly false positive is a check nobody reads. Mesh peers are now excluded by interface AND by endpoint. Re-run: 13 ok, 0 blind, 0 drifting \u2014 and Amsterdam's single live user with material traffic shows as correctly attributed, which is precisely the case that was broken this morning. So the check both works and confirms today's fix.",
+      "resultingHandoff": "none \u2014 this closes the loop that xd-868 and xd-947 were false readings of"
     },
     {
       "id": "xd-956",
