@@ -27027,11 +27027,15 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: P1: the Obsidian vault has been frozen for days \u2014 vault-sync.sh exits on a whitespace check before it ever pulls",
       "description": "MEASURED 2026-09-23 on the CEO Mac. ~/vault-sync.sh runs from user cron every 5 minutes. Order of operations: (1) grep for conflict markers [good guard, keep it]; (2) git add -A; (3) git diff --cached --check -> ON FAILURE it unstages and exit 3; (4) git pull origin development. Step 3 fails on TRAILING WHITESPACE and BLANK LINE AT EOF, so a cosmetic nit in any staged file aborts the cycle BEFORE the pull ever runs. ~/vault-sync-alerts.log is full of exactly those messages. CONSEQUENCE: the CEO clone is on branch 'development', 124 commits behind origin/production, last local commit 2026-09-20, with 108 uncommitted changes. Obsidian reads ~/Dropbox/Brain/CasperVPN -> that clone's memory/ folder, so THE VAULT THE CEO READS AS SOURCE OF TRUTH HAS BEEN A FROZEN SNAPSHOT while everyone believed it auto-synced. SECOND DEFECT: the script pulls origin/development, while CLAUDE.md 5 declares production the SOLE source of truth. FIX (do NOT let a cron do this unsupervised): a guard may refuse to COMMIT but must never skip the PULL \u2014 move the pull before the commit guard, or downgrade whitespace to a warning and keep only the conflict-marker grep as a hard stop. Point it at production. THEN handle the 108 local changes deliberately: back them up and resolve the merge by hand \u2014 a 124-commit merge onto a dirty tree is not a cron's job, and unpushed work on that clone exists nowhere else. INTERIM: I placed memory/context/access-inventory.json and .md straight into the clone's working tree and added the HOME.md line additively, so Obsidian shows them now without touching git state. Verify convergence with: git -C ~/Dropbox/app-link/CasperVPN/Code/Casper-Code rev-list --count HEAD..origin/production  (must be 0).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-09-23T01:33:26Z",
       "createdDate": "2026-09-23",
-      "completedDate": null
+      "completedDate": "2026-09-23",
+      "completedAt": "2026-09-23",
+      "completedBy": "[CTO]",
+      "resolution": "RESOLVED AND PROVEN. ROOT CAUSE: a leftover App Store lookup dump, lk.json, written to the repo root on 2026-09-17 14:25. Untracked, so 'git add -A' staged it; it carries trailing whitespace, so 'git diff --cached --check' failed; and the guard treated that as fatal - unstage and exit 3, on the line BEFORE the git pull. Last good cycle 2026-09-17 12:40; every cycle after logged 'BLOCKED: git diff --check found issues in staged content' every 5 minutes until 13:50 on 2026-09-23. One stray junk file froze the CEO's source of truth for six days. FIXED: (1) lk.json removed and .gitignore'd with *.lookup.json; (2) the whitespace check is now a logged WARNING, never an abort - the conflict-marker grep stays a hard stop and is re-scanned after the merge; (3) the script syncs the branch the clone is actually on and warns when that is not production; (4) it PUSHES after a clean merge - the old script only pulled, so local commits could never leave the Mac; (5) both logs rotate (alert log was 29 MB, now 115 KB). NOTHING LOST: all 110 local changes were committed and pushed to dev/vault-local-rescue-2026-09-23 BEFORE the clone moved - several local files were LARGER than production (one session log by 33 KB), so a blind checkout would have destroyed real work. Clone now on production, 0 behind, 0 dirty. PROVEN by two unattended cron cycles (14:00 pulled+merged+PUSHED 24dcc278c..9ccae9391; 14:05 clean). Obsidian now shows today's session log and the new access inventory note. Backup: ~/casper-vault-backup-20260923-135007.",
+      "resultingHandoff": "reconciliation of dev/vault-local-rescue-2026-09-23 into production"
     },
     {
       "id": "xd-961",
@@ -27044,9 +27048,26 @@
       "createdAt": "2026-09-23T05:38:39Z",
       "createdDate": "2026-09-23",
       "completedDate": null
+    },
+    {
+      "id": "xd-962",
+      "from": "[CTO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CTO: Reconcile the rescued Mac-only work (dev/vault-local-rescue-2026-09-23) into production",
+      "description": "Six days of work existed only on the CEO Mac because vault-sync.sh aborted before its pull (xd-960). It is now captured verbatim in dev/vault-local-rescue-2026-09-23 (commit daa79f5dc): 63 modified + 47 untracked, mostly memory/ vault files plus marketing docs, tools/ scripts and some ios-app-v2 files. DELIBERATELY NOT MERGED: the local copies are a MIX - some LARGER than production (memory/departments/qa/session-log.md by 33 KB, real content production lacks), others SMALLER (memory/prompts/01-cowork.md by 7 KB, production newer). A blind merge either way regresses something. TASK: go file by file, keep the superset, land it on production. Start with memory/ since the vault is the CEO's source of truth. File-level backup also at ~/casper-vault-backup-20260923-135007/files/. The sync is healthy now so nothing further will diverge.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-09-23T14:13:38Z",
+      "createdDate": "2026-09-23",
+      "completedDate": null
     }
   ],
   "importantNotes": [
+    {
+      "date": "2026-09-23",
+      "priority": "P1",
+      "note": "Your notes are fixed and current again. One stray leftover file, dropped in by accident on the 17th, was enough to stop the updater every time it ran: it checked tidiness before fetching anything, found a stray space in that file, and gave up. The file is gone, and the updater now fetches first and only warns about tidiness. It also now sends your work back up, which it never did before. Nothing was lost - six days of work that existed only on your Mac is saved online first. Proven running on its own twice."
+    },
     {
       "date": "2026-09-22",
       "priority": "P1",
