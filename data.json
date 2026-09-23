@@ -26211,7 +26211,7 @@
       "from": "[QA]",
       "to": "[BACKEND]",
       "title": "Handoff from QA: [P1] /api/updates/check returns 404 on prod - the desktop auto-updater (auto_update.rs) targets it",
-      "description": "Verified live 2026-09-20 from the sandbox: GET https://api.caspervpn.com/api/updates/check -> HTTP 404. desktop/src-tauri auto_update.rs calls exactly this route, so every desktop build will fail its update check on first launch. Found by the [DESKTOP] skill-restructure agent, confirmed by QA. ASK: either implement the route (version manifest per platform) or tell [DESKTOP] the canonical route so the client can change. Hand back to [QA] for a curl retest.\n\n--- CTO VERIFICATION 2026-09-23 ---\nVERIFIED STILL BROKEN (2026-09-23). GET /api/updates/check returns HTTP 404 on production, both bare and with ?platform=windows&version=1.0.0. The desktop auto-updater has no endpoint to call.",
+      "description": "Verified live 2026-09-20 from the sandbox: GET https://api.caspervpn.com/api/updates/check -> HTTP 404. desktop/src-tauri auto_update.rs calls exactly this route, so every desktop build will fail its update check on first launch. Found by the [DESKTOP] skill-restructure agent, confirmed by QA. ASK: either implement the route (version manifest per platform) or tell [DESKTOP] the canonical route so the client can change. Hand back to [QA] for a curl retest.\n\n--- CTO VERIFICATION 2026-09-23 ---\nVERIFIED STILL BROKEN (2026-09-23). GET /api/updates/check returns HTTP 404 on production, both bare and with ?platform=windows&version=1.0.0. The desktop auto-updater has no endpoint to call.\n\n--- CTO VERIFICATION 2026-09-23 ---\nROOT CAUSE: the endpoint was NEVER BUILT. This is not a route mismatch, an auth problem or a feature flag. Confirmed against origin/production: 45 controllers, ZERO matching updat|version|release, and no such route in the website either. /api/updates/check returns a 404 byte-identical to a deliberately invented path, while a real-but-protected route returns 401 \u2014 so ASP.NET is failing to match a route that does not exist. The desktop client calls GET /api/updates/check?platform=&arch=&channel=&current_version= anonymously (auto_update.rs:157) and needs 200 with a complete body every time \u2014 it rejects non-2xx and then parses unconditionally, so a 204 or a 404 shows the user 'Update check failed'. Three serialisation traps make a naive DTO fail: the API is configured camelCase but the client wants snake_case; nulls are omitted but ten fields are required; and the channel is sent lowercase in the request yet must come back PascalCase. A ready patch is drafted. DO NOT SHIP IT YET \u2014 see xd-981: the desktop updater does not verify signatures and installs silently with elevation, so serving a download_url before that is fixed would create a remote code execution path. Also BLOCKED ON A PRODUCT DECISION: there is nowhere to host the installers (dl.caspervpn.com does not resolve; the site's download buttons link back to themselves) and no release metadata source has been chosen.",
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-09-20T20:34:12Z",
@@ -27354,9 +27354,26 @@
       "createdAt": "2026-09-24T01:03:25Z",
       "createdDate": "2026-09-24",
       "completedDate": null
+    },
+    {
+      "id": "xd-981",
+      "from": "[CTO]",
+      "to": "[DESKTOP]",
+      "title": "Handoff from CTO: P0 SECURITY: the desktop auto-updater's signature check always passes, then installs silently as admin",
+      "description": "VERIFIED BY READING THE CODE 2026-09-24, desktop/caspervpn-core/src/auto_update.rs. verify_signature(file, expected_sig) reads the downloaded file into memory, DISCARDS it, never touches expected_sig at all, logs 'Signature verification passed' and returns Ok. It is a placeholder that cannot fail \u2014 the comment says so: '(placeholder \u2014 production uses Ed25519)'. The very next step installs that file SILENTLY AND ELEVATED: msiexec /i <file> /qn /norestart on Windows, the NSIS installer with /S, pkexec dpkg -i / rpm -U on Linux. MEANING: whatever URL the update endpoint returns becomes elevated code execution on the user's machine, with no verification of any kind. WHY IT HAS NOT BITTEN US: it is LATENT. /api/updates/check has never existed (confirmed against origin/production: zero controllers match updat|version|release), dl.caspervpn.com does not resolve, and no installer binaries are published anywhere on the site. So nothing can be delivered today. THE RULE THIS SETS: real Ed25519 verification against an embedded public key must land in the desktop client in the SAME change as the server endpoint \u2014 never before it, and never after. Bump the client version so older builds can be refused. This is the same shape as the xd-814 lesson in the backend skill: do not ship the server half of a contract whose client half cannot handle it safely. ALSO WORTH KNOWING: should_check() has only test callers \u2014 no background timer is wired, so today the check would only fire when a user clicks 'Check now'.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-09-24T01:29:44Z",
+      "createdDate": "2026-09-24",
+      "completedDate": null
     }
   ],
   "importantNotes": [
+    {
+      "date": "2026-09-23",
+      "priority": "P0",
+      "note": "Found a real security hole in the desktop app, and we got lucky. The updater is supposed to check that an update really came from us before installing it. It does not check at all \u2014 it just says 'checked!' and carries on, then installs the file silently with full admin rights. So anyone who could tell the app where to download from could put anything on a customer's computer. It cannot happen right now, because the part of our system that tells the app about updates was never built, and we have no files for it to download. That is the only reason this is not live. My advice: do not build that missing piece until the app checks signatures properly. They must be done together, in one go."
+    },
     {
       "date": "2026-09-23",
       "priority": "P1",
