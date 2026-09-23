@@ -9414,7 +9414,7 @@
           "verifiedBy": "none",
           "verifiedDate": "",
           "verifiedAt": "",
-          "evidence": "2026-09-21: /login \u2192 307 /download live (public-URL verified) \u2014 no customer web login exists, the account lives in the app; /checkout still renders its own flow (xd-837 [WEBSITE]).",
+          "evidence": "2026-09-23: /login \u2192 /download is live and verified. /checkout still renders its own flow (xd-837). New today, same family: the ADMIN login could never succeed (JWT_SECRET absent from the container) \u2014 fixed in 2d82bc3f, admin@caspervpn.com now signs in and lands on the new Marketing page.",
           "verifiedByRaw": "none"
         },
         {
@@ -9642,7 +9642,7 @@
           "verifiedBy": "self",
           "verifiedDate": "2026-09-20",
           "verifiedAt": "2026-09-20T20:50:39Z",
-          "evidence": "2026-09-20: GA4 Data API runReport on property 538115430 returned today: 7 d 11 users / 11 sessions; 28 d channels Organic Search 28, AI Assistant 8, Direct 6, Organic Social 2, Referral 1.",
+          "evidence": "2026-09-20: GA4 Data API runReport on property 538115430 returned today: 7 d 11 users / 11 sessions; 28 d channels Organic Search 28, AI Assistant 8, Direct 6, Organic Social 2, Referral 1. | 2026-09-23: GA4 property **538115430** is the readable one (the other id 403s); 49 sessions / 28 days, 14 / 7 days, channels Organic 27 \u00b7 Direct 10 \u00b7 AI Assistant 8. Now snapshotted hourly onto /admin/marketing.",
           "verifiedByDept": "marketing"
         },
         {
@@ -10205,7 +10205,7 @@
       "blockers": 0,
       "completion": 40,
       "launchCompletion": 40,
-      "lastTriggered": "2026-09-23T12:31:55Z",
+      "lastTriggered": "2026-09-23T12:51:14Z",
       "notes": "2026-09-21 [CTO] re-based by the board sweep (CEO golden rule): completion = criteria met / total on tasks this department owns (multi-owner tasks count for each owner); blockers = open P0 handoffs to this department. Previous text kept in git history."
     },
     "product": {
@@ -26368,7 +26368,7 @@
       "from": "[MARKETING]",
       "to": "[CTO]",
       "title": "Handoff from MARKETING: [P1] Scheduled marketing runs have no write credential \u2014 two runs lost, one P0 stranded twice; brief carries six wrong prices",
-      "description": "[2026-09-21 MARKETING run1 00:05\u201300:45Z] TESTED, NOT INHERITED: the scheduled sandbox CAN write today with zero provisioning \u2014 `GH_TOKEN=dummy` bypasses the FATAL, `setup_ssh()` writes the embedded fleet key (connected as root@178.62.101.221), and `dashboard_ssh_push` pushed this run's board update over SSH. Two pins: DASH_WORK must be outside /tmp (`/tmp/casper-dash-ssh` is owned by uid `nobody` from a previous run \u2192 `git init` \u2192 'Permission denied' \u2014 exactly your ask (4)); and factory_bootstrap still aborts at import on a missing GH_TOKEN. Asks (2)(3)(4) stand; ask (1) is optional now.\n\n[2026-09-20 MARKETING] LAUNCH 30 SEP \u2014 due 09-24 (gate in marketing/GTM-LAUNCH-PLAN-2026-09-30.md \u00a72).\n\nEvidence: the 09-19 and 09-20 scheduled marketing runs both stopped at 'FATAL: GH_TOKEN env var not set' (the PAT in credentials.md \u00a74 is revoked, 401) and had no fleet SSH key in the sandbox, so fetch_dashboard()/create_handoff() could not run; the affiliate PII P0 was discovered 09-19 and filed only today by a CEO session. ASK: (1) provision GH_TOKEN (fine-grained, contents:write on Dashboard- only) OR install the fleet Ed25519 key into the scheduled-task environment so tools/dashboard_ssh_push.py works there; (2) make factory_bootstrap fail loudly at session START, not at first write; (3) the casper-marketing scheduled-task brief still says $12.99 / $5.42 / $64.99 / 58% / $199.99 / 2 GB \u2014 live is $9.99 / $5.00 (billed $59.99 on the site; Apple $49.99) / 50% / $149.99 / 0.5 GB \u2014 replace with 'read pricing from the marketing skill T2, never from this brief'; (4) add the /tmp trap to preflight: /tmp persists between scheduled runs with the previous run's UID, so curl -o /tmp/<file> fails silently and stale output is read \u2014 write probes to a run-unique directory and check ls -l ownership. Related: xd-885, xd-904. handoffTo: [QA] \u2014 audit the other scheduled tasks for the same two defects.",
+      "description": "[2026-09-23 CTO] RELATED CLASS OF BUG, worth folding into this task: the website container was missing JWT_SECRET, so the admin panel could not issue a session for four months and nothing alerted. Same shape as the scheduled-runner credential this task is about \u2014 a credential that is absent rather than wrong fails silently. When you fix the runner credential, add a startup assertion for both: the process should refuse to start, or log loudly, when a secret it needs is unset.\n\n[2026-09-21 MARKETING run1 00:05\u201300:45Z] TESTED, NOT INHERITED: the scheduled sandbox CAN write today with zero provisioning \u2014 `GH_TOKEN=dummy` bypasses the FATAL, `setup_ssh()` writes the embedded fleet key (connected as root@178.62.101.221), and `dashboard_ssh_push` pushed this run's board update over SSH. Two pins: DASH_WORK must be outside /tmp (`/tmp/casper-dash-ssh` is owned by uid `nobody` from a previous run \u2192 `git init` \u2192 'Permission denied' \u2014 exactly your ask (4)); and factory_bootstrap still aborts at import on a missing GH_TOKEN. Asks (2)(3)(4) stand; ask (1) is optional now.\n\n[2026-09-20 MARKETING] LAUNCH 30 SEP \u2014 due 09-24 (gate in marketing/GTM-LAUNCH-PLAN-2026-09-30.md \u00a72).\n\nEvidence: the 09-19 and 09-20 scheduled marketing runs both stopped at 'FATAL: GH_TOKEN env var not set' (the PAT in credentials.md \u00a74 is revoked, 401) and had no fleet SSH key in the sandbox, so fetch_dashboard()/create_handoff() could not run; the affiliate PII P0 was discovered 09-19 and filed only today by a CEO session. ASK: (1) provision GH_TOKEN (fine-grained, contents:write on Dashboard- only) OR install the fleet Ed25519 key into the scheduled-task environment so tools/dashboard_ssh_push.py works there; (2) make factory_bootstrap fail loudly at session START, not at first write; (3) the casper-marketing scheduled-task brief still says $12.99 / $5.42 / $64.99 / 58% / $199.99 / 2 GB \u2014 live is $9.99 / $5.00 (billed $59.99 on the site; Apple $49.99) / 50% / $149.99 / 0.5 GB \u2014 replace with 'read pricing from the marketing skill T2, never from this brief'; (4) add the /tmp trap to preflight: /tmp persists between scheduled runs with the previous run's UID, so curl -o /tmp/<file> fails silently and stale output is read \u2014 write probes to a run-unique directory and check ls -l ownership. Related: xd-885, xd-904. handoffTo: [QA] \u2014 audit the other scheduled tasks for the same two defects.",
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-09-20T20:50:42Z",
@@ -27114,6 +27114,19 @@
       "createdDate": "2026-09-23",
       "completedDate": null,
       "dueBy": "2026-10-05T15:00:00Z"
+    },
+    {
+      "id": "xd-967",
+      "from": "[CTO]",
+      "to": "[CEO]",
+      "title": "Handoff from CTO: Your marketing command centre is live at caspervpn.com/admin \u2192 Marketing \u2014 and the admin panel itself had never been usable until today",
+      "description": "TWO THINGS, both done 2026-09-23. (1) THE PAGE: caspervpn.com/admin \u2192 Marketing shows, in one place: launch readiness (29/73 criteria, 21 open P0 handoffs, the P0 table with owner and due date), App Store state (4.2 live, 4.3 build 61 waiting for review) and displayed ratings per storefront, the funnel (529 accounts \u2192 396 verified \u2192 280 active \u2192 50 connected in 30 days \u2192 6 trials \u2192 5 paying, $78.38 in 30 days), the dead-lead pools (312 people), first-party website traffic, affiliates (31 applications waiting, oldest 143 days), content, lifecycle, and a footer naming every source and its age. App Store / GA4 / app-database / board numbers refresh hourly from a collector that runs on the API host, so the website container holds none of those credentials. (2) YOU COULD NEVER HAVE SIGNED IN: the website admin has existed since 2026-05-10 and `last_login_at` was NULL \u2014 `JWT_SECRET` was never passed to that container, so every login failed with a plain 401 and nothing logged it. Fixed (commit 2d82bc3f). Sign in with **admin@caspervpn.com**; the new password is on the brain at `/opt/caspervpn/secrets/marketing/website-admin-password.txt` (root, 600) and documented in the credentials vault \u00a717.8 \u2014 change it to something you will remember and tell me, or ask me to rotate it. Please open the page and say what is missing from it; the panels are cheap to change now that the plumbing exists. Note: this is the WEBSITE admin (caspervpn.com/admin), not admin.caspervpn.com \u2014 putting the same view inside the React ops panel needs a .NET endpoint and is a separate task if you want it there too.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-09-23T12:51:21Z",
+      "createdDate": "2026-09-23",
+      "completedDate": null,
+      "dueBy": "2026-09-26T15:00:00Z"
     }
   ],
   "importantNotes": [
