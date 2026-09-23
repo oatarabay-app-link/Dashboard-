@@ -27071,11 +27071,15 @@
       "to": "[BACKEND]",
       "title": "Handoff from CTO: CasperCloak peer registration FAILED for the China trial user \u2014 key never reached Montreal",
       "description": "MEASURED 2026-09-23. Trial user fa699500 (CN) connected to Montreal over CasperCloak on 2026-09-22 19:13. A WireGuardKeys row exists (config-20260922191655, pubkey Z4dbC9wra/xHrnjYPeud...) so the backend issued a config - but that public key is NOT present on Montreal's wg0 (24 peers, none match). The client therefore sent WireGuard handshakes into a server that has no peer for it: three cc-wg-nohandshake-cf failures at 19:16, then zero bytes forever. CONTRAST: the same flow on Amsterdam DID register (user 1d3ae4a9, RU) and moved 435 MB. So peer registration is INTERMITTENT, not universally broken. WHERE TO LOOK: RegisterPeerOnServer in OptimizedVpnServerService (~line 1617) tries the Flask control API /wireguard/add-client first then falls back; check Montreal's control API and whether the add-client call failed silently. Do NOT assume - reproduce a CC connect against Montreal and read the result (CLAUDE.md 7.1).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-09-23T15:21:41Z",
       "createdDate": "2026-09-23",
-      "completedDate": null
+      "completedDate": "2026-09-23",
+      "completedAt": "2026-09-23",
+      "completedBy": "[CTO]",
+      "resolution": "CLOSED \u2014 registration is NOT broken; the China failure was INTERMITTENT and is not reproducible. PROVEN end-to-end today: requested /api/servers/{montreal}/config as a real user and the issued public key appeared on Montreal's wg0. A direct control-API test also returned HTTP 201 and the peer landed. IMPORTANT CORRECTION to my own earlier reading: I first reported 'registration BROKEN on Montreal' from a probe that sent an EMPTY token (my grep looked for the token in /etc/caspervpn/secrets.env; it actually lives in the service process environment as API_TOKEN). Re-tested properly: auth passes on all 12 nodes. A second wrong reading came from the payload \u2014 the endpoint wants client_ip, not allowed_ips. WHY IT COULD NOT BE ROOT-CAUSED: the API container logs are wiped on recreate, so the 2026-09-22 19:13-19:16 window is gone. THE REAL GAP IS THAT NOTHING WATCHED THIS: a config can be issued while the peer never registers, and every static check (port open, service active, config parses) stays green. FIXED: protocol_health_check.py now performs a REGISTRATION PROBE on every node every 6 hours \u2014 adds a throwaway peer, confirms the kernel has it, removes it. First run: 10 of 12 proven OK, 2 'unknown' (token unreadable) rather than falsely OK; the PID lookup now tries the :5002 listener first, which covers those two.",
+      "resultingHandoff": "xd-965 to [BACKEND] \u2014 verify-after-register so a failed registration is never silent"
     },
     {
       "id": "xd-964",
@@ -27178,9 +27182,26 @@
       "createdAt": "2026-09-23T13:22:28Z",
       "createdDate": "2026-09-23",
       "completedDate": null
+    },
+    {
+      "id": "xd-972",
+      "from": "[CTO]",
+      "to": "[BACKEND]",
+      "title": "Handoff from CTO: Make peer registration verify itself \u2014 a failed registration must never be silent",
+      "description": "xd-963 showed a user can be handed a working config while the peer never reaches the node, and nothing notices: he simply gets zero bytes forever. RegisterPeerOnServer (OptimizedVpnServerService ~1617 and VpnServerService ~1163) tries the Flask control API then falls back to SSH, but does not CONFIRM the peer exists afterwards. ASK: after registering, read the peer back (control API or wg show) and log/alert when it is absent; surface it as a ConnectFailureEvent so it appears in telemetry instead of being invisible. Also note the API container logs are wiped on recreate, which is why the original 2026-09-22 incident could not be root-caused \u2014 consider persisting registration outcomes. A 6-hourly synthetic probe now exists (protocol_health_check.py) but it cannot catch a failure that happens only for a specific user at a specific moment.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-09-23T16:35:59Z",
+      "createdDate": "2026-09-23",
+      "completedDate": null
     }
   ],
   "importantNotes": [
+    {
+      "date": "2026-09-23",
+      "priority": "P0",
+      "note": "Checked the claim that three of our five connection types do not work. It is not accurate today. OpenVPN: I asked our system for a connection file from all 12 servers and got a complete, valid one from every single server \u2014 that claim is out of date. The stealth connection: it does carry real traffic when it sets up correctly, which we could not see before today because our counter was broken. IKEv2 was genuinely the cause of the Apple rejection and is now fixed and proven on 11 of 12 servers. What IS true: almost nobody uses anything except our main connection type, and the stealth connection fails far too often in Iran. Both are real problems, but they are different from what was written."
+    },
     {
       "date": "2026-09-23",
       "priority": "P0",
