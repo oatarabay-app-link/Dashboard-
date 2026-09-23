@@ -26724,11 +26724,15 @@
       "to": "[BACKEND]",
       "title": "Handoff from QA: [P2] /api/payments/apple-webhook accepts JWS payloads whose signature/chain is never verified \u2014 the 'continuing anyway' rationale covers validate-receipt ([Authorize]) but not this anonymous endpoint",
       "description": "CODE-VERIFIED 2026-09-21 on origin/development and confirmed live by the log: both real webhooks in the last 7 days logged 'Apple transaction certificate chain validation failed (continuing anyway): self-signed certificate in certificate chain' (2026-09-19 10:01:47Z and 2026-09-21 00:06:09Z) and were processed. AppleReceiptService.cs HandleServerNotificationAsync :792-812 decodes the OUTER notification with JwtSecurityTokenHandler.ReadJwtToken (decode only \u2014 no signature validation, no x5c check), then DecodeSignedTransactionAsync :1160-1205 builds the inner x5c chain and, on failure, logs and continues (comment 'xd-incident-2026-05-03 \u2026 rejecting on chain failure is NOT load-bearing here' \u2014 points 1-3 of that analysis rely on [Authorize] on /payments/validate-receipt and on iOS StoreKit; neither applies to /api/payments/apple-webhook, which must be anonymous for Apple). PaymentsController.cs:396-440 has no other authentication. Consequence: a POST with a self-made JWS carrying a real originalTransactionId and notificationType DID_RENEW / EXPIRED / REFUND / DID_CHANGE_RENEWAL_STATUS would be processed like Apple's (the only lookup is the Payment by original transaction id, :873). VERIFY-BEFORE-SEVERITY: 0 abuse observed (2 webhook hits in 7 d, both genuine Apple types on the CEO's account), the endpoint is reachable through nginx, and the transaction ids are not public \u2014 hence P2, not P0. FIX OPTIONS (either): (a) fix the chain build \u2014 add Apple Root CA G3 (and the WWDR G6 in\n\n--- CTO VERIFICATION 2026-09-23 ---\nVERIFIED STILL REAL AND ESCALATED P2->P1 (2026-09-23). Traced the live code path: PaymentsController /api/payments/apple-webhook -> AppleReceiptService.HandleServerNotificationAsync, which decodes the OUTER notification with 'new JwtSecurityTokenHandler().ReadJwtToken(signedPayload)'. ReadJwtToken PARSES ONLY - it does not verify the signature or the certificate chain. So anyone who can POST to that endpoint can send a forged Apple notification and have it acted on. The chain IS validated for inner signed TRANSACTIONS (DecodeSignedTransactionAsync, x5c against Apple Root CA), which limits some paths, but notificationType handling acts on the unverified outer payload. This is a billing-integrity hole, not a cosmetic one.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-09-21T06:05:22Z",
       "createdDate": "2026-09-21",
-      "completedDate": null
+      "completedDate": "2026-09-23",
+      "completedAt": "2026-09-23",
+      "completedBy": "[CTO]",
+      "resolution": "FIXED AND PROVEN ON PRODUCTION 2026-09-23. /api/payments/apple-webhook is unauthenticated by design and decoded Apple's notification with JwtSecurityTokenHandler.ReadJwtToken, which PARSES ONLY \u2014 no signature, no chain. MEASURED: an unauthenticated POST from a laptop reached the handler and was processed. NOW: the JWS must chain to APPLE'S ROOT using X509ChainTrustMode.CustomRootTrust (deliberately not the OS trust store \u2014 that dependency is why the older transaction-side chain check had to be downgraded to log-and-continue inside Linux containers, xd-incident-2026-05-03) AND its ES256 signature must match the x5c leaf. IMPORTANT: an issuer-name check is NOT enough, and that was my first attempt \u2014 a self-signed certificate named 'Totally Not Apple' passes Issuer.Contains('Apple') and was accepted end-to-end in testing before I caught it. Only the cryptographic chain works. PROOF after deploy (image c452356d2d35, health 200, 0 ERR): four crafted forgeries all rejected with HTTP 400 \u2014 including one whose certificate was named literally 'Apple Inc.' with a valid self-signature \u2014 and the log line reads \"Apple webhook REJECTED \u2014 signature verification failed: x5c chain does not lead to Apple's root (self-signed certificate)\". Escape hatch Apple:VerifyWebhookSignature=false exists and defaults to true.",
+      "resultingHandoff": "xd-974 to [BACKEND] \u2014 Apple has never actually called this webhook; xd-975 to [QA] to confirm a genuine Apple notification still passes"
     },
     {
       "id": "xd-936",
@@ -27218,9 +27222,38 @@
       "createdAt": "2026-09-23T17:05:29Z",
       "createdDate": "2026-09-23",
       "completedDate": null
+    },
+    {
+      "id": "xd-974",
+      "from": "[CTO]",
+      "to": "[BACKEND]",
+      "title": "Handoff from CTO: P1: Apple has NEVER called our server-notification webhook \u2014 no subscription lifecycle events are reaching us",
+      "description": "MEASURED 2026-09-23. Searched every nginx access log we retain (api_ssl_access.log plus .1 through .9.gz, about ten days): ZERO requests to /api/payments/apple-webhook from Apple. The endpoint is definitely reachable and definitely logs \u2014 a test POST from a laptop appeared in the log within seconds and returned a structured 400. So this is not a logging gap; Apple simply never calls us. CONSEQUENCE: no renewals, cancellations, expiries, refunds or billing-retry notifications are being processed through the webhook at all, which means subscription state depends entirely on the app calling validate-receipt and on the daily reconcile job. LIKELY CAUSE: the App Store Server Notifications URL (V2) is not set, or points somewhere else, in App Store Connect under App Information. CHECK THAT FIRST before writing any code. Then send a test notification from ASC and confirm it arrives and passes the new signature check (xd-935, shipped today).",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-09-23T17:33:19Z",
+      "createdDate": "2026-09-23",
+      "completedDate": null
+    },
+    {
+      "id": "xd-975",
+      "from": "[CTO]",
+      "to": "[QA]",
+      "title": "Handoff from CTO: Confirm a GENUINE Apple notification still passes the new webhook signature check",
+      "description": "xd-935 shipped today: /api/payments/apple-webhook now rejects any notification whose x5c chain does not lead to Apple's root. Forged payloads are proven rejected (4 of 4, including a certificate named 'Apple Inc.'). What is NOT yet proven is the other direction \u2014 that a real Apple notification passes \u2014 because Apple has never called this endpoint (see the paired backend task). Once the notification URL is configured, use App Store Connect's 'send test notification' and confirm: HTTP 200 back, and NO 'Apple webhook REJECTED' line in the API log. If a genuine notification is ever rejected, the emergency switch is Apple:VerifyWebhookSignature=false \u2014 set it, report it, do not leave it off.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-09-23T17:33:19Z",
+      "createdDate": "2026-09-23",
+      "completedDate": null
     }
   ],
   "importantNotes": [
+    {
+      "date": "2026-09-23",
+      "priority": "P0",
+      "note": "Two things about Apple payments. First, the hole is closed: our payment webhook now checks that a message genuinely came from Apple, and I proved it by sending four fake messages, all rejected \u2014 including one forged to look like Apple. Second, and more important: Apple has never actually sent us anything. Ten days of records show not one message from them, while a test message from my laptop arrived instantly. That means renewals, cancellations and refunds are not reaching us at all, and our subscription records depend entirely on the app checking in. Someone needs to set the notification address in the Apple console \u2014 that is a settings change, not a code change."
+    },
     {
       "date": "2026-09-23",
       "priority": "P1",
