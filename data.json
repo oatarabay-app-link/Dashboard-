@@ -27060,9 +27060,38 @@
       "createdAt": "2026-09-23T14:13:38Z",
       "createdDate": "2026-09-23",
       "completedDate": null
+    },
+    {
+      "id": "xd-963",
+      "from": "[CTO]",
+      "to": "[BACKEND]",
+      "title": "Handoff from CTO: CasperCloak peer registration FAILED for the China trial user \u2014 key never reached Montreal",
+      "description": "MEASURED 2026-09-23. Trial user fa699500 (CN) connected to Montreal over CasperCloak on 2026-09-22 19:13. A WireGuardKeys row exists (config-20260922191655, pubkey Z4dbC9wra/xHrnjYPeud...) so the backend issued a config - but that public key is NOT present on Montreal's wg0 (24 peers, none match). The client therefore sent WireGuard handshakes into a server that has no peer for it: three cc-wg-nohandshake-cf failures at 19:16, then zero bytes forever. CONTRAST: the same flow on Amsterdam DID register (user 1d3ae4a9, RU) and moved 435 MB. So peer registration is INTERMITTENT, not universally broken. WHERE TO LOOK: RegisterPeerOnServer in OptimizedVpnServerService (~line 1617) tries the Flask control API /wireguard/add-client first then falls back; check Montreal's control API and whether the add-client call failed silently. Do NOT assume - reproduce a CC connect against Montreal and read the result (CLAUDE.md 7.1).",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-09-23T15:21:41Z",
+      "createdDate": "2026-09-23",
+      "completedDate": null
+    },
+    {
+      "id": "xd-964",
+      "from": "[CTO]",
+      "to": "[QA]",
+      "title": "Handoff from CTO: Verify CasperCloak end-to-end now that traffic is finally measurable",
+      "description": "Until today every CasperCloak session recorded 0 bytes, which made the protocol look dead when it was partly working. That is fixed: the usage sync now resolves client-generated CasperCloak peers via WireGuardKeys (verified on prod - a Russian trial user's 435 MB is now attributed). WHAT QA MUST DO: connect over CasperCloak from several countries and confirm (a) the tunnel carries traffic, (b) the bytes appear against the right user in admin within a few minutes, (c) the data cap now actually bites for a CasperCloak user. Item (c) matters - the cap was unenforceable for CC users for as long as this bug existed.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-09-23T15:21:41Z",
+      "createdDate": "2026-09-23",
+      "completedDate": null
     }
   ],
   "importantNotes": [
+    {
+      "date": "2026-09-23",
+      "priority": "P0",
+      "note": "The 'zero traffic' on the trial accounts was OUR METER, not the product. One trial user in Russia has actually used 435 megabytes through our stealth connection - he was the second heaviest user on that server - while his profile showed nothing. Our counter never linked stealth connections to the person using them, so all of them read zero. Fixed and proven today. Two consequences: the admin numbers were wrong for everyone using stealth, and their data limit could never be applied. One separate real failure remains: the user in China never got set up on the Montreal server, so his connection genuinely could not work."
+    },
     {
       "date": "2026-09-23",
       "priority": "P1",
