@@ -25617,7 +25617,7 @@
       "completedAt": "2026-09-24",
       "completedBy": "[BACKEND]",
       "resolution": "FIXED + PUSHED (not yet deployed). MEASURED on prod 2026-09-24: ZERO Subscription rows sit at Status=Trialing because TrialService writes Status=Active by design, so every trial metric read 0 while 7 accounts were mid-trial (Users.TrialStartedAt=7, BillingInterval=Trial=7). Worse, AdminController paidUsers counted Plan.Type != Free and the xd-929 'Free Trial' plan is Type=Premium/PriceMonthly=0 -- so the admin dashboard reported 12 paying subscribers when only 5 pay (2 Monthly + 2 Weekly + 1 Lifetime). Fixed 5 read-path counters across AdminMarketingController (funnel, 'trial' segment, trialUsers) and AdminController (paidUsers, recurring filter). Marketing-page counters filter on PriceMonthly > 0 and were already correct -- left untouched. Build: dotnet 8.0.125 -> 0 Error(s). DELIBERATELY NOT DONE: flipping TrialService to Status=Trialing. Trialing is a terminal state that 13 gates do not recognise -- it would cap trial users at 512 MB, 403 them off premium servers, fail their IKEv2/RADIUS auth, deny multi-hop, and stop trials ever expiring. That is a separate change requiring one shared entitling-status predicate + a device test.",
-      "resultingHandoff": "xd-982 to [QA] to confirm the corrected counters after the next backend deploy"
+      "resultingHandoff": "xd-985 to [QA] to confirm the corrected counters after the next backend deploy"
     },
     {
       "id": "xd-856",
@@ -25634,7 +25634,7 @@
       "completedAt": "2026-09-24",
       "completedBy": "[BACKEND]",
       "resolution": "FIXED + PUSHED (not yet deployed). The ticket's premise was wrong -- the trial-expiry downgrade selects by Type+IsActive, not by name, and is deterministic. But name-keying is real in 3 other places. MEASURED: Plans holds 15 rows with DUPLICATE names -- Free x2, Enterprise x2, Test Plan x2 -- and 6 rows inactive. (a) UserService and (b) BandwidthMonitoringService picked the free plan by Name with no IsActive filter and no ORDER BY; latent only because both Free rows carry the same limit, and (b) feeds BOTH the 402 data-cap and the premium-server 403. (c) THE REAL DEFECT: SubscriptionsController.FindPlanByProductId ran its substring test BACKWARDS (plan name contains product id) with no IsActive filter -- real Google Play ids matched nothing so the Android receipt path has NEVER worked (always 400 'Plan not found'), while a short id like 'trial' matched 'free trial' and would have granted the unlimited, never-sold Trial plan. All three fixed; Trial and Free plans now explicitly excluded from receipt matching. Build: 0 Error(s). NOT done: the optional 9-site ORDER BY hardening -- deterministic today, pure hygiene, not worth the blast radius in the same change.",
-      "resultingHandoff": "xd-982 to [QA]; Android receipt path still needs a real Play sandbox purchase before launch"
+      "resultingHandoff": "xd-985 to [QA]; Android receipt path still needs a real Play sandbox purchase before launch"
     },
     {
       "id": "xd-857",
@@ -25883,7 +25883,7 @@
       "completedAt": "2026-09-24",
       "completedBy": "[DEVOPS]",
       "resolution": "FIXED + PROVEN. GlitchTip kept COUNTING errors while storing ZERO detail since 2026-05-24 -- the worst kind of monitoring failure, because the dashboard looked alive. MEASURED: issue_events_issueevent is partitioned daily on UUIDv7 with NO default partition; the maintenance command builds only a 7-day runway and stopped running ~2026-05-17, so from 2026-05-24 every event-detail INSERT failed hard while the unpartitioned issue table kept incrementing (last_seen 2026-09-22 vs newest event 2026-05-24). Dumped the 987 historical events (43 MB, /root/backups/) BEFORE maintenance dropped them per the configured 90-day retention, then ran maintain_partitions -- newest partition now 2026-09-29. PROVEN with a ROLLED-BACK insert: the error moved from 'no partition of relation found for row' to a mere not-null complaint naming the partition it routed to (issue_events_issueevent_20260923_h0). Nothing created. DURABILITY: new EXTERNAL /etc/cron.d/glitchtip-partitions at 04:30 -- deliberately NOT the app's own 05:00 scheduler, which is the component that silently failed -- verified to run to exit=0. DETECTION: new check_telemetry() in the nightly inventory watches partition runway (crit at 0 days) and event freshness, and specifically flags the silent-failure signature 'issues fresh + events stale'. Live run confirms: OK runway 6 d; WARN stored events empty. NOT PROVEN: why the in-app scheduler stopped in May -- the logs rotated away. The external cron is built so it does not matter.",
-      "resultingHandoff": "none -- detection now covers the recurrence; xd-984 raised separately for the deploy lag"
+      "resultingHandoff": "none for detection (now covered); xd-987 raised separately for the deploy lag"
     },
     {
       "id": "xd-874",
@@ -25929,7 +25929,7 @@
       "completedAt": "2026-09-24",
       "completedBy": "[DEVOPS]",
       "resolution": "FIXED + PROVEN LIVE. The ticket's premise was outdated: the repo file backend-dotnet-core/Data/disposable-email-domains.txt is 167 domains and is NOT the live blocklist. The live list is that plus /opt/caspervpn/geoip/disposable-override.txt (8,867 domains), hot-reloaded on mtime with no restart -- the refresh mechanism already existed and works. blackshop.fit was the single leak; appended atomically with a never-shrink guard (8,867 -> 8,868). PROVEN: POST /api/auth/register with that domain now returns 400 DISPOSABLE_EMAIL and the API logged 'Reloaded disposable-domain override file ...: 8868 domains'. No restart, no account created. Its one existing account is unverified, 0.00 MB, 0 connections -- zero harm; email verification held. BIGGER FIND, ALSO FIXED: that 8,868-domain file existed ONLY on the brain and in no backup -- a host rebuild would have silently dropped protection to 167 domains and resumed the ~188-account/26 GB signup wave it stopped, with no error anywhere. Snapshotted to infrastructure/data/ with a restore procedure. STILL OPEN: no automated refresh SOURCE; farm_guard.py only surfaces domains with >=3 accounts in 7 days, which is exactly why a 1-account domain was never flagged.",
-      "resultingHandoff": "xd-983 to [DEVOPS] for a weekly blocklist refresh with a line-count-must-not-shrink guard"
+      "resultingHandoff": "xd-986 to [DEVOPS] for a weekly blocklist refresh with a line-count-must-not-shrink guard"
     },
     {
       "id": "xd-877",
