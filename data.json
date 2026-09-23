@@ -25419,12 +25419,16 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: Nothing watches whether the daily routines actually ran \u2014 add a routine-freshness deadman",
       "description": "MEASURED 2026-09-17 13:35Z (L4 system-check). Prometheus has 41 alert rules and NONE of them watches whether a routine ran; PostgresBackupStale covers the nightly dump only. The RoutineRuns table showed every Claude routine last recorded 2026-09-16 (system-check 21:13Z, alert-triage 21:07Z, routines-health 18:18Z, finalize 18:15Z, blocked-users 18:12Z, speed 18:07Z) and nothing at all for 2026-09-17; this run fired ~9 h after its 07:30 slot and the 3-hourly alert-triage had missed ~5 slots. THAT PART IS EXPECTED, NOT A DEFECT: the Claude tasks are documented to fire on next app launch, and a sibling routine (blocked-users) was observed holding the session lock minutes later, i.e. they were catching up. THE ACTUAL GAP: nothing can tell 'late' from 'stopped'. The whole L4 layer exists because in the 2026-07-14 incident detection worked and the closing loop did not \u2014 a closing loop that can go dark unnoticed repeats that class. ASK: (1) a textfile exporter (60 s timer, same pattern as alert_delivery_textfile_exporter.sh) emitting casper_routine_last_run_timestamp_seconds{routine=\"...\"} from SELECT \"Routine\", max(\"RanAt\") FROM \"RoutineRuns\" GROUP BY 1; (2) a rule per expected cadence \u2014 daily routines stale after 30 h, the 3-hourly one after 9 h, the */15 routines-status after 1 h; (3) severity warning, not critical, so a closed laptop does not page. ACCEPTANCE: stop one routine deliberately, confirm the alert fires and clears. Note the known limitation from xd-818 \u2014 this alert would be delivered by the same Resend channel it watches.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-09-17T16:55:32Z",
       "createdDate": "2026-09-17",
-      "completedDate": null,
-      "dueBy": "2026-09-24T16:55:32Z"
+      "completedDate": "2026-09-24",
+      "dueBy": "2026-09-24T16:55:32Z",
+      "completedAt": "2026-09-24",
+      "completedBy": "[CTO]",
+      "resolution": "ANSWERED, AND THE ANSWER IS WORSE THAN THE TASK ASSUMED 2026-09-23. The task said nothing watches whether the daily routines actually ran. Something does \u2014 a 'routines-status' record runs every ~8 minutes (767 runs) \u2014 but it was not enough, because MEASURED today from the RoutineRuns table: every Claude-scheduled routine last ACTUALLY ran 3 to 6 days ago, while all seven show enabled:true with valid next-run times. system-check 124 h ago, blocked-users 124 h, routines-health 125 h, speed 125 h, alert-triage 152 h, finalize-open-tasks 171 h. TWO CAUSES. (1) casper-system-check's last run started 2026-09-20T23:07Z and was STILL marked 'running' with no activity since 23:09 that night \u2014 it hung for three days and blocked its own schedule. I stopped that session, so it can fire again. (2) The rest simply never fired: these are LOCAL scheduled tasks that only run while the CEO's Mac is awake with the app open. Their last runs succeeded; the schedule just never came round on a sleeping machine. THE STRUCTURAL FIX IS ALREADY IN PLACE, by accident of today's work: the four checks I moved onto the BRAIN (protocol-health 6-hourly, meter-sanity hourly, access-inventory daily, infra-inventory daily) run server-side and are independent of the Mac entirely \u2014 all four have run today and are recording normally. That is the pattern to follow: anything that must not miss a day belongs on the brain, not on a laptop.",
+      "resultingHandoff": "xd-979 to [DEVOPS] \u2014 move the remaining Mac-scheduled routines server-side or accept they are best-effort"
     },
     {
       "id": "xd-843",
@@ -27326,9 +27330,26 @@
       "createdAt": "2026-09-24T00:16:12Z",
       "createdDate": "2026-09-24",
       "completedDate": null
+    },
+    {
+      "id": "xd-979",
+      "from": "[CTO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CTO: Our daily automation runs on the CEO's laptop \u2014 move what must not miss a day onto the brain",
+      "description": "MEASURED 2026-09-24. All seven Claude-scheduled routines are enabled with valid schedules, yet every one last actually ran 3-6 days ago (system-check 124 h, blocked-users 124 h, routines-health 125 h, speed 125 h, alert-triage 152 h, finalize-open-tasks 171 h). Two causes: casper-system-check's run hung on 2026-09-20 and sat 'running' for three days, blocking its own schedule (cleared today); and the others are LOCAL tasks that only fire while the CEO's Mac is awake with the app open. CONSEQUENCE: the checks meant to catch drift \u2014 alert triage, blocked users by country, speed by country, routines health \u2014 were silent for the entire week in which the CasperCloak counter, the IKEv2 DNS fault and the Apple webhook crash all went unnoticed. ASK: decide per routine. Anything that must not miss a day belongs on the brain as a cron, like the four added today (protocol-health, meter-sanity, access-inventory, infra-inventory) which run server-side and are unaffected. The rest can stay on the Mac if we accept they are best-effort \u2014 but then nothing should depend on them. Also add a stuck-run guard: a routine whose previous run is still 'running' after N hours should be stopped automatically rather than blocking its own schedule for three days.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-09-24T00:54:56Z",
+      "createdDate": "2026-09-24",
+      "completedDate": null
     }
   ],
   "importantNotes": [
+    {
+      "date": "2026-09-23",
+      "priority": "P0",
+      "note": "Found why nothing warned us this week. Our daily automatic checks have not actually run for between three and six days, even though they all look switched on. Two reasons: one check got stuck three days ago and, because it never finished, it blocked itself from starting again; and the rest only run while your Mac is awake with the app open, so on a closed laptop they simply never happened. I have unstuck the first one. The important part: the four new checks I set up today live on the server instead of your Mac, so they run whether your laptop is open or not \u2014 and all four have run today."
+    },
     {
       "date": "2026-09-23",
       "priority": "P0",
