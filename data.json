@@ -27800,14 +27800,35 @@
       "to": "[QA]",
       "title": "Handoff from CTO: The QA session prompt contains 6 errors that would send a session wrong \u2014 rewrite it from the skill",
       "description": "The QA Cowork prompt in circulation conflicts with protocol and with the QA skill itself. MEASURED today: (1) it health-checks http://localhost:5000 \u2014 port 5000 returns 000, the API is on 8080 (200). The QA skill's own first line documents this exact trap, so the prompt contradicts the skill it tells you to load. (2) it names branch 'dropbox-local' \u2014 that branch DOES NOT EXIST (remote heads are production, development, gh-pages, dropbox-local-waqar, and two dev/* branches); protocol says production is the sole branch. (3) it says load 'caspervpn-testing' \u2014 renamed to caspervpn-qa on 2026-04-23 by the naming unification. (4) it sets verifiedBy='qa-tested' \u2014 not a valid tier; the four tiers are none/self/tested/verified, so this value would not render as a badge. (5) its BEFORE-ANY-WORK list omits preflight-protocol.md, which is mandatory and whose omission cost this session three wrong claims in one hour. (6) it omits the session lock before pushing, and the plain-English and validity-only laws entirely. ALSO: it embeds a GitHub token and a dev account password in plaintext \u2014 both must be rotated and neither should ever be in a prompt. Rewrite the prompt to point at the skill rather than restate it, since a restatement drifts the moment the skill changes \u2014 which is exactly what happened here.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-09-24T22:09:49Z",
+      "createdDate": "2026-09-24",
+      "completedDate": "2026-09-24",
+      "completedAt": "2026-09-24",
+      "completedBy": "[CTO]",
+      "resolution": "DONE \u2014 the corrected QA instructions now exist as a real daily routine: casper-qa-verification-daily, 09:16 local, after every sibling routine so it verifies what they closed. The pasted prompt had never been set up as a scheduled task at all. All six errors are removed and verified against the live system: health check on port 8080 (5000 returns nothing); branch production (dropbox-local does not exist); the qa skill by its vault path; the tier value exactly 'tested' (confirmed in the QA skill itself \u2014 'qa-tested' is invalid); preflight-protocol and the relevant CLAUDE.md sections as mandatory reading; the session lock before any repo push. NO credentials anywhere in it \u2014 the old prompt's plaintext GitHub token and dev password are gone and must still be ROTATED because they were exposed. Design choice: the routine POINTS AT the skill and protocol files and tells the session to read them, instead of restating them \u2014 a restatement drifts the moment the skill changes, which is how the old prompt went wrong. Also encodes today's lessons: read the ticket body not the title, skip ON HOLD items, only use ids returned by create_handoff, delete any test account in the same run, never change production state, and the two-phase deploy policy.",
+      "resultingHandoff": "xd-1006 (found while checking today's deploy)"
+    },
+    {
+      "id": "xd-1006",
+      "from": "[CTO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CTO: P1: crypto payments would NOT switch on a customer's subscription \u2014 the bridge secret is blank on both sides",
+      "description": "MEASURED 2026-09-24 (values never printed, only set/blank): inside the running containers, API CryptoSync__SharedSecret = BLANK and website CRYPTOSYNC_SHARED_SECRET = BLANK. The website's NOWPayments webhook only forwards a paid order to the backend when that secret is set (website/app/api/payments/webhooks/nowpayments/route.ts:141 `if (DOTNET_BACKEND_URL && CRYPTOSYNC_SHARED_SECRET)`), so today a completed crypto payment would be accepted by the website and SILENTLY never activate the subscription. docker-compose.yml:113-116 says the intended fix is to seed the host .env so both sides match \u2014 but the variable is absent from /root/Casper/Casper-Code/.env AND from both .env backups (2026-05-23, 2026-06-18). CANNOT PROVE whether today's two api recreates and one website recreate blanked a value that was set by hand earlier, or whether it has been blank since before \u2014 the old containers are gone; the absence from every backup since May suggests the latter. NO customer harmed in the window: 0 website orders in the last 12 hours. FIX: generate one strong random value (never print it), append CRYPTOSYNC_SHARED_SECRET=<value> to the brain's .env with a backup first, recreate api (via /root/deploy_api.sh) and website, then prove it end to end with a signed test call to /api/payments/crypto/record that is ACCEPTED, and an unsigned one that is REJECTED. \u26a0\ufe0f COORDINATE FIRST: someone modified that .env at 19:14 UTC today (after these deploys), so another session is active in this exact file \u2014 do not race it. ALSO BLANK: Activation__FleetSshPublicKey in the API \u2014 find what depends on it before deciding whether it matters.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-09-24T22:36:36Z",
       "createdDate": "2026-09-24",
       "completedDate": null
     }
   ],
   "importantNotes": [
+    {
+      "date": "2026-09-24",
+      "priority": "P1",
+      "note": "The QA check now runs by itself every morning at 09:16 with corrected instructions \u2014 no passwords in it. FOUND WHILE CHECKING TODAY'S UPDATE: the secret that links crypto payments to customer subscriptions is blank, so a crypto payment would be taken but the subscription would not switch on. Nobody has paid in crypto in the last 12 hours, so nobody has been affected. I have not fixed it yet because another session edited that same settings file this evening, and two sessions writing the same file is how settings get lost."
+    },
     {
       "date": "2026-09-24",
       "priority": "P0",
