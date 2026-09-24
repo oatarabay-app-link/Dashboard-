@@ -25923,12 +25923,16 @@
       "to": "[CTO]",
       "title": "Handoff from MARKETING: Guard the SSH commit-tree path \u2014 it silently deletes the whole repo (proven today, 6,719 files)",
       "description": "INCIDENT + FIX, both today. Marketing's 2026-09-17 session-2 commit 17347a6a pushed development back to THREE top-level entries: memory/ fell 365 -> 3 files, tools/ 46 -> 2, and website/, ios-app-v2/, backend-dotnet-core/, admin-panel-react/, Android/, desktop/, infrastructure/, tests/, docs/, marketing/, scripts/ vanished. 6,719 files / 948,276 lines recorded as deletions in one commit. ROOT CAUSE: the sandbox cannot push from the Dropbox-mounted clone (lock files), so sessions build commits with `git commit-tree` from a scratch worktree. That worktree held only the three paths the session wrote. write-tree over a PARTIAL directory produces a tree that git reads as 'everything else was deleted'. Nothing warned. RESTORED by Marketing this run: 3c034651 = tree of 5ceec3fd (run 1, same branch, full tree) with every path present at 6a659fda overlaid. Diff vs the broken tip is 6,719 additions / 0 modifications / 0 deletions; all four session-2 vault writes and both new tools preserved; fast-forward, no force, ancestry asserted. The Mac 5-min cron had not pulled, so the CEO's working tree was never touched. WHY THIS IS YOURS: the tooling is shared. Every department that pushes over SSH from a scratch dir can repeat this on production, where it would also take the live website down via deploy-website.yml. ASK: (1) add a guard to the shared push path that aborts when a commit's deletion count exceeds a threshold (say 50 files) unless explicitly forced; (2) prefer `git commit -- <explicit pathspecs>` over write-tree from a scratch dir; (3) add the trap to CLAUDE.md Section 7 Known Traps next to the empty-SHA refspec near-miss from earlier today - same family: a git primitive doing exactly what it was told about a tree the caller did not mean.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P0",
       "createdAt": "2026-09-17T21:19:11Z",
       "createdDate": "2026-09-17",
-      "completedDate": null,
-      "dueBy": "2026-09-24T21:19:11Z"
+      "completedDate": "2026-09-25",
+      "dueBy": "2026-09-24T21:19:11Z",
+      "completedAt": "2026-09-25",
+      "completedBy": "[CTO]",
+      "resolution": "GUARDED in the shared push path. tools/factory_bootstrap.py's new SSH writer builds every commit from the FULL parent tree in a private index \u2014 never from a directory \u2014 and refuses to push unless exactly the one intended path was added or modified and nothing was deleted. PROVEN against the exact incident: fed a commit built without the parent tree, it answered 'REFUSING TO PUSH (xd-847 guard): this commit should change only '...', but it changes 6778 path(s)' and pushed nothing (test on a throwaway branch, since deleted). Other hand-built commit-tree scripts outside factory_bootstrap are not covered \u2014 they should call api_put instead.",
+      "resultingHandoff": "none"
     },
     {
       "id": "xd-848",
@@ -28309,11 +28313,15 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: Extend the protocol guard + coordination check to sessions that do NOT run on the CEO's Mac",
       "description": "Built 2026-09-24 and live on the CEO's Mac only (user-level ~/.claude/settings.json): a Stop hook that will not let a session finish after changing the board, the repo, a production container/image or the production database without writing its vault log; a SessionEnd ledger of sessions that ended with unlogged changes; and a SessionStart coordination view built from EVIDENCE (repo commits by department, container restarts and .env/compose edits read from the live server, the live board, the push lock). Every scheduled routine runs on this Mac, so all of them are covered. NOT covered: sessions on other machines or in the cloud. Their CHANGES still show up to Mac sessions (the coordination view reads shared state, not their cooperation), but they themselves get neither the guard nor the view. Option: move the scripts into the repo (tools/hooks/) and register them in the project's .claude/settings.json via $CLAUDE_PROJECT_DIR, removing the user-level copies so Mac sessions do not fire them twice. Test with the same 11-case harness used on 2026-09-24.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-09-24T23:03:46Z",
       "createdDate": "2026-09-24",
-      "completedDate": null
+      "completedDate": "2026-09-25",
+      "completedAt": "2026-09-25",
+      "completedBy": "[CTO]",
+      "resolution": "DONE \u2014 the protocol now reaches every kind of Casper session. MEASURED FIRST: Cowork runs hooks in 0 of its records, and runs from its own sealed folder, so the Mac-only setup could never reach it. CODE (any machine, the cloud): project-level .claude/settings.json on production (the repo's default branch) and development runs the start-up view, the end-of-session guard and the ledger \u2014 tested keyless in a clean home folder. On the Mac a launcher stands the personal copy aside whenever the project brings its own (tested both ways), so nothing runs twice. COWORK ROUTINES: all 12 rewritten \u2014 they pointed at a branch that does not exist, 6 carried a DEAD GitHub key, 9 a plaintext password, 6 used session_exit, 0 read the preflight; now each points at the repo's protocol, runs the coordination script, and must confirm its log saved. COWORK HANDS-ON: the protocol is in Cowork's always-loaded memory. AND THE ROOT CAUSE: Cowork could not save its work at all (64x 'PAT 401', 28x 'FATAL: GH_TOKEN' in three days); factory_bootstrap now writes over SSH without a token, behind a guard proven against the xd-847 mistake. LIMIT: Cowork is instruction-level, not enforced.",
+      "resultingHandoff": "xd-1019 (claude.ai skills), xd-1020 (development merge), xd-1021 (password)"
     },
     {
       "id": "xd-1012",
@@ -28396,6 +28404,42 @@
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-09-25T00:01:58Z",
+      "createdDate": "2026-09-25",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1019",
+      "from": "[CTO]",
+      "to": "[CEO]",
+      "title": "Handoff from CTO: Refresh the 10 claude.ai 'caspervpn-*' skills \u2014 Cowork loads them and they are months old",
+      "description": "MEASURED 2026-09-24: Cowork loads 10 Casper skills from the claude.ai account \u2014 caspervpn-android, -desktop, -dev, -dev-infrastructure, -devops, -email-setup, -legal-compliance, -marketing-growth, -product-strategy, -testing \u2014 still under the OLD names, 2.5-11 KB each, none mentioning the preflight checklist, while the repo's department skills are up to 93 KB. CLAUDE.md \u00a711.7 listed this sync as pending since April. Cowork's memory now tells every session the repo wins, so this is no longer blocking \u2014 but the cleanest fix stops it recurring: replace each claude.ai skill with a SHORT pointer ('read memory/departments/<dept>/skill/SKILL.md in the Casper-Code repo first \u2014 it is the source of truth') so it can never go stale again. Uploading skills is done in claude.ai settings by the account owner; the CTO can prepare the ten files.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-09-25T00:02:52Z",
+      "createdDate": "2026-09-25",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1020",
+      "from": "[CTO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CTO: Merge the new factory_bootstrap into the development branch (111 lines differ \u2014 not overwritten)",
+      "description": "production's tools/factory_bootstrap.py now has: token from the shell start-up files, no exit at import, GitHub over SSH when there is no working token, the xd-847 delete guard, and retry on dropped reads (all tested). development carries a different copy (111 differing lines) and was deliberately NOT overwritten. Merge properly before Phase B moves work to development, or sessions there will fail to save exactly as Cowork did.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-09-25T00:02:52Z",
+      "createdDate": "2026-09-25",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1021",
+      "from": "[CTO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CTO: Change the dev test-account password \u2014 it sat in plain text in 9 routines and was pasted in chat",
+      "description": "The claude-dev test account's password was written in plain text in 9 of the 12 Cowork routines (removed 2026-09-24; originals kept as local .bak files) and appeared in the CEO's pasted QA prompt. The dead GitHub key found next to it is already refused (401) and needs no action. Change the password, record the new one ONLY in memory/context/credentials.md, and delete the SKILL.md.bak-2026-09-24 files once the new routines have run cleanly.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-09-25T00:02:52Z",
       "createdDate": "2026-09-25",
       "completedDate": null
     }
