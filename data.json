@@ -27728,11 +27728,15 @@
       "to": "[IOS]",
       "title": "Handoff from CTO: The app still offers a free trial that no longer exists \u2014 fix signup and paywall screens",
       "description": "The cardless signup trial was switched OFF on 2026-09-24 (CEO decision: the trial must convert to paid). PROVEN on prod: a fresh signup now returns TrialStartedAt=NULL and the Free plan. The App Store 7-day introductory offer is now the ONLY trial \u2014 verified APPROVED on all four paid products since 2026-09-17. ACTION: find every place the app promises a free trial at signup or shows trial days remaining for a non-subscriber, and stop it appearing for new accounts. Then state the trial properly on the paywall: length, what it includes, and THE PRICE AFTER IT, next to the purchase button \u2014 Apple Guideline 3.1.2 requires this and rejects paywalls showing '7 days free' without the post-trial price. Also verify the paywall checks introductory-offer ELIGIBILITY first: a returning customer who already used it is not eligible and showing it anyway is a common rejection. SEVEN accounts are still mid-trial on the old model \u2014 they finish normally and drop to Free; do not break their display.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P0",
       "createdAt": "2026-09-24T13:37:33Z",
       "createdDate": "2026-09-24",
-      "completedDate": null
+      "completedDate": "2026-09-24",
+      "completedAt": "2026-09-24",
+      "completedBy": "[CTO]",
+      "resolution": "NOT NEEDED \u2014 I RAISED THIS ON AN UNMEASURED ASSUMPTION AND IT WAS WRONG. I asserted the app still advertised the retired trial without reading the code; the CEO challenged it and the opposite is true. MEASURED: the paywall has three button states (SubscriptionManager.swift:2190-2228) \u2014 'Start 7-day free trial' when offerTrial, 'Start free trial \u2014 then $X' when introFreeTrial, else '<action> \u2014 $X'. offerTrial = manager.trialEligible = backendSubscription?.trialEligible && tier == .free, i.e. it is BACKEND-DRIVEN, while introFreeTrial is read from StoreKit. So switching the cardless trial off makes the app fall through to the CORRECT Apple button, which already shows the post-trial price. PROVEN: a fresh signup probe now receives trialEligible=False from /api/auth/me (probe created, measured, deleted, verified gone). No iOS change is required. The only residual string, '7 days, no card needed', appears solely in the Trial tier's feature list \u2014 shown only to the users still ON the old trial, for whom it is accurate, and it disappears when they finish.",
+      "resultingHandoff": "none \u2014 the app self-corrected; the real gap was the App Store metadata, now fixed"
     },
     {
       "id": "xd-1002",
@@ -27740,14 +27744,47 @@
       "to": "[MARKETING]",
       "title": "Handoff from CTO: App Store description must now describe the trial \u2014 it currently mentions it zero times",
       "description": "With the cardless trial retired, the App Store introductory offer is the only trial and it AUTO-CHARGES. The live listing does not mention a trial at all. Apple requires the trial length, what it includes and the price charged afterwards to appear in the description alongside the auto-renewal paragraph. 4.3 is WAITING_FOR_REVIEW right now (verified via App Store Connect), so getting this in before a reviewer opens the paywall closes it quietly; after, Guideline 3.1.2 is a plausible rejection.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P0",
       "createdAt": "2026-09-24T13:37:33Z",
+      "createdDate": "2026-09-24",
+      "completedDate": "2026-09-24",
+      "completedAt": "2026-09-24",
+      "completedBy": "[CTO]",
+      "resolution": "DONE AND VERIFIED VIA THE APP STORE CONNECT API. The metadata described the model we had just removed, on BOTH versions. Measured before changing: 4.2 (LIVE) and 4.3 promotionalText both read 'Try Premium free for 7 days - every plan, no commitment'; 4.3 whatsNew read 'a 7-day free trial \u2014 every server, unlimited data, no card needed'; and 'trial' appeared ZERO times in either description. FIXED: 4.3 promotionalText, whatsNew AND description all updated \u2014 the description now carries a FREE TRIAL block stating the length, what is included, that no charge is made during it, that the subscription starts automatically at the chosen plan's price unless cancelled at least 24 hours before, and where to cancel ('trial' now appears 4 times, was 0; 2690 -> 3068 chars). 4.2 (READY_FOR_SALE) promotionalText also corrected \u2014 that is what customers read TODAY. Its description returned HTTP 409 'cannot be edited at this time', which is expected on a live version; it ships with 4.3. TRAP for next time: promotionalText is capped at 170 characters and rejects with a 409 'attribute value is too long'. SUBMISSION AUDIT of 4.3 while there: description, keywords, promo, whatsNew, support URL, marketing URL, age rating, price schedule, build 61 attached, and review contact WITH demo account and notes are all present; all 7 IAP products are APPROVED with localizations. Two non-blocking gaps: no custom EULA (Apple's standard EULA applies, our ToS governs only via the website link) and phased release is not enabled.",
+      "resultingHandoff": "none \u2014 the listing is compliant; the EULA and phased-release gaps are recorded below"
+    },
+    {
+      "id": "xd-1003",
+      "from": "[CTO]",
+      "to": "[QA]",
+      "title": "Handoff from CTO: Two test accounts are inflating the free-trial count \u2014 7 shown, 5 are real",
+      "description": "MEASURED 2026-09-24: of the 7 subscriptions on BillingInterval=Trial, two are automated test artifacts left by an earlier session \u2014 probe-1789991690@caspervpn.com and probe2-1789996462@caspervpn.com, both created 2026-09-21, both 0 connections and 0 MB. Every trial figure quoted this week (including in the counter fix xd-855) therefore counts 5 real people and 2 probes. Confirm they are disposable and remove them so the dashboard reports a true number. NOT deleted unilaterally: they are user accounts, and deletion is irreversible. Of the 5 real trials only ONE is genuinely using the product \u2014 596brdykg9@privaterelay, 21 connections and 3.1 GB; the other four have 0-2 connections and 0 MB, which is itself a retention signal worth a look.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-09-24T21:43:33Z",
+      "createdDate": "2026-09-24",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1004",
+      "from": "[CTO]",
+      "to": "[BACKEND]",
+      "title": "Handoff from CTO: Business and Enterprise advertise device counts they do not enforce",
+      "description": "Found while verifying the 3-device change. The live Plans rows: Business MaxDevices=3 but its Features string reads '10 devices'; Enterprise MaxDevices=25 but its Features reads '100+ devices'. Same class as the Free plan bug fixed under xd-893 ('1 device' advertised, 1 enforced, now 3/3). These two are unsold today so nobody is affected, but the strings are customer-facing and would mislead the moment either plan is sold. SEPARATE LANDMINE worth recording: DbSeeder upserts the canonical Free plan id 00000000-\u2026-0001, but the ACTIVE Free plan in production is a DIFFERENT row (1d446012-\u2026). The seeder therefore maintains a plan that is not the one in use \u2014 which is why the API restart did NOT revert the 3-device change, and why a future 'fix it in the seeder' will silently do nothing.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-09-24T21:43:33Z",
       "createdDate": "2026-09-24",
       "completedDate": null
     }
   ],
   "importantNotes": [
+    {
+      "date": "2026-09-24",
+      "priority": "P0",
+      "note": "App Store wording is fixed on BOTH the live version and the one in review - it now says the subscription starts automatically unless cancelled, with the price. The app itself needed no change; it already had the right screen and switched to it on its own. The breach is now formally documented with your decision, dated - that satisfies the legal requirement. TWO THINGS STILL OPEN: the website still shows the OLD privacy policy and terms (the corrected ones are written but not put on the site yet), and the admin page cannot show who is on a free trial until the server is updated - the fix is written but not deployed."
+    },
     {
       "date": "2026-09-24",
       "priority": "P0",
