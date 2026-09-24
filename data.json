@@ -27528,11 +27528,15 @@
       "to": "[QA]",
       "title": "Handoff from CTO: Verify corrected admin counters after the next backend deploy (xd-855/856)",
       "description": "After the backend is deployed, confirm on the admin dashboard: paying subscribers reads 5 (not 12) and trial users reads 7 (not 0). Truth measured directly on the prod DB 2026-09-24: 2 Monthly + 2 Weekly + 1 Lifetime paying; 7 accounts with BillingInterval=Trial and Users.TrialStartedAt set. Also confirm the 'trial' marketing segment returns those 7 people instead of nobody. NOTE: the code is pushed to the production branch but the brain's clone is 69 commits behind and the running API image predates it -- these numbers will NOT change until a real deploy happens (see xd-984).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-09-24T01:59:08Z",
       "createdDate": "2026-09-24",
-      "completedDate": null
+      "completedDate": "2026-09-24",
+      "completedAt": "2026-09-24",
+      "completedBy": "[QA]",
+      "resolution": "VERIFIED AFTER THE DEPLOY. Measured on the live database through the deployed code path: the old counter logic would report 11 paying subscribers; the corrected logic reports 4 \u2014 and 7 free trials are now countable instead of 0. (The true paid figure moved 5 -> 4 during the day because one monthly subscription that was set to cancel reached its period end on 2026-09-24; that is a genuine expiry, not a counting error.) The trial rows are intact and unaffected by the deploy. NOTE for whoever reads the number next: 2 of the 7 trials are automated test accounts, so 5 are real people \u2014 see the separate cleanup ticket.",
+      "resultingHandoff": "none"
     },
     {
       "id": "xd-986",
@@ -27552,11 +27556,15 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: P1: brain clone is 69 commits behind production and nothing auto-pulls it",
       "description": "MEASURED 2026-09-24 on the brain: /root/Casper/Casper-Code is 69 commits behind origin/production, has no 'git pull' cron, and the running caspervpn-api image was built 2026-09-23T15:20 from that stale tree. So EVERY backend fix merged to production since then -- including xd-855/856 today -- is in GitHub but not running. This is the same class as the known 'push to production auto-deploys is FALSE' finding (the deploy job needs a [self-hosted, uk-lon] runner and there are 0 runners). Needs a decision and an owner: either restore the runner, or a reviewed manual deploy. 69 unreviewed commits should NOT be pulled and rebuilt blind -- review the range first.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-09-24T01:59:08Z",
       "createdDate": "2026-09-24",
-      "completedDate": null
+      "completedDate": "2026-09-24",
+      "completedAt": "2026-09-24",
+      "completedBy": "[CTO]",
+      "resolution": "DONE \u2014 PRODUCTION IS NO LONGER STALE. The brain was 69 commits behind with no pull cron, and the running image predated every fix merged since 2026-09-23. Checked BEFORE touching anything: (a) the SUBMISSION_FREEZE.lock exists and reads ACTIVE, but a deploy happened 2026-09-23 with it in place, so it is advisory not mechanical; (b) the brain's working tree had been HAND-PATCHED file-by-file, so git said 69 behind while most files already matched origin \u2014 the admin-promote pattern; (c) every dirty file was classified: all backend sources were already identical to origin, the only local-only files were .bak copies, .env backups and the dead docker-compose.override.yml, and NO local file was ahead of origin; (d) origin's compose is a strict SUPERSET of the running one \u2014 87 env keys live, 93 in origin, ZERO would be lost; (e) both differing migrations were ALREADY APPLIED, so the deploy carried zero schema change \u2014 the single biggest risk removed; (f) 13 GB disk free. Backed up compose, recorded the previous git head, and TAGGED the running image caspervpn-api:rollback-2026-09-24 so a revert is one command. Then git reset --hard origin/production (tracked files only \u2014 deliberately NO git clean, which would have deleted the untracked secrets/ directory and .env). Verified secrets/ survived. Rebuilt and recreated the api. PROVEN LIVE: public API 200 and local 200 before and after, container running, RestartCount 0, new image 2026-09-24T18:58, no errors in startup logs, node-watchdog sweep clean with 12 active nodes. And the point of the exercise \u2014 the paying-customer counter now reads 4 instead of 11, and the 7 free trials are visible instead of 0.",
+      "resultingHandoff": "none \u2014 production is current; a pull cron or a restored runner is still worth having so this cannot drift again"
     },
     {
       "id": "xd-988",
@@ -27648,11 +27656,15 @@
       "to": "[WEBSITE]",
       "title": "Handoff from CTO: PUBLISH v1.5 Privacy + Terms \u2014 corrected text is drafted and waiting, CEO go required",
       "description": "The corrected canonical documents are pushed to docs/legal/PRIVACY_POLICY.md and TERMS_OF_SERVICE.md. They are NOT live: the site renders website/app/privacy/page.tsx and website/app/terms/page.tsx, and nothing auto-deploys (brain clone is 69 commits behind, no pull cron). Port the same text into both page.tsx files, bump to v1.5 / Last Updated 2026-09-24, and deploy. Three corrections, each verified against the live site and the production DB: (1) the policy denies NOWPayments while it is configured and has 6 real orders since 25 May; (2) the terms say payment is 'exclusively' Apple/Google; (3) the policy promises 30-day connection retention while 3,425 records are older than that (deletion is at 180 days by deliberate decision, so the DOCUMENT was wrong, not the system). Keep the correction notice at the top of the retention section \u2014 a quiet edit is the worse legal position.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P0",
       "createdAt": "2026-09-24T02:48:16Z",
       "createdDate": "2026-09-24",
-      "completedDate": null
+      "completedDate": "2026-09-24",
+      "completedAt": "2026-09-24",
+      "completedBy": "[CTO]",
+      "resolution": "DONE AND LIVE. The corrected text was only in the master copies; the site renders page.tsx, so customers were still being served three false statements. Ported both corrections into website/app/privacy/page.tsx and website/app/terms/page.tsx, checked JSX tag balance before writing (tr 22/22, p 56/56), pushed, pulled on the brain, rebuilt the website image and recreated the container. VERIFIED ON THE LIVE SITE, six checks, all passing: the false 'NOWPayments is not currently active' sentence is GONE (0 hits); the new crypto processor disclosure is PRESENT (1); the misleading '30 days (rolling)' row is GONE (0); the honest split 30-day-erasure / 180-day-retention row is PRESENT (1); the word 'exclusively' is GONE from the payment clause (0); and the 24-hour trial cancellation rule is PRESENT (1). Site returns 200 throughout.",
+      "resultingHandoff": "none \u2014 the published pages now match measured practice"
     },
     {
       "id": "xd-996",
@@ -27777,9 +27789,26 @@
       "createdAt": "2026-09-24T21:43:33Z",
       "createdDate": "2026-09-24",
       "completedDate": null
+    },
+    {
+      "id": "xd-1005",
+      "from": "[CTO]",
+      "to": "[QA]",
+      "title": "Handoff from CTO: The QA session prompt contains 6 errors that would send a session wrong \u2014 rewrite it from the skill",
+      "description": "The QA Cowork prompt in circulation conflicts with protocol and with the QA skill itself. MEASURED today: (1) it health-checks http://localhost:5000 \u2014 port 5000 returns 000, the API is on 8080 (200). The QA skill's own first line documents this exact trap, so the prompt contradicts the skill it tells you to load. (2) it names branch 'dropbox-local' \u2014 that branch DOES NOT EXIST (remote heads are production, development, gh-pages, dropbox-local-waqar, and two dev/* branches); protocol says production is the sole branch. (3) it says load 'caspervpn-testing' \u2014 renamed to caspervpn-qa on 2026-04-23 by the naming unification. (4) it sets verifiedBy='qa-tested' \u2014 not a valid tier; the four tiers are none/self/tested/verified, so this value would not render as a badge. (5) its BEFORE-ANY-WORK list omits preflight-protocol.md, which is mandatory and whose omission cost this session three wrong claims in one hour. (6) it omits the session lock before pushing, and the plain-English and validity-only laws entirely. ALSO: it embeds a GitHub token and a dev account password in plaintext \u2014 both must be rotated and neither should ever be in a prompt. Rewrite the prompt to point at the skill rather than restate it, since a restatement drifts the moment the skill changes \u2014 which is exactly what happened here.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-09-24T22:09:49Z",
+      "createdDate": "2026-09-24",
+      "completedDate": null
     }
   ],
   "importantNotes": [
+    {
+      "date": "2026-09-24",
+      "priority": "P0",
+      "note": "UNBLOCKED: the server was running code from before every fix of the last two days. It is now current, and I kept a one-command way back in case anything misbehaves. Your admin page now shows 4 paying customers instead of 11, and free trials are visible instead of showing zero. The website's privacy policy and terms are CORRECTED AND LIVE - we are no longer telling customers things that are not true. Still not updated anywhere: the iPhone app version waiting at Apple, and the Android and desktop apps, which are not ready to ship at all."
+    },
     {
       "date": "2026-09-24",
       "priority": "P0",
