@@ -25049,12 +25049,16 @@
       "to": "[WEBSITE]",
       "title": "Handoff from MARKETING: Handoff from MARKETING: transient Next.js soft-404 (404 document served with HTTP 200 + x-nextjs-cache HIT) on /, /pricing, /no-log-policy at 09-13 ~18:20Z \u2014 check server-cache invalidation + make access logs queryable",
       "description": "Observed by Marketing scheduled run 09-13 18:20Z: three consecutive requests to /, /pricing, /no-log-policy returned one identical 40,730 B body = Next.js 404 page (<title>404: This page could not be found) with HTTP 200, x-nextjs-cache: HIT, cf-cache-status: DYNAMIC (origin-side). Self-resolved <60s; not recurred in 6 later probes (latest 09-15 18:05Z). caspervpn-website container Up 2 months, no restart; no access lines for the window in docker logs, so the event cannot be attributed. Risk: a crawler hitting that minute indexes a 200 soft-404 for the homepage/pricing. Ask: (1) audit Next.js ISR/fetch-cache config for a path that can cache the not-found render under a real route key; (2) enable access logging on the website container (or nginx per-vhost); (3) return 404 status for notFound() renders.\n\n[finalize 2026-09-16] still not reproducible + DETECTOR TRAP FOUND. 9 probes (3 each) to /, /pricing, /no-log-policy at ~17:45Z: all HTTP 200 with their correct, DISTINCT titles and distinct sizes 86,693 / 62,067 / 51,081 B. The incident signature was ONE IDENTICAL 40,730 B body on all three, so this is healthy. TRAP for whoever builds the monitor this task asks for: the string '404: This page could not be found' is present in the React Flight payload of EVERY healthy page (context: [\\\"$\\\",\\\"title\\\",null,{\\\"children\\\":\\\"404: This page could not be found.\\\"}]), so a body-grep detector false-positives 100% of the time \u2014 I hit this myself. Key the detector on the <title> tag, or on 'identical body size across different paths'. Headers do not discriminate either: x-nextjs-cache: HIT + cf-cache-status: DYNAMIC on all 9 healthy probes, the same headers the incident showed.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-09-15T22:12:27Z",
       "createdDate": "2026-09-15",
-      "completedDate": null,
-      "dueBy": "2026-09-22T22:12:27Z"
+      "completedDate": "2026-09-25",
+      "dueBy": "2026-09-22T22:12:27Z",
+      "completedAt": "2026-09-25",
+      "completedBy": "[WEBSITE]",
+      "resolution": "Closed on the two concrete asks; the cause stays UNKNOWN (hypothesis only, never reproduced since 09-13). Measured 2026-09-26: (a) not-found pages return real HTTP 404 (3 paths); (b) the website already has its own queryable access log in the nginx container (/var/log/nginx/website_ssl_access.log, ~11 days kept, status + size per request) \u2014 an event like 09-13 can now be attributed. Monitor trap stays documented: key on <title> or identical body size, never on the '404' string. Handed to [QA] as xd-1030 for the re-check; criteria stay unticked until QA passes them.",
+      "resultingHandoff": "xd-1030 to [QA] (item 8)"
     },
     {
       "id": "xd-788",
@@ -25842,12 +25846,16 @@
       "to": "[WEBSITE]",
       "title": "Handoff from MARKETING: Handoff from MARKETING: P0 web funnel repair \u2014 CTAs to App Store, /login leaks to admin, Android link 404s, GA4 not firing",
       "description": "[2026-09-21 CTO] /login part done 2026-09-21: the redirect to /admin/login (the admin panel) is gone \u2014 /login now 307 \u2192 /download, because no customer web login exists and the account lives in the app (3afea9ed). /checkout \u2192 App Store (or a real payment rail) is still open with [WEBSITE].\n\n[2026-09-20 MARKETING] LAUNCH 30 SEP \u2014 due 09-25 (gate in marketing/GTM-LAUNCH-PLAN-2026-09-30.md \u00a72).\n\nMEASURED 2026-09-17 on the live site. (1) /login 307-redirects customers to /admin/login (the staff panel). (2) /free-vpn links to play.google.com/store/apps/details?id=com.caspervpn -> HTTP 404; Android is not shipped. (3) /apps/android, /apps/windows, /apps/mac and /download all CTA to apps.apple.com/id1187243615 regardless of platform. (4) A GoogleAnalytics component is mounted in layout but NO GA4/GTM measurement ID is rendered in the HTML -> zero analytics; no ad pixels of any kind. (5) /checkout renders a plan picker with no payment provider (prod DB: 0 subscriptions carry a Stripe price ID, ever). CEO DECISION 2026-09-17: point all web CTAs at the App Store until the payment gateway is finished. TO DO: repoint /login to a customer destination or hide it; replace the dead Play link with an email capture; make each platform page CTA honest; insert the GA4 measurement ID once the property exists; route /checkout to the App Store or wire Stripe. Also: 10 blog posts ship with no meta description, and 4 guide pairs cannibalise each other (vpn-for-gaming/best-vpn-gaming, obfuscation-guide/what-is-vpn-obfuscation, is-vpn-legal/vpn-legality, vpn-for-business/vpn-for-small-business).\n\n--- CORRECTION 2026-09-17 (MARKETING): item (4) of this handoff was WRONG. GA4 IS live and collecting on caspervpn.com. Verified in the GA4 property: 10 active users / 83 events / 33 views in the last 7 days, with our real page titles (homepage, 'Best VPN for Iran', /download, /free-vpn, /pricing, white-label, plus a Russian-language homepage variant) and real geography (Iran 3, Russia 2, Cameroon, Indonesia, Ireland, Lithuania, Turkmenistan; top source google/organic). WHY MY SCAN MISSED IT: components/google-analytics.tsx gates rendering on cookie consent (xd-612) \u2014 it returns null unless localStorage 'cc_consent_v1' == 'all' \u2014 so no gtag/G- id appears in the server-rendered HTML or on a fresh visit that has not accepted the banner. The measurement ID is injected at build time from NEXT_PUBLIC_GA_MEASUREMENT_ID and is correctly NOT committed to the repo. NOTHING TO FIX HERE. The one real consequence to keep in mind: analytics only counts visitors who press 'Accept all', so reported traffic understates actual traffic \u2014 factor that in when judging paid-campaign numbers. Items (1) /login -> /admin/login, (2) dead Play Store link, (3) platform-mismatched CTAs and (5) no payment rail on /checkout all STAND as filed.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P0",
       "createdAt": "2026-09-17T16:52:03Z",
       "createdDate": "2026-09-17",
-      "completedDate": null,
-      "dueBy": "2026-09-25T15:00:00Z"
+      "completedDate": "2026-09-25",
+      "dueBy": "2026-09-25T15:00:00Z",
+      "completedAt": "2026-09-25",
+      "completedBy": "[WEBSITE]",
+      "resolution": "DONE except one CEO decision. Measured on the live site 2026-09-26: (1) /login -> 307 /download (CTO 09-21). (2) No Play Store link anywhere (0 hits on 7 pages). (3) Platform pages are honest: Android 'Coming Soon - Get iOS Version', Windows 'Coming Soon' + waitlist, Mac 'available via the iOS app on M1+'. (4) GA4 was never broken (Marketing's own correction). (5) /checkout: every main paid button now opens the App Store (Marketing 09-24); the crypto checkout remains only as a small labelled secondary link \u2014 NOTE it has created 6 invoices and ZERO completed payments ever (website DB orders: 6 pending, last 09-21) \u2014 whether to keep that link is a CEO decision, not changed here. EXTRA FOUND AND FIXED: the '10 posts without a description' were really 10 posts whose description was internal SEO notes ('**Target keyword:** ...'), and 7 posts showed those internal notes (keywords, search volumes, 'MARKETING_CLAIMS_AUDIT compliant') at the top of the article to every reader; 17 posts showed doubled apostrophes (You''re); 1 post rendered code comments as 9 extra page titles. Cleaned in the database (backup /root/backups/blog_posts-before-meta-fix-*.json) + renderer fix (commit 1207097). The 4 cannibalising guide pairs now point to one page each (commit 464b0d1). Handed to [QA] as xd-1030 for the re-check; criteria stay unticked until QA passes them.",
+      "resultingHandoff": "xd-1030 to [QA] (re-check). CEO decision owed: keep or remove the crypto checkout link."
     },
     {
       "id": "xd-838",
@@ -26891,12 +26899,16 @@
       "to": "[WEBSITE]",
       "title": "Handoff from QA: [P2] Two missing routes recorded during the restructure: /canary (WARRANT_CANARY.md says it is published there) and /.well-known/assetlinks.json (Android App Links)",
       "description": "[2026-09-21 CTO] /canary is no longer a 404: a truthful holding page went live 2026-09-21 (3afea9ed) \u2014 'Status: first signed statement pending', explicitly says nothing on the page is a signal, noindex. It publishes NONE of docs/legal/WARRANT_CANARY.md, which is stale (Last Updated 15 Feb, next update 15 May missed, signatory placeholder). [LEGAL] still owes the first signed canary; Privacy \u00a710 promises quarterly updates, so please date the first one before 30 Sep.\n\nFound 2026-09-20 by the [LEGAL] and [ANDROID] skill-restructure agents. (1) docs/legal WARRANT_CANARY.md states the canary is published at caspervpn.com/canary; the website has no such route - either publish it (a static page rendered from the markdown, dated, signed) or amend the document. (2) website/public/.well-known/assetlinks.json is absent; Android autoVerify App Links will fail. It needs the release-keystore SHA-256, which [ANDROID] does not have yet, so this is blocked on the Android keystore - create the file with a placeholder comment now so the route exists, fill the fingerprint when ANDROID hands it over. Lower priority than xd-886/xd-888.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-09-20T20:34:12Z",
       "createdDate": "2026-09-20",
-      "completedDate": null,
-      "dueBy": "2026-09-27T20:34:12Z"
+      "completedDate": "2026-09-25",
+      "dueBy": "2026-09-27T20:34:12Z",
+      "completedAt": "2026-09-25",
+      "completedBy": "[WEBSITE]",
+      "resolution": "Website part done. /canary: live truthful holding page (CTO 09-21) \u2014 the signed canary is still owed by [LEGAL]. /.well-known/assetlinks.json now exists and returns 200 application/json '[]' (a valid empty list: Android App Links simply stay unverified until [ANDROID] provides the release-key fingerprint and the file is filled) \u2014 commit 6dd4588. Handed to [QA] as xd-1030 for the re-check; criteria stay unticked until QA passes them.",
+      "resultingHandoff": "xd-1030 to [QA] (item 6); fingerprint still owed by [ANDROID]; signed canary still owed by [LEGAL]"
     },
     {
       "id": "xd-906",
@@ -27040,13 +27052,15 @@
       "from": "[MARKETING]",
       "to": "[WEBSITE]",
       "title": "Handoff from MARKETING: [P1] Publish Terms v1.5 the day Legal approves + stamp /affiliates/terms with a Version line + build /trial",
-      "description": "Three items, one owner, gate G1/G3 (plan \u00a72). (a) When [LEGAL] delivers Terms v1.5 (xd-861, due 09-24), regenerate with tools/generate_legal_pages.py (--check) and deploy the same day; verify from the origin: Version 1.5, effective date, '7-day' > 0. (b) /affiliates/terms carries no Version string (measured 2026-09-20) \u2014 add 'Version: 1.0 \u00b7 Effective <date>' the same way. (c) Build /trial (title 'Free 7-Day VPN Trial \u2014 Full Premium, No Cut-Off | CasperVPN'; H1 'Seven days of everything. Then it's your call.'; FAQPage + Product schema; body: what's unlocked, what happens on day 8 (falls back to the 0.5 GB free plan), how to cancel via App Store settings; renewal price $9.99/mo in the hero) \u2014 publish ONLY after (a) is live; link it from /pricing, /free-vpn, /compare/*, /best-vpn. handoffTo: [QA] origin verification of all three.",
+      "description": "Three items, one owner, gate G1/G3 (plan \u00a72). (a) When [LEGAL] delivers Terms v1.5 (xd-861, due 09-24), regenerate with tools/generate_legal_pages.py (--check) and deploy the same day; verify from the origin: Version 1.5, effective date, '7-day' > 0. (b) /affiliates/terms carries no Version string (measured 2026-09-20) \u2014 add 'Version: 1.0 \u00b7 Effective <date>' the same way. (c) Build /trial (title 'Free 7-Day VPN Trial \u2014 Full Premium, No Cut-Off | CasperVPN'; H1 'Seven days of everything. Then it's your call.'; FAQPage + Product schema; body: what's unlocked, what happens on day 8 (falls back to the 0.5 GB free plan), how to cancel via App Store settings; renewal price $9.99/mo in the hero) \u2014 publish ONLY after (a) is live; link it from /pricing, /free-vpn, /compare/*, /best-vpn. handoffTo: [QA] origin verification of all three.\n\n[2026-09-26 WEBSITE] (b) DONE: /affiliates/terms shows 'Version: 1.0 \u00b7 Effective March 9, 2026' (page text unchanged since that date) \u2014 commit b6d0f16, live. (a) and (c) WAITING ON [LEGAL]: the Terms source (docs/legal/TERMS_OF_SERVICE.md) still says Version 1.4; the 09-24 commit calls v1.5 a DRAFT. The trial wording is already live under the 1.4 label. As soon as Legal marks v1.5 approved, Website publishes it the same day and then builds /trial.",
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-09-20T21:36:06Z",
       "createdDate": "2026-09-20",
       "completedDate": null,
-      "dueBy": "2026-09-27T15:00:00Z"
+      "dueBy": "2026-09-27T15:00:00Z",
+      "blocked": true,
+      "blocker": "[LEGAL] approval of Terms v1.5"
     },
     {
       "id": "xd-916",
@@ -27388,11 +27402,15 @@
       "to": "[WEBSITE]",
       "title": "Handoff from CTO: Your live edits on the production server are UNCOMMITTED \u2014 push them before the next deploy (they blocked one today)",
       "description": "Found 2026-09-21T12:09Z by the production deploy guard (clean-tree check), on /root/Casper/Casper-Code: staged 'M CLAUDE.md', 'A tools/shipped_build_probe.py', 'M website/app/privacy/page.tsx', 'M website/app/terms/page.tsx', plus unstaged 'M nginx/sites/website.conf'. They exist on NO branch. This is the same class as the 2026-09-18 rescues (Apple-receipt guard, relay-TLS probes): one checkout command away from being lost, and every other deploy on that box now has to work around them (today's native-front flip and the trial's backend deploy were done with in-place edits / a targeted checkout of backend-dotnet-core only, never touching your files). ACTION: finish, then push via api_put to production+development and reset those paths on the brain \u2014 or tell CTO to do it for you. Do not leave work on the server overnight.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-09-21T16:07:09Z",
       "createdDate": "2026-09-21",
-      "completedDate": null
+      "completedDate": "2026-09-25",
+      "completedAt": "2026-09-25",
+      "completedBy": "[WEBSITE]",
+      "resolution": "Already resolved before this session \u2014 verified, not assumed: on the brain (/root/Casper/Casper-Code, 2026-09-25 22:2xZ) there are no modified tracked files; privacy/terms pages were committed 09-24 (7d042da23, ecacaca20), website.conf 09-20 (9d1af8f6f), shipped_build_probe.py 09-20 (00cd533d3), and each is byte-identical to origin/production. Only untracked .bak files remain (not website's). Handed to [QA] as xd-1030 for the re-check; criteria stay unticked until QA passes them.",
+      "resultingHandoff": "xd-1030 to [QA] (item 9)"
     },
     {
       "id": "xd-940",
@@ -28405,11 +28423,15 @@
       "to": "[WEBSITE]",
       "title": "Handoff from MARKETING: [P2] Mobile header: the theme toggle covers the brand name at 390px \u00b7 and referral links in our own emails should not count as affiliate clicks",
       "description": "(1) At 390px width the dark-mode button sits on top of 'CasperVPN' in the header (screenshot taken 24 Sep 19:55Z) \u2014 the first thing a phone visitor sees. (2) An email link scanner opened the referral link in our test approval email 25 seconds after delivery (desktop Chrome user agent) and it was recorded as an affiliate click. Every real welcome email will do the same. Tag links in our own emails (for example &src=email) and do not count those clicks.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-09-24T20:01:40Z",
       "createdDate": "2026-09-24",
-      "completedDate": null
+      "completedDate": "2026-09-25",
+      "completedAt": "2026-09-25",
+      "completedBy": "[WEBSITE]",
+      "resolution": "Both fixed and measured live. (1) Phone header: logo 40px under 640px, theme button moved into the menu; at 390px the overlap went from 36px to 0 (commit 730d70b). (2) The approval email's referral link carries &src=email; the site ignores such visits (no cookie, no click) and the click API refuses them \u2014 proven with a real approved code: tracked:false, click count 15 -> 15 (commit 6849bc1). Side notes, not fixed: on a phone the cookie banner covers the bottom of the open menu until answered; the page is 394px wide at 390px (a decorative blur circle and a table stick out 4px). Handed to [QA] as xd-1030 for the re-check; criteria stay unticked until QA passes them.",
+      "resultingHandoff": "xd-1030 to [QA] (items 4-5)"
     },
     {
       "id": "xd-1011",
@@ -28654,9 +28676,26 @@
       "createdAt": "2026-09-25T22:42:00Z",
       "createdDate": "2026-09-25",
       "completedDate": null
+    },
+    {
+      "id": "xd-1030",
+      "from": "[WEBSITE]",
+      "to": "[QA]",
+      "title": "Handoff from WEBSITE: [P1] Re-check 6 website fixes shipped 2026-09-26 (commits 1207097..b6d0f16 on production, deployed 22:39Z) and tick xd-837/1010/905/787/939",
+      "description": "Run each check from the live site, not the code. PASS = tick; FAIL = hand back to [WEBSITE].\n1 Blog (xd-837): for every /blog URL in sitemap.xml \u2014 meta description exists, does not start with '#' or '**', has no line break; body has none of 'Target keyword' / 'Monthly Volume' / 'MARKETING_CLAIMS_AUDIT'; no doubled apostrophe (grep \"[a-z]''[a-z]\" = 0); exactly one <h1> per page (/blog/vpn-setup-guide had 10, now 1, with 3 <pre> code blocks). Measured by WEBSITE 22:45Z: 27/27 pass.\n2 Guides (xd-837): /guides/best-vpn-gaming, obfuscation-guide, vpn-legality, vpn-for-business carry rel=canonical to vpn-for-gaming, what-is-vpn-obfuscation, is-vpn-legal, vpn-for-small-business; sitemap.xml lists 0 of the 4 duplicates and all 4 keepers.\n3 Funnel (xd-837): /login -> 307 /download; 0 play.google links on /, /free-vpn, /download, /pricing, /apps/android; /apps/android, /apps/windows, /apps/mac CTAs say Coming Soon / Waitlist / 'via iOS app'.\n4 Header (xd-1010): at 390px width the theme button no longer overlaps 'CasperVPN' (measured overlap 36px before, 0 after); the Theme toggle is inside the phone menu and switches dark/light.\n5 Email referral (xd-1010): POST /api/affiliates/click with a REAL approved code and landingPage '/?ref=CODE&src=email' returns tracked:false and affiliate_clicks count does not change (15 -> 15 measured); in a browser, /?ref=X&src=email fires no click call and sets no casper_ref cookie, while /?ref=X (control) fires 1 call and sets the cookie.\n6 Android file (xd-905): GET /.well-known/assetlinks.json -> 200 application/json '[]'; /.well-known/apple-app-site-association still 200.\n7 Affiliate terms (xd-915 b): /affiliates/terms shows 'Version: 1.0 \u00b7 Effective March 9, 2026'.\n8 xd-787: website 404s return HTTP 404 (/this-page-does-not-exist-xyz, /blog/no-such-post-xyz, /guides/no-such-guide-xyz); per-site access log exists in caspervpn-nginx: /var/log/nginx/website_ssl_access.log (+ ~11 days rotated).\n9 xd-939: on the brain, git status in /root/Casper/Casper-Code shows no modified tracked files; website/app/privacy/page.tsx, website/app/terms/page.tsx, nginx/sites/website.conf, tools/shipped_build_probe.py identical to origin/production.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-09-25T22:44:29Z",
+      "createdDate": "2026-09-25",
+      "completedDate": null
     }
   ],
   "importantNotes": [
+    {
+      "date": "2026-09-26",
+      "priority": "P1",
+      "note": "WEBSITE: 7 blog articles were showing our internal SEO notes (target keywords, search volumes, 'claims audit compliant') at the top of the article to every reader, and 17 showed broken apostrophes. Fixed and checked live on all 27 articles. Also fixed: phone header overlap, affiliate click counting from our own emails, 4 duplicate guide pages. ONE DECISION FOR YOU: the website still offers crypto payment as a small secondary link \u2014 it has never completed a single payment (6 unpaid invoices). Keep it or remove it?"
+    },
     {
       "date": "2026-09-26",
       "dept": "[DEVOPS]",
