@@ -27076,14 +27076,18 @@
       "to": "[WEBSITE]",
       "title": "Handoff from MARKETING: [P1] Publish Terms v1.5 the day Legal approves + stamp /affiliates/terms with a Version line + build /trial",
       "description": "Three items, one owner, gate G1/G3 (plan \u00a72). (a) When [LEGAL] delivers Terms v1.5 (xd-861, due 09-24), regenerate with tools/generate_legal_pages.py (--check) and deploy the same day; verify from the origin: Version 1.5, effective date, '7-day' > 0. (b) /affiliates/terms carries no Version string (measured 2026-09-20) \u2014 add 'Version: 1.0 \u00b7 Effective <date>' the same way. (c) Build /trial (title 'Free 7-Day VPN Trial \u2014 Full Premium, No Cut-Off | CasperVPN'; H1 'Seven days of everything. Then it's your call.'; FAQPage + Product schema; body: what's unlocked, what happens on day 8 (falls back to the 0.5 GB free plan), how to cancel via App Store settings; renewal price $9.99/mo in the hero) \u2014 publish ONLY after (a) is live; link it from /pricing, /free-vpn, /compare/*, /best-vpn. handoffTo: [QA] origin verification of all three.\n\n[2026-09-26 WEBSITE] (b) DONE: /affiliates/terms shows 'Version: 1.0 \u00b7 Effective March 9, 2026' (page text unchanged since that date) \u2014 commit b6d0f16, live. (a) and (c) WAITING ON [LEGAL]: the Terms source (docs/legal/TERMS_OF_SERVICE.md) still says Version 1.4; the 09-24 commit calls v1.5 a DRAFT. The trial wording is already live under the 1.4 label. As soon as Legal marks v1.5 approved, Website publishes it the same day and then builds /trial.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-09-20T21:36:06Z",
       "createdDate": "2026-09-20",
-      "completedDate": null,
+      "completedDate": "2026-09-25",
       "dueBy": "2026-09-27T15:00:00Z",
-      "blocked": true,
-      "blocker": "[LEGAL] approval of Terms v1.5"
+      "blocked": false,
+      "blocker": null,
+      "completedAt": "2026-09-25",
+      "completedBy": "[WEBSITE]",
+      "resolution": "DONE (CEO 2026-09-26: Legal approved v1.5; crypto payment set up \u2014 keep it). (a) Terms of Service + Privacy Policy v1.5 live, generated from docs/legal by tools/generate_legal_pages.py (restored to production from development and fixed: h4, blockquotes, trailing full stops in URLs); generator --check clean; visible-text diff vs the old pages reviewed line by line \u2014 only intended changes. (b) /affiliates/terms version line (done earlier, b6d0f16). (c) /trial live \u2014 written to Terms v1.5 4.3, NOT to this ticket's original day-8 text: since the CEO decision of 2026-09-24 the App Store trial converts to paid unless cancelled 24h before, so 'falls back to the free plan' would have been false; it now says both paths. Linked from /pricing, /free-vpn, /compare/*, /best-vpn. Same misstatement fixed on the trial block used by the compare pages and in the /free-vpn FAQ. ALSO FIXED: the website said the Free plan is 1 device (/pricing card, /free-vpn, FAQ); production Plans table and Terms say 3. Build verified on the brain (124/124 pages); tsc shows 8 PRE-EXISTING type errors in 4 other files (none in this change). Handed to [QA] as xd-1051.",
+      "resultingHandoff": "xd-1051 to [QA]; follow-ups to [LEGAL] and [DEVOPS] (this session)"
     },
     {
       "id": "xd-916",
@@ -28988,9 +28992,50 @@
       "createdAt": "2026-09-26T02:49:07Z",
       "createdDate": "2026-09-26",
       "completedDate": null
+    },
+    {
+      "id": "xd-1051",
+      "from": "[WEBSITE]",
+      "to": "[QA]",
+      "title": "Handoff from WEBSITE: [P1] Re-check Terms/Privacy v1.5 + /trial + Free-plan device count (live since 2026-09-26 ~23:50Z, commits 0d6384a..344eee2) and tick xd-915",
+      "description": "From the live site. PASS = tick; FAIL = back to [WEBSITE].\n1 /terms and /privacy show 'Version: 1.5', Last Updated + Effective 'September 26, 2026'; Terms 4.2 names NOWPayments; Terms 4.3.1-4.3.3 present; Privacy shows the v1.5 correction notice; no markdown (** / #### / ](...)) visible; `python3 tools/generate_legal_pages.py --check` from the repo root = OK for both (pages are generated from docs/legal, never hand-edited).\n2 /trial: 200; title 'Free 7-Day VPN Trial \u2014 Full Premium, No Cut-Off | CasperVPN' (once); one <h1>; JSON-LD FAQPage + Product; states $9.99/month, the 24-hour cancellation rule, the 0.5 GB free plan on cancel, the cancel path; never 'no credit card'. In sitemap.xml.\n3 /pricing, /free-vpn, /compare/<any>, /best-vpn each link href=\"/trial\".\n4 Free plan = 3 devices everywhere: /pricing Free card '3 Devices', /free-vpn '3 Devices', /faq 'Free and every Premium plan: up to 3 devices'; matches production Plans table (Free MaxDevices=3) and Terms 4.3.3.\n5 Crypto checkout: POST /api/payments/checkout {planId:monthly,paymentMethod:crypto,email:qa-probe@...} returns a nowpayments.io invoice URL (measured 2026-09-26: order CVN-MUHLOS3S-DUXD, pending, 9.99 USD \u2014 a probe, never paid). NOT yet proven: a real paid invoice turning into a completed order + Premium on the account \u2014 needs one real payment.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-09-25T23:51:42Z",
+      "createdDate": "2026-09-25",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1052",
+      "from": "[WEBSITE]",
+      "to": "[LEGAL]",
+      "title": "Handoff from WEBSITE: [P1] Two gaps between the approved Terms v1.5 and what the website sells",
+      "description": "Measured on production code 2026-09-26. (1) 17 places on caspervpn.com promise a '30-day money-back guarantee' (compare pages, best-vpn, trial block, others: grep -ri 'money-back' website/). Terms v1.5 4.6 contains no such guarantee \u2014 App Store refunds are Apple's policy. Either add the guarantee to the Terms (with how it works for App Store purchases) or tell [MARKETING]/[WEBSITE] to remove the claim. (2) Crypto purchases on caspervpn.com are live, but Terms 4.4 auto-renewal, 4.5 cancellation and 4.6 refunds only describe App Store / Google Play, and 4.6 still says web subscriptions 'when introduced will include their own refund terms'. Crypto orders are one-off invoices that do not auto-renew. Please add the crypto case; Website republishes the same day with tools/generate_legal_pages.py.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-09-25T23:51:42Z",
+      "createdDate": "2026-09-25",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1053",
+      "from": "[WEBSITE]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from WEBSITE: [P1] Website deploy ships even when the website FAILS to compile",
+      "description": "MEASURED 2026-09-26 on the brain: `docker build --target deps` of a website change with a syntax error printed 'Failed to compile \u2026 Build failed because of webpack errors' and still exited 0, because website/Dockerfile runs `npm run build || echo \"Build complete\u2026\"`; deploy-website.yml's build-check does the same (`npm run build || echo \u2026`, `npx tsc --noEmit || true`). The pipeline would have replaced the live site with a broken image (caught by a manual build before pushing). Also `next build` skips type checks, and `npx tsc --noEmit` currently reports 8 errors in 4 files (app/compare/[slug], app/guides/[slug] x5, app/pricing:107, lib/conversion-tracking:72) \u2014 [WEBSITE] will fix those if you make the check blocking. Ask: remove both `|| echo` / `|| true`, make a failed build fail the job and keep the running container.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-09-25T23:51:42Z",
+      "createdDate": "2026-09-25",
+      "completedDate": null
     }
   ],
   "importantNotes": [
+    {
+      "date": "2026-09-26",
+      "priority": "P1",
+      "note": "WEBSITE: new Terms of Service and Privacy Policy (version 1.5) are live, and the free-trial page caspervpn.com/trial is live. The site also said the free plan allows 1 device \u2014 it allows 3; fixed. Crypto payment is kept as you decided. It creates a payment page correctly, but no real crypto payment has gone through yet, so one real small payment is still the only proof it works end to end."
+    },
     {
       "date": "2026-09-26",
       "priority": "P1",
