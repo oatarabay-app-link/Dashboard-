@@ -25568,12 +25568,16 @@
       "to": "[DEVOPS]",
       "title": "Handoff from QA: [QA FAILED] Nightly real-user speed report is blind after the hourly compaction \u2014 fix the gap filter + add the protocol column",
       "description": "MEASURED 2026-09-16 (read-only). (1) BLIND: since the BandwidthUsageLogs hourly compaction (2026-09-15 ~20:00Z) every row lands exactly on the hour. Last-24 h gap histogram: 11442 rows at 0.2\u201392 s (all inside the 20:00 incident hour) + 2520 rows at exactly 3600.000000 s. /root/Casper/scripts/throughput-report.sh keeps only 'gap BETWEEN 5 AND 600' in both CTEs, so every hourly row is discarded \u21d2 from 2026-09-17 the report prints zero active ticks for every country. (2) ARTIFACT: today's only non-zero line (AE p50 16.26 / p90 29.16 / max 33.3) is 14 rows of ONE user on D\u00fcsseldorf between 2026-09-15 20:25:54Z and 20:33:50Z, each with an identical BytesUsed of 38.99\u201339.00 MB while the gap varied 9.4 s \u2192 34.2 s \u2014 a repeated counter inside the 20:25\u201321:50Z reconcile incident, not a speed. DO: (a) make the report read the hourly rows \u2014 accept gap \u2248 3600 and label that column 'hour-average Mbps (understates bursts)'; hourly rows ARE true deltas (bandwidth-compact-hourly.sh inserts SUM(BytesUsed) GROUP BY UserId,ServerId,date_trunc('hour',RecordedAt) and aborts on a byte-sum mismatch), so the arithmetic is sound; (b) add a validity guard that drops any cluster whose BytesUsed is constant across unequal gaps, and any country whose active ticks all fall inside one <15-minute window \u2014 today's line would have been suppressed by either; (c) implement the still-missing protocol column (join ConnectionLogs protocol 0=WireGuard / 3=CasperCloak per country+server \u2014 was xd-786) so a Gulf CasperCloak session is unmistakable; (d) if real per-tick speed is wanted rather than an hour average, it needs a separate bounded sampling path \u2014 the raw ticks no longer exist after compaction. CONTEXT: fleet-wide real traffic 2026-09-15 21:00Z\u21922026-09-16 17:00Z = 24 rows / 1 user ('[wg-sync] poll: peers=286 billed=1 \u2026 phantom=20'), so even a fixed report has almost nothing to measure right now. Validity rules + evidence: memory/context/throughput-history.md, .claude/skills/caspervpn-anticensorship/references/caspercloak-throughput.md (2026-09-16 section).\n\n[QA 2026-09-18 \u2014 speed routine: STILL BLIND, 2nd consecutive day, and a SECOND blindness layer found] throughput-2026-09-17.txt and throughput-2026-09-18.txt are both 486 bytes = (0 rows) in both sections (generated 2026-09-18T04:40:01Z). Cron fires (40 4 * * *); the script is unchanged and still filters gap BETWEEN 5 AND 600. Re-measured today: last-24h gap histogram = 2 rows, both NULL gap, zero rows inside the kept band. NEW FINDING \u2014 fixing the gap filter ALONE will still print nothing: both CTEs also carry HAVING count(*) > 20, a threshold calibrated for ~41s ticks (~2100 ticks/user/day), while an hourly cadence caps a user at 24 rows/day. Measured gap-eligible rows on 2026-09-17: LB 26 (only survivor), IQ 2, DE 1, US 0, NG 0 \u2014 an hour-aware gap fix would have emitted exactly one line. Drop HAVING to > 3 together with the gap fix, or the fix is cosmetic. Evidence: memory/context/throughput-history.md (2026-09-18 entry).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-09-16T21:06:08Z",
       "createdDate": "2026-09-16",
-      "completedDate": null,
-      "dueBy": "2026-09-23T21:06:08Z"
+      "completedDate": "2026-09-25",
+      "dueBy": "2026-09-23T21:06:08Z",
+      "completedAt": "2026-09-25",
+      "completedBy": "[DEVOPS]",
+      "resolution": "throughput-report.sh rewritten for the hourly BandwidthUsageLogs rows: speed = bytes in the hour / seconds the user was connected in that hour (ConnectionLogs overlap) = session-average Mbps (understates bursts); hours with < 60 s connected dropped; protocol column added (WireGuard/OpenVPN/IKEv2/CasperCloak). 7-day test returned 11 country rows (was 0 rows). Live /root/Casper/scripts/throughput-report.sh, repo infrastructure/scripts/throughput-report.sh.",
+      "resultingHandoff": "xd-1029 to [QA] (verify)"
     },
     {
       "id": "xd-821",
@@ -25703,7 +25707,7 @@
       "from": "[CTO]",
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: Two DNS/cert monitors were watching retired hostnames \u2014 repointed to the live s<N>.pompesh.com endpoints",
-      "description": "MEASURED 2026-09-16 21:00-21:20Z (L4 system-check). The two DNS/cert monitors on the brain were pointed at RETIRED hostnames, so they emitted ~5 false alert emails/day AND were blind to the real certificate state. EVIDENCE: all 13 cc-*.caspervpn.com names return NXDOMAIN from the brain (dig @1.1.1.1 AND system resolver; api/www/s6-edge.pompesh.com resolve normally). They are genuinely retired, not dropped: VpnServers.CasperCloakDomain holds s<N>.pompesh.com for all 12 relays, and mia-01/sgp-01 have NO cc-* cert or renewal config (only s10/s3.pompesh.com). CONSEQUENCE: parity_monitor.sh cert_check returned 0 for all 12 relays -> a permanent false '11+0 = 11/12' deficit on 12 of 13 nodes every night (see /var/log/fleet-parity-check.log) plus a nightly failure email; subdomain-resolution-check.sh reported 'MISSING: cc-uk cc-us cc-de ...' every 6 h (4 emails/day, /var/log/subdomain-check.log). This is the alert-fatigue mechanism that buried PostgresDown for 6 days in the 2026-07-14 incident that created this routine, and it consumed the Resend quota documented in xd-818. FIXED THIS RUN (monitoring components only, root cause measured): both scripts repointed to the live names, backups kept as *.bak-20260916-210553, bash -n clean, and both now IN GIT on production+development (infrastructure/scripts/parity_monitor.sh, and subdomain-resolution-check.sh which was server-only = the xd-460 drift class). VERIFIED: the subdomain loop now reports 'MISSING: (none)' across 20 names. IMPORTANT / EXPECTED: tonight's 02:00Z parity run will report 10 nodes at 11/12 -- that is a TRUE POSITIVE, not a regression: those 10 relays serve a cert expiring 2026-10-13 (26 d), inside the 30-day threshold. It should clear to 12/12 after the 03:45Z one-shot fan-out tracked in xd-826. DEVOPS TO DO: (1) after the fan-out, confirm the next parity run reads 12/12 on all 13 nodes; (2) confirm no other fleet script still references cc-*.caspervpn.com (infrastructure/scripts/cc-domain-provision.sh still does, as do 4 parity_monitor.sh.bak-* files on the brain); (3) decide whether the cc-* DNS records should be formally decommissioned/documented so no future provisioning re-adds them.\n\n[CTO 2026-09-17, L4 system-check - the prediction in this task was CONFIRMED on both halves] Predicted: 'tonight's 02:00Z parity will report 10 nodes at 11/12 (true positive), clearing to 12/12 after the 03:45Z fan-out'. MEASURED: /var/log/fleet-parity-check.log 2026-09-17T02:00:02Z shows exactly 10 nodes at 11+0=11/12 (mia, mex, sgp, mtl, sao, tyo, syd, hkg, US-LA, DE-DU) and 12/12 for bkk-01, UK-LON, NL-AM2 (s5), FR-PA (s7) - the two relays whose certs were replaced on 09-16. The 03:45-03:49Z fan-out then reached all 13; all 12 relays now serve notAfter=Dec 12 2026 and the exact cert_check() returns 1 for all 10. Tonight's 02:00Z run should read 12/12 fleet-wide - PENDING until it runs. NEW, FOUND BY FOLLOWING THIS TASK'S OWN LESSON: the repointed parity e-mail was the ONLY watcher of the relay certificate. probe_ssl_earliest_cert_expiry resolved to 4 series, ALL brain names (api/www/caspervpn.com + /health) - zero of the 12 relay :443 endpoints, so SSLCertExpirySoon (<30 d) and SSLCertExpiryUrgent (<7 d) could never fire for them. That is the mechanism of the 2026-08-20 fleet-wide 502 P0. FIXED THIS RUN: new scrape job 'blackbox-relay-tls' (12 targets, http_2xx, 300 s) in the live prometheus.yml AND in git (infrastructure/monitoring/prometheus.yml, production - the dev branch has no infrastructure/monitoring/). All 12 measured http=200 tls=0 BEFORE adding, so no new ServiceDown noise; promtool check config SUCCESS, then docker kill -s HUP prometheus (uptime stayed 'Up 40 hours' = signal, not restart). VERIFIED: 12/12 new targets up, 78 active targets, 0 not-up across all jobs, 12 expiry series at 86.0 d.",
+      "description": "MEASURED 2026-09-16 21:00-21:20Z (L4 system-check). The two DNS/cert monitors on the brain were pointed at RETIRED hostnames, so they emitted ~5 false alert emails/day AND were blind to the real certificate state. EVIDENCE: all 13 cc-*.caspervpn.com names return NXDOMAIN from the brain (dig @1.1.1.1 AND system resolver; api/www/s6-edge.pompesh.com resolve normally). They are genuinely retired, not dropped: VpnServers.CasperCloakDomain holds s<N>.pompesh.com for all 12 relays, and mia-01/sgp-01 have NO cc-* cert or renewal config (only s10/s3.pompesh.com). CONSEQUENCE: parity_monitor.sh cert_check returned 0 for all 12 relays -> a permanent false '11+0 = 11/12' deficit on 12 of 13 nodes every night (see /var/log/fleet-parity-check.log) plus a nightly failure email; subdomain-resolution-check.sh reported 'MISSING: cc-uk cc-us cc-de ...' every 6 h (4 emails/day, /var/log/subdomain-check.log). This is the alert-fatigue mechanism that buried PostgresDown for 6 days in the 2026-07-14 incident that created this routine, and it consumed the Resend quota documented in xd-818. FIXED THIS RUN (monitoring components only, root cause measured): both scripts repointed to the live names, backups kept as *.bak-20260916-210553, bash -n clean, and both now IN GIT on production+development (infrastructure/scripts/parity_monitor.sh, and subdomain-resolution-check.sh which was server-only = the xd-460 drift class). VERIFIED: the subdomain loop now reports 'MISSING: (none)' across 20 names. IMPORTANT / EXPECTED: tonight's 02:00Z parity run will report 10 nodes at 11/12 -- that is a TRUE POSITIVE, not a regression: those 10 relays serve a cert expiring 2026-10-13 (26 d), inside the 30-day threshold. It should clear to 12/12 after the 03:45Z one-shot fan-out tracked in xd-826. DEVOPS TO DO: (1) after the fan-out, confirm the next parity run reads 12/12 on all 13 nodes; (2) confirm no other fleet script still references cc-*.caspervpn.com (infrastructure/scripts/cc-domain-provision.sh still does, as do 4 parity_monitor.sh.bak-* files on the brain); (3) decide whether the cc-* DNS records should be formally decommissioned/documented so no future provisioning re-adds them.\n\n[CTO 2026-09-17, L4 system-check - the prediction in this task was CONFIRMED on both halves] Predicted: 'tonight's 02:00Z parity will report 10 nodes at 11/12 (true positive), clearing to 12/12 after the 03:45Z fan-out'. MEASURED: /var/log/fleet-parity-check.log 2026-09-17T02:00:02Z shows exactly 10 nodes at 11+0=11/12 (mia, mex, sgp, mtl, sao, tyo, syd, hkg, US-LA, DE-DU) and 12/12 for bkk-01, UK-LON, NL-AM2 (s5), FR-PA (s7) - the two relays whose certs were replaced on 09-16. The 03:45-03:49Z fan-out then reached all 13; all 12 relays now serve notAfter=Dec 12 2026 and the exact cert_check() returns 1 for all 10. Tonight's 02:00Z run should read 12/12 fleet-wide - PENDING until it runs. NEW, FOUND BY FOLLOWING THIS TASK'S OWN LESSON: the repointed parity e-mail was the ONLY watcher of the relay certificate. probe_ssl_earliest_cert_expiry resolved to 4 series, ALL brain names (api/www/caspervpn.com + /health) - zero of the 12 relay :443 endpoints, so SSLCertExpirySoon (<30 d) and SSLCertExpiryUrgent (<7 d) could never fire for them. That is the mechanism of the 2026-08-20 fleet-wide 502 P0. FIXED THIS RUN: new scrape job 'blackbox-relay-tls' (12 targets, http_2xx, 300 s) in the live prometheus.yml AND in git (infrastructure/monitoring/prometheus.yml, production - the dev branch has no infrastructure/monitoring/). All 12 measured http=200 tls=0 BEFORE adding, so no new ServiceDown noise; promtool check config SUCCESS, then docker kill -s HUP prometheus (uptime stayed 'Up 40 hours' = signal, not restart). VERIFIED: 12/12 new targets up, 78 active targets, 0 not-up across all jobs, 12 expiry series at 86.0 d.\n\n[2026-09-26 DEVOPS] Item (1) verified: /var/log/fleet-parity-check.log 2026-09-24 and 2026-09-25 02:00 runs = all nodes 12/12, and the 22:35Z manual run too. Items (2)(3) still open.",
       "status": "pending",
       "priority": "P2",
       "createdAt": "2026-09-17T00:10:09Z",
@@ -26151,12 +26155,16 @@
       "to": "[DEVOPS]",
       "title": "Handoff from QA: xd-820 throughput report has produced 0 rows for a 3rd consecutive day",
       "description": "Measured 2026-09-18 08:5xZ. /root/reports/throughput-2026-09-17.txt and throughput-2026-09-18.txt are BOTH 486 bytes and the bodies are identical: the 'CENSORED-REGION COUNTRIES BY SERVER, last 24h' section reads '(0 rows)'. Compare 09-16 = 2,034 B and 09-14/09-15 = 2,397 B, i.e. the report stopped returning data after the BandwidthUsageLogs hourly-upsert rewrite (xd-793) landed \u2014 exactly what QA predicted on 09-16 and reported as CONFIRMED on 09-17. This is now the 3rd run. The gap-filter/join in throughput-report.sh still assumes the pre-rewrite per-heartbeat row shape. Note this is NOT a data outage: BandwidthUsageLogs is healthy (6 rows / 3 users / 113.4 MB / 2 servers in 24h, 0 off-hour rows) \u2014 the REPORT is what is broken. Per the method pin, byte-length alone is not proof; the bodies were diffed.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-09-18T11:47:35Z",
       "createdDate": "2026-09-18",
-      "completedDate": null,
-      "dueBy": "2026-09-25T11:47:35Z"
+      "completedDate": "2026-09-25",
+      "dueBy": "2026-09-25T11:47:35Z",
+      "completedAt": "2026-09-25",
+      "completedBy": "[DEVOPS]",
+      "resolution": "Same fix as xd-820 \u2014 the report returns rows again (22:36Z run: IQ + UA rows, RoutineRuns 'throughput' ok).",
+      "resultingHandoff": "xd-1029 to [QA] (verify)"
     },
     {
       "id": "xd-858",
@@ -26239,12 +26247,16 @@
       "to": "[DEVOPS]",
       "title": "Handoff from QA: Real-user usage recording has collapsed since the hourly compaction \u2014 settle idle-users vs broken-recorder",
       "description": "MEASURED 2026-09-18 (read-only). Fleet-wide BandwidthUsageLogs, last 24 h: 2 rows / 2 users / 11.1 MB (US 1 row 11.1 MB, IQ 1 row 0.0 MB). The same query a day earlier returned 39 rows. Lebanon's most recent row is 2026-09-17 12:00Z (28 h before this run). The Gulf (AE SA BH OM KW QA) has ZERO rows in 48 h. TWO READINGS BOTH FIT and neither is proven: (a) GENUINE IDLENESS \u2014 '[wg-sync] poll: peers=272 billed=0 (0 B) phantom=15 (~8 kB) reaped=0' is identical on every poll across 3 h, i.e. the writer's own upstream sees no billable byte deltas, and a 20-second double-sample of the brain's raw kernel counters moved 0 bytes; (b) RECORDING REGRESSION \u2014 the collapse begins in the same hour the hourly compaction switched on (2026-09-15 ~20:00Z) and the one heavy Lebanon account (654 GB over 121 hourly rows) stops at exactly that timestamp. THE CHECK THAT SETTLES IT (not yet done, needs exit-node access QA does not have): on Dusseldorf (carries almost all traffic), take one connected peer's live kernel byte counter from 'wg show all dump', wait one hour, and compare the delta against the hourly BandwidthUsageLogs row written for that same peer. Counter climbed but no row / a much smaller row = regression in bandwidth-compact-hourly.sh or the wg-sync billing path. WHY IT MATTERS BEYOND THE REPORT: if usage is not being recorded then data caps are not being enforced (silent revenue/abuse hole), and every speed report stays empty regardless of the xd-820 fix. Pairs with xd-820 (report filters) \u2014 fix the recorder first, the report second.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-09-18T19:04:21Z",
       "createdDate": "2026-09-18",
-      "completedDate": null,
-      "dueBy": "2026-09-25T19:04:21Z"
+      "completedDate": "2026-09-25",
+      "dueBy": "2026-09-25T19:04:21Z",
+      "completedAt": "2026-09-25",
+      "completedBy": "[DEVOPS]",
+      "resolution": "Settled: the recorder works, usage is low. Post-compaction sessions with traffic DO get hourly rows with bytes (2026-09-23 18:00 session -> 1,289 MB; 2026-09-24 05:05 257-min session -> 302 MB); BandwidthUsageLogs has 1-6 users/day. The one real gap: IKEv2 sessions get 0 rows -> backend xd-1025 (already open).",
+      "resultingHandoff": "xd-1029 to [QA] (verify)"
     },
     {
       "id": "xd-864",
@@ -26252,12 +26264,16 @@
       "to": "[DEVOPS]",
       "title": "Handoff from DEVOPS: Move record_backups_run cron after 04:15 so the Operations tab stops showing yesterday's off-site + retention lines",
       "description": "Routines/disk/backups daily check 2026-09-18 (claude:routines-health). ALL 9 server routines ran inside their windows; status file generatedAt 2026-09-18T16:00:03Z (fresh). Disk 51% used, 25.3 GB free; tonight's two writes measured 21 MB (tar) + 21.5 MB (dump) = ~43 MB, so the projection is safe by three orders of magnitude. Farm guard: 0 accounts shut off, 0 new candidate throwaway domains since 2026-09-16 (mailpwr.com already blocked); blocklist 8,867 domains. Admin ops endpoint returns 401 as expected (alive). \n\nDEFECT TO FIX (residual of xd-824): record_backups_run.sh runs at cron '20 3 * * *' = 03:20Z, which is BEFORE offsite-sync.sh (03:30) and bandwidth-retention.sh (04:15). So the 'off-site' and 'usage-log retention' lines in /root/reports/backups-latest.txt \u2014 and therefore the admin Operations tab \u2014 are ALWAYS the PREVIOUS day's values. Measured today: the report showed off-site 2026-09-17T03:30:06Z while /var/log/offsite-sync.log already had [2026-09-18T03:30:07Z] offsite sync OK, remote size 3.6G. FIX: move the cron to after 04:15 (e.g. '30 4 * * *') so all four lines describe the same night. Low risk, additive, no user impact.\n\nNON-FINDING, recorded so the next run does not re-file it: 'weekly dump: none on disk' and routines-status newestWeekly=null are BY DESIGN. Weeklies are written Sundays only (pg_backup.sh line 31, DAY_OF_WEEK -eq 7) and retained 90 days OFF-SITE. Verified on the dev brain 188.166.174.132:/root/casper-backups/prod-postgres -> weekly_2026-09-13_0300.dump 1,814,683,718 bytes intact, plus 4 dailies and the 1.88 GB pre-compaction archive; that host is 24% full (60 GB free). Reading only the brain listing would have produced a false P0.\n\nOTHER ROUTINES' WARNS (not this routine's scope, owners noted): infra-inventory warn 04:20Z = 86 items, 0 critical, 1 warning, soonest expiry 'OneProvider Amsterdam - NL 51.158.147.210 in 7 days' (hosting bill -> casper-infra-expiry-daily / CEO). connectivity warn 05:00Z = '2 country(ies) look blocked, 1 with zero traffic (24 h)' -> casper-blocked-users-daily.\n\nSKILLS UPDATED (CLAUDE.md 11.7, pushed to production under the session lock): devops SKILL.md new 'Backup & disk pins (2026-09-18)' \u2014 artifact sizes are ~21 MB post-compaction so the spec's 1.9+1.9 GB projection is ~90x stale, grade by DELTA (10x jump = writer regrowth, 10x collapse = truncated write); weeklies live off-site only; backups-latest.txt is written before two of the jobs it reports. Mirrored to QA SKILL.md 15.5 + 15.6. One dated line in memory/context/skills-changelog.md.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-09-18T19:16:33Z",
       "createdDate": "2026-09-18",
-      "completedDate": null,
-      "dueBy": "2026-09-25T19:16:33Z"
+      "completedDate": "2026-09-25",
+      "dueBy": "2026-09-25T19:16:33Z",
+      "completedAt": "2026-09-25",
+      "completedBy": "[DEVOPS]",
+      "resolution": "record_backups_run cron moved 03:20 -> 04:30 (after off-site 03:30 and retention 04:15). Run now: backups-latest.txt off-site line = 2026-09-25T03:30:08Z, matching /var/log/offsite-sync.log.",
+      "resultingHandoff": "xd-1029 to [QA] (verify)"
     },
     {
       "id": "xd-865",
@@ -26462,12 +26478,16 @@
       "to": "[DEVOPS]",
       "title": "Handoff from QA: xd-843 residual, 2nd run: the relay-cert ALERT now works, but the daily cert REPORT still does not exist",
       "description": "VERIFIED WORKING 2026-09-19 (so do not redo it): scrape job 'blackbox-relay-tls' 12/12 targets UP and probe_ssl_earliest_cert_expiry now resolves to 16 series (4 brain + 12 relays, all 83.8 d out). SSLCertExpirySoon/Urgent can finally fire for the s<N>.pompesh.com endpoints. STILL MISSING, unchanged from the 09-18 QA run: (a) parity_monitor.sh runs nightly at 02:00:01Z (cron journal confirms it on 09-19) but leaves NO artifact in /root/reports \u2014 there is nothing to read the morning after, so a 12/12 parity run cannot be evidenced by anyone who was not watching the journal; (b) /root/reports/cert-expiry-scan.txt is still dated 2026-09-17 13:34 and certscan.sh has no cron entry, so the cert scan is ad-hoc. ASK: have parity_monitor.sh write /root/reports/parity-latest.txt (and a RoutineRuns row, matching what xd-824 just did for backups/throughput/farm-guard), and put certscan.sh on a daily cron. Until then xd-843 cannot be closed.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-09-19T23:02:39Z",
       "createdDate": "2026-09-19",
-      "completedDate": null,
-      "dueBy": "2026-09-26T23:02:39Z"
+      "completedDate": "2026-09-25",
+      "dueBy": "2026-09-26T23:02:39Z",
+      "completedAt": "2026-09-25",
+      "completedBy": "[DEVOPS]",
+      "resolution": "parity_monitor_run.sh (cron 02:00) wraps the unchanged monitor and writes /root/reports/parity-latest.txt + RoutineRuns 'parity' (manual run 22:35Z: 14/14 at 12/12). certscan.sh on a daily 04:50 cron -> /root/reports/cert-expiry-scan.txt + RoutineRuns 'cert-scan' (12 relay certs, soonest 77 d). Both in infrastructure/scripts/.",
+      "resultingHandoff": "xd-1029 to [QA] (verify)"
     },
     {
       "id": "xd-878",
@@ -27960,11 +27980,15 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: Five server routines detect problems but escalate to nobody \u2014 give them an alert path",
       "description": "MEASURED 2026-09-24 by grepping each script for an escalation call. ALERTING correctly: infra_inventory_check, protocol_health_check, meter_sanity_check, access_inventory_check, fleet_health_loop. SILENT \u2014 they write a report and record a run, but email no one: connectivity_report.sh (connectivity by country), throughput-report.sh (real-user speed), farm_guard.py, datacap_enforcement_sweep.sh, routines_status.sh. Their findings therefore only reach a human if a session happens to read them, and for six days none did. INTERIM COVER IS NOW IN PLACE: routines_watchdog.py (brain, every 2 h) emails support@ when ANY routine goes stale, has never run, or last reported fail \u2014 so at minimum silence is detected. That is a backstop, not a substitute: the watchdog can say 'connectivity_report ran and said fail', it cannot say WHICH country broke. ASK: give each of the five a threshold and an email on breach, the way infra_inventory_check does it (Resend, and note api.resend.com rejects the default Python user agent \u2014 send a normal User-Agent).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-09-24T01:03:25Z",
       "createdDate": "2026-09-24",
-      "completedDate": null
+      "completedDate": "2026-09-25",
+      "completedAt": "2026-09-25",
+      "completedBy": "[DEVOPS]",
+      "resolution": "routine_alert.py (/opt/caspervpn, repo infrastructure/scripts) mails support@ the summary AND report body on warn/fail for connectivity, throughput, farm-guard, routines-status, parity, cert-scan; plus 'datacap' every 10 min = any user over cap WITH an open session. Deduped per signature, repeated once a day. Mail path proven with a self-test row: Resend 200; second call deduped; test row deleted. Crons in infrastructure/brain/crontab-root.txt.",
+      "resultingHandoff": "xd-1029 to [QA] (verify)"
     },
     {
       "id": "xd-981",
@@ -28119,11 +28143,15 @@
       "to": "[DEVOPS]",
       "title": "Handoff from QA: 8 of 12 nodes: WireGuard interface up but no handshake in 10 minutes",
       "description": "Measured by the 6-hourly protocol health check 2026-09-23T18:17Z: ikev2 12/12 serving, caspercloak 12/12, openvpn 12/12, registration 12/12 \u2014 but wireguard 4/12, with 8 nodes warning 'interface up, N peers, no handshake in 10 min'. That is the primary protocol for most users. Determine whether this is a real data-plane fault or an artefact of the probe's 10-minute window on a quiet node (a node with no active users legitimately has no recent handshake). Do NOT 'fix' it before establishing which \u2014 the wrong-instrument family has cost us twice this month.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-09-24T02:44:21Z",
       "createdDate": "2026-09-24",
-      "completedDate": null
+      "completedDate": "2026-09-25",
+      "completedAt": "2026-09-25",
+      "completedBy": "[DEVOPS]",
+      "resolution": "NOT a data-plane fault. 10 nodes had 0 user handshakes in 24 h, yet all 10 completed a REAL WireGuard tunnel from the Bangkok prober (throwaway peer via the node control API, temp interface, 3/3 pings to the node wg0 address), cleaned up after. protocol_health_check.py now runs that real test whenever no user handshake is fresh (positive + negative control: wrong port -> handshake 0, ping 0/3 -> crit). Full run 2026-09-25 22:31Z: 60 ok / 0 warn, wireguard 12/12.",
+      "resultingHandoff": "xd-1029 to [QA] (verify)"
     },
     {
       "id": "xd-993",
@@ -28334,11 +28362,15 @@
       "to": "[DEVOPS]",
       "title": "Handoff from MARKETING: [P1] Two deploy clones share ONE compose project with different .env files \u2014 whichever clone ran compose last decides the website's secrets and DB user",
       "description": "[2026-09-24 23:10Z (25 Sep 02:10 Beirut) MARKETING \u2014 ADDED, security] When the website is deployed from the /home clone it connects to Postgres as 'devuser', which is a SUPERUSER (from /root it is casper_prod, not a superuser). Any SQL flaw in the website would then reach every database on the server, including the app database. The website should always connect as a non-superuser role.\n\nMEASURED 24 Sep (key names + sha256 prefixes only, never values). /root/Casper/Casper-Code (auto-deploy.yml, /root/deploy_api.sh) and /home/caspervpn/Casper-Code (deploy-website.yml) both run compose project 'casper-code' against the same containers. .env drift: keys only in /root (17): CONN_IDLE_LIFETIME, CONN_POOL_MAX/MIN, CloudflareDns__ApiToken, ENCRYPTION_MASTER_KEY, LiveVpnServer__Ikev2SharedSecret, LiveVpnServer__L2tpPsk, PROBE_API_KEY, PUSH_API_KEY, Radius__ApiKey/DefaultSecret/ProbeApiKey, SCHEDULER_API_KEY, SENTRY_DSN, SERVER_API_KEY, VpnApi__Token, VpnServer__ControlApiToken. Keys only in /home (5): AFFILIATE_NOTIFY_TO, AFFILIATE_REPLY_TO, CRYPTOSYNC_SHARED_SECRET, DOTNET_BACKEND_URL, WEBSITE_ADMIN_JWT_SECRET. Same key, different value (7): ALLOWED_ORIGINS, ASPNETCORE_ENVIRONMENT, DB_PASSWORD, DB_USER, JWT_SECRET, RADIUS_SECRET, REDIS_PASSWORD. CONSEQUENCES SEEN TODAY: 19:08Z the website was recreated from /root and lost its admin login key (website admin login 500 until 19:15Z); the website connects as DB user 'devuser' when deployed from /home and as 'casper_prod' from /root; the API had a blank crypto bridge secret because only /home held it (xd-1006). STOPGAP (done by Marketing): copied WEBSITE_ADMIN_JWT_SECRET, AFFILIATE_NOTIFY_TO, AFFILIATE_REPLY_TO and CRYPTOSYNC_SHARED_SECRET into /root .env (backups .env.bak.202609241914 and .env.bak.202609241958). FIX NEEDED: one clone (point deploy-website.yml at /root, or make /home/.env a symlink to /root/.env after reconciling the 7 differing values), and make every deploy fail on compose's 'variable is not set' warning. ALSO: /root/deploy_api.sh rolls back to caspervpn-api:rollback-20260612 (a June image) on a failed health check \u2014 it should roll back to the image it just replaced.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P0",
       "createdAt": "2026-09-24T20:01:40Z",
       "createdDate": "2026-09-24",
-      "completedDate": null
+      "completedDate": "2026-09-25",
+      "completedAt": "2026-09-25",
+      "completedBy": "[DEVOPS]",
+      "resolution": "Website now uses its own DB role casper_website (no superuser; rights on caspervpn_website only; CONNECT revoked from PUBLIC on caspervpn + caspervpn_dev). docker-compose uses ${WEBSITE_DB_USER:?} so a missing role fails the deploy. deploy-website.yml now deploys from /root/Casper/Casper-Code (one clone) with a 'compose config --quiet' gate. Pushed 33d31856d; website redeployed by the workflow 2026-09-25 22:32Z from /root; live DATABASE_URL user = casper_website; / /privacy /pricing /partners /blog = 200, /api/blog returns DB rows. Open: retire the unused /home clone; a global 'variable is not set' gate is blocked by the pre-existing blank ACTIVATION_FLEET_SSH_PUBLIC_KEY.",
+      "resultingHandoff": "xd-1029 to [QA] (verify)"
     },
     {
       "id": "xd-1008",
@@ -28424,7 +28456,7 @@
       "from": "[QA]",
       "to": "[DEVOPS]",
       "title": "Handoff from QA: [P1] Sweep 24 Sep: brain security + fleet parity failures (Flask :5002 reachable from the internet)",
-      "description": "Measured 2026-09-24 in the xd-923 sweep (evidence on each row of security-lockdown-p1, fleet-service-set-convergence, monitoring-prometheus, radius-finalize, ci-cd-pipeline): (1) P1 Flask on the brain listens 0.0.0.0:5002 and answers from a NON-whitelisted host (Bangkok 46.16.129.246: /health 200; /wireguard/add-client 401) although iptables whitelists only 4 fleet IPs \u2014 find the rule that admits it, then bind or firewall. (2) wildcard NAT '-o eth0 -j MASQUERADE' and '-o wg1 -j MASQUERADE' still present. (3) /etc/ipsec.secrets has 3 test_/testuser_ lines (strongSwan inactive on brain). (4) no logrotate for openvpn/caspercloak. (5) brain disk 82%. (6) radacct: 0 session starts in 7 days. (7) Prometheus has no push/scheduler/probe-service targets. (8) CasperCloak relays are 5 different files (485/399/444/282/408 lines) \u2014 all safe (ping_interval=None, no jitter) but not converged. (9) no CI step for DB migrations. DECISIONS for you to re-word rather than 'fix': root login is key-only (without-password) not 'no'; RADIUS on 0.0.0.0 is fleet-whitelisted on purpose; dpdaction=restart. Return to [QA] with command output per item.",
+      "description": "Measured 2026-09-24 in the xd-923 sweep (evidence on each row of security-lockdown-p1, fleet-service-set-convergence, monitoring-prometheus, radius-finalize, ci-cd-pipeline): (1) P1 Flask on the brain listens 0.0.0.0:5002 and answers from a NON-whitelisted host (Bangkok 46.16.129.246: /health 200; /wireguard/add-client 401) although iptables whitelists only 4 fleet IPs \u2014 find the rule that admits it, then bind or firewall. (2) wildcard NAT '-o eth0 -j MASQUERADE' and '-o wg1 -j MASQUERADE' still present. (3) /etc/ipsec.secrets has 3 test_/testuser_ lines (strongSwan inactive on brain). (4) no logrotate for openvpn/caspercloak. (5) brain disk 82%. (6) radacct: 0 session starts in 7 days. (7) Prometheus has no push/scheduler/probe-service targets. (8) CasperCloak relays are 5 different files (485/399/444/282/408 lines) \u2014 all safe (ping_interval=None, no jitter) but not converged. (9) no CI step for DB migrations. DECISIONS for you to re-word rather than 'fix': root login is key-only (without-password) not 'no'; RADIUS on 0.0.0.0 is fleet-whitelisted on purpose; dpdaction=restart. Return to [QA] with command output per item.\n\n[2026-09-26 DEVOPS \u2014 PARTIAL] (1) ROOT CAUSE + FIX: brain INPUT rule 'ctstate NEW limit 625/sec ACCEPT' sits ABOVE every whitelist and above f2b-sshd, so any port on 0.0.0.0 answered the internet (Flask log: scanners 96.126.104.20 x18/24h). Inserted above it: allow 127/8, 172.16/12, 10.66/16 + the 4 whitelisted IPs, then DROP for tcp/5002; allow local + DROP for udp/1812-1813; persisted (backup rules.v4.bak-20260926-xd1014). Verified: Bangkok + Montreal -> :5002 time out; api container /health 200; IKEv2 RADIUS logins OK on all 12 afterwards. (3) test_/testuser_ EAP lines commented out (backup /etc/ipsec.secrets.bak-20260926-xd1014). (4) /etc/logrotate.d/casper-vpn-logs (repo infrastructure/logrotate/). (5) disk 73%. STILL OPEN: replace the NEW-limit ACCEPT with a DROP-above-limit + explicit ACCEPTs for 9443/51821/1701 (staged, touches live VPN ports); (2) MASQUERADE; (6) = backend xd-1025; (7) Prometheus targets; (8) relay convergence; (9) CI migration step.",
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-09-24T20:53:33Z",
@@ -28537,11 +28569,15 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: deploy_api.sh's automatic rollback pointed at an image that did not exist \u2014 make it tag the running image on every deploy",
       "description": "MEASURED 2026-09-24 22:1xZ while deploying xd-1017. (1) /root/deploy_api.sh's AUTOMATIC ROLLBACK POINTED AT AN IMAGE THAT DID NOT EXIST: on an unhealthy deploy it runs `docker tag caspervpn-api:rollback-20260612 caspervpn-api:latest` \u2014 `docker image inspect caspervpn-api:rollback-20260612` returned 'No such image'. The tag would have failed and `up -d` would have re-launched the NEW (broken) image: there was no rollback at all, and even if the tag had existed it would have restored a 12 June build. FIXED FOR NOW: the currently-running image (sha256:6c9eb349\u2026) was tagged caspervpn-api:rollback-20260612 and caspervpn-api:pre-xd1017-20260925 before the deploy, so tonight's rollback target was real. After the deploy that tag still points at the PREVIOUS good build, which is correct until the next deploy. ASK: make the script tag the running image itself at the start of EVERY deploy (e.g. rollback-$(date +%Y%m%d%H%M)) and roll back to THAT tag; refuse to deploy if the tag cannot be created. (2) The script's own post-deploy check 'evict-string in LIVE dll (UTF-16, >0 = new code live)' printed 0 on a deploy whose code IS live \u2014 a strings/UTF-16 grep on the .NET dll is not a reliable instrument (method names are ASCII and do show; e.g. grep -c StartFirstDataCycleAsync /app/CasperVPN.dll = 3). (3) Compose warned 'ACTIVATION_FLEET_SSH_PUBLIC_KEY variable is not set. Defaulting to a blank string' \u2014 pre-existing (recorded in CLAUDE.md \u00a75 on 2026-09-24), not caused by this deploy; tracked where it was first found.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-09-25T01:21:35Z",
       "createdDate": "2026-09-25",
-      "completedDate": null
+      "completedDate": "2026-09-25",
+      "completedAt": "2026-09-25",
+      "completedBy": "[DEVOPS]",
+      "resolution": "/root/deploy_api.sh now tags the RUNNING image caspervpn-api:rollback-YYYYMMDDHHMM at the start of every deploy, verifies the tag = running image id, refuses to deploy otherwise, rolls back to that tag, keeps the 3 newest; post-deploy line reports old->new image id (the UTF-16 strings check is gone). Harness-run on live 22:22Z: rollback-202609252222 = running 1d62175cae73. Repo copy infrastructure/scripts/deploy_api.sh; backup /root/deploy_api.sh.bak-20260926-xd1023.",
+      "resultingHandoff": "xd-1029 to [QA] (verify)"
     },
     {
       "id": "xd-1024",
@@ -28606,9 +28642,27 @@
       "createdAt": "2026-09-24T23:02:52Z",
       "createdDate": "2026-09-24",
       "completedDate": null
+    },
+    {
+      "id": "xd-1029",
+      "from": "[DEVOPS]",
+      "to": "[QA]",
+      "title": "Handoff from DEVOPS: verify DevOps board run 2026-09-26 (xd-1007, 1023, 992, 1014 part, 864, 877, 820/857, 863, 980)",
+      "description": "Re-run on the live state and tick/return each: xd-1007: Website now uses its own DB role casper_website (no superuser; rights on caspervpn_website only; CONNECT revoked from PUBLIC on caspervpn + caspervpn_dev). docker-compose uses ${WEBSITE_DB_USER:?} so a missing role fails the deploy. deploy-website.yml now depl | xd-1023: /root/deploy_api.sh now tags the RUNNING image caspervpn-api:rollback-YYYYMMDDHHMM at the start of every deploy, verifies the tag = running image id, refuses to deploy otherwise, rolls back to that tag, keeps the 3 newest; post-deploy line reports old->new ima | xd-992: NOT a data-plane fault. 10 nodes had 0 user handshakes in 24 h, yet all 10 completed a REAL WireGuard tunnel from the Bangkok prober (throwaway peer via the node control API, temp interface, 3/3 pings to the node wg0 address), cleaned up after. protocol_health | xd-864: record_backups_run cron moved 03:20 -> 04:30 (after off-site 03:30 and retention 04:15). Run now: backups-latest.txt off-site line = 2026-09-25T03:30:08Z, matching /var/log/offsite-sync.log. | xd-877: parity_monitor_run.sh (cron 02:00) wraps the unchanged monitor and writes /root/reports/parity-latest.txt + RoutineRuns 'parity' (manual run 22:35Z: 14/14 at 12/12). certscan.sh on a daily 04:50 cron -> /root/reports/cert-expiry-scan.txt + RoutineRuns 'cert-sc | xd-820: throughput-report.sh rewritten for the hourly BandwidthUsageLogs rows: speed = bytes in the hour / seconds the user was connected in that hour (ConnectionLogs overlap) = session-average Mbps (understates bursts); hours with < 60 s connected dropped; protocol c | xd-857: Same fix as xd-820 \u2014 the report returns rows again (22:36Z run: IQ + UA rows, RoutineRuns 'throughput' ok). | xd-863: Settled: the recorder works, usage is low. Post-compaction sessions with traffic DO get hourly rows with bytes (2026-09-23 18:00 session -> 1,289 MB; 2026-09-24 05:05 257-min session -> 302 MB); BandwidthUsageLogs has 1-6 users/day. The one real gap: IKEv2 ses | xd-980: routine_alert.py (/opt/caspervpn, repo infrastructure/scripts) mails support@ the summary AND report body on warn/fail for connectivity, throughput, farm-guard, routines-status, parity, cert-scan; plus 'datacap' every 10 min = any user over cap WITH an open se | xd-1014 (partial): re-test brain:5002 from Bangkok (must time out) and api container (must be 200).",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-09-25T22:42:00Z",
+      "createdDate": "2026-09-25",
+      "completedDate": null
     }
   ],
   "importantNotes": [
+    {
+      "date": "2026-09-26",
+      "dept": "[DEVOPS]",
+      "priority": "P1",
+      "text": "Security fixed 26 Sep: the website no longer uses a superuser database account, and the main server's firewall was letting the internet reach two internal services \u2014 both closed and tested. Details in xd-1007 / xd-1014."
+    },
     {
       "date": "2026-09-25",
       "priority": "P0",
