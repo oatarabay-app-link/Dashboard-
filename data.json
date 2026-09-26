@@ -29276,9 +29276,40 @@
       "createdAt": "2026-09-26T21:40:48Z",
       "createdDate": "2026-09-26",
       "completedDate": null
+    },
+    {
+      "id": "xd-1063",
+      "from": "[CTO]",
+      "to": "[IOS]",
+      "title": "Handoff from CTO: [P1] VPN left the CEO's phone without internet after a 5-second mobile-data drop - WireGuard restarted but passed nothing; he had to switch the VPN off (27 Sep 01:40 Beirut)",
+      "description": "[2026-09-27 CTO \u2014 MEASURED from the CEO's exported app log (build 25g, iOS 27.0, WireGuard, Amsterdam 51.158.147.210, Lebanon mobile data) + brain API log + Amsterdam node + prod DB. Times UTC.] 22:06:31 connected; 22:06:35 diagnostics handshake OK, rx 169,364 / tx 550,280. 22:06:34 -> 22:40:31 no app heartbeats (app suspended in background - normal); the 22:40:31 heartbeat reports rx 193,940 / tx 579,180 = +24 KB / +29 KB in 34 min: idle but ALIVE (rx grew). 22:40:02 extension NWPathMonitor unsatisfied (cellular) -> WireGuardKit backend OFF (temporaryShutdown); 22:40:03 cellular->other forced reassert; 22:40:07 satisfied cellular \u2014 'iface change other->cellular but debounced'; 22:40:08 'Backend restarted successfully from temporaryShutdown'. ~22:40:26 app foregrounded; [ZOMBIE-PROBE] attempt=1 FAIL -1001 in 5002 ms (budget 5 s) = traffic NOT flowing 18-23 s after the network returned. 22:40:31 'watchdog STALE (age=-1s) but debounced \u2014 skipping'; 22:40:31.348 'Disconnecting (manual)' (CEO: 'I had to switch it off to regain phone connection'); internet back at once (the 22:40:33 'second probe OK \u2014 transient blip' ran AFTER teardown, over the direct path \u2014 it measured nothing about the tunnel). SERVER SIDE: Amsterdam up (control API /health 200 every ~15 s; another user handshook there 22:38-22:46); the peer was removed by the 22:40:31 /disconnect. Whether the phone's re-handshake reached the server after 22:40:08 is UNMEASURABLE today: no WireGuardPeerUsages row exists for this user+server and WireGuardKeys.LastHandshakeAt is NULL on all 660 active keys (Backend ticket filed). HYPOTHESES (unproven \u2014 instrument before any fix, CLAUDE.md \u00a77.2): H1 UDP from the phone was dropped right after the mobile re-attach (Lebanon mobile, UDP-throttle history); H2 the restart did not re-handshake promptly \u2014 there are NO handshake log lines after a temporaryShutdown restart (the PROBE lines exist only at tunnel start); H3 the debounced other->cellular transition left the endpoint/route stale. TASK 1 (instrument): after every temporaryShutdown restart and every path change, log for 60 s every 5 s: handshake initiations sent, responses received, lastHandshake age, rx/tx deltas. Reproduce: connected on mobile data, airplane mode 5 s, measure time-to-traffic; repeat on Wi-Fi->cellular. TASK 2 (only after TASK 1 shows the cause): self-repair \u2014 a failed probe within 60 s of a network change must rebuild the tunnel automatically instead of leaving the phone offline (today: 60 s watchdog + 20 s debounce = no repair inside the first minute, and the zombie logic judged 'healthy' after the teardown). Related: xd-944 (probe budget does not cut), xd-1018 (report connections that pass nothing), xd-494 (WG wake reassert device gate). Hand to [QA] with the build: 'mobile data off 5 s while connected -> web traffic back within 10 s, no user action'.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-09-27T01:48:19Z",
+      "createdDate": "2026-09-27",
+      "completedDate": null,
+      "handoffTo": "[QA]",
+      "handoffNote": "Device test: mobile data off 5 s while connected -> traffic back within 10 s, no user action."
+    },
+    {
+      "id": "xd-1064",
+      "from": "[CTO]",
+      "to": "[BACKEND]",
+      "title": "Handoff from CTO: Handshake times are never recorded for the CEO's WireGuard connections - so 'did the phone reconnect?' cannot be answered from the server",
+      "description": "[2026-09-27 CTO \u2014 MEASURED on prod DB] WireGuardKeys.LastHandshakeAt is NULL on ALL 660 active keys (the column is never written). WireGuardPeerUsages has LastHandshakeAt on 1444/1486 rows, but there is NO row for user 2eecd0e6-c0f3-4ae2-a82b-ca04c71ff675 (CEO) on server 1a8394db-d423-4602-89db-c213594d7880 (Amsterdam) despite a 34-min WireGuard session 22:06-22:40Z on 26 Sep (tunnel 10.66.69.226/32, key row updated 22:06:31). Consequence: the iOS stall ticket filed the same night cannot be checked server-side. HYPOTHESIS: the same peer-mapping gap as the CasperCloak attribution issue fixed 23 Sep (WireGuardKeys raw-SQL fallback) \u2014 the plain WireGuard path may not reach that fallback. TASK: make the /wireguard/peer-stats sync write latest-handshake (and a masked endpoint) for every peer it can map, including app-generated keys; keep a short per-session handshake history (last ~20 timestamps, 24 h retention) so a 'connected but nothing flows' report can be verified. Prove it with the CEO's next WireGuard session: the row must appear within one sync.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-09-27T01:48:19Z",
+      "createdDate": "2026-09-27",
+      "completedDate": null
     }
   ],
   "importantNotes": [
+    {
+      "date": "2026-09-27",
+      "priority": "P1",
+      "note": "Your connection cut (27 Sep, 01:40): your phone lost mobile signal for about 5 seconds. The VPN restarted, but traffic did not come back, so the phone had no internet until you switched the VPN off. The Amsterdam server was working. The app does not repair itself quickly after a signal drop. The iPhone team will first add recording to find the exact cause, then fix it. Until then: if the internet stops while the VPN is on, switch it off and on again."
+    },
     {
       "date": "2026-09-27",
       "dept": "[DEVOPS]",
