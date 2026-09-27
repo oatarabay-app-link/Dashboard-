@@ -29492,11 +29492,15 @@
       "to": "[BACKEND]",
       "title": "Handoff from QA: [P1] Apple webhook accepts notifications after certificate-chain validation FAILS ('continuing anyway')",
       "description": "MEASURED 2026-09-26T10:00:53Z in the api log, on the real EXPIRED notice: 'Apple transaction certificate chain validation failed (continuing anyway): self-signed certificate in certificate chain' - then the notification was processed and changed subscription state. HYPOTHESIS (not proven): the Apple Root CA is not in the container's trust store, so every real notice fails the chain check and the code proceeds anyway; if the JWS signature itself is not checked against Apple's chain, a forged POST to /api/payments/apple-webhook could change a user's subscription. Check: (1) which check fails and why, (2) whether a failed chain = reject, (3) pin Apple Root CA G3. ALSO (P3, hypothesis): IKEv2 ConnectionLogs row for the CEO's Sydney session shows BytesUploaded 71.46 MB / BytesDownloaded 4.03 MB - likely inverted (RADIUS Acct-Input vs Output are from the NAS's point of view). Return to [QA].",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-09-26T21:31:44Z",
       "createdDate": "2026-09-26",
-      "completedDate": null
+      "completedDate": "2026-09-27",
+      "completedAt": "2026-09-27",
+      "completedBy": "[BACKEND]",
+      "resolution": "[BACKEND 2026-09-28 ~02:35 Beirut] FIXED + DEPLOYED + PROVEN LIVE. ANSWER TO QA'S QUESTIONS: (1) the failing check was the TRANSACTION decoder's chain build against the OS trust store (no Apple roots in the Linux image) \u2014 it failed on every real receipt and continued; (2) the WEBHOOK was not forgeable (xd-935 verifies the outer JWS since 09-23), but the RECEIPT path /api/payments/validate-receipt (any signed-in account) never verified the ES256 signature at all -> a hand-made JWS was trusted. MEASURED BEFORE on production (non-mutating: the transaction id used is already recorded, so acceptance ends at 'already processed'): unsigned JWS -> HTTP 200; genuine signature + edited payload -> HTTP 200. FIX (production 0d1b42b, tests dc827dd): one verifier VerifyAppleJws() for the webhook and every transaction decode \u2014 Apple Root CA - G3 PINNED (SHA-256 63343ABF..E9179, no runtime download), Apple marker OIDs required (leaf 1.2.840.113635.100.6.11.1, intermediate 1.2.840.113635.100.6.2.1 \u2014 measured present on real prod+sandbox JWS), chain leaf->intermediate->pinned root at the JWS signedDate, ES256 with the leaf key; failure = REJECT (escape hatch Apple:RejectUnverifiedTransactions=false). DEPLOY: deploy_api.sh 23:29:12Z -> DONE OK 23:30:59Z, image 16e1e96f9567 -> 5fd6eb27b8f4, /health 200 local+public, restarts 0, 0 errors; dll has VerifyAppleJws/LoadPinnedAppleRoot. MEASURED AFTER (same 3 requests): genuine Apple JWS -> 200 'already processed' (verified inside the prod container); unsigned -> 400 ('no x5c certificate chain'); edited payload -> 400 ('ES256 signature does not match'); Payments 439 before = 439 after; the old 'continuing anyway' warning no longer appears. Tests: 8 new AppleJwsVerificationTests (mutation-checked) + real sandbox JWS verified through the exact .NET code before shipping. P3 IKEv2 byte direction: analysed, split out (see resulting handoff).",
+      "resultingHandoff": "xd-1095 to [QA] (verify + 48 h watch); xd-1097 [BACKEND] P3 IKEv2 byte direction"
     },
     {
       "id": "xd-1059",
@@ -29905,11 +29909,15 @@
       "to": "[BACKEND]",
       "title": "Handoff from QA: [P2] Plan table still carries the old prices (6-Month 5.83/mo, Yearly 5.00/mo and 59.99/yr) \u2014 /api/plans is public",
       "description": "MEASURED 2026-09-27 ~22:43Z: GET https://api.caspervpn.com/api/plans -> 6-Month price 5.83, Yearly 5.0; Plans rows: 6-Month PriceMonthly 5.83, Yearly PriceMonthly 5.00 / PriceYearly 59.99. Apple's current prices are $29.99 / 6 months (= 5.00/mo) and $49.99 / year (= 4.17/mo). Back up the rows, update them, and list who reads /api/plans (app, website, admin) so nothing still shows the old number. Return to [QA].",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-09-27T22:49:39Z",
       "createdDate": "2026-09-27",
-      "completedDate": null
+      "completedDate": "2026-09-27",
+      "completedAt": "2026-09-27",
+      "completedBy": "[BACKEND]",
+      "resolution": "[BACKEND 2026-09-28] DONE. Backup /root/backups/xd1088-plans-before-20260927T233246.json. Plans 6-Month PriceMonthly 5.83 -> 5.00; Yearly PriceMonthly 5.00 -> 4.17 and PriceYearly 59.99 -> 49.99 (one transaction, asserted counts). LIVE: GET https://api.caspervpn.com/api/plans now returns 6-Month 5.0/0, Yearly 4.17/49.99 (no cache on the endpoint). WHO READS /api/plans (grep of the code): admin panel (Subscriptions + Users pages, adminService.getPlans) -> now correct; Android SubscriptionRepository (not shipped); iOS defines the endpoint constant only \u2014 no call site, the app shows StoreKit prices + hard-coded fallback text (that text is xd-1093 [IOS]); website has no call (own copy, Marketing verified). Side effect (intended): admin MRR for Yearly subscribers now uses 4.17.",
+      "resultingHandoff": "xd-1096 to [QA]"
     },
     {
       "id": "xd-1089",
@@ -29987,6 +29995,48 @@
       "completedDate": null,
       "dueBy": "2026-10-05T12:00:00Z",
       "taskRef": "xd-1076"
+    },
+    {
+      "id": "xd-1095",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: [P1] Verify xd-1058 on production: forged Apple receipts are rejected, genuine ones still work",
+      "description": "[BACKEND 2026-09-28] Re-run the non-mutating probe (recipe in backend skill references/probes.md 'Receipt forgery probe'): with a probe account token, POST the genuine current Apple JWS of an ALREADY-RECORDED transaction -> 200 'Transaction already processed'; the same claims unsigned -> 400; genuine signature + edited payload -> 400; Payments count unchanged. Then watch real traffic for 48 h: api log must show 0 'xd-1058: Apple transaction REJECTED' for real App Store receipts/notifications (a real one rejected = page [BACKEND] at once; emergency switch Apple__RejectUnverifiedTransactions=false), and nginx /api/payments/apple-webhook stays 200.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-09-27T23:33:55Z",
+      "createdDate": "2026-09-27",
+      "completedDate": null,
+      "dueBy": "2026-10-05T12:00:00Z",
+      "taskRef": "xd-1058"
+    },
+    {
+      "id": "xd-1096",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: [P2] Verify xd-1088: plan prices in the database match Apple's (6 months $29.99, 1 year $49.99)",
+      "description": "[BACKEND 2026-09-28] GET https://api.caspervpn.com/api/plans -> 6-Month priceMonthly 5.0, Yearly priceMonthly 4.17 / priceYearly 49.99; admin panel Plans lists show the same. The in-app fallback text is xd-1093 [IOS], not this.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-09-27T23:33:55Z",
+      "createdDate": "2026-09-27",
+      "completedDate": null,
+      "dueBy": "2026-10-05T12:00:00Z",
+      "taskRef": "xd-1088"
+    },
+    {
+      "id": "xd-1097",
+      "from": "[BACKEND]",
+      "to": "[BACKEND]",
+      "title": "Handoff from BACKEND: [P3] IKEv2 up/down bytes are stored swapped (display only \u2014 data-cap totals are right)",
+      "description": "[BACKEND 2026-09-28, split from xd-1058] RFC 2866: Acct-Input-Octets = received FROM the user (upload), Acct-Output-Octets = sent TO the user (download). RadiusAuthController stores BytesDownloaded = Input and BytesUploaded = Output in BOTH branches (cumulative :333-334, Stop :377-378, Interim :393-396) \u2014 matches QA's CEO Sydney row (up 71.46 MB / down 4.03 MB for a browsing session). SAFE FIX DESIGN for the cumulative (strongSwan) branch: count newBytes from the TOTAL (in+out) minus the stored total (direction-agnostic, so sessions open across the deploy are not re-counted), then write Uploaded=Input, Downloaded=Output only when the reported total grew. Do NOT touch the non-cumulative branch until the WireGuard daemon's rx/tx -> Input/Output convention is read on a node. Optional data fix: swap closed IKEv2 rows written since 2026-09-26. Totals counted against the data cap are unaffected either way.",
+      "status": "pending",
+      "priority": "P3",
+      "createdAt": "2026-09-27T23:33:55Z",
+      "createdDate": "2026-09-27",
+      "completedDate": null,
+      "taskRef": "xd-1058",
+      "dueBy": "2026-10-05T12:00:00Z"
     }
   ],
   "importantNotes": [
