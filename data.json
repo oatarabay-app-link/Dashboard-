@@ -29392,9 +29392,28 @@
       "createdAt": "2026-09-28T00:21:56Z",
       "createdDate": "2026-09-28",
       "completedDate": null
+    },
+    {
+      "id": "xd-1071",
+      "from": "[CTO]",
+      "to": "[IOS]",
+      "title": "Handoff from CTO: [P1] When the phone's network fails, the app sits in 'Connecting\u2026' for 90+ s with no cancel and insists on fetching a fresh config it cannot reach \u2014 reconnect from the cached config, make Connecting cancellable, detect the stall sooner (CEO 28 Sep 00:28)",
+      "description": "[2026-09-28 CTO \u2014 MEASURED from the CEO's 5th exported log + brain log + Amsterdam node + prod DB; times Beirut (UTC+3).] 00:16:51 WireGuard\u2192Amsterdam up; heavy use (92.5 MB rx by 00:28 \u2014 server tx 92,600,328 matches the phone's rx 92,553,708). Last handshake 00:24:54 (server agrees: 21:24:54Z). From then the phone's handshake initiations got no answer while it kept sending (tx\u0394 31 KB/min). 00:28:51 watchdog 'DATA-PLANE STALL #1: age=237s handshakeStale=true' \u2192 reassert \u2192 new backend, still NO handshake (rx=740 tx=1200 by 00:29:17). 00:29:10 + 00:29:17 two probes FAIL \u2192 zombie verdict (correct) \u2192 teardown 00:29:18 \u2192 reconnect: 'Failed to fetch config from API: timed out' after 30 s (primary front AND fallback host), IKEv2 config fetch timed out after another 30 s, OpenVPN resolve timed out; 'Error loading servers: cancelled' 00:30:53; CEO force-quit, relaunch 00:31:02. SERVER SIDE RULED OUT: no remove-client on Amsterdam 21:14-21:35Z (only the 21:16:50 add); no over-limit line; the peer is STILL registered with last handshake 21:24:54Z; API served 9-12 req/min with 0 4xx/5xx every minute 21:27-21:33Z; fronts /health 200 in 0.15 s from the brain. CONCLUSION (measured): the phone's mobile network stopped passing our traffic in BOTH directions (UDP to Amsterdam and HTTPS to the API) from ~00:25 to ~00:31; not our servers. APP DEFECTS THIS EXPOSED (all measured in the log): (1) stall detection took 4 min (180 s stale threshold + 60 s watchdog) while rekey should complete within ~10 s \u2014 treat 'handshake initiations unanswered for 60 s while tx grows' as a stall; (2) after teardown the reconnect REQUIRES a fresh /wireguard-config + /connect even though the server still holds the peer and the app had a valid config 12 min old \u2014 reconnect from the cached config first when the API is unreachable, and only refresh the config on 401/403/404; (3) each fallback step blocks 30 s (WireGuard\u2192IKEv2\u2192OpenVPN = 90 s) and the UI offers no cancel \u2014 'can't connect or disconnect' \u2014 add a Cancel that aborts the cascade immediately (xd-944 family: budgets that do not cut); (4) the verdict text says 'CasperCloak WS is a zombie' for a plain WireGuard tunnel \u2014 fix the label. Not touched: the zombie logic itself was right this time. PROOF: airplane mode 3 min while connected on cellular \u2192 app shows the stall within 60 s, Cancel works at any point, reconnect after the network returns takes < 10 s without an API round-trip. Related: xd-1063 (server-removed peer), xd-1066 (extension died), xd-944.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-09-28T00:38:57Z",
+      "createdDate": "2026-09-28",
+      "completedDate": null,
+      "handoffTo": "[QA]",
+      "handoffNote": "Device test: airplane mode 3 min while connected \u2192 stall shown < 60 s, Cancel works, reconnect < 10 s after network returns, no API call needed."
     }
   ],
   "importantNotes": [
+    {
+      "date": "2026-09-28",
+      "priority": "P1",
+      "note": "Your 00:28 drop: this one was your phone's mobile network \u2014 for about six minutes it passed nothing, not even the plain connection to our website. Our servers were fine and still had your phone registered. The app's fault was what came next: it sat on 'Connecting\u2026' for a minute and a half with no way to cancel, asking our server for a new configuration over a network that wasn't working. iPhone ticket filed: reconnect from the saved configuration, cancel button, faster detection. The one automatic cut-off today (another account) was correct."
+    },
     {
       "date": "2026-09-28",
       "priority": "P0",
