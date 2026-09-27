@@ -29320,9 +29320,28 @@
       "completedDate": null,
       "handoffTo": "[QA]",
       "handoffNote": "Device test: free account at 100% cut within 20 s; lifetime account sharing an address never cut; CEO's session lands under his own id."
+    },
+    {
+      "id": "xd-1066",
+      "from": "[CTO]",
+      "to": "[IOS]",
+      "title": "Handoff from CTO: [P1] The tunnel process dies silently (no stopTunnel, no crash record) \u2014 CEO 27 Sep 22:44 Beirut after 1.65 GB / heavy burst + 3 path changes in 6 s; add exit breadcrumbs + memory footprint + launch-time detection so the next death is explained",
+      "description": "[2026-09-27 CTO \u2014 MEASURED from the CEO's third exported log + brain log + Amsterdam node + prod DB.] Session: WireGuard to Amsterdam started 26 Sep 23:20:41Z, ran ~20.5 h. The tunnel extension logged normally until 19:44:34Z ('NETWORK PATH UPDATE' at 19:44:28/:31/:34Z, satisfied cellular prev=cellular \u2014 3 path changes in 6 s), last handshake 19:44:13Z (server agrees to the second), watchdog line at 19:44:08Z present, 19:45:08Z MISSING, no further line ever. At 19:52:39Z the app cold-launched and read 'Tunnel status: Disconnected'; tunnel_started.txt still said the 23:20:41Z process (no relaunch). NOT a graceful stop: every graceful stop in the same log writes 'xd-454 watchdog stopped / xd-455 extension NWPathMonitor stopped / setTunnelNetworkSettings CALLED with nil' (seen 22:40:31Z and 22:48:53Z the night before) \u2014 none here, and no 'Tunnel disconnect reason recovered' at launch (that line only appears when stopTunnel ran). SERVER SIDE RULED OUT: Amsterdam casper-control journal has NO /wireguard/remove-client 19:00-20:00Z; the peer PipBwygs is STILL registered on Amsterdam at 19:54:41Z with latest handshake 19:44:13Z, rx 124,309,816 / tx 1,655,232,944; brain log has no over-limit line for this user today; the usage row is correctly under the CEO since the xd-1065 repair (created 23:20:50Z, synced 19:54:50Z). App side: the app itself had been evicted (0 app lines 02:27-22:52 local); traffic burst 1.6 MB -> 10.6 MB rx in the minute 19:42:08-19:43:08Z. WHAT KILLED THE PROCESS IS NOT IN ANY LOG WE HOLD \u2014 CasperVPNTunnel has no crash reporter (no SentrySDK in the tunnel target) and logs no memory figure. HYPOTHESES (unproven, in order): H1 iOS killed the extension for memory (packet-tunnel limit ~50 MB; heavy throughput + Go backend buffers); H2 a crash in the extension during the rapid path churn (three socket bumps in 6 s); H3 device restart / power-off (leaves no lines either). The artifact that settles it is ON THE PHONE: Settings > Privacy & Security > Analytics & Improvements > Analytics Data, files named CasperVPNTunnel-2026-09-27-\u2026 (crash) or JetsamEvent-2026-09-27-\u2026 (memory kill) around 22:44 \u2014 the CEO was asked to look. TASKS (instrument first, CLAUDE.md \u00a77.2): (1) in the tunnel, write a heartbeat breadcrumb every 30 s to the app group (timestamp, uptime, handshake age, rx/tx, memory footprint via task_info/os_proc_available_memory, last path event) and a 'clean-exit' marker in stopTunnel; (2) at app launch, if the last breadcrumb has no clean-exit marker -> log 'tunnel died without stopTunnel at T, last footprint X MB, last event Y' and show the user 'VPN stopped unexpectedly at 22:44 - reconnect?'; (3) add the memory footprint to the existing 'watchdog OK' line; (4) evaluate crash reporting inside the extension (Sentry/GlitchTip client in the tunnel target, or MetricKit diagnostics in the app); (5) only after (1)-(3) show the cause: fix (buffer sizes / path-churn handling) \u2014 no fix on a guess. Note for the CEO's own mitigation: Auto-connect (on-demand) is OFF by his choice; with it ON, iOS would restart the tunnel by itself after such a death (do NOT enable the kill switch for him \u2014 xd-759 brick history). Related: xd-1063 (server-removed peer, P2), xd-1065 (backend wrong-account cut, P0), xd-944 (probe budget).",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-09-27T22:57:34Z",
+      "createdDate": "2026-09-27",
+      "completedDate": null,
+      "handoffTo": "[QA]",
+      "handoffNote": "Device test: after a forced extension kill (Xcode Debug > Simulate Memory Warning or a crash build), the next launch must show the death time + last footprint."
     }
   ],
   "importantNotes": [
+    {
+      "date": "2026-09-27",
+      "priority": "P1",
+      "note": "Your connection tonight (27 Sep, 22:44): different cause from last night. Nobody on our side removed your phone this time \u2014 the server still shows your connection registered. The VPN program on the phone itself stopped suddenly, without a normal shutdown, right after three quick mobile-network changes and a heavy-traffic period. Our logs cannot say what stopped it; the phone's own report can (see the chat). iPhone team now adds the recording needed to catch it next time."
+    },
     {
       "date": "2026-09-27",
       "priority": "P0",
