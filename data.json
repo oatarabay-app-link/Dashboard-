@@ -28492,7 +28492,7 @@
       "from": "[QA]",
       "to": "[CEO]",
       "title": "Handoff from QA: We cannot test the UAE rule ourselves \u2014 we need one phone there",
-      "description": "The rule that forces UAE users onto the stealth protocol has never been measured, and our own server data points the OTHER way: plain WireGuard carried 1.6 GB over multi-hour sessions there, while the protocol we force carried 12.5 MB and produced every recorded failure. BUT that covers only 5-6 users and cannot prove where those people physically were, so it must not be acted on alone. To settle it we need one phone in the UAE, on both mobile data and wifi, running nine short tests (three per protocol setting) and reporting average speed, spread and carrier. Options: someone you know there, or a paid test-device service.",
+      "description": "The rule that forces UAE users onto the stealth protocol has never been measured, and our own server data points the OTHER way: plain WireGuard carried 1.6 GB over multi-hour sessions there, while the protocol we force carried 12.5 MB and produced every recorded failure. BUT that covers only 5-6 users and cannot prove where those people physically were, so it must not be acted on alone. To settle it we need one phone in the UAE, on both mobile data and wifi, running nine short tests (three per protocol setting) and reporting average speed, spread and carrier. Options: someone you know there, or a paid test-device service.\n\n[2026-09-28 CTO - A REAL UAE PHONE EXISTS: Basel, paying monthly since June, iPhone, account 79675a02 (xd-719 history)]\nMEASURED: last real traffic 2026-08-26 (~700 MB, Dusseldorf; ConnectionLogs 696.5 MB and BandwidthUsageLogs 701.1 MB agree), then 0 ConnectionLogs rows 08-31 -> 09-27 while DE/LB/IQ users logged sessions the same weeks (control). No BugReports / SupportTickets from him.\nHis one try, 2026-09-27 17:01Z, Amsterdam, CasperCloak via Cloudflare (StealthTier AE=DirectFirst, cfWiring=minted), store build (no version sent): attempt 1 reported cc-ws-connected-cf after 89 ms; attempt 2 reached the s5 relay (caspercloak-ws 17:01:24.9 open -> 17:01:25.6 'client connected mode=obfs-v2' -> 17:01:27.98 closed, about 3 s), inner WireGuard handshake 17:01:26Z (peer endpoint 127.0.0.1 = via the relay), rx 41 KB; no /connect call and no retry afterwards. Who closed the link is not visible server-side (no close code) -> his device log is the missing measurement.\nASK (CEO): would Basel run the nine-test plan above, or at minimum send an in-app bug report right after a failed connect? He is also a paying customer whose app is not working - the same work fixes both. His Apple free week converts to paid on 2026-10-04.",
       "status": "pending",
       "priority": "P2",
       "createdAt": "2026-09-24T02:44:21Z",
@@ -29695,9 +29695,44 @@
       "createdAt": "2026-09-27T22:07:51Z",
       "createdDate": "2026-09-27",
       "completedDate": null
+    },
+    {
+      "id": "xd-1076",
+      "from": "[CTO]",
+      "to": "[BACKEND]",
+      "title": "Handoff from CTO: [P1] Apple re-subscribe leaves our 'cancels at period end' flag ON (Apple says it renews) and a free-trial start is booked as a $9.99 payment - real paying UAE user, fix before 4 Oct",
+      "description": "[2026-09-28 CTO - MEASURED: prod DB + API log + nginx api_ssl_access.log* + App Store Server API (subscription status, transaction history, notification history for originalTransactionId 440003177673894), read-only from the brain with the container's own key, 2026-09-27 21:56Z]\nCASE: user 79675a02 (Basel, UAE, One_Month_Subscription since 2026-06-24; board history xd-719). Apple's signed record: DID_RENEW 08-24 10:18:30Z -> DID_CHANGE_RENEWAL_STATUS/AUTO_RENEW_DISABLED 08-26 15:19:18Z -> EXPIRED/VOLUNTARY 09-24 18:18:25Z (expirationIntent=1 customer cancelled, isInBillingRetryPeriod=false) -> SUBSCRIBED/RESUBSCRIBE 09-27 17:00:56Z (tx 440003366112082, offerType=1 FREE_TRIAL P7D, price 0 AED, expires 10-04 17:00:55Z; renewal info autoRenewStatus=1, renewalPrice 39990 milli-AED). All 4 sendAttempts SUCCESS; nginx 200 at 08-26 15:19:19, 09-24 18:18:25, 09-27 17:00:57; API 09-27 17:00:25 'Subscription Status: Expired' then 17:01:02 'Apple receipt validated ... Plan=Monthly'. The lapse itself was NOT our bug.\nDEFECT 1 - stale CancelAtPeriodEnd. DB now: Subscriptions 54946077 Status=Active, CurrentPeriodEnd 2026-10-04 17:00:55, CancelAtPeriodEnd=TRUE while Apple says auto-renew ON. Cause (AppleReceiptService.HandleServerNotificationAsync on origin/production): the SUBSCRIBED INITIAL_BUY/RESUBSCRIBE branch (~L1107-1136) and the DID_RENEW branch (~L927-960) never reset CancelAtPeriodEnd; ValidateAndSyncAsync never writes it; only DID_CHANGE_RENEWAL_STATUS does (~L1142-1170). Once a user switches auto-renew off and later re-subscribes, the flag stays true for good. EFFECTS: (a) SubscriptionExpiryService.cs:76-82 cancels a CancelAtPeriodEnd row at CurrentPeriodEnd with NO grace - if the trial-conversion DID_RENEW lands after 10-04 17:00:55Z he is cut to Free until it arrives; (b) AdminController.cs:253 'recurring' filter and RevenueIntelligenceAggregatorService.cs:128 count him as cancelling. The app's Renews/Expires text comes from StoreKit willAutoRenew (SubscriptionManager.swift:1401), not from this flag.\nFIX 1: every signed notification carries data.signedRenewalInfo - set CancelAtPeriodEnd = (autoRenewStatus == 0) on every notification that owns the row (keep the xd-934 ownership guard), and at minimum reset it to false on INITIAL_BUY, RESUBSCRIBE and DID_RENEW.\nDEFECT 2 - free trial booked as revenue. Payment 1ad14a04 (09-27 17:01:02Z, 'Apple IAP: Monthly (One_Month_Subscription)') = 9.99 USD Succeeded for a FREE_TRIAL transaction whose Apple price is 0. Cause: AppleReceiptService.cs:1381 sets Price only when priceMilli > 0, so a 0 price reads as 'missing' and :259 falls back to plan.PriceMonthly. offerType / offerDiscountType are never parsed (the Apple-trial gap left open after xd-855).\nFIX 2: accept price 0 when the field is present; parse offerType/offerDiscountType in the receipt AND webhook paths; book an introductory FREE_TRIAL as Amount 0 with a trial marker.\nDATA FIX (with the code fix, one row each): Subscriptions 54946077 CancelAtPeriodEnd=false; Payment 1ad14a04 Amount=0 (+ offerType in Metadata). Re-check against Apple, not our rows.\nPROBE: backend skill references/probes.md 'Why didn't a subscription renew? - ask Apple' (added 2026-09-28). DUE before 2026-10-04 17:00Z (his trial converts then). No production data was changed by the CTO session.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-09-27T22:09:02Z",
+      "createdDate": "2026-09-27",
+      "completedDate": null,
+      "dueBy": "2026-10-03T12:00:00Z",
+      "handoffTo": "[QA]",
+      "handoffNote": "QA: after deploy, (1) a RESUBSCRIBE / DID_RENEW leaves CancelAtPeriodEnd=false; (2) a FREE_TRIAL receipt writes Amount 0; (3) user 79675a02's row matches Apple's autoRenewStatus via the probe."
+    },
+    {
+      "id": "xd-1077",
+      "from": "[CTO]",
+      "to": "[CTO]",
+      "title": "Handoff from CTO: [P3] write_session_memory() splits the newest DEPARTMENT_LOG heading from its body - prepend at index 0 when line 0 is not a '# ' title",
+      "description": "[2026-09-28 CTO - MEASURED] tools/factory_bootstrap.py write_session_memory(), DEPARTMENT_LOG part: `dl_header = dl_lines[0]` + entry + `dl_lines[2:]`. DEPARTMENT_LOG.md has NO title line, so line 0 is the previous newest entry's '## ...' heading: the helper leaves that heading on top, detached from its body, and drops line 1. Seen twice in two days: the 09-27 (c) [DEVOPS] heading was split by the 2026-09-28T00:22 [CTO] entry (repaired by this session in the same vault push), and the earlier 09-27 split the DEVOPS session repaired by hand. FIX: keep line 0 as a header only when it starts with '# '; otherwise new = entry + content. TEST with a 3-entry sample: the old top heading must stay directly above its own body and the file must grow by exactly len(entry). Trap row added to preflight-protocol.md (Traps added 2026-09-28).",
+      "status": "pending",
+      "priority": "P3",
+      "createdAt": "2026-09-27T22:09:02Z",
+      "createdDate": "2026-09-27",
+      "completedDate": null,
+      "dueBy": "2026-10-04T22:09:02Z",
+      "handoffTo": "[QA]",
+      "handoffNote": "QA: run the helper against a sample file; the previous top heading must stay above its body."
     }
   ],
   "importantNotes": [
+    {
+      "date": "2026-09-28",
+      "priority": "P1",
+      "note": "Basel (our paying customer in the UAE): his plan did not renew because auto-renew was turned off on his Apple account on 26 August - Apple's own record says the customer cancelled. Our system did its part correctly. He bought again on 27 September and is on Apple's free week; Apple will charge him on 4 October unless he cancels. The real problem: the app still does not work for him - his try on 27 September dropped after about 3 seconds, and he has had no working connection since late August. We need a report from his phone to see why (UAE-tester ticket xd-993). Two small mistakes in our billing records were found and sent to Backend (xd-1076)."
+    },
     {
       "date": "2026-09-28",
       "priority": "P1",
