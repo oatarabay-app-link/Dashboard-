@@ -30661,9 +30661,26 @@
       "createdAt": "2026-09-28T18:54:14Z",
       "createdDate": "2026-09-28",
       "completedDate": null
+    },
+    {
+      "id": "xd-1117",
+      "from": "[CTO]",
+      "to": "[BACKEND]",
+      "title": "Handoff from CTO: [P1] The admin's trial counter is blind to the Apple 7-day trial (the only trial we sell): stamp TrialStartedAt/TrialEndsAt from FREE_TRIAL transactions, show in-trial / converted / cancelled in the funnel",
+      "description": "[2026-09-29 CTO \u2014 MEASURED, CEO asked 'how accurate is the data'] AdminMarketingController counts trials as Users.TrialStartedAt in the window (7d/30d/all), excluding AdminAnalytics:ExcludeTestEmails. That stamp is written ONLY by the old in-app cardless trial (TrialService, xd-929), which has been OFF since 24 Sep (Trial__Enabled=false in the running container). So: '4 trial users' = the 4 real accounts that started the OLD trial in the last 7 days (7f49b2e3, 1d3ae4a9, fa699500, e0b53114; ends 29\u201330 Sep) \u2014 accurate for that definition; the 2 sign-ups of 28 Sep are Free (and unverified), not trials; the 2 pr***@caspervpn.com test trials that ended at 14:03Z are excluded; d4b2e056 (ri***@gmail.com) ended 21:29Z and will be returned to Free by the hourly SubscriptionExpiryService. APPLE TRIALS: xd-1076 (live since the 00:03Z container) parses OfferType/OfferDiscountType (IsFreeTrial) from the signed transaction but does NOT persist it (no Subscriptions column) and does NOT stamp TrialStartedAt/TrialEndsAt (grep: zero writes in AppleReceiptService) \u2192 the admin shows ZERO Apple trials forever. Measured today: 1 real customer in an Apple trial (79675a02, One_Month_Subscription, period 27 Sep 17:00Z \u2192 4 Oct 17:00Z, Active); weekly-plan trials are indistinguishable from paid weeks in the DB (both 7-day periods). Apple's V2 notices DO arrive (PaymentsController apple-webhook; 58 DID_RENEW stored, newest 25 Sep 07:17Z; none expected until the 2 Oct weekly renewal / 4 Oct trial conversion). Expiry safety net: paid Active past CurrentPeriodEnd \u2192 Expired after ActiveExpiryGraceDays=3 (no grace when CancelAtPeriodEnd); old in-app trials no grace. TASKS: (1) on the FIRST transaction with OfferDiscountType=FREE_TRIAL set Users.TrialStartedAt (if null) and TrialEndsAt=expiresDate; persist OfferType/OfferDiscountType on the Subscription row (migration); (2) funnel stages from real facts: sign-ups \u2192 verified \u2192 Apple trial started \u2192 converted (RENEWAL after a FREE_TRIAL period) \u2192 cancelled (DID_CHANGE_RENEWAL_STATUS / EXPIRED) \u2192 active paid; (3) backfill: for non-weekly products a 7-day first period = trial; (4) the 'trial users' card label must say which trial it counts. Proof: the admin shows 1 Apple trial today and the funnel numbers match a SQL cross-check.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-09-29T00:50:51Z",
+      "createdDate": "2026-09-29",
+      "completedDate": null
     }
   ],
   "importantNotes": [
+    {
+      "date": "2026-09-29",
+      "priority": "P1",
+      "note": "Trial numbers (29 Sep): the admin's '4 trial users' counts the OLD in-app trial (switched off 24 Sep) \u2014 accurate for that, but it cannot see the Apple 7-day trial at all. Right now 1 real customer is in an Apple trial (monthly plan, converts 4 Oct unless they cancel). Today's 2 sign-ups are free accounts that have not verified their email. Backend ticket filed to make the admin count Apple trials and show started / converted / cancelled."
+    },
     {
       "date": "2026-09-28",
       "priority": "P1",
