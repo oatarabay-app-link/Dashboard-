@@ -1382,17 +1382,20 @@
           "qaDate": "2026-09-24"
         },
         {
-          "test": "All 300+ API endpoints documented and accessible via Swagger/OpenAPI at /api/docs",
+          "test": "API documentation is published on the development API only (api.dev.caspervpn.com/api/docs); production /api/docs answers 200 with that pointer and no schema is served in production (CEO decision 2026-09-30, was: 'All 300+ API endpoints documented and accessible via Swagger/OpenAPI at /api/docs')",
           "passed": false,
           "verifiedBy": "none",
           "verifiedAt": "2026-02-16T23:24:23Z",
-          "evidence": "QA 2026-09-24 FAIL: GET /api/docs -> 302 to /swagger/index.html -> 404 on prod (2026-09-24). Either docs are deliberately off in production (then re-word this criterion) or the redirect is broken. -> [BACKEND]",
+          "evidence": "QA 2026-09-24 FAIL: GET /api/docs -> 302 to /swagger/index.html -> 404 on prod (2026-09-24). Either docs are deliberately off in production (then re-word this criterion) or the redirect is broken. -> [BACKEND] | 2026-09-29 re-worded on the CEO's decision (xd-1147); met stays false until [QA] ticks.",
           "met": false,
           "verifiedDate": "2026-04-05",
           "verifiedByRaw": "qa-tested",
           "qaVerdict": "FAIL",
           "qaDate": "2026-09-24",
-          "verifiedByPrevious": "tested"
+          "verifiedByPrevious": "tested",
+          "previousTest": "All 300+ API endpoints documented and accessible via Swagger/OpenAPI at /api/docs",
+          "rewordedBy": "[CEO] via [BACKEND]",
+          "rewordedDate": "2026-09-29"
         },
         {
           "test": "Real-time monitoring dashboard displays server load, connection count, bandwidth usage, uptime percentage",
@@ -2847,17 +2850,20 @@
           "verifiedByRaw": "ceo-cowork-live"
         },
         {
-          "test": "API documentation at /api/docs includes all endpoints, parameters, and response schemas",
+          "test": "API documentation (all endpoints, parameters, response schemas) is served on the development API at api.dev.caspervpn.com/api/docs; production /api/docs returns 200 with that pointer, no schema in production (CEO decision 2026-09-30, was: 'API documentation at /api/docs includes all endpoints, parameters, and response schemas')",
           "passed": false,
           "verifiedBy": "none",
           "verifiedAt": "2026-02-16T23:24:23Z",
-          "evidence": "QA 2026-09-24 FAIL: /api/docs -> 302 -> /swagger/index.html -> 404 on prod. Was ticked 2026-04-06; no longer true. -> [BACKEND]",
+          "evidence": "QA 2026-09-24 FAIL: /api/docs -> 302 -> /swagger/index.html -> 404 on prod. Was ticked 2026-04-06; no longer true. -> [BACKEND] | 2026-09-29 re-worded on the CEO's decision (xd-1147); met stays false until [QA] ticks.",
           "met": false,
           "verifiedDate": "2026-09-24",
           "verifiedByRaw": "qa-tested",
           "qaVerdict": "FAIL",
           "qaDate": "2026-09-24",
-          "verifiedByPrevious": "tested"
+          "verifiedByPrevious": "tested",
+          "previousTest": "API documentation at /api/docs includes all endpoints, parameters, and response schemas",
+          "rewordedBy": "[CEO] via [BACKEND]",
+          "rewordedDate": "2026-09-29"
         }
       ],
       "xdId": [
@@ -9627,17 +9633,20 @@
       "category": "admin",
       "acceptanceCriteria": [
         {
-          "test": "Replace CensorshipResponseService.cs:986-1013 ProbeProtocolsAsync new Random() simulator with real HTTP/UDP probes invoked from fleet nodes (existing Flask :5002 endpoint can run them). Persist to CensorshipCountryStatuses + CensorshipProtocolStatuses DB tables. UI must show real numbers, not in-mem...",
+          "test": "Random() simulator removed; per-country protocol status is INFERRED from real ConnectionLogs + Prometheus fleet probes (in-country / node-side probes are Phase 3, xd-1131) and persisted to CensorshipCountryStatuses (ProtocolsJson holds the per-protocol result) on every probe and hourly; admin UI shows the persisted numbers (CEO decision 2026-09-30: inference accepted for launch; was: real HTTP/UDP probes from fleet nodes persisted to CensorshipCountryStatuses + CensorshipProtocolStatuses)",
           "met": false,
           "verifiedBy": "none",
           "verifiedDate": "2026-09-29",
           "verifiedByRaw": "ceo-uncheck",
           "passed": false,
           "verifiedAt": "2026-09-28T22:21:59Z",
-          "evidence": "[CEO 2026-09-29] UN-TICKED after a production check: CensorshipCountryStatuses = 0 rows and CensorshipProtocolStatuses does not exist, so \"persist to both tables\" is not met; the service infers from ConnectionLogs (CensorshipResponseService.cs:1455) instead of running probes from fleet nodes. The fake Random() numbers are gone (fallback only, :1608). Back to Backend xd-1121. | was: QA 2026-09-24: LIVE ON PROD. Brain tree = origin/production 57cb19ad6; running api image built 2026-09-24T19:27Z. CensorshipResponseService.cs:1455 ProbeProtocolsAsync uses real ConnectionLogs inference; the Random() body survives only as ProbeProtocolsLegacySimulatedAsync (L1608), called solely when no IServiceScopeFactory is injected and then logs a warning. Route GET /api/admin/censorship/matrix -> 401 on prod (live, auth-gated). verify: grep -n 'ProbeProtocolsLegacySimulatedAsync\\|new Random' backend-dotnet-core/Services/CensorshipResponseService.cs",
+          "evidence": "[CEO 2026-09-29] UN-TICKED after a production check: CensorshipCountryStatuses = 0 rows and CensorshipProtocolStatuses does not exist, so \"persist to both tables\" is not met; the service infers from ConnectionLogs (CensorshipResponseService.cs:1455) instead of running probes from fleet nodes. The fake Random() numbers are gone (fallback only, :1608). Back to Backend xd-1121. | was: QA 2026-09-24: LIVE ON PROD. Brain tree = origin/production 57cb19ad6; running api image built 2026-09-24T19:27Z. CensorshipResponseService.cs:1455 ProbeProtocolsAsync uses real ConnectionLogs inference; the Random() body survives only as ProbeProtocolsLegacySimulatedAsync (L1608), called solely when no IServiceScopeFactory is injected and then logs a warning. Route GET /api/admin/censorship/matrix -> 401 on prod (live, auth-gated). verify: grep -n 'ProbeProtocolsLegacySimulatedAsync\\|new Random' backend-dotnet-core/Services/CensorshipResponseService.cs | 2026-09-29 re-worded on the CEO's decision (xd-1147); met stays false until [QA] ticks.",
           "qaVerdict": "FAIL",
           "qaDate": "2026-09-29",
-          "verify": "docker exec -i caspervpn-postgres psql -U casper_prod -d caspervpn -tAc 'SELECT count(*) FROM \"CensorshipCountryStatuses\"'  -> must be > 0"
+          "verify": "docker exec -i caspervpn-postgres psql -U casper_prod -d caspervpn -tAc 'SELECT count(*) FROM \"CensorshipCountryStatuses\"'  -> must be > 0",
+          "previousTest": "Replace CensorshipResponseService.cs:986-1013 ProbeProtocolsAsync new Random() simulator with real HTTP/UDP probes invoked from fleet nodes (existing Flask :5002 endpoint can run them). Persist to CensorshipCountryStatuses + CensorshipProtocolStatuses DB tables. UI must show real numbers, not in-mem...",
+          "rewordedBy": "[CEO] via [BACKEND]",
+          "rewordedDate": "2026-09-29"
         }
       ],
       "xdId": [],
@@ -31662,15 +31671,39 @@
       "to": "[CEO]",
       "title": "Handoff from BACKEND: Two decisions after today's backend work: (1) fleet-node censorship probes or inference? (2) 'API docs at /api/docs' criterion wording",
       "description": "(1) xd-1121 (b): the censorship numbers now persist hourly, but they are INFERRED from real connections + Prometheus, not probed from inside each country (no in-country probe fleet exists; a node-side probe endpoint would be fleet-tier work). Decide: A) accept inference as the method and re-word the criterion (fast, nothing to build), or B) build node-side HTTP/UDP probes (DevOps + backend, ~1 week). Recommendation: A for launch.\n(2) admin-backend AC8 + backend-api AC8 both say 'API documentation at /api/docs'. Swagger is OFF in production on purpose (no schema leak); /api/docs answers 200 with 'docs are on api.dev.caspervpn.com/api/docs'. QA already recorded this as intended (xd-1060). Decide: re-word the two criteria to 'docs published on the dev API only' so QA can tick them, or ask for public docs. Recommendation: re-word.\n(3) FYI, not a decision: IKEv2 logins never ran any of our checks until today (xd-1135). Free accounts are still allowed IKEv2 on the 3 free nodes \u2014 say if you want IKEv2 paid-only instead.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-09-29T20:19:57Z",
       "createdDate": "2026-09-29",
+      "completedDate": "2026-09-29",
+      "dueBy": "2026-10-06T20:19:52Z",
+      "completedAt": "2026-09-29",
+      "completedBy": "[BACKEND]",
+      "resolution": "CEO decided 2026-09-30: (1) inference accepted for launch, (2) re-word the docs criteria. Criteria re-worded; QA to tick.",
+      "resultingHandoff": "xd-1148 to [QA]"
+    },
+    {
+      "id": "xd-1148",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: Tick 3 re-worded criteria after the CEO's 2026-09-30 decisions (xd-1147)",
+      "description": "CEO 2026-09-30: 'accept for launch and yes'. (1) Censorship numbers: inference from real connections is the accepted method for launch; in-country probes stay Phase 3 (xd-1131). (2) API docs are dev-only by design. Re-worded criteria (previous text kept in previousTest): admin-backend AC 'API documentation...', backend-api AC 'API documentation...', admin-censorship-real-probes AC. QA verify: curl https://api.caspervpn.com/api/docs -> 200 JSON pointer; https://api.dev.caspervpn.com/api/docs -> Swagger; SELECT count(*), max(\"UpdatedAt\") FROM \"CensorshipCountryStatuses\" -> 12 rows, fresh within 1 h; then tick the 3 rows.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-09-29T20:36:33Z",
+      "createdDate": "2026-09-29",
       "completedDate": null,
-      "dueBy": "2026-10-06T20:19:52Z"
+      "dueBy": "2026-10-06T20:36:27Z"
     }
   ],
   "importantNotes": [
+    {
+      "date": "2026-09-29",
+      "dept": "[CEO]",
+      "priority": "P2",
+      "text": "CEO DECISION 2026-09-30 (xd-1147): censorship status = inference from real connections + Prometheus, accepted for launch (in-country probes = Phase 3, xd-1131). API docs are published on the dev API only, by design; production /api/docs is a pointer. Three criteria re-worded accordingly; QA ticks (xd-1148).",
+      "id": "note-legacy-638a95aa1a"
+    },
     {
       "id": "note-qa-20260929-2020",
       "type": "ceo-flag",
