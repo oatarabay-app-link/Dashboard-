@@ -5984,7 +5984,7 @@
       "owner": "iOS",
       "status": "PARTIAL (sweep 2026-09-21): AC4\u2013AC6 hold (Settings toggle, SettingsView.swift:293-303); AC0\u2013AC3 NOT wired \u2014 no biometric reference outside Settings + BiometricAuthManager on development (aed1430af) or production (f98c38869): no launch prompt, no unlock, no quick-connect. The toggle has no effect \u2192 xd to [iOS] | 5/7 ACs met \u2014 xd-421 regression fixed in commit 2703c9ae. AC6 SettingsToggleRow wire-up restored. AC2-4 still require Xcode device test.",
       "blocked": false,
-      "blocker": "",
+      "blocker": "[iOS 2026-09-30] Settings toggle HIDDEN since build 62 (xd-924, BiometricAuthManager.launchLockShipped=false) until the launch lock (AC0\u2013AC3) is wired. AC4\u2013AC6 are self-ticks from April, never QA-tested.",
       "deps": [
         "auth-complete"
       ],
@@ -7523,12 +7523,13 @@
           "verifiedBy": "none"
         },
         {
-          "test": "iOS: ActivationSheet in DedicatedIPView accepts token, hits /api/dedicated-ip/activate, assigns IP",
+          "test": "iOS: DedicatedIPView redeem / claim-from-IAP assigns the IP (DedicatedIPManager: POST /dedicated-ip/redeem and /claim-from-iap), IP shown in the app",
           "met": false,
           "evidence": "QA sweep 2026-09-21 (Stale \u2014 p): Stale \u2014 prod has no /api/dedicated-ip/activate; the app calls /redeem and /claim-from-iap (DedicatedIPManager.swift:202-204). [iOS] to rewrite the criterion.",
           "sweepNote": "2026-09-21",
           "verifiedByRaw": "none",
-          "verifiedBy": "none"
+          "verifiedBy": "none",
+          "note": "[iOS 2026-09-30] rewritten \u2014 the old /activate token flow does not exist (QA sweep 2026-09-21). Not ticked."
         },
         {
           "test": "QA: End-to-end purchase \u2192 activation \u2192 connect uses dedicated IP verified via whatismyip",
@@ -27262,13 +27263,18 @@
       "to": "[IOS]",
       "title": "Handoff from CTO: iOS BACKLOG for build 25b (prioritised, one list)",
       "description": "P0: xd-751 manual disconnect re-arms on-demand ~2 s later (user-facing); xd-735 CF-Worker recovery path timeout in LB (partly covered by 24u/24y \u2014 re-measure); xd-726 Double VPN MH entry via CF times out in LB (bare-relay entry for Tier-3); xd-730 bg-drop-without-teardown abandons server peers. P1: xd-721 front-latch reset on login screen; xd-722 verify/ship no-wrongful-logout in App Store build; xd-724 force-CC restricted-region on-demand; xd-742 handle 403 AUTH_1006 on config fetch (same pattern as the 402/403 paywall routing); xd-674 MH entry-rotation changes exit country + stale UI; xd-702 QA handback on xd-673 (MTU: live MTU is 1200, dead file \u2014 close after confirming); xd-723 /multihop/routes client robustness. P2: xd-659 401 thundering-herd single-flight refresh; xd-660 APNs entitlement (needs the CEO's Apple portal \u2014 listed under CEO decisions too). Ship as ONE build (25b) with ONE QA checklist. | MERGED FROM: xd-721, xd-722, xd-724, xd-726, xd-730, xd-735, xd-751, xd-659, xd-660, xd-674, xd-702, xd-723, xd-742\n\n[iOS 2026-09-27] Overdue (due 09-23). A 13-item backlog from 16 Sep; several items may be fixed by 25c\u201325k. Needs item-by-item re-check against the code before any work.",
-      "status": "pending",
+      "status": "deferred",
       "priority": "P1",
       "createdAt": "2026-09-16T01:37:36Z",
       "createdDate": "2026-09-16",
-      "completedDate": null,
+      "completedDate": "2026-09-30",
       "dueBy": "2026-09-23T01:37:36Z",
-      "handoffNote": "[iOS 2026-09-27] BLOCKER: needs an iOS session on the CEO Mac (Xcode build) \u2014 Cowork cannot build iOS."
+      "handoffNote": "[iOS 2026-09-27] BLOCKER: needs an iOS session on the CEO Mac (Xcode build) \u2014 Cowork cannot build iOS.",
+      "deferReason": "13-item list from 16 Sep predates builds 25c\u201325m (several items likely fixed); needs item-by-item re-check against current code before any work. Not a launch blocker.",
+      "revisitBy": "2026-10-07",
+      "deferredUntil": "2026-10-07",
+      "completedBy": "[IOS]",
+      "resolution": "DEFERRED to 2026-10-07 \u2014 13-item list from 16 Sep predates builds 25c\u201325m (several items likely fixed); needs item-by-item re-check against current code before any work. Not a launch blocker."
     },
     {
       "id": "xd-812",
@@ -28447,13 +28453,18 @@
       "to": "[IOS]",
       "title": "Handoff from CTO: SPEED LEVER B (client half): stripe CasperCloak across 4-8 parallel connections - the 2-4x that works TODAY through Cloudflare",
       "description": "CEO DIRECTIVE 2026-09-19: do the deeper speed work BEFORE deciding whether the UAE may go direct by default. This is the client half; the relay half and the QUIC prototype are the paired DevOps task. MEASURED RECORD (do not re-derive; source: .claude/skills/caspervpn-anticensorship/references/caspercloak-throughput.md). CEO device, Lebanon, Dusseldorf s6, fast.com, n=5 PAIRS, 2026-09-10: no-VPN 23/23/23/14/13 Mbps; CF-fronted 4.5, 9.1, 2.4, 1.0, 1.5 (mean 3.7); direct grey relay 8.3, 3.9, 5.9, 8.8, 10 (mean 7.4). Direct wins 4/5 and never collapsed; CF collapsed to 7-12% of line on the worst pairs; the ONE CF win (9.1) matched direct, so the CF tax is mostly the old Worker's redial FLAPPING, not fronting per se. CRITICAL: even on the DIRECT road we only reach 36-63% of line (best pairs 63-77%) => removing Cloudflare is NOT sufficient; the residual loss is H2 (single loss-sensitive TCP stream: head-of-line blocking + TCP-over-TCP meltdown + throughput ~ MSS/(RTT*sqrt(loss))) plus obfs size-padding 7-15%. Relay hardware is NOT the cap (CPU 0.0%, 85 MB/s downlink, load ~0, mtl-01 2026-06-27) and the relay software ceiling held 8/16/32/64 Mbps single stream on BOTH the direct and native-front roads. Reference architecture check: VLESS/VMess-over-WS-over-TLS-over-CDN (our exact shape) delivers 10-50 Mbps through CF while we get 1-3 => a fixable inefficiency exists; 'fundamental' is rejected. REGION INVERSION (decides the transport): GCC (AE/SA) = DPI/SNI/IP blocking with UDP/QUIC largely ALLOWED; Lebanon = carrier UDP throttle with shallow DPI. So a UDP transport is the answer for the Gulf and is useless in Lebanon - never treat 'restricted regions' as one bucket for speed. || SCOPE (client): today one WireGuard-over-WebSocket connection carries everything, so ONE lost segment stalls every inner flow (head-of-line blocking) and a single TCP flow on a 150-200 ms path cannot fill the line. Open N=4-8 parallel WS connections to the SAME relay, stripe WG packets across them, reassemble on arrival. N independent flows ~ N x single-flow throughput on a lossy link and a loss on one no longer stalls the others. Keeps full stealth (identical TLS/obfs shape, just more of it) and works through Cloudflare unchanged, which is why it is the interim lever while the transport work runs. ACCEPTANCE: (1) N is configurable and defaults conservatively; (2) packet ordering/reassembly verified under induced loss and reorder; (3) graceful degrade to 1 stream when the extra dials fail (never worse than today); (4) MEASURED before/after on a real device, 3+ paired runs, reported as mean AND spread - within-road spread was 3.8x in the 09-10 test, so a single run proves nothing; (5) battery/CPU delta recorded (N sockets on cellular). TRAPS: connection COUNT is itself a DPI signal - 8 simultaneous TLS sessions to one host is unusual; grade the stealth cost before raising N, and stagger the dials. MTU: CasperCloak already fragments at 1400 over obfs/WS/TLS/TCP (known trap) - re-check the effective MTU per stream. Do NOT re-add any per-packet sleep (removed fleet-wide 2026-06-16/17; it capped throughput at 0.4 Mbps). PAIRED WITH: the DevOps task created in the same push (relay reassembly + QUIC/HTTP-3 prototype + relay efficiency). SUPERSEDES the client half of xd-807.\n\n[iOS 2026-09-27] Open. Code change + device proof required.",
-      "status": "pending",
+      "status": "deferred",
       "priority": "P1",
       "createdAt": "2026-09-20T00:03:59Z",
       "createdDate": "2026-09-20",
-      "completedDate": null,
+      "completedDate": "2026-09-30",
       "dueBy": "2026-09-27T00:03:59Z",
-      "handoffNote": "[iOS 2026-09-27] BLOCKER: needs an iOS session on the CEO Mac (Xcode build) \u2014 Cowork cannot build iOS."
+      "handoffNote": "[iOS 2026-09-27] BLOCKER: needs an iOS session on the CEO Mac (Xcode build) \u2014 Cowork cannot build iOS.",
+      "deferReason": "Multi-day transport work (4\u20138 striped connections + reassembly + measured runs); not a launch item. Pairs with the DevOps relay half.",
+      "revisitBy": "2026-10-14",
+      "deferredUntil": "2026-10-14",
+      "completedBy": "[IOS]",
+      "resolution": "DEFERRED to 2026-10-14 \u2014 Multi-day transport work (4\u20138 striped connections + reassembly + measured runs); not a launch item. Pairs with the DevOps relay half."
     },
     {
       "id": "xd-883",
@@ -31298,7 +31309,7 @@
       "from": "[CTO]",
       "to": "[IOS]",
       "title": "Handoff from CTO: [P1] The tunnel process dies silently (no stopTunnel, no crash record) \u2014 CEO 27 Sep 22:44 Beirut after 1.65 GB / heavy burst + 3 path changes in 6 s; add exit breadcrumbs + memory footprint + launch-time detection so the next death is explained",
-      "description": "[2026-09-27 CTO \u2014 MEASURED from the CEO's third exported log + brain log + Amsterdam node + prod DB.] Session: WireGuard to Amsterdam started 26 Sep 23:20:41Z, ran ~20.5 h. The tunnel extension logged normally until 19:44:34Z ('NETWORK PATH UPDATE' at 19:44:28/:31/:34Z, satisfied cellular prev=cellular \u2014 3 path changes in 6 s), last handshake 19:44:13Z (server agrees to the second), watchdog line at 19:44:08Z present, 19:45:08Z MISSING, no further line ever. At 19:52:39Z the app cold-launched and read 'Tunnel status: Disconnected'; tunnel_started.txt still said the 23:20:41Z process (no relaunch). NOT a graceful stop: every graceful stop in the same log writes 'xd-454 watchdog stopped / xd-455 extension NWPathMonitor stopped / setTunnelNetworkSettings CALLED with nil' (seen 22:40:31Z and 22:48:53Z the night before) \u2014 none here, and no 'Tunnel disconnect reason recovered' at launch (that line only appears when stopTunnel ran). SERVER SIDE RULED OUT: Amsterdam casper-control journal has NO /wireguard/remove-client 19:00-20:00Z; the peer PipBwygs is STILL registered on Amsterdam at 19:54:41Z with latest handshake 19:44:13Z, rx 124,309,816 / tx 1,655,232,944; brain log has no over-limit line for this user today; the usage row is correctly under the CEO since the xd-1065 repair (created 23:20:50Z, synced 19:54:50Z). App side: the app itself had been evicted (0 app lines 02:27-22:52 local); traffic burst 1.6 MB -> 10.6 MB rx in the minute 19:42:08-19:43:08Z. WHAT KILLED THE PROCESS IS NOT IN ANY LOG WE HOLD \u2014 CasperVPNTunnel has no crash reporter (no SentrySDK in the tunnel target) and logs no memory figure. HYPOTHESES (unproven, in order): H1 iOS killed the extension for memory (packet-tunnel limit ~50 MB; heavy throughput + Go backend buffers); H2 a crash in the extension during the rapid path churn (three socket bumps in 6 s); H3 device restart / power-off (leaves no lines either). The artifact that settles it is ON THE PHONE: Settings > Privacy & Security > Analytics & Improvements > Analytics Data, files named CasperVPNTunnel-2026-09-27-\u2026 (crash) or JetsamEvent-2026-09-27-\u2026 (memory kill) around 22:44 \u2014 the CEO was asked to look. TASKS (instrument first, CLAUDE.md \u00a77.2): (1) in the tunnel, write a heartbeat breadcrumb every 30 s to the app group (timestamp, uptime, handshake age, rx/tx, memory footprint via task_info/os_proc_available_memory, last path event) and a 'clean-exit' marker in stopTunnel; (2) at app launch, if the last breadcrumb has no clean-exit marker -> log 'tunnel died without stopTunnel at T, last footprint X MB, last event Y' and show the user 'VPN stopped unexpectedly at 22:44 - reconnect?'; (3) add the memory footprint to the existing 'watchdog OK' line; (4) evaluate crash reporting inside the extension (Sentry/GlitchTip client in the tunnel target, or MetricKit diagnostics in the app); (5) only after (1)-(3) show the cause: fix (buffer sizes / path-churn handling) \u2014 no fix on a guess. Note for the CEO's own mitigation: Auto-connect (on-demand) is OFF by his choice; with it ON, iOS would restart the tunnel by itself after such a death (do NOT enable the kill switch for him \u2014 xd-759 brick history). Related: xd-1063 (server-removed peer, P2), xd-1065 (backend wrong-account cut, P0), xd-944 (probe budget).\n\n[QA 2026-09-29 b] SECOND silent stop, 2026-09-29, same pattern. CEO lifetime account, build 62, WireGuard to Amsterdam: the tunnel's log shows 3 wake() calls (04:04:14/23/43Z) and 4 cellular path updates with socket bumps (04:04:15-04:04:43Z), then 'watchdog OK: handshake age=3s rx=4907180' at 04:04:46Z \u2014 and nothing after it (the 60 s watchdog line at 04:05:46Z is missing; no 'watchdog stopped' / 'setTunnelNetworkSettings CALLED with nil', so no stopTunnel ran). Server side: ConnectionLogs 2646771e last seen 04:07:33Z, then no row for this phone's Amsterdam peer until the app reconnected at 12:19:10Z (8 h 12 min down); no app activity in the api log for this account between 00:33Z and 12:19Z. Build 62 has none of this ticket's breadcrumbs yet, so the cause is still unmeasured. The CEO is asked again for the phone's Analytics Data (CEO checklist 16). Automatic reconnect is off on his phone ('On-demand disabled \u2014 user has not opted into kill switch or auto-connect'), which is why it stayed down.",
+      "description": "[2026-09-27 CTO \u2014 MEASURED from the CEO's third exported log + brain log + Amsterdam node + prod DB.] Session: WireGuard to Amsterdam started 26 Sep 23:20:41Z, ran ~20.5 h. The tunnel extension logged normally until 19:44:34Z ('NETWORK PATH UPDATE' at 19:44:28/:31/:34Z, satisfied cellular prev=cellular \u2014 3 path changes in 6 s), last handshake 19:44:13Z (server agrees to the second), watchdog line at 19:44:08Z present, 19:45:08Z MISSING, no further line ever. At 19:52:39Z the app cold-launched and read 'Tunnel status: Disconnected'; tunnel_started.txt still said the 23:20:41Z process (no relaunch). NOT a graceful stop: every graceful stop in the same log writes 'xd-454 watchdog stopped / xd-455 extension NWPathMonitor stopped / setTunnelNetworkSettings CALLED with nil' (seen 22:40:31Z and 22:48:53Z the night before) \u2014 none here, and no 'Tunnel disconnect reason recovered' at launch (that line only appears when stopTunnel ran). SERVER SIDE RULED OUT: Amsterdam casper-control journal has NO /wireguard/remove-client 19:00-20:00Z; the peer PipBwygs is STILL registered on Amsterdam at 19:54:41Z with latest handshake 19:44:13Z, rx 124,309,816 / tx 1,655,232,944; brain log has no over-limit line for this user today; the usage row is correctly under the CEO since the xd-1065 repair (created 23:20:50Z, synced 19:54:50Z). App side: the app itself had been evicted (0 app lines 02:27-22:52 local); traffic burst 1.6 MB -> 10.6 MB rx in the minute 19:42:08-19:43:08Z. WHAT KILLED THE PROCESS IS NOT IN ANY LOG WE HOLD \u2014 CasperVPNTunnel has no crash reporter (no SentrySDK in the tunnel target) and logs no memory figure. HYPOTHESES (unproven, in order): H1 iOS killed the extension for memory (packet-tunnel limit ~50 MB; heavy throughput + Go backend buffers); H2 a crash in the extension during the rapid path churn (three socket bumps in 6 s); H3 device restart / power-off (leaves no lines either). The artifact that settles it is ON THE PHONE: Settings > Privacy & Security > Analytics & Improvements > Analytics Data, files named CasperVPNTunnel-2026-09-27-\u2026 (crash) or JetsamEvent-2026-09-27-\u2026 (memory kill) around 22:44 \u2014 the CEO was asked to look. TASKS (instrument first, CLAUDE.md \u00a77.2): (1) in the tunnel, write a heartbeat breadcrumb every 30 s to the app group (timestamp, uptime, handshake age, rx/tx, memory footprint via task_info/os_proc_available_memory, last path event) and a 'clean-exit' marker in stopTunnel; (2) at app launch, if the last breadcrumb has no clean-exit marker -> log 'tunnel died without stopTunnel at T, last footprint X MB, last event Y' and show the user 'VPN stopped unexpectedly at 22:44 - reconnect?'; (3) add the memory footprint to the existing 'watchdog OK' line; (4) evaluate crash reporting inside the extension (Sentry/GlitchTip client in the tunnel target, or MetricKit diagnostics in the app); (5) only after (1)-(3) show the cause: fix (buffer sizes / path-churn handling) \u2014 no fix on a guess. Note for the CEO's own mitigation: Auto-connect (on-demand) is OFF by his choice; with it ON, iOS would restart the tunnel by itself after such a death (do NOT enable the kill switch for him \u2014 xd-759 brick history). Related: xd-1063 (server-removed peer, P2), xd-1065 (backend wrong-account cut, P0), xd-944 (probe budget).\n\n[QA 2026-09-29 b] SECOND silent stop, 2026-09-29, same pattern. CEO lifetime account, build 62, WireGuard to Amsterdam: the tunnel's log shows 3 wake() calls (04:04:14/23/43Z) and 4 cellular path updates with socket bumps (04:04:15-04:04:43Z), then 'watchdog OK: handshake age=3s rx=4907180' at 04:04:46Z \u2014 and nothing after it (the 60 s watchdog line at 04:05:46Z is missing; no 'watchdog stopped' / 'setTunnelNetworkSettings CALLED with nil', so no stopTunnel ran). Server side: ConnectionLogs 2646771e last seen 04:07:33Z, then no row for this phone's Amsterdam peer until the app reconnected at 12:19:10Z (8 h 12 min down); no app activity in the api log for this account between 00:33Z and 12:19Z. Build 62 has none of this ticket's breadcrumbs yet, so the cause is still unmeasured. The CEO is asked again for the phone's Analytics Data (CEO checklist 16). Automatic reconnect is off on his phone ('On-demand disabled \u2014 user has not opted into kill switch or auto-connect'), which is why it stayed down.\n\n[iOS 2026-09-30] Shipped in 4.3.1 (build 63), marker 2026-09-30-25m, commit 638f422 on production (cherry-picked to development 93529f0). Xcode device build of this exact tree installed and running on the CEO iPhone. Device checks pending -> QA. DONE: memory footprint on every watchdog OK line (MEM-HIGH >= 40 MB) + fresh tunnel tag. NOT DONE: exit breadcrumbs file + launch-time 'extension died without stopTunnel' detection \u2014 next iOS build.",
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-09-27T22:57:34Z",
@@ -31620,11 +31631,15 @@
       "to": "[IOS]",
       "title": "Handoff from QA: [P1] The paywall shows OLD prices: backup $34.99 / $59.99 and per-month + 'Save' lines are hard-coded (live 4.2 AND 4.3 in review)",
       "description": "[CEO 2026-09-29] CEO: this fix ships in the next version, not as a pull of 4.3 (decision on xd-1093).\n\nMEASURED 2026-09-27 ~22:45Z. (1) Apple's price list is right: App Store Connect current price, Lebanon and USA: 1 Year $49.99, 6 Months $29.99, 1 Month $9.99 (UK \u00a349.99/\u00a329.99; Germany keeps \u20ac59.99/\u20ac34.99 and UAE/Saudi their local tiers, by design). (2) The app has the OLD prices written into its code, in the live 4.2 AND the 4.3 build in review: ios-app-v2/CasperVPN/CasperVPN/Core/Services/SubscriptionManager.swift:1618 price \"$34.99\" monthlyEquivalent \"$5.83/mo\" savings \"Save 42%\"; :1624 price \"$59.99\" \"$5.00/mo\" \"Save 50%\". The big price uses Apple's live price when it loads and falls back to these old numbers (drawn in GREY) when it does not (:2049-2051 formattedPrice(for:) ?? plan.price); the per-month line and the 'Save' line are ALWAYS the old hard-coded text (:2053-2058). (3) The server's plan table is also old: /api/plans (public) -> 6-Month 5.83/mo, Yearly 5.00/mo; Plans.PriceYearly for Yearly = 59.99. CEO 2026-09-28: 'it shows 34 and 59 on my live version'. HYPOTHESIS (not yet proven which): (a) Apple's price list did not load on his phone, so the grey backup numbers showed; or (b) his Apple ID country still has the old price (e.g. Germany). How to tell: grey = backup; white = Apple's price for his Apple ID country. FIX: compute price, per-month and 'Save' from the StoreKit Product (displayPrice / price) and show no number rather than a stale one when products fail to load; if a fallback must stay, update it to $29.99 ($5.00/mo, Save 50%) and $49.99 ($4.17/mo, Save 58%). Ships in the next build after 4.3. Return to [QA] with a simulator screenshot of both states (loaded / not loaded).\n\n[QA 2026-09-28] CEO 2026-09-28 (later): his phone now shows 6 months $29 and 1 year $49 in WHITE \u2014 Apple's live prices, so his Apple ID country has the new prices and the earlier 34/59 was the grey backup text (Apple's list had not loaded). Still open: the per-month and 'Save' lines under each price are always the old hard-coded text ($5.83/mo \u00b7 Save 42%, $5.00/mo \u00b7 Save 50%), and the backup numbers are old. Same code as xd-1093 (Marketing -> iOS) \u2014 fix once, close both.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-09-27T22:49:39Z",
       "createdDate": "2026-09-27",
-      "completedDate": null
+      "completedDate": "2026-09-29",
+      "completedAt": "2026-09-29",
+      "completedBy": "[IOS]",
+      "resolution": "Shipped in 4.3.1 (build 63), marker 2026-09-30-25m, commit 638f422 on production (cherry-picked to development 93529f0). Xcode device build of this exact tree installed and running on the CEO iPhone. Device checks pending -> QA. '/mo' and 'Save N%' computed from the StoreKit product (buyer's currency, priceFormatStyle); no figure when products are not loaded; fallback prices $29.99/$49.99. Same fix closes xd-1093.",
+      "resultingHandoff": "xd-1156 to [QA]"
     },
     {
       "id": "xd-1088",
@@ -31679,12 +31694,16 @@
       "to": "[IOS]",
       "title": "Handoff from BACKEND: xd-988 landed: free users on the 4.2 store app may see a dropped tunnel once, then must be steered to a free server",
       "description": "Backend now cuts a free account's live WireGuard peer on a premium node (xd-988, CEO 2026-09-28). The app sees 'connected, no traffic' until it reconnects; on reconnect smart-recommend/recommended/alternates return free servers only and any premium config fetch is 403 PREMIUM_SERVER. 4.3 (25j) shows the Premium card - fine. 4.2 store app: confirm the reconnect path uses smart-recommend (so it lands on a free server) and does not loop on the 403 (the xd-814 16-refusals trap). Nothing to build unless 4.2 loops; report back to [QA].",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-09-27T23:05:42Z",
       "createdDate": "2026-09-27",
-      "completedDate": null,
-      "dueBy": "2026-10-04T23:05:39Z"
+      "completedDate": "2026-09-29",
+      "dueBy": "2026-10-04T23:05:39Z",
+      "completedAt": "2026-09-29",
+      "completedBy": "[IOS]",
+      "resolution": "CODE-BASED ANSWER, no build needed: the 403 PREMIUM_SERVER client short-circuit (xd-814) shipped in build 25c (2026-09-16) and 4.2 is marker 25g (2026-09-17), so the store app stops on the first refusal and SmartConnect filters premium servers for free accounts \u2014 it should not loop. QA confirms on a 4.2 device with a free account (brain: docker logs caspervpn-api | grep PREMIUM_SERVER must show \u22641 per attempt).",
+      "resultingHandoff": "xd-1156 to [QA]"
     },
     {
       "id": "xd-1092",
@@ -31705,11 +31724,15 @@
       "to": "[IOS]",
       "title": "Handoff from MARKETING: In-app plan cards still show old price text ($5.83/mo \u00b7 Save 42%, $5.00/mo) after the 26 Sep price drop",
       "description": "[CTO 2026-09-28T23:05:12Z] MEASURED \u2014 build 61 (in review, 92934b3 / 25k) vs build 62 (c0cc8f54 / 25l), 16 iOS files differ. Reviewer-visible in 61 and fixed in 62: onboarding stats '1 Gbps' + '99.9% Uptime' (-> '5 Protocols' + '3 Devices'); 'Zero logs' wording (-> 'No activity logs'); the paywall says 'Start free trial' to every Apple ID and shows no full trial terms (62: eligibility check + 'Free for 7 days, then <price> every <period>. Renews automatically until cancelled...'); '1 Device' (-> '3 Devices'); the in-app privacy text (xd-996). NOT fixed in 62: the per-month / 'Save' lines and the $34.99/$59.99 fallbacks (SubscriptionManager.swift PlanDisplayInfo) = this ticket. 62 has not run on a device yet (xd-1119). CTO ADVICE to the CEO (29 Sep): keep 61 in review + expedite; next upload = 62 + this price fix, device-tested, with a new version number; if Apple rejects 61, submit that build within hours. [CEO 2026-09-29] CEO DECISION (Cowork: 'contact apple'): do NOT pull 4.3; ask Apple for a faster review of 4.3 (xd-1059); the price-text fix ships in the NEXT version. This reading was stated back to the CEO in chat. MEASURED 2026-09-28 ~18:55Z (App Store Connect, read-only): 4.3 WAITING_FOR_REVIEW since 2026-09-22 18:41Z. NOTE for [IOS]: build 62 (25l, xd-1119) is also numbered 4.3 and does not list this fix - the next App Store upload needs a NEW version number (4.3 stays in review with build 61) and must include this fix.\n\n[2026-09-27] CEO saw old prices in the live app. MEASURED on production (4.3 b61 = build in review), ios-app-v2/CasperVPN/CasperVPN/Core/Services/SubscriptionManager.swift: the big price uses Apple's live price (formattedPrice \u2192 product.displayPrice, line 2051), but the lines under it come from hardcoded PlanDisplayInfo.allPlans (1603\u20131633): 6 months '$5.83/mo' 'Save 42%', 1 year '$5.00/mo' 'Save 50%'; fallback prices '$34.99'/'$59.99' show if products fail to load. Correct today: 6 months $29.99 = $5.00/mo, save 50%; 1 year $49.99 = $4.17/mo, save 58% (vs monthly $9.99).\nFIX (preferred): compute per-month and savings from StoreKit product.price / months and priceFormatStyle, so a price change never needs a code change again; update fallback strings to 29.99 / 49.99. Not measured: the live 4.2 binary (no git tag).\nCEO DECISION NEEDED: pull 4.3 from review and resubmit with the fix (restarts Apple's queue, 4.3 waiting since 22 Sep) or ship in 4.4.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-09-27T23:18:18Z",
       "createdDate": "2026-09-27",
-      "completedDate": null
+      "completedDate": "2026-09-29",
+      "completedAt": "2026-09-29",
+      "completedBy": "[IOS]",
+      "resolution": "Shipped in 4.3.1 (build 63), marker 2026-09-30-25m, commit 638f422 on production (cherry-picked to development 93529f0). Xcode device build of this exact tree installed and running on the CEO iPhone. Device checks pending -> QA. Fixed once with xd-1087 (live StoreKit maths).",
+      "resultingHandoff": "xd-1156 to [QA]"
     },
     {
       "id": "xd-1094",
@@ -32421,11 +32444,15 @@
       "to": "[IOS]",
       "title": "Handoff from QA: [P1] Reopening the app cuts a healthy connection: a connection check that started before the app went to sleep is judged when it wakes (CEO log 29 Sep)",
       "description": "MEASURED 2026-09-29 from the CEO's exported log (build 4.3 (62), iOS 27.0.0, WireGuard to Amsterdam 51.158.147.210, Lebanon cellular; times UTC) + production. SEQUENCE: 12:19:09Z tunnel up (extension connectedSince 1790684349). 12:28:18Z app foregrounded; '[NO-TRAFFIC] ... trigger=20s-bytes rx=0 tx=296' (the 20 s window is the idle period before unlock); 12:28:24.025 '[ZOMBIE-PROBE] attempt=1 result=FAIL ... -1001 ... in 5003ms (budget 5s)'; the app was suspended right after (no app lines 12:28:24.6 -> 19:28:13). recoverIfZombieOnForeground() then slept 1.5 s and started attempt 2 while suspended. 19:28:13.664Z on the next foreground: '[ZOMBIE-PROBE] attempt=2 result=DEADLINE-CUT in 25188135ms (budget 5s)' (= 7 h of suspension) -> 19:28:13.665 'two consecutive foreground probes FAILED while .connected \u2014 CasperCloak WS is a zombie; reconnecting to Amsterdam' -> 19:28:13.694 '[ZOMBIE-VERDICT] handshakeAgo=12s completed=1 trafficFlowing=1 rx=111431280 tx=3161976 adapter=running ... uptime=25744 :: TUNNEL LOOKED ALIVE (handshake 12s ago) => probe verdict SUSPECT, teardown may be a FALSE POSITIVE' -> 19:28:13.700 'Disconnecting (manual)' -> 19:28:15.658 connected again. The extension proves the tunnel was healthy for the whole 7 h 9 min (uptime 25,744 s; 'watchdog OK' 19:26:43 handshake 42 s, 19:27:43 102 s; rx 111 MB). The CEO saw 'when I opened the app it reconnected'. CODE (production = build 62): VPNConnectionManager.swift:3612 recoverIfZombieOnForeground(): attempt 1 -> :3629 Task.sleep 1.5 s -> attempt 2 -> :3634 teardown log -> :3663 disconnect(); the run is not cancelled when the app leaves the foreground; zombieRecoveryInFlight (:3589) makes the next foreground skip a fresh check; logTunnelViewAtZombieVerdict() (:3635 -> :3792) is logged but does not gate the teardown. This is the device log xd-825 PART 2 was waiting for (2026-09-16: 'PART 2 ... waits on a real device log containing [ZOMBIE-VERDICT]'). OPTIONS for iOS to choose (QA does not prescribe): cancel the check when the app leaves .active and start fresh on the next .active; treat an attempt whose elapsed time is far above its budget as 'no verdict', not 'failed'; do not tear down while the extension reports handshake < 180 s and rx rising. Also: the label 'CasperCloak WS is a zombie' appears on WireGuard (same as xd-1071 item 4). PROOF QA will run on the fixed build: open the app, background it within 3 s of a failed first probe (airplane mode on 5 s, then off), wait >= 10 min, reopen -> no teardown while the extension's handshake is < 180 s; the log names the discarded check. Related: xd-1119 item (4) FAIL, xd-944, xd-1066.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-09-29T20:02:54Z",
       "createdDate": "2026-09-29",
-      "completedDate": null
+      "completedDate": "2026-09-29",
+      "completedAt": "2026-09-29",
+      "completedBy": "[IOS]",
+      "resolution": "Shipped in 4.3.1 (build 63), marker 2026-09-30-25m, commit 638f422 on production (cherry-picked to development 93529f0). Xcode device build of this exact tree installed and running on the CEO iPhone. Device checks pending -> QA. Probe verdicts ignored when the app was suspended or left the foreground (elapsed > 15 s or not active -> INCONCLUSIVE, no teardown); the extension's own view (handshake < 180 s + traffic flowing) now overrules two failed probes.",
+      "resultingHandoff": "xd-1156 to [QA]"
     },
     {
       "id": "xd-1138",
@@ -32512,11 +32539,15 @@
       "to": "[IOS]",
       "title": "Handoff from QA: [P1] The app still promises a '30-Day Money Back' (paywall) and a 30-day refund (support assistant) \u2014 remove per the CEO's 29 Sep decision; ships in the next version",
       "description": "MEASURED 2026-09-29 in the current code (origin/production, build 62): SubscriptionManager.swift:1671 TrustSignal(iconName: \"dollarsign.circle\", text: \"30-Day Money Back\") in trustSignals (:1668), rendered on the paywall by trustSignalsGrid (:1937, used at :1764); AISupportManager.swift:335 the support assistant answers any 'refund / cancel / money back' question with 'Refund requests are handled within 30 days of purchase. I can help you submit a request to our billing team.' The CEO decided on 2026-09-29 to remove the money-back promise (xd-1052 / xd-1113 \u2014 the website is now clean: 0 of 109 pages, verified by QA on xd-1142), and the site FAQ now says App Store refunds are handled by Apple. ASK: replace the trust signal (e.g. 'Cancel anytime') and change the refund answer to 'Refunds for App Store purchases are handled by Apple \u2014 here is how to ask' with the Apple link. Version 4.3 is already in Apple's queue (CEO: keep it there) so this ships in the next version together with the price-text fix (xd-1093). Not verified on a phone which store build shows the paywall row today; the code line predates 4.2. QA verify on the next build: grep -rn -i 'money.back' ios-app-v2/CasperVPN/CasperVPN -> only the intent keyword in AISupportManager; paywall screenshot.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-09-29T20:12:46Z",
       "createdDate": "2026-09-29",
-      "completedDate": null
+      "completedDate": "2026-09-29",
+      "completedAt": "2026-09-29",
+      "completedBy": "[IOS]",
+      "resolution": "Shipped in 4.3.1 (build 63), marker 2026-09-30-25m, commit 638f422 on production (cherry-picked to development 93529f0). Xcode device build of this exact tree installed and running on the CEO iPhone. Device checks pending -> QA. Paywall trust signal -> 'Cancel Anytime'; support assistant refund answer -> refunds are Apple's (reportaproblem.apple.com).",
+      "resultingHandoff": "xd-1156 to [QA]"
     },
     {
       "id": "xd-1144",
@@ -32557,12 +32588,16 @@
       "to": "[IOS]",
       "title": "Handoff from BACKEND: Send a stable DeviceId on POST /servers/{id}/connect (xd-1138 backend half is live)",
       "description": "Backend (live since 2026-09-29 20:15Z) accepts `deviceId` (string, max 64) in the connect body and uses it as the ONLY same-device key when present, so two iPhones on the same iOS version stop closing each other's session rows. Send UIDevice.identifierForVendor (or the per-install id planned in xd-940) on every connect. Until the app sends it, behaviour is unchanged. Return to [QA] with the build number.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-09-29T20:19:57Z",
       "createdDate": "2026-09-29",
-      "completedDate": null,
-      "dueBy": "2026-10-06T20:19:52Z"
+      "completedDate": "2026-09-29",
+      "dueBy": "2026-10-06T20:19:52Z",
+      "completedAt": "2026-09-29",
+      "completedBy": "[IOS]",
+      "resolution": "Shipped in 4.3.1 (build 63), marker 2026-09-30-25m, commit 638f422 on production (cherry-picked to development 93529f0). Xcode device build of this exact tree installed and running on the CEO iPhone. Device checks pending -> QA. deviceId = identifierForVendor on every POST /servers/{id}/connect (omitted if iOS returns none).",
+      "resultingHandoff": "xd-1156 to [QA]"
     },
     {
       "id": "xd-1147",
@@ -32684,6 +32719,18 @@
       "status": "pending",
       "priority": "P3",
       "createdAt": "2026-09-29T21:35:47Z",
+      "createdDate": "2026-09-29",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1156",
+      "from": "[IOS]",
+      "to": "[QA]",
+      "title": "Handoff from IOS: Device-test 4.3.1 (63) marker 25m \u2014 xd-1137, 1087/1093, 1143, 1146, 1066",
+      "description": "Shipped in 4.3.1 (build 63), marker 2026-09-30-25m, commit 638f422 on production (cherry-picked to development 93529f0). Xcode device build of this exact tree installed and running on the CEO iPhone. Device checks pending -> QA. Checks: (1) xd-1137 leave the app in the background >1 h connected, reopen: NO teardown; log shows either a clean probe or '[zombie-recovery] probe INCONCLUSIVE' / 'extension reports the tunnel ALIVE \u2014 probe failures overruled'. (2) xd-1087/1093 paywall: 6 Months shows '$5.00/mo' + 'Save 50%', 1 Year '$4.17/mo' + 'Save 58%' (US prices; other countries in local currency); with plans not loaded (airplane mode) no /mo or Save line is shown. (3) xd-1143 paywall trust row says 'Cancel Anytime', no '30-Day Money Back'; Support chat 'refund' answer points to Apple (reportaproblem.apple.com). verify: grep -rn -i 'money back' ios-app-v2/CasperVPN/CasperVPN -> only the intent keyword in AISupportManager.swift. (4) xd-1146 prod DB: ConnectionLogs for the CEO's next connect carry a DeviceId. (5) xd-1066 tunnel_debug.log watchdog OK lines end with 'mem=NNMB'; tunnel tag '2026-09-30-25m-memwatch'.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-09-29T22:05:24Z",
       "createdDate": "2026-09-29",
       "completedDate": null
     }
