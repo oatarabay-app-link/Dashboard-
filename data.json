@@ -13648,10 +13648,10 @@
       "name": "QA & Testing",
       "status": "red",
       "lead": "QA Lead (AI)",
-      "currentTask": "2026-09-29 run d: whole-board sweep finished (845/845 criteria carry a fresh QA verdict) \u00b7 open handoffs to QA: 1 P0 / 8 P1 / 3 P2-P3 \u00b7 top: BACKEND: prove crypto end-to-end with ONE real $1 USDT-TRC20 payment \u2014; MARKETING: [P1] Verify: partner dashboard (sign-in link, dashboard, si",
+      "currentTask": "2026-09-29 run e: sweep finished (845/845 criteria verdicted), xd-923 + xd-1095 closed \u00b7 open handoffs to QA: 1 P0 / 7 P1 / 3 P2-P3, all waiting on a phone, the CEO or a real event \u00b7 top: BACKEND: prove crypto end-to-end with ONE real $1 USDT-TRC20 payment \u2014; MARKETING: [P1] Verify: partner dashboard (sign-in link, dashboard, si",
       "blockers": 1,
       "completion": 0,
-      "lastActivity": "2026-09-29T22:11:46Z",
+      "lastActivity": "2026-09-29T23:37:48Z",
       "launchCompletion": 0,
       "lastTriggered": "2026-09-20T22:21:32Z",
       "notes": "2026-09-29 [QA] re-based at QA exit (golden rule 8): completion = criteria met / total on tasks this department owns (0/5); blockers = open P0 handoffs to it. | CORRECTION 2026-09-29 20:20Z [QA]: at 20:13Z QA wrote 4 vault files (QA session log, factory-sessions, DEPARTMENT_LOG, QA skill) while [BACKEND] held the session lock (backend-cowork-0929, since 20:12:41Z). Cause: the lock step's failure was hidden by a pipe ('lock.py take | tail -1 && \u2026' \u2014 tail's exit code 0 let the chain continue; same trap as skill \u00a723 'read.py | tail -1'). Checked after: 0 conflict markers, every entry present, DEPARTMENT_LOG title on line 1, Backend's commits untouched (single-path commits with a sha guard). To be copied into the QA session log when the lock is free."
@@ -32040,7 +32040,7 @@
       "createdDate": "2026-09-25",
       "completedDate": null,
       "dueBy": "2026-10-02T22:48:12Z",
-      "qaNote": "[QA 2026-09-29] Still no real DID_CHANGE_RENEWAL_STATUS notice: last apple-webhook POST 2026-09-27 17:00:57Z. CEO lifetime row 59bf8188: EndDate 2126-02-22, CancelAtPeriodEnd=false. Due 2026-10-02 - if no notice by then, defer with a revisit date.",
+      "qaNote": "[QA 2026-09-29 e] Still no real Apple notification: 0 apple-webhook POSTs since 09-27 17:00:57Z (nginx api_ssl_access.log). Open until the first real DID_CHANGE_RENEWAL_STATUS (SLA 10-02). [QA 2026-09-29] Still no real DID_CHANGE_RENEWAL_STATUS notice: last apple-webhook POST 2026-09-27 17:00:57Z. CEO lifetime row 59bf8188: EndDate 2126-02-22, CancelAtPeriodEnd=false. Due 2026-10-02 - if no notice by then, defer with a revisit date.",
       "lastVerifiedBy": "[QA]",
       "lastVerifiedDate": "2026-09-29"
     },
@@ -33018,16 +33018,20 @@
       "to": "[QA]",
       "title": "Handoff from BACKEND: [P1] Verify xd-1058 on production: forged Apple receipts are rejected, genuine ones still work",
       "description": "[BACKEND 2026-09-28] Re-run the non-mutating probe (recipe in backend skill references/probes.md 'Receipt forgery probe'): with a probe account token, POST the genuine current Apple JWS of an ALREADY-RECORDED transaction -> 200 'Transaction already processed'; the same claims unsigned -> 400; genuine signature + edited payload -> 400; Payments count unchanged. Then watch real traffic for 48 h: api log must show 0 'xd-1058: Apple transaction REJECTED' for real App Store receipts/notifications (a real one rejected = page [BACKEND] at once; emergency switch Apple__RejectUnverifiedTransactions=false), and nginx /api/payments/apple-webhook stays 200.\n\n--- BACKEND 2026-09-28 ---\nWAS THE HOLE EVER USED? No. Checked 2026-09-28 00:37Z against the App Store Server API (both environments, full paginated histories): all 439 Apple payment rows are transactions Apple knows (0 unknown, 0 without a TransactionId) and all 9 subscriptions with an Apple product belong to a user with such a row (0 orphans). A forged receipt would have left exactly that trace. The check is now part of infrastructure/scripts/apple_billing_audit.py (production c3e828a, installed /opt/caspervpn/): lines 'OUR ROWS APPLE DOES NOT KNOW' and 'SUBSCRIPTIONS WITHOUT AN APPLE-KNOWN PAYMENT', both must be 0. Live re-proof of the fix (~00:17Z, infrastructure/scripts/apple_receipt_forgery_probe.py, production bdfa6f9, exit 0): genuine 200 'Transaction already processed'; unsigned and edited-price forgeries 400 'Invalid signed transaction'; 2 'xd-1058: Apple transaction REJECTED' log lines; probe account still 0 Apple payments. QA: run both scripts on the brain; PASS = probe exit 0 and both audit lines 0.\n\n[QA 2026-09-28] Probe re-run by QA 2026-09-28 ~18:4xZ: genuine receipt 200 'Transaction already processed'; unsigned 400; edited price 400; RESULT PASS, exit 0; Payments 439 -> 439. Audit: 'OUR ROWS APPLE DOES NOT KNOW: 0', 'SUBSCRIPTIONS WITHOUT AN APPLE-KNOWN PAYMENT: 0 of 9'. Real-traffic watch: 4 'xd-1058: Apple transaction REJECTED' lines in the durable log, all from the two probe runs (23:32:21Z and 00:17:06Z) \u2014 0 real rejections, but 0 real Apple notifications either in the ~19 h since the recreate. 48 h window ends 2026-09-29 23:33Z.\n\n[QA 2026-09-29] Re-check: 48 h window ends today 23:33Z, so not closed now. Since yesterday's QA probe: the 4 'xd-1058: Apple transaction REJECTED' lines are all 09-28 18:42-18:43Z (the QA probe runs); 0 later; 0 real Apple notifications in ~43 h (last apple-webhook POST 09-27 17:00:57Z). Next QA run closes it if still 0. Probe not re-run today (it posts to production).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-09-27T23:33:55Z",
       "createdDate": "2026-09-27",
-      "completedDate": null,
+      "completedDate": "2026-09-29",
       "dueBy": "2026-10-05T12:00:00Z",
       "taskRef": "xd-1058",
       "qaNote": "[QA 2026-09-29] Re-check: 48 h window ends today 23:33Z, so not closed now. Since yesterday's QA probe: the 4 'xd-1058: Apple transaction REJECTED' lines are all 09-28 18:42-18:43Z (the QA probe runs); 0 later; 0 real Apple notifications in ~43 h (last apple-webhook POST 09-27 17:00:57Z). Next QA run closes it if still 0. Probe not re-run today (it posts to production).",
       "lastVerifiedBy": "[QA]",
-      "lastVerifiedDate": "2026-09-29"
+      "lastVerifiedDate": "2026-09-29",
+      "completedAt": "2026-09-29",
+      "completedBy": "[QA]",
+      "resolution": "[QA 2026-09-29 e] PASS - window closed at 23:33Z. (1) Forgery probe (run 09-28): genuine 200 'Transaction already processed', unsigned and edited forgeries 400; not re-run (it posts to production). (2) 48 h of real traffic, 27 Sep 23:33Z to 29 Sep 23:33Z: 15 receipt calls from real phones, all HTTP 200 (nginx api_ssl_access.log), 0 Apple notification POSTs in the window; 'xd-1058: Apple transaction REJECTED' lines = only the 4 QA-probe lines of 09-28 18:42-18:43Z (API log checked through run b; the container restarted 20:14Z 29 Sep and shows 0 since). (3) apple_billing_audit.py re-run 22:4xZ 29 Sep: our rows Apple does not know 0, rows without a TransactionId 0, subscriptions without an Apple-known payment 0 of 10, amount mismatches 0; the 3 'Apple tx not in our payments' and 1 flag mismatch are all Sandbox (expected). (4) Payments 441 (unchanged since 09-28 22:18Z). Gap, not blocking: no real App Store notification arrived in 48 h, so the webhook leg is proven by the probe only - the first real notice is already watched in xd-1031.",
+      "resultingHandoff": "none - the first real Apple notice is covered by xd-1031 (open, SLA 10-02)"
     },
     {
       "id": "xd-1096",
@@ -33997,7 +34001,10 @@
       "priority": "P1",
       "createdAt": "2026-09-29T22:05:24Z",
       "createdDate": "2026-09-29",
-      "completedDate": null
+      "completedDate": null,
+      "qaNote": "[QA 2026-09-29 e] Code legs checked on the production branch (read-only): (3) PASS - 'money back' appears only as the support intent keyword (AISupportManager.swift) and the paywall trust row reads 'Cancel Anytime' (SubscriptionManager.swift:1701); (6) PASS in code - SubscriptionManager.swift on production has 0 'Split Tunneling' plan lines and the support answer says it is not available on iPhone. (4) not yet: 95 connections in the last 24 h, 0 carry a DeviceId, and none come from build 63 yet (only 4 from 4.3 (62)) - re-check after the CEO's first connect on 63. (1) (2) (5) need the phone / its exported log. ",
+      "lastVerifiedBy": "[QA]",
+      "lastVerifiedDate": "2026-09-29"
     },
     {
       "id": "xd-1157",
