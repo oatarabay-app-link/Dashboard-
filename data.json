@@ -11577,6 +11577,16 @@
           "verifiedDate": null,
           "evidence": "[DEVOPS 2026-09-30T21:28:06Z] xd-818 deferred to 5 Oct pending this answer. Measured 16 Sep: Resend 429 monthly_quota_exceeded on every alert 11:28-13:28Z.",
           "verify": "answer on this row + xd-818; then a test alert arrives on the second channel"
+        },
+        {
+          "test": "DECISION (answered 1 Oct, live chat) \u2014 The iPhone app's Admin tab: (1) YES, switch Apple's demo account from admin to a normal user now \u2014 DONE 2026-09-30 21:43:39Z (UPDATE 1), the reviewer no longer gets the tab, no new build; (2) the next app build removes the Admin tab from the app completely \u2014 code on development 04da9101, needs the iOS build.",
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "verifiedByRaw": "none",
+          "verifiedDate": null,
+          "evidence": "[CTO 2026-09-30] data change UPDATE 1 at 21:43:39Z; QA check xd-1194; iOS build xd-1193.",
+          "verify": "SELECT \"Email\",\"Role\" FROM \"Users\" WHERE \"Role\" IN (2,3)  -> only admin@caspervpn.com"
         }
       ],
       "progress": 0,
@@ -35415,7 +35425,7 @@
       "from": "[QA]",
       "to": "[IOS]",
       "title": "Handoff from QA: [QA] Push notifications never register - 0 device tokens ever saved, so support replies never notify anyone",
-      "description": "[CEO office 2026-09-30] dueBy set by the 7-day rule (xdPolicy: createdAt + 7 d; already past \u2192 7 Oct). QA 2026-09-29, production: the UserDeviceTokens table has 0 rows - ever. The app asks for push (AppDelegate.swift:193-201 registerForRemoteNotifications) and passes the token to PushNotificationManager (AppDelegate.swift:72), but nothing is stored by the backend. Result: notifications-system #1 FAIL, live-support-chat #7 FAIL, apns-deep-link #5 FAIL - a support reply never reaches the user's phone. The backend half (no APNs settings in the API) is on [BACKEND] in a sibling ticket created in the same write. ASK: find where the token is lost (permission prompt never shown? request never sent? refused?), fix it, and hand back to [QA] with the build number. QA then checks UserDeviceTokens > 0 and one ticket-reply push on the CEO's phone.",
+      "description": "[CEO office 2026-09-30] dueBy set by the 7-day rule (xdPolicy: createdAt + 7 d; already past \u2192 7 Oct). QA 2026-09-29, production: the UserDeviceTokens table has 0 rows - ever. The app asks for push (AppDelegate.swift:193-201 registerForRemoteNotifications) and passes the token to PushNotificationManager (AppDelegate.swift:72), but nothing is stored by the backend. Result: notifications-system #1 FAIL, live-support-chat #7 FAIL, apns-deep-link #5 FAIL - a support reply never reaches the user's phone. The backend half (no APNs settings in the API) is on [BACKEND] in a sibling ticket created in the same write. ASK: find where the token is lost (permission prompt never shown? request never sent? refused?), fix it, and hand back to [QA] with the build number. QA then checks UserDeviceTokens > 0 and one ticket-reply push on the CEO's phone.\n\n--- [CTO] 2026-09-30 \u2014 MEASURED CAUSE LEAD ---\nThe CEO's phone log (export 2026-10-01 00:32 Beirut) says: 'APNs registration failed: no valid \"aps-environment\" entitlement string found for application', then 'PushNotificationManager: no APNs token available \u2014 skipping register'. The repo matches it: ios-app-v2/CasperVPN/CasperVPN/CasperVPN.entitlements (the file every app configuration signs with, pbxproj CODE_SIGN_ENTITLEMENTS x4) has NO aps-environment key. Without it iOS never gives the app a push token, so 0 tokens can ever be saved. Caveat: the phone ran an Xcode-installed build; check that the App Store build is signed with the same file (it is the same CODE_SIGN_ENTITLEMENTS). Fix = Push Notifications capability on the App ID + aps-environment=production in the entitlements + a new build.",
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-09-29T22:11:52Z",
@@ -35895,6 +35905,49 @@
       "dueBy": "2026-10-14T12:00:00Z",
       "handoffTo": "[QA]",
       "handoffNote": "Start only after Apple approves 4.3.1. QA: sandbox device test as listed; the board reviews the day-one trial start rate 2 weeks after release."
+    },
+    {
+      "id": "xd-1193",
+      "from": "[CTO]",
+      "to": "[iOS]",
+      "title": "Handoff from CTO: [P1] Next app build: the Admin tab is removed from the app completely (CEO decision 1 Oct) - build and device-check development 04da9101",
+      "description": "CEO decision in a live chat, 2026-10-01 00:4x Beirut: 'remove it completely from the app'. Why: the Admin tab (iPhone tab bar, iPad sidebar) loaded real customers' emails and names, revenue and support tickets, and could change a user's data limit, reply to tickets as 'Support' and force-disconnect users - for ANY admin account, including Apple's review demo account (it was Role=Admin until 21:43:39Z). DONE on development 04da9101 by [CTO]: removed AdminDashboardView.swift, AdminDashboardViewModel.swift, AdminService.swift, the 16 /admin/* endpoint constants in Config.swift, User.isAdmin, the MainTabView admin tab and the MainSplitView .admin destination; project.pbxproj: 7 objects dropped (3 build files, 3 file refs, the Admin group), parsed with openstep_parser, 0 dangling references. The admin code has been in every build since 2026-04-08 (d2123185), so the live 4.2 and 4.3.1 build 64 under review both contain it. UNBUILT: no Xcode in the session. ASK: (1) Xcode build of development 04da9101 (device); (2) on the phone, sign in with an admin account (admin@) and confirm there is NO Admin tab and no Admin sidebar row on iPad; (3) include it in the next App Store build (promote to production with that build); (4) hand to [QA] with the build number. verify: grep -rn 'AdminDashboardView\\|AdminService\\|isAdmin' ios-app-v2/CasperVPN/CasperVPN --include=*.swift -> 0 hits on the branch you build.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-09-30T21:48:17Z",
+      "createdDate": "2026-09-30",
+      "completedDate": null,
+      "dueBy": "2026-10-07T21:48:13Z",
+      "handoffTo": "[QA]",
+      "handoffNote": "QA checks the built app: no Admin tab for admin@; everything else unchanged."
+    },
+    {
+      "id": "xd-1194",
+      "from": "[CTO]",
+      "to": "[QA]",
+      "title": "Handoff from CTO: [P1] Check: Apple's demo account is a normal user now - the Admin tab is gone for it without a new build (CEO YES 1 Oct)",
+      "description": "Production data change with CEO YES in a live chat (2026-10-01, answer 'Yes, switch it now'): UPDATE \"Users\" SET \"Role\"=0 WHERE Id=015bb891-... (claude-dev@caspervpn.com) AND Role=2 AND IsReviewAccount=true -> UPDATE 1 at 2026-09-30 21:43:39Z. After: claude-dev Role 0, IsReviewAccount true, IsActive true, IsEmailVerified true; admin@caspervpn.com still Role 2 (the only admin). Why it is safe: backend role checks are only [Authorize(Roles=Admin,SuperAdmin)] on admin routes + one email-gate exemption (EmailVerificationGate.cs:106; the account is verified anyway). Review access (premium servers, no data cap, trial, email gate) comes from IsReviewAccount, not the role. /api/user reads the role from the DB (no cache) -> the app hides the tab on its next sync. Access tokens issued before the change keep the Admin claim until they expire (1 h). Nothing in tools/ or on the brain uses claude-dev for /api/admin (grep: asc_preflight.py calls /api/servers only; ceo_ns_probe.py is SQL). CHECK: (1) SQL: SELECT \"Email\",\"Role\",\"IsReviewAccount\" FROM \"Users\" WHERE \"Role\" IN (2,3) OR \"IsReviewAccount\" -> admin@ 2 f ; claude-dev 0 t. (2) CEO phone (signed in as the demo account): close + reopen the app -> no Admin tab. (3) API log: no /api/admin/* call from user 015bb891 after 22:45Z. (4) the demo account still signs in and connects to a premium server. Rollback: set Role=2 on that one row.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-09-30T21:48:17Z",
+      "createdDate": "2026-09-30",
+      "completedDate": null,
+      "dueBy": "2026-10-02T21:48:13Z",
+      "handoffTo": "[CEO]",
+      "handoffNote": "Tell the CEO the tab is gone for the demo account."
+    },
+    {
+      "id": "xd-1195",
+      "from": "[CTO]",
+      "to": "[SECURITY]",
+      "title": "Handoff from CTO: [P2] A real password is written in plain text in tools/asc_preflight.py (the App Review demo account) - move it to the credentials lookup",
+      "description": "Seen 2026-10-01 by [CTO] while checking who uses the demo account (tools/asc_preflight.py, the login call near line 264). The value is NOT repeated here. ASK: read it from memory/context/credentials.md like the other tools; scrub it from git history if the repo could ever be shared. Do NOT change the demo account's password while Apple is reviewing 4.3.1 (the reviewer signs in with it); rotate after the review, then update App Store Connect's review notes the same day.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-09-30T21:48:17Z",
+      "createdDate": "2026-09-30",
+      "completedDate": null,
+      "dueBy": "2026-10-07T21:48:13Z"
     }
   ],
   "importantNotes": [
