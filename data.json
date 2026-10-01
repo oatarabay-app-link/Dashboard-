@@ -11801,6 +11801,16 @@
           "verifiedDate": null,
           "evidence": "[CTO 2026-10-01T17:01:42Z] xd-1235 to [iOS].",
           "verify": "git log origin/production -1 -- ios-app-v2 shows the merge of ios/trial-at-signup; the CEO's phone runs 4.4 (65)"
+        },
+        {
+          "test": "READY TO SHIP \u2014 the server stops cutting a live tunnel when an old 'disconnect' arrives late (the 'Connected but no internet, I must switch the VPN off' problem, xd-1196): the server now keeps the tunnel key while the same phone still has a newer live session on that server, and a disconnect closes the session it names (or the oldest one), never a random one \u00b7 why: measured on your phone 30 Sep 22:05 \u2014 a reconnect registered, then the old tunnel's disconnect deleted the key of the new tunnel; the app sat on Connected with no traffic for 3.5 min; today you reported the same after long sessions \u00b7 tested on dev: built and tested on the main server, 170 of 170 tests pass (4 new for this rule); dev server redeploys from development on its own \u00b7 rollback: /root/deploy_api.sh keeps a rollback image tag \u00b7 ships with the API deploy (row 67 can go in the same deploy; commit 137328a). Advice: yes \u2014 it fixes store users (4.2/4.3.1) that the app-side change cannot reach.",
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "verifiedByRaw": "none",
+          "verifiedDate": null,
+          "evidence": "[BACKEND 2026-10-01T17:18:12Z] development 137328a; /root/reports/eng1001-backend-test2.log Passed 170/170.",
+          "verify": "after the deploy: docker logs caspervpn-api | grep -c '[disconnect] peer KEPT' grows on the next fast reconnect; the CEO's long session keeps traffic (extension log rx climbing)"
         }
       ],
       "progress": 0,
@@ -36654,13 +36664,17 @@
       "to": "[BACKEND]",
       "title": "Handoff from CTO: [P1] A late 'disconnect' from an old tunnel deletes the WireGuard peer of the NEW tunnel - user sits on 'Connected' with no internet (CEO phone, 3.5 min, 30 Sep)",
       "description": "MEASURED 2026-09-30 (CEO iPhone, build 4.3.1 (63), own account 2eecd0e6, Amsterdam): the tunnel restarted 3x in 8 s (22:05:35, 22:05:38, 22:05:42 - right after 'Background Auto-Connect toggled OFF' at 22:05:30; that trigger is a hypothesis). API log: new connects registered 22:05:36.302 + 22:05:36.309, then the OLD tunnel's POST /servers/{id}/disconnect ran OptimizedVpnServerService disconnect -> RemoveClientAsync -> 'Removed WireGuard peer PipBwygs... from Amsterdam on disconnect' at 22:05:36.531. The key is the same for every tunnel (xd-070 'pubkey PipBwygshG' persisted at 22:05:10 and 22:09:15), so the removal killed the live tunnel. Phone: heartbeats bytesRx=0 from 22:05:42; app requests timed out; at 22:09:15 the app's no-traffic check fired (ConnectFailure cat=connected-no-traffic elapsed=243667ms), re-registered the peer, and traffic returned (22:09:46 rx 4.4 MB). FIX (backend, OptimizedVpnServerService.cs ~L1422): on disconnect, do NOT remove the peer when the same user has a newer active connection on that server (or the peer was re-added after this connection's ConnectedAt); better: the client sends its session/connection id and only that session's peer is removed. Test: connect -> reconnect fast -> old disconnect arrives late -> peer still present (wg show on the node) + traffic flows. Then [QA]. Related: xd-1063 (iOS detection took 4 min).\n\n--- [iOS] 2026-10-01 app-side mitigation ---\nDONE on development a39154d6 (ConnectionViewModel.logDisconnectionToBackend): a disconnect the user did not ask for waits 6 s and is NOT reported if the app is connected/connecting again on the same server (log [DISCONNECT-REPORT] skipped). Only covers new app builds; the backend fix in this task is still needed for 4.2/4.3.1 users. UNBUILT.\n\n[CTO 2026-10-01T17:01:42Z] CEO 1 Oct, new report: 'kept on for a long time \u2192 my internet breaks, I must turn the VPN off to get it back' \u2014 the backend half of this ticket (do not remove the peer of a NEWER active connection on disconnect) is still open and is the fix for store users; app log requested from the CEO via xd-1235.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-09-30T22:11:04Z",
       "createdDate": "2026-09-30",
-      "completedDate": null,
+      "completedDate": "2026-10-01",
       "handoffTo": "[QA]",
-      "dueBy": "2026-10-07T22:11:04Z"
+      "dueBy": "2026-10-07T22:11:04Z",
+      "completedAt": "2026-10-01",
+      "completedBy": "[BACKEND]",
+      "resolution": "[BACKEND 2026-10-01T17:18:12Z] Server side fixed on development 137328a (keep the peer while another tunnel of the user is active on the server; close the named/oldest row); tests 170/170; QA xd-1236; CEO READY TO SHIP row added. App-side mitigation already on branch ios/trial-at-signup (xd-1232).",
+      "resultingHandoff": "xd-1236 to [QA]; CEO card row"
     },
     {
       "id": "xd-1197",
@@ -37196,6 +37210,18 @@
       "status": "pending",
       "priority": "P0",
       "createdAt": "2026-10-01T17:01:47Z",
+      "createdDate": "2026-10-01",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1236",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: [P1] xd-1196 server side on dev: late disconnect keeps the newer tunnel's peer (137328a) \u2014 check on dev before the CEO ship",
+      "description": "[BACKEND 2026-10-01T17:18:12Z] FIX on development 137328a (OptimizedVpnServerService + the VpnServerService twin per \u00a79.6): (1) the disconnect closes the ConnectionLogs row the client names (DisconnectRequest.ConnectionLogId) or else the OLDEST active row for user+server \u2014 before, an unordered FirstOrDefault could close the NEW tunnel's row; (2) before RemoveClientAsync, OtherActiveConnectionAsync(server,user,except) \u2014 if the same user still has another ACTIVE row on that server the peer is KEPT and '[disconnect] peer KEPT on {Server} \u2026 (xd-1196)' is logged; the peer is removed only when this was the user's only tunnel there. Tests: LateDisconnectKeepsPeerTests (4) \u2014 170/170 on the brain (/root/reports/eng1001-backend-test2.log). CHECK ON DEV after the redeploy (~20 min): connect (QA account) \u2192 reconnect fast on the same server \u2192 send the OLD session's disconnect (POST /api/servers/{id}/disconnect with its ConnectionLogId, or none) \u2192 dev API log shows 'peer KEPT', the node's wg show still lists the key, traffic flows; then disconnect the last session \u2192 'Removed WireGuard peer'. Then the CEO ship row.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-01T17:18:17Z",
       "createdDate": "2026-10-01",
       "completedDate": null
     }
