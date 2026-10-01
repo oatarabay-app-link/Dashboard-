@@ -11675,8 +11675,20 @@
           "evidence": "[MARKETING 2026-10-01T10:39:07Z] growth run; phone notification sent"
         },
         {
+          "test": "CHECKLIST P1 (today) \u2014 Your crypto payment of 13:42 Beirut (3 USDT, weekly plan) is still not credited: open the NOWPayments dashboard \u2192 Payments \u2192 that payment \u2192 read its status. If it says 'finished': press 'Resend IPN' (our server now accepts it \u2014 proven at 18:19 Beirut). If it says 'confirmed' or 'sending': NOWPayments has not paid the money out to our wallet yet \u2014 tell me the status and I will file it with their support text; if you want the plan credited by hand meanwhile, say 'credit my weekly plan' (that is a production change, so it needs your yes).",
+          "verify": "orders.status = completed for CVN-MUPEKAD7-CG24 + a 'NOWPayments v1.0' POST answered 200 in nginx website_ssl_access.log",
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "verifiedByRaw": "none",
+          "verifiedDate": null,
+          "evidence": "[CEO office live chat 2026-10-01 15:20Z (18:20 Beirut)] measured: order pending since 10:39:56Z; webhook rejected twice (10:40:56Z, 10:42:31Z, before the 10:52Z hotfix); no notice since; fix proven live 15:19Z."
+        },
+        {
           "test": "INCIDENT FIXED [CTO 2026-10-01T11:11Z] \u2014 Crypto payments were never confirmed: our NOWPayments webhook rejected EVERY real notice ('Signature mismatch'), because nested fields were dropped before checking the signature. Found on the CEO's own payment (Premium Weekly, order CVN-MUPEKAD7-CG24, 3 USDT BSC paid 10:42Z, NOWPayments status 'confirmed'). Hotfix live 10:52Z (production b6b0acb71). The CEO's order completes when NOWPayments sends 'finished'; checked again 11:31Z. Website polish live too (0785a6ce0): centred hero, real connected screen with breathing green light, real Double VPN screen.",
-          "met": false
+          "met": false,
+          "evidence": "[CEO office live chat 2026-10-01 15:20Z (18:20 Beirut)] RE-MEASURED: the fix is live \u2014 a signed test notice with a nested field (for an order that does not exist) now answers 404 'Unknown order' instead of 401 'Invalid signature' (probe from inside the website container, secret never printed). NOWPayments has NOT called our webhook since its two rejected notices at 10:40:56Z and 10:42:31Z (nginx website_ssl_access.log; only our own curl probes after that). Order CVN-MUPEKAD7-CG24 (Premium Weekly, 2.99, gm@applinkoffshore.com, invoice 6085909453) is still 'pending' (updated 10:39:56Z); no Subscriptions row, no API Payments row, no email. Also measured: a completed crypto payment sends NO confirmation email today (webhook route and the API's crypto/record endpoint have no mail step) \u2192 xd below. | ",
+          "verify": "brain: docker exec -i caspervpn-postgres psql -U casper_prod -d caspervpn_website -At -c \"SELECT status FROM orders WHERE order_number='CVN-MUPEKAD7-CG24'\" \u2192 completed; nginx website_ssl_access.log \u2192 a 'NOWPayments v1.0' POST with 200 after 10:52Z"
         },
         {
           "test": "READY TO SHIP \u2014 the data meter stops charging the wrong account when a phone switches accounts: the server now re-checks who owns each tunnel key every minute and moves the usage row to the current owner (xd-1208) \u00b7 why: since 30 Sep 14:23Z one Los Angeles row charged the free test account for the App Review account's traffic and the hourly 'wrong account' check failed 21 runs in a row; any real customer who signs into a second account on the same phone would be billed for the other \u00b7 tested on dev: built on the main server from the development branch \u2014 0 errors, 166 of 166 tests pass; the dev server redeployed from development at 11:13:13Z (clone 1dd4cd140 contains f6aba5a; /health 200; the running dll contains LookupKeyOwnersAsync; wg-sync polling, 0 moved keys on dev) healthy \u00b7 rollback: /root/deploy_api.sh keeps a rollback image tag; one command puts the previous build back \u00b7 ships with the usual backend path (/root/deploy_api.sh on the main server, commit 3c3fc4a).",
@@ -37106,9 +37118,32 @@
       "createdAt": "2026-10-01T11:21:19Z",
       "createdDate": "2026-10-01",
       "completedDate": null
+    },
+    {
+      "id": "xd-1232",
+      "from": "[CEO]",
+      "to": "[WEBSITE]",
+      "title": "Handoff from CEO: [P1] A completed crypto payment sends no email and a rejected payment notice is never re-requested \u2014 add a receipt email and a fallback that re-checks pending crypto orders with NOWPayments",
+      "description": "[CEO office live chat 2026-10-01 15:20Z (18:20 Beirut)] MEASURED on production (read-only): (1) website/app/api/payments/webhooks/nowpayments/route.ts and the API's POST /api/payments/crypto/record contain no mail step \u2014 a customer who pays by crypto gets no confirmation; the CEO's own payment today ('money deducted, no mail') is the first real case. (2) NOWPayments called the webhook twice (10:40:56Z, 10:42:31Z), got 401 from the old signature code, and has not called again since the 10:52Z hotfix (b6b0acb71) \u2014 a rejected notice is lost unless someone presses 'Resend IPN' in their dashboard. Order CVN-MUPEKAD7-CG24 still 'pending' at 15:19Z. ASK: (a) send one plain receipt email (kind 'crypto_receipt', logged in transactional_emails) when an order completes \u2014 from the webhook path and from the .NET sync result; (b) a fallback for pending crypto orders older than 1 h: ask NOWPayments for the payment status (GET /v1/payment/<payment_id>; store payment_id at checkout or resolve it from the invoice) and complete the order when it reads 'finished' \u2014 never on any other status; (c) a row in RoutineRuns when a webhook is rejected (401/404) so the next run sees it. Build on development, QA on dev, then a READY TO SHIP row. Then \u2192 [QA].",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-01T15:20:02Z",
+      "createdDate": "2026-10-01",
+      "completedDate": null
     }
   ],
   "importantNotes": [
+    {
+      "id": "note-ceo-office-20261001-1520",
+      "type": "ceo",
+      "priority": "P1",
+      "author": "[CEO]",
+      "date": "2026-10-01",
+      "createdAt": "2026-10-01T15:20:00Z",
+      "resolved": false,
+      "title": "[CEO office, 18:20 Beirut 1 Oct] Your 13:42 crypto payment is still not credited \u2014 the server-side bug is fixed and proven; NOWPayments has not re-sent the notice; one click in their dashboard (Resend IPN) should finish it",
+      "body": "Measured at 18:19 Beirut: our server now accepts NOWPayments' notices (the 13:52 fix is live \u2014 tested with a signed test notice). NOWPayments sent two notices at 13:40 and 13:42, both rejected by the old code, and none since. Your weekly order is still marked pending; no plan was credited and no email went out \u2014 and today no email goes out even on a successful crypto payment (handed to Website to add). What to do: in the NOWPayments dashboard open the 13:42 payment; if its status is 'finished', press 'Resend IPN'; if it is 'confirmed' or 'sending', the money has not reached our wallet yet \u2014 tell me the status. Details are on the dashboard."
+    },
     {
       "id": "note-qa-20261001-correction",
       "type": "qa",
