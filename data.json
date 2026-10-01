@@ -11677,6 +11677,46 @@
         {
           "test": "INCIDENT FIXED [CTO 2026-10-01T11:11Z] \u2014 Crypto payments were never confirmed: our NOWPayments webhook rejected EVERY real notice ('Signature mismatch'), because nested fields were dropped before checking the signature. Found on the CEO's own payment (Premium Weekly, order CVN-MUPEKAD7-CG24, 3 USDT BSC paid 10:42Z, NOWPayments status 'confirmed'). Hotfix live 10:52Z (production b6b0acb71). The CEO's order completes when NOWPayments sends 'finished'; checked again 11:31Z. Website polish live too (0785a6ce0): centred hero, real connected screen with breathing green light, real Double VPN screen.",
           "met": false
+        },
+        {
+          "test": "READY TO SHIP \u2014 the data meter stops charging the wrong account when a phone switches accounts: the server now re-checks who owns each tunnel key every minute and moves the usage row to the current owner (xd-1208) \u00b7 why: since 30 Sep 14:23Z one Los Angeles row charged the free test account for the App Review account's traffic and the hourly 'wrong account' check failed 21 runs in a row; any real customer who signs into a second account on the same phone would be billed for the other \u00b7 tested on dev: built on the main server from the development branch \u2014 0 errors, 166 of 166 tests pass; the dev server redeployed from development at 11:13:13Z (clone 1dd4cd140 contains f6aba5a; /health 200; the running dll contains LookupKeyOwnersAsync; wg-sync polling, 0 moved keys on dev) healthy \u00b7 rollback: /root/deploy_api.sh keeps a rollback image tag; one command puts the previous build back \u00b7 ships with the usual backend path (/root/deploy_api.sh on the main server, commit 3c3fc4a).",
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "verifiedByRaw": "none",
+          "verifiedDate": null,
+          "evidence": "[BACKEND 2026-10-01T11:15:17Z] prepared by the engineering run; measured row 4054e629 (Los Angeles 10.66.67.25, charged to 4f9a04c4 applinksarl.offshore, key owned by 015bb891 claude-dev); QA xd on dev below.",
+          "verify": "docker logs caspervpn-api --since 2h | grep -c '[wg-sync][key-moved]' (>=1 right after the deploy \u2014 the Los Angeles row); then RoutineRuns wg-wrong-row = ok at the next :23"
+        },
+        {
+          "test": "READY TO SHIP \u2014 two small files for the main server's routine folder: (1) the hourly 'wrong account' check now writes WHICH row, which server and which two accounts into the Details column the admin Operations tab shows (today that column is empty and the list sits only in the Report column) \u00b7 (2) the new activation-funnel query (sign-up \u2192 verified \u2192 first try \u2192 first success per week, with control columns and a by-country table) saved where the task asks for it \u00b7 why: xd-1208 ask 3 and task activation-first-connection-funnel row 1 \u00b7 tested on dev: both queries ran read-only on the production database on 1 Oct and returned valid output (1 wrong row named; 8 weeks of funnel) \u00b7 rollback: put back the previous file from git \u00b7 install = copy infrastructure/scripts/wg_wrong_row_check.sh and infrastructure/scripts/activation_funnel.sql from git to /opt/caspervpn/ (commits 604440f, 0ab59b1).",
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "verifiedByRaw": "none",
+          "verifiedDate": null,
+          "evidence": "[BACKEND 2026-10-01T11:15:17Z] prepared by the engineering run.",
+          "verify": "ls /opt/caspervpn/activation_funnel.sql; diff -q <(git -C /root/Casper/Casper-Code show origin/production:infrastructure/scripts/wg_wrong_row_check.sh) /opt/caspervpn/wg_wrong_row_check.sh; next wg-wrong-row RoutineRuns row has Details not null"
+        },
+        {
+          "test": "READY TO SHIP \u2014 three small website fixes in one deploy: (1) a typing mistake on the checkout page that has silently stopped the website from deploying by itself since 30 Sep 22:56Z (xd-1211); (2) the download page's browser title and search snippet say iPhone, iPad and Mac today, with Android, Windows and Linux 'coming soon' \u2014 the page body already does (xd-1140); (3) blog share images carry ONE cache rule (1 hour) instead of two (a changed image could stay cached for a year) (xd-1154) \u00b7 why: without (1) every production push needs a manual deploy by hand \u00b7 tested on dev: full type check 0 errors and the site built on the main server from the merged tree (/root/reports/eng1001-website-tsc2.log); dev site: dev.caspervpn.com redeployed 11:13:13Z \u2014 /og/no-log-vpn answers ONE cache-control 'public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400'; /download title 'Download CasperVPN \u2014 iPhone, iPad & Mac'; /checkout 200 \u00b7 rollback: git revert of commits f6aba5a, 50aa41a, 20c9d12 \u00b7 ships by the website path (push to production \u2192 deploy-website workflow, which this fix un-breaks).",
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "verifiedByRaw": "none",
+          "verifiedDate": null,
+          "evidence": "[WEBSITE 2026-10-01T11:15:17Z] prepared by the engineering run.",
+          "verify": "curl -sI https://www.caspervpn.com/og/no-log-vpn | grep -ci 'cache-control' -> 1 line with ONE max-age; curl -s https://www.caspervpn.com/download | grep -o '<title>[^<]*' ; GitHub Actions \u2192 Deploy Website \u2192 green run after the push"
+        },
+        {
+          "test": "DECISION \u2014 Test keys for crypto payments on the test website (xd-1202): the test copy now has its own website database (done today, test server only), but it has no NOWPayments keys, so a test crypto checkout still cannot run end to end. Options: (a) you create a NOWPayments SANDBOX account (account-sandbox.nowpayments.io, free), make an API key + IPN secret there and paste them into the test server's secrets file (2 values, I can do the paste if you put them in the vault note on your Mac); (b) keep testing crypto only on the live site with tiny real payments. Advice: (a) \u2014 one-time 10 minutes, and every future payment change gets a real dry run before it touches customers.",
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "verifiedByRaw": "none",
+          "verifiedDate": null,
+          "evidence": "[DEVOPS 2026-10-01T11:15:17Z] asked by the engineering run.",
+          "verify": "docker exec caspervpn-dev-website printenv NOWPAYMENTS_API_KEY | wc -c -> >1 on the dev server"
         }
       ],
       "progress": 0,
@@ -15282,7 +15322,7 @@
       "name": "Backend API",
       "status": "yellow",
       "lead": "Dev Team",
-      "currentTask": "2026-10-01 CEO office re-base (10:45Z): 25 tasks \u00b7 99/134 criteria met \u00b7 open P0 handoffs 1",
+      "currentTask": "2026-10-01 engineering run re-base (11:15Z): 25 tasks \u00b7 99/134 criteria met \u00b7 open handoffs 14 \u00b7 open P0 1",
       "blockers": "1",
       "completion": "74",
       "launchCompletion": "74",
@@ -15293,19 +15333,19 @@
       "launch": 62,
       "lastSession": "2026-04-01",
       "currentStatus": "xd-322 COMPLETE. 22 admin tables live in DB. Rate-limiting 5req/sec auth policy operational. Multi-hop 4 endpoints active. Stripe code ready, needs prod keys in env.",
-      "lastTriggered": "2026-09-20T22:21:32Z"
+      "lastTriggered": "2026-10-01T11:15:17Z"
     },
     "devops": {
       "name": "DevOps & Infra",
       "status": "yellow",
       "lead": "Unassigned",
-      "currentTask": "2026-10-01 CEO office re-base (10:45Z): 26 tasks \u00b7 72/181 criteria met \u00b7 open P0 handoffs 1",
+      "currentTask": "2026-10-01 engineering run re-base (11:15Z): 26 tasks \u00b7 72/181 criteria met \u00b7 open handoffs 19 \u00b7 open P0 1",
       "blockers": "1",
       "completion": "40",
       "progress": 98,
       "launchCompletion": "40",
       "lastSession": "2026-03-16",
-      "lastTriggered": "2026-09-20T22:21:32Z",
+      "lastTriggered": "2026-10-01T11:15:17Z",
       "notes": "2026-09-21 [CTO] re-based by the board sweep (CEO golden rule): completion = criteria met / total on tasks this department owns (multi-owner tasks count for each owner); blockers = open P0 handoffs to this department. Previous text kept in git history."
     },
     "android": {
@@ -15337,12 +15377,12 @@
       "name": "Website",
       "status": "red",
       "lead": "Dev Team",
-      "currentTask": "2026-10-01 CEO office re-base (10:45Z): 7 tasks \u00b7 28/41 criteria met \u00b7 open P0 handoffs 0",
+      "currentTask": "2026-10-01 engineering run re-base (11:15Z): 7 tasks \u00b7 28/41 criteria met \u00b7 open handoffs 2 \u00b7 open P0 0",
       "blockers": "0",
       "completion": "68",
       "launchCompletion": "68",
       "lastSessionAt": "2026-03-30T20:00:00Z",
-      "lastTriggered": "2026-09-20T22:21:32Z",
+      "lastTriggered": "2026-10-01T11:15:17Z",
       "notes": "2026-09-28 [QA] re-based at QA exit (golden rule 8): completion = criteria met / total on tasks this department owns (multi-owner tasks count for each owner); blockers = open P0 handoffs to it."
     },
     "qa": {
@@ -15398,12 +15438,12 @@
       "name": "CTO Office",
       "status": "yellow",
       "lead": "Waqar",
-      "currentTask": "2026-10-01 CEO office re-base (10:45Z): 36 tasks \u00b7 149/229 criteria met \u00b7 open P0 handoffs 0",
+      "currentTask": "2026-10-01 engineering run re-base (11:15Z): 36 tasks \u00b7 149/229 criteria met \u00b7 open handoffs 2 \u00b7 open P0 0",
       "blockers": "0",
       "completion": "65",
       "launchCompletion": "65",
       "lastSessionAt": "2026-09-28T22:40:35Z",
-      "lastTriggered": "2026-09-20T22:21:32Z",
+      "lastTriggered": "2026-10-01T11:15:17Z",
       "notes": "2026-09-21 [CTO] re-based by the board sweep (CEO golden rule): completion = criteria met / total on tasks this department owns (multi-owner tasks count for each owner); blockers = open P0 handoffs to this department. Previous text kept in git history."
     },
     "ceo": {
@@ -35576,12 +35616,16 @@
       "to": "[WEBSITE]",
       "title": "Handoff from QA: [P2] /download still says 'Available on every major platform' and shows Linux as installable",
       "description": "[CEO office 2026-09-30] dueBy set by the 7-day rule (xdPolicy: createdAt + 7 d; already past \u2192 7 Oct). MEASURED 2026-09-29: https://www.caspervpn.com/download headline 'Available on every major platform. One account, all your devices protected.' and the Linux card reads 'CLI & GUI \u00b7 Kernel WireGuard \u00b7 Rust CLI \u00b7 .deb / .rpm / AUR \u00b7 View Install Guide' with no 'coming soon', while /apps/linux says 'Coming Soon \u2014 Not available yet \u2014 these are the packages we plan to ship' and the stores have nothing (snapcraft.io/caspervpn 404; Flathub search 'caspervpn' 0 CasperVPN hits; AUR 0). Android and Windows cards correctly say 'Coming soon'; macOS points to the App Store (Apple-silicon Macs run the iPhone app) \u2014 fine. ASK: change the headline to what is true today (iPhone, iPad, Apple-silicon Mac) and mark the Linux card 'Coming soon'. This is gtm-03 criterion 7. QA re-checks with: curl -s https://www.caspervpn.com/download | grep -c 'every major platform' -> 0.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-09-29T20:02:54Z",
       "createdDate": "2026-09-29",
-      "completedDate": null,
-      "dueBy": "2026-10-07T18:00:00Z"
+      "completedDate": "2026-10-01",
+      "dueBy": "2026-10-07T18:00:00Z",
+      "completedAt": "2026-10-01",
+      "completedBy": "[WEBSITE]",
+      "resolution": "[WEBSITE 2026-10-01T11:15:17Z] Headline already true on the live site since the design-v2 ship (grep 'every major platform' = 0, Linux under 'Coming soon'); the page's <title>/description still promised all platforms \u2192 fixed on development 50aa41a; QA xd-1225; CEO ship row 69.",
+      "resultingHandoff": "xd-1225 to [QA]; CEO card row 69"
     },
     {
       "id": "xd-1141",
@@ -35800,12 +35844,16 @@
       "to": "[WEBSITE]",
       "title": "Handoff from QA: [QA] /og/<slug> sends two Cache-Control values (1-year immutable in front of the route's own)",
       "description": "[CEO office 2026-09-30] dueBy set by the 7-day rule (xdPolicy: createdAt + 7 d; already past \u2192 7 Oct). QA 2026-09-29: curl -sI https://www.caspervpn.com/og/no-log-vpn -> 'Cache-Control: public, immutable, no-transform, max-age=31536000, public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400'. The route's value (blog-hero-image-system AC2) is there, but another layer (nginx or Next) prepends immutable + 1 year, so a changed hero can stay cached for a year. Send one Cache-Control value. Hand back to [QA].",
-      "status": "pending",
+      "status": "completed",
       "priority": "P3",
       "createdAt": "2026-09-29T21:35:47Z",
       "createdDate": "2026-09-29",
-      "completedDate": null,
-      "dueBy": "2026-10-07T18:00:00Z"
+      "completedDate": "2026-10-01",
+      "dueBy": "2026-10-07T18:00:00Z",
+      "completedAt": "2026-10-01",
+      "completedBy": "[WEBSITE]",
+      "resolution": "[WEBSITE 2026-10-01T11:15:17Z] Cause found (next/og ImageResponse default header appended to the route's own); fixed on development 20c9d12 (one value); QA xd-1225; CEO ship row 69.",
+      "resultingHandoff": "xd-1225 to [QA]; CEO card row 69"
     },
     {
       "id": "xd-1155",
@@ -36109,7 +36157,7 @@
       "from": "[CEO]",
       "to": "[BACKEND]",
       "title": "Handoff from CEO: [P1] Activation funnel: sign-up \u2192 verified \u2192 first connect attempt \u2192 first success, weekly, by country and app version (task activation-first-connection-funnel)",
-      "description": "[BOARD 2026-10-01, decision 1] Raised to P0: 6 of the 17 real sign-ups of the last 7 days came from RU (4) and CN (2), where we have passed no traffic since 7 Sep (claude:blocked-users), and real connections fell from 43/day (26 Sep) to 4/day (30 Sep). The board needs this funnel BY COUNTRY with failure reasons before it approves any paid acquisition. Control: DE/LB/AE must show normal. | [CEO office 2026-09-30] dueBy set by the 7-day rule (xdPolicy: createdAt + 7 d; already past \u2192 7 Oct). CEO office 2026-09-30: 117 of 285 real users have ever connected (41%); 18 in the last 7 days (6%). We cannot say why the other 168 never connected because no row carries the app version and the funnel is not computed anywhere. Build the 4 criteria on task activation-first-connection-funnel (ICE 384): the saved query with a control column, the AppVersion/OS columns + header (coordinate the header with [iOS] \u2014 one small change in the next build), the by-country split with top failure reason, and the numbers on the Monday KPI report + admin Marketing page (both surfaces, marketing T30). Populations named on every number (\u00a77.2.1). Then hand to [QA].",
+      "description": "[BOARD 2026-10-01, decision 1] Raised to P0: 6 of the 17 real sign-ups of the last 7 days came from RU (4) and CN (2), where we have passed no traffic since 7 Sep (claude:blocked-users), and real connections fell from 43/day (26 Sep) to 4/day (30 Sep). The board needs this funnel BY COUNTRY with failure reasons before it approves any paid acquisition. Control: DE/LB/AE must show normal. | [CEO office 2026-09-30] dueBy set by the 7-day rule (xdPolicy: createdAt + 7 d; already past \u2192 7 Oct). CEO office 2026-09-30: 117 of 285 real users have ever connected (41%); 18 in the last 7 days (6%). We cannot say why the other 168 never connected because no row carries the app version and the funnel is not computed anywhere. Build the 4 criteria on task activation-first-connection-funnel (ICE 384): the saved query with a control column, the AppVersion/OS columns + header (coordinate the header with [iOS] \u2014 one small change in the next build), the by-country split with top failure reason, and the numbers on the Monday KPI report + admin Marketing page (both surfaces, marketing T30). Populations named on every number (\u00a77.2.1). Then hand to [QA].\n\n[BACKEND 2026-10-01T11:15:17Z] PARTIAL \u2014 criterion 1 built, 2 measured, 3 needs a schema change, 4 is Marketing/Admin. (1) infrastructure/scripts/activation_funnel.sql on development 0ab59b1 (install to /opt/caspervpn via CEO card row 68). RUN read-only on production 1 Oct 10:3xZ, cohorts by sign-up week, real users vs unfiltered control: W33 20/31 signups \u2192 12 verified \u2192 9 attempted \u2192 2 succeeded (10%); W34 14/19 \u2192 12 \u2192 10 \u2192 4 (29%); W35 10/61 \u2192 9 \u2192 5 \u2192 0; W36 17/78 \u2192 14 \u2192 8 \u2192 2 (12%); W37 19/72 \u2192 18 \u2192 11 \u2192 4 (21%); W38 18/37 \u2192 17 \u2192 10 \u2192 1 (6%); W39 17/20 \u2192 16 \u2192 11 \u2192 7 (41%); W40 (partial) 4/5 \u2192 2 \u2192 1 \u2192 0. The control works: W35\u2013W37 'all' columns are the bot farm (61/78/72 rows vs 10/17/19 real). (3) By country, real sign-ups of the last 8 weeks, never-connected share: unknown-country 15 of 15 (100%, no failure rows), IR 15/15 (100%, top reason 'unknown' \u00d7185), NG 7/7, LB 3/3, RU 21/26 (81%, 'cc-wg-nohandshake-cf' \u00d7114), CN 7/9 (78%, 'unknown' \u00d761), AE 3/4, CA 3/5, US 4/5. Populations named in the query header. (2) OPEN: ConnectFailureEvents already has AppVersion/BuildNumber (xd-954); ConnectionLogs has NO app-version column \u2014 needs a migration + the iOS header (coordinate with [iOS]); not done this run. (4) OPEN: Monday KPI report + admin Marketing page \u2192 [MARKETING]/[ADMIN-PANEL] once (1) is installed. Reading: 'unknown' is the top failure reason in IR/CN/NG \u2014 the failure categories do not explain the never-connected users; that is a measurement gap to fix before a product change.",
       "status": "pending",
       "priority": "P0",
       "createdAt": "2026-09-30T16:16:45Z",
@@ -36301,12 +36349,16 @@
       "to": "[ADMIN]",
       "title": "Handoff from CEO: [P3] Admin-panel probes recipe mints a JWT the production API rejects: audience must be 'CasperVPN' (env Jwt__Audience), not 'CasperVPN-Users'",
       "description": "[CEO office 2026-09-30] dueBy set by the 7-day rule (xdPolicy: createdAt + 7 d; already past \u2192 7 Oct). Measured by the CEO office 2026-09-30 21:12Z: memory/departments/admin-panel/skill/references/probes.md \u00a7JWT says aud 'CasperVPN-Users' (appsettings.json:46). The running container has Jwt__Audience=CasperVPN (docker exec caspervpn-api printenv Jwt__Audience), so a token minted per the recipe gets 401 on every /api/admin route \u2014 a wrong-instrument false 'broken' (preflight traps 2026-09-22). With aud=CasperVPN all 21 probed admin endpoints answered 200. Fix the recipe in place (edit the row, bump the date) and add: read the audience from the container first. Vault first, then cloud (CLAUDE.md \u00a711.7).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P3",
       "createdAt": "2026-09-30T21:25:41Z",
       "createdDate": "2026-09-30",
-      "completedDate": null,
-      "dueBy": "2026-10-07T18:00:00Z"
+      "completedDate": "2026-10-01",
+      "dueBy": "2026-10-07T18:00:00Z",
+      "completedAt": "2026-10-01",
+      "completedBy": "[ADMIN-PANEL]",
+      "resolution": "[ADMIN-PANEL 2026-10-01T11:15:17Z] Recipe fixed in the vault (audience/issuer read from the container + a proof step); QA xd-1229.",
+      "resultingHandoff": "xd-1229 to [QA]"
     },
     {
       "id": "xd-1189",
@@ -36412,12 +36464,16 @@
       "to": "[SECURITY]",
       "title": "Handoff from CTO: [P2] A real password is written in plain text in tools/asc_preflight.py (the App Review demo account) - move it to the credentials lookup",
       "description": "Seen 2026-10-01 by [CTO] while checking who uses the demo account (tools/asc_preflight.py, the login call near line 264). The value is NOT repeated here. ASK: read it from memory/context/credentials.md like the other tools; scrub it from git history if the repo could ever be shared. Do NOT change the demo account's password while Apple is reviewing 4.3.1 (the reviewer signs in with it); rotate after the review, then update App Store Connect's review notes the same day.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-09-30T21:48:17Z",
       "createdDate": "2026-09-30",
-      "completedDate": null,
-      "dueBy": "2026-10-07T21:48:13Z"
+      "completedDate": "2026-10-01",
+      "dueBy": "2026-10-07T21:48:13Z",
+      "completedAt": "2026-10-01",
+      "completedBy": "[SECURITY]",
+      "resolution": "[SECURITY 2026-10-01T11:15:17Z] Password removed from the tool on development 5c38e9a (read from env or credentials.md); rotation after Apple's review stays with the CEO; QA xd-1228.",
+      "resultingHandoff": "xd-1228 to [QA]"
     },
     {
       "id": "xd-1196",
@@ -36519,12 +36575,16 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: [P1] Dev cannot test payments or any website database feature \u2014 no website tables, no crypto keys (found while testing crypto renewal)",
       "description": "[CEO office 2026-10-01] dueBy set by the 7-day rule (xdPolicy: createdAt + 7 d). Measured on the dev server 2026-09-30 ~22:20Z: (1) the dev website's DATABASE_URL points at the API database caspervpn_dev, which has NO website tables (only restricted_countries; no orders, subscriptions, transactional_emails, blog_posts, affiliates) -> checkout, blog, affiliates, mail log all fail on dev; (2) NOWPAYMENTS_API_KEY, NOWPAYMENTS_IPN_SECRET and CRYPTOSYNC_SHARED_SECRET are EMPTY on the dev website, and CryptoSync__SharedSecret is empty on the dev API (renewal-switch/record answer 503) -> no crypto test is possible on dev; this also blocks QA xd-1190 (xd-1172 on dev). Proposal: a separate dev website database (prisma db push from website/prisma/schema.prisma) wired in infrastructure/dev-vps/docker-compose.dev-vps.yml; a dev-only CryptoSync secret in the dev .env mapped to website + api; NOWPayments sandbox keys (needs a NOWPayments sandbox account \u2014 CEO). Workaround used meanwhile: infrastructure/scripts/crypto_renewal_e2e_dev.sh (throwaway website + database + a temporary API secret, dev API restored after).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-09-30T22:35:52Z",
       "createdDate": "2026-09-30",
-      "completedDate": null,
-      "dueBy": "2026-10-07"
+      "completedDate": "2026-10-01",
+      "dueBy": "2026-10-07",
+      "completedAt": "2026-10-01",
+      "completedBy": "[DEVOPS]",
+      "resolution": "[DEVOPS 2026-10-01T11:15:17Z] Dev website database + dev sync secret done on the dev server (compose c9adaec on development); NOWPayments sandbox keys need the CEO (DECISION row 70); QA xd-1227.",
+      "resultingHandoff": "xd-1227 to [QA]; CEO card row 70"
     },
     {
       "id": "xd-1203",
@@ -36604,12 +36664,16 @@
       "to": "[BACKEND]",
       "title": "Handoff from CEO: [P2] The hourly 'wrong account charged' check has failed 9 hours in a row (since 14:23Z) \u2014 find the row, clear it, and make the alert name the row",
       "description": "[CEO office 2026-09-30 23:15Z (02:15 Beirut 1 Oct, hourly run)] MEASURED on the brain (read-only): RoutineRuns 'wg-wrong-row' = fail at 14:23, 15:23, 16:23, 17:23, 18:23, 19:23, 20:23, 21:23 (2 rows) and 22:23Z (1 row); ok at every hourly run before 14:23Z back to 28 Sep. Summary: '1 usage row(s) charged to the WRONG account right now \u2014 a customer may be billed or cut for someone else's traffic'. The Details column of every one of these rows is EMPTY, so nobody can tell WHICH row from the routine itself. HYPOTHESIS (not measured by the office): it is the Los Angeles pair QA measured at 21:1xZ in xd-1182 \u2014 usage row says the free test account 4f9a04c4 (114.8%) while the live key BgoAQwQD.. belongs to the App Review demo account 015bb891 (the demo account signed in on the CEO's phone at 13:32Z, the check started failing at 14:23Z). ASK: (1) run the xd-1065 wrong-row query, name the row(s) and the two accounts; (2) clear it the way xd-1116 was cleared (move/close the stale usage row, never delete history) \u2014 a production data change needs CEO YES first unless it is our own test accounts only, then say so; (3) make the routine write the offending rows into RoutineRuns.Details (user ids, server, address) so the next reader does not have to guess; (4) hand to [QA] to confirm the routine reads ok again. The office UN-TICKED row 8 of ops-scheduled-routines (it was ticked at 15:23Z while that row was already fail).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-09-30T23:19:30Z",
       "createdDate": "2026-09-30",
-      "completedDate": null,
-      "dueBy": "2026-10-07"
+      "completedDate": "2026-10-01",
+      "dueBy": "2026-10-07",
+      "completedAt": "2026-10-01",
+      "completedBy": "[BACKEND]",
+      "resolution": "[BACKEND 2026-10-01T11:15:17Z] (1) Row named: WireGuardPeerUsages 4054e629, Los Angeles 10.66.67.25, key BgoAQwQD.., charged to 4f9a04c4 (applinksarl.offshore@gmail.com, free test) \u2014 key owned by 015bb891 (claude-dev@caspervpn.com, App Review account). Both are our own accounts; the office hypothesis (xd-1182 LA pair) is CONFIRMED by the query. (2) Not cleared by hand: root cause is code (the sync never re-checks a key's owner on the fast path), fixed on development 3c3fc4a \u2014 the row re-homes itself on the first poll after the deploy (READY TO SHIP row 67 on the CEO card). (3) The routine now writes the rows into RoutineRuns.Details (604440f; install row 68). (4) QA xd-1224.",
+      "resultingHandoff": "xd-1224 to [QA]; CEO card rows 67, 68"
     },
     {
       "id": "xd-1209",
@@ -36647,12 +36711,16 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: [P2] deploy-website.yml did not deploy production push 66fee573 (1 Oct ~00:09Z)",
       "description": "Pushed website/** to production at ~00:09Z; 10 min later the brain clone was still at 9093089d8 and caspervpn.com/social/... 404. Deployed by hand with the workflow's steps. Find why (no run? failed build-check? environment approval? concurrency cancel by the auto-sync merge cdfe65c5e?). | [CEO office 2026-10-01] dueBy set by the 7-day rule (createdAt + 7 d).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-10-01T00:31:30Z",
       "createdDate": "2026-10-01",
-      "completedDate": null,
-      "dueBy": "2026-10-08T00:00:00Z"
+      "completedDate": "2026-10-01",
+      "dueBy": "2026-10-08T00:00:00Z",
+      "completedAt": "2026-10-01",
+      "completedBy": "[DEVOPS]",
+      "resolution": "[DEVOPS 2026-10-01T11:15:17Z] Root cause: the workflow's blocking tsc step fails on a checkout-page type error shipped 22:54Z 30 Sep (TS18047) \u2014 no deploy job has run since; fixed on development f6aba5a (tsc 0); ships with CEO row 69; QA xd-1226.",
+      "resultingHandoff": "xd-1226 to [QA]; CEO card row 69"
     },
     {
       "id": "xd-1212",
@@ -36811,6 +36879,78 @@
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-10-01T11:11:47Z",
+      "createdDate": "2026-10-01",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1224",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: [P1] xd-1208 on dev: usage row re-homed when a key moves to another account \u2014 check on dev before the CEO ship (row 67)",
+      "description": "[BACKEND 2026-10-01T11:15:17Z] MEASURED on production (read-only): WireGuardPeerUsages row 4054e629, Los Angeles, 10.66.67.25, key BgoAQwQD.., charged to 4f9a04c4 (applinksarl.offshore@gmail.com, free test account, 114.8%) while WireGuardKeys says the key belongs to 015bb891 (claude-dev@caspervpn.com, the App Review account, signed in on the CEO's phone 30 Sep 13:32Z); LastSyncAt still updating (live) \u2192 the hourly wg-wrong-row check = fail 14:23Z 30 Sep \u2192 10:23Z 1 Oct (21 runs). ROOT CAUSE (code, WireGuardUsageSyncService.cs fast path): the row is found by (PublicKey, ServerId) and the key's OWNER is never re-checked, so when a phone signs into another account and keeps its key (xd-1182) the old account keeps paying. FIX on development 3c3fc4a: one WireGuardKeys owner query per node poll (LookupKeyOwnersAsync); a row whose key owner differs is re-pointed to the owner with log '[wg-sync][key-moved]' and its byte baseline taken from the node's current counters (a zero baseline \u2014 as the xd-1116 re-point branch had \u2014 would bill the whole cumulative counter to the new owner on the next poll; that branch is corrected too). Build proof on the main server: dotnet build 0 errors, dotnet test 166/166 (/root/reports/eng1001-backend-build.log, eng1001-backend-test.log). Dev: 11:13:13Z (clone 1dd4cd140 contains f6aba5a; /health 200; the running dll contains LookupKeyOwnersAsync; wg-sync polling, 0 moved keys on dev). The production row clears itself on deploy (no manual data change was made \u2014 production data needs CEO YES). CHECK ON DEV: (1) dev API healthy after the redeploy (https://api.dev.caspervpn.com/health 200); (2) `docker logs caspervpn-dev-api --since 30m | grep -c 'wg-sync'` shows the sync running; a moved key on dev is unlikely to exist \u2014 the re-home path is exercised only when WireGuardKeys owner \u2260 row user, so the production proof is the first poll after the ship (verify on the READY TO SHIP row); (3) read the diff (git show 3c3fc4a) for the baseline rule. ALSO ask 3 of xd-1208: wg_wrong_row_check.sh now writes the rows as JSON into RoutineRuns.Details (604440f; JSON proven valid on production: 1 row). Then the CEO ship rows 67 and 68.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-01T11:15:23Z",
+      "createdDate": "2026-10-01",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1225",
+      "from": "[WEBSITE]",
+      "to": "[QA]",
+      "title": "Handoff from WEBSITE: [P2] xd-1140 + xd-1154 on dev/live: /download truthful (live already), /og cache-control single value (dev), review before the CEO ship (row 69)",
+      "description": "[WEBSITE 2026-10-01T11:15:17Z] xd-1140 ALREADY LIVE since the design-v2 ship (00:24Z 1 Oct): curl -s https://www.caspervpn.com/download | grep -c 'every major platform' \u2192 0; the Linux card sits under 'Coming soon' with 'Get notified'; iPhone \u00b7 iPad \u00b7 Mac is the only download. The <title> still said 'All Platforms' and the description listed Android/Windows/Linux as downloads \u2192 fixed on development 50aa41a (metadata only). xd-1154 MEASURED live: cache-control = 'public, immutable, no-transform, max-age=31536000, public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400' (two values). CAUSE: ImageResponse (next/og) sets its own default 1-year immutable header; the route passed 'Cache-Control' in options.headers, which was appended, not replaced. FIX 20c9d12: set the header on the response object (replaces every value). The nginx 7d/immutable rule only matches file extensions, not /og/<slug> \u2014 not the cause. VERIFY on dev after the redeploy: curl -sI https://dev.caspervpn.com/og/no-log-vpn | grep -i cache-control \u2192 exactly one value 'public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400'; curl -s https://dev.caspervpn.com/download | grep -o '<title>[^<]*' \u2192 'Download CasperVPN \u2014 iPhone, iPad & Mac | CasperVPN'. Dev state at hand-off: dev.caspervpn.com redeployed 11:13:13Z \u2014 /og/no-log-vpn answers ONE cache-control 'public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400'; /download title 'Download CasperVPN \u2014 iPhone, iPad & Mac'; /checkout 200. Then the CEO ship row 69.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-01T11:15:23Z",
+      "createdDate": "2026-10-01",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1226",
+      "from": "[DEVOPS]",
+      "to": "[QA]",
+      "title": "Handoff from DEVOPS: [P2] xd-1211: why deploy-website stopped \u2014 the workflow's blocking type check fails on production since 30 Sep 22:56Z; fix on development, ships with CEO row 69",
+      "description": "[DEVOPS 2026-10-01T11:15:17Z] MEASURED on the main server: the 22:19Z 30 Sep push DID deploy (sshd: 'Accepted publickey for caspervpn from 172.212.160.52' \u00d72 at 22:21Z = the GitHub-hosted deploy job; brain clone reset 22:21:20Z). The 22:56Z and 00:09Z pushes produced NO deploy connection at all (0 GitHub logins in sshd 22:30Z\u201301:10Z; the only deploy-shaped SSH was the CTO's manual one). So the deploy job never ran \u2192 its prerequisite job failed. deploy-website.yml runs on GitHub-hosted runners ('Build & Type Check Website': npx prisma generate && npx tsc --noEmit, BLOCKING since xd-1062). REPRODUCED: tsc on the production/development checkout tree \u2192 'app/checkout/page.tsx(76,19): error TS18047: selectedPlan is possibly null' \u2014 introduced by 71a17cf/305ea1f (22:54Z 30 Sep, the 'button never greyed out' change), i.e. exactly the first push that stopped deploying; next build does not type-check, so the manual deploys succeeded. FIX on development f6aba5a (unreachable narrowing guard); tsc \u2192 0 errors on the merged tree (/root/reports/eng1001-website-tsc2.log). The Actions run page would show the red 'Build & Type Check Website' job (no API access from the VM \u2014 repo private, PAT dead). Side findings: (a) the self-hosted runner's 'Build & Test .NET Backend' CI job is FAILING on every run (23:53Z, 00:33Z, 00:55Z 1 Oct) while the same tree builds and tests 166/166 on the brain \u2014 not investigated this run, [DEVOPS] next run; (b) hourly sshd 'signature algorithm ssh-rsa not in PubkeyAcceptedAlgorithms' refusals come from 139.19.117.130 (a scanner, root login attempts) \u2014 refused correctly, not GitHub. VERIFY after the CEO ship: push to production \u2192 GitHub Actions 'Deploy Website' green \u2192 brain clone HEAD moves by itself (git -C /root/Casper/Casper-Code log -1) and caspervpn-website is recreated without a manual deploy.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-01T11:15:23Z",
+      "createdDate": "2026-10-01",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1227",
+      "from": "[DEVOPS]",
+      "to": "[QA]",
+      "title": "Handoff from DEVOPS: [P1] xd-1202 on dev: the test website now has its own database (29 tables) and a test-only sync secret \u2014 re-run xd-1190's dev checks (checkout/orders) on dev.caspervpn.com",
+      "description": "[DEVOPS 2026-10-01T11:15:17Z] DONE on the dev server only (no production change): (1) database caspervpn_website_dev created (owner casper_dev) and the Prisma schema pushed from the deps-stage image \u2192 29 tables (orders, subscriptions, blog_posts, affiliates, transactional_emails, \u2026); (2) FOUND on the way: the dev website's old DATABASE_URL was not just the wrong database \u2014 it was an INVALID url (the raw-interpolated dev password needs URL-encoding: Prisma 'P1013 invalid port number'), so every website DB call on dev failed before any table was missing; the compose now takes the whole url from .env (WEBSITE_DATABASE_URL, encoded; a missing value fails the deploy \u2014 same ':?' pattern as production), development c9adaec; (3) dev-only CRYPTOSYNC_SHARED_SECRET generated into the dev .env (random, never printed) \u2014 compose already maps it to the website and to the API (CryptoSync__SharedSecret), so after the redeploy renewal-switch/record answer 401 on a bad signature instead of 503; (4) NOWPayments sandbox keys still empty \u2192 DECISION row 70 on the CEO card. .env backed up (/root/Casper/Casper-Code/.env.bak-xd1202-*). Dev redeploy from development: dev.caspervpn.com redeployed 11:13:13Z \u2014 /og/no-log-vpn answers ONE cache-control 'public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400'; /download title 'Download CasperVPN \u2014 iPhone, iPad & Mac'; /checkout 200; after the redeploy: website DATABASE_URL database = caspervpn_website_dev (29 tables), CryptoSync secret present in both the dev website and the dev API (env length 64). VERIFY: docker exec caspervpn-dev-website printenv DATABASE_URL (database caspervpn_website_dev); docker exec caspervpn-dev-postgres psql -U casper_dev -d caspervpn_website_dev -c '\\dt' \u2192 29 tables; docker exec caspervpn-dev-api printenv CryptoSync__SharedSecret | wc -c \u2192 >1; POST https://dev.caspervpn.com/api/payments/checkout with a plan \u2192 not a database error (crypto still 'coming soon' until the sandbox keys).",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-01T11:15:23Z",
+      "createdDate": "2026-10-01",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1228",
+      "from": "[SECURITY]",
+      "to": "[QA]",
+      "title": "Handoff from SECURITY: [P2] xd-1195: review-account password removed from tools/asc_preflight.py (development 5c38e9a) \u2014 verify 0 occurrences and that the tool still runs",
+      "description": "[SECURITY 2026-10-01T11:15:17Z] tools/asc_preflight.py now reads the App Review account's password from CASPER_REVIEW_PW or from memory/context/credentials.md on the CEO's Mac (the row whose email is the review account) and skips the marketing-vs-API check with a warning when neither is available. Parser proven against the real credentials file on the Mac (value found, never printed); AST walk confirms both functions; secret string absent from the file. STILL OPEN, for the CEO after Apple's review of 4.3.1 (never during): rotate the demo account's password (production data \u2192 CEO YES), update App Store Connect's review notes the same day; the old value stays in git history (a history rewrite = force-push, forbidden) \u2014 rotation is what retires it. VERIFY on development: git show 5c38e9a:tools/asc_preflight.py | grep -c '<the old password from credentials.md>' \u2192 0; python3 tools/asc_preflight.py --skip-network runs.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-01T11:15:23Z",
+      "createdDate": "2026-10-01",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1229",
+      "from": "[ADMIN-PANEL]",
+      "to": "[QA]",
+      "title": "Handoff from ADMIN-PANEL: [P3] xd-1188: admin probes recipe mints the JWT with the container's audience/issuer (vault probes.md updated) \u2014 verify one minted token answers 200",
+      "description": "[ADMIN-PANEL 2026-10-01T11:15:17Z] memory/departments/admin-panel/skill/references/probes.md \u00a7JWT rewritten (date bumped to 2026-10-01): reads Jwt__SecretKey, Jwt__Audience and Jwt__Issuer from the running container (measured 1 Oct: Audience=CasperVPN, Issuer=CasperVPN) and mints with those; adds the proof step (one GET /api/admin/users?pageSize=1 must answer 200 before the token is used as an instrument). Vault first; cloud skill sync follows the CTO's skill-creator pass (xd-1130). VERIFY: follow the recipe on the brain \u2192 200.",
+      "status": "pending",
+      "priority": "P3",
+      "createdAt": "2026-10-01T11:15:23Z",
       "createdDate": "2026-10-01",
       "completedDate": null
     }
