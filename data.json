@@ -1,6 +1,6 @@
 {
-  "lastUpdated": "2026-10-01T15:59:43Z",
-  "updatedBy": "[CTO] Paris retired (CEO)",
+  "lastUpdated": "2026-10-01T16:44:22Z",
+  "updatedBy": "[CTO] crypto wrong-network guard live",
   "overall": {
     "completion": 69,
     "phase": "Phase 2: Go-to-market \u2014 launch plan 30 Sep 2026",
@@ -11682,12 +11682,12 @@
           "verifiedBy": "none",
           "verifiedByRaw": "none",
           "verifiedDate": null,
-          "evidence": "[CEO office live chat 2026-10-01 15:20Z (18:20 Beirut)] measured: order pending since 10:39:56Z; webhook rejected twice (10:40:56Z, 10:42:31Z, before the 10:52Z hotfix); no notice since; fix proven live 15:19Z."
+          "evidence": "[CEO office live chat 2026-10-01 15:20Z (18:20 Beirut)] measured: order pending since 10:39:56Z; webhook rejected twice (10:40:56Z, 10:42:31Z, before the 10:52Z hotfix); no notice since; fix proven live 15:19Z. \u00b7 [CTO live chat 2026-10-01T16:44Z] MEASURED: order CVN-MUPEKAD7-CG24 = completed 16:23:16Z; subscription active until 2026-10-08 16:23Z; webhook log 16:23:14Z 'sending' -> 16:23:16Z 'finished' -> '.NET sync ok: New account created + subscription activated; activation email sent'. Why it was held: invoice was USDT-ERC20, USDT-BEP20 was sent from Binance -> NOWPayments 'Wrong Asset Confirmed'; CEO asked support, support completed it. NOWPayments sent us NO notice while it was held. Ready for QA to tick (only QA ticks)."
         },
         {
           "test": "INCIDENT FIXED [CTO 2026-10-01T11:11Z] \u2014 Crypto payments were never confirmed: our NOWPayments webhook rejected EVERY real notice ('Signature mismatch'), because nested fields were dropped before checking the signature. Found on the CEO's own payment (Premium Weekly, order CVN-MUPEKAD7-CG24, 3 USDT BSC paid 10:42Z, NOWPayments status 'confirmed'). Hotfix live 10:52Z (production b6b0acb71). The CEO's order completes when NOWPayments sends 'finished'; checked again 11:31Z. Website polish live too (0785a6ce0): centred hero, real connected screen with breathing green light, real Double VPN screen.",
           "met": false,
-          "evidence": "[CEO office live chat 2026-10-01 15:20Z (18:20 Beirut)] RE-MEASURED: the fix is live \u2014 a signed test notice with a nested field (for an order that does not exist) now answers 404 'Unknown order' instead of 401 'Invalid signature' (probe from inside the website container, secret never printed). NOWPayments has NOT called our webhook since its two rejected notices at 10:40:56Z and 10:42:31Z (nginx website_ssl_access.log; only our own curl probes after that). Order CVN-MUPEKAD7-CG24 (Premium Weekly, 2.99, gm@applinkoffshore.com, invoice 6085909453) is still 'pending' (updated 10:39:56Z); no Subscriptions row, no API Payments row, no email. Also measured: a completed crypto payment sends NO confirmation email today (webhook route and the API's crypto/record endpoint have no mail step) \u2192 xd below. | ",
+          "evidence": "[CEO office live chat 2026-10-01 15:20Z (18:20 Beirut)] RE-MEASURED: the fix is live \u2014 a signed test notice with a nested field (for an order that does not exist) now answers 404 'Unknown order' instead of 401 'Invalid signature' (probe from inside the website container, secret never printed). NOWPayments has NOT called our webhook since its two rejected notices at 10:40:56Z and 10:42:31Z (nginx website_ssl_access.log; only our own curl probes after that). Order CVN-MUPEKAD7-CG24 (Premium Weekly, 2.99, gm@applinkoffshore.com, invoice 6085909453) is still 'pending' (updated 10:39:56Z); no Subscriptions row, no API Payments row, no email. Also measured: a completed crypto payment sends NO confirmation email today (webhook route and the API's crypto/record endpoint have no mail step) \u2192 xd below. |  \u00b7 [CTO live chat 2026-10-01T16:44Z] MEASURED: order CVN-MUPEKAD7-CG24 = completed 16:23:16Z; subscription active until 2026-10-08 16:23Z; webhook log 16:23:14Z 'sending' -> 16:23:16Z 'finished' -> '.NET sync ok: New account created + subscription activated; activation email sent'. Why it was held: invoice was USDT-ERC20, USDT-BEP20 was sent from Binance -> NOWPayments 'Wrong Asset Confirmed'; CEO asked support, support completed it. NOWPayments sent us NO notice while it was held. Ready for QA to tick (only QA ticks).",
           "verify": "brain: docker exec -i caspervpn-postgres psql -U casper_prod -d caspervpn_website -At -c \"SELECT status FROM orders WHERE order_number='CVN-MUPEKAD7-CG24'\" \u2192 completed; nginx website_ssl_access.log \u2192 a 'NOWPayments v1.0' POST with 200 after 10:52Z"
         },
         {
@@ -11779,6 +11779,16 @@
           "verifiedDate": null,
           "evidence": "[CTO 2026-10-01T16:29:47Z] routine 08 step 7a updated; Migadu account not in credentials.md (marketing skill T31).",
           "verify": "send one mail to support@caspervpn.com; Gmail search 'to:support@caspervpn.com newer_than:1d' in applinks123@gmail.com finds it"
+        },
+        {
+          "test": "DONE \u2014 awaiting QA: Crypto wrong-network guard (CEO YES 1 Oct live chat). Customers now pick coin AND network on our checkout and renewal pages (USDT or USDC on BNB Smart Chain, Bitcoin, Ether); the payment page then accepts only that one coin; a yellow warning names the network as Binance names it. If a payment gets stuck or is part-paid, the customer gets an email and support gets a list, every hour. Live on caspervpn.com since 16:42Z (production faf8571a0).",
+          "verify": "POST https://caspervpn.com/api/payments/checkout {planId:weekly,paymentMethod:crypto,payCurrency:usdterc20} -> invoice page shows 'USDT BSC' only (measured 16:43Z: CVN-MUPRJF0B-LR33, iid 5209540141 'Send USDT on the BSC blockchain'); /var/log/crypto-renewals.log on brain shows unpaidChecked/unpaidEmailed",
+          "met": false,
+          "passed": false,
+          "verifiedBy": "self",
+          "verifiedByRaw": "self",
+          "verifiedDate": null,
+          "evidence": "[CTO live chat 2026-10-01T16:44Z] Smoke on production: /, /checkout, /renew 200; test order stored payCurrency=usdtbsc although usdterc20 was asked (not on the list -> default); invoice page fixed to USDT on BSC. Manual run of the hourly pass 16:43:46Z: unpaidChecked 5, unpaidEmailed 5 (all 5 were team/test orders from the last 48 h), support list sent; errors []."
         }
       ],
       "progress": 0,
@@ -37014,7 +37024,7 @@
       "from": "[CTO]",
       "to": "[QA]",
       "title": "Handoff from CTO: [P0] Re-test a REAL crypto payment end to end after the IPN signature hotfix",
-      "description": "Hotfix b6b0acb71 (lib/nowpayments-sig.ts, recursive key sort). Before it, every real IPN got 401. Check: the CEO's order CVN-MUPEKAD7-CG24 becomes completed with a subscription + API sync + confirmation email once NOWPayments says finished; then one more small real payment. Unit proof: old serialiser turns fee{...} into {}.",
+      "description": "Hotfix b6b0acb71 (lib/nowpayments-sig.ts, recursive key sort). Before it, every real IPN got 401. Check: the CEO's order CVN-MUPEKAD7-CG24 becomes completed with a subscription + API sync + confirmation email once NOWPayments says finished; then one more small real payment. Unit proof: old serialiser turns fee{...} into {}. \u00b7 [CTO live chat 2026-10-01T16:44Z] A REAL payment completed end to end at 16:23Z (CEO's order, see CEO backlog row 66 evidence) \u2014 usable as the P0 evidence.",
       "status": "pending",
       "priority": "P0",
       "createdAt": "2026-10-01T11:11:47Z",
@@ -37134,7 +37144,7 @@
       "from": "[CEO]",
       "to": "[WEBSITE]",
       "title": "Handoff from CEO: [P1] A completed crypto payment sends no email and a rejected payment notice is never re-requested \u2014 add a receipt email and a fallback that re-checks pending crypto orders with NOWPayments",
-      "description": "[CEO office live chat 2026-10-01 15:20Z (18:20 Beirut)] MEASURED on production (read-only): (1) website/app/api/payments/webhooks/nowpayments/route.ts and the API's POST /api/payments/crypto/record contain no mail step \u2014 a customer who pays by crypto gets no confirmation; the CEO's own payment today ('money deducted, no mail') is the first real case. (2) NOWPayments called the webhook twice (10:40:56Z, 10:42:31Z), got 401 from the old signature code, and has not called again since the 10:52Z hotfix (b6b0acb71) \u2014 a rejected notice is lost unless someone presses 'Resend IPN' in their dashboard. Order CVN-MUPEKAD7-CG24 still 'pending' at 15:19Z. ASK: (a) send one plain receipt email (kind 'crypto_receipt', logged in transactional_emails) when an order completes \u2014 from the webhook path and from the .NET sync result; (b) a fallback for pending crypto orders older than 1 h: ask NOWPayments for the payment status (GET /v1/payment/<payment_id>; store payment_id at checkout or resolve it from the invoice) and complete the order when it reads 'finished' \u2014 never on any other status; (c) a row in RoutineRuns when a webhook is rejected (401/404) so the next run sees it. Build on development, QA on dev, then a READY TO SHIP row. Then \u2192 [QA].",
+      "description": "[CEO office live chat 2026-10-01 15:20Z (18:20 Beirut)] MEASURED on production (read-only): (1) website/app/api/payments/webhooks/nowpayments/route.ts and the API's POST /api/payments/crypto/record contain no mail step \u2014 a customer who pays by crypto gets no confirmation; the CEO's own payment today ('money deducted, no mail') is the first real case. (2) NOWPayments called the webhook twice (10:40:56Z, 10:42:31Z), got 401 from the old signature code, and has not called again since the 10:52Z hotfix (b6b0acb71) \u2014 a rejected notice is lost unless someone presses 'Resend IPN' in their dashboard. Order CVN-MUPEKAD7-CG24 still 'pending' at 15:19Z. ASK: (a) send one plain receipt email (kind 'crypto_receipt', logged in transactional_emails) when an order completes \u2014 from the webhook path and from the .NET sync result; (b) a fallback for pending crypto orders older than 1 h: ask NOWPayments for the payment status (GET /v1/payment/<payment_id>; store payment_id at checkout or resolve it from the invoice) and complete the order when it reads 'finished' \u2014 never on any other status; (c) a row in RoutineRuns when a webhook is rejected (401/404) so the next run sees it. Build on development, QA on dev, then a READY TO SHIP row. Then \u2192 [QA]. \u00b7 [CTO live chat 2026-10-01T16:44Z] PARTLY DONE by production faf8571a0: the hourly pass now finds crypto orders with no finished payment after 2 h (48 h window), emails the customer once (reply if you paid / link to finish) and sends support one list; part-paid or unknown NOWPayments statuses alert at once. NOT done: a receipt email from the website itself (the API's activation email covers new accounts only) and asking NOWPayments for the payment status (needs their login token, not the API key).",
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-10-01T15:20:02Z",
@@ -37152,9 +37162,32 @@
       "createdAt": "2026-10-01T15:59:47Z",
       "createdDate": "2026-10-01",
       "completedDate": null
+    },
+    {
+      "id": "xd-1234",
+      "from": "[CTO]",
+      "to": "[QA]",
+      "title": "Handoff from CTO: [P1] Verify crypto wrong-network guard (production faf8571a0)",
+      "description": "CEO YES 1 Oct. Check on caspervpn.com: (1) /checkout -> pick Cryptocurrency -> coin list shows 4 choices, each with its network, USDT on BNB Smart Chain pre-selected, yellow warning changes with the choice; (2) each coin opens a NOWPayments page for ONLY that coin+network (no coin list); (3) /renew/<order>?t=<token> shows the same picker, pre-set to the coin paid last time; (4) a test order left unpaid 2 h gets ONE 'not paid yet' email and support@ gets the list (brain /var/log/crypto-renewals.log, table transactional_emails kind crypto_payment_check / crypto_ops_alert); (5) a signed test notice with payment_status 'partially_paid' for a test order -> customer 'we're checking' email + support alert, once. Test order already made: CVN-MUPRJF0B-LR33 (qa+cryptoguard@caspervpn.com). Then tick the new CEO-backlog criterion.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-01T16:44:29Z",
+      "createdDate": "2026-10-01",
+      "completedDate": null
     }
   ],
   "importantNotes": [
+    {
+      "id": "note-cto-20261001T1644",
+      "type": "ceo",
+      "priority": "P1",
+      "author": "[CTO]",
+      "date": "2026-10-01",
+      "createdAt": "2026-10-01T16:44:22Z",
+      "resolved": false,
+      "title": "Your crypto payment went through (Premium active to 8 Oct) \u2014 and wrong-network payments are now prevented on the website",
+      "body": "1) Your stuck payment: NOWPayments support completed it at 19:23 Beirut; your account was upgraded and the confirmation email sent. 2) New on caspervpn.com since 19:42 Beirut: customers choose the coin AND the network before paying (USDT or USDC on BNB Smart Chain, Bitcoin, Ether), the payment page then accepts only that one, and a clear warning tells Binance users which network to pick. 3) If a payment is still unpaid after 2 hours, the customer gets one email (reply if you paid, or a link to finish) and support gets a list. You may get one of these emails for an old test order \u2014 ignore it. 4) Crypto can't be charged automatically; plans renew by a payment link emailed before the end (live since today). Next: QA checks it. Nothing for you to do."
+    },
     {
       "id": "note-ceo-office-20261001-1520",
       "type": "ceo",
