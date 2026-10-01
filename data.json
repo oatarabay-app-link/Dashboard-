@@ -36447,6 +36447,20 @@
       "createdDate": "2026-09-30",
       "completedDate": null,
       "dueBy": "2026-10-07"
+    },
+    {
+      "id": "xd-1209",
+      "from": "[CTO]",
+      "to": "[iOS]",
+      "title": "Handoff from CTO: [P1] After the user taps Disconnect, the app reconnects by itself (zombie-recovery), and it shows 'Connected' while the tunnel is paused with no network (CEO phone, 1 Oct 03:02-03:12 Beirut)",
+      "description": "MEASURED from the CEO's phone log (build 4.3.1 (63), marker 25m, account 2eecd0e6, WireGuard Amsterdam): (1) 2026-10-01T00:02:49Z extension: path requiresConnection on cellular, 'sendto: network is unreachable', then WireGuardKit 'PATH NOT SATISFIABLE - SHUTTING DOWN BACKEND' (temporaryShutdown) and 'path update: status=unsatisfied iface=nil'. No further path update in the extension for 9.5 min. The app kept showing Connected (kernel status Connected at 03:10:25 launch); zombie probes timed out (5 s, 104 s) and were judged INCONCLUSIVE (appActive=false). (2) 00:12:17.309Z user pressed Disconnect (manual) -> tunnel Disconnected 17.673 -> at 00:12:18.908 '[zombie-recovery] two consecutive foreground probes FAILED while .connected \u2014 CasperCloak WS is a zombie; reconnecting to Amsterdam' and 'Connecting to Amsterdam' 00:12:19.407 (protocol is WireGuard, not CasperCloak; [ZOMBIE-VERDICT] tunnel view UNPARSEABLE). The foreground sync then forced .disconnected. (3) Server: no request from this user reached the API after 2026-09-30 22:10:52Z, also none after the VPN was off (00:12:31Z dedicated-ip calls) -> the phone itself was offline (probe -1009 'Internet connection appears to be offline' after teardown). So the outage itself = phone network (hypothesis until the CEO confirms Safari with VPN off); the app bugs are (a) and (b). ASK: (a) any manual disconnect cancels pending zombie-recovery and arms nothing for that session; zombie probes must require state == .connected at fire time AND no user disconnect since the probe started; label protocol correctly. (b) when the extension enters temporaryShutdown (path unsatisfied), publish a 'Waiting for network' state to the app instead of Connected. Tests: unit test of the recovery gate; device test with Airplane mode on for 60 s then Disconnect -> must stay disconnected. Then [QA]. Related: xd-1071 (stuck 'Connecting' with no network), xd-1063.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-01T00:14:30Z",
+      "createdDate": "2026-10-01",
+      "completedDate": null,
+      "handoffTo": "[QA]",
+      "dueBy": "2026-10-08T00:14:30Z"
     }
   ],
   "importantNotes": [
