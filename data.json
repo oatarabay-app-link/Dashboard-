@@ -4273,7 +4273,7 @@
       "phase": 3,
       "priority": "P0",
       "owner": "Android",
-      "status": "PARTIAL \u2014 NOT LIVE (Phase 3). 2026-10-02: first successful build on development e079ab3 (not yet run on a device/emulator); next: the app's login/server/config calls do not match the live API's shapes (see notes).",
+      "status": "PARTIAL \u2014 NOT LIVE (Phase 3). 2026-10-02: API contract fix on development 4a3c75e6 (builds; 7/7 unit tests). Not yet run on an emulator \u2014 CEO installs Android Studio (no /dev/kvm in cloud or VM). CEO goal: a clone of the iOS app.",
       "blocked": false,
       "blocker": "",
       "deps": [
@@ -4429,7 +4429,7 @@
         "xd-239b"
       ],
       "previousPhase": 2,
-      "notes": "[ANDROID 2026-10-02 apps run] MEASURED contract gap (blocks the first real connection, next run's work): the backend wraps every reply in ApiResponse {success, data, ...}; Android reads bare bodies. Login: backend AuthResponse.accessToken/refreshToken vs Android LoginResponse.token/refresh_token. Servers: VpnServerDto Id(Guid)/IsPremium/IpAddress/Protocol(enum)/Ping vs Android VPNServer id/premium/ip/protocol(String). WireGuard config: backend POST /api/servers/{id}/wireguard-config vs Android GET servers/{id}/config. Plan: mirror the iOS APIClient contract, test against api.dev.caspervpn.com with a test account. || [ANDROID apps run 2026-10-02 c, 2026-10-02T16:38:24Z] The API-contract change from apps run b (ApiResponse envelope, accessToken/refreshToken, VpnServerDto names, POST wireguard-config with the client key, session id on disconnect, TokenManager hang fix, no body logging; 17 files) is STILL NOT ON development: run b lost the Mac link before the push. This run restored it byte-exact (sha256 91411a60\u2026 = the copy in the Claude project doc claude/android-contract-handover-2026-10-02b.md) on development c397d3b8 (Android/ unchanged since e079ab3) and started the JDK 17 build, but the automatic permission check of this unattended run blocked reading the build result, so there is NO build proof this run and nothing was committed (a commit needs a passing build). Emulator proof is also impossible here: neither the cloud box nor the Mac VM has /dev/kvm. Dev offers 0 servers (handoff to DEVOPS). Next run: rebuild + test the restored patch, then commit and push it."
+      "notes": "[ANDROID 2026-10-02 apps run] MEASURED contract gap (blocks the first real connection, next run's work): the backend wraps every reply in ApiResponse {success, data, ...}; Android reads bare bodies. Login: backend AuthResponse.accessToken/refreshToken vs Android LoginResponse.token/refresh_token. Servers: VpnServerDto Id(Guid)/IsPremium/IpAddress/Protocol(enum)/Ping vs Android VPNServer id/premium/ip/protocol(String). WireGuard config: backend POST /api/servers/{id}/wireguard-config vs Android GET servers/{id}/config. Plan: mirror the iOS APIClient contract, test against api.dev.caspervpn.com with a test account. || [ANDROID apps run 2026-10-02 c, 2026-10-02T16:38:24Z] The API-contract change from apps run b (ApiResponse envelope, accessToken/refreshToken, VpnServerDto names, POST wireguard-config with the client key, session id on disconnect, TokenManager hang fix, no body logging; 17 files) is STILL NOT ON development: run b lost the Mac link before the push. This run restored it byte-exact (sha256 91411a60\u2026 = the copy in the Claude project doc claude/android-contract-handover-2026-10-02b.md) on development c397d3b8 (Android/ unchanged since e079ab3) and started the JDK 17 build, but the automatic permission check of this unattended run blocked reading the build result, so there is NO build proof this run and nothing was committed (a commit needs a passing build). Emulator proof is also impossible here: neither the cloud box nor the Mac VM has /dev/kvm. Dev offers 0 servers (handoff to DEVOPS). Next run: rebuild + test the restored patch, then commit and push it.\n\n--- [ANDROID] 2026-10-02T22:03:37Z (live CEO session, Cowork) ---\nDONE: restored the contract change (sha256 91411a60\u2026 byte-exact from claude/android-contract-handover-2026-10-02b.md) on development 0203ce12; cloud build with JDK 21: assembleDevDebug + assembleProductionDebug BUILD SUCCESSFUL, unit tests 7/7 pass (live dev test skipped: no dev password in this session). Committed + pushed to development as 4a3c75e6 under the session lock.\nEMULATOR: Android Studio is NOT installed on the CEO Mac. Kit in Dropbox CasperVPN/_android: casper-prod-debug.apk (production API, sha256 399fa634\u2026) + android-emulator.command (boots the first AVD, installs, launches, saves logcat-latest.log). Production flavor chosen because dev offers 0 servers (xd-1247).\nCEO DIRECTION (2026-10-02): Android must be a clone of the iOS app. Parity gaps found in code (grep, 4a3c75e6): no Google sign-in, no trial-at-signup screen (all plans, best value preselected), no Double VPN (multi-hop) and so no Premium gate, no connection-failure report, no funnel events. Order: (1) emulator run proves login + server list + connect on production; (2) Google sign-in; (3) Play Billing plans + trial screen (needs a Play Console app + products \u2014 CEO); (4) Double VPN Premium-only; (5) failure report + funnel events (after iOS telemetry v2 payload, xd-1254/1255)."
     },
     {
       "id": "server-expansion",
@@ -38212,6 +38212,19 @@
       "createdAt": "2026-10-02T21:29:58Z",
       "createdDate": "2026-10-02",
       "completedDate": null
+    },
+    {
+      "id": "xd-1260",
+      "from": "[ANDROID]",
+      "to": "[QA]",
+      "title": "Handoff from ANDROID: [P1] Android: check the API-contract commit 4a3c75e6 and the first emulator run",
+      "description": "development 4a3c75e6 (Android only). 1) Code check: ApiResponse envelope, accessToken/refreshToken, VpnServerDto names, POST wireguard-config with the client public key, session id on disconnect, no body logging. 2) Re-run ./gradlew :app:assembleDevDebug :app:testDevDebugUnitTest (JDK 17/21) \u2014 expect 7 tests pass + live dev test (set CASPER_DEV_PASSWORD) pass. 3) When the CEO has run the emulator kit (Dropbox CasperVPN/_android, logcat-latest.log): verify register/login, server list non-empty, Connect shows Connected and traffic flows, Disconnect stays off. Tick android-app criteria only on evidence.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-02T22:03:41Z",
+      "createdDate": "2026-10-02",
+      "completedDate": null,
+      "dueBy": "2026-10-05T22:03:37Z"
     }
   ],
   "importantNotes": [
