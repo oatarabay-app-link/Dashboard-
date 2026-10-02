@@ -5,6 +5,18 @@
 ---
 
 ### Session: 2026-10-02 — CEO
+**Timestamp:** 2026-10-02T18:36:32Z
+
+**Change:** Board meeting 2 (CEO live): 2 new phase-2 tasks infra-cost-rightsizing, cc-probe-resistance; payment-rails DECISION row
+
+**Files changed:**
+_(none listed)_
+
+**Structure affected:** YES
+
+---
+
+### Session: 2026-10-02 — CEO
 **Timestamp:** 2026-10-02T06:21:10Z
 
 **Change:** CEO office 2026-10-02: 2 new phase-1 tasks for live parts with no task (domains-dns-registrar, github-ci-deploy-pipelines); 2 Paris handoffs merged; xd-1214 closed
