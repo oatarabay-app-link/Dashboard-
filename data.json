@@ -38249,9 +38249,44 @@
       "createdAt": "2026-10-02T22:10:36Z",
       "createdDate": "2026-10-02",
       "completedDate": null
+    },
+    {
+      "id": "xd-1263",
+      "from": "[CTO]",
+      "to": "[IOS]",
+      "title": "Handoff from CTO: [P1] 'Connected but no internet' 3 Oct 01:22 (CEO, Alfa LB, Amsterdam WireGuard): tunnel went one-way dead \u2014 phone silent from 22:19:55Z while the server kept initiating; app saw it in 5 s but recovery waits for the 180 s watchdog; export lacks the extension log at export time",
+      "description": "[CTO 2026-10-02T22:34:16Z, CEO live chat, read-only] MEASURED. App export (riverzenlb, build 4.4 26b-tunnel, iOS 27, cellular): 21:11:52Z WG up to Amsterdam 51.158.147.210 (handshake OK, rx 40 KB in 3 s); 21:20:27Z foreground zombie probe OK (204 in 241 ms, via CF AMS); app in background until 22:22:36Z; then heartbeat + 3x GET /bandwidth/live got NO response and '[ZOMBIE-PROBE] attempt=1 result=FAIL -1001 in 5008ms'; export at 22:22:45Z. Server side (Amsterdam, wg show dump at 22:26-22:28Z): peer PipBwygs.../10.66.69.78 endpoint 91.197.46.138:38698 (Alfa, LB \u2014 whois LB-MIC1-ALFA), latest handshake 22:19:55Z, rx frozen at 53,530,860 B, tx 776 MB; tcpdump 20 s: the SERVER sends a 148-byte handshake initiation to the phone every ~5 s, ZERO packets arrive from the phone. API log: heartbeats received 21:11:55/21:12:22/21:12:25/21:20:27Z, nothing after; 0 requests from this user after 22:22Z. The phone's WG config carried PersistentKeepalive=25, MTU 1420 (config string says 1280 \u2014 mismatch, see below). CONCLUSION (proven): phone\u2192server UDP stopped between 22:19:55 and 22:22:36Z; the server never saw a new handshake by 22:28Z although the phone had data to send at 22:22:36. NOT the server, not the plan, no peer removal (control API log shows only peer-stats polls; ConnectionLogs row b67bbf40 was closed by auto-reconcile-stale at 22:08:59Z \u2014 11 min BEFORE the last good handshake, so not the cause). HYPOTHESES (not separable from the server): (A) Alfa dropped/re-mapped the mobile connection at ~22:20 and the extension kept sending on a dead socket (NWPathMonitor did not fire because the path stayed 'satisfied'); (B) Alfa cuts WireGuard UDP after time/volume (776 MB in 70 min). ASKS: (1) on a foreground ZOMBIE-PROBE FAIL, re-handshake at once (adapter.update / socket bump) instead of waiting for the 60 s watchdog + 180 s stale threshold (xd-454) \u2014 the user notices in 5 s; (2) the log export must include the extension's tunnel_debug.log AS OF EXPORT TIME (today it embeds only the 47 connect-time lines) plus path-update events, so the next occurrence shows whether the extension re-handshook, bumped sockets, or saw an interface/IP change; (3) write the MTU actually applied (1420) vs the config string (1280) \u2014 decide which is intended; (4) CONSOLE-FIRST on the next occurrence (preflight protocol): the CEO should pick CasperCloak for one evening on Alfa \u2014 drops stop = carrier cuts WG (B); continue = phone side (A). Protocol note: the app chose WireGuard because the user setting says so (smart-recommend 'protocolReason: User selected'); LB advisory tier only changes the default. Then \u2192 [QA].",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-02T22:34:20Z",
+      "createdDate": "2026-10-02",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1264",
+      "from": "[CTO]",
+      "to": "[BACKEND]",
+      "title": "Handoff from CTO: [P2] xd-943 again on 3 Oct: a brand-new account's FIRST phone got 'Device limit reached \u2014 3 active' (open rows=3, same-device=0); the rows were closed only by auto-reconcile-stale 62-69 min later",
+      "description": "[CTO 2026-10-02T22:34:16Z, CEO live chat, read-only] MEASURED. User 212ddb7b (created 20:30:04Z 2 Oct, one iPhone). 21:11:53Z POST /servers/1a8394db/connect x2 \u2192 400 SRV_6001; API log '[opt-vpn-connect] xd-943 device limit: live other-device sessions=3 (open rows=3, same-device=0) max=3'. The 3 open rows at that moment: 2ef00287 (closed 20:59:16 'Reconnected from same device' \u2014 fine), 5310852a (DeviceId E9B24161\u2026, D\u00fcsseldorf, ConnectedAt 20:59:16, closed 22:02:32 by the stale job), 9a9a1dc8 (DeviceId NULL, ConnectedAt 20:59:47, closed 22:02:32), b67bbf40 (DeviceId NULL, SessionId mh-2e67\u2026, Amsterdam, ConnectedAt 20:59:47, LastSeenAt 21:20:27, closed 22:08:59 'auto-reconcile-stale (xd-507)'). So: (a) two rows carry no DeviceId (the multi-hop 'mh-' path and one more writer create rows without it) \u2192 same-device matching cannot work \u2192 every earlier row of the same phone counts as another device; (b) rows the phone abandoned at 20:59 stayed open for 62-69 minutes \u2014 the 15-minute heartbeat timeout did not close them; (c) /connect was called twice within 3 ms (client double-call \u2014 iOS side, noted on xd-1263). The tunnel itself worked (wireguard-config had already registered the peer; 'logConnection failed (non-fatal)'), so this did not cause tonight's drop \u2014 but any Free (1-device) user hits it as a hard refusal (xd-943's original case). ASKS: write DeviceId on EVERY row writer (multi-hop, heartbeat-created rows), fall back to the WireGuard public key as the device identity when DeviceId is null, and close superseded rows of the same device/key on a new connect; measure: SELECT count(*) FROM \"ConnectionLogs\" WHERE \"DisconnectedAt\" IS NULL AND \"LastSeenAt\" < now()-interval '20 min' \u2192 0 after the fix. Then \u2192 [QA].",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-02T22:34:20Z",
+      "createdDate": "2026-10-02",
+      "completedDate": null
     }
   ],
   "importantNotes": [
+    {
+      "id": "note-cto-20261003a",
+      "type": "cto",
+      "priority": "P1",
+      "author": "[CTO]",
+      "date": "2026-10-02",
+      "createdAt": "2026-10-02T22:34:16Z",
+      "resolved": false,
+      "title": "[CTO 3 Oct 01:3x] CEO 'internet drops while VPN connected': tunnel went one-way dead on Alfa at 01:20 \u2014 server fine, phone silent; iOS recovery + export asks filed",
+      "body": "Measured on the Amsterdam server: the phone's last good exchange 01:19:55 Beirut, then the server called every 5 s with no reply (20 s capture: 4 out, 0 in). App detected the dead tunnel in 5 s (zombie probe) but its own repair waits for the 3-minute watchdog. Cause on the phone/carrier side (Alfa) \u2014 carrier cut vs phone socket not separable from the server; CEO test: CasperCloak for one evening. Side finding: a new account's first phone got 'Device limit reached, 3 active' (xd-943 pattern) \u2014 xd-1264. iOS asks: xd-1263. Not shipped: nothing; read-only."
+    },
     {
       "id": "note-ios-2026-10-02-accounts",
       "date": "2026-10-02",
