@@ -5,6 +5,18 @@
 ---
 
 ### Session: 2026-10-02 — CEO
+**Timestamp:** 2026-10-02T19:35:10Z
+
+**Change:** CEO 2 Oct: task ios-connect-telemetry-v2 (P0) + xd to iOS and Backend; pricing + build-scope decision rows; ex-censored success rate on north-star
+
+**Files changed:**
+_(none listed)_
+
+**Structure affected:** YES
+
+---
+
+### Session: 2026-10-02 — CEO
 **Timestamp:** 2026-10-02T19:01:22Z
 
 **Change:** CEO 2 Oct answers: 2 new phase-2 tasks (website-account-area, apple-search-ads-test), 4 handoffs, xd-1106/xd-1086 closed
