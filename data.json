@@ -11934,6 +11934,16 @@
           "passed": true,
           "verifiedByRaw": "ceo-office",
           "verifiedDate": "2026-10-02"
+        },
+        {
+          "test": "SHIPPED 2026-10-03 \u00b7 CEO YES 2026-10-03 (live chat) \u2014 Admin panel: (1) deleting a user works again (eight side tables now clean up with the user; your delete at 20:35 failed on one of them); (2) Users tab fits the screen: Country and Joined columns added, Plan + Status in one cell, Role in the Name cell, the action buttons pinned to the right edge; (3) the user profile always shows Country (last login, with the sign-up country when different); (4) new Website & Content \u2192 Payments page listing every crypto order placed on caspervpn.com (1 paid, 13 opened-not-paid, 5 failed) \u00b7 tested on dev: create + delete of a throwaway user with a dependent row \u2192 200, 0 rows left; API 170/170 tests; admin compiled clean \u00b7 live: production 3018801f, API image 11acf73d07de \u2192 0bcac941eced 23:54Z, migration applied, FK rules CASCADE, /api/admin/users rows carry country, /api/admin/website/orders 200 (19 orders), admin bundle main.a1a38934.js \u00b7 rollback: caspervpn-api:rollback-202610022351 + previous admin image; git revert 2c76cf32 f2942f76 de9faa53 3018801f.",
+          "met": true,
+          "passed": true,
+          "verifiedBy": "self",
+          "verifiedByRaw": "cto",
+          "verifiedDate": "2026-10-03",
+          "evidence": "[CTO 2026-10-03T00:41:36Z] shipped and checked live by the CTO session; QA re-check requested (see Cross-Dept).",
+          "verify": "DELETE /api/admin/users/<throwaway id> \u2192 200; curl -s -H \"$H\" https://api.caspervpn.com/api/admin/website/orders?pageSize=1 \u2192 200 with totals; curl -s https://admin.caspervpn.com/ | grep -o 'main\\.[a-f0-9]*\\.js' \u2192 bundle contains 'website/payments'"
         }
       ],
       "progress": 0,
@@ -38274,9 +38284,32 @@
       "createdAt": "2026-10-02T22:34:20Z",
       "createdDate": "2026-10-02",
       "completedDate": null
+    },
+    {
+      "id": "xd-1265",
+      "from": "[CTO]",
+      "to": "[QA]",
+      "title": "Handoff from CTO: [P1] Admin fixes shipped 3 Oct on the CEO's yes \u2014 check live: user delete, Users table (Country/Joined/pinned actions), profile Country, Website \u2192 Payments page",
+      "description": "[CTO 2026-10-03T00:41:36Z] production 3018801f (2c76cf32 FK cascade migration 20261003000000_UserDeleteCascade; f2942f76 UserListItemDto.Country + UserDetailsDto.RegistrationCountry; de9faa53 GET /api/admin/website/orders; 3018801f admin SPA). API deployed 23:54Z via /root/deploy_api.sh (image 0bcac941eced, rollback tag caspervpn-api:rollback-202610022351); admin-react rebuilt on the brain (runner-safe), bundle main.a1a38934.js. VERIFY: (1) admin \u2192 Users \u2192 delete a throwaway account you create \u2192 'User deleted', no 400; psql: FKs to Users with delete_rule <> CASCADE = only the 4 SET NULL ones (BugReports, DedicatedIpTokens, DedicatedIps, ServerIps); (2) Users tab at 1280 px wide: no horizontal scroll needed to reach the action buttons (Actions column is sticky right), Country and Joined columns present, sort by Joined works (sortBy=createdAt); (3) a user profile shows a Country row even when last-login country is empty ('Unknown'); (4) Website & Content \u2192 Payments lists 19 orders with totals 1 completed / 13 pending / 5 failed (compare: SELECT status, count(*) FROM orders GROUP BY 1 on caspervpn_website), status filter works; (5) Customers \u2192 Payments still loads (445 rows). Dev proof: throwaway user with a FraudScores row deleted \u2192 200, 0 rows left (dev api 23:48Z). NOT verified: the CEO's browser view of the table (device check).",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-03T00:41:41Z",
+      "createdDate": "2026-10-03",
+      "completedDate": null
     }
   ],
   "importantNotes": [
+    {
+      "id": "note-cto-20261003b",
+      "type": "cto",
+      "priority": "P1",
+      "author": "[CTO]",
+      "date": "2026-10-03",
+      "createdAt": "2026-10-03T00:41:36Z",
+      "resolved": false,
+      "title": "[CTO 3 Oct 02:xx] Shipped on the CEO's yes: admin user delete fixed, Users table fits + Country/Joined, profile Country, new Website \u2192 Payments page",
+      "body": "Live since 23:54Z (API) and the admin rebuild that followed (bundle main.a1a38934.js). Proof on the CEO card SHIPPED row and QA handoff xd-1265. Side facts: production had 8 hand-added tables pointing at Users with no cascade (now CASCADE); only 1 of 19 website crypto orders ever reached the API's Payments table \u2014 the other 18 are now visible on the new page."
+    },
     {
       "id": "note-cto-20261003a",
       "type": "cto",
