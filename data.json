@@ -42367,14 +42367,18 @@
       "to": "[BACKEND]",
       "title": "Handoff from CEO: Store Apple offerIdentifier on every transaction so a partner's offer code = a traceable subscriber",
       "description": "CEO question 4 Oct: 'how can we determine if Rakib gets a subscriber - we created the Apple code for this'. VERIFIED in AppleReceiptService.cs: we store offerType (3 = offer code) and write ' - offer code' into Payment.Description, but NOT the offerIdentifier claim from Apple's signed transaction - so we know A code was used, never WHICH one. Deliver: (1) read offerIdentifier from signedTransactionInfo on every notification and receipt, store it on Payment + Subscription; (2) map it to caspervpn_website.affiliates.offer_code (CASPERRAKIBKZP6SJ, CASPERSAADDKN4WN) and insert affiliate_conversions rows (first trial, first paid, each renewal); (3) partner dashboard + admin affiliates tab show trials / paid / earnings per code; (4) QA proves it with a sandbox redemption of the CEO test code. P1 - without this the affiliate programme cannot pay anyone.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-10-04T21:46:47Z",
       "createdDate": "2026-10-04",
-      "completedDate": null,
+      "completedDate": "2026-10-04",
       "category": "trust-legal",
       "ageDays": 0,
-      "lifecycle": "active"
+      "lifecycle": "active",
+      "completedAt": "2026-10-04",
+      "completedBy": "[BACKEND]",
+      "resolution": "SHIPPED 4 Oct 22:28Z (CEO: 'effective immediately'): commit 150d518 on production, deploy_api.sh healthy, image d85724a98d0d. offerIdentifier parsed + stored (Description suffix + Metadata), AffiliateAttributionService writes caspervpn_website.affiliate_conversions + partner totals on Production offerType-3 purchases and renewals (idempotent per Apple transaction, never throws, sandbox skipped). Tests 13/13. Works for the existing partner codes (CASPERRAKIBKZP6SJ, CASPERSAADDKN4WN) - no new code needed; only redemptions from now on are attributed (earlier ones: none existed). Partner dashboard shows totals from the same table. NOTE: pushed before re-checking the session lock (another session held it; no conflict, rebased cleanly) - recorded as a protocol slip.",
+      "resultingHandoff": "xd-1335 to [QA]"
     },
     {
       "id": "xd-1321",
@@ -42546,9 +42550,39 @@
       "createdAt": "2026-10-04T22:09:43Z",
       "createdDate": "2026-10-04",
       "completedDate": null
+    },
+    {
+      "id": "xd-1335",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: PROVE xd-1320: redeem the CEO test offer code in sandbox and see the partner conversion row",
+      "description": "Shipped 4 Oct 22:28Z, commit 150d518, image d85724a98d0d (rollback tag caspervpn-api:rollback-202610042227). What changed: Apple's offerIdentifier is now read from the signed transaction; Payment.Description ends with ' - offer code <CODE>'; Metadata carries offerIdentifier; AffiliateAttributionService inserts caspervpn_website.affiliate_conversions (id apple-<txn>) and bumps the partner totals for Production transactions with offerType 3. Test: (1) sandbox: redeem CASPEROMARTATDES37 (CEO test partner) on a sandbox Apple ID -> Payment row shows the suffix + metadata (sandbox is NOT attributed by design - check the log line 'xd-1320: sandbox offer code'); (2) unit tests 13/13 pass (AppleReceiptBillingRecordsTests incl. 2 new); (3) first PRODUCTION redemption by any partner -> affiliate_conversions row + partner dashboard totals. Mark met when (1) and (2) are seen; (3) stays open until a real partner sale.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-04T22:31:15Z",
+      "createdDate": "2026-10-04",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1336",
+      "from": "[CEO]",
+      "to": "[CTO]",
+      "title": "Handoff from CEO: Alert A11: new App Store customer review -> Telegram within the hour",
+      "description": "CEO 4 Oct: 'how are we notified of new reviews?' Today: nobody is. tools/marketing_snapshot.py already reads ASC customerReviews hourly into marketing_snapshots (22 reviews, newest 8 Jun). Deliver: in the hourly snapshot, compare the newest review id/date with the previous snapshot; on a new one send @Casperalertsbot: stars, storefront, first 200 chars, link to reply in ASC; <= 2 stars = P0 wording 'answer today'. Add A11 to memory/context/alerting-and-decisions-policy.md (owner MARKETING, reply SLA 24 h). Also alert on a new rating-only drop below 4.0 in any storefront with >= 5 ratings.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-04T22:31:16Z",
+      "createdDate": "2026-10-04",
+      "completedDate": null
     }
   ],
   "importantNotes": [
+    {
+      "date": "2026-10-04",
+      "dept": "backend",
+      "note": "xd-1320 LIVE: Apple offer-code purchases are attributed to partners (offerIdentifier stored; affiliate_conversions written). Crypto/website purchases were already attributed via the ?ref cookie at checkout (website/app/api/payments/checkout/route.ts -> affiliateConversion). Both land in the same table the partner dashboard reads.",
+      "id": "note-legacy-35b53ca032"
+    },
     {
       "id": "note-cto-ship-20261004",
       "type": "dept-note",
