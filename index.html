@@ -1480,10 +1480,25 @@ function renderXDept(){
     return;
   }
   // STRICT filter: only pending + in_progress + open (NOT deferred/consolidated/completed — those have their own tabs)
-  const active=tasks.filter(t=>{
+  const CATS={'release-4.3.1':'Release 4.3.1','next-build-4.4':'Next build 4.4','infra-fleet':'Infra & fleet','growth':'Growth','trust-legal':'Trust & legal','money-admin':'Money & admin','platform':'Platform','factory-ops':'Factory ops','other':'Other'};
+  window.xdF=window.xdF||{cat:'all',dept:'all',life:'all'};
+  const F=window.xdF;
+  const allActive=tasks.filter(t=>{
     const s=(t.status||'').toLowerCase();
     return s==='pending'||s==='in_progress'||s==='in-progress'||s==='open';
-  }).sort((a,b)=>new Date(b.createdAt||0)-new Date(a.createdAt||0));
+  });
+  const dOf=t=>(t.to||'unknown').replace(/^\[+|\]+$/g,'').toUpperCase();
+  const ageOf=t=>t.createdAt?Math.floor((Date.now()-new Date(t.createdAt))/86400000):0;
+  const lifeOf=t=>t.lifecycle||(ageOf(t)>7?'triage':'active');
+  const active=allActive.filter(t=>(F.cat==='all'||(t.category||'other')===F.cat)&&(F.dept==='all'||dOf(t)===F.dept)&&(F.life==='all'||lifeOf(t)===F.life))
+    .sort((a,b)=>new Date(b.createdAt||0)-new Date(a.createdAt||0));
+  const chip=(k,v,label,n)=>`<span onclick="window.xdF.${k}='${v}';renderXDept()" style="cursor:pointer;display:inline-block;padding:3px 9px;margin:2px 4px 2px 0;border-radius:12px;font-size:11px;border:1px solid var(--border);${F[k]===v?'background:var(--blue);color:#fff;border-color:var(--blue)':'background:var(--panel-alt,rgba(255,255,255,0.03));color:var(--muted)'}">${label}${n!=null?' <b>'+n+'</b>':''}</span>`;
+  const cnt=(f)=>allActive.filter(f).length;
+  let filterBar=`<div style="margin:6px 0 10px"><div style="font-size:11px;color:var(--muted);margin-bottom:3px">Category</div>`+chip('cat','all','All',allActive.length)+Object.keys(CATS).map(c=>chip('cat',c,CATS[c],cnt(t=>(t.category||'other')===c))).join('')+`</div>`;
+  const deptNames=[...new Set(allActive.map(dOf))].sort();
+  filterBar+=`<div style="margin:0 0 10px"><div style="font-size:11px;color:var(--muted);margin-bottom:3px">Department</div>`+chip('dept','all','All')+deptNames.map(dn=>chip('dept',dn,dn,cnt(t=>dOf(t)===dn))).join('')+`</div>`;
+  const triN=cnt(t=>lifeOf(t)==='triage');
+  filterBar+=`<div style="margin:0 0 12px"><div style="font-size:11px;color:var(--muted);margin-bottom:3px">Lifecycle — rule: no row stays active more than 7 days</div>`+chip('life','all','All')+chip('life','active','Active ≤ 7 d',cnt(t=>lifeOf(t)==='active'))+chip('life','triage','⚠ Triage > 7 d',triN)+`</div>`;
   // Group by `to` (owning dept)
   const byDept={};
   active.forEach(t=>{
@@ -1495,7 +1510,7 @@ function renderXDept(){
   const done=tasks.filter(t=>t.status==='completed').length;
   const deferred=tasks.filter(t=>t.status==='deferred').length;
   const consolidated=tasks.filter(t=>t.status==='consolidated').length;
-  let html=`<div class="section"><div class="section-title">Cross-Department Task Queue (${active.length} active)</div>
+  let html=`<div class="section"><div class="section-title">Cross-Department Task Queue (${active.length} shown of ${allActive.length} open · ${triN} in triage)</div>${filterBar}
     <p style="font-size:12px;color:var(--muted);margin-bottom:14px">${active.length} pending/in-progress · grouped by owning department · <a href="#" onclick="document.querySelector('.tab[data-tab=deferred]').click();return false" style="color:var(--yellow)">⏸️ ${deferred} deferred</a> · <a href="#" onclick="document.querySelector('.tab[data-tab=consolidated]').click();return false" style="color:var(--blue)">🔄 ${consolidated} consolidated</a> · <a href="#" onclick="document.querySelector('.tab[data-tab=finalized]').click();return false" style="color:var(--green)">✅ ${done} finalized</a></p>`;
   depts.forEach(dept=>{
     const list=byDept[dept];
@@ -1514,7 +1529,7 @@ function renderXDept(){
         <div style="font-size:11px;color:var(--muted);margin-top:4px">
           ${ctoEsc(t.from||'?')} → <strong>${ctoEsc(t.to||'?')}</strong> | <span style="color:${t.status==='in_progress'?'var(--blue)':'var(--yellow)'}">⏳ ${ctoEsc(t.status||'?')}</span>
         </div>
-        <div style="font-size:11px;margin-top:3px;color:var(--muted)">📅 ${created} | 🎯 Due: <span style="color:${isOverdue?'var(--red)':'var(--green)'}">${due}${isOverdue?' ⚠️':''}</span></div>
+        <div style="font-size:11px;margin-top:3px;color:var(--muted)">📅 ${created} · ${ageOf(t)} d ${lifeOf(t)==='triage'?'<span style="color:var(--red);font-weight:700">⚠ TRIAGE: '+ctoEsc(t.triageReason||'older than 7 days')+'</span>':'<span style="color:var(--green)">active</span>'} · 🗂 ${ctoEsc(CATS[t.category]||'Other')} | 🎯 Due: <span style="color:${isOverdue?'var(--red)':'var(--green)'}">${due}${isOverdue?' ⚠️':''}</span></div>
         ${t.description?`<div style="font-size:12px;margin-top:6px;line-height:1.45">${ctoEsc(t.description).slice(0,400)}${t.description.length>400?'...':''}</div>`:''}
       </div>`;
     });
