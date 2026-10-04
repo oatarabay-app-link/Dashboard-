@@ -12207,6 +12207,15 @@
           "verifiedBy": "none",
           "evidence": "[CTO live chat 2026-10-04 22:4xZ] added; development 0561706fe; QA xd-1337.",
           "verify": "admin.caspervpn.com \u2192 Users \u2192 Sign-up Health shows the last 14 days with Resend states; Operations shows the Connection by country card"
+        },
+        {
+          "test": "DECISION (CEO 5 Oct, live) \u2014 Activate Appfigures (the free trial ends 9 Oct): CEO asked why it is not active since Apple Search Ads was decided. Only the CEO can do it: (1) appfigures.com \u2192 choose a plan before 9 Oct (paid = CEO's money; price on their pricing page \u2014 the vault estimate is $10\u201340/month, check it); (2) Account \u2192 API \u2192 create a key and paste it in a live session; it is stored only on the main server (/opt/caspervpn/secrets/marketing/appfigures.key). Then Marketing uses it for per-country VPN rankings (ads market pick, xd-1319) and Backend for the external revenue check.",
+          "verify": "ssh brain: test -s /opt/caspervpn/secrets/marketing/appfigures.key && Appfigures API GET /v2/products/mine \u2192 200",
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "verifiedDate": null,
+          "evidence": "[CEO office 2026-10-04 22:2xZ (01:2x Beirut 5 Oct), CEO live in Cowork] Company inbox: Appfigures daily/monthly reports already arrive (account exists, trial); no API key on the main server (xd-913 measured 29 Sep). Board advice: YES \u2014 the cheapest plan that includes per-country category rankings; review after the 14-day ads test."
         }
       ],
       "progress": 0,
@@ -16214,7 +16223,8 @@
           "test": "Markets chosen from data with the numbers written here (installs, sign-ups, connection success per country) \u2014 not by default",
           "verify": "task evidence lists the per-country table and the chosen markets",
           "met": false,
-          "verifiedBy": "none"
+          "verifiedBy": "none",
+          "evidence": "[CEO office 2026-10-04 22:2xZ (01:2x Beirut 5 Oct), CEO live in Cowork] CEO: markets limited to Europe, the Americas and Australia; pick 3 by top VPN subscriptions per country from board data; monitor results (xd-1340). | "
         },
         {
           "test": "Apple Ads account exists with a working payment method and the $10/day campaign cap set",
@@ -42385,7 +42395,7 @@
       "from": "[CEO]",
       "to": "[MARKETING]",
       "title": "Handoff from CEO: [CEO via Telegram] How do we use Appfigures now?",
-      "description": "CEO by Telegram 4 Oct 23:51 Beirut: 'How can we use app figures now'. Facts (company inbox, read-only): Appfigures daily mail 3 Oct: 7 downloads, 1 active sub, 4.71\u2605/14 ratings; monthly Sept: 185 downloads, $22.55 revenue (-38%); the free trial ends 9 Oct (keeping it is money = CEO decision, class C). API key row in credentials.md (#4) still '\u23f3 CEO to create'. Deliver before 9 Oct: a plain one-screen plan \u2014 (1) what we use it for now: daily downloads/revenue per country as the external control for the north star, ratings/reviews watch, keyword ranks for the 4.4 listing, competitor ranks (NordVPN/Proton/Surfshark); (2) whether the free tier covers it or a paid plan is needed (price + board advice, as a DECISION row on the CEO card); (3) if the CEO wants the API, the exact steps for him to create the key (stored only in /opt/caspervpn/secrets/marketing/appfigures.key on the brain). No spend.",
+      "description": "CEO by Telegram 4 Oct 23:51 Beirut: 'How can we use app figures now'. Facts (company inbox, read-only): Appfigures daily mail 3 Oct: 7 downloads, 1 active sub, 4.71\u2605/14 ratings; monthly Sept: 185 downloads, $22.55 revenue (-38%); the free trial ends 9 Oct (keeping it is money = CEO decision, class C). API key row in credentials.md (#4) still '\u23f3 CEO to create'. Deliver before 9 Oct: a plain one-screen plan \u2014 (1) what we use it for now: daily downloads/revenue per country as the external control for the north star, ratings/reviews watch, keyword ranks for the 4.4 listing, competitor ranks (NordVPN/Proton/Surfshark); (2) whether the free tier covers it or a paid plan is needed (price + board advice, as a DECISION row on the CEO card); (3) if the CEO wants the API, the exact steps for him to create the key (stored only in /opt/caspervpn/secrets/marketing/appfigures.key on the brain). No spend. | [CEO office 2026-10-04 22:2xZ (01:2x Beirut 5 Oct), CEO live in Cowork] CEO wants Appfigures activated for the Search Ads market pick (xd-1340); CEO card has the activation DECISION row.",
       "status": "pending",
       "priority": "P0",
       "createdAt": "2026-10-04T21:45:20Z",
@@ -42627,6 +42637,45 @@
       "createdAt": "2026-10-04T22:46:10Z",
       "createdDate": "2026-10-04",
       "completedDate": null
+    },
+    {
+      "id": "xd-1338",
+      "from": "[CEO]",
+      "to": "[BACKEND]",
+      "title": "Handoff from CEO: [CEO 5 Oct] Admin revenue shows test money: exclude Apple Sandbox + staff, real periods, match Appfigures",
+      "description": "CEO 5 Oct 01:1x Beirut (live): 'why is Appfigures not similar to admin revenue; we are still recording tests with real users; I can't filter sandbox, or month/week/quarter, only a date'. MEASURED (prod DB, read-only, 22:1xZ): Payments status=paid = 448 rows $3,743.31. Apple Sandbox (test) 365 rows $3,426.42 = 92%; Apple Production tagged 22 rows $95.08; 60 renewal rows (DID_RENEW) carry no Environment tag but match Production originals by OriginalTransactionId = $218.82; crypto 1 row $2.99 (CEO). So real Apple money ever = $313.90 (gross customer price) vs admin total $3,743. September: admin $87.14 = Sandbox $47.59 + real renewals $32.79 + real new $6.76; Appfigures September $22.55 (Apple proceeds = after Apple's cut; real only). Code: AdminSecurityFeaturesController GetRevenueMetrics sums ALL Payments.Amount (no Sandbox/staff filter) and ignores the page's time range; MRR = sum of PriceMonthly on every Active subscription (sandbox + staff included). HYPOTHESIS for the remaining Sep gap ($39.55 gross vs $22.55 net): Apple's 15-30% cut + Appfigures counting by Pacific date + the CEO's own real purchases \u2014 reconcile row by row. DELIVER (backend, then [ADMIN-PANEL] for the UI): (1) every revenue/MRR/ARPU/churn number excludes Environment=Sandbox and the staff accounts (same staff list as the north-star exclusion) by default; (2) write Environment on renewal rows (DID_RENEW path) and backfill the 60 untagged rows from their original transaction; (3) filters: Real / Sandbox / All + presets Today, 7 d, This week, This month, Last month, Quarter, YTD, Custom range \u2014 applied by the API, not only the chart; (4) show gross (customer price) AND estimated Apple proceeds side by side, with a line 'Appfigures (external) for the same period' once the Appfigures API key exists; (5) acceptance: admin real September gross = $39.55 (13 rows) and the page says how it differs from Appfigures. Test on dev, READY TO SHIP row for the CEO. Then \u2192 [QA].",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-10-04T22:50:41Z",
+      "createdDate": "2026-10-04",
+      "completedDate": null,
+      "dueBy": "2026-10-11"
+    },
+    {
+      "id": "xd-1339",
+      "from": "[CEO]",
+      "to": "[ADMIN-PANEL]",
+      "title": "Handoff from CEO: [CEO 5 Oct] Admin overview: Live Threats empty, tabs overlap, Top Countries counts bots",
+      "description": "CEO 5 Oct (live): 'live threats on dashboard reports nothing; recent activity overlaps; top countries and other tabs overlap; top countries still count bots with real users'. MEASURED (prod DB 22:2xZ): the Live Threats card (/api/admin/threats/summary) reads 5 sources; only BlockedIPs is fed (92,734 rows, newest 4 Oct 22:45Z); ThreatDetections newest 1 Apr (10 rows), DdosAlerts newest 1 Apr (5), ThreatEvents newest 25 Jun (1), ServerBlockEvents 0 rows. DELIVER (admin + backend): (1) Live Threats shows only sources that are fed, with 'last event' time per source, and names the dead detectors honestly (or hide them) - list which detector should feed each and hand that to [BACKEND]/[DEVOPS]; (2) one inventory of overview tabs/cards that show the same number (Recent Activity vs Activity Log vs Live Users etc.) - merge or remove duplicates, one owner per number; (3) Top Countries and every user count use the north-star real-user definition (exclude staff, disposable-mail bots, unverified, test accounts) with a Real/All toggle; (4) acceptance: Top Countries 'Real' matches the CEO office north-star query for the same period. Dev first, READY TO SHIP row. Then \u2192 [QA].",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-04T22:50:41Z",
+      "createdDate": "2026-10-04",
+      "completedDate": null,
+      "dueBy": "2026-10-11"
+    },
+    {
+      "id": "xd-1340",
+      "from": "[CEO]",
+      "to": "[MARKETING]",
+      "title": "Handoff from CEO: [CEO 5 Oct] Apple Search Ads: pick 3 countries in Europe / Americas / Australia by VPN subscription data, then monitor",
+      "description": "CEO 5 Oct (live): 'activate Appfigures since we decided on Apple Search Ads; select Europe, America and Australia - the countries it works in; choose 3 countries by top VPN subscriptions per country from data the board gathers, and monitor ad results'. This narrows xd-1251 / task apple-search-ads-test (budget unchanged: $10/day x 14 days, CEO YES 2 Oct). DELIVER: (1) a ranked table of candidate countries ONLY in Europe, the Americas and Australia: VPN category subscription revenue/top-grossing ranks per country (Appfigures once active; otherwise Apple Search Ads popularity + public sources with date), our own installs, sign-ups, connect-success and paying per country (prod DB, staff/bots excluded), Search Ads CPT/CPI benchmarks with source+date; (2) pick 3 with the reason in one line each - write it on apple-search-ads-test row 0; (3) campaign plan: exact-match keywords, $10/day cap split, start only after the Apple Ads account has a working card and the API cert (CEO list xd-913); (4) monitoring: daily line in the growth run (spend, taps, installs, real sign-ups, connected, paid, cost per each) + stop trigger sign-up->connect < 40%. No spend without the CEO's YES on the final 3. Then \u2192 [CEO] for the YES.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-10-04T22:50:41Z",
+      "createdDate": "2026-10-04",
+      "completedDate": null,
+      "dueBy": "2026-10-11"
     }
   ],
   "importantNotes": [
