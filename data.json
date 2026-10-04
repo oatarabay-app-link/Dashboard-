@@ -12142,6 +12142,27 @@
           "verifiedDate": null,
           "verify": "Gmail (read-only): search 'from:noreply-accounts@google.com Kimi newer_than:7d' \u2192 the 3 Oct 19:58Z notice; closes when the CEO answers in chat",
           "evidence": "[CEO office 2026-10-04 06:2xZ (09:2x Beirut, daily run)] read from the company inbox (read-only): Google account-data notice 2026-10-03 19:58Z, sender noreply-accounts@google.com. Advice: if you do not recognise it, treat it as a lost login the same day."
+        },
+        {
+          "test": "READY TO SHIP \u2014 Double VPN becomes a Premium feature on the server: a Free account asking for a Double VPN route or connection gets the upgrade message instead of a free Double VPN \u00b7 why: you saw on 2 Oct that the free app does not block Double VPN; the server let a Free account connect (measured 3 Oct 20:59Z) and the store apps 4.2 / 4.3.1 have no gate of their own \u00b7 tested on dev: build 0 errors, 174 of 174 tests; a fresh free test account on the test server got the refusal (GET /api/multihop/routes HTTP 403 {success:false, errorCode:'PREMIUM_FEATURE'} at 07:21:53Z with the new code's own log line '[PREMIUM_FEATURE] free user ee783efc.. asked for Double VPN (routes) \u2014 403 (xd-1258)' in the dev API log (dev container rebuilt 07:19Z from 386af0b26). NOTE a dev trap: a fresh dev sign-up lands on the 'Free Trial' plan with DataLimitBytes 0 = unlimited, so NO premium gate fires on dev until the throwaway account's CurrentCycleDataLimitBytes is set to 536870912 (done for this test; production Free accounts carry that cap, e.g. user 6984ccec today)) \u00b7 rollback: one git revert (2440a37a7) \u00b7 ships by /root/deploy_api.sh (xd-1292 = QA on dev first). Advice: YES.",
+          "met": false,
+          "verifiedBy": "none",
+          "evidence": "[ENGINEERING run 2026-10-04 a, 09:57 Beirut (06:59-07:5xZ)] added; development 2440a37a7.",
+          "verify": "fresh Free account -> GET https://api.caspervpn.com/api/multihop/routes = 403 with errorCode PREMIUM_FEATURE; a paid/trial account = 200"
+        },
+        {
+          "test": "READY TO SHIP \u2014 the daily 'connections by country' report compares the two traffic counters over the same hours (today it drops the first hour of its own 24-hour window, which is why it said 'usage 0' on 4 Oct while the meter was fine) \u00b7 why: the 4 Oct 'usage meter is blind' alarm was this report's own window, not the meter \u2014 measured: a new free user's traffic is the same number in all three places (11.3 MB) \u00b7 tested on dev: the script parses (bash -n) and the corrected query was run read-only on the live database \u00b7 rollback: git revert 386af0b26 \u00b7 install = `git -C /root/Casper/Casper-Code show origin/production:infrastructure/scripts/connectivity_report.sh > /opt/caspervpn/connectivity_report.sh` after the cherry-pick (cron unchanged). Advice: YES.",
+          "met": false,
+          "verifiedBy": "none",
+          "evidence": "[ENGINEERING run 2026-10-04 a, 09:57 Beirut (06:59-07:5xZ)] added; development 386af0b26; measurement on xd-1293.",
+          "verify": "next 05:00Z report: usage_counter_bytes > 0 on a day with a session longer than 1 minute; /root/reports/connectivity-latest.txt"
+        },
+        {
+          "test": "CHECKLIST (5 minutes, NOWPayments dashboard) \u2014 a crypto payment on 1 Oct was paid out to the old Ethereum (ERC-20) wallet with its high fees, although you chose USDT on BNB Smart Chain. Our checkout cannot pick the payout wallet (the invoice page has no such setting); the NOWPayments account does. Steps: 1. account.nowpayments.io -> Settings -> Payout wallets (or 'Store settings' -> 'Payout'): make the USDT BEP-20 (BNB Smart Chain) wallet the default / remove the ERC-20 one; 2. if there is an 'auto-convert to' option, set it to USDT BEP-20; 3. say 'done' in any chat \u2014 the next run checks the next payment's outcome currency (xd-1223). Advice: do it before the next crypto sale.",
+          "met": false,
+          "verifiedBy": "none",
+          "evidence": "[ENGINEERING run 2026-10-04 a, 09:57 Beirut (06:59-07:5xZ)] added (xd-1223: code read, website/lib/nowpayments.ts createInvoice sends no payout currency).",
+          "verify": "next completed crypto payment: NOWPayments payment detail outcome_currency = usdtbsc"
         }
       ],
       "progress": 0,
@@ -38017,13 +38038,17 @@
       "from": "[CTO]",
       "to": "[WEBSITE]",
       "title": "Handoff from CTO: [P1] Crypto payments: payout currency shows usdterc20 although the BSC wallet is main",
-      "description": "NOWPayments payment 6425820920 (paid in usdtbsc) shows outcome_currency usdterc20. Check whether createInvoice passes an outcome/payout currency, or the store setting still routes to the ETH wallet (higher fees). Hypothesis, not verified. \u00b7 [CEO office 2026-10-02] dueBy set = createdAt + 7 d (xdPolicy).",
-      "status": "pending",
+      "description": "NOWPayments payment 6425820920 (paid in usdtbsc) shows outcome_currency usdterc20. Check whether createInvoice passes an outcome/payout currency, or the store setting still routes to the ETH wallet (higher fees). Hypothesis, not verified. \u00b7 [CEO office 2026-10-02] dueBy set = createdAt + 7 d (xdPolicy). \u00b7 [ENGINEERING run 2026-10-04 a, 09:57 Beirut (06:59-07:5xZ)] [WEBSITE] READ THE CODE: website/lib/nowpayments.ts createInvoice (L85-110) sends price_amount, price_currency 'usd', pay_currency (coin+network the customer picked, lib/crypto-coins.ts, default USDT on BNB Smart Chain since 1 Oct), order_id/description/urls \u2014 NO outcome/payout currency: NOWPayments' /v1/invoice API has no such field (only the /v1/payment endpoint takes payout_currency/payout_address, and we use the hosted invoice). So outcome_currency is decided by the NOWPayments STORE SETTINGS (Settings -> Payout wallets / 'convert to'), not by our code; usdterc20 on payment 6425820920 means the ERC-20 wallet is still the store's payout target (or the payment predates the 1 Oct wallet decision). Needs the CEO in the NOWPayments dashboard \u2014 CHECKLIST row added on the CEO card. Not changed by this run.",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-10-01T11:11:47Z",
       "createdDate": "2026-10-01",
-      "completedDate": null,
-      "dueBy": "2026-10-08T11:11:47Z"
+      "completedDate": "2026-10-04",
+      "dueBy": "2026-10-08T11:11:47Z",
+      "completedAt": "2026-10-04",
+      "completedBy": "[WEBSITE]",
+      "resolution": "[ENGINEERING run 2026-10-04 a, 09:57 Beirut (06:59-07:5xZ)] answered from the code: no payout currency is sent (the invoice API has none); the store's payout-wallet setting decides -> CEO checklist row.",
+      "resultingHandoff": "CHECKLIST row on the CEO card (NOWPayments payout wallet)"
     },
     {
       "id": "xd-1224",
@@ -38381,7 +38406,7 @@
       "from": "[ANDROID]",
       "to": "[DEVOPS]",
       "title": "Handoff from ANDROID: [P1] The dev API offers 0 servers, so no app (Android, iOS dev scheme, desktop) can make a test connection on dev",
-      "description": "[ANDROID apps run 2026-10-02 c, 2026-10-02T16:38:24Z] MEASURED twice: 08:2xZ (apps run b, live contract test: 'servers 200 count=0') and 16:38Z (fresh dev account, GET https://api.dev.caspervpn.com/api/servers -> 200, data = [] ). Apps run b read the dev DB: VpnServers has only 'Dev API Host' active and it is in Maintenance; 'Bangkok Dev' inactive/offline. WHY IT MATTERS: the build mandate (prompts/09 \u00a73a) requires every apps run to end with a real connection to a fleet node from an emulator/simulator; on dev that is impossible until dev offers at least one connectable WireGuard server. ASK: make one dev-safe node connectable from the dev API (Bangkok dev prober is the natural one; never a production node's live peer table without CEO YES), then answer with GET /api/servers count >= 1 and POST /api/servers/<id>/wireguard-config -> 200 for a dev test account. Not changed by this run: nothing on dev or prod.",
+      "description": "[ANDROID apps run 2026-10-02 c, 2026-10-02T16:38:24Z] MEASURED twice: 08:2xZ (apps run b, live contract test: 'servers 200 count=0') and 16:38Z (fresh dev account, GET https://api.dev.caspervpn.com/api/servers -> 200, data = [] ). Apps run b read the dev DB: VpnServers has only 'Dev API Host' active and it is in Maintenance; 'Bangkok Dev' inactive/offline. WHY IT MATTERS: the build mandate (prompts/09 \u00a73a) requires every apps run to end with a real connection to a fleet node from an emulator/simulator; on dev that is impossible until dev offers at least one connectable WireGuard server. ASK: make one dev-safe node connectable from the dev API (Bangkok dev prober is the natural one; never a production node's live peer table without CEO YES), then answer with GET /api/servers count >= 1 and POST /api/servers/<id>/wireguard-config -> 200 for a dev test account. Not changed by this run: nothing on dev or prod. \u00b7 [ENGINEERING run 2026-10-04 a, 09:57 Beirut (06:59-07:5xZ)] [DEVOPS] MEASURED (read-only): dev DB VpnServers = 9 rows, only 'Dev API Host (London \u2014 DigitalOcean)' IsActive (Status 2); 'Bangkok Dev' 46.16.129.246 IsActive=false Status=1; the dev API container has NO VpnServers__* control entries (only VpnApi__Token), and from the dev host Bangkok's control API answers nothing on :5002 and :5000 (curl 000 = refused/filtered). So this is not a one-row flip: it needs (1) a VpnServers__<id>=46.16.129.246 control mapping + the node's token on the dev API env, (2) Bangkok's control port opened to the dev host 188.166.174.132 (a fleet-node firewall change \u2014 needs a yes on a READY TO SHIP row even though Bangkok is the dev node), (3) the row set IsActive=true/Status Online on the dev DB, (4) the Flask peer-add path tested with a dev account. Not done this run (3 steps, one on a fleet node). Proposed owner order: DevOps builds (1)+(3) on dev, puts (2) on the CEO card, then answers with GET /api/servers count >= 1.",
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-10-02T16:38:30Z",
@@ -38527,20 +38552,24 @@
       "to": "[BACKEND]",
       "title": "Handoff from IOS: [P1] Double VPN must be Premium on the server: MultiHopController lets Free accounts connect",
       "description": "CEO 2 Oct (live): 'the free version does not block Double VPN as a premium feature and it is one'. MEASURED: POST /api/multihop/connect 20:59:46Z \u2192 200 for free user 212ddb7b; MultiHopController.cs ~L240 only requires an Active subscription ('Multi-hop tier-gate removed'), and the Free plan is an active subscription. The app gate (PremiumFeature.multiHop = not free, branch ios/trial-at-signup 46ab677a) only covers the next app version; 4.2 / 4.3.1 users keep free Double VPN until the server refuses. ASK: refuse multihop/connect for the Free plan with the existing 403 subscriptionRequired shape (the app already shows the upgrade sheet for it, xd-776); keep trial + paid tiers allowed; unit test; dev; READY TO SHIP row.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-10-02T21:27:48Z",
       "createdDate": "2026-10-02",
-      "completedDate": null,
+      "completedDate": "2026-10-04",
       "dueBy": "2026-10-09T21:27:44Z",
-      "handoffTo": "[QA]"
+      "handoffTo": "[QA]",
+      "completedAt": "2026-10-04",
+      "completedBy": "[BACKEND]",
+      "resolution": "[ENGINEERING run 2026-10-04 a, 09:57 Beirut (06:59-07:5xZ)] DONE on development 2440a37a7 \u2014 Free plan refused on /multihop/routes and /multihop/connect with 403 PREMIUM_FEATURE ('Active subscription required\u2026' wording -> iOS upgrade sheet); trial/paid (unlimited data) and review accounts pass; 4 unit tests, 174/174 on the brain; dev before: free account -> routes 200; after: GET /api/multihop/routes HTTP 403 {success:false, errorCode:'PREMIUM_FEATURE'} at 07:21:53Z with the new code's own log line '[PREMIUM_FEATURE] free user ee783efc.. asked for Double VPN (routes) \u2014 403 (xd-1258)' in the dev API log (dev container rebuilt 07:19Z from 386af0b26). NOTE a dev trap: a fresh dev sign-up lands on the 'Free Trial' plan with DataLimitBytes 0 = unlimited, so NO premium gate fires on dev until the throwaway account's CurrentCycleDataLimitBytes is set to 536870912 (done for this test; production Free accounts carry that cap, e.g. user 6984ccec today). READY TO SHIP row added on the CEO card; QA on dev = xd-1292.",
+      "resultingHandoff": "xd-1292 to [QA] (dev check); READY TO SHIP row on the CEO card"
     },
     {
       "id": "xd-1259",
       "from": "[CEO]",
       "to": "[CTO]",
       "title": "Handoff from CEO: [P1] Two scheduled runs left no Obsidian log today (CEO 2 Oct: 'make sure all tasks are updating Obsidian session logs')",
-      "description": "[CEO office 2026-10-02 21:3xZ] Measured from DEPARTMENT_LOG.md + list_triggers: 9 firings on 2 Oct; full entries from QA (05:47Z, 13:44Z), apps (01:5xZ and 16:40Z: Android/iOS/Desktop), growth (09:56-09:58Z), office (06:24Z), engineering 14:57Z firing (16:07-16:09Z: Website/Backend/DevOps/CTO). NO entry from the 06:57Z (09:57 Beirut) engineering firing; only [IOS] 10:35Z from the 08:19Z (11:19 Beirut) apps firing (Android + Desktop missing). Do: (1) read those two sessions (the Claude app's session list; ~/.claude/casper-session-ledger.jsonl on the Mac) and write what they did and why they did not log; (2) if they changed the board or the repo without a log, write the missing entries now, marked 'written after the fact by [CTO]'; (3) rule added to prompts/09 step 7a (log even when idle) \u2014 mirror in prompts/06 and 08 if missing; (4) the office counts entries per firing every morning. Then \u2192 [QA]. \u00b7 [ENGINEERING run 2026-10-03 07:0x-07:3xZ (09:57 Beirut)] [CTO] this run wrote its DEPARTMENT_LOG entries (one per department) before reporting; the 09:57 Beirut slot of 3 Oct is covered.",
+      "description": "[CEO office 2026-10-02 21:3xZ] Measured from DEPARTMENT_LOG.md + list_triggers: 9 firings on 2 Oct; full entries from QA (05:47Z, 13:44Z), apps (01:5xZ and 16:40Z: Android/iOS/Desktop), growth (09:56-09:58Z), office (06:24Z), engineering 14:57Z firing (16:07-16:09Z: Website/Backend/DevOps/CTO). NO entry from the 06:57Z (09:57 Beirut) engineering firing; only [IOS] 10:35Z from the 08:19Z (11:19 Beirut) apps firing (Android + Desktop missing). Do: (1) read those two sessions (the Claude app's session list; ~/.claude/casper-session-ledger.jsonl on the Mac) and write what they did and why they did not log; (2) if they changed the board or the repo without a log, write the missing entries now, marked 'written after the fact by [CTO]'; (3) rule added to prompts/09 step 7a (log even when idle) \u2014 mirror in prompts/06 and 08 if missing; (4) the office counts entries per firing every morning. Then \u2192 [QA]. \u00b7 [ENGINEERING run 2026-10-03 07:0x-07:3xZ (09:57 Beirut)] [CTO] this run wrote its DEPARTMENT_LOG entries (one per department) before reporting; the 09:57 Beirut slot of 3 Oct is covered. \u00b7 [ENGINEERING run 2026-10-04 a, 09:57 Beirut (06:59-07:5xZ)] [CTO] the 09:57 Beirut engineering slot of 4 Oct wrote six DEPARTMENT_LOG entries (one per department) before reporting; 3 Oct both slots logged. Items (1)-(2) (read the two unlogged 2 Oct sessions from ~/.claude/casper-session-ledger.jsonl on the Mac) cannot be done by a scheduled run: ~/.claude is outside the connected folder. Either the CEO attaches that folder once, or the office reads it in a live chat. (3) prompts/09 step 7a exists; 06/08 mirror not checked this run.",
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-10-02T21:29:58Z",
@@ -39011,11 +39040,15 @@
       "to": "[BACKEND]",
       "title": "Handoff from CEO: [P1] The usage meter is nearly blind: 1 BandwidthUsageLogs row today vs 514 MB of session traffic in 24 h \u2014 fix or explain before any per-country traffic claim",
       "description": "MEASURED 2026-10-04 06:08Z (prod DB, read-only): BandwidthUsageLogs rows per day 29 Sep 28 \u00b7 30 Sep 48 \u00b7 1 Oct 7 \u00b7 2 Oct 20 \u00b7 3 Oct 3 \u00b7 4 Oct 1 (distinct users 5, 6, 5, 7, 2, 1). In the same 24 h ConnectionLogs session counters moved 514,106,931 bytes (the connectivity routine's own fleet control, 05:00Z: users_with_real_traffic 0 \u00b7 usage_counter_bytes 0 \u00b7 session_counter_bytes 514106931), and every per-country verdict reads 'fleet idle / instrument'. meter-sanity says ok 24/24 (13 meters ok, 0 blind) \u2014 the two instruments disagree, so one of them is wrong (\u00a77.2.1). HYPOTHESIS, not proven: the usage-sync path stopped writing after the 3 Oct deploys (07:17Z xd-1208 re-home, 15:12Z correction) or the hourly compaction drops rows when the key-owner lookup moves them; the 1 Oct dip (7 rows) predates both, so the cause may be older. ASK: (1) read the API log for the usage-sync job since 2 Oct 00:00Z and count writes vs skips; (2) compare per-user session bytes vs usage bytes for the 5 users who connected on 3 Oct; (3) say which instrument is right and fix the other on development \u2192 READY TO SHIP row; (4) until then mark the connectivity report's per-country verdicts as void. Why P1: the data cap (512 MiB free tier) is enforced from this table \u2014 a blind meter means free users are not capped and the board's traffic numbers are fiction. Control to keep: Germany/Lebanon sessions must show bytes once fixed.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-10-04T06:19:44Z",
       "createdDate": "2026-10-04",
-      "completedDate": null
+      "completedDate": "2026-10-04",
+      "completedAt": "2026-10-04",
+      "completedBy": "[BACKEND]",
+      "resolution": "[ENGINEERING run 2026-10-04 a, 09:57 Beirut (06:59-07:5xZ)] ANSWERED with measurements (not blind): rows/day counts user-server-hours since the 15 Sep hourly upsert; bytes agree (4 Oct: 11,338,760 in the usage table, the session row and the user's cap counter); the routine's 0 was the 24 h window cutting the previous day's hour bucket + 17 Simulator sessions of 3-25 s that the 20 s poll cannot see (their bytes reach the cap counter via the app's disconnect report). The cap reads Users.CurrentCycleDataUsedBytes, not this table. Window fix on development 386af0b26 -> READY TO SHIP row; QA re-check xd-1293. Open design gap (not shipped): bill a new peer from zero on first sight when its row was created by /wireguard-config \u2014 filed as a note, needs a design decision (double-billing risk for revived rows).",
+      "resultingHandoff": "xd-1293 to [QA]; READY TO SHIP row (connectivity window) on the CEO card"
     },
     {
       "id": "xd-1291",
@@ -39028,9 +39061,44 @@
       "createdAt": "2026-10-04T06:19:44Z",
       "createdDate": "2026-10-04",
       "completedDate": null
+    },
+    {
+      "id": "xd-1292",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: [P1] Check on dev: Double VPN is refused to the Free plan on the server (xd-1258) \u2014 then it waits for the CEO's yes",
+      "description": "[ENGINEERING run 2026-10-04 a, 09:57 Beirut (06:59-07:5xZ)] development 2440a37a7 (branch pushed 7326ca5d5 -> 386af0b26): MultiHopController GET /api/multihop/routes and POST /api/multihop/connect now run the same predicate as the premium-server gate (ServersController.CanUsePremiumServersAsync, xd-814): review account OR unlimited-data plan passes (trial + paid), Free gets 403 {success:false, errorCode:'PREMIUM_FEATURE', message:'Active subscription required. Double VPN is available on Premium plans.', upgradeUrl} \u2014 the wording the iOS APIClient maps to APIError.subscriptionRequired (upgrade sheet, xd-776). PROOF: dotnet build 0 errors + dotnet test 174/174 (4 new in Tests/MultiHopPremiumGateTests.cs) on the brain, /root/reports/eng1004a-backend-dev*.log. MEASURED on dev BEFORE the deploy (old container): fresh free account verify-eng1004a-*@caspervpn.com -> GET /api/multihop/routes HTTP 200 {available:true}. AFTER the deploy: GET /api/multihop/routes HTTP 403 {success:false, errorCode:'PREMIUM_FEATURE'} at 07:21:53Z with the new code's own log line '[PREMIUM_FEATURE] free user ee783efc.. asked for Double VPN (routes) \u2014 403 (xd-1258)' in the dev API log (dev container rebuilt 07:19Z from 386af0b26). NOTE a dev trap: a fresh dev sign-up lands on the 'Free Trial' plan with DataLimitBytes 0 = unlimited, so NO premium gate fires on dev until the throwaway account's CurrentCycleDataLimitBytes is set to 536870912 (done for this test; production Free accounts carry that cap, e.g. user 6984ccec today). VERIFY (dev): register a fresh account, flip IsEmailVerified in the dev DB, login, `curl -s -o /dev/null -w '%{http_code}' -H 'Authorization: Bearer <token>' https://api.dev.caspervpn.com/api/multihop/routes` -> 403 and the body carries errorCode PREMIUM_FEATURE; a review account (IsReviewAccount=true) -> 200. LIMIT: /connect cannot be exercised on dev (dev has one active server; the entry==exit check answers 400 before the gate) \u2014 the /connect half is proven by the unit test + the shared predicate; QA re-checks /connect on production after the CEO's yes (the 3 Oct 20:59:46Z 200 for free user 212ddb7b must become 403). ROLLBACK: git revert 2440a37a7. Ships by /root/deploy_api.sh after the READY TO SHIP row on the CEO card gets a yes.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-04T07:22:08Z",
+      "createdDate": "2026-10-04",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1293",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: [P1] Re-run the usage-meter measurement (xd-1290): the meter is NOT blind \u2014 the rows/day instrument and the 24 h window were wrong; dev has the window fix (connectivity_report.sh)",
+      "description": "[ENGINEERING run 2026-10-04 a, 09:57 Beirut (06:59-07:5xZ)] MEASURED on production (read-only, prod DB + API log): (1) BandwidthUsageLogs holds ONE row per (user, server, HOUR) since the 15 Sep hourly upsert (BandwidthMonitoringService.RecordUsageAsync, ON CONFLICT upsert on the hour bucket), so 'rows per day' counts user-server-hours, not traffic: 29 Sep..4 Oct rows 45/48/7/20/3/1 but BYTES 4.74 GB / 2.72 GB / 427 MB / 608 MB / 651 MB / 11.3 MB; ConnectionLogs bytes by ConnectedAt the same days 458 MB / 938 MB / 14.6 MB / 75.6 MB / 514 MB / 11.3 MB. (2) Per user: brand-new free user 6984ccec (4 Oct 05:30-06:37Z, 67 min CasperCloak): Users.CurrentCycleDataUsedBytes 11,338,760 = BandwidthUsageLogs sum 11,338,760 = ConnectionLogs 11,338,760 \u2014 exact; 7250d2c3 (3 Oct 05:01Z, 15 min): usage 650,642,276 >= session 502,288,660, cycle counter 650,643,108 (121% of the 512 MiB cap). (3) The routine's '0 usage vs 514 MB sessions' at 05:00Z is a WINDOW artifact: the only large session of that window (3 Oct 05:01:04Z, 502 MB) is stored in the 05:00:00 hour bucket, which `RecordedAt > now()-24h` evaluated at 05:00:01Z excludes while `ConnectedAt > now()-24h` includes the session. The rest of the window was 17 sessions of 3-25 s (the CEO's Simulator captures 19:31-22:27Z, 12 MB total, users 2eecd0e6/11487223/212ddb7b): the 20 s peer poll cannot bill a session shorter than one poll (a NEW peer row takes the node's counters as its baseline \u2014 WireGuardUsageSyncService ~L455 \u2014 and the peer is gone by the next poll); API log since 3 Oct 15:00Z: 2,851 polls, 8 with billed>0, all 8 in the 4 Oct 05:30-05:33Z session; 0 'Failed to record bandwidth', 0 42P10. Those short-session bytes DO reach the Users counters through the app's disconnect report (OptimizedVpnServerService.DisconnectFromServerAsync: 212ddb7b counter 2,781,580 = its sessions, history table 197,080). (4) The data cap reads Users.CurrentCycleDataUsedBytes (BandwidthMonitoringService.GetUserBandwidthAsync L69), not this table \u2014 so free users ARE capped; the table is the history/admin surface. FIX on development 386af0b26: infrastructure/scripts/connectivity_report.sh usage window = `>= date_trunc('hour', now()-24h)` (5 places), bash -n OK; install needs a CEO yes (READY TO SHIP row). VERIFY: the two SQLs on prod read-only: SELECT date_trunc('day',\"RecordedAt\")::date, count(*), sum(\"BytesUsed\") FROM \"BandwidthUsageLogs\" WHERE \"RecordedAt\">now()-interval '7 days' GROUP BY 1; and the same by ConnectedAt on ConnectionLogs; then user 6984ccec's three numbers. Control (\u00a77.2.1): a user with a >1 min session must show equal bytes in all three places; a Simulator 4 s session will not appear in the history table and that is the known gap, not blindness. Per-country verdicts of the 05:00Z connectivity report stay 'void' until the window fix is installed; after it, re-read one morning's report and expect usage_counter_bytes > 0 on a day with a >1 min session.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-04T07:22:08Z",
+      "createdDate": "2026-10-04",
+      "completedDate": null
     }
   ],
   "importantNotes": [
+    {
+      "id": "note-eng-20261004a",
+      "type": "engineering",
+      "priority": "P1",
+      "author": "[ENGINEERING run]",
+      "date": "2026-10-04",
+      "createdAt": "2026-10-04T07:22:04Z",
+      "resolved": false,
+      "title": "[Engineering 4 Oct 09:57 Beirut] Double VPN is now Premium on the test server (your yes needed); the 'blind usage meter' alarm was the report's own window \u2014 the meter is fine; one NOWPayments setting needs you",
+      "body": "BAD FIRST: nothing shipped to production (no CEO YES rows were waiting for Backend/DevOps/Website/Admin/Security/CTO). DONE ON THE TEST SERVER: (1) Double VPN refuses the Free plan on the server \u2014 build 0 errors, 174/174 tests, dev before 200 / after GET /api/multihop/routes HTTP 403 {success:false, errorCode:'PREMIUM_FEATURE'} at 07:21:53Z with the new code's own log line '[PREMIUM_FEATURE] free user ee783efc.. asked for Double VPN (routes) \u2014 403 (xd-1258)' in the dev API log (dev container rebuilt 07:19Z from 386af0b26). NOTE a dev trap: a fresh dev sign-up lands on the 'Free Trial' plan with DataLimitBytes 0 = unlimited, so NO premium gate fires on dev until the throwaway account's CurrentCycleDataLimitBytes is set to 536870912 (done for this test; production Free accounts carry that cap, e.g. user 6984ccec today) -> READY TO SHIP row, QA xd-1292. (2) Usage meter (xd-1290) is NOT blind: 'rows per day' counts user-server-hours since 15 Sep; bytes agree (a new free user today: 11.3 MB in all three places); the morning report's '0' was its own 24-hour window dropping the previous day's hour bucket + 17 Simulator sessions of 3-25 s that the 20-second poll cannot see (their bytes still reach the cap counter through the app's disconnect report; the cap reads the user counter, not the table). Window fix on development -> READY TO SHIP row, QA xd-1293. (3) NOWPayments payout currency (xd-1223): our code cannot choose it; the account's payout-wallet setting does -> CHECKLIST row. NOT DONE: xd-1255 telemetry v2 (iOS has not answered the payload on xd-1254; coding it blind risks a second round) \u2014 next run codes the backend half anyway if iOS stays silent; xd-1247 dev servers (needs a fleet-node firewall change, see the ticket); DevOps rows 87/96, security rotations still wait for your yes. Development was levelled with production first (f9f63ab01; production's 3 Oct 'auto: local sync' moved 39 Info.plist keys into the Xcode project \u2014 [iOS] should know)."
+    },
     {
       "id": "note-ceo-office-20261004",
       "type": "ceo",
