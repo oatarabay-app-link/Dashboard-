@@ -1481,7 +1481,7 @@ function renderXDept(){
   }
   // STRICT filter: only pending + in_progress + open (NOT deferred/consolidated/completed — those have their own tabs)
   const CATS={'release-4.3.1':'Release 4.3.1','next-build-4.4':'Next build 4.4','infra-fleet':'Infra & fleet','growth':'Growth','trust-legal':'Trust & legal','money-admin':'Money & admin','platform':'Platform','factory-ops':'Factory ops','other':'Other'};
-  window.xdF=window.xdF||{cat:'all',dept:'all',life:'all'};
+  window.xdF=window.xdF||{cat:'all',dept:'all',life:'all',rel:'all'};
   const F=window.xdF;
   const allActive=tasks.filter(t=>{
     const s=(t.status||'').toLowerCase();
@@ -1490,7 +1490,7 @@ function renderXDept(){
   const dOf=t=>(t.to||'unknown').replace(/^\[+|\]+$/g,'').toUpperCase();
   const ageOf=t=>t.createdAt?Math.floor((Date.now()-new Date(t.createdAt))/86400000):0;
   const lifeOf=t=>t.lifecycle||(ageOf(t)>7?'triage':'active');
-  const active=allActive.filter(t=>(F.cat==='all'||(t.category||'other')===F.cat)&&(F.dept==='all'||dOf(t)===F.dept)&&(F.life==='all'||lifeOf(t)===F.life))
+  const active=allActive.filter(t=>(F.cat==='all'||(t.category||'other')===F.cat)&&(F.dept==='all'||dOf(t)===F.dept)&&(F.life==='all'||lifeOf(t)===F.life)&&(F.rel==='all'||(F.rel==='yes'?t.needsRelease===true:t.needsRelease!==true)))
     .sort((a,b)=>new Date(b.createdAt||0)-new Date(a.createdAt||0));
   const chip=(k,v,label,n)=>`<span onclick="window.xdF.${k}='${v}';renderXDept()" style="cursor:pointer;display:inline-block;padding:3px 9px;margin:2px 4px 2px 0;border-radius:12px;font-size:11px;border:1px solid var(--border);${F[k]===v?'background:var(--blue);color:#fff;border-color:var(--blue)':'background:var(--panel-alt,rgba(255,255,255,0.03));color:var(--muted)'}">${label}${n!=null?' <b>'+n+'</b>':''}</span>`;
   const cnt=(f)=>allActive.filter(f).length;
@@ -1499,6 +1499,7 @@ function renderXDept(){
   filterBar+=`<div style="margin:0 0 10px"><div style="font-size:11px;color:var(--muted);margin-bottom:3px">Department</div>`+chip('dept','all','All')+deptNames.map(dn=>chip('dept',dn,dn,cnt(t=>dOf(t)===dn))).join('')+`</div>`;
   const triN=cnt(t=>lifeOf(t)==='triage');
   filterBar+=`<div style="margin:0 0 12px"><div style="font-size:11px;color:var(--muted);margin-bottom:3px">Lifecycle — rule: no row stays active more than 7 days</div>`+chip('life','all','All')+chip('life','active','Active ≤ 7 d',cnt(t=>lifeOf(t)==='active'))+chip('life','triage','⚠ Triage > 7 d',triN)+`</div>`;
+  filterBar+=`<div style="margin:0 0 12px"><div style="font-size:11px;color:var(--muted);margin-bottom:3px">Release — CEO rule 4 Oct: everything that needs no app release is finalized by its owner now; blockers go to the board</div>`+chip('rel','all','All')+chip('rel','no','✅ No release needed — finalize now',cnt(t=>t.needsRelease!==true))+chip('rel','yes','📱 Needs an app release',cnt(t=>t.needsRelease===true))+`</div>`;
   // Group by `to` (owning dept)
   const byDept={};
   active.forEach(t=>{
@@ -1529,7 +1530,7 @@ function renderXDept(){
         <div style="font-size:11px;color:var(--muted);margin-top:4px">
           ${ctoEsc(t.from||'?')} → <strong>${ctoEsc(t.to||'?')}</strong> | <span style="color:${t.status==='in_progress'?'var(--blue)':'var(--yellow)'}">⏳ ${ctoEsc(t.status||'?')}</span>
         </div>
-        <div style="font-size:11px;margin-top:3px;color:var(--muted)">📅 ${created} · ${ageOf(t)} d ${lifeOf(t)==='triage'?'<span style="color:var(--red);font-weight:700">⚠ TRIAGE: '+ctoEsc(t.triageReason||'older than 7 days')+'</span>':'<span style="color:var(--green)">active</span>'} · 🗂 ${ctoEsc(CATS[t.category]||'Other')} | 🎯 Due: <span style="color:${isOverdue?'var(--red)':'var(--green)'}">${due}${isOverdue?' ⚠️':''}</span></div>
+        <div style="font-size:11px;margin-top:3px;color:var(--muted)">📅 ${created} · ${ageOf(t)} d ${lifeOf(t)==='triage'?'<span style="color:var(--red);font-weight:700">⚠ TRIAGE: '+ctoEsc(t.triageReason||'older than 7 days')+'</span>':'<span style="color:var(--green)">active</span>'} · 🗂 ${ctoEsc(CATS[t.category]||'Other')}${t.needsRelease?' · 📱 needs release':''}${t.blocker?' · ⛔ BLOCKED: '+ctoEsc(String(t.blocker)).slice(0,80):''} | 🎯 Due: <span style="color:${isOverdue?'var(--red)':'var(--green)'}">${due}${isOverdue?' ⚠️':''}</span></div>
         ${t.description?`<div style="font-size:12px;margin-top:6px;line-height:1.45">${ctoEsc(t.description).slice(0,400)}${t.description.length>400?'...':''}</div>`:''}
       </div>`;
     });
