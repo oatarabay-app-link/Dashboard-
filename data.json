@@ -43697,9 +43697,51 @@
       "dueBy": "2026-10-08T18:00:00Z",
       "category": "growth",
       "needsRelease": false
+    },
+    {
+      "id": "xd-1369",
+      "from": "[CEO]",
+      "to": "[BACKEND]",
+      "title": "Handoff from CEO: Auth hardening (CEO security review 5 Oct): enforce 2FA for admin roles, breached-password check, password rules",
+      "description": "VERIFIED in code 5 Oct: admin authorization is server-side ([Authorize(Roles=Admin,SuperAdmin)] on AdminController) - OK; login rate limiting = RateLimitingMiddleware (sliding window) + per-user lockout 5 failures/15 min (FailedLoginAttempts) - OK; 2FA (TOTP) exists but is OPTIONAL and admin@caspervpn.com has TwoFactorEnabled=false; password rule = MinLength(8) only, no complexity, no breached-password check. Deliver: (1) 2FA REQUIRED for Role Admin/SuperAdmin - login returns TwoFactorRequired until enrolled; CEO enrols admin@ first; (2) k-anonymity check against Have I Been Pwned (range API, SHA-1 prefix, no password leaves the server in full) on register + change-password + admin login; reject with 'this password appeared in a data breach'; (3) rule: >= 10 chars, not in the top-10k list, not equal to the email; (4) tests. P1.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-05T10:50:34Z",
+      "createdDate": "2026-10-05",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1370",
+      "from": "[CEO]",
+      "to": "[ADMIN]",
+      "title": "Handoff from CEO: Admin SPA keeps the session token in localStorage - move to httpOnly cookie (or memory + short refresh)",
+      "description": "VERIFIED 5 Oct: admin-panel-react/src/services/api.ts stores accessToken (60 min), refreshToken (30 days) and user in localStorage - readable by any script that runs on the page (XSS -> full admin takeover for 30 days). The website admin (admin_token cookie) and the partner dashboard already use httpOnly, sameSite=lax cookies - do the same here with BACKEND: /api/auth/login sets httpOnly cookies for the admin origin, SPA sends credentials: include, refresh via cookie, CSRF double-submit token on mutations. Interim (this week): keep the access token in memory only, refresh token httpOnly, logout clears both. Also: refresh token lifetime 30 days (60 when 'remember me') - cap admin at 7 days. P1.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-05T10:50:34Z",
+      "createdDate": "2026-10-05",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1371",
+      "from": "[CEO]",
+      "to": "[LEGAL]",
+      "title": "Handoff from CEO: Platform terms register + privacy policy vs code diff + Apple privacy labels + cyber-insurance quote",
+      "description": "CEO 5 Oct: 'have we read platform terms? does our privacy policy match our app? do we have cyber liability insurance?'. State: no terms register exists in the vault; the privacy page was corrected 3 Oct (no RAM-only/audit claims) but never diffed line by line against what the code stores; Apple privacy labels (xd-282) have waited for the CEO since spring; no insurance. Deliver: (1) TERMS REGISTER memory/context/platform-terms-register.md: Apple Developer Program License Agreement + App Review 5.4 (VPN) + NetworkExtension entitlement rules; Google Play Developer Distribution Agreement + VPN policy; Cloudflare self-serve terms (proxying non-web traffic through the CDN - CasperCloak WebSocket fronting; check the current allowed-use wording); NOWPayments; Resend; OneProvider/DigitalOcean AUP (VPN exit traffic); Payoneer. For each: the clauses that bind us, the risk, what we must not do. (2) POLICY-vs-CODE DIFF: tables Users (RegistrationIpHash, RegistrationCountry, LastLoginCountry, LastLoginUserAgent), ConnectionLogs (DeviceId, UserAgent, bytes), ConnectFailureEvents (RegionHint, CarrierAsnHint, build), BandwidthUsageLogs, FailedLoginAttempts, crash reports (GlitchTip), affiliate_clicks (ip_hash, user_agent), orders (email to NOWPayments) - each must map to a section of /privacy or the policy changes; the sentence 'no IP addresses, no device fingerprints tied to sessions' must be true or rewritten. (3) Apple App Privacy labels drafted from that diff for the CEO to paste (unblocks xd-282). (4) Cyber liability insurance: get 2 quotes for a VPN SaaS with a Lebanese entity (coverage: data breach response, third-party liability, business interruption; expect low four figures/yr); advice: buy when the first business/DPA customer signs, not before. P1.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-05T10:50:34Z",
+      "createdDate": "2026-10-05",
+      "completedDate": null
     }
   ],
   "importantNotes": [
+    {
+      "date": "2026-10-05",
+      "dept": "ceo",
+      "note": "CEO security review 5 Oct (verified in code): admin check server-side OK; login rate limit + lockout OK; 2FA optional (admin@ has it OFF) -> enforce; passwords min 8 only, no breach check -> HIBP; admin SPA tokens in localStorage -> httpOnly cookies; iOS tokens in Keychain OK; partner/website admin cookies httpOnly OK. No cyber insurance, no platform-terms register, privacy policy never diffed vs code, Apple privacy labels still pending -> LEGAL row.",
+      "id": "note-legacy-b596b4f2df"
+    },
     {
       "id": "note-growth-20261005",
       "type": "growth",
