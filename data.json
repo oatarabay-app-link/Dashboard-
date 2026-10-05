@@ -42694,7 +42694,7 @@
       "from": "[CEO]",
       "to": "[MARKETING]",
       "title": "Handoff from CEO: Affiliate truth: Rakib's 5 clicks are 5 real iPhones on 4 days - but we cannot attribute a single install. Fix the chain, then talk to him",
-      "description": "[GROWTH run 2026-10-04 b, 22:47Z firing (01:47 Beirut 5 Oct)] Absorbed xd-984 (Handoff from MARKETING: [P1] Monthly affiliate redemption report \u2014 read offer-code redempt): The redemption report is now built on our own data: xd-1320 (shipped 22:28Z 4 Oct) stores Apple's offerIdentifier on every transaction and writes affiliate_conversions, so per-partner earnings come from our database; payout statement + monthly run continue on xd-1314. Apple Sales-report access (CEO key role) is no longer the only path.\n\n[GROWTH run 2026-10-04 b, 22:47Z firing (01:47 Beirut 5 Oct)] Absorbed xd-921 (Handoff from MARKETING: [P2] Recruit the first 5 active affiliates after gate G4 (endpoint): Recruiting 5 active affiliates only makes sense once a partner sale can be attributed and paid; xd-1314 (CEO, 4 Oct) owns attribution, the early-partner offer and the partner follow-up.\n\nMEASURED 4 Oct (website DB): RAKIBKZP6SJ 5 clicks (28, 29, 29, 30 Sep, 3 Oct), 5 different IPs, all iPhone Safari, landing /?ref=RAKIBKZP, referrer empty (shared in chat/DM). SAAD 0 clicks. Partner-dashboard logins 0. affiliate_conversions = 6 rows (verify: tests?). Attribution gap: the click lands on caspervpn.com, the user then goes to the App Store, and nothing links the install or the trial back to the code -> we will NEVER be able to pay him or prove the programme. Deliver: (1) attribution = App Store offer code per partner (already minted) + 'where did you hear about us' at sign-up + ref cookie -> web sign-up; show per-partner clicks/sign-ups/trials/paid on the partner dashboard; (2) early-partner offer for CEO yes: 40% recurring for 12 months (vs 25%), free Premium for the partner, a personal landing page /p/<code>, and payout via Payoneer at $20 minimum; (3) a personal message to Rakib from the CEO: thanks, numbers, the offer, and 'what would make this easier for you?' - draft, CEO sends. Do NOT claim the programme 'works' anywhere until one attributed paid sign-up exists.",
+      "description": "[CTO 5 Oct 00:4xZ] NOTE: partner dashboard sign-in was broken for everyone until 00:40Z today (schema permission, fixed) - Rakib and Saad could never log in; say so in the message. [GROWTH run 2026-10-04 b, 22:47Z firing (01:47 Beirut 5 Oct)] Absorbed xd-984 (Handoff from MARKETING: [P1] Monthly affiliate redemption report \u2014 read offer-code redempt): The redemption report is now built on our own data: xd-1320 (shipped 22:28Z 4 Oct) stores Apple's offerIdentifier on every transaction and writes affiliate_conversions, so per-partner earnings come from our database; payout statement + monthly run continue on xd-1314. Apple Sales-report access (CEO key role) is no longer the only path.\n\n[GROWTH run 2026-10-04 b, 22:47Z firing (01:47 Beirut 5 Oct)] Absorbed xd-921 (Handoff from MARKETING: [P2] Recruit the first 5 active affiliates after gate G4 (endpoint): Recruiting 5 active affiliates only makes sense once a partner sale can be attributed and paid; xd-1314 (CEO, 4 Oct) owns attribution, the early-partner offer and the partner follow-up.\n\nMEASURED 4 Oct (website DB): RAKIBKZP6SJ 5 clicks (28, 29, 29, 30 Sep, 3 Oct), 5 different IPs, all iPhone Safari, landing /?ref=RAKIBKZP, referrer empty (shared in chat/DM). SAAD 0 clicks. Partner-dashboard logins 0. affiliate_conversions = 6 rows (verify: tests?). Attribution gap: the click lands on caspervpn.com, the user then goes to the App Store, and nothing links the install or the trial back to the code -> we will NEVER be able to pay him or prove the programme. Deliver: (1) attribution = App Store offer code per partner (already minted) + 'where did you hear about us' at sign-up + ref cookie -> web sign-up; show per-partner clicks/sign-ups/trials/paid on the partner dashboard; (2) early-partner offer for CEO yes: 40% recurring for 12 months (vs 25%), free Premium for the partner, a personal landing page /p/<code>, and payout via Payoneer at $20 minimum; (3) a personal message to Rakib from the CEO: thanks, numbers, the offer, and 'what would make this easier for you?' - draft, CEO sends. Do NOT claim the programme 'works' anywhere until one attributed paid sign-up exists.",
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-10-04T21:27:23Z",
@@ -43269,9 +43269,27 @@
       "createdAt": "2026-10-05T00:37:44Z",
       "createdDate": "2026-10-05",
       "completedDate": null
+    },
+    {
+      "id": "xd-1353",
+      "from": "[CTO]",
+      "to": "[WEBSITE]",
+      "title": "Handoff from CTO: Partner sign-in: make ensureTokenTable() a migration, not a runtime CREATE; QA the magic link end to end",
+      "description": "INCIDENT 5 Oct 00:3xZ (CEO: 'can't sign in to affiliates'): POST /api/partners/login-link failed on EVERY request with Postgres 42501 'permission denied for schema public' because lib/partner-auth.ts ensureTokenTable() runs CREATE TABLE IF NOT EXISTS on each call and casper_website had USAGE but not CREATE on schema public. Result: 0 partner logins ever (Rakib, Saad, CEO test), no email sent, UI said 'link is on its way'. Hot-fix applied on prod: GRANT CREATE ON SCHEMA public TO casper_website; sign-in link for applinks123@gmail.com delivered 00:40Z (Resend). Deliver: (1) move the table to a Prisma migration and drop the runtime CREATE (or wrap it in a privilege check); (2) log + alert (Telegram A-support) when login-link throws - a silent 200 hid this for 8 days; (3) QA: request link -> email delivered -> /partners/auth logs in -> dashboard shows clicks/conversions, for the CEO test partner; (4) MARKETING: tell Rakib and Saad their sign-in works now (part of the CEO message, xd-1314).",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-10-05T00:41:07Z",
+      "createdDate": "2026-10-05",
+      "completedDate": null
     }
   ],
   "importantNotes": [
+    {
+      "date": "2026-10-05",
+      "dept": "cto",
+      "note": "Partner (affiliate) sign-in was broken since 27 Sep: 42501 permission denied (website DB user lacked CREATE on schema public; code runs CREATE TABLE IF NOT EXISTS per request). GRANT applied on prod 00:39Z; first magic link delivered 00:40Z. Rakib/Saad never managed to log in - not their fault.",
+      "id": "note-legacy-5605f09cfe"
+    },
     {
       "date": "2026-10-05",
       "dept": "ceo",
