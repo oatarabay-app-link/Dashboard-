@@ -12267,7 +12267,7 @@
           "test": "CEO YES 2026-10-05 01:1xZ (live chat, recorded in the decisions register): rotate ALL FOUR \u2014 DevOps by 8 Oct, database password last in a quiet window, rollback kept + 24 h before the old secret is revoked (xd-896, xd-978, xd-1021, xd-1024). | DECISION (engineering run 4 Oct c, P1 security) \u2014 Four secrets are still the old ones: the servers' shared admin password (an ordinary English word, in git history), the production database password (same), the test account's password (was pasted in routines and chat), and the hidden-mode relay key (was in 13 files). Options: (a) rotate all four now, one per engineering run; (b) rotate the two with no customer impact first (test-account password, servers' admin password), the database password in a planned 1-minute window after Apple approves 4.3.1, and the relay key only together with the 4.4 app (old apps carry the old key \u2014 rotating it earlier breaks hidden mode for them); (c) leave them. ADVICE: (b). Each rotation: done by the engineering run under the lock, new value written only in the credentials note, rollback = the old value kept until the check passes. Answer 'yes secrets (b)' or (a)/(c) in any chat.",
           "met": true,
           "verifiedBy": "verified",
-          "evidence": "[CEO office 2026-10-05 06:5xZ (09:5x Beirut, daily run)] PASS ANSWERED \u2014 found in memory/departments/ceo/board-decisions.md (row 2026-10-05, CEO live 01:1xZ): '(1) YES to all four secret rotations'. The register is the single reference (CEO rule 4 Oct), so the office closes the decision row and does not re-ask. Work rows: xd-896, xd-978, xd-1021, xd-1024 \u2192 [DEVOPS], due 8 Oct. | [ENGINEERING run 2026-10-04 c (fired 22:48Z = 01:48 Beirut 5 Oct, Cowork, Mac folder attached)] added; tickets xd-896, xd-978, xd-1021, xd-1024 (dueBy 11 Oct) and xd-1129 wait on this.",
+          "evidence": "[CEO office 2026-10-05 06:5xZ (09:5x Beirut, daily run)] PASS ANSWERED \u2014 found in memory/departments/ceo/board-decisions.md (row 2026-10-05, CEO live 01:1xZ): '(1) YES to all four secret rotations'. The register is the single reference (CEO rule 4 Oct), so the office closes the decision row and does not re-ask. Work rows: xd-896, xd-978, xd-1021, xd-1024 \u2192 [DEVOPS], due 8 Oct. | [ENGINEERING run 2026-10-04 c (fired 22:48Z = 01:48 Beirut 5 Oct, Cowork, Mac folder attached)] added; tickets xd-896, xd-978, xd-1021, xd-1024 (dueBy 11 Oct) and xd-1129 wait on this. | [ENGINEERING run 2026-10-05 a, scheduled 'Casper engineering' 09:57 Beirut (06:5x-08:1xZ), Cowork, Mac folder attached] sequencing: xd-1021 (test-account password) is BLOCKED while 4.3.1 is in Apple's queue \u2014 claude-dev@caspervpn.com is the App Review demo account (Users.IsReviewAccount=true); rotating it now would fail the review unless you change the demo password in App Store Connect at the same time. xd-978 (node sudo) first, next run; xd-896 relay key = dual-accept + 4.4; xd-1024 DB password in the night window.",
           "verify": "grep -n 'YES to all four secret rotations' memory/departments/ceo/board-decisions.md",
           "verifiedByRaw": "ceo-office",
           "verifiedDate": "2026-10-05"
@@ -12288,6 +12288,24 @@
           "verifiedDate": null,
           "addedBy": "[ANDROID] apps run 2026-10-05 a",
           "evidence": "[CEO office 2026-10-05 06:5xZ (09:5x Beirut, daily run)] waits for you (day 1) \u2014 the most important thing only you can do this week: without Android Studio on your Mac no Android build can be proven (row 88 closed on this choice). | [APPS run 2026-10-05 a 2026-10-05T00:46:31Z] added; guide production 7f71d82e; API 36 build development aea89451."
+        },
+        {
+          "test": "READY TO SHIP \u2014 admin money numbers show real customers only, everywhere: the 'recurring summary' now agrees with the revenue number (today it says $175.95 against $22.95), the 'revenue intelligence' box stops counting Apple test purchases and staff ($3,743 \u2192 real money only), and renewal payments are tagged test/real from now on \u00b7 why: your 5 Oct order (xd-1338) + QA's xd-1356 \u00b7 tested on dev: all three endpoints answer the same MRR (12.96) and the same total (253.23), build 0 errors, tests 190/190 \u00b7 rollback: /root/deploy_api.sh keeps the rollback image tag \u00b7 ship = cherry-pick fa1a25835 to production + /root/deploy_api.sh. ALSO on your yes: a one-off tag of the 60 old renewal rows (production data; SQL on xd-1338): set Metadata Environment from each row's original purchase (ON CONFLICT nothing, backup first). Advice: YES.",
+          "met": false,
+          "verify": "curl -s -H \"Authorization: Bearer $JWT\" https://api.caspervpn.com/api/admin/subscriptions/recurring-summary | jq .data.monthlyRecurringRevenueUsd  == curl \u2026 /api/admin/revenue | jq .data.summary.mrr",
+          "evidence": "[ENGINEERING run 2026-10-05 a, scheduled 'Casper engineering' 09:57 Beirut (06:5x-08:1xZ), Cowork, Mac folder attached] added; development fa1a25835; QA xd-1362."
+        },
+        {
+          "test": "READY TO SHIP \u2014 partner sign-in hardening: the website never again tries to create a database table while a partner is waiting; if a sign-in link cannot be made, support gets an e-mail within the hour instead of a silent 'link is on its way' \u00b7 why: 5 Oct incident (0 partner logins for 8 days, xd-1353) \u00b7 tested on dev: website build + type check pass on the exact tree; dev redeploy from development \u00b7 rollback: git revert 1ffff88da + redeploy \u00b7 ship = cherry-pick 1ffff88da to production, website deploy workflow. Advice: YES.",
+          "met": false,
+          "verify": "grep -c 'login-link FAILED' in the website container log stays 0 while test partner sign-ins keep working; a forced failure produces one partner_ops_alert row in transactional_emails",
+          "evidence": "[ENGINEERING run 2026-10-05 a, scheduled 'Casper engineering' 09:57 Beirut (06:5x-08:1xZ), Cowork, Mac folder attached] added; development 1ffff88da; QA xd-1365."
+        },
+        {
+          "test": "READY TO SHIP \u2014 the task-sorting tool the CEO office runs every morning is unfrozen (it was stuck on 4 Oct and would have filed a duplicate TRIAGE row per department every day) \u00b7 why: xd-1359 \u00b7 tested: dry run on today's live board reproduced the office's own counts and changed nothing \u00b7 rollback: git revert 3cb56f699 \u00b7 ship = cherry-pick 3cb56f699 to production (a tool file only; no server change). Advice: YES.",
+          "met": false,
+          "verify": "DASH_WORK=$HOME/<run>/dash python3 tools/task_taxonomy.py --dry prints today's date and 'nothing written'",
+          "evidence": "[ENGINEERING run 2026-10-05 a, scheduled 'Casper engineering' 09:57 Beirut (06:5x-08:1xZ), Cowork, Mac folder attached] added; development 3cb56f699; QA xd-1364."
         }
       ],
       "progress": 0,
@@ -16522,12 +16540,12 @@
       "name": "Backend API",
       "status": "red",
       "lead": "Dev Team",
-      "currentTask": "2026-10-05 CEO office re-base (06:5xZ): 28 tasks \u00b7 104/151 criteria met \u00b7 open handoffs 18 \u00b7 open P0 3 (xd-1175, xd-1308, xd-1338)",
+      "currentTask": "2026-10-05 eng run a re-base (08:04Z): 28 tasks \u00b7 104/151 criteria met \u00b7 open handoffs 17 \u00b7 open P0 3 (xd-1175, xd-1308, xd-1338)",
       "blockers": "3",
       "completion": "69",
       "launchCompletion": "69",
       "progress": 92,
-      "lastActivity": "2026-03-16",
+      "lastActivity": "2026-10-05",
       "notes": "2026-09-21 [CTO] re-based by the board sweep (CEO golden rule): completion = criteria met / total on tasks this department owns (multi-owner tasks count for each owner); blockers = open P0 handoffs to this department. Previous text kept in git history.",
       "lastSessionAt": "2026-03-19T12:00:00Z",
       "launch": 62,
@@ -16539,14 +16557,15 @@
       "name": "DevOps & Infra",
       "status": "red",
       "lead": "Unassigned",
-      "currentTask": "2026-10-05 CEO office re-base (06:5xZ): 29 tasks \u00b7 81/198 criteria met \u00b7 open handoffs 24 \u00b7 open P0 1 (xd-1300)",
+      "currentTask": "2026-10-05 eng run a re-base (08:04Z): 29 tasks \u00b7 81/198 criteria met \u00b7 open handoffs 23 \u00b7 open P0 1 (xd-1300)",
       "blockers": "1",
       "completion": "41",
       "progress": 98,
       "launchCompletion": "41",
       "lastSession": "2026-03-16",
       "lastTriggered": "2026-10-04T18:08:08Z",
-      "notes": "2026-09-21 [CTO] re-based by the board sweep (CEO golden rule): completion = criteria met / total on tasks this department owns (multi-owner tasks count for each owner); blockers = open P0 handoffs to this department. Previous text kept in git history."
+      "notes": "2026-09-21 [CTO] re-based by the board sweep (CEO golden rule): completion = criteria met / total on tasks this department owns (multi-owner tasks count for each owner); blockers = open P0 handoffs to this department. Previous text kept in git history.",
+      "lastActivity": "2026-10-05"
     },
     "android": {
       "name": "Android",
@@ -16577,13 +16596,14 @@
       "name": "Website",
       "status": "yellow",
       "lead": "Dev Team",
-      "currentTask": "2026-10-05 CEO office re-base (06:5xZ): 8 tasks \u00b7 28/46 criteria met \u00b7 open handoffs 3 \u00b7 open P0 1 (xd-1353)",
+      "currentTask": "2026-10-05 eng run a re-base (08:04Z): 8 tasks \u00b7 28/46 criteria met \u00b7 open handoffs 3 \u00b7 open P0 1 (xd-1353)",
       "blockers": "1",
       "completion": "61",
       "launchCompletion": "61",
       "lastSessionAt": "2026-03-30T20:00:00Z",
       "lastTriggered": "2026-10-04T18:08:08Z",
-      "notes": "2026-09-28 [QA] re-based at QA exit (golden rule 8): completion = criteria met / total on tasks this department owns (multi-owner tasks count for each owner); blockers = open P0 handoffs to it."
+      "notes": "2026-09-28 [QA] re-based at QA exit (golden rule 8): completion = criteria met / total on tasks this department owns (multi-owner tasks count for each owner); blockers = open P0 handoffs to it.",
+      "lastActivity": "2026-10-05"
     },
     "qa": {
       "name": "QA & Testing",
@@ -16638,13 +16658,14 @@
       "name": "CTO Office",
       "status": "yellow",
       "lead": "Waqar",
-      "currentTask": "2026-10-05 CEO office re-base (06:5xZ): 40 tasks \u00b7 157/250 criteria met \u00b7 open handoffs 9 \u00b7 open P0 2 (xd-1315, xd-1318)",
+      "currentTask": "2026-10-05 eng run a re-base (08:04Z): 40 tasks \u00b7 157/250 criteria met \u00b7 open handoffs 8 \u00b7 open P0 2 (xd-1315, xd-1318)",
       "blockers": "2",
       "completion": "63",
       "launchCompletion": "63",
       "lastSessionAt": "2026-09-28T22:40:35Z",
       "lastTriggered": "2026-10-04T18:08:08Z",
-      "notes": "2026-09-21 [CTO] re-based by the board sweep (CEO golden rule): completion = criteria met / total on tasks this department owns (multi-owner tasks count for each owner); blockers = open P0 handoffs to this department. Previous text kept in git history."
+      "notes": "2026-09-21 [CTO] re-based by the board sweep (CEO golden rule): completion = criteria met / total on tasks this department owns (multi-owner tasks count for each owner); blockers = open P0 handoffs to this department. Previous text kept in git history.",
+      "lastActivity": "2026-10-05"
     },
     "ceo": {
       "status": "red",
@@ -34815,7 +34836,7 @@
       "from": "[QA]",
       "to": "[DEVOPS]",
       "title": "Handoff from QA: [P1] Rotate the CasperCloak relay PSK (X-SECRET-02): literal was in a cloud-syncable skill file + 17 doc files (redacted 09-20); still a literal in 13 code/config files",
-      "description": "[CEO 5 Oct 01:1xZ] CEO YES: 'yes to all four' rotations. DevOps executes under /run/casper-deploy.lock with a rollback: relay PSK + node sudo + dev test-account first; the production DB password last, in a quiet window (02:00-04:00 Beirut), every consumer (.env of api/website/admin/exporters/backup) switched in one step, health checks after, old password revoked only after 24 h clean. Never print a secret anywhere but /opt/caspervpn/secrets and the brain's .env. [ENGINEERING run 2026-10-04 c (fired 22:48Z = 01:48 Beirut 5 Oct, Cowork, Mac folder attached)] (d) ACTIVE again, dueBy 2026-10-11 \u2014 relay pre-shared key: a live-server/production change \u2014 needs a CEO yes. Next step: the CEO answers DECISION row 'secret rotations' on the CEO card (added tonight); the next engineering run then rotates under the session lock, one secret per run, value recorded only in the credentials note. No answer by 11 Oct \u2192 deferred with that reason.\n\n[CEO office 2026-09-30 21:15Z] 7-day rule: past its date with no closing evidence on this ticket. Re-dated to 7 Oct 18:00Z. The owner's next daily run must close it with evidence, hand it back with the blocker, or defer it with a reason + revisit date (xdPolicy) \u2014 not left open again. Found 2026-09-20 during the all-department skill restructure. The relay pre-shared key was written verbatim into .claude/skills/caspervpn-anticensorship/SKILL.md (a Claude Code project skill that gets uploaded to the Anthropic skill store) and into 16 other .md files across the vault (DEPARTMENT_LOG, devops session-log, QA references, memory/sessions audits, transport-and-obfs-spec.md). QA redacted all 17 doc occurrences to a pointer at credentials.md. The literal REMAINS, by design, in 13 runtime files: infrastructure/caspercloak/{caspercloak_ws.py,caspercloak_ws.v13.py,relay_ws.py}, caspercloak-protocol/server/{relay.py,caspercloak-ws.service}, infrastructure/scripts/fleet-onboarding.sh, ios-app-v2 Config.swift + Obfs4Transport.swift, the security references cc_test_client.py, and three stale scratch dirs (.tmp_qa0903/, .qatmp/) that hold board.json copies. ASK: rotate using the dual-accept mechanism the skill already documents (RELAY_PSK + RELAY_PSK_PREV on every relay first, then iOS Config, then drop PREV), coordinated with [iOS] for the client build. Severity is P1 not P0: the PSK gates relay obfuscation, not user data or auth, and there is no evidence of exposure beyond the skill store - but a key that has lived in 30 files for months should be assumed known. Delete the .tmp_qa0903/ and .qatmp/ dirs as part of this.\n\n--- CTO VERIFICATION 2026-09-23 ---\nCONFIRMED STILL REAL (2026-09-23). The CasperCloak relay PSK is still the literal value in the caspercloak-ws systemd unit Environment on the fleet \u2014 I saw it in plaintext while reading the unit today. Rotation has not happened.\n\n[2026-09-27 DEVOPS] CEO 2026-09-26: the CEO is handling the rotation.\n\n[2026-09-27b DEVOPS] For the rotation: the current key is still written in 14 tracked files, including the iOS app source (Config.swift, Obfs4Transport.swift) and the relay code \u2014 so it ships inside every app build. Rotation therefore needs the dual-accept path (relays accept old + new, a new app build with the new key, then retire the old one); editing the documents alone would not help.",
+      "description": "[2026-10-05T08:04Z eng run 1005a] [DEVOPS/SECURITY] CEO YES row 118 read this run; not executed this run (the run's time went to xd-1356/1338, xd-1357, xd-1359, xd-1353). Order kept: node sudo password (xd-978) first \u2014 measure which nodes still use the caspervpn user + password and that root key access works on each BEFORE changing it; relay PSK (xd-896) only as dual-accept PREV+NEW and the client half rides 4.4; DB password (xd-1024) in the 02:00-04:00 Beirut window with postgres + API env + FreeRADIUS + exporters + backup switched together and a real IKEv2 login proven after. Next engineering run (17:57 Beirut) takes xd-978. \u00b7 [CEO 5 Oct 01:1xZ] CEO YES: 'yes to all four' rotations. DevOps executes under /run/casper-deploy.lock with a rollback: relay PSK + node sudo + dev test-account first; the production DB password last, in a quiet window (02:00-04:00 Beirut), every consumer (.env of api/website/admin/exporters/backup) switched in one step, health checks after, old password revoked only after 24 h clean. Never print a secret anywhere but /opt/caspervpn/secrets and the brain's .env. [ENGINEERING run 2026-10-04 c (fired 22:48Z = 01:48 Beirut 5 Oct, Cowork, Mac folder attached)] (d) ACTIVE again, dueBy 2026-10-11 \u2014 relay pre-shared key: a live-server/production change \u2014 needs a CEO yes. Next step: the CEO answers DECISION row 'secret rotations' on the CEO card (added tonight); the next engineering run then rotates under the session lock, one secret per run, value recorded only in the credentials note. No answer by 11 Oct \u2192 deferred with that reason.\n\n[CEO office 2026-09-30 21:15Z] 7-day rule: past its date with no closing evidence on this ticket. Re-dated to 7 Oct 18:00Z. The owner's next daily run must close it with evidence, hand it back with the blocker, or defer it with a reason + revisit date (xdPolicy) \u2014 not left open again. Found 2026-09-20 during the all-department skill restructure. The relay pre-shared key was written verbatim into .claude/skills/caspervpn-anticensorship/SKILL.md (a Claude Code project skill that gets uploaded to the Anthropic skill store) and into 16 other .md files across the vault (DEPARTMENT_LOG, devops session-log, QA references, memory/sessions audits, transport-and-obfs-spec.md). QA redacted all 17 doc occurrences to a pointer at credentials.md. The literal REMAINS, by design, in 13 runtime files: infrastructure/caspercloak/{caspercloak_ws.py,caspercloak_ws.v13.py,relay_ws.py}, caspercloak-protocol/server/{relay.py,caspercloak-ws.service}, infrastructure/scripts/fleet-onboarding.sh, ios-app-v2 Config.swift + Obfs4Transport.swift, the security references cc_test_client.py, and three stale scratch dirs (.tmp_qa0903/, .qatmp/) that hold board.json copies. ASK: rotate using the dual-accept mechanism the skill already documents (RELAY_PSK + RELAY_PSK_PREV on every relay first, then iOS Config, then drop PREV), coordinated with [iOS] for the client build. Severity is P1 not P0: the PSK gates relay obfuscation, not user data or auth, and there is no evidence of exposure beyond the skill store - but a key that has lived in 30 files for months should be assumed known. Delete the .tmp_qa0903/ and .qatmp/ dirs as part of this.\n\n--- CTO VERIFICATION 2026-09-23 ---\nCONFIRMED STILL REAL (2026-09-23). The CasperCloak relay PSK is still the literal value in the caspercloak-ws systemd unit Environment on the fleet \u2014 I saw it in plaintext while reading the unit today. Rotation has not happened.\n\n[2026-09-27 DEVOPS] CEO 2026-09-26: the CEO is handling the rotation.\n\n[2026-09-27b DEVOPS] For the rotation: the current key is still written in 14 tracked files, including the iOS app source (Config.swift, Obfs4Transport.swift) and the relay code \u2014 so it ships inside every app build. Rotation therefore needs the dual-accept path (relays accept old + new, a new app build with the new key, then retire the old one); editing the documents alone would not help.",
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-09-20T20:34:12Z",
@@ -36451,7 +36472,7 @@
       "from": "[CTO]",
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: Rotate the shared node sudo password \u2014 it is in git history, not just in one file",
-      "description": "[CEO 5 Oct 01:1xZ] CEO YES: 'yes to all four' rotations. DevOps executes under /run/casper-deploy.lock with a rollback: relay PSK + node sudo + dev test-account first; the production DB password last, in a quiet window (02:00-04:00 Beirut), every consumer (.env of api/website/admin/exporters/backup) switched in one step, health checks after, old password revoked only after 24 h clean. Never print a secret anywhere but /opt/caspervpn/secrets and the brain's .env. [ENGINEERING run 2026-10-04 c (fired 22:48Z = 01:48 Beirut 5 Oct, Cowork, Mac folder attached)] (d) ACTIVE again, dueBy 2026-10-11 \u2014 shared node sudo password: a live-server/production change \u2014 needs a CEO yes. Next step: the CEO answers DECISION row 'secret rotations' on the CEO card (added tonight); the next engineering run then rotates under the session lock, one secret per run, value recorded only in the credentials note. No answer by 11 Oct \u2192 deferred with that reason.\n\n[CEO office 2026-09-30] dueBy set by the 7-day rule (xdPolicy: createdAt + 7 d; already past \u2192 7 Oct). [2026-09-25 CTO] MORE URGENT THAN IT LOOKED: this node admin/sudo password is a single ORDINARY ENGLISH WORD (it appears as normal prose 24 times across the iOS, backend, DevOps, QA and marketing skills). It was also written into the DevOps skill as the password itself, twice \u2014 removed from the current text today, still in git history. Replace with a long random value; record it only in memory/context/credentials.md.\n\nxd-927 removed the plaintext SUDO_PW literal from tools/config_drift_audit.py, but that only stops it being read from the working tree. The value remains in the repository's history, and it is the same password recorded for several nodes in credentials.md. Anyone who has ever had a clone has it. ROTATE it on every node that uses it, update memory/context/credentials.md, and set CASPER_SUDO_PW wherever the audit tool runs. Note that the access inventory now shows Amsterdam and Paris reachable as root with casper_fleet_admin, so the two {'sudo': True} entries in that tool may simply be obsolete \u2014 check before re-provisioning a password those nodes may no longer need. Do NOT attempt history rewriting on a shared repo without planning it with the CEO.\n\n[2026-09-27 DEVOPS] CEO 2026-09-26: the CEO is handling the rotation.",
+      "description": "[2026-10-05T08:04Z eng run 1005a] [DEVOPS/SECURITY] CEO YES row 118 read this run; not executed this run (the run's time went to xd-1356/1338, xd-1357, xd-1359, xd-1353). Order kept: node sudo password (xd-978) first \u2014 measure which nodes still use the caspervpn user + password and that root key access works on each BEFORE changing it; relay PSK (xd-896) only as dual-accept PREV+NEW and the client half rides 4.4; DB password (xd-1024) in the 02:00-04:00 Beirut window with postgres + API env + FreeRADIUS + exporters + backup switched together and a real IKEv2 login proven after. Next engineering run (17:57 Beirut) takes xd-978. \u00b7 [CEO 5 Oct 01:1xZ] CEO YES: 'yes to all four' rotations. DevOps executes under /run/casper-deploy.lock with a rollback: relay PSK + node sudo + dev test-account first; the production DB password last, in a quiet window (02:00-04:00 Beirut), every consumer (.env of api/website/admin/exporters/backup) switched in one step, health checks after, old password revoked only after 24 h clean. Never print a secret anywhere but /opt/caspervpn/secrets and the brain's .env. [ENGINEERING run 2026-10-04 c (fired 22:48Z = 01:48 Beirut 5 Oct, Cowork, Mac folder attached)] (d) ACTIVE again, dueBy 2026-10-11 \u2014 shared node sudo password: a live-server/production change \u2014 needs a CEO yes. Next step: the CEO answers DECISION row 'secret rotations' on the CEO card (added tonight); the next engineering run then rotates under the session lock, one secret per run, value recorded only in the credentials note. No answer by 11 Oct \u2192 deferred with that reason.\n\n[CEO office 2026-09-30] dueBy set by the 7-day rule (xdPolicy: createdAt + 7 d; already past \u2192 7 Oct). [2026-09-25 CTO] MORE URGENT THAN IT LOOKED: this node admin/sudo password is a single ORDINARY ENGLISH WORD (it appears as normal prose 24 times across the iOS, backend, DevOps, QA and marketing skills). It was also written into the DevOps skill as the password itself, twice \u2014 removed from the current text today, still in git history. Replace with a long random value; record it only in memory/context/credentials.md.\n\nxd-927 removed the plaintext SUDO_PW literal from tools/config_drift_audit.py, but that only stops it being read from the working tree. The value remains in the repository's history, and it is the same password recorded for several nodes in credentials.md. Anyone who has ever had a clone has it. ROTATE it on every node that uses it, update memory/context/credentials.md, and set CASPER_SUDO_PW wherever the audit tool runs. Note that the access inventory now shows Amsterdam and Paris reachable as root with casper_fleet_admin, so the two {'sudo': True} entries in that tool may simply be obsolete \u2014 check before re-provisioning a password those nodes may no longer need. Do NOT attempt history rewriting on a shared repo without planning it with the CEO.\n\n[2026-09-27 DEVOPS] CEO 2026-09-26: the CEO is handling the rotation.",
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-09-24T00:16:12Z",
@@ -37247,7 +37268,7 @@
       "from": "[CTO]",
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: Change the dev test-account password \u2014 it sat in plain text in 9 routines and was pasted in chat",
-      "description": "[CEO 5 Oct 01:1xZ] CEO YES: 'yes to all four' rotations. DevOps executes under /run/casper-deploy.lock with a rollback: relay PSK + node sudo + dev test-account first; the production DB password last, in a quiet window (02:00-04:00 Beirut), every consumer (.env of api/website/admin/exporters/backup) switched in one step, health checks after, old password revoked only after 24 h clean. Never print a secret anywhere but /opt/caspervpn/secrets and the brain's .env. [ENGINEERING run 2026-10-04 c (fired 22:48Z = 01:48 Beirut 5 Oct, Cowork, Mac folder attached)] (d) ACTIVE again, dueBy 2026-10-11 \u2014 dev test-account password: a live-server/production change \u2014 needs a CEO yes. Next step: the CEO answers DECISION row 'secret rotations' on the CEO card (added tonight); the next engineering run then rotates under the session lock, one secret per run, value recorded only in the credentials note. No answer by 11 Oct \u2192 deferred with that reason.\n\n[CEO office 2026-09-30] dueBy set by the 7-day rule (xdPolicy: createdAt + 7 d; already past \u2192 7 Oct). [CEO 2026-09-29] MEASURED: the 'Casper qa' scheduled task no longer holds the test-account password or the old token - its instructions were replaced 2026-09-28 21:45Z. The password itself still needs changing (this ticket).\n\n[2026-09-25 CTO] Also removed today from the QA skill, where it was written in plain text. Still in git history and in local .bak copies of the Cowork routines \u2014 rotation is the only real fix.\n\nThe claude-dev test account's password was written in plain text in 9 of the 12 Cowork routines (removed 2026-09-24; originals kept as local .bak files) and appeared in the CEO's pasted QA prompt. The dead GitHub key found next to it is already refused (401) and needs no action. Change the password, record the new one ONLY in memory/context/credentials.md, and delete the SKILL.md.bak-2026-09-24 files once the new routines have run cleanly.\n\n[2026-09-27 DEVOPS] CEO 2026-09-26: the CEO is handling this, including the disabled 'Casper qa' cloud scheduled task that still holds the password + an old token in its prompt.",
+      "description": "[2026-10-05T08:04Z eng run 1005a] [SECURITY] NOT rotated on purpose \u2014 see blocker. Everything else is ready: new value goes only into credentials.md; the RADIUS identity claude-dev_7f0f223c stays as it is (never regenerate it, cto skill 30 Sep). \u00b7 [CEO 5 Oct 01:1xZ] CEO YES: 'yes to all four' rotations. DevOps executes under /run/casper-deploy.lock with a rollback: relay PSK + node sudo + dev test-account first; the production DB password last, in a quiet window (02:00-04:00 Beirut), every consumer (.env of api/website/admin/exporters/backup) switched in one step, health checks after, old password revoked only after 24 h clean. Never print a secret anywhere but /opt/caspervpn/secrets and the brain's .env. [ENGINEERING run 2026-10-04 c (fired 22:48Z = 01:48 Beirut 5 Oct, Cowork, Mac folder attached)] (d) ACTIVE again, dueBy 2026-10-11 \u2014 dev test-account password: a live-server/production change \u2014 needs a CEO yes. Next step: the CEO answers DECISION row 'secret rotations' on the CEO card (added tonight); the next engineering run then rotates under the session lock, one secret per run, value recorded only in the credentials note. No answer by 11 Oct \u2192 deferred with that reason.\n\n[CEO office 2026-09-30] dueBy set by the 7-day rule (xdPolicy: createdAt + 7 d; already past \u2192 7 Oct). [CEO 2026-09-29] MEASURED: the 'Casper qa' scheduled task no longer holds the test-account password or the old token - its instructions were replaced 2026-09-28 21:45Z. The password itself still needs changing (this ticket).\n\n[2026-09-25 CTO] Also removed today from the QA skill, where it was written in plain text. Still in git history and in local .bak copies of the Cowork routines \u2014 rotation is the only real fix.\n\nThe claude-dev test account's password was written in plain text in 9 of the 12 Cowork routines (removed 2026-09-24; originals kept as local .bak files) and appeared in the CEO's pasted QA prompt. The dead GitHub key found next to it is already refused (401) and needs no action. Change the password, record the new one ONLY in memory/context/credentials.md, and delete the SKILL.md.bak-2026-09-24 files once the new routines have run cleanly.\n\n[2026-09-27 DEVOPS] CEO 2026-09-26: the CEO is handling this, including the disabled 'Casper qa' cloud scheduled task that still holds the password + an old token in its prompt.",
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-09-25T00:02:52Z",
@@ -37258,7 +37279,8 @@
       "ageDays": 10,
       "lifecycle": "active",
       "reactivatedAt": "2026-10-04T22:59:32Z",
-      "needsRelease": false
+      "needsRelease": false,
+      "blocker": "claude-dev@caspervpn.com IS Apple's App Review demo account (Users.IsReviewAccount=true, measured on production 07:2xZ) and 4.3.1 is WAITING_FOR_REVIEW \u2014 a new password breaks the reviewer's login unless the review notes in App Store Connect change in the same minute, which only the CEO may do. Rotate right after Apple's verdict, or the CEO updates the demo-account password in App Store Connect himself and says so."
     },
     {
       "id": "xd-1022",
@@ -37300,7 +37322,7 @@
       "from": "[CTO]",
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: P1: change the production database password \u2014 it is a single dictionary word and is in git history",
-      "description": "[CEO 5 Oct 01:1xZ] CEO YES: 'yes to all four' rotations. DevOps executes under /run/casper-deploy.lock with a rollback: relay PSK + node sudo + dev test-account first; the production DB password last, in a quiet window (02:00-04:00 Beirut), every consumer (.env of api/website/admin/exporters/backup) switched in one step, health checks after, old password revoked only after 24 h clean. Never print a secret anywhere but /opt/caspervpn/secrets and the brain's .env. [ENGINEERING run 2026-10-04 c (fired 22:48Z = 01:48 Beirut 5 Oct, Cowork, Mac folder attached)] (d) ACTIVE again, dueBy 2026-10-11 \u2014 production database password: a live-server/production change \u2014 needs a CEO yes. Next step: the CEO answers DECISION row 'secret rotations' on the CEO card (added tonight); the next engineering run then rotates under the session lock, one secret per run, value recorded only in the credentials note. No answer by 11 Oct \u2192 deferred with that reason.\n\n[CEO office 2026-09-30] dueBy set by the 7-day rule (xdPolicy: createdAt + 7 d; already past \u2192 7 Oct). MEASURED 2026-09-25: the casper_prod database password is ONE ordinary English word (it appears 9 times in the DevOps skill as normal prose). It was also written into that skill as the password itself (now removed from the current text) and so remains in git history. Change it to a long random value and record it ONLY in memory/context/credentials.md. \u26a0\ufe0f Plan it, do not rush it: the DevOps skill itself records that a past casper_prod password change reached postgres and the API but NOT FreeRADIUS, which broke every IKEv2 login fleet-wide. The change must update, together: postgres, the API environment, FreeRADIUS on the brain, and every script that reads it \u2014 then prove a real IKEv2 login on a node.\n\n[2026-09-27 DEVOPS] CEO 2026-09-26: the CEO is handling the rotation.\n\n[2026-09-27b DEVOPS] Before rotating: do the postgres-exporter/consumer-check spin-off first (the 2026-07-14 rotation left monitoring broken for 6 days).",
+      "description": "[2026-10-05T08:04Z eng run 1005a] [DEVOPS/SECURITY] CEO YES row 118 read this run; not executed this run (the run's time went to xd-1356/1338, xd-1357, xd-1359, xd-1353). Order kept: node sudo password (xd-978) first \u2014 measure which nodes still use the caspervpn user + password and that root key access works on each BEFORE changing it; relay PSK (xd-896) only as dual-accept PREV+NEW and the client half rides 4.4; DB password (xd-1024) in the 02:00-04:00 Beirut window with postgres + API env + FreeRADIUS + exporters + backup switched together and a real IKEv2 login proven after. Next engineering run (17:57 Beirut) takes xd-978. \u00b7 [CEO 5 Oct 01:1xZ] CEO YES: 'yes to all four' rotations. DevOps executes under /run/casper-deploy.lock with a rollback: relay PSK + node sudo + dev test-account first; the production DB password last, in a quiet window (02:00-04:00 Beirut), every consumer (.env of api/website/admin/exporters/backup) switched in one step, health checks after, old password revoked only after 24 h clean. Never print a secret anywhere but /opt/caspervpn/secrets and the brain's .env. [ENGINEERING run 2026-10-04 c (fired 22:48Z = 01:48 Beirut 5 Oct, Cowork, Mac folder attached)] (d) ACTIVE again, dueBy 2026-10-11 \u2014 production database password: a live-server/production change \u2014 needs a CEO yes. Next step: the CEO answers DECISION row 'secret rotations' on the CEO card (added tonight); the next engineering run then rotates under the session lock, one secret per run, value recorded only in the credentials note. No answer by 11 Oct \u2192 deferred with that reason.\n\n[CEO office 2026-09-30] dueBy set by the 7-day rule (xdPolicy: createdAt + 7 d; already past \u2192 7 Oct). MEASURED 2026-09-25: the casper_prod database password is ONE ordinary English word (it appears 9 times in the DevOps skill as normal prose). It was also written into that skill as the password itself (now removed from the current text) and so remains in git history. Change it to a long random value and record it ONLY in memory/context/credentials.md. \u26a0\ufe0f Plan it, do not rush it: the DevOps skill itself records that a past casper_prod password change reached postgres and the API but NOT FreeRADIUS, which broke every IKEv2 login fleet-wide. The change must update, together: postgres, the API environment, FreeRADIUS on the brain, and every script that reads it \u2014 then prove a real IKEv2 login on a node.\n\n[2026-09-27 DEVOPS] CEO 2026-09-26: the CEO is handling the rotation.\n\n[2026-09-27b DEVOPS] Before rotating: do the postgres-exporter/consumer-check spin-off first (the 2026-07-14 rotation left monitoring broken for 6 days).",
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-09-25T01:50:24Z",
@@ -41239,7 +41261,7 @@
       "from": "[DEVOPS]",
       "to": "[DEVOPS]",
       "title": "Handoff from DEVOPS: [P1] Retire fr-pa (Paris, 163.172.62.64) everywhere \u2014 host decommissioned it (xd-1213); silence the 3 alerts; fleet count 11 \u00b7 10 countries",
-      "description": "[CEO office 2026-10-03 06:2xZ (09:2x Beirut, daily run)] still open on the live side: Prometheus still has fr-pa (1 target down), Alertmanager firing 3 alerts since 1 Oct 04:05Z (ServiceDown 163.172.62.64:5002, NodeExporterDown fr-pa, ServiceDown https://s7.pompesh.com/), and 3 daily routines fail on the Paris row (infra-inventory 04:21Z CRITICAL 'node Paris', cert-scan 04:50Z '1 without a certificate', access-inventory 04:40Z '2 BROKEN'). The live step is CEO card row 87 (READY TO SHIP, no answer yet; board advice YES). ops-scheduled-routines row 7 un-ticked by the office today for this reason. \u00b7 [DEVOPS 2026-10-01T11:21:13Z] Per xd-1213's own branch 'address no longer ours': (1) VpnServers Paris row stays IsActive=false; add the retired note (production data \u2192 say so on the CEO card row before changing anything beyond what the watchdog already did); (2) remove node fr-pa from Prometheus + blackbox targets and alertmanager (NodeExporterDown fr-pa, ServiceDown 163.172.62.64:5002, ServiceDown https://s7.pompesh.com/ firing since 04:05Z) \u2014 brain config change \u2192 READY TO SHIP row + CEO YES; (3) access-inventory.json / FLEET_NODES / fleet-onboarding + parity + protocol_health lists; (4) s7.pompesh.com DNS \u2192 remove or park (someone else may receive that address); (5) admin Infrastructure view + infra-inventory routine; (6) known_hosts entry for the old key removed. Report the fleet count left (11 active servers \u00b7 10 countries) and hand to [QA]. \u00b7 [CEO office 2026-10-02 06:2xZ (09:2x Beirut, daily run)] xd-1233 merged here (its extra asks: remove Paris from the server list the apps receive \u2014 keep IsActive=false or delete per the DevOps rule; cancel the hosting if it still bills \u2014 the host already credited $8.76 for unused days). MEASURED 06:1xZ: s7.pompesh.com still resolves to 163.172.62.64 (item 4 \u2014 park or remove the record today; the address can be handed to a stranger); Prometheus still has fr-pa as a target (1 target down); routines access-inventory, cert-scan, infra-inventory still fail on the Paris row (xd-1212). \u00b7 [CEO office 2026-10-02] dueBy set = createdAt + 7 d (xdPolicy). \u00b7 [DEVOPS 2026-10-02T16:06:21Z] REPO SIDE DONE on development fd646491: prometheus.yml (node-exporter, ping, ssh, :5002, https s7 targets), parity_monitor.sh, synthetic-probes.sh, deploy-disk-guard-fleet.sh, ip_reputation_monitor.py, factory_bootstrap FLEET_NODES (paris-5 removed), access-inventory.json node-fr-pa kind=retired-node (retired 2026-10-01). LIVE SIDE (items 2, 4, 6 + radius client) = CEO card row 87 READY TO SHIP. Items 1 and 5 (VpnServers row note, admin Infrastructure view) unchanged. MEASURED 15:3xZ: s7.pompesh.com still resolves; Prometheus on the brain still has fr-pa. \u00b7 [CTO live chat 2026-10-04 21:5x-22:1xZ (CEO 'all 9')] [DEVOPS] main-server part SHIPPED (row 87): Prometheus targets, RADIUS client, Cloudflare s7 + s7-edge records \u2014 see xd-1334.",
+      "description": "[2026-10-05T08:04Z eng run 1005a] [DEVOPS] leg (5) routines: cert-scan and infra-inventory no longer check Paris (development 058a6f92e, installed on the brain 07:35Z under row 87; QA xd-1363). Legs (1)(2)(4) shipped by row 87 on 4 Oct; (3) access-inventory.json already marks Paris retired-node; (6) known_hosts not measured this run. \u00b7 [CEO office 2026-10-03 06:2xZ (09:2x Beirut, daily run)] still open on the live side: Prometheus still has fr-pa (1 target down), Alertmanager firing 3 alerts since 1 Oct 04:05Z (ServiceDown 163.172.62.64:5002, NodeExporterDown fr-pa, ServiceDown https://s7.pompesh.com/), and 3 daily routines fail on the Paris row (infra-inventory 04:21Z CRITICAL 'node Paris', cert-scan 04:50Z '1 without a certificate', access-inventory 04:40Z '2 BROKEN'). The live step is CEO card row 87 (READY TO SHIP, no answer yet; board advice YES). ops-scheduled-routines row 7 un-ticked by the office today for this reason. \u00b7 [DEVOPS 2026-10-01T11:21:13Z] Per xd-1213's own branch 'address no longer ours': (1) VpnServers Paris row stays IsActive=false; add the retired note (production data \u2192 say so on the CEO card row before changing anything beyond what the watchdog already did); (2) remove node fr-pa from Prometheus + blackbox targets and alertmanager (NodeExporterDown fr-pa, ServiceDown 163.172.62.64:5002, ServiceDown https://s7.pompesh.com/ firing since 04:05Z) \u2014 brain config change \u2192 READY TO SHIP row + CEO YES; (3) access-inventory.json / FLEET_NODES / fleet-onboarding + parity + protocol_health lists; (4) s7.pompesh.com DNS \u2192 remove or park (someone else may receive that address); (5) admin Infrastructure view + infra-inventory routine; (6) known_hosts entry for the old key removed. Report the fleet count left (11 active servers \u00b7 10 countries) and hand to [QA]. \u00b7 [CEO office 2026-10-02 06:2xZ (09:2x Beirut, daily run)] xd-1233 merged here (its extra asks: remove Paris from the server list the apps receive \u2014 keep IsActive=false or delete per the DevOps rule; cancel the hosting if it still bills \u2014 the host already credited $8.76 for unused days). MEASURED 06:1xZ: s7.pompesh.com still resolves to 163.172.62.64 (item 4 \u2014 park or remove the record today; the address can be handed to a stranger); Prometheus still has fr-pa as a target (1 target down); routines access-inventory, cert-scan, infra-inventory still fail on the Paris row (xd-1212). \u00b7 [CEO office 2026-10-02] dueBy set = createdAt + 7 d (xdPolicy). \u00b7 [DEVOPS 2026-10-02T16:06:21Z] REPO SIDE DONE on development fd646491: prometheus.yml (node-exporter, ping, ssh, :5002, https s7 targets), parity_monitor.sh, synthetic-probes.sh, deploy-disk-guard-fleet.sh, ip_reputation_monitor.py, factory_bootstrap FLEET_NODES (paris-5 removed), access-inventory.json node-fr-pa kind=retired-node (retired 2026-10-01). LIVE SIDE (items 2, 4, 6 + radius client) = CEO card row 87 READY TO SHIP. Items 1 and 5 (VpnServers row note, admin Infrastructure view) unchanged. MEASURED 15:3xZ: s7.pompesh.com still resolves; Prometheus on the brain still has fr-pa. \u00b7 [CTO live chat 2026-10-04 21:5x-22:1xZ (CEO 'all 9')] [DEVOPS] main-server part SHIPPED (row 87): Prometheus targets, RADIUS client, Cloudflare s7 + s7-edge records \u2014 see xd-1334.",
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-10-01T11:21:19Z",
@@ -42518,7 +42540,8 @@
       "category": "infra-fleet",
       "ageDays": 1,
       "lifecycle": "active",
-      "needsRelease": false
+      "needsRelease": false,
+      "blocker": "CEO yes on READY TO SHIP row 113 (alerts to Telegram + ntfy + repeat + uptime budget, development 94ebbb23a) \u2014 the alert config cannot change on the live main server without it; the live CTO session owns the dev work."
     },
     {
       "id": "xd-1301",
@@ -42648,7 +42671,8 @@
       "category": "next-build-4.4",
       "ageDays": 1,
       "lifecycle": "active",
-      "needsRelease": true
+      "needsRelease": true,
+      "blocker": "needs the 4.4 iOS build (xd-1348): the backend contract (stageReached/errorCode, telemetry v2, production since 4 Oct 22:01Z) is live \u2014 the names come from the app once it sends them."
     },
     {
       "id": "xd-1309",
@@ -42815,7 +42839,8 @@
       "category": "factory-ops",
       "ageDays": 1,
       "lifecycle": "active",
-      "needsRelease": false
+      "needsRelease": false,
+      "blocker": "needs the CEO's Kimi account/API access and his say-so on where it runs \u2014 nothing an unattended run can create."
     },
     {
       "id": "xd-1319",
@@ -43163,8 +43188,8 @@
       "from": "[CEO]",
       "to": "[BACKEND]",
       "title": "Handoff from CEO: [CEO 5 Oct] Admin revenue shows test money: exclude Apple Sandbox + staff, real periods, match Appfigures",
-      "description": "CEO 5 Oct 01:1x Beirut (live): 'why is Appfigures not similar to admin revenue; we are still recording tests with real users; I can't filter sandbox, or month/week/quarter, only a date'. MEASURED (prod DB, read-only, 22:1xZ): Payments status=paid = 448 rows $3,743.31. Apple Sandbox (test) 365 rows $3,426.42 = 92%; Apple Production tagged 22 rows $95.08; 60 renewal rows (DID_RENEW) carry no Environment tag but match Production originals by OriginalTransactionId = $218.82; crypto 1 row $2.99 (CEO). So real Apple money ever = $313.90 (gross customer price) vs admin total $3,743. September: admin $87.14 = Sandbox $47.59 + real renewals $32.79 + real new $6.76; Appfigures September $22.55 (Apple proceeds = after Apple's cut; real only). Code: AdminSecurityFeaturesController GetRevenueMetrics sums ALL Payments.Amount (no Sandbox/staff filter) and ignores the page's time range; MRR = sum of PriceMonthly on every Active subscription (sandbox + staff included). HYPOTHESIS for the remaining Sep gap ($39.55 gross vs $22.55 net): Apple's 15-30% cut + Appfigures counting by Pacific date + the CEO's own real purchases \u2014 reconcile row by row. DELIVER (backend, then [ADMIN-PANEL] for the UI): (1) every revenue/MRR/ARPU/churn number excludes Environment=Sandbox and the staff accounts (same staff list as the north-star exclusion) by default; (2) write Environment on renewal rows (DID_RENEW path) and backfill the 60 untagged rows from their original transaction; (3) filters: Real / Sandbox / All + presets Today, 7 d, This week, This month, Last month, Quarter, YTD, Custom range \u2014 applied by the API, not only the chart; (4) show gross (customer price) AND estimated Apple proceeds side by side, with a line 'Appfigures (external) for the same period' once the Appfigures API key exists; (5) acceptance: admin real September gross = $39.55 (13 rows) and the page says how it differs from Appfigures. Test on dev, READY TO SHIP row for the CEO. Then \u2192 [QA].",
-      "status": "pending",
+      "description": "[2026-10-05T08:04Z eng run 1005a] [BACKEND] items (1) and (2)-code DONE on development fa1a25835 and proven on dev (QA xd-1362): every MRR/ARR/total-revenue number on /api/admin/revenue, recurring-summary and revenue-intelligence now uses ONE predicate (Production only, no @caspervpn.com/oatarabay/applinkoffshore mailboxes, no Sandbox receipt, no user holding a Sandbox subscription) and MonthlyValue per row; renewal payments now carry Environment. STILL OPEN: (2)-backfill of the 60 untagged DID_RENEW rows = production data \u2192 on the READY TO SHIP row (SQL on the row); (3) Real/Sandbox/All + period presets applied by the API; (4) gross vs Apple proceeds + Appfigures line; (5) acceptance Sep gross $39.55 / 13 rows. Next run continues with (3); UI half \u2192 [ADMIN-PANEL] after the API filters exist. \u00b7 CEO 5 Oct 01:1x Beirut (live): 'why is Appfigures not similar to admin revenue; we are still recording tests with real users; I can't filter sandbox, or month/week/quarter, only a date'. MEASURED (prod DB, read-only, 22:1xZ): Payments status=paid = 448 rows $3,743.31. Apple Sandbox (test) 365 rows $3,426.42 = 92%; Apple Production tagged 22 rows $95.08; 60 renewal rows (DID_RENEW) carry no Environment tag but match Production originals by OriginalTransactionId = $218.82; crypto 1 row $2.99 (CEO). So real Apple money ever = $313.90 (gross customer price) vs admin total $3,743. September: admin $87.14 = Sandbox $47.59 + real renewals $32.79 + real new $6.76; Appfigures September $22.55 (Apple proceeds = after Apple's cut; real only). Code: AdminSecurityFeaturesController GetRevenueMetrics sums ALL Payments.Amount (no Sandbox/staff filter) and ignores the page's time range; MRR = sum of PriceMonthly on every Active subscription (sandbox + staff included). HYPOTHESIS for the remaining Sep gap ($39.55 gross vs $22.55 net): Apple's 15-30% cut + Appfigures counting by Pacific date + the CEO's own real purchases \u2014 reconcile row by row. DELIVER (backend, then [ADMIN-PANEL] for the UI): (1) every revenue/MRR/ARPU/churn number excludes Environment=Sandbox and the staff accounts (same staff list as the north-star exclusion) by default; (2) write Environment on renewal rows (DID_RENEW path) and backfill the 60 untagged rows from their original transaction; (3) filters: Real / Sandbox / All + presets Today, 7 d, This week, This month, Last month, Quarter, YTD, Custom range \u2014 applied by the API, not only the chart; (4) show gross (customer price) AND estimated Apple proceeds side by side, with a line 'Appfigures (external) for the same period' once the Appfigures API key exists; (5) acceptance: admin real September gross = $39.55 (13 rows) and the page says how it differs from Appfigures. Test on dev, READY TO SHIP row for the CEO. Then \u2192 [QA].",
+      "status": "in_progress",
       "priority": "P0",
       "createdAt": "2026-10-04T22:50:41Z",
       "createdDate": "2026-10-04",
@@ -43415,8 +43440,8 @@
       "from": "[CTO]",
       "to": "[WEBSITE]",
       "title": "Handoff from CTO: Partner sign-in: make ensureTokenTable() a migration, not a runtime CREATE; QA the magic link end to end",
-      "description": "INCIDENT 5 Oct 00:3xZ (CEO: 'can't sign in to affiliates'): POST /api/partners/login-link failed on EVERY request with Postgres 42501 'permission denied for schema public' because lib/partner-auth.ts ensureTokenTable() runs CREATE TABLE IF NOT EXISTS on each call and casper_website had USAGE but not CREATE on schema public. Result: 0 partner logins ever (Rakib, Saad, CEO test), no email sent, UI said 'link is on its way'. Hot-fix applied on prod: GRANT CREATE ON SCHEMA public TO casper_website; sign-in link for applinks123@gmail.com delivered 00:40Z (Resend). Deliver: (1) move the table to a Prisma migration and drop the runtime CREATE (or wrap it in a privilege check); (2) log + alert (Telegram A-support) when login-link throws - a silent 200 hid this for 8 days; (3) QA: request link -> email delivered -> /partners/auth logs in -> dashboard shows clicks/conversions, for the CEO test partner; (4) MARKETING: tell Rakib and Saad their sign-in works now (part of the CEO message, xd-1314).",
-      "status": "pending",
+      "description": "[2026-10-05T08:04Z eng run 1005a] [WEBSITE] (1)(2) DONE on development 1ffff88da (no request-time DDL; named error; support alert on failure; next build + tsc rc 0 on the exact tree) \u2014 production ships with the READY TO SHIP row. (3) \u2192 QA xd-1365 (works on production since the hot-fix). (4) is part of the CEO message xd-1314 ([MARKETING]). \u00b7 INCIDENT 5 Oct 00:3xZ (CEO: 'can't sign in to affiliates'): POST /api/partners/login-link failed on EVERY request with Postgres 42501 'permission denied for schema public' because lib/partner-auth.ts ensureTokenTable() runs CREATE TABLE IF NOT EXISTS on each call and casper_website had USAGE but not CREATE on schema public. Result: 0 partner logins ever (Rakib, Saad, CEO test), no email sent, UI said 'link is on its way'. Hot-fix applied on prod: GRANT CREATE ON SCHEMA public TO casper_website; sign-in link for applinks123@gmail.com delivered 00:40Z (Resend). Deliver: (1) move the table to a Prisma migration and drop the runtime CREATE (or wrap it in a privilege check); (2) log + alert (Telegram A-support) when login-link throws - a silent 200 hid this for 8 days; (3) QA: request link -> email delivered -> /partners/auth logs in -> dashboard shows clicks/conversions, for the CEO test partner; (4) MARKETING: tell Rakib and Saad their sign-in works now (part of the CEO message, xd-1314).",
+      "status": "in_progress",
       "priority": "P0",
       "createdAt": "2026-10-05T00:41:07Z",
       "createdDate": "2026-10-05",
@@ -43465,15 +43490,19 @@
       "to": "[BACKEND]",
       "title": "Handoff from QA: Handoff from QA: [P1] Admin 'recurring summary' still shows MRR $175.95 - must agree with the fixed $22.95",
       "description": "FAIL on production 5 Oct 05:4xZ (xd-1351 leg 2). /api/admin/revenue -> mrr 22.95, arr 275.40 (PASS). GET /api/admin/subscriptions/recurring-summary -> monthlyRecurringRevenueUsd 175.95 (Monthly 19.98, Weekly 5.98, Lifetime 149.99): the two MRR numbers disagree. Cause: backend-dotnet-core/Services/AdminService.cs:847 'var mrr = recurring.Sum(s => s.Plan?.PriceMonthly ?? 0)' and the byPlan sum at ~L842 use Plan.PriceMonthly (Weekly plan row = 2.99, i.e. a weekly price counted as monthly; Lifetime counted at full price) instead of MonthlyValue() (AdminService.cs:89). It also does not exclude sandbox/non-production rows the way the revenue query now does. Fix: reuse MonthlyValue + the same production/non-staff filter in GetRecurringSubscriptionsSummaryAsync. Verify: GET /api/admin/subscriptions/recurring-summary monthlyRecurringRevenueUsd == /api/admin/revenue summary.mrr (22.95 today).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-10-05T05:47:34Z",
       "createdDate": "2026-10-05",
-      "completedDate": null,
+      "completedDate": "2026-10-05",
       "category": "money-admin",
       "ageDays": 0,
       "needsRelease": false,
-      "lifecycle": "active"
+      "lifecycle": "active",
+      "completedAt": "2026-10-05",
+      "completedBy": "[BACKEND]",
+      "resolution": "[ENGINEERING run 2026-10-05 a, scheduled 'Casper engineering' 09:57 Beirut (06:5x-08:1xZ), Cowork, Mac folder attached] FIXED on development fa1a25835 and proven on dev (recurring-summary 12.96 == revenue 12.96 == revenue-intelligence 12.96; before: PriceMonthly sums, no sandbox/staff filter). Production still shows 175.95 until the CEO says yes on the READY TO SHIP row.",
+      "resultingHandoff": "xd-1362 to [QA]"
     },
     {
       "id": "xd-1357",
@@ -43481,15 +43510,19 @@
       "to": "[DEVOPS]",
       "title": "Handoff from QA: Handoff from QA: [P1] Retire Paris from the inventory list: cert-scan and infra-inventory still fail on it",
       "description": "FAIL on production 5 Oct 05:4xZ (xd-1334 routines leg). Routines-watchdog 04:47Z = 'fail' (11 healthy, 1 stale legal-archive, 3 failing: cert-scan, infra-inventory, protocol-health). cert-scan 04:50Z: '12 relay certificates scanned ... 1 without a certificate'; infra-inventory 04:21Z: 'CRITICAL: node Paris serves s7.pompesh.com (no certificate / unreachable)'. Cause: memory/context/access-inventory.json:243 ('name': 'Paris') and :256 ('ccDomain': 's7.pompesh.com') still list Paris; the checks read that list. Paris is retired everywhere else (VpnServers Paris IsActive=false, Prometheus 0 targets, clients.conf 0, DNS NXDOMAIN). Fix: remove/mark retired the Paris node in access-inventory.json and re-run the two routines through their own cron (do not run routines_watchdog.py by hand - it writes a row). Verify: next 04:21Z infra-inventory and 04:50Z cert-scan = ok, watchdog items = only legal-archive stale. access-inventory itself is now ok (04:40Z, 24 routes proven, 0 BROKEN).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-10-05T05:47:34Z",
       "createdDate": "2026-10-05",
-      "completedDate": null,
+      "completedDate": "2026-10-05",
       "category": "trust-legal",
       "ageDays": 0,
       "needsRelease": false,
-      "lifecycle": "active"
+      "lifecycle": "active",
+      "completedAt": "2026-10-05",
+      "completedBy": "[DEVOPS]",
+      "resolution": "[ENGINEERING run 2026-10-05 a, scheduled 'Casper engineering' 09:57 Beirut (06:5x-08:1xZ), Cowork, Mac folder attached] FIXED and installed on the main server under CEO YES row 87: cert-scan no longer scans s7 (Paris), infra-inventory scans certificates only for active nodes. Dry run 11/11 relays ok, 0 missing. Verdict from the 6 Oct 04:2x/04:5x cron runs \u2192 QA xd-1363.",
+      "resultingHandoff": "xd-1363 to [QA]"
     },
     {
       "id": "xd-1358",
@@ -43513,15 +43546,19 @@
       "to": "[CTO]",
       "title": "Handoff from CEO: [P2] tools/task_taxonomy.py is frozen on 4 Oct: hard-coded date, sys.path and DASH_WORK; creates a fresh TRIAGE row per dept every run",
       "description": "[CEO office 2026-10-05] Routine 08 step 12 says 'run tools/task_taxonomy.py'. As committed the script has now=dt.datetime(2026,10,4), sys.path.insert(0,'/sessions/rcw-01wwxneqtke65kdg9mxbvyte/...') (one VM's path) and DASH_WORK=~/ceo-run-1002/dash-push21, and it opens its own dashboard_session and creates a new P0 TRIAGE handoff per department on every run even when one is already open. Running it unattended today would have aged every row against 4 Oct and double-filed TRIAGE rows, so the office applied the same rules in-process (date = today, re-use the open TRIAGE row per department, only create when none is open) and did NOT run the script. Please: now = date.today() (UTC), path from __file__, DASH_WORK from the environment, idempotent TRIAGE rows (update the open one), and a --dry flag that prints the counts. Also add needsRelease defaulting for new rows (19 open rows had none today). Verify: python3 tools/task_taxonomy.py --dry prints today's counts without writing.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-10-05T06:41:28Z",
       "createdDate": "2026-10-05",
-      "completedDate": null,
+      "completedDate": "2026-10-05",
       "category": "factory-ops",
       "ageDays": 0,
       "needsRelease": false,
-      "lifecycle": "active"
+      "lifecycle": "active",
+      "completedAt": "2026-10-05",
+      "completedBy": "[CTO]",
+      "resolution": "[ENGINEERING run 2026-10-05 a, scheduled 'Casper engineering' 09:57 Beirut (06:5x-08:1xZ), Cowork, Mac folder attached] FIXED on development 3cb56f699; dry run on the live board reproduced the office's counts (QA 8, iOS 1) and would update xd-1360/xd-1361 instead of duplicating them. Reaches the production clone the office runs with the READY TO SHIP row.",
+      "resultingHandoff": "xd-1364 to [QA]"
     },
     {
       "id": "xd-1360",
@@ -43546,9 +43583,68 @@
       "createdAt": "2026-10-05T06:41:29Z",
       "createdDate": "2026-10-05",
       "completedDate": null
+    },
+    {
+      "id": "xd-1362",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: [P1] Verify on dev: /api/admin/subscriptions/recurring-summary MRR == /api/admin/revenue MRR == revenue-intelligence MRR (xd-1356, xd-1338 items 1-2)",
+      "description": "[ENGINEERING run 2026-10-05 a, scheduled 'Casper engineering' 09:57 Beirut (06:5x-08:1xZ), Cowork, Mac folder attached] development fa1a25835 (deployed on dev 07:40:40Z, image b334e8d89ccf). MEASURED on dev 07:5xZ with an admin JWT minted from the dev container: GET /api/admin/revenue summary.mrr 12.96 / arr 155.52 / totalRevenue 253.23; GET /api/admin/subscriptions/recurring-summary monthlyRecurringRevenueUsd 12.96, totalRecurring 1, byPlan [Weekly 1 \u2192 12.96]; GET /api/admin/revenue-intelligence/metrics mrr 12.96 / arr 155.52 / totalRevenue 253.23; dev API log 0 errors in the window. Before the change recurring-summary used Plan.PriceMonthly (weekly at 1x, Lifetime at full price) and no sandbox/staff filter. Change: AdminService.RealCustomerSubscription / RealCustomerPayment (Environment != Sandbox + the staff mailboxes) are now the ONE predicate used by GetRevenueDataAsync, GetRecurringSubscriptionsSummaryAsync (MonthlyValue per row) and the revenue-intelligence endpoint; DID_RENEW payments now write Environment into Metadata (xd-1338 item 2 \u2014 the 60 old untagged renewal rows need the one-off backfill on the READY TO SHIP row). Build 0 errors, tests 190/190 (3 new: AdminRealMoneyTests) on the brain: /root/reports/eng1005a-backend-build.log, eng1005a-backend-tests.log. verify (dev): mint the admin JWT per admin skill probes \u00a7JWT, then compare the three endpoints above \u2014 the MRR values must be identical. Production check only after the CEO yes on the READY TO SHIP row.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-05T08:04:33Z",
+      "createdDate": "2026-10-05",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1363",
+      "from": "[DEVOPS]",
+      "to": "[QA]",
+      "title": "Handoff from DEVOPS: [P1] Verify: cert-scan (04:50Z) and infra-inventory (04:21Z) pass on 6 Oct with Paris gone; routines-watchdog items = only legal-archive stale (xd-1357)",
+      "description": "[ENGINEERING run 2026-10-05 a, scheduled 'Casper engineering' 09:57 Beirut (06:5x-08:1xZ), Cowork, Mac folder attached] QA's cause was not the one: both routines ignore access-inventory.json (Paris there was already kind=retired-node). cert-scan = /opt/caspervpn/certscan.sh with a HARD-CODED list s1..s12 (s7 = Paris); infra-inventory = /opt/caspervpn/infra_inventory_check.py check_certificates() iterated every VpnServers row including IsActive=false (Paris). FIX on development 058a6f92e (infrastructure/scripts/certscan.sh drops s7; infra_inventory_check.py scans certificates only for active nodes) and INSTALLED on the main server 07:35Z under CEO YES row 87 ('finish retiring Paris \u2026 three routines fail on the Paris row' is that row's stated reason; xd-1231 leg 5): md5 /opt == repo (3b787db4 / 7edf9cd6), backups /root/backups/certscan.sh.before-xd1357-20261005T073528Z and infra_inventory_check.py.before-xd1357-20261005T073528Z, bash -n + py_compile OK. DRY PROOF (record_run stubbed, no RoutineRuns row written): 11 relays scanned, soonest expiry 68 d, 0 without a certificate \u2192 /root/reports/eng1005a-certscan-dry.txt. Not run through cron by hand (QA's own rule). verify: on 6 Oct read RoutineRuns rows 'cert-scan' (04:55Z cron) = ok '11 relay certificates scanned \u2026 0 without a certificate' and 'infra-inventory' (04:20Z) with no 'node Paris' CRITICAL; routines-watchdog 04:47Z failing = 0 (legal-archive stale is xd-1358). rollback: copy the two backups back to /opt/caspervpn.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-05T08:04:33Z",
+      "createdDate": "2026-10-05",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1364",
+      "from": "[CTO]",
+      "to": "[QA]",
+      "title": "Handoff from CTO: [P2] Verify tools/task_taxonomy.py --dry on development prints today's counts and would UPDATE the open TRIAGE rows, not create new ones (xd-1359)",
+      "description": "[ENGINEERING run 2026-10-05 a, scheduled 'Casper engineering' 09:57 Beirut (06:5x-08:1xZ), Cowork, Mac folder attached] development 3cb56f699: today = UTC date; sys.path from __file__; DASH_WORK read from the environment (exits with a plain sentence when unset); one open TRIAGE row per department is UPDATED (title, description, triageRows) and a new one is created only when none is open; needsRelease defaults to False on open rows that lack it; xdPolicy.taxonomy.lastRun written; --dry computes everything and writes nothing; the one-off 4 Oct importantNote insertion is gone. MEASURED on the live board d55874d02 at 07:4xZ: '[dry] today=2026-10-05: deferred 44, triage 9, active 154, needsRelease defaulted 2; triage rows by dept: qa 8, ios 1; qa: updated xd-1360 (8 rows); ios: updated xd-1361 (1 rows); nothing written' \u2014 the same counts the office found by hand this morning. verify: from a clone of development, cd tools && GH_TOKEN=dummy DASH_WORK=$HOME/<run>/dash python3 task_taxonomy.py --dry \u2192 prints today's date and 'nothing written'; the live board is unchanged afterwards. The office uses the Dropbox clone (production) \u2014 the file reaches it with the READY TO SHIP row.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-05T08:04:33Z",
+      "createdDate": "2026-10-05",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1365",
+      "from": "[WEBSITE]",
+      "to": "[QA]",
+      "title": "Handoff from WEBSITE: [P0] Partner sign-in end to end on production for the CEO test partner + review the hardening on dev (xd-1353)",
+      "description": "[ENGINEERING run 2026-10-05 a, scheduled 'Casper engineering' 09:57 Beirut (06:5x-08:1xZ), Cowork, Mac folder attached] (3) PRODUCTION (works since the 00:39Z hot-fix): POST https://caspervpn.com/api/partners/login-link for applinks123@gmail.com \u2192 transactional_emails kind partner_login 'sent' \u2192 the mail's link opens /partners/auth \u2192 the partner dashboard shows clicks/conversions. (1)(2) on development 1ffff88da: lib/partner-auth.ts no longer runs CREATE TABLE at request time \u2014 ensureTokenTable() only checks to_regclass('public.partner_login_tokens') once per process and throws PartnerTokenTableMissing when it is absent; app/api/partners/login-link/route.ts logs '[partners] login-link FAILED \u2014 partner got no link' and e-mails CRYPTO_ALERT_TO/support@ (kind partner_ops_alert, at most once an hour per container) instead of the silent 200; mailer.ts MailKind gains partner_ops_alert. Build proof on the exact tree: docker build --target deps (includes next build) rc 0 + tsc --noEmit rc 0 \u2192 /root/reports/eng1005a-web-deps.log, eng1005a-web-tsc.log. Dev redeploys from development (~10 min after 07:56Z). verify (dev, read-only): POST <the dev website>/api/partners/login-link with a non-partner e-mail \u2192 same 200 text; website container log shows no 'login-link FAILED'. The table on dev: docker exec caspervpn-dev-postgres psql -U casper_dev -d caspervpn_website_dev -c \"select to_regclass('public.partner_login_tokens')\" \u2014 if NULL, the dev website needs `npx prisma db push` (dev only, no yes needed) and the alert path can be exercised there. Production ships with the READY TO SHIP row.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-05T08:04:33Z",
+      "createdDate": "2026-10-05",
+      "completedDate": null
     }
   ],
   "importantNotes": [
+    {
+      "id": "note-eng-20261005a",
+      "type": "engineering",
+      "priority": "P1",
+      "author": "[CTO]",
+      "date": "2026-10-05",
+      "createdAt": "2026-10-05T08:04:25Z",
+      "resolved": false,
+      "title": "[Engineering run 5 Oct 09:57 Beirut] admin money numbers fixed on dev \u00b7 Paris routine false alarms fixed on the main server \u00b7 task-sorting tool unfrozen \u00b7 partner sign-in hardened on dev \u00b7 test-account rotation blocked by Apple's review",
+      "body": "DONE (proof on the tickets): xd-1356 + xd-1338 items 1-2 on dev \u2014 the three admin money endpoints now answer the same MRR (dev 12.96) and exclude Apple test purchases and staff; build 0 errors, tests 190/190. xd-1357 \u2014 cert-scan and infra-inventory no longer check the retired Paris server; installed on the main server under your yes on row 87 (dry run 11/11 relays ok); the 6 Oct night runs are the verdict. xd-1359 \u2014 the morning task-sorting tool runs on today's date and updates the open TRIAGE rows instead of filing new ones (dry run = the office's counts). xd-1353 items 1-2 \u2014 the partner sign-in no longer creates tables at request time and e-mails support when a link cannot be made. WAITING FOR YOUR YES: 3 new READY TO SHIP rows at the bottom of your card (admin money numbers; partner sign-in hardening; the task tool). BLOCKED: the test-account password rotation (xd-1021) \u2014 that account is Apple's review account and 4.3.1 is still in Apple's queue; rotating it now would fail the review. The other three rotations keep their order; the node password goes first in the 17:57 run. NOT REACHED this run: xd-1175 (activation funnel), xd-1308 (needs 4.4), xd-1315, xd-1318 (CTO), xd-1300/1301/1311/1336/1302 (alerts/Telegram family, live CTO session), xd-1339 (admin overview), xd-1354 (crypto orders), xd-1247/1248/1257/1310/1347 (DevOps P1s). No production code, container or data changed except the two routine files above. Mac VM disk 98% (run folder moved to /tmp); the device bridge dropped twice for ~1-2 min during the run."
+    },
     {
       "id": "note-ceo-office-20261005",
       "type": "ceo",
