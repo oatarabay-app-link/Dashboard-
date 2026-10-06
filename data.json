@@ -44734,7 +44734,10 @@
       "createdAt": "2026-10-06T15:23:06Z",
       "createdDate": "2026-10-06",
       "completedDate": null,
-      "handoffNote": " | FIRST ANDROID CONNECT, 6 Oct 2026 16:30:35Z: CEO Mac, Android Studio, Pixel 8 emulator (Android 17), devDebug on development 5fcc4b98 -> Dusseldorf over WireGuard, 'Connected' + timer + live speed on the new Home; dev API telemetry-v2 connect-success row 5f918d9e (server c5bff440, net=wifi, front=direct, elapsed=2533 ms). Fixed on the way: WorkManager crash (5fcc4b98), login renewal + 10-char rule (beb0b36e); dev data: Dusseldorf/LA/Singapore IsActive=true (CEO yes, live), CEO test account email marked verified on dev (dev cannot send mail). Open: stale error banner stays after a successful connect; app shows '403' not the server reason (email not verified) - both in slice 1b."
+      "handoffNote": " | FIRST ANDROID CONNECT, 6 Oct 2026 16:30:35Z: CEO Mac, Android Studio, Pixel 8 emulator (Android 17), devDebug on development 5fcc4b98 -> Dusseldorf over WireGuard, 'Connected' + timer + live speed on the new Home; dev API telemetry-v2 connect-success row 5f918d9e (server c5bff440, net=wifi, front=direct, elapsed=2533 ms). Fixed on the way: WorkManager crash (5fcc4b98), login renewal + 10-char rule (beb0b36e); dev data: Dusseldorf/LA/Singapore IsActive=true (CEO yes, live), CEO test account email marked verified on dev (dev cannot send mail). Open: stale error banner stays after a successful connect; app shows '403' not the server reason (email not verified) - both in slice 1b.",
+      "runNotes": [
+        "6 Oct 16:5xZ apps run l: built a Servers-tab slice in parallel, but the live CEO Android session pushed its own Servers tab 1:1 (aaef6933) first; the run dropped its copy (no merge) and shipped only the 16 KB library fix (a29659a9, xd-1408). Next slice for unattended runs: one the live session is not on - coordinate via this row."
+      ]
     },
     {
       "id": "xd-1406",
@@ -44771,11 +44774,15 @@
       "to": "[ANDROID]",
       "title": "Handoff from ANDROID: 16 KB page size: libwg.so / libwg-go.so / libwg-quick.so not 16 KB aligned (Play requirement)",
       "description": "Android Studio + emulator dialog 6 Oct: 'This app isn't 16 KB compatible ... lib/arm64-v8a/libwg.so, libwg-go.so, libwg-quick.so LOAD segment not aligned'. Upgrade the WireGuard tunnel library / rebuild native libs 16 KB aligned before any Play upload.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-10-06T15:23:06Z",
       "createdDate": "2026-10-06",
-      "completedDate": null
+      "completedDate": "2026-10-06",
+      "completedAt": "2026-10-06",
+      "completedBy": "[ANDROID]",
+      "resolution": "Fixed on development a29659a9: WireGuard tunnel 1.0.20260102 ships 16 KB-aligned arm64/x86_64 libs (LOAD 0x1000 -> 0x4000, readelf on both Maven AARs and on the built APK; zipalign -P 16 OK). Build + 68 unit tests green (cloud box, 6 Oct 17:1xZ). Emulator check pending at QA.",
+      "resultingHandoff": "xd-1411 to [QA] (emulator check)"
     },
     {
       "id": "xd-1409",
@@ -44800,6 +44807,22 @@
       "createdAt": "2026-10-06T16:31:29Z",
       "createdDate": "2026-10-06",
       "completedDate": null
+    },
+    {
+      "id": "xd-1411",
+      "from": "[ANDROID]",
+      "to": "[QA]",
+      "title": "Handoff from ANDROID: Verify 16 KB page size fix on the emulator (xd-1408)",
+      "description": "development a29659a9 (Android/CasperVPN-v2/gradle/libs.versions.toml: com.wireguard.android:tunnel 1.0.20230706 -> 1.0.20260102). Also applied to the CEO's Android Studio copy _android/CasperVPN-v2-dev/gradle/libs.versions.toml. Proof so far (cloud build): ./gradlew :app:assembleDevDebug :app:testDevDebugUnitTest BUILD SUCCESSFUL, 68 tests / 0 failed / 3 skipped; readelf -lW on the APK: lib/arm64-v8a + lib/x86_64 libwg.so, libwg-go.so, libwg-quick.so LOAD align 0x4000 (was 0x1000); zipalign -c -P 16 4 app-dev-debug.apk OK. Check (device-bound, CEO Mac): (1) Android Studio Sync + build shows no '16 KB alignment' notice; (2) the Pixel 8 emulator no longer shows the 'Android App Compatibility' dialog at launch; (3) WireGuard connect still works once xd-1407 gives the dev server list a node. verify: unzip -p app-dev-debug.apk lib/arm64-v8a/libwg-go.so > /tmp/x.so && readelf -lW /tmp/x.so | grep LOAD (Align 0x4000)",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-06T16:55:01Z",
+      "createdDate": "2026-10-06",
+      "completedDate": null,
+      "taskRef": "xd-1408",
+      "needsRelease": false,
+      "category": "platform",
+      "lifecycle": "active"
     }
   ],
   "importantNotes": [
