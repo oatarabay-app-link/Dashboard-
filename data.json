@@ -44991,7 +44991,7 @@
       "from": "[CEO]",
       "to": "[CTO]",
       "title": "Handoff from CEO: RETIRE CLOUDFLARE COMPLETELY - inventory + migration plan within 24 h (CEO 6 Oct)",
-      "description": "CEO 6 Oct: 'we should retire Cloudflare completely'. Why: Cloudflare's self-serve terms 2.2.1(j) forbid VPN/proxy use and let them suspend the account at once (row 129); our VPN DNS lookups also go to Cloudflare, which our privacy policy denied. Step 1 (24 h, read-only): list EVERY Cloudflare use with evidence \u2014 DNS hosting (caspervpn.com, pompesh.com, others), proxied website/admin/API, Workers/fronting for CasperCloak, DNS upstream resolvers on every node and in the app, R2/Pages/Access/email routing, API tokens in use. Step 2: a phased plan (replacement for each, order, rollback, no customer downtime; DNS moves planned, email records preserved) for the board. Step 3: each phase ships as a READY TO SHIP row (infrastructure still needs the CEO yes). Coordinate with xd-1389 (CasperCloak broken everywhere) and xd-1348 (second front). Row 129. | [CEO 6 Oct, later] 'so now our whole masking protocol is dead? what is the solution?' \u2014 SCOPE ADDED: the plan must include the REPLACEMENT for hidden mode before any Cloudflare cut: CasperCloak served directly from our own relays on 443 under our own domains/certificates (no third-party front), plus a rotating pool of spare relay addresses (the unused masking reserve), plus build 65 auto-fallback. Rule: read the terms of ANY new provider for VPN/proxy bans BEFORE using it (the Cloudflare lesson). Measured baseline (xd-1389): 17 CC sessions in 30 d, only 2 carried data; WireGuard works in RU and MM \u2014 so cutting the Cloudflare front removes little that works today. Do not switch the Cloudflare front off until the replacement passes the CC canary.",
+      "description": "CEO 6 Oct: 'we should retire Cloudflare completely'. Why: Cloudflare's self-serve terms 2.2.1(j) forbid VPN/proxy use and let them suspend the account at once (row 129); our VPN DNS lookups also go to Cloudflare, which our privacy policy denied. Step 1 (24 h, read-only): list EVERY Cloudflare use with evidence \u2014 DNS hosting (caspervpn.com, pompesh.com, others), proxied website/admin/API, Workers/fronting for CasperCloak, DNS upstream resolvers on every node and in the app, R2/Pages/Access/email routing, API tokens in use. Step 2: a phased plan (replacement for each, order, rollback, no customer downtime; DNS moves planned, email records preserved) for the board. Step 3: each phase ships as a READY TO SHIP row (infrastructure still needs the CEO yes). Coordinate with xd-1389 (CasperCloak broken everywhere) and xd-1348 (second front). Row 129. | [CEO 6 Oct, later] 'so now our whole masking protocol is dead? what is the solution?' \u2014 SCOPE ADDED: the plan must include the REPLACEMENT for hidden mode before any Cloudflare cut: CasperCloak served directly from our own relays on 443 under our own domains/certificates (no third-party front), plus a rotating pool of spare relay addresses (the unused masking reserve), plus build 65 auto-fallback. Rule: read the terms of ANY new provider for VPN/proxy bans BEFORE using it (the Cloudflare lesson). Measured baseline (xd-1389): 17 CC sessions in 30 d, only 2 carried data; WireGuard works in RU and MM \u2014 so cutting the Cloudflare front removes little that works today. Do not switch the Cloudflare front off until the replacement passes the CC canary. | [CEO 6 Oct, later: 'can you do the whole switch so we test it in the new iOS build?'] CEO YES for PHASE 1 now: take ALL VPN traffic off Cloudflare \u2014 (a) hidden mode served directly from our relays on 443 under our own domain (start from the existing NativeFront path), (b) VPN DNS lookups to our own resolvers on each node, no 1.1.1.1/Google/Quad9 upstream, (c) build 65 uses (a) as the hidden-mode road with auto-fallback. Do it on development + one test relay first; QA + the CC canary must pass; then the production switch of the server side is shipped by the normal path WITHOUT another CEO yes (this message is the yes), rollback = re-enable the Cloudflare front by config. PHASE 2 (later, board plan, separate yes): move DNS hosting + website/API/admin proxying off Cloudflare \u2014 website hosting is not the terms problem, VPN traffic is. MEASURED 6 Oct ~22:0xZ (read-only, main server): nameservers of caspervpn.com AND pompesh.com = Cloudflare; caspervpn.com, www, api, admin, dev and edge.pompesh.com resolve to Cloudflare proxy IPs (104.21.x / 172.67.x); relays like s1.pompesh.com are DNS-only (own IP); API env has CloudfrontFronting__NativeFront__Enabled=true (a non-Cloudflare 'native front' path already exists in code); ~40 code/config files mention Cloudflare or 1.1.1.1 (CloudflareDnsService.cs, CloudfrontFrontingService.cs, StealthEnforcement.cs, MaskingIpAutoPromoter.cs, setup_wireguard_server.sh, server-deploy.sh, admin masking pages...).",
       "status": "pending",
       "priority": "P0",
       "createdAt": "2026-10-06T21:28:01Z",
@@ -45031,6 +45031,30 @@
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-10-06T22:06:54Z",
+      "createdDate": "2026-10-06",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1425",
+      "from": "[CEO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CEO: PHASE 1 Cloudflare exit: hidden mode direct on our relays (443, own domain) + own DNS resolvers on every node \u2014 dev + 1 test relay first",
+      "description": "CEO YES 6 Oct (see xd-1421). Build on the existing NativeFront path. Deliver on development + one test relay: CasperCloak reachable on 443 under our own domain with our own certificate, no Cloudflare in the path; unbound (or equivalent) resolver on the node, tunnel DNS points to it, no upstream to 1.1.1.1/8.8.8.8/9.9.9.9. Proof: CC canary handshake + 60 s hold passes 4 runs in a row; dig from inside a test tunnel shows our resolver. Then production rollout by the normal path, one relay at a time, rollback by config. MEASURED 6 Oct ~22:0xZ (read-only, main server): nameservers of caspervpn.com AND pompesh.com = Cloudflare; caspervpn.com, www, api, admin, dev and edge.pompesh.com resolve to Cloudflare proxy IPs (104.21.x / 172.67.x); relays like s1.pompesh.com are DNS-only (own IP); API env has CloudfrontFronting__NativeFront__Enabled=true (a non-Cloudflare 'native front' path already exists in code); ~40 code/config files mention Cloudflare or 1.1.1.1 (CloudflareDnsService.cs, CloudfrontFrontingService.cs, StealthEnforcement.cs, MaskingIpAutoPromoter.cs, setup_wireguard_server.sh, server-deploy.sh, admin masking pages...).",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-10-06T22:14:56Z",
+      "createdDate": "2026-10-06",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1426",
+      "from": "[CEO]",
+      "to": "[IOS]",
+      "title": "Handoff from CEO: Build 65: hidden mode must use the new non-Cloudflare front (xd-1421 phase 1) with auto-fallback \u2014 add to the build-65 scope",
+      "description": "CEO 6 Oct: test the Cloudflare exit in the new iOS build. Add to memory/departments/ios/build-65-scope.md: the hidden-mode road points at the server-provided NativeFront host (not edge.pompesh.com); the front list comes from the server config so it can change without a new build; auto-fallback (xd-1309) covers WireGuard <-> hidden mode. TestFlight test script for the CEO: connect in hidden mode, open 3 sites, speed test, 10 min hold; QA reads the session bytes server-side.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-10-06T22:14:56Z",
       "createdDate": "2026-10-06",
       "completedDate": null
     }
