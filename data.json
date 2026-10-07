@@ -12904,6 +12904,14 @@
           "addedAt": "2026-10-07T21:40:42Z",
           "addedBy": "[CTO] live chat 2026-10-07",
           "evidence": "[CTO live chat 2026-10-07] added; task urgent-support-notify-admin; QA xd-1489."
+        },
+        {
+          "test": "READY TO SHIP \u2014 hidden-mode (CasperCloak) sessions get counted: today about 9 in 10 of them never reach our session list, so every 'hidden mode is broken' number undercounts and the admin shows those users as offline. The server now opens the session from the app's regular 'still connected' signal when the app's first 'I connected' message got lost \u00b7 why: xd-1434 / xd-1438 (your 6 Oct LA session sent only those signals) \u00b7 tested on dev: before = no session; after = one hidden-mode session opened from the signal, no duplicate on the next signal, and not re-opened right after a disconnect \u00b7 build 0 errors, tests 195/195 \u00b7 rollback: /root/deploy_api.sh keeps the rollback image \u00b7 ship = cherry-pick d412b33bc to production + /root/deploy_api.sh. Advice: YES \u2014 it only records sessions, it never lets anyone in (same data and Premium checks as connecting).",
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "verify": "QA xd-1495",
+          "evidence": "[ENGINEERING run 2026-10-07 g, 2026-10-07T21:42:10Z] added; development d412b33bc; QA xd-1495; iOS xd-1496."
         }
       ],
       "progress": 0,
@@ -47019,7 +47027,7 @@
       "category": "infra-fleet",
       "ageDays": 0,
       "lifecycle": "active",
-      "note": "[ENGINEERING run 2026-10-07 g, 2026-10-07T21:10:55Z] claimed: measuring why hidden-mode (CasperCloak) sessions get no ConnectionLogs row (read-only on production, code on the brain clone); any fix goes to development only. ",
+      "note": "[ENGINEERING run 2026-10-07 g, 2026-10-07T21:42:10Z] PARTIAL - MEASURED (read-only, production): nginx api_ssl_access 23 Sep-7 Oct: 14 of 141 hidden-mode config fetches (GET /servers/{id}/caspercloak-config) were followed by POST /servers/{id}/connect for the same server within 180 s; control = WireGuard-only config fetches: 59 of 93. CEO 6 Oct LA session: caspercloak-config 22:15:37Z, then ONLY heartbeats 22:26-22:52Z, no /connect. All 18 Protocol=3 rows in 30 days carry the old body UserAgent 'CasperVPN/iOS' (no build) - 0 from build 65. CAUSE: the app sends its single /connect the instant the tunnel says connected, before hidden mode carries data, and never retries; its heartbeat self-heal (ConnectionViewModel.sendHeartbeat -> logConnectionToBackend) is dead code because the hasLoggedConnectForSession guard is still true. FIX on development d412b33bc (ServersController.Heartbeat): a heartbeat with no open row ADOPTS the session through the normal connect path (quota gate, premium gate, device limit) when the last row is not an admin/device termination and closed > 2 min ago; row marked UserAgent 'heartbeat-adopt (xd-1434)'; a WireGuard-labelled open row becomes CasperCloak when the heartbeat says CasperCloak (xd-1438 item 2). Build 0 errors, tests 195/195 (/root/reports/eng1007g-backend-*.log). DEV PROOF: dev API redeployed 21:38:52Z (DLL carries 'heartbeat-adopt' x1). BEFORE (old dev image 19:33Z, 21:23:59Z): heartbeat CasperCloak on Singapore for probe user probe-renewal-1790807482 -> sessionActive=false reason=no-session, 0 rows. AFTER 21:40:45Z: sessionActive=true + 1 row Protocol=3 UserAgent 'heartbeat-adopt (xd-1434)'; 2nd heartbeat 21:40:51Z -> same single row; POST /disconnect closed it 21:41:06Z; a heartbeat right after the disconnect was NOT adopted ('Session closed (status:Disconnected)'). Files /root/reports/eng1007g-devtest-{before,after1,after2,negative}.txt. Dev data only; no production change. Waits: QA xd-1495 on dev, then CEO YES on the READY TO SHIP row, then ship + re-run xd-1389's counts. iOS half: xd-1496. [ENGINEERING run 2026-10-07 g, 2026-10-07T21:10:55Z] claimed: measuring why hidden-mode (CasperCloak) sessions get no ConnectionLogs row (read-only on production, code on the brain clone); any fix goes to development only. ",
       "updatedAt": "2026-10-07T21:40:42Z"
     },
     {
@@ -47079,7 +47087,7 @@
       "to": "[BACKEND]",
       "title": "Handoff from CTO: ConnectionLogs misses hidden-mode (CasperCloak) sessions - LA session 6 Oct 22:39-22:52Z has heartbeats but no row",
       "description": "MEASURED 6 Oct 23:52Z on prod: CEO user, last 8 h, ConnectionLogs has 2 rows (Amsterdam WireGuard 22:15:28Z) and none for Los Angeles, while the api log shows [heartbeat] HIT server=Los Angeles protocol=CasperCloak with bytesRx up to 10.19 MB (22:51-22:52Z). Code: Services/OptimizedVpnServerService.cs ~1259-1269 sets Protocol = request.PreferredProtocol ?? server.Protocol, so CC on a WireGuard server row can be logged as WireGuard. Heartbeat (ServersController ~744-860) answers sessionActive=false reason=no-session when no active row exists. ASK: (1) find why no row was created for this session (which connect path ran), (2) record the transport actually used (heartbeat VpnProtocol / PreferredProtocol) on the row, (3) tell CTO when fixed so the CC session counts in cloudflare-exit-phase1 criteria 1 and 7 can be re-run. Context: cloudflare-exit-phase1, xd-1389.",
-      "status": "consolidated",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-10-06T23:53:27Z",
       "createdDate": "2026-10-06",
@@ -47087,7 +47095,7 @@
       "category": "infra-fleet",
       "ageDays": 0,
       "lifecycle": "done",
-      "note": "[ENGINEERING run 2026-10-07 g, 2026-10-07T21:10:55Z] claimed: measuring why hidden-mode (CasperCloak) sessions get no ConnectionLogs row (read-only on production, code on the brain clone); any fix goes to development only. ",
+      "note": "[ENGINEERING run 2026-10-07 g, 2026-10-07T21:42:10Z] PARTIAL - MEASURED (read-only, production): nginx api_ssl_access 23 Sep-7 Oct: 14 of 141 hidden-mode config fetches (GET /servers/{id}/caspercloak-config) were followed by POST /servers/{id}/connect for the same server within 180 s; control = WireGuard-only config fetches: 59 of 93. CEO 6 Oct LA session: caspercloak-config 22:15:37Z, then ONLY heartbeats 22:26-22:52Z, no /connect. All 18 Protocol=3 rows in 30 days carry the old body UserAgent 'CasperVPN/iOS' (no build) - 0 from build 65. CAUSE: the app sends its single /connect the instant the tunnel says connected, before hidden mode carries data, and never retries; its heartbeat self-heal (ConnectionViewModel.sendHeartbeat -> logConnectionToBackend) is dead code because the hasLoggedConnectForSession guard is still true. FIX on development d412b33bc (ServersController.Heartbeat): a heartbeat with no open row ADOPTS the session through the normal connect path (quota gate, premium gate, device limit) when the last row is not an admin/device termination and closed > 2 min ago; row marked UserAgent 'heartbeat-adopt (xd-1434)'; a WireGuard-labelled open row becomes CasperCloak when the heartbeat says CasperCloak (xd-1438 item 2). Build 0 errors, tests 195/195 (/root/reports/eng1007g-backend-*.log). DEV PROOF: dev API redeployed 21:38:52Z (DLL carries 'heartbeat-adopt' x1). BEFORE (old dev image 19:33Z, 21:23:59Z): heartbeat CasperCloak on Singapore for probe user probe-renewal-1790807482 -> sessionActive=false reason=no-session, 0 rows. AFTER 21:40:45Z: sessionActive=true + 1 row Protocol=3 UserAgent 'heartbeat-adopt (xd-1434)'; 2nd heartbeat 21:40:51Z -> same single row; POST /disconnect closed it 21:41:06Z; a heartbeat right after the disconnect was NOT adopted ('Session closed (status:Disconnected)'). Files /root/reports/eng1007g-devtest-{before,after1,after2,negative}.txt. Dev data only; no production change. Waits: QA xd-1495 on dev, then CEO YES on the READY TO SHIP row, then ship + re-run xd-1389's counts. iOS half: xd-1496. [ENGINEERING run 2026-10-07 g, 2026-10-07T21:10:55Z] claimed: measuring why hidden-mode (CasperCloak) sessions get no ConnectionLogs row (read-only on production, code on the brain clone); any fix goes to development only. ",
       "consolidatedInto": "xd-1434",
       "completedAt": "2026-10-07T21:40:42Z",
       "completedBy": "[CTO]",
@@ -48158,6 +48166,30 @@
       "needsRelease": false,
       "updatedAt": "2026-10-07T21:40:42Z",
       "blocker": "CEO: sign in to admin.dev (and admin.caspervpn.com) himself in the browser pane during a live chat - sessions may not type passwords"
+    },
+    {
+      "id": "xd-1495",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: Check on dev: a hidden-mode heartbeat with no session row now opens one (xd-1434/xd-1438)",
+      "description": "FIX on development d412b33bc (ServersController.Heartbeat): a heartbeat with no open row ADOPTS the session through the normal connect path (quota gate, premium gate, device limit) when the last row is not an admin/device termination and closed > 2 min ago; row marked UserAgent 'heartbeat-adopt (xd-1434)'; a WireGuard-labelled open row becomes CasperCloak when the heartbeat says CasperCloak (xd-1438 item 2). Build 0 errors, tests 195/195 (/root/reports/eng1007g-backend-*.log). DEV PROOF: dev API redeployed 21:38:52Z (DLL carries 'heartbeat-adopt' x1). BEFORE (old dev image 19:33Z, 21:23:59Z): heartbeat CasperCloak on Singapore for probe user probe-renewal-1790807482 -> sessionActive=false reason=no-session, 0 rows. AFTER 21:40:45Z: sessionActive=true + 1 row Protocol=3 UserAgent 'heartbeat-adopt (xd-1434)'; 2nd heartbeat 21:40:51Z -> same single row; POST /disconnect closed it 21:41:06Z; a heartbeat right after the disconnect was NOT adopted ('Session closed (status:Disconnected)'). Files /root/reports/eng1007g-devtest-{before,after1,after2,negative}.txt. Dev data only; no production change. HOW TO CHECK on api.dev.caspervpn.com: mint a JWT for a verified dev probe user with no open row on a free server, POST /api/servers/<id>/heartbeat {vpnProtocol:'CasperCloak'} -> sessionActive=true and one ConnectionLogs row Protocol=3 UserAgent 'heartbeat-adopt (xd-1434)'; second heartbeat -> same row (no duplicate); POST /disconnect closes it; an 'Admin force-disconnect' row is NOT adopted. Script: /root/reports/eng1007g-probe.sh (brain). Then the READY TO SHIP row on the CEO card.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-10-07T21:42:14Z",
+      "createdDate": "2026-10-07",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1496",
+      "from": "[BACKEND]",
+      "to": "[IOS]",
+      "title": "Handoff from BACKEND: Hidden-mode sessions never reach the server's session list: retry POST /connect + fix the dead self-heal",
+      "description": "MEASURED (read-only, production): nginx api_ssl_access 23 Sep-7 Oct: 14 of 141 hidden-mode config fetches (GET /servers/{id}/caspercloak-config) were followed by POST /servers/{id}/connect for the same server within 180 s; control = WireGuard-only config fetches: 59 of 93. CEO 6 Oct LA session: caspercloak-config 22:15:37Z, then ONLY heartbeats 22:26-22:52Z, no /connect. All 18 Protocol=3 rows in 30 days carry the old body UserAgent 'CasperVPN/iOS' (no build) - 0 from build 65. CAUSE: the app sends its single /connect the instant the tunnel says connected, before hidden mode carries data, and never retries; its heartbeat self-heal (ConnectionViewModel.sendHeartbeat -> logConnectionToBackend) is dead code because the hasLoggedConnectForSession guard is still true. ASK: (1) ConnectionViewModel.sendHeartbeat self-heal: reset hasLoggedConnectForSession before logConnectionToBackend() (today the guard returns at once, so the self-heal never runs); (2) for CasperCloak, send /connect after the tunnel carries data (or retry it with backoff on failure) - VPNConnectionManager ~3220 and ConnectionViewModel.logConnectionToBackend. The server now adopts the session from the heartbeat (development d412b33bc), so this is belt and braces, not a blocker. For build 66 or later.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-07T21:42:14Z",
+      "createdDate": "2026-10-07",
+      "completedDate": null
     }
   ],
   "importantNotes": [
