@@ -17311,7 +17311,7 @@
       "phase": 2,
       "priority": "P0",
       "category": "urgent",
-      "status": "IN QA - 7 Oct 21:5xZ CTO live chat: 9 real users measured (at least 5 carried data through hidden mode; 2 Iran blocked before our servers); paying customer's cause measured = Amsterdam relay had no session resume; FIXED 21:32Z (CEO yes), A/B 74/150 lost -> 0/150; message on CEO card row 153; none ticked",
+      "status": "PARTIAL \u2014 IN QA - 7 Oct 21:5xZ CTO live chat: 9 real users measured (at least 5 carried data through hidden mode; 2 Iran blocked before our servers); paying customer's cause measured = Amsterdam relay had no session resume; FIXED 21:32Z (CEO yes), A/B 74/150 lost -> 0/150; message on CEO card row 153; none ticked",
       "description": "[CEO live 2026-10-07T20:03:23Z] CEO: 'we have several urgent issues \u2026 create them as tasks and we create chats to fix those tasks and check them off'. CEO 7 Oct: hidden mode is not working for real users and a paying subscriber is at risk. Context: xd-1389 (CC failing), cloudflare-exit-phase1, CEO's own CC session 7 Oct (held 18 min, ~0.27 MB in the first 17 min). Find every real user (staff excluded) with a hidden-mode attempt in 7 days, measure where each fails, fix the server side today, and write the message for the subscriber.",
       "acceptanceCriteria": [
         {
@@ -17324,11 +17324,14 @@
         },
         {
           "test": "Root cause for the subscriber's failure measured (server log / relay journal line quoted), not guessed",
-          "verify": "quoted relay journal + api log lines for that user",
-          "met": false,
-          "passed": false,
-          "verifiedBy": "none",
-          "evidence": "[CTO live 2026-10-07 21:0x-21:5xZ, CEO chat, Opus 5.5] MEASURED ROOT CAUSE (the paying customer): Amsterdam (NL-AM2, s5) was the ONLY one of 11 live relays without #52 session resumption - live /usr/local/bin/caspercloak_ws.py 485 L md5 e3b92f499644 mtime 2026-06-16: 'resume'=0, '#52'=0; the other 10: resume 9 / #52 12 (Duesseldorf 399 L d58c2f8c7cbf, ws16 fleet 408 L 4292dfd4890c). Why the drift: Amsterdam was the Prometheus-metrics pilot (2026-05-18, job 'caspercloak' tier 'caspercloak-pilot'); the 2026-06-25 surgical #52 port to the Python 3.8 / websockets 13.1 relays reached Duesseldorf only, and no check compared relay versions. Journal at the customer's times (7 Oct): '09:11:22 connection closed / 09:11:22 connection open / 09:11:23 client connected mode=obfs-v2' - no '#52=' (new socket on every reconnect). A/B, SAME REAL TRANSACTION (throwaway WireGuard peer 10.66.69.250 in a netns on Amsterdam, WG-over-hidden-mode bridge with X-CC-Session, abrupt WebSocket drop at +10 s, server-to-phone pings every 0.2 s, phone side silent): OLD code (backup run side by side on 127.0.0.1:18443) 76/150 replies, one 14.8 s blackout (seq 42-115); FIXED code (live :443) 150/150, 0 lost (max rtt 362 ms = packets queued during the drop delivered after the resume). Socket proof: old relay 34615 -> 46894 -> 36178 over 2 resumes; fixed 40022 -> 40022 -> 40022 ('#52=RESUME sid=cctest-c src=:40022 gen=2'). HYPOTHESIS (not measured): why his line drops every ~4 min (7 Oct 09:07-10:02Z, 3:53-3:58 apart) - app watchdog on an idle tunnel or his carrier's NAT/DPI; no device log."
+          "verify": "fb.ssh_exec_node('ams-4', \"md5sum /usr/local/bin/caspercloak_ws.py; grep -c '#52' /usr/local/bin/caspercloak_ws.py /usr/local/bin/caspercloak_ws.py.bak-cc1007-*\")",
+          "met": true,
+          "passed": true,
+          "verifiedBy": "tested",
+          "evidence": "[QA 2026-10-07 ah ~22:15Z, scheduled] PASS. Re-measured on Amsterdam (AMS802567) 22:07Z: backup caspercloak_ws.py.bak-cc1007-20261007T213200Z has '#52' = 0; live /usr/local/bin/caspercloak_ws.py md5 856b7603eea9, '#52' = 15; service active since 21:32:01Z. Matches the CTO's root cause (the only relay without session resume). | [CTO live 2026-10-07 21:0x-21:5xZ, CEO chat, Opus 5.5] MEASURED ROOT CAUSE (the paying customer): Amsterdam (NL-AM2, s5) was the ONLY one of 11 live relays without #52 session resumption - live /usr/local/bin/caspercloak_ws.py 485 L md5 e3b92f499644 mtime 2026-06-16: 'resume'=0, '#52'=0; the other 10: resume 9 / #52 12 (Duesseldorf 399 L d58c2f8c7cbf, ws16 fleet 408 L 4292dfd4890c). Why the drift: Amsterdam was the Prometheus-metrics pilot (2026-05-18, job 'caspercloak' tier 'caspercloak-pilot'); the 2026-06-25 surgical #52 port to the Python 3.8 / websockets 13.1 relays reached Duesseldorf only, and no check compared relay versions. Journal at the customer's times (7 Oct): '09:11:22 connection closed / 09:11:22 connection open / 09:11:23 client connected mode=obfs-v2' - no '#52=' (new socket on every reconnect). A/B, SAME REAL TRANSACTION (throwaway WireGuard peer 10.66.69.250 in a netns on Amsterdam, WG-over-hidden-mode bridge with X-CC-Session, abrupt WebSocket drop at +10 s, server-to-phone pings every 0.2 s, phone side silent): OLD code (backup run side by side on 127.0.0.1:18443) 76/150 replies, one 14.8 s blackout (seq 42-115); FIXED code (live :443) 150/150, 0 lost (max rtt 362 ms = packets queued during the drop delivered after the resume). Socket proof: old relay 34615 -> 46894 -> 36178 over 2 resumes; fixed 40022 -> 40022 -> 40022 ('#52=RESUME sid=cctest-c src=:40022 gen=2'). HYPOTHESIS (not measured): why his line drops every ~4 min (7 Oct 09:07-10:02Z, 3:53-3:58 apart) - app watchdog on an idle tunnel or his carrier's NAT/DPI; no device log.",
+          "verifiedDate": "2026-10-07",
+          "qaVerdict": "PASS",
+          "qaDate": "2026-10-07"
         },
         {
           "test": "Fix live: the subscriber's next hidden-mode session carries > 10 MB, or a WireGuard fallback that works is set for them",
@@ -17336,7 +17339,9 @@
           "met": false,
           "passed": false,
           "verifiedBy": "none",
-          "evidence": "[CTO live 2026-10-07 21:0x-21:5xZ, CEO chat, Opus 5.5] DEPLOYED 2026-10-07 21:32:01Z on Amsterdam only - CEO YES in the live chat ~21:30Z ('Yes, fix it now'; Bangkok-first bypass acknowledged: Bangkok cannot run the Python 3.8 / websockets 13.1 variant; the same #52 code runs on Duesseldorf since 24 Jun). Live file = Amsterdam metrics relay + Duesseldorf #52 hunks (614 L md5 856b7603eea9; PSK line unchanged, hash-checked; metrics kept: Prometheus target nl-am2 up, 0 CC alerts at 21:40Z) + drop-in caspercloak-ws.service.d/grace.conf CC_SESSION_GRACE_S=600 (= Duesseldorf). Startup line: 'CC WS relay wss://0.0.0.0:443 ... honest-mode=on(v13) resume=#52 grace=600s metrics=on'. Backup /usr/local/bin/caspercloak_ws.py.bak-cc1007-20261007T213200Z. ROLLBACK (1 min): copy the backup over the live file, delete grace.conf, systemctl daemon-reload, systemctl restart caspercloak-ws. PROOF (synthetic, from the server itself): 20,971,520 B downloaded through hidden mode on Amsterdam (real WireGuard in a netns via the live relay) in 24.8 s (~6.8 Mbps, HTTP 206) with an abrupt drop at +4 s resumed on the same socket ('#52=RESUME sid=cctest-d src=:34312 gen=1'); external handshakes through s5-edge (Cloudflare) 21:40:26Z and s5 direct 21:40:43Z both CSOK and landed on Amsterdam. Test peer, netns and keys removed (wg0 peers 30 = before). PENDING (QA, real traffic): the customer's next sessions on Amsterdam - '#52=NEW'/'#52=RESUME' lines in journalctl -u caspercloak-ws and > 10 MB for 79675a02 (WireGuardPeerUsages / BandwidthUsageLogs) within 24 h; devops SKILL 0.5 threshold >= 10 client connects in 12 h."
+          "evidence": "[QA 2026-10-07 ah ~22:15Z, scheduled] NOT YET (waiting on the customer, not a fail). Since the 21:32Z fix: the Amsterdam journal shows '#52=NEW' 4 and '#52=RESUME' 5 lines (all users), but user 79675a02 has not connected: WireGuardPeerUsages on Amsterdam LastHandshakeAt 20:20:07Z (before the fix), 0 BandwidthUsageLogs and 0 ConnectionLogs rows after 21:32Z. Re-check after his next session. | [CTO live 2026-10-07 21:0x-21:5xZ, CEO chat, Opus 5.5] DEPLOYED 2026-10-07 21:32:01Z on Amsterdam only - CEO YES in the live chat ~21:30Z ('Yes, fix it now'; Bangkok-first bypass acknowledged: Bangkok cannot run the Python 3.8 / websockets 13.1 variant; the same #52 code runs on Duesseldorf since 24 Jun). Live file = Amsterdam metrics relay + Duesseldorf #52 hunks (614 L md5 856b7603eea9; PSK line unchanged, hash-checked; metrics kept: Prometheus target nl-am2 up, 0 CC alerts at 21:40Z) + drop-in caspercloak-ws.service.d/grace.conf CC_SESSION_GRACE_S=600 (= Duesseldorf). Startup line: 'CC WS relay wss://0.0.0.0:443 ... honest-mode=on(v13) resume=#52 grace=600s metrics=on'. Backup /usr/local/bin/caspercloak_ws.py.bak-cc1007-20261007T213200Z. ROLLBACK (1 min): copy the backup over the live file, delete grace.conf, systemctl daemon-reload, systemctl restart caspercloak-ws. PROOF (synthetic, from the server itself): 20,971,520 B downloaded through hidden mode on Amsterdam (real WireGuard in a netns via the live relay) in 24.8 s (~6.8 Mbps, HTTP 206) with an abrupt drop at +4 s resumed on the same socket ('#52=RESUME sid=cctest-d src=:34312 gen=1'); external handshakes through s5-edge (Cloudflare) 21:40:26Z and s5 direct 21:40:43Z both CSOK and landed on Amsterdam. Test peer, netns and keys removed (wg0 peers 30 = before). PENDING (QA, real traffic): the customer's next sessions on Amsterdam - '#52=NEW'/'#52=RESUME' lines in journalctl -u caspercloak-ws and > 10 MB for 79675a02 (WireGuardPeerUsages / BandwidthUsageLogs) within 24 h; devops SKILL 0.5 threshold >= 10 client connects in 12 h.",
+          "qaVerdict": "WAITING",
+          "qaDate": "2026-10-07"
         },
         {
           "test": "Plain-English message to the subscriber drafted for the CEO (what happened, what we did, what to do in the app) \u2014 CEO sends it",
@@ -17451,7 +17456,7 @@
       "phase": 2,
       "priority": "P0",
       "category": "urgent",
-      "status": "BUILT ON DEVELOPMENT (a37d751 + ab986af), dev-tested 7 Oct 21:34Z; waits for QA (xd-1489) and the CEO's yes to ship (CEO card row 149)",
+      "status": "PARTIAL \u2014 BUILT ON DEVELOPMENT (a37d751 + ab986af), dev-tested 7 Oct 21:34Z; waits for QA (xd-1489) and the CEO's yes to ship (CEO card row 149)",
       "description": "[CEO live 2026-10-07T20:03:23Z] CEO: 'we have several urgent issues \u2026 create them as tasks and we create chats to fix those tasks and check them off'. CEO 7 Oct: when a message from a user arrives through support, the admin must get a notification (badge/alert in the admin panel; optional Telegram/email to the team). Related: xd-1158 (push tokens never registered \u2014 user-side replies).",
       "acceptanceCriteria": [
         {
@@ -17460,7 +17465,9 @@
           "met": false,
           "passed": false,
           "verifiedBy": "none",
-          "evidence": "[CTO live chat 2026-10-07T21:40:42Z - CEO URGENT 6 (xd-1475/xd-1476): close with proof, merge, or plan a month] Development PASS by [CTO] (not a QA tick): dev 7 Oct 21:34Z - new ticket -> 1 unread support row 0.4 s later via GET /api/admin/notifications; the bell polls every 30 s (admin.dev bundle main.0ac10e84.js). QA re-runs on xd-1489."
+          "evidence": "[QA 2026-10-07 ah ~22:15Z, scheduled] NOT LIVE \u2014 development PASS, independent QA re-run (no tick until production): /root/reports/qa1007ah-support.sh on the brain, dev probe user + dev admin JWT: new ticket TKT-20261007-62.. -> support rows|unread 1|1 in 2 s; 2nd user message -> 1|1 (no repeat); admin opens thread -> 1|0; user writes again -> 2|1; admin replies -> 2|0; GET /api/admin/notifications returns the 'New support message' row; ticket closed. api log 'notification created' x2, 'telegram not configured - skipped' x2. admin.dev bundle main.0ac10e84.js: 'View all notifications' 1, 'click to open' 1, mock 'New user registered' 0. Bell/toast/tab title not looked at in a browser. | [CTO live chat 2026-10-07T21:40:42Z - CEO URGENT 6 (xd-1475/xd-1476): close with proof, merge, or plan a month] Development PASS by [CTO] (not a QA tick): dev 7 Oct 21:34Z - new ticket -> 1 unread support row 0.4 s later via GET /api/admin/notifications; the bell polls every 30 s (admin.dev bundle main.0ac10e84.js). QA re-runs on xd-1489.",
+          "qaVerdict": "NOT LIVE",
+          "qaDate": "2026-10-07"
         },
         {
           "test": "Notification stored in the database (unread/read state) so it survives a refresh",
@@ -17468,7 +17475,9 @@
           "met": false,
           "passed": false,
           "verifiedBy": "none",
-          "evidence": "[CTO live chat 2026-10-07T21:40:42Z - CEO URGENT 6 (xd-1475/xd-1476): close with proof, merge, or plan a month] Development: Notifications rows with Category 'support' and Read/ReadAt survive a refresh; after the dev run the DB shows 2 rows, 0 unread (opened + answered). QA re-runs the SQL on xd-1489."
+          "evidence": "[QA 2026-10-07 ah ~22:15Z, scheduled] NOT LIVE \u2014 development PASS, independent QA re-run (no tick until production): /root/reports/qa1007ah-support.sh on the brain, dev probe user + dev admin JWT: new ticket TKT-20261007-62.. -> support rows|unread 1|1 in 2 s; 2nd user message -> 1|1 (no repeat); admin opens thread -> 1|0; user writes again -> 2|1; admin replies -> 2|0; GET /api/admin/notifications returns the 'New support message' row; ticket closed. api log 'notification created' x2, 'telegram not configured - skipped' x2. admin.dev bundle main.0ac10e84.js: 'View all notifications' 1, 'click to open' 1, mock 'New user registered' 0. Bell/toast/tab title not looked at in a browser. | [CTO live chat 2026-10-07T21:40:42Z - CEO URGENT 6 (xd-1475/xd-1476): close with proof, merge, or plan a month] Development: Notifications rows with Category 'support' and Read/ReadAt survive a refresh; after the dev run the DB shows 2 rows, 0 unread (opened + answered). QA re-runs the SQL on xd-1489.",
+          "qaVerdict": "NOT LIVE",
+          "qaDate": "2026-10-07"
         },
         {
           "test": "Optional team alert (Telegram bot or support@ email) on each new message \u2014 CEO picks",
@@ -17555,16 +17564,19 @@
       "phase": 2,
       "priority": "P0",
       "category": "urgent",
-      "status": "IN PROGRESS - the engineering run fires and logs again (runs e/f, 7 Oct); backlog cut to under 10 open rows per department on 7 Oct (counts on row 1); QA xd-1476 checks the counts, the 2-firing proof and the 3-day trend",
+      "status": "PARTIAL \u2014 IN PROGRESS - the engineering run fires and logs again (runs e/f, 7 Oct); backlog cut to under 10 open rows per department on 7 Oct (counts on row 1); QA xd-1476 checks the counts, the 2-firing proof and the 3-day trend",
       "description": "[CEO live 2026-10-07T20:03:23Z] CEO: 'we have several urgent issues \u2026 create them as tasks and we create chats to fix those tasks and check them off'. CEO 7 Oct: tasks are not moving. Measured: the engineering run has left no log since 5 Oct 14:46Z (still none at 19:51Z 7 Oct) \u2014 every backend/DevOps/website/admin/security row waits on it (xd-1450, xd-1454, CEO card row 145: switch to Opus). Then burn the backlog down per department.",
       "acceptanceCriteria": [
         {
           "test": "Engineering run starts on the Mac and leaves a DEPARTMENT_LOG entry at 2 firings in a row",
-          "verify": "session folder + log entry per firing",
-          "met": false,
-          "passed": false,
-          "verifiedBy": "none",
-          "evidence": "[CTO live chat 2026-10-07T21:57:06Z] 2 firings in a row now logged: 20:04Z firing (run f, Opus) -> DEPARTMENT_LOG 20:22-20:24Z; 21:04:49Z firing (run g) -> DEPARTMENT_LOG [BACKEND] 21:44:01Z ... [CTO] 21:46:58Z. Ready for QA to re-read and tick (xd-1476). | [CTO live chat 2026-10-07T21:40:42Z - CEO URGENT 6 (xd-1475/xd-1476): close with proof, merge, or plan a month] Engineering firings: 19:04:48Z (run e) did nothing on claude-fable-5-1 until the CEO's /model switch (Mac folder 19:57:22Z), then logged 20:41-21:03Z; 20:04Z (run f, Opus) logged 20:22-20:24Z; 21:04:49Z (run g) - no log yet at 21:3xZ. Not yet 2 clean firings in a row - QA re-checks the 21:04Z and 22:04Z firings."
+          "verify": "grep -nE '^## \\[(BACKEND|DEVOPS|WEBSITE|ADMIN-PANEL|SECURITY)\\] Session \u2014 2026-10-07T2' DEPARTMENT_LOG.md",
+          "met": true,
+          "passed": true,
+          "verifiedBy": "tested",
+          "evidence": "[QA 2026-10-07 ah ~22:15Z, scheduled] PASS. DEPARTMENT_LOG.md (Mac vault, read 22:10Z) holds the engineering group's entries for two firings in a row: [BACKEND]/[DEVOPS]/[ADMIN-PANEL]/[WEBSITE]/[SECURITY]/[CTO] 20:41:29Z-20:44:54Z and again [BACKEND] 21:44:01Z, [DEVOPS] 21:44:40Z, [WEBSITE] 21:45:15Z, [ADMIN-PANEL] 21:46:08Z, [SECURITY] 21:46:33Z, [CTO] 21:46:58Z. | [CTO live chat 2026-10-07T21:57:06Z] 2 firings in a row now logged: 20:04Z firing (run f, Opus) -> DEPARTMENT_LOG 20:22-20:24Z; 21:04:49Z firing (run g) -> DEPARTMENT_LOG [BACKEND] 21:44:01Z ... [CTO] 21:46:58Z. Ready for QA to re-read and tick (xd-1476). | [CTO live chat 2026-10-07T21:40:42Z - CEO URGENT 6 (xd-1475/xd-1476): close with proof, merge, or plan a month] Engineering firings: 19:04:48Z (run e) did nothing on claude-fable-5-1 until the CEO's /model switch (Mac folder 19:57:22Z), then logged 20:41-21:03Z; 20:04Z (run f, Opus) logged 20:22-20:24Z; 21:04:49Z (run g) - no log yet at 21:3xZ. Not yet 2 clean firings in a row - QA re-checks the 21:04Z and 22:04Z firings.",
+          "verifiedDate": "2026-10-07",
+          "qaVerdict": "PASS",
+          "qaDate": "2026-10-07"
         },
         {
           "test": "Per department (backend, DevOps, iOS, QA): open rows counted; each row closed with proof, merged, or deferred with a month \u2014 target < 10 open each",
@@ -17572,7 +17584,9 @@
           "met": false,
           "passed": false,
           "verifiedBy": "none",
-          "evidence": "[CTO live chat 2026-10-07T21:40:42Z - CEO URGENT 6 (xd-1475/xd-1476): close with proof, merge, or plan a month] Burn-down pushed in this session. Open rows per department (pending + in_progress) BEFORE -> AFTER: ADMIN 2->2, ADMIN-PANEL 4->3, ANDROID 4->4, BACKEND 26->7, CEO 3->3, CTO 19->6, DEVOPS 29->9, IOS 28->6, LEGAL 4->4, MARKETING 12->5, PRODUCT 3->3, QA 58->9, SECURITY 1->1, WEBSITE 6->6. Every department is under 10. Each closed row quotes its measurement; merged rows point at one umbrella per real trigger; planned rows carry deferredUntil + the plan."
+          "evidence": "[QA 2026-10-07 ah ~22:15Z, scheduled] NOT MET at 22:15Z on board acce86300: open (pending+in_progress) handoffs BACKEND 7, DEVOPS 9, IOS 9, QA 12 (11 after this run closes xd-1489) \u2014 QA is above the < 10 target because 10 new P0/P1 checks arrived 21:40-21:53Z; 8 of them need the phone, the emulator, a signed-in browser or a real payment. | [CTO live chat 2026-10-07T21:40:42Z - CEO URGENT 6 (xd-1475/xd-1476): close with proof, merge, or plan a month] Burn-down pushed in this session. Open rows per department (pending + in_progress) BEFORE -> AFTER: ADMIN 2->2, ADMIN-PANEL 4->3, ANDROID 4->4, BACKEND 26->7, CEO 3->3, CTO 19->6, DEVOPS 29->9, IOS 28->6, LEGAL 4->4, MARKETING 12->5, PRODUCT 3->3, QA 58->9, SECURITY 1->1, WEBSITE 6->6. Every department is under 10. Each closed row quotes its measurement; merged rows point at one umbrella per real trigger; planned rows carry deferredUntil + the plan.",
+          "qaVerdict": "FAIL",
+          "qaDate": "2026-10-07"
         },
         {
           "test": "Daily office report shows open-row count per department falling 3 days in a row",
@@ -17715,13 +17729,13 @@
       "name": "QA & Testing",
       "status": "red",
       "lead": "QA Lead (AI)",
-      "currentTask": "2026-10-07 xd-1440 re-base (01:19Z): 1 tasks \u00b7 0/5 criteria met after removing the 6 Oct 23:54Z auto-ticks \u00b7 open handoffs 38 \u00b7 open P0 2",
-      "blockers": "2",
+      "currentTask": "2026-10-07 run ah re-base (22:20Z): 1 tasks \u00b7 0/5 criteria met \u00b7 open P0 to QA 6",
+      "blockers": "6",
       "completion": "0",
-      "lastActivity": "2026-10-07T00:12:00Z",
+      "lastActivity": "2026-10-07T22:20:00Z",
       "launchCompletion": "0",
       "lastTriggered": "2026-10-07T00:12:00Z",
-      "notes": "2026-10-07 [QA] re-based at exit (run a): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run r): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run q): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run p): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run o): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run n): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run m): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run l): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run k): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run j): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run i): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run h): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run g): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run f): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run e): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run d): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run c): blockers = open P0 handoffs (xd-1164, xd-1222); xd-1395 closed. | 2026-10-06 ["
+      "notes": "2026-10-07 [QA] re-based at exit (run ah): blockers = open P0 handoffs (xd-1476, xd-1490, xd-1492, xd-1493, xd-1495, xd-1498). | 2026-10-07 [QA] re-based at exit (run a): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run r): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run q): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run p): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run o): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run n): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run m): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run l): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run k): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run j): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run i): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run h): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run g): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run f): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run e): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run d): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run c): blockers = open P0 handoffs (xd-1164, xd-1222); xd-1395 closed. | 2026-10-06 ["
     },
     "legal": {
       "name": "Legal & Compliance",
@@ -47273,7 +47287,8 @@
       "category": "infra-fleet",
       "ageDays": 0,
       "lifecycle": "active",
-      "updatedAt": "2026-10-07T21:40:42Z"
+      "updatedAt": "2026-10-07T22:20:00Z",
+      "triageNote": "[QA 2026-10-07 ah ~22:15Z, scheduled] Still down at 22:09Z: 'codegraph query' on the brain -> 'Unable to find image casper-codegraph:latest locally ... pull access denied'."
     },
     {
       "id": "xd-1446",
@@ -47904,8 +47919,9 @@
       "dueBy": "2026-10-08T20:03:23Z",
       "category": "urgent",
       "needsRelease": false,
-      "updatedAt": "2026-10-07T21:40:42Z",
-      "qaNote": "[CTO live chat 2026-10-07T21:57:06Z] For row 0 of urgent-stuck-backlog: engineering firings 20:04Z (run f) and 21:04Z (run g) both logged (see the row's evidence). Row 1: counts after the cut are on the row; new rows keep arriving (xd-1495, xd-1497 at 21:42-21:44Z) - count per department at your run. | [CTO live chat 2026-10-07T21:40:42Z - CEO URGENT 6 (xd-1475/xd-1476): close with proof, merge, or plan a month] MEASURED 21:2xZ via list_triggers: Casper engineering = claude-opus-5-5 (updated 20:02:48Z) and it logged (run f 20:22-20:24Z, run e 20:41-21:03Z); the 21:04:49Z firing had not logged by 21:3xZ. Casper CEO office = claude-fable-5-1 STILL (next firing 8 Oct 06:02Z) - this morning it did nothing until the CEO switched the session by hand. CLOUDFLARE EXIT run = '' (account default); run 8 logged 19:44Z. Open until the office run is on Opus and its next firing logs."
+      "updatedAt": "2026-10-07T22:20:00Z",
+      "qaNote": "[CTO live chat 2026-10-07T21:57:06Z] For row 0 of urgent-stuck-backlog: engineering firings 20:04Z (run f) and 21:04Z (run g) both logged (see the row's evidence). Row 1: counts after the cut are on the row; new rows keep arriving (xd-1495, xd-1497 at 21:42-21:44Z) - count per department at your run. | [CTO live chat 2026-10-07T21:40:42Z - CEO URGENT 6 (xd-1475/xd-1476): close with proof, merge, or plan a month] MEASURED 21:2xZ via list_triggers: Casper engineering = claude-opus-5-5 (updated 20:02:48Z) and it logged (run f 20:22-20:24Z, run e 20:41-21:03Z); the 21:04:49Z firing had not logged by 21:3xZ. Casper CEO office = claude-fable-5-1 STILL (next firing 8 Oct 06:02Z) - this morning it did nothing until the CEO switched the session by hand. CLOUDFLARE EXIT run = '' (account default); run 8 logged 19:44Z. Open until the office run is on Opus and its next firing logs.",
+      "triageNote": "[QA 2026-10-07 ah ~22:15Z, scheduled] urgent-stuck-backlog crit 0 PASS + ticked (two engineering firings logged 20:41-20:44Z and 21:44-21:46Z). Crit 1 NOT MET: QA 12 open (11 after this run), DEVOPS 9, IOS 9, BACKEND 7. Crit 2 needs 3 days of office reports."
     },
     {
       "id": "xd-1477",
@@ -48016,7 +48032,8 @@
       "createdAt": "2026-10-07T20:39:10Z",
       "createdDate": "2026-10-07",
       "completedDate": null,
-      "triageNote": "[QA 2026-10-07 21:07Z] NOT RUN FULLY. Read-only: origin/production (b33e478f9) tools/task_taxonomy.py computes NOW from the clock. The --dry run and the 8 Oct 09:02 no-duplicate check were not done this run."
+      "triageNote": "[QA 2026-10-07 ah ~22:15Z, scheduled] Leg 1 PASS: on the brain's production tree 801678615 (contains fda676025) 'task_taxonomy.py --dry' -> '[dry] board 1155f44bb today=2026-10-07 ... nothing written'. Leg 2 waits for the CEO office's 09:02 run on 8 Oct. | [QA 2026-10-07 21:07Z] NOT RUN FULLY. Read-only: origin/production (b33e478f9) tools/task_taxonomy.py computes NOW from the clock. The --dry run and the 8 Oct 09:02 no-duplicate check were not done this run.",
+      "updatedAt": "2026-10-07T22:20:00Z"
     },
     {
       "id": "xd-1484",
@@ -48076,9 +48093,9 @@
       "createdAt": "2026-10-07T21:01:54Z",
       "createdDate": "2026-10-07",
       "completedDate": null,
-      "triageNote": "[QA 2026-10-07 21:07Z] PARTIAL. PASS (read from origin/development): ci.yml uses EnricoMi/publish-unit-test-result-action/linux@v2 (composite); deploy_api.sh holds the xd-1134 guard (required-secrets check, 'nothing was changed' on missing, WARN for Activation__FleetSshPublicKey). NOT RUN: a real CI run of 'Build & Test .NET Backend' (no GitHub run read this run) and the guard run against live config. Left open.",
+      "triageNote": "[QA 2026-10-07 ah ~22:15Z, scheduled] Leg 2 PASS: the '# xd-1134' block from origin/development deploy_api.sh, run alone against the live production config -> 'required secrets present: 12/12', 'WARN empty: Activation__FleetSshPublicKey'; control with a fake required name -> 'FATAL ... nothing was changed', rc 1 (no docker tag/build/up lines in the extracted block). Leg 1 NOT YET: no development 'Build & Test .NET Backend' job since 96aff2d25 (dev lint ran 21:59:53Z on d412b33bc; the 22:02Z build job was production 7e1047974, which still fails 'Docker pull failed' x4 \u2014 expected, the fix is dev-only). | [QA 2026-10-07 21:07Z] PARTIAL. PASS (read from origin/development): ci.yml uses EnricoMi/publish-unit-test-result-action/linux@v2 (composite); deploy_api.sh holds the xd-1134 guard (required-secrets check, 'nothing was changed' on missing, WARN for Activation__FleetSshPublicKey). NOT RUN: a real CI run of 'Build & Test .NET Backend' (no GitHub run read this run) and the guard run against live config. Left open.",
       "qaNote": "[CTO live chat 2026-10-07T21:40:42Z - CEO URGENT 6 (xd-1475/xd-1476): close with proof, merge, or plan a month] Not measurable yet (7 Oct 21:3xZ): the runner's Worker logs 21:04-21:31Z hold only production's 'Build & Test .NET Backend' (21:18Z, old docker action, 4x 'Docker pull failed', Failed); development runs after 96aff2d25 show 'CI Status Check' Succeeded (21:30Z) and deploy-dev Succeeded, but no development backend test job. QA re-checks the next development backend run.",
-      "updatedAt": "2026-10-07T21:40:42Z"
+      "updatedAt": "2026-10-07T22:20:00Z"
     },
     {
       "id": "xd-1488",
@@ -48105,19 +48122,23 @@
       "to": "[QA]",
       "title": "Handoff from CTO: [P0] Check URGENT 4 on development: a user's support message raises ONE admin alert (bell + stored row) and opening/answering the ticket clears it",
       "description": "URGENT 4 (urgent-support-notify-admin) is on development a37d751 (+ ab986af = production wiring for the Telegram line). Before: the admin header bell was a mock-up (always '3' and three made-up rows: 'New user registered', 'Server US-East at 90% load', 'New payment received') and NO code wrote a Notification for a support message. Now: SupportTicketsController (new ticket + every user reply) -> SupportAlertService -> one Notifications row (Category 'support', ActionUrl /support-tickets?ticket=<id>), no repeat while that ticket's alert is unread and < 10 min old; opening the thread (GET /api/admin/support/tickets/{id}/messages) or answering it marks it read; the bell polls GET /api/admin/notifications every 30 s and on window focus, shows the unread count, a toast for each new support alert and '(N)' in the tab title; one Telegram line (TelegramTeamAlertSender, content-free: ticket number + admin link) when /opt/caspervpn/secrets/api holds the token + chat id files (production only). CTO dev proof 7 Oct 21:34Z on the dev host (JWTs minted from the dev API's own settings for the existing throwaway user verify-eng1004b-b-... and a dev admin; no account created, nothing typed): create ticket 200 -> 1 unread support row 0.4 s later; second message -> still 1 row; admin opens thread -> 0 unread; user writes again -> 2 rows / 1 unread; admin replies -> 0 unread; DB 2|0; api log 'support-alert: notification created' / 'no repeat' / 'marked read' / 'telegram not configured - skipped'; test ticket closed. Dev admin bundle main.0ac10e84.js: 'View all notifications' 1, 'click to open' 1, mock row 'New user registered' 0. Build on the main server: dotnet build 0 errors, tests 204/204 (9 new SupportAlertServiceTests), admin tsc --noEmit 0 errors (instrument proven: a planted TS2322 was caught, rc 2). QA RE-RUN: (1) the API steps: script /root/cto1008/devtest_u4.py on the main server - scp it to the dev host (casper_fleet_admin) and run it -> the same numbers; (2) bundle grep on admin.dev; (3) the browser leg (badge + toast + tab title) rides the admin browser pass umbrella. Pass -> tick rows 0-1 of urgent-support-notify-admin; row 2 = CEO picked Telegram (7 Oct live chat); row 3 = production after the CEO's yes (READY TO SHIP row on the CEO card).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P0",
       "createdAt": "2026-10-07T21:40:46Z",
       "createdDate": "2026-10-07",
-      "completedDate": null,
+      "completedDate": "2026-10-07",
       "category": "urgent",
       "lifecycle": "active",
       "ageDays": 0,
       "needsRelease": false,
-      "updatedAt": "2026-10-07T21:40:42Z",
+      "updatedAt": "2026-10-07T22:20:00Z",
       "taskRef": "urgent-support-notify-admin",
       "dueBy": "2026-10-10T20:03:23Z",
-      "handoffTo": "[CEO]"
+      "handoffTo": "[CEO]",
+      "completedAt": "2026-10-07",
+      "completedBy": "[QA]",
+      "resolution": "[QA 2026-10-07 ah ~22:15Z] PASS ON DEVELOPMENT (independent re-run, /root/reports/qa1007ah-support.txt): 1 alert per ticket, no repeat while unread, read on open and on reply, bell API returns it, dev admin bundle has the new bell and no mock rows. Not ticked on the task (not live). Production proof rides on the READY TO SHIP row 149 -> one real test ticket after the CEO's yes.",
+      "resultingHandoff": "none new; production check is criterion 3 of urgent-support-notify-admin"
     },
     {
       "id": "xd-1490",
@@ -48217,11 +48238,13 @@
       "to": "[QA]",
       "title": "Handoff from BACKEND: Check on dev: a hidden-mode heartbeat with no session row now opens one (xd-1434/xd-1438)",
       "description": "FIX on development d412b33bc (ServersController.Heartbeat): a heartbeat with no open row ADOPTS the session through the normal connect path (quota gate, premium gate, device limit) when the last row is not an admin/device termination and closed > 2 min ago; row marked UserAgent 'heartbeat-adopt (xd-1434)'; a WireGuard-labelled open row becomes CasperCloak when the heartbeat says CasperCloak (xd-1438 item 2). Build 0 errors, tests 195/195 (/root/reports/eng1007g-backend-*.log). DEV PROOF: dev API redeployed 21:38:52Z (DLL carries 'heartbeat-adopt' x1). BEFORE (old dev image 19:33Z, 21:23:59Z): heartbeat CasperCloak on Singapore for probe user probe-renewal-1790807482 -> sessionActive=false reason=no-session, 0 rows. AFTER 21:40:45Z: sessionActive=true + 1 row Protocol=3 UserAgent 'heartbeat-adopt (xd-1434)'; 2nd heartbeat 21:40:51Z -> same single row; POST /disconnect closed it 21:41:06Z; a heartbeat right after the disconnect was NOT adopted ('Session closed (status:Disconnected)'). Files /root/reports/eng1007g-devtest-{before,after1,after2,negative}.txt. Dev data only; no production change. HOW TO CHECK on api.dev.caspervpn.com: mint a JWT for a verified dev probe user with no open row on a free server, POST /api/servers/<id>/heartbeat {vpnProtocol:'CasperCloak'} -> sessionActive=true and one ConnectionLogs row Protocol=3 UserAgent 'heartbeat-adopt (xd-1434)'; second heartbeat -> same row (no duplicate); POST /disconnect closes it; an 'Admin force-disconnect' row is NOT adopted. Script: /root/reports/eng1007g-probe.sh (brain). Then the READY TO SHIP row on the CEO card.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P0",
       "createdAt": "2026-10-07T21:42:14Z",
       "createdDate": "2026-10-07",
-      "completedDate": null
+      "completedDate": null,
+      "triageNote": "[QA 2026-10-07 ah ~22:15Z, scheduled] PARTIAL \u2014 3 of 4 legs PASS on dev, re-run with the backend's probe at 22:07:50Z (/root/reports/qa1007ah-{1,2,neg}.txt): heartbeat with no open row -> sessionActive=true + 1 row Protocol=3 'heartbeat-adopt (xd-1434)'; 2nd heartbeat 22:07:56Z -> same single row; /disconnect closed it 22:07:58Z and a heartbeat right after was NOT adopted ('Session closed (status:Disconnected)'). NOT RUN: the admin force-disconnect leg and the WireGuard-row -> CasperCloak relabel. Not on production.",
+      "updatedAt": "2026-10-07T22:20:00Z"
     },
     {
       "id": "xd-1496",
@@ -48259,11 +48282,13 @@
       "to": "[QA]",
       "title": "Handoff from CTO: Verify URGENT 1 (urgent-cc-real-users): re-run the evidence + watch the UAE customer's next hidden-mode sessions on Amsterdam",
       "description": "Task urgent-cc-real-users, criteria 0-3 carry the evidence (CTO live 7 Oct). Re-run and tick only what passes: (0) the 9-user table: SQL on ConnectFailureEvents (lower(Protocol) like '%cloak%', 7 d) + WireGuardPeerUsages/BandwidthUsageLogs per user + relay journals (sid/src timing) - NOT ConnectionLogs bytes (wrong for CC); (1) root cause: on Amsterdam grep -c '#52' /usr/local/bin/caspercloak_ws.py.bak-cc1007-20261007T213200Z = 0 vs live > 0; md5 live 856b7603eea9; (2) fix live: journalctl -u caspercloak-ws on Amsterdam must show '#52=NEW sid=' / '#52=RESUME' lines from the customer (user 79675a02) and his WireGuardPeerUsages rx+tx on Amsterdam must grow > 10 MB after 2026-10-07 21:32Z; also >= 10 client connects in 12 h (devops SKILL 0.5); Prometheus target nl-am2 up, 0 CC alerts; (3) the message row on the CEO card exists and the CEO said 'sent'. If his sessions still drop every ~4 min AND lose data after the fix, hand back to [CTO] with the journal lines.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P0",
       "createdAt": "2026-10-07T21:51:04Z",
       "createdDate": "2026-10-07",
-      "completedDate": null
+      "completedDate": null,
+      "triageNote": "[QA 2026-10-07 ah ~22:15Z, scheduled] Crit 1 (root cause) PASS + ticked: backup '#52'=0, live md5 856b7603eea9 '#52'=15. Crit 2 WAITING: customer 79675a02 last handshake on Amsterdam 20:20:07Z, nothing after the 21:32Z fix; journal has 4 NEW / 5 RESUME lines from others. >=10 connects in 12 h and the > 10 MB check need tomorrow's run. Crit 0 (9-user table) not re-run this pass. Crit 3 is the CEO's 'sent'.",
+      "updatedAt": "2026-10-07T22:20:00Z"
     },
     {
       "id": "xd-1499",
@@ -48295,11 +48320,13 @@
       "to": "[QA]",
       "title": "Handoff from IOS: Check build 65 tip e5408724 (marker 26q): test builds no longer write passwords or WireGuard keys into the log",
       "description": "Branch ios/trial-at-signup tip e5408724. (1) tools/ios-tests/logredact/run-linux.sh -> '12 passed, 0 failed'; CONTROL=1 -> 3 passed, 9 failed. (2) After the CEO runs CasperVPN/_ios/build65f.command: b65f.log shows 'app marker 26q (must be 1): 1' and 'log-redaction rule in app (must be 1+)' >= 1. (3) In console-b65f.log count only - NEVER print the lines: grep -a -c '\"password\":\"<redacted>\"' >= 1 after any sign-in, and grep -a -o -E '\"[A-Za-z]*[Pp]assword\":\"[^<]' | wc -l = 0. Known and NOT covered by 26q (separate handoff): the tunnel's debug os_log 'Parsing tunnel config JSON' and Apple's NE configuration dump still show the WireGuard privateKey in the device console. Tasks: urgent-ios-build-65.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-10-07T21:53:35Z",
       "createdDate": "2026-10-07",
-      "completedDate": null
+      "completedDate": null,
+      "triageNote": "[QA 2026-10-07 ah ~22:15Z, scheduled] Leg 1 PASS: redactSecrets cut from APIClient.swift at ios/trial-at-signup e5408724, compiled with swiftc 6.0.3 (Linux): '12 passed, 0 failed'; CONTROL (LOG-REDACT rules dropped) '3 passed, 9 failed'. Legs 2-3 wait for the CEO's build65f run (b65f.log + console count).",
+      "updatedAt": "2026-10-07T22:20:00Z"
     },
     {
       "id": "xd-1502",
