@@ -47122,11 +47122,12 @@
       "to": "[QA]",
       "title": "Handoff from CTO: Check xd-1453: main server CPU back to normal; 17 leftover grep processes are asleep at 0% CPU",
       "description": "Measured 7 Oct 20:17-20:19Z on the main server: load 0.33-2.5 (a deploy build was running), no process from a live-session script using CPU; 17 old grep processes (2 to 143 days old, state S, 0.0% CPU each) remain - harmless; killing them is cleanup on a live server, left for an attended CTO session. Pass = CPU alert resolved in the routines watchdog mail.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-10-07T20:18:13Z",
       "createdDate": "2026-10-07",
-      "completedDate": null
+      "completedDate": null,
+      "triageNote": "[QA 2026-10-07 21:07Z] NOT PASSED YET. Measured on the main server: 17 leftover grep processes still there (asleep). Load average 14.5 / 7.9 / 4.9 (1/5/15 min) at 21:07Z with a GitHub runner worker at ~80% CPU and dockerd 39% (a CI/deploy build) - so 'CPU back to normal' cannot be called proven while a build is running. Pass test = CPU alert resolved in the watchdog mail; not read this run. Re-check after the build ends."
     },
     {
       "id": "xd-1481",
@@ -47134,11 +47135,12 @@
       "to": "[QA]",
       "title": "Handoff from IOS: Handoff from IOS: check build 65 tip 04033e5a (marker 26o) - 10-character passwords + rating prompt later chance",
       "description": "Branch ios/trial-at-signup tip 04033e5a. (1) Run tools/ios-tests/xd853/run-linux.sh (swiftc 6.x on Linux) -> expect 16 passed, 0 failed; on a Mac tools/ios-tests/xd853/run.sh the same. (2) Code check: ios-app-v2/CasperVPN/CasperVPN/Features/Auth/AuthViewModel.swift canRegister uses isNewPasswordValid (>=10), canLogin still isPasswordValid (>=8); Features/Profile/ChangePasswordView.swift and Features/Auth/ResetPasswordView.swift use >=10. (3) Server shape: curl -s -X POST https://api.caspervpn.com/api/auth/register -H 'Content-Type: application/json' -d '{\"email\":\"not-an-email\",\"password\":\"abcdefg12\",\"confirmPassword\":\"abcdefg12\",\"firstName\":\"x\",\"lastName\":\"y\"}' -> 400 with 'minimum length of 10' (invalid email, so no account is created). (4) Device part waits for the CEO's Xcode build: device test step 3 (ios-app-v2/Docs/build-65-device-test.md) - a 9-character sign-up shows 'Password must be at least 10 characters'. Tasks: urgent-ios-build-65, xd-1418, xd-1465.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-10-07T20:19:07Z",
       "createdDate": "2026-10-07",
-      "completedDate": null
+      "completedDate": null,
+      "triageNote": "[QA 2026-10-07 21:07Z] PARTIAL. PASS (2) code on origin/ios/trial-at-signup 04033e5a9: AuthViewModel canRegister uses isNewPasswordValid; isPasswordValid still >=8 for login; ChangePasswordView and ResetPasswordView use count >= 10. PASS (3) live API: register with bad email + 9-char password -> 400, message 'minimum length of 10' (no account created). NOT RUN (1): no swiftc on the Mac VM or main server. (4) device step waits for the CEO's Xcode build 65. Left open."
     },
     {
       "id": "xd-1482",
@@ -47146,12 +47148,13 @@
       "to": "[QA]",
       "title": "Handoff from DEVOPS: Verify row 114 on production: every alert now goes to e-mail + Telegram + ntfy (shipped 20:19Z)",
       "description": "[ENGINEERING run 2026-10-07 e, 2026-10-07T20:39:05Z, Opus 5.5, session cse_013HHnL3pX1tjGqiLaWKnkk9] SHIPPED under CEO YES row 114 (production ca7538f21 = development 94ebbb23a). Re-run on the main server: (1) curl -s localhost:9093/api/v2/receivers -> [{\"name\":\"all-channels\"}]; (2) docker inspect alertmanager --format '{{json .HostConfig.Binds}}' shows /opt/caspervpn/secrets/telegram_bot_token.alertmanager mounted read-only (owner nobody, 0400 - the container runs as nobody and cannot read the root-only original); (3) curl -s localhost:9093/metrics | grep '^alertmanager_notifications_total{integration=\"telegram\"}' >= 1 and every alertmanager_notifications_failed_total{integration=\"telegram\"|\"webhook\"} = 0; (4) journalctl -u alertmanager-resend-bridge | grep CasperAlertPathTest -> 'forwarded to Resend: status=200' (20:21:00Z); (5) curl -s localhost:9090/api/v1/query?query=casper:api_downtime_budget_minutes -> 438 and casper:api_downtime_budget_used_pct present; (6) silences still active (2: bkk-dev). Ask the CEO once: did the Telegram test 'CasperAlertPathTest' arrive ~20:20Z (and its 'resolved' ~20:25Z)? Only QA ticks row 114 + xd-1300/xd-1257 needs.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-10-07T20:39:10Z",
       "createdDate": "2026-10-07",
       "completedDate": null,
-      "notes": "[ENGINEERING run 2026-10-07 e, 2026-10-07T20:53:54Z] CEO confirmed in chat: the Telegram test alert arrived. QA still re-runs checks (1)-(6)."
+      "notes": "[ENGINEERING run 2026-10-07 e, 2026-10-07T20:53:54Z] CEO confirmed in chat: the Telegram test alert arrived. QA still re-runs checks (1)-(6).",
+      "triageNote": "[QA 2026-10-07 21:07Z] PARTIAL PASS from the main server. (1) receivers = [all-channels] PASS. (2) alertmanager mounts telegram_bot_token.alertmanager :ro PASS. (3) telegram notifications_total=2, every failed_total (telegram, webhook, email) = 0 PASS. (4) bridge log: 'forwarded to Resend status=200' for CasperAlertPathTest FIRING 20:21:00Z and RESOLVED 20:31:00Z PASS. (5) casper:api_downtime_budget_minutes=438, used_pct=0.228 present PASS. (6) 2 active silences PASS. NOT PROVEN: that the Telegram message and the ntfy message reached a phone - only the CEO can say; no ntfy counter checked. Row 114 stays unticked until he answers."
     },
     {
       "id": "xd-1483",
@@ -47159,11 +47162,12 @@
       "to": "[QA]",
       "title": "Handoff from CTO: Verify row 124 + xd-1456 on production: the morning task-sorting tool runs with today's date and never duplicates TRIAGE rows",
       "description": "[ENGINEERING run 2026-10-07 e, 2026-10-07T20:39:05Z, Opus 5.5, session cse_013HHnL3pX1tjGqiLaWKnkk9] SHIPPED under CEO YES row 124 (production fda676025 = development 51f289627, the rebased 3cb56f699). Proof before ship on the live board 51d011b65: 'DASH_WORK=<run>/dash python3 tools/task_taxonomy.py --dry' -> '[dry] board 51d011b65 today=2026-10-07: deferred 47, active 196, triage 2, needsRelease defaulted 58; devops: updated xd-1457 (2 rows); nothing written'. Verify: (1) the same --dry from the production tree prints today's date and 'nothing written'; (2) after the CEO office's 09:02 run on 8 Oct, no new duplicate TRIAGE handoff per department (the open one is UPDATED) and no new copy of the 4 Oct importantNote. xd-1456 (the office's ask) is the same fix.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P2",
       "createdAt": "2026-10-07T20:39:10Z",
       "createdDate": "2026-10-07",
-      "completedDate": null
+      "completedDate": null,
+      "triageNote": "[QA 2026-10-07 21:07Z] NOT RUN FULLY. Read-only: origin/production (b33e478f9) tools/task_taxonomy.py computes NOW from the clock. The --dry run and the 8 Oct 09:02 no-duplicate check were not done this run."
     },
     {
       "id": "xd-1484",
@@ -47171,11 +47175,12 @@
       "to": "[QA]",
       "title": "Handoff from ADMIN-PANEL: Verify row 129 on production: admin sign-in keeps no token in localStorage (httpOnly refresh cookie, 7-day cap)",
       "description": "[ENGINEERING run 2026-10-07 e, 2026-10-07T20:39:05Z, Opus 5.5, session cse_013HHnL3pX1tjGqiLaWKnkk9] SHIPPED under CEO YES row 129 (production 834bfacd6 = development 5d38f7bda). API: /root/deploy_api.sh 20:27:19-20:31:09Z image 00c74a43849b -> b1d3559ad6b4, rollback tag caspervpn-api:rollback-202610072027, /health 200. MEASURED with a no-account probe (/root/reports/eng1007e-probe_refresh.sh): BEFORE 20:12:39Z POST /api/auth/refresh {refreshToken:'cookie'} + X-Casper-Client: admin-spa -> 401 'Invalid or expired refresh token'; AFTER 20:31:41Z -> 401 'No admin session cookie' (the new path ran); CONTROL (apps path, no header) -> 401 'Invalid or expired refresh token' (unchanged); DLL strings -el 3 hits; 0 API errors 6 min after. Admin: admin SPA rebuilt 20:33-20:38Z with the CI runner stopped during the build (trap C1) and restarted after; live bundle main.94fb62a1.js -> main.c5cf7782.js (contains 'admin-spa' x1, withCredentials x7; the old token keys appear only in the wipe list), container healthy, https://admin.caspervpn.com 200; same-origin probe https://admin.caspervpn.com/api/auth/refresh -> 401 'No admin session cookie' (the admin host proxies /api, so SameSite=Strict holds); rollback tag caspervpn-admin-react:rollback-202610072032 = bcc9ac4092d7. Verify on admin.caspervpn.com with an admin account: login -> DevTools localStorage holds casper_user only; Cookies: casper_admin_refresh HttpOnly Secure SameSite=Strict Path=/api/auth max-age 604800; reload keeps the session; logout clears the cookie; an app login (no header) still returns a body refreshToken.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-10-07T20:39:10Z",
       "createdDate": "2026-10-07",
-      "completedDate": null
+      "completedDate": null,
+      "triageNote": "[QA 2026-10-07 21:07Z] PARTIAL PASS, 1 difference to report. PASS: live admin bundle is main.c5cf7782.js; API refresh with header X-Casper-Client: admin-spa and token 'cookie' -> 401 'No admin session cookie'. A real-shaped token 'abc.def.ghi' gives 401 'Invalid or expired refresh token' with AND without the header (app path unchanged). DIFFERENCE: the handoff says the no-header control with token 'cookie' returns 'Invalid or expired'; today it also returns 'No admin session cookie' - so the word 'cookie' alone triggers the admin path. Harmless for real app tokens, but the handoff text is not reproduced. NOT RUN: browser check with an admin account (localStorage / cookie flags / reload / logout) - needs an admin login."
     },
     {
       "id": "xd-1485",
@@ -47196,11 +47201,14 @@
       "to": "[QA]",
       "title": "Handoff from DEVOPS: Verify row 148: the certificate hand-out list on the main server no longer holds Paris",
       "description": "[ENGINEERING run 2026-10-07 e, 2026-10-07T20:53:54Z] SHIPPED under CEO YES row 148 (production 710b7e3a5 = development 3ab1271d9). Installed 20:53:27Z: /opt/caspervpn/wildcard-cert/distribute-cert.sh = git (diff -q equal), owner caspervpn 755, 0 FR-PA lines, 11 fleet entries + Miami canary; backup distribute-cert.sh.bak-row148-20261007T205327Z. No relay touched. Verify: diff -q /root/Casper/Casper-Code/infrastructure/wildcard-cert/distribute-cert.sh /opt/caspervpn/wildcard-cert/distribute-cert.sh; grep -c 'FR-PA:' = 0; after the ~12 Nov renewal the log ends 'Fan-out complete. All 12 nodes' (xd-1122, 13 Nov).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-10-07T20:54:00Z",
       "createdDate": "2026-10-07",
-      "completedDate": null
+      "completedDate": "2026-10-07",
+      "completedAt": "2026-10-07",
+      "completedBy": "[QA]",
+      "resolution": "[QA 2026-10-07 21:07Z] PASS. diff -q repo vs /opt/caspervpn/wildcard-cert/distribute-cert.sh -> identical; grep -c 'FR-PA:' = 0. Renewal fan-out result ('All 12 nodes') is still future (~12 Nov, xd-1122)."
     },
     {
       "id": "xd-1487",
@@ -47208,11 +47216,12 @@
       "to": "[QA]",
       "title": "Handoff from DEVOPS: Check on development: CI backend job runs again (xd-1485) + the deploy secret guard (xd-1134)",
       "description": "[ENGINEERING run 2026-10-07 e, 2026-10-07T21:01:49Z] (1) development 96aff2d25: .github/workflows/ci.yml test-report step -> EnricoMi/publish-unit-test-result-action/linux@v2 (composite, no ghcr image pull). Verify: the next development CI run's 'Build & Test .NET Backend' gets past 'Set up job' and runs Restore/Build/Test (runner _diag Worker log: no 'Docker pull failed'). (2) development adb9cbf7d: infrastructure/scripts/deploy_api.sh refuses BEFORE any change when one of 12 required API secrets renders empty (names only), warns on Activation__FleetSshPublicKey. Tested read-only against the live production config: 'required secrets present: 12/12', 'WARN empty: Activation__FleetSshPublicKey'; a fake required name -> 'FATAL ... nothing was changed'. Re-run: extract the '# xd-1134' block and source it with DP=/root/Casper/Casper-Code.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P2",
       "createdAt": "2026-10-07T21:01:54Z",
       "createdDate": "2026-10-07",
-      "completedDate": null
+      "completedDate": null,
+      "triageNote": "[QA 2026-10-07 21:07Z] PARTIAL. PASS (read from origin/development): ci.yml uses EnricoMi/publish-unit-test-result-action/linux@v2 (composite); deploy_api.sh holds the xd-1134 guard (required-secrets check, 'nothing was changed' on missing, WARN for Activation__FleetSshPublicKey). NOT RUN: a real CI run of 'Build & Test .NET Backend' (no GitHub run read this run) and the guard run against live config. Left open."
     }
   ],
   "importantNotes": [
