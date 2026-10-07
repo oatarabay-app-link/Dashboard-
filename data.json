@@ -17194,7 +17194,7 @@
       "priority": "P0",
       "category": "infrastructure",
       "owner": "CTO",
-      "status": "PARTIAL - CEO YES 6 Oct; run 8 (7 Oct): crit 0 evidence final, CEO waived Worker leg (QA xd-1466); crit 1 direct front measured + dev config live (commit 566a47c); crit 3 own resolver live on Dusseldorf (QA verify pending); crit 2 canary, 4 build 65, 5 production, 6 real users, 7 DPI cover NOT started; dedicated run memory/prompts/13-cloudflare-exit-routine.md; handoffs xd-1421, xd-1425, xd-1426; context xd-1389",
+      "status": "PARTIAL - CEO YES 6 Oct; run 8 (7 Oct): crit 0 evidence final, CEO waived Worker leg (QA xd-1466); crit 1 direct front measured + dev config live (commit 566a47c); crit 3 own resolver live on Dusseldorf (QA verify pending); crit 2 canary LIVE (run 1 pass x3 relays, needs 4 in a row); CEO 7 Oct: build 65 is built; crit 4 CEO test script, 5 production, 6 real users, 7 DPI cover NOT started; dedicated run memory/prompts/13-cloudflare-exit-routine.md; handoffs xd-1421, xd-1425, xd-1426; context xd-1389",
       "description": "CEO 6 Oct: Cloudflare's self-serve terms 2.2.1(j) forbid VPN/proxy use (row 129). Phase 1 moves all VPN traffic and VPN DNS off Cloudflare and proves hidden mode in build 65. Phase 2 (website/DNS hosting) later, separate yes.",
       "acceptanceCriteria": [
         {
@@ -17218,7 +17218,8 @@
           "verify": "canary log on the brain, last 4 rows = pass",
           "met": false,
           "passed": false,
-          "verifiedBy": "none"
+          "verifiedBy": "none",
+          "evidence": " || [CTO cloudflare-exit run 9, 7 Oct ~21:15Z] CANARY LIVE. Script infrastructure/caspercloak/cc_canary.py, deployed to the brain at /opt/caspervpn/cc_canary.py; PSK read from /etc/cc-canary.env (mode 600), never printed or logged; schedule /etc/cron.d/cc-canary every 15 min with flock (rollback = delete that file). Pass = DNS not a Cloudflare range + wss handshake reply + 60 s hold at 1 Mbps + bytes sent > 0. Run 1 (21:10Z): s6 Dusseldorf 91.194.84.79, s12 Los Angeles 208.87.243.205, s3 Singapore 167.150.100.166 all PASS: handshake reply, held 60.0 s, 7,488,000 bytes sent, no drop, no Cloudflare IP. Counter = /var/lib/cc-canary/state.json (consecutive per target), log /var/log/cc-canary.jsonl. Limits: bytes received is only the 5-byte handshake reply (garbage frames to WireGuard get no answer), so bytes>0 means bytes accepted, not a WireGuard session; vantage is the brain in London only. Criterion needs 4 passes in a row = about 45 min from run 1; next run reads state.json and ticks evidence. FINDING: /tmp/cchr.py on the brain held the relay shared key in a world-readable file; mode now 600 (key not repeated here); rotate the key when the fleet is next touched."
         },
         {
           "test": "Own DNS resolver on the relay; tunnel DNS uses it; no upstream to 1.1.1.1 / 8.8.8.8 / 9.9.9.9",
