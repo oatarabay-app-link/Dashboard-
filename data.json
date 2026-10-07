@@ -12532,11 +12532,13 @@
         },
         {
           "test": "SHIPPED 2026-10-07 20:19Z (awaiting QA xd-1482 + your phone: did the test alert arrive?) \u00b7 CEO YES 2026-10-06 (Cowork live chat: 'yes for first 2') \u2014 ship by the department's normal path, then \u2192 [QA]. | READY TO SHIP \u2014 every server alert goes to e-mail + your Telegram bot + the ntfy backup; critical alerts repeat every 30 minutes until fixed; a monthly uptime budget (99% = 7 h 18 min) is recorded with a warning at half and an alarm when used up \u00b7 why: your 4 Oct order (alerts policy \u00a72) \u2014 today alerts reach e-mail only \u00b7 tested on dev: no alert system exists on dev; the config passes amtool check-config and the rules pass promtool (47 rules) on development 94ebbb23a; the live test is one synthetic alert to your phone right after the ship \u00b7 rollback: the previous alertmanager.yml is kept as .bak-<stamp> and `docker kill -s HUP alertmanager` puts it back; rules: restore alerts.yml.bak \u00b7 ship = infrastructure/monitoring/scripts/render_alertmanager.sh (renders chat id + ntfy topic from the secrets folder, in place) + a one-time recreate of the alertmanager container with the bot-token file mounted read-only (2 s gap), + copy alerts.yml and HUP prometheus. Advice: YES.",
-          "met": false,
+          "met": true,
           "verifiedBy": "none",
-          "evidence": "[ENGINEERING run 2026-10-07 e, 2026-10-07T20:39:05Z, Opus 5.5, session cse_013HHnL3pX1tjGqiLaWKnkk9] SHIPPED: production ca7538f21; /opt/caspervpn/monitoring/alertmanager/alertmanager.yml rendered in place (amtool SUCCESS; 0 placeholders left), alertmanager recreated 20:19:29Z with the bot token mounted read-only (own copy owned by the container user 'nobody', 0400 - the root-only original would have made every Telegram send fail; measured before the ship), receivers -> [all-channels], 2 silences kept, Prometheus rules 47 (promtool SUCCESS) + group casper-downtime-budget loaded after HUP. LIVE TEST 20:20Z: one synthetic alert 'CasperAlertPathTest' -> telegram sent 1 / failed 0, webhook (e-mail bridge + ntfy) 2 / failed 0, Resend 'status=200' 20:21:00Z; it resolves by itself ~20:25Z (one 'resolved' message). Backups: alertmanager.yml.bak-row114-20261007T201926Z, alerts.yml.bak-row114-20261007T201926Z, /root/backups/alertmanager-inspect-before-row114-20261007T201926Z.json; rollback = /root/reports/eng1007e-rollback_alerts.sh 20261007T201926Z (2 s gap). QA xd-1482. | [ENGINEERING run 2026-10-07 e, 2026-10-07T20:05:24Z, session cse_013HHnL3pX1tjGqiLaWKnkk9, Opus 5.5] shipping now (in progress) - result follows in this run. | [CEO office 2026-10-05 06:5xZ (09:5x Beirut, daily run)] no answer yet (day 1). Board advice: YES \u2014 it is your own 4 Oct order (alerts policy \u00a72); today alerts reach e-mail only; config passes amtool; rollback = the previous alertmanager.yml. Ship by the DevOps path, then \u2192 [QA] xd-818. | [CTO live chat 2026-10-04 22:3xZ] added; development 94ebbb23a; CEO asked in chat to say 'yes alerts'.",
+          "evidence": "[CEO 2026-10-07] 'telegrma worekd' - the test alert reached his phone. Recorded 2026-10-07T20:53:54Z by [CTO] eng run e. | [ENGINEERING run 2026-10-07 e, 2026-10-07T20:39:05Z, Opus 5.5, session cse_013HHnL3pX1tjGqiLaWKnkk9] SHIPPED: production ca7538f21; /opt/caspervpn/monitoring/alertmanager/alertmanager.yml rendered in place (amtool SUCCESS; 0 placeholders left), alertmanager recreated 20:19:29Z with the bot token mounted read-only (own copy owned by the container user 'nobody', 0400 - the root-only original would have made every Telegram send fail; measured before the ship), receivers -> [all-channels], 2 silences kept, Prometheus rules 47 (promtool SUCCESS) + group casper-downtime-budget loaded after HUP. LIVE TEST 20:20Z: one synthetic alert 'CasperAlertPathTest' -> telegram sent 1 / failed 0, webhook (e-mail bridge + ntfy) 2 / failed 0, Resend 'status=200' 20:21:00Z; it resolves by itself ~20:25Z (one 'resolved' message). Backups: alertmanager.yml.bak-row114-20261007T201926Z, alerts.yml.bak-row114-20261007T201926Z, /root/backups/alertmanager-inspect-before-row114-20261007T201926Z.json; rollback = /root/reports/eng1007e-rollback_alerts.sh 20261007T201926Z (2 s gap). QA xd-1482. | [ENGINEERING run 2026-10-07 e, 2026-10-07T20:05:24Z, session cse_013HHnL3pX1tjGqiLaWKnkk9, Opus 5.5] shipping now (in progress) - result follows in this run. | [CEO office 2026-10-05 06:5xZ (09:5x Beirut, daily run)] no answer yet (day 1). Board advice: YES \u2014 it is your own 4 Oct order (alerts policy \u00a72); today alerts reach e-mail only; config passes amtool; rollback = the previous alertmanager.yml. Ship by the DevOps path, then \u2192 [QA] xd-818. | [CTO live chat 2026-10-04 22:3xZ] added; development 94ebbb23a; CEO asked in chat to say 'yes alerts'.",
           "verify": "a synthetic alert (amtool alert add) arrives on the CEO's phone from the bot within 1 min; `curl -s localhost:9093/api/v2/receivers` lists all-channels; docker inspect alertmanager shows the telegram_bot_token mount",
-          "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored"
+          "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored",
+          "verifiedByRaw": "ceo",
+          "verifiedDate": "2026-10-07"
         },
         {
           "test": "READY TO SHIP \u2014 two admin pages: (1) Operations \u2192 'Connection by country' (attempts, success %, the step where connections fail, what each country's network blocks \u2014 fills as the 4.4 app sends its reports); (2) Users \u2192 'Sign-up Health': every sign-up with whether its verification e-mail was delivered, opened, clicked or bounced (read from our mail provider), verified or not, first key, first connection, trial \u2014 with a warning list of the people whose mail bounced or never went out \u00b7 why: your 4 Oct ask ('can we determine if a user did not get a verification email? we need a tab for this') and the telemetry work \u00b7 tested on dev: dev redeployed 22:43:42Z from development (admin 0561706fe): admin JWT minted from the dev container; GET /api/admin/ops/connection-by-country?days=30 \u2192 200 envelope, countries [] with control sessionsAll 1 / failuresAll 2 / probesAll 20 (all test accounts, correctly excluded); GET /api/admin/signup-health?days=30&includeTest=true \u2192 200: 19 sign-ups (18 test), verified 36.8%, key 10.5%, connected 5.3%, trial 100%, mail column 'unknown' because dev's mail account is not Resend (status not-configured \u2014 the Resend path is provable only on production); admin.dev.caspervpn.com bundle main.f61ab815.js carries 'Sign-up Health' + 'Connection by country'. Proof log /root/reports/admin1004b-devproof.log \u00b7 rollback: git revert 0561706fe + redeploy \u00b7 ship = cherry-pick to production, /root/deploy_api.sh (one new read-only admin endpoint) + the admin-panel build on the main server. Advice: YES.",
@@ -12868,7 +12870,7 @@
           "createdBy": "[ANDROID]"
         },
         {
-          "test": "READY TO SHIP \u2014 take the retired Paris server off the list that hands the new hidden-mode certificate to every server \u00b7 why: the certificate renews by itself around 12 Nov; Paris is gone since 1 Oct, so that run would end 'INCOMPLETE: 1 failed' and raise a false alarm (all 12 live servers + Bangkok serve the current certificate today, measured 7 Oct 20:2xZ; the renewal key is valid) \u00b7 tested: development 3ab1271d9, bash -n OK, the list now holds 11 + the canary \u00b7 rollback: put back the .bak copy \u00b7 ship = copy one file to the main server (/opt/caspervpn/wildcard-cert/distribute-cert.sh, backup first), no server restart. Advice: YES.",
+          "test": "SHIPPED 2026-10-07 20:53Z (awaiting QA xd-1486) \u00b7 CEO YES 2026-10-07 (chat: 'yes for paris') \u00b7 READY TO SHIP \u2014 take the retired Paris server off the list that hands the new hidden-mode certificate to every server \u00b7 why: the certificate renews by itself around 12 Nov; Paris is gone since 1 Oct, so that run would end 'INCOMPLETE: 1 failed' and raise a false alarm (all 12 live servers + Bangkok serve the current certificate today, measured 7 Oct 20:2xZ; the renewal key is valid) \u00b7 tested: development 3ab1271d9, bash -n OK, the list now holds 11 + the canary \u00b7 rollback: put back the .bak copy \u00b7 ship = copy one file to the main server (/opt/caspervpn/wildcard-cert/distribute-cert.sh, backup first), no server restart. Advice: YES.",
           "verify": "CEO answers 'yes <row>' in any chat; the next engineering run copies the file and diff -q against git = equal",
           "met": false,
           "passed": false,
@@ -12877,7 +12879,7 @@
           "verifiedDate": null,
           "addedAt": "2026-10-07T20:39:05Z",
           "addedBy": "[DEVOPS] eng run 2026-10-07 e",
-          "evidence": "[ENGINEERING run 2026-10-07 e, 2026-10-07T20:39:05Z, Opus 5.5, session cse_013HHnL3pX1tjGqiLaWKnkk9] added; xd-1122 / xd-1231."
+          "evidence": "[CEO 2026-10-07] 'yes for paris'. [ENGINEERING run 2026-10-07 e, 2026-10-07T20:53:54Z] SHIPPED: production 710b7e3a5, file installed from git 20:53:27Z (equal to git, 0 Paris lines), backup .bak-row148-20261007T205327Z, rollback = copy the backup back. QA xd-1486. | [ENGINEERING run 2026-10-07 e, 2026-10-07T20:39:05Z, Opus 5.5, session cse_013HHnL3pX1tjGqiLaWKnkk9] added; xd-1122 / xd-1231."
         }
       ],
       "progress": 0,
@@ -40303,7 +40305,7 @@
       "deferredUntil": "2026-11-13",
       "updatedAt": "2026-10-07T20:39:05Z",
       "resolution": "DEFERRED to 13 Nov (the day after the real renewal). MEASURED 7 Oct 20:2xZ (read-only): renewal = certbot.timer (deploy hook wildcard-fanout.sh) and the Sunday 03:00 cron wildcard-renew.sh (<30 days), both call /opt/caspervpn/wildcard-cert/distribute-cert.sh (Miami canary, then the fleet); last full fan-out 17 Sep 03:49Z 'All 13 nodes serving wildcard'; today 12/12 relays + Bangkok serve notAfter 12 Dec 14:02:35 2026 = the brain's cert; the renewal token is active with dns_records:edit on pompesh.com. Found: the retired Paris node is still in the fan-out list -> development 3ab1271d9 + READY TO SHIP row 148. Row 4 of fleet-tls-cert-verification rewritten with a verify. On 13 Nov QA re-runs /root/reports/eng1007e-certsweep.sh (every relay notAfter = the brain's new date) and reads /var/log/wildcard-cert-distribute.log.",
-      "notes": "[ENGINEERING run 2026-10-07 e, 2026-10-07T20:39:05Z, Opus 5.5, session cse_013HHnL3pX1tjGqiLaWKnkk9] triage (c): DEFERRED to 13 Nov (the day after the real renewal). MEASURED 7 Oct 20:2xZ (read-only): renewal = certbot.timer (deploy hook wildcard-fanout.sh) and the Sunday 03:00 cron wildcard-renew.sh (<30 days), both call /opt/caspervpn/wildcard-cert/distribute-cert.sh (Miami canary, then the fleet); last full fan-out 17 Sep 03:49Z 'All 13 nodes serving wildcard'; today 12/12 relays + Bangkok serve notAfter 12 Dec 14:02:35 2026 = the brain's cert; the renewal token is active with dns_records:edit on pompesh.com. Found: the retired Paris node is still in the fan-out list -> development 3ab1271d9 + READY TO SHIP row 148. Row 4 of fleet-tls-cert-verification rewritten with a verify. On 13 Nov QA re-runs /root/reports/eng1007e-certsweep.sh (every relay notAfter = the brain's new date) and reads /var/log/wildcard-cert-distribute.log."
+      "notes": "[ENGINEERING run 2026-10-07 e, 2026-10-07T20:53:54Z] Paris removed from the live certificate fan-out list (row 148, CEO yes) - QA xd-1486. | [ENGINEERING run 2026-10-07 e, 2026-10-07T20:39:05Z, Opus 5.5, session cse_013HHnL3pX1tjGqiLaWKnkk9] triage (c): DEFERRED to 13 Nov (the day after the real renewal). MEASURED 7 Oct 20:2xZ (read-only): renewal = certbot.timer (deploy hook wildcard-fanout.sh) and the Sunday 03:00 cron wildcard-renew.sh (<30 days), both call /opt/caspervpn/wildcard-cert/distribute-cert.sh (Miami canary, then the fleet); last full fan-out 17 Sep 03:49Z 'All 13 nodes serving wildcard'; today 12/12 relays + Bangkok serve notAfter 12 Dec 14:02:35 2026 = the brain's cert; the renewal token is active with dns_records:edit on pompesh.com. Found: the retired Paris node is still in the fan-out list -> development 3ab1271d9 + READY TO SHIP row 148. Row 4 of fleet-tls-cert-verification rewritten with a verify. On 13 Nov QA re-runs /root/reports/eng1007e-certsweep.sh (every relay notAfter = the brain's new date) and reads /var/log/wildcard-cert-distribute.log."
     },
     {
       "id": "xd-1123",
@@ -42464,7 +42466,7 @@
       "ageDays": 6,
       "lifecycle": "active",
       "needsRelease": false,
-      "notes": "[ENGINEERING run 2026-10-07 e, 2026-10-07T20:39:05Z, Opus 5.5, session cse_013HHnL3pX1tjGqiLaWKnkk9] one more Paris leftover found: /opt/caspervpn/wildcard-cert/distribute-cert.sh still lists FR-PA (would fail the ~12 Nov certificate fan-out). Fixed on development 3ab1271d9; READY TO SHIP row 148."
+      "notes": "[ENGINEERING run 2026-10-07 e, 2026-10-07T20:53:54Z] Paris removed from the live certificate fan-out list (row 148, CEO yes) - QA xd-1486. | [ENGINEERING run 2026-10-07 e, 2026-10-07T20:39:05Z, Opus 5.5, session cse_013HHnL3pX1tjGqiLaWKnkk9] one more Paris leftover found: /opt/caspervpn/wildcard-cert/distribute-cert.sh still lists FR-PA (would fail the ~12 Nov certificate fan-out). Fixed on development 3ab1271d9; READY TO SHIP row 148."
     },
     {
       "id": "xd-1232",
@@ -47136,7 +47138,8 @@
       "priority": "P1",
       "createdAt": "2026-10-07T20:39:10Z",
       "createdDate": "2026-10-07",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[ENGINEERING run 2026-10-07 e, 2026-10-07T20:53:54Z] CEO confirmed in chat: the Telegram test alert arrived. QA still re-runs checks (1)-(6)."
     },
     {
       "id": "xd-1483",
@@ -47171,6 +47174,18 @@
       "status": "pending",
       "priority": "P2",
       "createdAt": "2026-10-07T20:39:10Z",
+      "createdDate": "2026-10-07",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1486",
+      "from": "[DEVOPS]",
+      "to": "[QA]",
+      "title": "Handoff from DEVOPS: Verify row 148: the certificate hand-out list on the main server no longer holds Paris",
+      "description": "[ENGINEERING run 2026-10-07 e, 2026-10-07T20:53:54Z] SHIPPED under CEO YES row 148 (production 710b7e3a5 = development 3ab1271d9). Installed 20:53:27Z: /opt/caspervpn/wildcard-cert/distribute-cert.sh = git (diff -q equal), owner caspervpn 755, 0 FR-PA lines, 11 fleet entries + Miami canary; backup distribute-cert.sh.bak-row148-20261007T205327Z. No relay touched. Verify: diff -q /root/Casper/Casper-Code/infrastructure/wildcard-cert/distribute-cert.sh /opt/caspervpn/wildcard-cert/distribute-cert.sh; grep -c 'FR-PA:' = 0; after the ~12 Nov renewal the log ends 'Fan-out complete. All 12 nodes' (xd-1122, 13 Nov).",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-07T20:54:00Z",
       "createdDate": "2026-10-07",
       "completedDate": null
     }
