@@ -12920,6 +12920,18 @@
           "verify": "Sign in to the admin panel with the OLD password -> refused; with the new one (from the vault) -> works.",
           "createdBy": "[iOS] CEO live chat",
           "createdAt": "2026-10-07T21:44:29Z"
+        },
+        {
+          "test": "MESSAGE TO SEND (URGENT 1, 7 Oct) - to the UAE hidden-mode customer (monthly plan, paying since June; user 79675a02). Why: his Amsterdam server forgot his connection on every blip; fixed 7 Oct 21:32Z. Text (his first name + email are in your live chat): 'Hi [first name], Thank you for being with CasperVPN since June. It means a lot to us. We found a problem on our side. Our Amsterdam server, the one you use for hidden mode, was running an older setup. When your connection dropped for a moment, the server forgot it and started again from zero, so things coming to your phone could stall for several seconds. We fixed it tonight. Now, when your connection drops for a moment, it picks up right where it left off. You don't need to change anything or update the app. If you still see it freeze or disconnect, just reply to this email with roughly when it happened, and we'll look into it the same day. Thank you for your patience, Omar, CasperVPN' Send from support@caspervpn.com or your usual address. Say 'sent' in any chat and this row is closed.",
+          "verify": "CEO says 'sent' in any chat; QA then watches the customer's next sessions (xd for URGENT 1).",
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "verifiedByRaw": null,
+          "verifiedDate": null,
+          "addedAt": "2026-10-07T21:51:04Z",
+          "addedBy": "[CTO] live chat 2026-10-07 (URGENT 1)",
+          "evidence": "[CTO live 2026-10-07 21:0x-21:5xZ, CEO chat, Opus 5.5] draft for the CEO; send = his action."
         }
       ],
       "progress": 0,
@@ -17299,7 +17311,7 @@
       "phase": 2,
       "priority": "P0",
       "category": "urgent",
-      "status": "PENDING \u2014 opened by the CEO 7 Oct; fixed in a live chat, checked off by QA",
+      "status": "IN QA - 7 Oct 21:5xZ CTO live chat: 9 real users measured (at least 5 carried data through hidden mode; 2 Iran blocked before our servers); paying customer's cause measured = Amsterdam relay had no session resume; FIXED 21:32Z (CEO yes), A/B 74/150 lost -> 0/150; message on CEO card row 153; none ticked",
       "description": "[CEO live 2026-10-07T20:03:23Z] CEO: 'we have several urgent issues \u2026 create them as tasks and we create chats to fix those tasks and check them off'. CEO 7 Oct: hidden mode is not working for real users and a paying subscriber is at risk. Context: xd-1389 (CC failing), cloudflare-exit-phase1, CEO's own CC session 7 Oct (held 18 min, ~0.27 MB in the first 17 min). Find every real user (staff excluded) with a hidden-mode attempt in 7 days, measure where each fails, fix the server side today, and write the message for the subscriber.",
       "acceptanceCriteria": [
         {
@@ -17308,7 +17320,7 @@
           "met": false,
           "passed": false,
           "verifiedBy": "none",
-          "evidence": ""
+          "evidence": "[CTO live 2026-10-07 21:0x-21:5xZ, CEO chat, Opus 5.5] MEASURED (production DB read-only + relay journals + wg0 dumps + nginx api_ssl_access; staff filter = staff-accounts.md + m7slabs). INSTRUMENT NOTE: ConnectionLogs Protocol=3 rows/bytes are wrong for hidden mode (RU user 1 Oct: row says 348 B; the same session carried 197 MB on Singapore per WireGuardPeerUsages + relay journal) - verdicts use relay journal timing (sid/src) + wg0 endpoint 127.0.0.1 + WireGuardPeerUsages/BandwidthUsageLogs. 9 REAL USERS with a hidden-mode attempt 30 Sep 21Z - 7 Oct 21Z (uid8 / country / plan / server / result / bytes): (1) 79675a02 / AE / Monthly PAID (Apple since 24 Jun; lapsed 24 Sep, back 27 Sep via 7-day trial, renewed 4 Oct) / Amsterdam / WORKS but drops: 52 relay connects on 7 Oct, wg0 endpoint 127.0.0.1:46734, usage 5 Oct 925 MB, 6 Oct 1.17 GB, 7 Oct 505 MB; Amsterdam relay counter 5.9 GB since 17 Sep (sole hidden-mode user there); 126 of 128 sessions since 17 Sep ended by an abrupt drop; 7 Oct 09:07-10:02Z a reconnect every ~4 min; 3 failure reports (5 Oct x2 'unknown', 7 Oct 20:11:22Z cc-wg-nohandshake-cf). (2) 264ce8fe / MM / Yearly TRIAL to 12 Oct / Singapore / WORKED 5 Oct: sid 61679282 src :47364 15:48:27-15:53:57Z, wg0 endpoint 127.0.0.1:47364, handshake 15:52:28Z, 198 MB. (3) d4062d5d / RU / Free / Duesseldorf x2 fail then Singapore / WORKED 1 Oct: sid 7e000b89 15:00:44-15:31Z (9 resumes), handshake 15:30:07Z, 197 MB. (4) 2a5aa4cc / CN / Free / Singapore / WORKED 2 Oct: sid e844756f 07:21:20-07:37:15Z, handshake 07:37:08Z, 74 MB (its 15 failure rows were one queued burst sent 07:21:08-14Z). (5) 6984ccec / PK / Free / Duesseldorf / WORKED 4 Oct: wg0 endpoint 127.0.0.1:48224, 11 MB. (6) 023966a3 / RU / Free / Duesseldorf / PARTLY: 1 Cloudflare-road no-handshake 18:50Z, 546 MB on Duesseldorf that day (road not provable: peer removed, Duesseldorf journal starts 6 Oct), then free cap 402 at 19:46Z. (7) 2bfce6df / IR / Free / DUS-LA-SGP / FAILED 1 Oct: 28 reports (old build, no stage), API served 200 configs, Singapore journal 0 client connects in the window = blocked before our relays. (8) 285507e0 / IR / Free / same / FAILED 4 Oct: 25 reports, Singapore journal 0 client connects = blocked before our relays. (9) df54e38d / GB / Free, NEW, email NOT verified / FAILED 7 Oct 16:58-16:59Z: wireguard-config 403 x6 on DUS/LA/SGP (unverified-email gate), never dialed. SUMMARY: at least 5 of 9 carried data through hidden mode; 1 got data (road unproven); 2 Iran blocked before reaching us; 1 refused by the email gate. Paying (Apple, real users): 2 paid + 2 trial; hidden-mode users among them = 79675a02 (paid) and 264ce8fe (trial); 2da84bfa (AZ trial) used plain WireGuard 2.5 GB on Miami, 696b8ee4 (weekly) 0 bytes. NOT MEASURED: relay journals before 2-6 Oct on DUS/LA/AMS (rotated), app versions (empty on all rows). Proof files: /root/reports/cc1007/ on the brain."
         },
         {
           "test": "Root cause for the subscriber's failure measured (server log / relay journal line quoted), not guessed",
@@ -17316,7 +17328,7 @@
           "met": false,
           "passed": false,
           "verifiedBy": "none",
-          "evidence": ""
+          "evidence": "[CTO live 2026-10-07 21:0x-21:5xZ, CEO chat, Opus 5.5] MEASURED ROOT CAUSE (the paying customer): Amsterdam (NL-AM2, s5) was the ONLY one of 11 live relays without #52 session resumption - live /usr/local/bin/caspercloak_ws.py 485 L md5 e3b92f499644 mtime 2026-06-16: 'resume'=0, '#52'=0; the other 10: resume 9 / #52 12 (Duesseldorf 399 L d58c2f8c7cbf, ws16 fleet 408 L 4292dfd4890c). Why the drift: Amsterdam was the Prometheus-metrics pilot (2026-05-18, job 'caspercloak' tier 'caspercloak-pilot'); the 2026-06-25 surgical #52 port to the Python 3.8 / websockets 13.1 relays reached Duesseldorf only, and no check compared relay versions. Journal at the customer's times (7 Oct): '09:11:22 connection closed / 09:11:22 connection open / 09:11:23 client connected mode=obfs-v2' - no '#52=' (new socket on every reconnect). A/B, SAME REAL TRANSACTION (throwaway WireGuard peer 10.66.69.250 in a netns on Amsterdam, WG-over-hidden-mode bridge with X-CC-Session, abrupt WebSocket drop at +10 s, server-to-phone pings every 0.2 s, phone side silent): OLD code (backup run side by side on 127.0.0.1:18443) 76/150 replies, one 14.8 s blackout (seq 42-115); FIXED code (live :443) 150/150, 0 lost (max rtt 362 ms = packets queued during the drop delivered after the resume). Socket proof: old relay 34615 -> 46894 -> 36178 over 2 resumes; fixed 40022 -> 40022 -> 40022 ('#52=RESUME sid=cctest-c src=:40022 gen=2'). HYPOTHESIS (not measured): why his line drops every ~4 min (7 Oct 09:07-10:02Z, 3:53-3:58 apart) - app watchdog on an idle tunnel or his carrier's NAT/DPI; no device log."
         },
         {
           "test": "Fix live: the subscriber's next hidden-mode session carries > 10 MB, or a WireGuard fallback that works is set for them",
@@ -17324,7 +17336,7 @@
           "met": false,
           "passed": false,
           "verifiedBy": "none",
-          "evidence": ""
+          "evidence": "[CTO live 2026-10-07 21:0x-21:5xZ, CEO chat, Opus 5.5] DEPLOYED 2026-10-07 21:32:01Z on Amsterdam only - CEO YES in the live chat ~21:30Z ('Yes, fix it now'; Bangkok-first bypass acknowledged: Bangkok cannot run the Python 3.8 / websockets 13.1 variant; the same #52 code runs on Duesseldorf since 24 Jun). Live file = Amsterdam metrics relay + Duesseldorf #52 hunks (614 L md5 856b7603eea9; PSK line unchanged, hash-checked; metrics kept: Prometheus target nl-am2 up, 0 CC alerts at 21:40Z) + drop-in caspercloak-ws.service.d/grace.conf CC_SESSION_GRACE_S=600 (= Duesseldorf). Startup line: 'CC WS relay wss://0.0.0.0:443 ... honest-mode=on(v13) resume=#52 grace=600s metrics=on'. Backup /usr/local/bin/caspercloak_ws.py.bak-cc1007-20261007T213200Z. ROLLBACK (1 min): copy the backup over the live file, delete grace.conf, systemctl daemon-reload, systemctl restart caspercloak-ws. PROOF (synthetic, from the server itself): 20,971,520 B downloaded through hidden mode on Amsterdam (real WireGuard in a netns via the live relay) in 24.8 s (~6.8 Mbps, HTTP 206) with an abrupt drop at +4 s resumed on the same socket ('#52=RESUME sid=cctest-d src=:34312 gen=1'); external handshakes through s5-edge (Cloudflare) 21:40:26Z and s5 direct 21:40:43Z both CSOK and landed on Amsterdam. Test peer, netns and keys removed (wg0 peers 30 = before). PENDING (QA, real traffic): the customer's next sessions on Amsterdam - '#52=NEW'/'#52=RESUME' lines in journalctl -u caspercloak-ws and > 10 MB for 79675a02 (WireGuardPeerUsages / BandwidthUsageLogs) within 24 h; devops SKILL 0.5 threshold >= 10 client connects in 12 h."
         },
         {
           "test": "Plain-English message to the subscriber drafted for the CEO (what happened, what we did, what to do in the app) \u2014 CEO sends it",
@@ -17332,7 +17344,7 @@
           "met": false,
           "passed": false,
           "verifiedBy": "none",
-          "evidence": ""
+          "evidence": "[CTO live 2026-10-07 21:0x-21:5xZ, CEO chat, Opus 5.5] Draft written: CEO card row 153 (text without his name/email - the board is public; full name + address given to the CEO in the live chat). The CEO sends it."
         }
       ],
       "dueBy": "2026-10-08T20:03:23Z",
@@ -46118,7 +46130,7 @@
       "createdDate": "2026-10-05",
       "completedDate": null,
       "qaNote": "[QA 2026-10-05 i 21:16Z] CEO NUMBERS REPRODUCED on production (read-only): ConnectionLogs protocol 3 over 30 d = 17 sessions / 15 users, 2 moved > 1 MB; ConnectFailureEvents protocol 'caspervpn' = 501 in 30 d, 151 with region hint in LB/DE/NL/US/GB/FR/AE/TR, 4 in the last 24 h; last CC session row 19:47Z today. Top front/category: 'unknown' 360, cc-wg-nohandshake-cf 119, tcp-timeout 8, cc-wg-nohandshake-direct 7, cc-ws-connected-cf 3. CAVEATS (not proven): the 'open-country' bucket includes US 109 and DE/NL, which may be staff/prober attempts (not separated); 360 of 501 are category 'unknown'; 'Cloudflare Worker path is the cause' is the CEO's hypothesis from the 12 Sep measurement - these counts show failures, not the layer. Re-run: ConnectionLogs Protocol=3 and ConnectFailureEvents lower(Protocol) like '%cloak%' (Protocol is varchar there, int in ConnectionLogs). QA will re-measure the canary once DevOps ships leg 1.",
-      "notes": "[CEO office 2026-10-07T11:49:59Z] CEO live 7 Oct 14:2x Beirut: 'app is not passing traffic - is it CC?'. MEASURED (api log + node-syd): 11:04:16Z StealthTier LB tier=Advisory server=Sydney cfWiring=SUPPRESSED (direct grey relay); relay caspercloak_ws.py 'client connected mode=obfs-v2 #52 NEW sid=4a8766fc' 11:04:21Z, held to 11:22:47Z (18 min, no drop; ended 'no close frame' when the app switched protocol). App heartbeats protocol=CasperCloak: 11:04:27Z 0/0; 11:21:52Z rx 274,556 tx 175,380; 11:21:59Z rx 12,988,988 tx 4,712,456 (7 s apart - two reporters or a jump; semantics unverified). Then WireGuard Sydney from 11:22:52Z (peer 7Z7F8vuv.., 10.66.16.254, SNAT to the dedicated IP .124). tcpdump node-syd: 11:31Z 15 s wg0 29 from phone / 36 to phone, eth0 46 out from .124 / 51 in; 11:32Z 25 s 1 SYN out / 2 SYN-ACK in, 0 DNS queries (client DNS 1.1.1.1/1.0.0.1); 11:39Z 20 s 19/17; wg counters +0.7 MB each way 11:29->11:39Z. Verdict: at check time the tunnel passed traffic (low volume) and the CEO was NOT in hidden mode; the CC session's first ~17 min carried ~0.27 MB by the app's own count - fits 'connected but barely loading' OR an idle phone (not distinguishable server-side). Lebanon -> Sydney is slow by distance alone.",
+      "notes": "[CTO live 2026-10-07 21:0x-21:5xZ, CEO chat, Opus 5.5] RE-MEASURED with the servers' own records: of 9 real users with a hidden-mode attempt in 7 days, at least 5 carried data through it (AE 2.6 GB, MM 198 MB, RU 197 MB, CN 74 MB, PK 11 MB); 2 in Iran never reached our relays; 1 refused by the email gate. The 'broken everywhere' headline came from ConnectionLogs (wrong for CC). Details: task urgent-cc-real-users criterion 0. || [CEO office 2026-10-07T11:49:59Z] CEO live 7 Oct 14:2x Beirut: 'app is not passing traffic - is it CC?'. MEASURED (api log + node-syd): 11:04:16Z StealthTier LB tier=Advisory server=Sydney cfWiring=SUPPRESSED (direct grey relay); relay caspercloak_ws.py 'client connected mode=obfs-v2 #52 NEW sid=4a8766fc' 11:04:21Z, held to 11:22:47Z (18 min, no drop; ended 'no close frame' when the app switched protocol). App heartbeats protocol=CasperCloak: 11:04:27Z 0/0; 11:21:52Z rx 274,556 tx 175,380; 11:21:59Z rx 12,988,988 tx 4,712,456 (7 s apart - two reporters or a jump; semantics unverified). Then WireGuard Sydney from 11:22:52Z (peer 7Z7F8vuv.., 10.66.16.254, SNAT to the dedicated IP .124). tcpdump node-syd: 11:31Z 15 s wg0 29 from phone / 36 to phone, eth0 46 out from .124 / 51 in; 11:32Z 25 s 1 SYN out / 2 SYN-ACK in, 0 DNS queries (client DNS 1.1.1.1/1.0.0.1); 11:39Z 20 s 19/17; wg counters +0.7 MB each way 11:29->11:39Z. Verdict: at check time the tunnel passed traffic (low volume) and the CEO was NOT in hidden mode; the CC session's first ~17 min carried ~0.27 MB by the app's own count - fits 'connected but barely loading' OR an idle phone (not distinguishable server-side). Lebanon -> Sydney is slow by distance alone.",
       "category": "infra-fleet",
       "ageDays": 1,
       "lifecycle": "done",
@@ -47045,7 +47057,8 @@
       "ageDays": 0,
       "lifecycle": "active",
       "note": "[ENGINEERING run 2026-10-07 g, 2026-10-07T21:42:10Z] PARTIAL - MEASURED (read-only, production): nginx api_ssl_access 23 Sep-7 Oct: 14 of 141 hidden-mode config fetches (GET /servers/{id}/caspercloak-config) were followed by POST /servers/{id}/connect for the same server within 180 s; control = WireGuard-only config fetches: 59 of 93. CEO 6 Oct LA session: caspercloak-config 22:15:37Z, then ONLY heartbeats 22:26-22:52Z, no /connect. All 18 Protocol=3 rows in 30 days carry the old body UserAgent 'CasperVPN/iOS' (no build) - 0 from build 65. CAUSE: the app sends its single /connect the instant the tunnel says connected, before hidden mode carries data, and never retries; its heartbeat self-heal (ConnectionViewModel.sendHeartbeat -> logConnectionToBackend) is dead code because the hasLoggedConnectForSession guard is still true. FIX on development d412b33bc (ServersController.Heartbeat): a heartbeat with no open row ADOPTS the session through the normal connect path (quota gate, premium gate, device limit) when the last row is not an admin/device termination and closed > 2 min ago; row marked UserAgent 'heartbeat-adopt (xd-1434)'; a WireGuard-labelled open row becomes CasperCloak when the heartbeat says CasperCloak (xd-1438 item 2). Build 0 errors, tests 195/195 (/root/reports/eng1007g-backend-*.log). DEV PROOF: dev API redeployed 21:38:52Z (DLL carries 'heartbeat-adopt' x1). BEFORE (old dev image 19:33Z, 21:23:59Z): heartbeat CasperCloak on Singapore for probe user probe-renewal-1790807482 -> sessionActive=false reason=no-session, 0 rows. AFTER 21:40:45Z: sessionActive=true + 1 row Protocol=3 UserAgent 'heartbeat-adopt (xd-1434)'; 2nd heartbeat 21:40:51Z -> same single row; POST /disconnect closed it 21:41:06Z; a heartbeat right after the disconnect was NOT adopted ('Session closed (status:Disconnected)'). Files /root/reports/eng1007g-devtest-{before,after1,after2,negative}.txt. Dev data only; no production change. Waits: QA xd-1495 on dev, then CEO YES on the READY TO SHIP row, then ship + re-run xd-1389's counts. iOS half: xd-1496. [ENGINEERING run 2026-10-07 g, 2026-10-07T21:10:55Z] claimed: measuring why hidden-mode (CasperCloak) sessions get no ConnectionLogs row (read-only on production, code on the brain clone); any fix goes to development only. ",
-      "updatedAt": "2026-10-07T21:40:42Z"
+      "updatedAt": "2026-10-07T21:40:42Z",
+      "notes": "[CTO live 2026-10-07 21:0x-21:5xZ, CEO chat, Opus 5.5] More evidence: ConnectionLogs row for RU user d4062d5d on Singapore 1 Oct 15:00:49-15:31:02Z says 348 B down / 276 B up; the same session carried 197 MB (WireGuardPeerUsages, peer created 15:00:57Z; relay journal sid 7e000b89). The subscriber's rows on Amsterdam are labelled Protocol 0 (WireGuard) while wg0 shows his endpoint at 127.0.0.1 (via the relay). || "
     },
     {
       "id": "xd-1435",
@@ -47709,17 +47722,21 @@
       "to": "[CTO]",
       "title": "Handoff from CEO: URGENT (CEO 7 Oct): URGENT 1 \u2014 Hidden mode (CasperCloak) must carry data for real users; keep the paying subscriber",
       "description": "[absorbed xd-1389 2026-10-07T21:40Z] Handoff from CEO: ALARM P0: CasperCloak is broken everywhere, not only in censored countries - 2 of 17 sessions worked in 30 days || Task urgent-cc-real-users. CEO 7 Oct: hidden mode is not working for real users and a paying subscriber is at risk. Context: xd-1389 (CC failing), cloudflare-exit-phase1, CEO's own CC session 7 Oct (held 18 min, ~0.27 MB in the first 17 min). Find every real user (staff excluded) with a hidden-mode attempt in 7 days, measure where each fails, fix the server side today, and write the message for the subscriber. Work it in a live Cowork chat; QA ticks the criteria.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P0",
       "createdAt": "2026-10-07T20:03:27Z",
       "createdDate": "2026-10-07",
-      "completedDate": null,
+      "completedDate": "2026-10-07",
       "taskRef": "urgent-cc-real-users",
       "handoffTo": "[QA]",
       "dueBy": "2026-10-08T20:03:23Z",
       "category": "urgent",
       "needsRelease": false,
-      "updatedAt": "2026-10-07T21:40:42Z"
+      "updatedAt": "2026-10-07T21:40:42Z",
+      "completedAt": "2026-10-07",
+      "completedBy": "[CTO]",
+      "resolution": "Done in the CEO live chat 7 Oct 21:0x-21:5xZ: 9 real users measured per user (criterion 0 evidence); the paying customer's cause measured (Amsterdam relay without #52 resume) and fixed 21:32Z with CEO yes, A/B 74/150 lost -> 0/150, 20 MB through hidden mode with a drop; message on CEO card row 153.",
+      "resultingHandoff": "xd-1498 to [QA] (verify + watch the customer), xd-1499 to [DEVOPS] (relay parity check + git), xd-1500 to [IOS] (email-gate cascade)"
     },
     {
       "id": "xd-1469",
@@ -47727,16 +47744,20 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CEO: URGENT (CEO 7 Oct): URGENT 1 \u2014 Hidden mode (CasperCloak) must carry data for real users; keep the paying subscriber",
       "description": "Task urgent-cc-real-users. CEO 7 Oct: hidden mode is not working for real users and a paying subscriber is at risk. Context: xd-1389 (CC failing), cloudflare-exit-phase1, CEO's own CC session 7 Oct (held 18 min, ~0.27 MB in the first 17 min). Find every real user (staff excluded) with a hidden-mode attempt in 7 days, measure where each fails, fix the server side today, and write the message for the subscriber. Work it in a live Cowork chat; QA ticks the criteria.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P0",
       "createdAt": "2026-10-07T20:03:27Z",
       "createdDate": "2026-10-07",
-      "completedDate": null,
+      "completedDate": "2026-10-07",
       "taskRef": "urgent-cc-real-users",
       "handoffTo": "[QA]",
       "dueBy": "2026-10-08T20:03:23Z",
       "category": "urgent",
-      "needsRelease": false
+      "needsRelease": false,
+      "completedAt": "2026-10-07",
+      "completedBy": "[CTO]",
+      "resolution": "Server side done by [CTO] in the same live chat (Amsterdam relay fixed 21:32Z, backup + rollback on the task). Done in the CEO live chat 7 Oct 21:0x-21:5xZ: 9 real users measured per user (criterion 0 evidence); the paying customer's cause measured (Amsterdam relay without #52 resume) and fixed 21:32Z with CEO yes, A/B 74/150 lost -> 0/150, 20 MB through hidden mode with a drop; message on CEO card row 153.",
+      "resultingHandoff": "xd-1498 to [QA]; xd-1499 to [DEVOPS] (parity check + git reconcile)"
     },
     {
       "id": "xd-1470",
@@ -48223,9 +48244,55 @@
       "createdAt": "2026-10-07T21:44:33Z",
       "createdDate": "2026-10-07",
       "completedDate": null
+    },
+    {
+      "id": "xd-1498",
+      "from": "[CTO]",
+      "to": "[QA]",
+      "title": "Handoff from CTO: Verify URGENT 1 (urgent-cc-real-users): re-run the evidence + watch the UAE customer's next hidden-mode sessions on Amsterdam",
+      "description": "Task urgent-cc-real-users, criteria 0-3 carry the evidence (CTO live 7 Oct). Re-run and tick only what passes: (0) the 9-user table: SQL on ConnectFailureEvents (lower(Protocol) like '%cloak%', 7 d) + WireGuardPeerUsages/BandwidthUsageLogs per user + relay journals (sid/src timing) - NOT ConnectionLogs bytes (wrong for CC); (1) root cause: on Amsterdam grep -c '#52' /usr/local/bin/caspercloak_ws.py.bak-cc1007-20261007T213200Z = 0 vs live > 0; md5 live 856b7603eea9; (2) fix live: journalctl -u caspercloak-ws on Amsterdam must show '#52=NEW sid=' / '#52=RESUME' lines from the customer (user 79675a02) and his WireGuardPeerUsages rx+tx on Amsterdam must grow > 10 MB after 2026-10-07 21:32Z; also >= 10 client connects in 12 h (devops SKILL 0.5); Prometheus target nl-am2 up, 0 CC alerts; (3) the message row on the CEO card exists and the CEO said 'sent'. If his sessions still drop every ~4 min AND lose data after the fix, hand back to [CTO] with the journal lines.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-10-07T21:51:04Z",
+      "createdDate": "2026-10-07",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1499",
+      "from": "[CTO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CTO: Hidden-mode relays: daily version-parity check on all 11 + put the 3 Python-3.8 relay variants in git without the key",
+      "description": "Found 7 Oct (URGENT 1): Amsterdam ran a relay without #52 session resume for ~3.5 months because it was the metrics pilot and the 25 Jun #52 port skipped it. (a) Add to the daily system check: on every relay, md5 + `grep -c '#52'` of the ExecStart file of caspercloak-ws, alert when any relay differs from its platform's reference (py3.8/ws13.1: Amsterdam 856b7603eea9 now, Duesseldorf d58c2f8c7cbf; ws16 fleet 4292dfd4890c). (b) Reconcile infrastructure/caspercloak/caspercloak_ws.v13.py (639 L, repo) with the live Amsterdam (metrics + #52) and Duesseldorf files into ONE git source - the key must come only from RELAY_PSK in the unit, never a literal in git; the live files' defaults differ from the repo's. (c) Decide whether to give Duesseldorf the metrics too (one reference file for both py3.8 relays). Files: /root/reports/cc1007/ on the brain (ams/dus/sgp copies, merged file, A/B logs).",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-07T21:51:04Z",
+      "createdDate": "2026-10-07",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1500",
+      "from": "[CTO]",
+      "to": "[IOS]",
+      "title": "Handoff from CTO: Unverified email: the app records 6 hidden-mode failures and cycles 3 servers instead of showing 'verify your email'",
+      "description": "MEASURED 7 Oct 16:59Z (nginx api_ssl_access): a new GB account (df54e38d, email not verified) got POST /api/servers/{DUS,LA,SGP}/wireguard-config 403 x6 in 2 s and the app posted 4 connect-failure rows as protocol caspercloak. The 403 is the server's email-verification gate (by design). Ask: on that 403 the app should stop the protocol/server cascade and show the verify-email screen; failure telemetry should record 'email-unverified', not a hidden-mode failure (it pollutes block detection).",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-07T21:51:04Z",
+      "createdDate": "2026-10-07",
+      "completedDate": null
     }
   ],
   "importantNotes": [
+    {
+      "id": "note-cto-cc-20261007",
+      "date": "2026-10-07",
+      "createdAt": "2026-10-07T21:51:04Z",
+      "dept": "[CTO]",
+      "priority": "P0",
+      "resolved": false,
+      "title": "[CTO live 7 Oct] URGENT 1 hidden mode: it works for most real users; the paying customer's Amsterdam server was out of date - fixed tonight",
+      "text": "CEO line - 9 real people tried hidden mode this week. At least 5 got data through it. The 2 in Iran were blocked before reaching our servers. The paying UAE customer uses it daily (about 2.6 GB in 3 days) but his Amsterdam server forgot his connection on every blip - it was the only one of 11 servers missing that upgrade since June. Fixed 21:32Z with your yes; tested: 74 of 150 messages lost before, 0 after. Message for him on your card, row 153. QA xd-1498 watches his next sessions. Follow-ups: xd-1499 daily same-version check on all servers; xd-1500 app email-gate cascade."
+    },
     {
       "id": "note-cto-20261007T2140",
       "date": "2026-10-07",
