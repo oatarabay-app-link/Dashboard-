@@ -17168,7 +17168,7 @@
       "priority": "P0",
       "category": "infrastructure",
       "owner": "CTO",
-      "status": "PARTIAL \u2014 CEO YES 6 Oct; dedicated run memory/prompts/13-cloudflare-exit-routine.md; handoffs xd-1421, xd-1425, xd-1426; context xd-1389",
+      "status": "PARTIAL - CEO YES 6 Oct; run 8 (7 Oct): crit 0 evidence final, CEO waived Worker leg (QA xd-1466); crit 1 direct front measured + dev config live (commit 566a47c); crit 3 own resolver live on Dusseldorf (QA verify pending); crit 2 canary, 4 build 65, 5 production, 6 real users, 7 DPI cover NOT started; dedicated run memory/prompts/13-cloudflare-exit-routine.md; handoffs xd-1421, xd-1425, xd-1426; context xd-1389",
       "description": "CEO 6 Oct: Cloudflare's self-serve terms 2.2.1(j) forbid VPN/proxy use (row 129). Phase 1 moves all VPN traffic and VPN DNS off Cloudflare and proves hidden mode in build 65. Phase 2 (website/DNS hosting) later, separate yes.",
       "acceptanceCriteria": [
         {
@@ -17184,7 +17184,8 @@
           "verify": "dig +short <front host> returns our relay IP (not 104.21/172.67/188.114 ranges); curl -sv https://<front host> shows our certificate",
           "met": false,
           "passed": false,
-          "verifiedBy": "none"
+          "verifiedBy": "none",
+          "evidence": "[CTO cloudflare-exit run 8, 7 Oct 19:20-19:36Z] DIRECT FRONT MEASURED, then DEV CONFIG DEPLOYED. RELAY SIDE (read from the main server, London; 3 relays, none behind Cloudflare): DNS (asked Cloudflare's own nameserver) s6/s12/s3.pompesh.com = DNS-only A records -> 91.194.84.79 / 208.87.243.205 / 167.150.100.166 (the relays' own IPs; s6-edge stays 188.114.96.0/97.0 = Cloudflare). 443: TLS 1.3, TLS_AES_256_GCM_SHA384, X25519, ALPN http/1.1, cert CN=*.pompesh.com (Let's Encrypt, SAN *.pompesh.com + pompesh.com, valid to 12 Dec 2026), openssl verify OK; any SNI under *.pompesh.com gets the same cert (so a new front name needs no new certificate). Decoy: GET / -> HTTP/1.1 200, Server nginx/1.24.0, no cf-ray header (the s6-edge name, for contrast, answers server: cloudflare + cf-ray LHR). HOLD TEST (cchr.py, real CSPK/CSOK WebSocket, 1200-byte frames, 4 Mbps, 600 s, parallel): wss://s6.pompesh.com/ HELD FULL 600 s, 249,600 frames (~299.5 MB), no drop; wss://s12.pompesh.com/ same; wss://s3.pompesh.com/ same. DEV SIDE: commit 566a47c on branch development (infrastructure/dev-vps/docker-compose.dev-vps.yml) sets CloudfrontFronting__NativeFront__Enabled=true and HostTemplate={entryId}.pompesh.com on the DEV api only; the deploy workflow ran (dev checkout at 566a47c), container recreated 19:34Z, env verified inside the running container, https://api.dev.caspervpn.com/health 200. Production env untouched (still {entryId}-edge.pompesh.com). Rollback: delete the two lines and push development. NOT MEASURED: (1) the URL the dev API actually returns to an app - no dev account was used (rule: no throwaway accounts); the code builds wss://{entryId}.pompesh.com/ (CloudfrontFrontingService.cs:107-116) and the first real request logs 'NATIVE front for <server> -> <url>' in the dev api log; (2) anything from a censored country - only a London vantage; (3) a real client's traffic pattern - the test is synthetic. WHAT A CENSOR SEES (DPI note, per run rule 3): SNI s6.pompesh.com in clear (no ECH); cert wildcard *.pompesh.com, public CT-logged, Let's Encrypt; TLS 1.3 + ALPN http/1.1 only (JA3S 'matches nginx' since xd-557 - NOT re-measured today); server IPs belong to MyLoc (DE-MYLOC-DUS), Psychz Networks (LA), an APNIC-range host (SGP) - ordinary hosting ranges, NOT Cloudflare, so the 'too big to block' cover is gone: a censor can block by IP or ASN. Active probe gets the nginx-style decoy page. Frame sizes/timing: synthetic 1200-byte frames at constant 4 Mbps, not compared with a real nginx site. Replacement cover (several domains, rotating relay IP pool, browser TLS fingerprint) = criterion 7, not built. No new provider used (same relay hosts, same Let's Encrypt, same pompesh.com zone). QA: verify on dev + Dusseldorf per handoff, then tick."
         },
         {
           "test": "CC canary through the direct front passes 4 runs in a row (handshake + 60 s hold + bytes > 0)",
@@ -17198,7 +17199,8 @@
           "verify": "from inside a test tunnel: dig whoami / resolver check shows our relay; tcpdump on the relay shows no port-53 traffic to those addresses during 5 min",
           "met": false,
           "passed": false,
-          "verifiedBy": "none"
+          "verifiedBy": "none",
+          "evidence": "[CTO cloudflare-exit run 8, 7 Oct 19:36-19:46Z] OWN RESOLVER ON THE TEST RELAY (Dusseldorf, de-3, WireGuard wg0 only) - DONE AND MEASURED. FINDING FIRST: every relay resolver (unbound) forwards ALL lookups to 1.1.1.1 and 9.9.9.9 (forward-zone '.'), and the backend hands clients 'DNS = 1.1.1.1, 1.0.0.1' (WireGuard config, VpnServerService.cs:1346 and the 8.8.8.8/9.9.9.9 variant at :1414, MultiHopController.cs:494). So VPN lookups reach Cloudflare today, as the CEO said. BEFORE (throwaway WireGuard peer in a network namespace on the relay, removed afterwards; tcpdump on the public interface): a lookup sent to 1.1.1.1 from inside the tunnel -> 4 packets (2 queries + 2 replies) to/from 1.1.1.1 on the relay's public interface. CHANGE: (a) /etc/unbound/unbound.conf.d/caspervpn.conf - forward-zone commented out (backup caspervpn.conf.bak-cfx-20261007T193708Z), access-control 10.66.0.0/16 added (legacy peers sit outside the /24s), unbound restarted: recursive from the root, DNSSEC on; (b) /usr/local/sbin/casper-dns-redirect.sh + systemd unit casper-dns-redirect.service (enabled): iptables nat PREROUTING REDIRECT of wg0 udp/tcp port 53 (any destination except the gateway) to the local resolver, plus INPUT ACCEPT wg0 port 53 (INPUT policy is DROP - without this rule the redirect timed out, found in test). Old app builds that still say 1.1.1.1 are answered by the relay. Public side stays closed (no open resolver). AFTER (same test tunnel): queries addressed to 1.1.1.1, 8.8.8.8 over TCP and 9.9.9.9 all answered NOERROR, DNSSEC 'ad' flag set, 0 packets to/from 1.1.1.1 1.0.0.1 8.8.8.8 8.8.4.4 9.9.9.9 149.112.112.112 on the public interface, 58 DNS packets from the relay's own recursion to authoritative servers, redirect counters 8 packets, HTTPS fetch through the tunnel 200. Side test earlier: 40 of 40 popular names resolved (Arabic and Lebanese news sites included), broken-DNSSEC zone gave SERVFAIL, cold-cache latency 3-127 ms vs 7-95 ms for the old forwarder. ROLLBACK (one relay, a minute): systemctl disable --now casper-dns-redirect; cp the .bak-cfx file back over caspervpn.conf; systemctl restart unbound. NOT DONE (criterion stays unmet): other 11 relays unchanged; OpenVPN (tun0/tun1), IKEv2/L2TP clients on this relay are not redirected; the backend/app still sends 'DNS = 1.1.1.1...' (5 code places listed in xd-1421; needs [BACKEND] + the node gateway address per server); the relay's own /etc/resolv.conf still lists 1.1.1.1 and 9.9.9.9 (host lookups, not VPN users); Cloudflare still hosts the authoritative DNS for pompesh.com/caspervpn.com (phase 2), so recursion for those names asks Cloudflare nameservers - unavoidable until phase 2. No real-user DNS flowed during the 20 s check after the change (2 peers active, 0 DNS packets). QA: verify per handoff, then tick."
         },
         {
           "test": "Build 65 on TestFlight uses the direct front for hidden mode with auto-fallback; CEO test script passed (connect, 3 sites, speed test, 10 min hold)",
@@ -45861,8 +45863,8 @@
       "from": "[CEO]",
       "to": "[DEVOPS]",
       "title": "Handoff from CEO: PHASE 1 Cloudflare exit: hidden mode direct on our relays (443, own domain) + own DNS resolvers on every node \u2014 dev + 1 test relay first",
-      "description": "CEO YES 6 Oct (see xd-1421). Build on the existing NativeFront path. Deliver on development + one test relay: CasperCloak reachable on 443 under our own domain with our own certificate, no Cloudflare in the path; unbound (or equivalent) resolver on the node, tunnel DNS points to it, no upstream to 1.1.1.1/8.8.8.8/9.9.9.9. Proof: CC canary handshake + 60 s hold passes 4 runs in a row; dig from inside a test tunnel shows our resolver. Then production rollout by the normal path, one relay at a time, rollback by config. MEASURED 6 Oct ~22:0xZ (read-only, main server): nameservers of caspervpn.com AND pompesh.com = Cloudflare; caspervpn.com, www, api, admin, dev and edge.pompesh.com resolve to Cloudflare proxy IPs (104.21.x / 172.67.x); relays like s1.pompesh.com are DNS-only (own IP); API env has CloudfrontFronting__NativeFront__Enabled=true (a non-Cloudflare 'native front' path already exists in code); ~40 code/config files mention Cloudflare or 1.1.1.1 (CloudflareDnsService.cs, CloudfrontFrontingService.cs, StealthEnforcement.cs, MaskingIpAutoPromoter.cs, setup_wireguard_server.sh, server-deploy.sh, admin masking pages...).",
-      "status": "pending",
+      "description": "CEO YES 6 Oct (see xd-1421). Build on the existing NativeFront path. Deliver on development + one test relay: CasperCloak reachable on 443 under our own domain with our own certificate, no Cloudflare in the path; unbound (or equivalent) resolver on the node, tunnel DNS points to it, no upstream to 1.1.1.1/8.8.8.8/9.9.9.9. Proof: CC canary handshake + 60 s hold passes 4 runs in a row; dig from inside a test tunnel shows our resolver. Then production rollout by the normal path, one relay at a time, rollback by config. MEASURED 6 Oct ~22:0xZ (read-only, main server): nameservers of caspervpn.com AND pompesh.com = Cloudflare; caspervpn.com, www, api, admin, dev and edge.pompesh.com resolve to Cloudflare proxy IPs (104.21.x / 172.67.x); relays like s1.pompesh.com are DNS-only (own IP); API env has CloudfrontFronting__NativeFront__Enabled=true (a non-Cloudflare 'native front' path already exists in code); ~40 code/config files mention Cloudflare or 1.1.1.1 (CloudflareDnsService.cs, CloudfrontFrontingService.cs, StealthEnforcement.cs, MaskingIpAutoPromoter.cs, setup_wireguard_server.sh, server-deploy.sh, admin masking pages...). | [CTO cloudflare-exit run 8, 2026-10-07T19:50Z] Direct front on 3 relays measured (600 s hold, no Cloudflare IP) and DEV hands it out (commit 566a47c); Dusseldorf resolver recursive with no 1.1.1.1/9.9.9.9 and wg0 DNS redirected to it (live, rollback one minute); details + what is NOT done on criteria 1 and 3 of cloudflare-exit-phase1. Next: canary, other relays, backend DNS lines.",
+      "status": "in_progress",
       "priority": "P0",
       "createdAt": "2026-10-06T22:14:56Z",
       "createdDate": "2026-10-06",
@@ -46543,9 +46545,31 @@
       "createdAt": "2026-10-07T19:17:22Z",
       "createdDate": "2026-10-07",
       "completedDate": null
+    },
+    {
+      "id": "xd-1467",
+      "from": "[CTO]",
+      "to": "[QA]",
+      "title": "Handoff from CTO: Verify cloudflare-exit-phase1 criteria 1 and 3 (direct front on dev + own resolver on Dusseldorf) - read evidence, re-run, tick only what you reproduce",
+      "description": "Evidence is on criteria 1 and 3 of cloudflare-exit-phase1. Re-run: (1) from the main server: openssl s_client -connect 91.194.84.79:443 -servername s6.pompesh.com (TLS 1.3, CN=*.pompesh.com), curl -sI --resolve s6.pompesh.com:443:91.194.84.79 https://s6.pompesh.com/ (200, server nginx/1.24.0, no cf-ray), dig @sullivan.ns.cloudflare.com s6.pompesh.com A (91.194.84.79, not a 104.21/172.67/188.114 address); hold test: python3 /tmp/cchr.py wss://s6.pompesh.com/ qa (HELD, no drop; if /tmp/cchr.py is gone ask [CTO]). (2) dev: docker inspect caspervpn-dev-api env shows NativeFront Enabled=true and HostTemplate {entryId}.pompesh.com; when a dev account asks for hidden-mode config, the dev api log line 'NATIVE front for Dusseldorf' shows wss://s6.pompesh.com/ - use a dev account, do not create one on production. (3) Dusseldorf resolver: grep -c '^forward-addr' /etc/unbound/unbound.conf.d/caspervpn.conf = 0; iptables -t nat -S PREROUTING shows the wg0 port-53 REDIRECT; systemctl is-active casper-dns-redirect = active; then from a test WireGuard peer, a lookup addressed to 1.1.1.1 is answered while tcpdump on the relay's public interface shows 0 packets to 1.1.1.1/9.9.9.9. Criterion 3 reads 'own resolver on the relay; tunnel DNS uses it' - it covers only Dusseldorf/WireGuard so far; judge it against the criterion text and say what is missing. Do not tick criteria 2, 4-7.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-07T19:42:43Z",
+      "createdDate": "2026-10-07",
+      "completedDate": null
     }
   ],
   "importantNotes": [
+    {
+      "id": "note-cto-cfx-20261007h",
+      "date": "2026-10-07",
+      "createdAt": "2026-10-07T19:52:00Z",
+      "dept": "[CTO]",
+      "priority": "P1",
+      "resolved": false,
+      "title": "[CTO cloudflare-exit run 8] Direct hidden-mode front measured + dev live; Dusseldorf relay resolves DNS itself (0 packets to 1.1.1.1/9.9.9.9)",
+      "text": "CEO line - Cloudflare exit phase 1, run 8 (7 Oct, after your answer '2'): MOVED: root cause closed on your waiver (QA to tick); direct hidden-mode front measured on 3 relays (600 s, 4 Mbps, no drop, no Cloudflare IP, our *.pompesh.com cert) and handed out by the DEV api (commit 566a47c); Dusseldorf relay now resolves DNS itself - before, a lookup from inside a tunnel went to 1.1.1.1; after, 0 packets to any public resolver, DNSSEC ok (live on that relay for WireGuard, one-minute rollback). NEXT: canary every 15 min + 4 passes (criterion 2); backend DNS lines and the other 11 relays (needs [BACKEND]); build 65 test on dev. BLOCKS: nothing for you right now; not yet proven from a censored country, and without Cloudflare the 'too big to block' cover is gone (criterion 7)."
+    },
     {
       "id": "note-ceobot-20261007b",
       "date": "2026-10-07",
