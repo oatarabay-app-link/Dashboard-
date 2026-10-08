@@ -46270,7 +46270,7 @@
       "to": "[BACKEND]",
       "title": "Handoff from IOS: screen_exit funnel event: whitelist it + store screen / secondsOnScreen / connected / plan + admin 'where people leave' card (xd-1388)",
       "description": "xd-1388 (CEO P0, build 65 item 8). iOS ios/trial-at-signup 02331ecc (marker 26n) and Android development 70c46b57 now POST /api/user/funnel-events with body {event:'screen_exit', screen, secondsOnScreen:int, connected:bool, plan:string, appVersion, build, platform:'ios'|'android'} once when the app goes to the background. MEASURED on development (git show origin/development:backend-dotnet-core/Models/FunnelEvent.cs): FunnelEventNames.All has only the six trial_offer_* names and FunnelEventRequest has no screen fields -> today the server answers 200 {success:false,'Unknown event'} and stores nothing. Needed: (1) add 'screen_exit' to FunnelEventNames.All; (2) nullable columns Screen (MaxLength 32, [a-z_] only), SecondsOnScreen (int, clamp 0..86400), Connected (bool?), Plan (MaxLength 16) + migration; (3) keep the existing rate limit (one event per background per app is the client rule); (4) admin funnel card 'where people leave' = count by screen, last 7 days, real users only. Screen names sent: home, servers, settings, profile, support, login, sign_up, onboarding, paywall, trial_offer, double_vpn, dedicated_ip (Android may also send split_tunneling, notification_preferences, forgot_password, email_verification). Must be live on production before build 65 reaches TestFlight users. verify: curl -s -X POST https://api.dev.caspervpn.com/api/user/funnel-events -H 'Authorization: Bearer <test token>' -H 'Content-Type: application/json' -d '{\"event\":\"screen_exit\",\"screen\":\"home\",\"secondsOnScreen\":5,\"connected\":false,\"plan\":\"free\",\"appVersion\":\"4.4\",\"build\":\"65\",\"platform\":\"ios\"}' -> {success:true} and a FunnelEvents row with Screen=home.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-10-05T21:30:37Z",
       "createdDate": "2026-10-05",
@@ -46279,9 +46279,9 @@
       "category": "next-build-4.4",
       "ageDays": 1,
       "lifecycle": "active",
-      "notes": "[CEO live b65 device test 2026-10-08] measured from build 26o: POST /api/user/funnel-events {event:'screen_exit'} -> 200 {success:false, error:'Unknown event'} at 00:30:15 and 00:52:09 Beirut - device test step 13's server half waits on this whitelist.",
+      "notes": "[ENGINEERING run 2026-10-08 c, second parallel firing, 2026-10-08T22:09:05Z] CLAIMED: backend fix on development only (no production change, no API deploy while run b ships). Other runs: stay off this row until this note says done. | [CEO live b65 device test 2026-10-08] measured from build 26o: POST /api/user/funnel-events {event:'screen_exit'} -> 200 {success:false, error:'Unknown event'} at 00:30:15 and 00:52:09 Beirut - device test step 13's server half waits on this whitelist.",
       "triageNote": "[QA live with CEO 2026-10-08 02:0x-02:3x Beirut, run ai] Still dropped on build 26q: production api 'FunnelEvent: unknown event screen_exit ... dropped' at 23:13:42Z, 23:16:27Z, 23:17:15Z while the app logged '[SCREEN-EXIT] left on home/sign_up/trial_offer ...' (5 exits). git grep 'screen_exit' = 0 on origin/development backend too.",
-      "updatedAt": "2026-10-07T23:32:00Z"
+      "updatedAt": "2026-10-08T22:09:05Z"
     },
     {
       "id": "xd-1393",
@@ -48744,11 +48744,13 @@
       "to": "[BACKEND]",
       "title": "Handoff from QA: [QA FAILED] NetworkProbes stores 'not tested' as failed (WsOk/WgUdpOk false instead of null)",
       "description": "xd-1513 check (c): production NetworkProbes row 2026-10-07T22:51:16Z (app 4.4, LB, wifi): DnsOk t, Tcp443Ok t, TlsOk t, WsOk FALSE, WgUdpOk FALSE while WsMs/WgUdpMs are NULL - the app line was '[NET-PROBE] dns=ok/64 tcp=ok/35 tls=ok/113 ws=- wg=-' (not tested). Same on the 23:11:23Z and 23:22:46Z rows from build 26q. Any 'WebSocket blocked' count from this table is therefore wrong. FIX: make WsOk/WgUdpOk nullable (DTO + column) and store null when the app sends '-'. Verify: select count(*) from \"NetworkProbes\" where \"WsOk\"=false and \"WsMs\" is null -> 0 for rows after the fix.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P2",
       "createdAt": "2026-10-07T23:29:40Z",
       "createdDate": "2026-10-07",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[ENGINEERING run 2026-10-08 c, second parallel firing, 2026-10-08T22:09:05Z] CLAIMED: backend fix on development only (no production change, no API deploy while run b ships). Other runs: stay off this row until this note says done.",
+      "updatedAt": "2026-10-08T22:09:05Z"
     },
     {
       "id": "xd-1522",
