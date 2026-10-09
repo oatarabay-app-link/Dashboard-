@@ -13244,6 +13244,16 @@
           "test": "READY TO SHIP \u2014 the daily 'connections by country' report puts each failed connection under the country the person really logs in from \u00b7 why: today it files failures under the country set in the phone, so a user in Iran whose phone says 'US' made the US look blocked and hid Iran's problem \u00b7 tested: run read-only on today's real data - the 14 failures move from a 'US' row with no users to the Iran row (3 sessions, phone setting 'US' shown next to it), every other country is unchanged, total failures 25 before and after \u00b7 ships together with row 175 (same file, one copy) \u00b7 rollback: put back the previous file from git (one copy command); it only reads data, it changes nothing. Advice: YES.",
           "verify": "ssh main server after install: diff <(git -C /root/Casper/Casper-Code show origin/production:infrastructure/scripts/connectivity_report.sh) /opt/caspervpn/connectivity_report.sh -> empty; next 05:00Z report: grep -c phone_regions /root/reports/connectivity-latest.txt -> 1, and no row with users=0, sessions=0 and failures>0 whose phone_regions differs from cc",
           "evidence": "[QA 2026-10-09 k, scheduled] QA re-ran the new report read-only on real data: the 14 failures move from a 'US' row to Iran (phone setting 'US' shown), every other country unchanged, total 25 = 25. Ready for your YES (met stays false until you answer). || [ENGINEERING run 2026-10-09 j, 2026-10-09T09:18:30Z] added; development 111bd1f (xd-1585), on top of 6ae39cd (row 175, xd-1582). Test: /root/reports/eng1009j/old.txt vs new.txt (read-only SQL from the old and new script, 09:13Z). Ship (after YES on 175 and this row): cherry-pick -x 6ae39cd 111bd1f to production, then copy infrastructure/scripts/connectivity_report.sh from production git to /opt/caspervpn/ (cron unchanged), then -> [QA]."
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "addedAt": "2026-10-09T10:32:57Z",
+          "addedBy": "[DEVOPS] engineering run 1009k",
+          "test": "READY TO SHIP \u2014 the 6-hourly server check stops sending false 'a new user cannot connect' alarms \u00b7 why: the check tries each quiet server once, and one try fails about 7 times in 100 on every server, near or far - that is what the Mexico City, Miami and Tokyo alarms were; now it tries a second time 10 seconds later and only alarms if both fail \u00b7 tested: on the real history (422 tries since 26 Sep, no server stands out) and with a 5-case test: new version 5 of 5, old version 3 of 5 \u00b7 what changes: one file on the main server (/opt/caspervpn/protocol_health_check.py) copied from production git after the cherry-pick of development 8ce346c; no VPN server is touched \u00b7 rollback: copy back the saved old file (md5 3b881055) \u00b7 board advice: yes - it only removes false alarms, a real outage still fails twice.",
+          "verify": "ssh brain: md5sum /opt/caspervpn/protocol_health_check.py = git show origin/production:infrastructure/scripts/protocol_health_check.py | md5sum; next run line in /var/log/protocol-health.log; grep -c 'try2:' /root/reports/protocol-health.json",
+          "evidence": "[ENGINEERING run 2026-10-09 k, 2026-10-09T10:32:57Z] added for xd-1586; development 8ce346c (merge ee6f6d9, file md5 9fd7ebb0 on origin/development). Live file md5 3b881055 = development before the change. Nothing installed."
         }
       ],
       "progress": 0,
@@ -18369,7 +18379,7 @@
       "name": "Backend API",
       "status": "red",
       "lead": "Dev Team",
-      "currentTask": "2026-10-09 engineering run j re-base (09:18Z): 30 tasks \u00b7 106/158 criteria met \u00b7 open P0 to BACKEND 3",
+      "currentTask": "2026-10-09 engineering run k re-base (10:32Z): 30 tasks \u00b7 106/158 criteria met \u00b7 open P0 to BACKEND 3",
       "blockers": "3",
       "completion": "67",
       "launchCompletion": "68",
@@ -18386,7 +18396,7 @@
       "name": "DevOps & Infra",
       "status": "red",
       "lead": "Unassigned",
-      "currentTask": "2026-10-09 engineering run j re-base (09:18Z): 31 tasks \u00b7 86/205 criteria met \u00b7 open P0 to DEVOPS 3",
+      "currentTask": "2026-10-09 engineering run k re-base (10:32Z): 31 tasks \u00b7 86/205 criteria met \u00b7 open P0 to DEVOPS 3",
       "blockers": "3",
       "completion": "42",
       "progress": 98,
@@ -18425,7 +18435,7 @@
       "name": "Website",
       "status": "yellow",
       "lead": "Dev Team",
-      "currentTask": "2026-10-09 engineering run j re-base (09:18Z): 8 tasks \u00b7 28/46 criteria met \u00b7 open P0 to WEBSITE 0",
+      "currentTask": "2026-10-09 engineering run k re-base (10:32Z): 8 tasks \u00b7 28/46 criteria met \u00b7 open P0 to WEBSITE 0",
       "blockers": "0",
       "completion": "61",
       "launchCompletion": "61",
@@ -18487,7 +18497,7 @@
       "name": "CTO Office",
       "status": "yellow",
       "lead": "Waqar",
-      "currentTask": "2026-10-09 engineering run j re-base (09:18Z): 46 tasks \u00b7 169/272 criteria met \u00b7 open P0 to CTO 4",
+      "currentTask": "2026-10-09 engineering run k re-base (10:32Z): 46 tasks \u00b7 169/272 criteria met \u00b7 open P0 to CTO 4",
       "blockers": "4",
       "completion": "62",
       "launchCompletion": "63",
@@ -50920,7 +50930,7 @@
       "ageDays": 0,
       "needsRelease": false,
       "lifecycle": "active",
-      "notes": "[ENGINEERING run 2026-10-09 k, 2026-10-09T10:10:56Z] CLAIMED by eng run 1009k - measuring the 06:17Z protocol-health run first (read-only). || "
+      "notes": "[ENGINEERING run 2026-10-09 k, 2026-10-09T10:32:57Z] MEASURED (read-only): /var/log/protocol-health.log since 26 Sep = 422 prober WireGuard attempts, 31 failed (7 %), on all 8 quiet nodes (HK 4/54, Mexico City 5/54, Miami 3/49, Montreal 7/54, Singapore 3/52, Sydney 2/52, Sao Paulo 3/53, Tokyo 2/54), not tied to distance (ping from the Bangkok prober: Singapore 34 ms 0 % loss, Sao Paulo 396 ms 0 %, Mexico City 259 ms 1/20, Miami 272 ms 1/20). 06:17Z run: Miami PASSED, Mexico City + Tokyo failed (ADD=201 handshake=0 ping 0/3). Bangkok sshd log 06:16-06:32: every prober tunnel login for those probes was 'Accepted publickey'; the 3 'Connection closed by authenticating user' at 06:23:44/06:27:21/06:29:55 match the 3 IKEv2 'Permission denied' items (Singapore, Sao Paulo, Tokyo), not the WireGuard ones. CONTROL MISSING: Mexico City and Tokyo had 0 real-user handshakes in 24 h, so no user signal either way. VERDICT: no evidence of a fault on Mexico City or Miami; the alarm is a one-try probe that loses ~7 % of attempts everywhere (cause of the single lost handshake not measured - hypothesis: one lost UDP packet, WireGuard retries only after 5 s while the ping window is ~3-6 s). FIX on development 8ce346c (merge ee6f6d9): retry once after 10 s, crit only if both tries fail, both evidences kept (so the next readings measure the flake). Test /home run folder t.py: new file 5/5 cases, old file 3/5 (control: fail-then-pass and fail-then-unrunnable wrongly crit). Install after CEO YES on ceo-action-backlog row 182. || [ENGINEERING run 2026-10-09 k, 2026-10-09T10:10:56Z] CLAIMED by eng run 1009k - measuring the 06:17Z protocol-health run first (read-only). || "
     },
     {
       "id": "xd-1587",
@@ -51221,6 +51231,18 @@
       "createdDate": "2026-10-09",
       "completedDate": null,
       "relatedTask": "gtm-01-claims-true"
+    },
+    {
+      "id": "xd-1605",
+      "from": "[[DEVOPS]]",
+      "to": "[[QA]]",
+      "title": "Handoff from [DEVOPS]: Check the WireGuard check retry (xd-1586, development 8ce346c) before CEO YES",
+      "description": "[ENGINEERING run 2026-10-09 k, 2026-10-09T10:32:57Z] development 8ce346c changes infrastructure/scripts/protocol_health_check.py wireguard_probe only: a failed real handshake is retried once after WG_RETRY_PAUSE_SECONDS=10; crit only if both fail; 'unknown' if the 2nd try cannot run; evidence 'try1: ... | try2: ...'. Please re-run independently: (1) the mocked 5-case test (fail/pass->ok, fail/fail->crit, fail/none->unknown, pass->ok, none->unknown) on the new file and the old file as control (old must give crit for fail/pass); (2) re-count prober failures per node from /var/log/protocol-health.log on the main server (expect ~7 % on every quiet node). Ship row: ceo-action-backlog #182. After install + CEO YES: the next 4 runs should show 'try2:' evidence and 0 one-try crits.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-09T10:33:05Z",
+      "createdDate": "2026-10-09",
+      "completedDate": null
     }
   ],
   "importantNotes": [
