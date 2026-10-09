@@ -49761,11 +49761,12 @@
       "to": "[BACKEND]",
       "title": "Handoff from QA: [P2] Two open session rows for one user+server, 8 ms apart (double /connect)",
       "description": "[QA 2026-10-08 am ~23:15Z, scheduled] Found while checking row 151 (xd-1539). Production ConnectionLogs: user 2eecd0e6, server Amsterdam 1a8394db, two rows ConnectedAt 22:43:56.326Z and .334Z, both DisconnectedAt NULL, UserAgent 'CasperVPN/iOS 4.4 (65)'. Over 7 days 28 pairs with the same user+server started < 1 s apart (most from build 65; some 'CasperVPN/iOS' and blank agents). Not from the heartbeat adopt (0 adopt rows). Effect: the session list shows 2 sessions; device-slot / duration counts may double. Check: does POST /api/servers/<id>/connect take a per-user+server guard (unique open row or a lock)? codegraph is still down (image casper-codegraph missing, xd-1445) so QA did not locate the line. SQL to re-run: select count(*) from (select \"UserId\",\"ServerId\" from \"ConnectionLogs\" where \"DisconnectedAt\" is null group by 1,2 having count(*)>1) x  -> must be 0. Also tell [iOS] if the app sends connect twice.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P2",
       "createdAt": "2026-10-08T23:12:07Z",
       "createdDate": "2026-10-08",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[ENGINEERING run 2026-10-09 d, 2026-10-09T03:07:43Z] CLAIMED: backend fix on development only (no production change). Measured read-only on production 2026-10-09T03:07Z: open duplicate user+server rows now = 0; pairs started < 1 s apart, same user+server, last 7 d = 29 of 584 rows (24 h: 5); 27/29 same DeviceId; control (same user, DIFFERENT server, < 1 s) = 2. Other runs: leave this row."
     },
     {
       "id": "xd-1547",
