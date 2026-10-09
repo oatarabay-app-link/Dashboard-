@@ -13234,6 +13234,16 @@
           "test": "READY TO SHIP \u2014 bring back the code map tool on the main server and make it repair itself \u00b7 why: every session is told to use it, but it has been broken since 7 Oct, and its nightly refresh has failed every night since, so the map is also getting old \u00b7 how: build the tool again (one small download, run gently on one processor) and add one line to its nightly job that rebuilds it whenever it is missing \u00b7 tested: nothing to test on the test copy - it is a helper for our sessions only, it serves no customer \u00b7 rollback: delete the tool and the one line; no customer service is touched",
           "verify": "ssh main server: docker image inspect casper-codegraph >/dev/null && echo OK; codegraph query SupportTickets -> prints nodes; next 23:30Z: tail -3 /var/log/codegraph.log has no 'Unable to find image'",
           "evidence": "[ENGINEERING run 2026-10-09 i, 2026-10-09T08:16:34Z] added for xd-1574 / xd-1445 / xd-1589. Install after YES: nice -n 19 taskset -c 1 docker build -t casper-codegraph /opt/codegraph (Dockerfile = python:3.12-slim + pip graphifyy); add to the top of /opt/codegraph/rebuild.sh after 'set -e': 'docker image inspect casper-codegraph >/dev/null 2>&1 || nice -n 19 docker build -q -t casper-codegraph /opt/codegraph' (backup first). Board advice: yes - tooling only."
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "addedAt": "2026-10-09T09:18:30Z",
+          "addedBy": "[DEVOPS] engineering run 1009j",
+          "test": "READY TO SHIP \u2014 the daily 'connections by country' report puts each failed connection under the country the person really logs in from \u00b7 why: today it files failures under the country set in the phone, so a user in Iran whose phone says 'US' made the US look blocked and hid Iran's problem \u00b7 tested: run read-only on today's real data - the 14 failures move from a 'US' row with no users to the Iran row (3 sessions, phone setting 'US' shown next to it), every other country is unchanged, total failures 25 before and after \u00b7 ships together with row 175 (same file, one copy) \u00b7 rollback: put back the previous file from git (one copy command); it only reads data, it changes nothing. Advice: YES.",
+          "verify": "ssh main server after install: diff <(git -C /root/Casper/Casper-Code show origin/production:infrastructure/scripts/connectivity_report.sh) /opt/caspervpn/connectivity_report.sh -> empty; next 05:00Z report: grep -c phone_regions /root/reports/connectivity-latest.txt -> 1, and no row with users=0, sessions=0 and failures>0 whose phone_regions differs from cc",
+          "evidence": "[ENGINEERING run 2026-10-09 j, 2026-10-09T09:18:30Z] added; development 111bd1f (xd-1585), on top of 6ae39cd (row 175, xd-1582). Test: /root/reports/eng1009j/old.txt vs new.txt (read-only SQL from the old and new script, 09:13Z). Ship (after YES on 175 and this row): cherry-pick -x 6ae39cd 111bd1f to production, then copy infrastructure/scripts/connectivity_report.sh from production git to /opt/caspervpn/ (cron unchanged), then -> [QA]."
         }
       ],
       "progress": 0,
@@ -18357,7 +18367,7 @@
       "name": "Backend API",
       "status": "red",
       "lead": "Dev Team",
-      "currentTask": "2026-10-09 engineering run i re-base (08:16Z): 30 tasks \u00b7 106/158 criteria met \u00b7 open P0 to BACKEND 3",
+      "currentTask": "2026-10-09 engineering run j re-base (09:18Z): 30 tasks \u00b7 106/158 criteria met \u00b7 open P0 to BACKEND 3",
       "blockers": "3",
       "completion": "67",
       "launchCompletion": "68",
@@ -18374,7 +18384,7 @@
       "name": "DevOps & Infra",
       "status": "red",
       "lead": "Unassigned",
-      "currentTask": "2026-10-09 engineering run i re-base (08:16Z): 31 tasks \u00b7 86/205 criteria met \u00b7 open P0 to DEVOPS 3",
+      "currentTask": "2026-10-09 engineering run j re-base (09:18Z): 31 tasks \u00b7 86/205 criteria met \u00b7 open P0 to DEVOPS 3",
       "blockers": "3",
       "completion": "42",
       "progress": 98,
@@ -18413,7 +18423,7 @@
       "name": "Website",
       "status": "yellow",
       "lead": "Dev Team",
-      "currentTask": "2026-10-09 engineering run i re-base (08:16Z): 8 tasks \u00b7 28/46 criteria met \u00b7 open P0 to WEBSITE 0",
+      "currentTask": "2026-10-09 engineering run j re-base (09:18Z): 8 tasks \u00b7 28/46 criteria met \u00b7 open P0 to WEBSITE 0",
       "blockers": "0",
       "completion": "61",
       "launchCompletion": "61",
@@ -18475,7 +18485,7 @@
       "name": "CTO Office",
       "status": "yellow",
       "lead": "Waqar",
-      "currentTask": "2026-10-09 engineering run i re-base (08:16Z): 46 tasks \u00b7 169/272 criteria met \u00b7 open P0 to CTO 4",
+      "currentTask": "2026-10-09 engineering run j re-base (09:18Z): 46 tasks \u00b7 169/272 criteria met \u00b7 open P0 to CTO 4",
       "blockers": "4",
       "completion": "62",
       "launchCompletion": "63",
@@ -46603,7 +46613,7 @@
       "qaNote": "[QA 2026-10-08 ak ~22:18Z, scheduled] 7-day rule: past dueBy 2026-10-08 - close with evidence, hand back with a blocker, or defer with reason + revisit date (a P1 is never deferred silently).",
       "needsRelease": false,
       "triageReason": "dueBy 2026-10-08 passed: close, hand back, or plan a month",
-      "notes": "[QA 2026-10-09 i ~08:2xZ, scheduled] QA re-run via xd-1597: provider quotes 4/4 PASS; masking IPs reachable 22/22 (443 21/22, Paris closed); 2 Hong Kong reserves listed on Spamhaus ZEN PBL -> xd-1599. || [ENGINEERING run 2026-10-09 h, 2026-10-09T07:20Z] TRIAGE (d) active, due 14 Oct. Step (1) PART DONE, read-only from the main server 07:10Z: MaskingIps = 22 rows (Role 0 = 12 primaries incl. Paris; Role 1 = 10 reserves). CORRECTION to the 5 Oct reading: the 10 reserves are NOT unbound - each is a secondary IP on a live node (HK 2, Miami 1, Montreal 2, Sydney 1, Sao Paulo 2, Tokyo 2), all OneProvider, .00/mo, IsBilled=true. Reachability: 22/22 answer ping; 21/22 have TCP 443 open (Paris 163.172.62.64 closed = the retired server, expected - its row still billed=true, check). Reputation: 22/22 NOT listed on Spamhaus ZEN, SpamCop, Barracuda (control 127.0.0.2 returned listed on all three = lookups work); SORBS control failed -> not counted. ServerBlockEvents = 1 row ever (ClearedAt 2026-10-07 22:55Z) - the detector has written at least once; not 0 as on 5 Oct. LEFT: CC decoy + WG port check per Active IP, the reserve-promotion dry-run on bkk-01 (dev), then release 8 (CEO yes 5 Oct stands). NOTE for the CEO office: DPI note 9 Oct option C wants spare IPs on >= 3 OTHER providers; these reserves all sit on OneProvider (same network as 7 of 11 relays), so releasing them does not conflict with C.",
+      "notes": "[QA 2026-10-09 i ~08:2xZ, scheduled] QA re-run via xd-1597: provider quotes 4/4 PASS; masking IPs reachable 22/22 (443 21/22, Paris closed); 2 Hong Kong reserves listed on Spamhaus ZEN PBL -> xd-1599. || [ENGINEERING run 2026-10-09 h, 2026-10-09T07:20Z] TRIAGE (d) active, due 14 Oct. Step (1) PART DONE, read-only from the main server 07:10Z: MaskingIps = 22 rows (Role 0 = 12 primaries incl. Paris; Role 1 = 10 reserves). CORRECTION to the 5 Oct reading: the 10 reserves are NOT unbound - each is a secondary IP on a live node (HK 2, Miami 1, Montreal 2, Sydney 1, Sao Paulo 2, Tokyo 2), all OneProvider, .00/mo, IsBilled=true. Reachability: 22/22 answer ping; 21/22 have TCP 443 open (Paris 163.172.62.64 closed = the retired server, expected - its row still billed=true, check). Reputation: 22/22 NOT listed on Spamhaus ZEN, SpamCop, Barracuda (control 127.0.0.2 returned listed on all three = lookups work); SORBS control failed -> not counted. ServerBlockEvents = 1 row ever (ClearedAt 2026-10-07 22:55Z) - the detector has written at least once; not 0 as on 5 Oct. LEFT: CC decoy + WG port check per Active IP, the reserve-promotion dry-run on bkk-01 (dev), then release 8 (CEO yes 5 Oct stands). NOTE for the CEO office: DPI note 9 Oct option C wants spare IPs on >= 3 OTHER providers; these reserves all sit on OneProvider (same network as 7 of 11 relays), so releasing them does not conflict with C. || [ENGINEERING run 2026-10-09 j, 2026-10-09T09:18:30Z] CORRECTION to run h's line '22/22 NOT listed on Spamhaus ZEN': WRONG - 2 of 22 (27.0.232.216 + .217, both Hong Kong reserves) are on ZEN through the PBL (127.0.0.10), measured 09:09Z; not on SBL/XBL. Run h tested only for the abuse codes. The 2 reserves to keep must come from the other 20 (xd-1599).",
       "blocker": ""
     },
     {
@@ -50889,7 +50899,8 @@
       "ageDays": 0,
       "needsRelease": false,
       "lifecycle": "active",
-      "notes": "[ENGINEERING run 2026-10-09 j, 2026-10-09T09:08:35Z] CLAIMED by this run: fix connectivity_report.sh on development only (failures keyed by login country, RegionHint as its own column). No production change. Other runs: stay off this row until this note says done."
+      "notes": "[ENGINEERING run 2026-10-09 j, 2026-10-09T09:08:35Z] CLAIMED by this run: fix connectivity_report.sh on development only (failures keyed by login country, RegionHint as its own column). No production change. Other runs: stay off this row until this note says done. || [ENGINEERING run 2026-10-09 j, 2026-10-09T09:18:30Z] DONE on development 111bd1f (fetch+rebase+push under the session lock; remote tip verified). Failures keyed by the failing user's LastLoginCountry (RegionHint only when no user); RegionHint printed as phone_regions / phone_region in PER COUNTRY, FAILURE CATEGORIES and TELEMETRY v2. Tested read-only on production 09:13Z (/root/reports/eng1009j/old.txt vs new.txt): BEFORE US 0 users/0 sessions/14 failures BLOCKED? + IR 1/3/0 idle; AFTER IR 1/3/14 BLOCKED? phone_regions=US, no US row; control: CA/AE/LB/RU/DE identical, failures 25=25. READY TO SHIP row 181. For [CTO] (cloudflare-exit): that Iran user still fails every connect - 9 cc-wg-nohandshake-na (hidden mode, no handshake) + 5 wireguard unknown in 24 h, 0 traffic. || [ENGINEERING run 2026-10-09 j, 2026-10-09T09:18:30Z] QA handoff xd-1602.",
+      "blocker": "Waits for CEO YES on ceo-action-backlog row 181 (with row 175)"
     },
     {
       "id": "xd-1586",
@@ -51121,12 +51132,16 @@
       "to": "[DEVOPS]",
       "title": "Handoff from QA: [QA] xd-1375 masking IPs: 2 Hong Kong reserves ARE listed on Spamhaus ZEN (PBL) - the '22/22 not listed' line is wrong",
       "description": "[QA 2026-10-09 i ~08:2xZ, scheduled] Re-run from the main server 08:1xZ (/root/reports/qa1009i-ipcheck.txt). Reachability PASS: 22/22 ping, 21/22 TCP 443 (Paris 163.172.x.x closed, retired, as expected). Reputation FAIL as written: 27.0.232.216 and 27.0.232.217 (both Role 1 reserves, 'OneProvider secondary on Hong Kong') answer 127.0.0.10 on zen.spamhaus.org; the other 20 empty; SpamCop + Barracuda 0/22. Controls 2.0.0.127.<zone> answer on all 3 lists (zen 127.0.0.2/.4/.10). Reading (hypothesis until checked on spamhaus.org): 127.0.0.10 is the PBL policy list (range marked end-user by the ISP), not an abuse listing. Ask: correct the xd-1375 row, check both on the Spamhaus lookup page, and do not pick these two as the 2 reserves to keep (CEO yes 5 Oct = keep 1 EU + 1 US cleanest). Then back to [QA].",
-      "status": "in_progress",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-10-09T08:15:46Z",
       "createdDate": "2026-10-09",
-      "completedDate": null,
-      "notes": "[ENGINEERING run 2026-10-09 j, 2026-10-09T09:08:35Z] CLAIMED by this run: read-only DNS checks of the 2 Hong Kong reserves (PBL vs abuse list) + correct the xd-1375 row. No server change."
+      "completedDate": "2026-10-09",
+      "notes": "[ENGINEERING run 2026-10-09 j, 2026-10-09T09:08:35Z] CLAIMED by this run: read-only DNS checks of the 2 Hong Kong reserves (PBL vs abuse list) + correct the xd-1375 row. No server change. || [ENGINEERING run 2026-10-09 j, 2026-10-09T09:18:30Z] DONE. MEASURED 09:09Z from the main server (dig, read-only): 27.0.232.216 and 27.0.232.217 answer 127.0.0.10 on zen AND on pbl.spamhaus.org, and NOTHING on sbl, xbl or sbl-xbl. Controls 2.0.0.127 answer on every zone (zen .2/.4/.10, pbl .10, sbl .2, xbl .4) = lookups work. Reading: both are on the Spamhaus PBL only (the ISP marks the range as end-user space that should not send mail directly) - a policy listing, not an abuse/spam/malware listing. Not checked on the spamhaus.org web page (a scheduled run cannot pass its browser check); the pbl zone answer is the same data. Advice: do NOT keep these two as the reserves (some sites treat any ZEN hit as bad); pick the 1 EU + 1 US reserves from the 20 with no answer on any zone.",
+      "completedAt": "2026-10-09",
+      "completedBy": "[DEVOPS]",
+      "resolution": "completed: measured PBL-only listing, xd-1375 corrected",
+      "resultingHandoff": "xd-1601 to [QA]"
     },
     {
       "id": "xd-1600",
@@ -51137,6 +51152,30 @@
       "status": "pending",
       "priority": "P2",
       "createdAt": "2026-10-09T09:12:02Z",
+      "createdDate": "2026-10-09",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1601",
+      "from": "[DEVOPS]",
+      "to": "[QA]",
+      "title": "Handoff from DEVOPS: Check xd-1599: 2 Hong Kong reserve IPs are on Spamhaus PBL only (not SBL/XBL); xd-1375 row corrected",
+      "description": "MEASURED 09:09Z from the main server (dig, read-only): 27.0.232.216 and 27.0.232.217 answer 127.0.0.10 on zen AND on pbl.spamhaus.org, and NOTHING on sbl, xbl or sbl-xbl. Controls 2.0.0.127 answer on every zone (zen .2/.4/.10, pbl .10, sbl .2, xbl .4) = lookups work. Reading: both are on the Spamhaus PBL only (the ISP marks the range as end-user space that should not send mail directly) - a policy listing, not an abuse/spam/malware listing. Not checked on the spamhaus.org web page (a scheduled run cannot pass its browser check); the pbl zone answer is the same data. Advice: do NOT keep these two as the reserves (some sites treat any ZEN hit as bad); pick the 1 EU + 1 US reserves from the 20 with no answer on any zone. Verify: on the main server, for each of 27.0.232.216/.217 reverse the octets and dig +short <rev>.pbl.spamhaus.org / .sbl.spamhaus.org / .xbl.spamhaus.org -> 127.0.0.10 / empty / empty; control 2.0.0.127 answers on all three. Read xd-1375 notes for the correction line. Then close xd-1599.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-09T09:18:40Z",
+      "createdDate": "2026-10-09",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1602",
+      "from": "[DEVOPS]",
+      "to": "[QA]",
+      "title": "Handoff from DEVOPS: Check xd-1585 on development 111bd1f: connectivity report keys failures by login country",
+      "description": "Run the PER COUNTRY / FAILURE CATEGORIES SQL from development 111bd1f read-only (or diff /root/reports/eng1009j/old.txt new.txt): no row with users=0, sessions=0, failures>0 whose phone_regions differs from cc; total failures equal old vs new; other countries unchanged. CEO card row 181 (ships with row 175). Then tick or hand back to [DEVOPS].",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-09T09:18:40Z",
       "createdDate": "2026-10-09",
       "completedDate": null
     }
