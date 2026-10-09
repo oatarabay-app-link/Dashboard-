@@ -49161,7 +49161,7 @@
       "to": "[WEBSITE]",
       "title": "Handoff from QA: [QA FAILED] Website: blog Share button does nothing on a Mac + every 'conversion' tracking event is refused (400) + page errors on Privacy/Terms",
       "description": "CEO 8 Oct 02:2x Beirut, live: 'share doesnt work'. MEASURED in the CEO's Chrome (macOS) on /blog/is-vpn-safe: the button calls navigator.share (website/components/share-button.tsx:13-14), the call never resolves or rejects (pending > 8 s, shim log '[QA-SHARE] called' only), so the clipboard fallback (line 17) is never reached and the user sees nothing. FIX: on desktop copy the link first (or race share() with a timeout and fall back to copy on any error except AbortError) and always show 'Link copied'. (2) /pricing 'Toggle billing period' -> POST /api/track {type:'conversion', event:'billing_toggle'} -> 400 {error:'Invalid type'} (re-run 23:28Z). Cause by code: lib/conversion-tracking.ts:77-81 sends type 'conversion'; app/api/track/route.ts accepts only session_start/pageview/heatmap/page_update/session_end and returns 400 at line 81 - so by the code EVERY first-party conversion event (signup, purchase, download, affiliate_apply, pricing_view, billing_toggle) is dropped since 6a3f150ad (26 Sep). Also tsc error 'billing_toggle not assignable to ConversionEvent' (pricing/page.tsx). (3) /privacy and /terms: 7 React hydration page errors each (#418/#423/#425), reproduced twice (22:5x and 23:28Z, headless Chromium 1280 px). NOT a bug: header menus (Products/Business/theme) - automated clicks timed out on 19 pages but the CEO clicked them fine. Audit: 80 sitemap URLs, 256 controls clicked, file scratch audit full-1280.json (QA). Verify: curl -s -X POST https://caspervpn.com/api/track -H 'Content-Type: application/json' -d '{\"type\":\"conversion\",\"event\":\"billing_toggle\"}' -> must not be 400; Share on Mac Chrome -> link copied or share sheet.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-10-07T23:29:40Z",
       "createdDate": "2026-10-07",
@@ -49169,7 +49169,8 @@
       "category": "next-build-4.4",
       "ageDays": 1,
       "needsRelease": false,
-      "lifecycle": "active"
+      "lifecycle": "active",
+      "notes": "[ENGINEERING run 2026-10-08 d, 2026-10-09T00:18:45Z] CLAIMED item 1 (Share button on computers): fix on development now. Items 2 (conversion events 400) and 3 (hydration errors) not started by this run. | "
     },
     {
       "id": "xd-1520",
