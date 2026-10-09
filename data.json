@@ -13204,6 +13204,26 @@
           "addedAt": "2026-10-09T07:20:00Z",
           "addedBy": "[DEVOPS] engineering run 1009h",
           "evidence": "[ENGINEERING run 2026-10-09 h, 2026-10-09T07:20Z] added for xd-1347; research only, nothing bought, no card charged."
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "addedAt": "2026-10-09T08:14:13Z",
+          "test": "READY TO SHIP \u2014 the weekly 'is everything still really live' check can run again, safely \u00b7 why: it has not run once since May (the file was not allowed to run), and the old version would have reset the main server's code folder behind the deploy script's back and then tried to post with a dead key \u00b7 tested on the main server in a throwaway copy: all 8 checks pass; a test with a broken check fails and prepares exactly one alert (not sent); a missing copy fails loudly \u00b7 rollback: put the old crontab line back (saved copy) and remove the new copy of the checks; nothing else changes",
+          "verify": "ssh main server: crontab -l | grep reality -> '/opt/caspervpn/reality-probes-weekly.sh'; test -x it; git -C /opt/caspervpn/reality-repo rev-parse --abbrev-ref HEAD; REALITY_NO_ALERT=1 /opt/caspervpn/reality-probes-weekly.sh | tail -1 -> 'exit_code=0'; next Monday 00:00Z: tail /var/log/reality-probes-weekly.log shows 8 passed",
+          "addedBy": "[DEVOPS] engineering run 1009i",
+          "evidence": "[ENGINEERING run 2026-10-09 i, 2026-10-09T08:14:13Z] added; development ec61b19 (xd-1587). Install after YES: cherry-pick -x ec61b19 to production; git clone --branch production <repo> /opt/caspervpn/reality-repo; copy scripts/reality-probes-weekly.sh from production git to /opt/caspervpn/ (755); crontab backup, then point the Monday line at /opt/caspervpn/reality-probes-weekly.sh. Board advice: yes - read-only checks, one alert path already used by the factory deadman."
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "addedAt": "2026-10-09T08:14:13Z",
+          "test": "DECISION \u2014 the monthly password-change job on the main server: switch it off for now? \u00b7 why: it never ran (its log folder is missing), and that was lucky: it changes 6 keys only on the main server, while our 12 VPN servers keep the old ones - so after it runs, usage records from every server would be refused, sign-ins on the IKEv2 road would fail, and it restarts the app server the unsafe way (skipping the deploy script that keeps the other secrets). It would run on 1 Nov the moment anyone creates that folder. Options: (a) switch the job off now and plan a new one that changes keys on all servers together (advice); (b) leave it as is (it stays off only by accident); (c) make it work as it is (NOT advised - breaks connections). Advice: (a). Your admin password (row for xd-1522) is separate and still needs your 2 minutes.",
+          "verify": "ssh main server: crontab -l | grep -c rotate-secrets -> 0 (or the line starts with #); ls /var/log/caspervpn -> absent until the new job exists",
+          "addedBy": "[SECURITY] engineering run 1009i",
+          "evidence": "[ENGINEERING run 2026-10-09 i, 2026-10-09T08:14:13Z] added for xd-1588. Measured: crontab '0 3 1 * * /root/rotate-secrets.sh >> /var/log/caspervpn/secret-rotation.log' + /var/log/caspervpn absent -> never started. Script read (values never printed): rotates Radius__ApiKey, SERVER_API_KEY, PUSH_API_KEY, PROBE_API_KEY, SCHEDULER_API_KEY, LiveVpnServer__Ikev2SharedSecret in /root/Casper/Casper-Code/.env + /etc/caspervpn/secrets.env + brain FreeRADIUS rest conf + brain /etc/ipsec.secrets, then 'docker compose up -d --no-deps api scheduler push' (no --env-file/override = the 24 Sep blank-secret trap), and only LOGS 'MANUAL: rotate on the other nodes'. Code: BandwidthController.cs:80 checks SERVER_API_KEY from the fleet; Radius:ApiKey gates RadiusAuthController/ServersController; Ikev2SharedSecret is served to apps (VpnServerService.cs:1374). Fleet-side breakage = hypothesis from code, not run."
         }
       ],
       "progress": 0,
@@ -50888,7 +50908,8 @@
       "ageDays": 0,
       "needsRelease": false,
       "lifecycle": "active",
-      "notes": "[ENGINEERING run 2026-10-09 i, 2026-10-09T08:07:54Z] CLAIMED by this run (fix on development + READY TO SHIP row; nothing on the live server without CEO YES). Measured 08:1xZ: cause confirmed on the main server. || "
+      "notes": "[ENGINEERING run 2026-10-09 i, 2026-10-09T08:14:13Z] DONE on development ec61b19 -> CEO card row 178 (READY TO SHIP) + QA. MEASURED: (1) file mode 100644 in git and on the server, crontab line 10, log = 'Permission denied' only; (2) the old wrapper did 'git reset --hard origin/production' on /root/Casper/Casper-Code (the deploy clone, 0 tracked edits / 37 untracked today) - so a plain chmod would have moved the deploy clone every Monday without a deploy; (3) under set -e the failing probe ended the script before the alert; (4) the alert used fetch_dashboard (dead PAT); (5) run from the brain, 3 of 8 probes are false-red (root SSH to itself refused). FIX: own clone /opt/caspervpn/reality-repo, REALITY_LOCAL=1 local docker probes, exit code captured, failure = one RealityProbeFailed alert to the local Alertmanager. TEST on the main server (throwaway clone /root/reports/eng1009i-reality): 8/8 pass exit 0; control wrong container -> exit 1 + alert payload built (REALITY_NO_ALERT=1, not sent); missing clone -> exit 3. Deploy clone HEAD unchanged 102ad92ad. Nothing installed. || [ENGINEERING run 2026-10-09 i, 2026-10-09T08:07:54Z] CLAIMED by this run (fix on development + READY TO SHIP row; nothing on the live server without CEO YES). Measured 08:1xZ: cause confirmed on the main server. || ",
+      "blocker": "Waits for CEO YES on ceo-action-backlog row 178"
     },
     {
       "id": "xd-1588",
@@ -50907,7 +50928,8 @@
       "ageDays": 0,
       "needsRelease": false,
       "lifecycle": "active",
-      "notes": "[ENGINEERING run 2026-10-09 i, 2026-10-09T08:07:54Z] CLAIMED by this run (fix on development + READY TO SHIP row; nothing on the live server without CEO YES). Measured 08:1xZ: cause confirmed on the main server. || "
+      "notes": "[ENGINEERING run 2026-10-09 i, 2026-10-09T08:14:13Z] READ, not run: the script would rotate 6 keys on the main server only and recreate api/scheduler/push with a plain compose up - see CEO card row 179 (DECISION, advice: switch the cron line off, design a fleet-wide rotation). Do NOT create /var/log/caspervpn (that arms it for 1 Nov 03:00Z). Lynis warning (sweep 4 Oct, index 66): not done this run. || [ENGINEERING run 2026-10-09 i, 2026-10-09T08:07:54Z] CLAIMED by this run (fix on development + READY TO SHIP row; nothing on the live server without CEO YES). Measured 08:1xZ: cause confirmed on the main server. || ",
+      "blocker": "Waits for CEO decision on ceo-action-backlog row 179"
     },
     {
       "id": "xd-1589",
@@ -51042,6 +51064,18 @@
       "status": "pending",
       "priority": "P2",
       "createdAt": "2026-10-09T07:19:24Z",
+      "createdDate": "2026-10-09",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1598",
+      "from": "[DEVOPS]",
+      "to": "[QA]",
+      "title": "Handoff from DEVOPS: Check xd-1587 (weekly reality probes) on development ec61b19",
+      "description": "development ec61b19: scripts/reality-probes-weekly.sh (mode 755, own clone, local Alertmanager alert) + tools/reality_probes.py (REALITY_LOCAL=1). Re-run on the main server in a throwaway clone: git clone --shared /root/Casper/Casper-Code /root/reports/qa-reality/repo, put the two files from origin/development in it, commit on branch production, set origin to itself, then REALITY_REPO=<clone> REALITY_NO_ALERT=1 scripts/reality-probes-weekly.sh -> exit_code=0 and 8 passed; control REALITY_API_CONTAINER=nope -> exit 1 + 'would send'. PASS -> CEO card row 178 ready for YES. Evidence of the dev run: /root/reports/eng1009i-reality/t1.log t2.log t3.log.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-09T08:14:13Z",
       "createdDate": "2026-10-09",
       "completedDate": null
     }
