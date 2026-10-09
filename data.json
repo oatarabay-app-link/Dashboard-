@@ -13243,7 +13243,7 @@
           "addedBy": "[DEVOPS] engineering run 1009j",
           "test": "READY TO SHIP \u2014 the daily 'connections by country' report puts each failed connection under the country the person really logs in from \u00b7 why: today it files failures under the country set in the phone, so a user in Iran whose phone says 'US' made the US look blocked and hid Iran's problem \u00b7 tested: run read-only on today's real data - the 14 failures move from a 'US' row with no users to the Iran row (3 sessions, phone setting 'US' shown next to it), every other country is unchanged, total failures 25 before and after \u00b7 ships together with row 175 (same file, one copy) \u00b7 rollback: put back the previous file from git (one copy command); it only reads data, it changes nothing. Advice: YES.",
           "verify": "ssh main server after install: diff <(git -C /root/Casper/Casper-Code show origin/production:infrastructure/scripts/connectivity_report.sh) /opt/caspervpn/connectivity_report.sh -> empty; next 05:00Z report: grep -c phone_regions /root/reports/connectivity-latest.txt -> 1, and no row with users=0, sessions=0 and failures>0 whose phone_regions differs from cc",
-          "evidence": "[ENGINEERING run 2026-10-09 j, 2026-10-09T09:18:30Z] added; development 111bd1f (xd-1585), on top of 6ae39cd (row 175, xd-1582). Test: /root/reports/eng1009j/old.txt vs new.txt (read-only SQL from the old and new script, 09:13Z). Ship (after YES on 175 and this row): cherry-pick -x 6ae39cd 111bd1f to production, then copy infrastructure/scripts/connectivity_report.sh from production git to /opt/caspervpn/ (cron unchanged), then -> [QA]."
+          "evidence": "[QA 2026-10-09 k, scheduled] QA re-ran the new report read-only on real data: the 14 failures move from a 'US' row to Iran (phone setting 'US' shown), every other country unchanged, total 25 = 25. Ready for your YES (met stays false until you answer). || [ENGINEERING run 2026-10-09 j, 2026-10-09T09:18:30Z] added; development 111bd1f (xd-1585), on top of 6ae39cd (row 175, xd-1582). Test: /root/reports/eng1009j/old.txt vs new.txt (read-only SQL from the old and new script, 09:13Z). Ship (after YES on 175 and this row): cherry-pick -x 6ae39cd 111bd1f to production, then copy infrastructure/scripts/connectivity_report.sh from production git to /opt/caspervpn/ (cron unchanged), then -> [QA]."
         }
       ],
       "progress": 0,
@@ -14068,19 +14068,20 @@
       "acceptanceCriteria": [
         {
           "test": "Free tier copy says 0.5 GB on all 5 core pages and the full free-plan limits (0.5 GB, 3 locations, 3 devices) on /pricing, /faq and /free-vpn; no '2 GB', no '500MB/day' (re-worded 5 Oct by [MARKETING], xd-1380: CEO 3 Oct no-numbers rule)",
-          "met": false,
-          "passed": false,
-          "verifiedBy": "none",
-          "verifiedDate": "2026-09-29",
-          "verifiedAt": "2026-09-20T20:50:39Z",
-          "evidence": "[GROWTH run 2026-10-09 j, 2026-10-09T09:11:49Z, MARKETING re-measure from the CEO Mac, browser UA + ?cb=, not ticked - QA ticks] STILL FAILS AS PHRASED: '3 locations' = 0 on / and /download (pricing 1, faq 4, free-vpn 10); but '0.5 GB' is now on all 5 pages (/ 3, /pricing 2, /faq 8, /free-vpn 20, /download 1) and '2 GB'/'500MB/day' = 0. Marketing advice: RE-WORD the row to '0.5 GB a month + 3 devices on all 5 core pages' (true now) instead of adding a location count to more pages - the CEO's 3 Oct rule is 'no server or country numbers'. QA to decide (re-word or hand [WEBSITE] the copy). || [FAIL] QA 2026-09-29, as phrased the row still fails (same as QA 2026-09-21): of the 5 core pages, /download has no free-tier copy (0 '0.5 GB', 0 '3 locations') and / says '0.5 GB every month' but not '3 locations'; /pricing, /faq and /free-vpn carry both. '2 GB' and '500MB/day' = 0 on all 105 sitemap pages (the only '500MB-2GB' is about other free VPNs on /guides/free-vpn-risks). Un-ticked. -> [MARKETING]: add the copy to / and /download or re-word the row. | was: QA 2026-09-21: NOT upgraded \u2014 as phrased the row fails: /download carries no free-tier copy ('0.5 GB' 0, '3 locations' 0) and / has no '3 locations'; '2 GB' 0 and '500MB/day' 0 on all 5 pages; '0.5 GB' on 4/5, '3 (server) locations' on 3/5. Rephrase to 'wherever the free tier is described' or add the copy, then hand back to [QA]. | prior: 2026-09-20: origin curl of / /pricing /faq /free-vpn /download: '2GB'=0 on every page; '0.5GB' present (1/2/8/23/0).",
-          "verifiedByDept": "marketing",
-          "qaVerdict": "FAIL",
-          "qaDate": "2026-09-29",
-          "verify": "for p in / /pricing /faq /free-vpn /download; do curl -s https://www.caspervpn.com$p | grep -c '3 [Ll]ocations'; done -> >= 1 each",
-          "verifiedByRaw": "qa-sweep-2026-09-29-fail",
+          "met": true,
+          "passed": true,
+          "verifiedBy": "tested",
+          "verifiedDate": "2026-10-09",
+          "verifiedAt": "2026-10-09T10:20:00Z",
+          "evidence": "[PASS] [QA 2026-10-09 k, scheduled] Measured as the row is phrased NOW (re-worded 5 Oct; the old verify column still asked for '3 locations' on all 5 pages - replaced, old kept in verifyOriginal). Live www.caspervpn.com 10:1xZ, visible text (scripts skipped), browser UA + cache-bust: '0.5 GB' / 3 / 2 / 2 / 6 / 1 on / /pricing /faq /free-vpn /download (all 5 >= 1); '3 locations' 1/1/4 and '3 devices' 10/1/2 on /pricing /faq /free-vpn; '2 GB' = 0 and '500MB/day' = 0 on all 5. Control: page sizes 45-96 kB (full pages). || [GROWTH run 2026-10-09 j, 2026-10-09T09:11:49Z, MARKETING re-measure from the CEO Mac, browser UA + ?cb=, not ticked - QA ticks] STILL FAILS AS PHRASED: '3 locations' = 0 on / and /download (pricing 1, faq 4, free-vpn 10); but '0.5 GB' is now on all 5 pages (/ 3, /pricing 2, /faq 8, /free-vpn 20, /download 1) and '2 GB'/'500MB/day' = 0. Marketing advice: RE-WORD the row to '0.5 GB a month + 3 devices on all 5 core pages' (true now) instead of adding a location count to more pages - the CEO's 3 Oct rule is 'no server or country numbers'. QA to decide (re-word or hand [WEBSITE] the copy). || [FAIL] QA 2026-09-29, as phrased the row still fails (same as QA 2026-09-21): of the 5 core pages, /download has no free-tier copy (0 '0.5 GB', 0 '3 locations') and / says '0.5 GB every month' but not '3 locations'; /pricing, /faq and /free-vpn carry both. '2 GB' and '500MB/day' = 0 on all 105 sitemap pages (the only '500MB-2GB' is about other free VPNs on /guides/free-vpn-risks). Un-ticked. -> [MARKETING]: add the copy to / and /download or re-word the row. | was: QA 2026-09-21: NOT upgraded \u2014 as phrased the row fails: /download carries no free-tier copy ('0.5 GB' 0, '3 locations' 0) and / has no '3 locations'; '2 GB' 0 and '500MB/day' 0 on all 5 pages; '0.5 GB' on 4/5, '3 (server) locations' on 3/5. Rephrase to 'wherever the free tier is described' or add the copy, then hand back to [QA]. | prior: 2026-09-20: origin curl of / /pricing /faq /free-vpn /download: '2GB'=0 on every page; '0.5GB' present (1/2/8/23/0).",
+          "verifiedByDept": "qa",
+          "qaVerdict": "PASS",
+          "qaDate": "2026-10-09",
+          "verify": "for p in / /pricing /faq /free-vpn /download: visible text grep -ci '0\\.5 ?GB' >=1 each; on /pricing /faq /free-vpn also '3 (server )?locations' >=1 and '3 (simultaneous )?devices' >=1; '\\b2 ?GB' and '500 ?MB ?/ ?day' = 0 on all 5",
+          "verifiedByRaw": "qa",
           "testPrevious": "Free tier copy says 0.5 GB / 3 locations on all 5 core pages; no '2 GB', no '500MB/day'",
-          "autoTickReverted": "2026-10-07 growth x: auto-ticked by session_exit at 23:54Z 6 Oct (board 2c61c1337), restored"
+          "autoTickReverted": "2026-10-07 growth x: auto-ticked by session_exit at 23:54Z 6 Oct (board 2c61c1337), restored",
+          "verifyOriginal": "for p in / /pricing /faq /free-vpn /download; do curl -s https://www.caspervpn.com$p | grep -c '3 [Ll]ocations'; done -> >= 1 each"
         },
         {
           "test": "App Store description and promotional text carry no quantum claim, no '2 GB', no speed figures",
@@ -14099,18 +14100,19 @@
         },
         {
           "test": "Zero unqualified 'quantum' mentions on every public page (each mention carries 'coming soon')",
-          "met": false,
-          "passed": false,
-          "verifiedBy": "none",
-          "verifiedDate": "2026-09-29",
-          "verifiedAt": "2026-09-20T22:28:58Z",
-          "evidence": "[GROWTH run 2026-10-09 j, 2026-10-09T09:11:49Z, MARKETING re-measure from the CEO Mac, browser UA + ?cb=, not ticked - QA ticks] PASSES NOW on live: /guides/vpn-encryption-explained 'remains safe even when quantum' = 0 and 'quantum' = 0 in the page body; /blog/quantum-encryption-explained and /blog/protonvpn-vs-caspervpn answer 404 (unpublished). Left over: the guide's <title>/og:title still names 'Kyber1024' while the body never mentions it (SEO mismatch, not a present-tense claim). Re-run the row's verify + the 105-page sitemap quantum count, then tick. || [FAIL] QA 2026-09-29 (all 105 sitemap pages): 3 pages still make an unqualified present-tense quantum claim about CasperVPN: /guides/vpn-encryption-explained ('Your data encrypted today remains safe even when quantum computers arrive'), /blog/quantum-encryption-explained ('This means connections are protected against both current and future quantum threats' and 'giving users the choice to optimize for ... quantum-resistant security') and /blog/protonvpn-vs-caspervpn ('post-quantum-ready obfuscation'). Other mentions are qualified or generic education. Un-ticked. -> [MARKETING]. | was: 2026-09-20: Website: 105 copy edits shipped (ab1de453 + c6e2e82c) and read-verified from the origin on 16 pages \u2014 no present-tense 'CasperCloak uses/implements/has Kyber' sentence remains; every CasperVPN quantum claim carries coming soon / being added / will use; regex residuals are row labels whose values read 'Coming soon' and generic PQC education. Store screenshot + app onboarding tracked separately (AC7). QA re-audit \u2192 xd-928.",
-          "verifiedByDept": "marketing",
-          "qaVerdict": "FAIL",
-          "qaDate": "2026-09-29",
-          "verify": "grep -i 'remains safe even when quantum' on https://www.caspervpn.com/guides/vpn-encryption-explained -> 0",
-          "verifiedByRaw": "qa-sweep-2026-09-29-fail",
-          "autoTickReverted": "2026-10-07 growth x: auto-ticked by session_exit at 23:54Z 6 Oct (board 2c61c1337), restored"
+          "met": true,
+          "passed": true,
+          "verifiedBy": "tested",
+          "verifiedDate": "2026-10-09",
+          "verifiedAt": "2026-10-09T10:20:00Z",
+          "evidence": "[PASS] [QA 2026-10-09 k, scheduled] Crawled all 82 sitemap URLs on live (all 200, 10:0xZ): 'quantum' = 0 in the visible text AND 0 in the raw HTML of every page (so no unqualified mention anywhere). The 2 removed posts /blog/quantum-encryption-explained and /blog/protonvpn-vs-caspervpn answer 404 (27 kB not-found page). Control: '0.5 GB' found 27x across the same crawl, so the text extraction works. Note: sitemap has 82 URLs today vs 106 on 27 Sep (posts unpublished). Left over, not a claim: /guides/vpn-encryption-explained <title>/og:title still say 'Kyber1024' -> SEO tidy-up only. || [GROWTH run 2026-10-09 j, 2026-10-09T09:11:49Z, MARKETING re-measure from the CEO Mac, browser UA + ?cb=, not ticked - QA ticks] PASSES NOW on live: /guides/vpn-encryption-explained 'remains safe even when quantum' = 0 and 'quantum' = 0 in the page body; /blog/quantum-encryption-explained and /blog/protonvpn-vs-caspervpn answer 404 (unpublished). Left over: the guide's <title>/og:title still names 'Kyber1024' while the body never mentions it (SEO mismatch, not a present-tense claim). Re-run the row's verify + the 105-page sitemap quantum count, then tick. || [FAIL] QA 2026-09-29 (all 105 sitemap pages): 3 pages still make an unqualified present-tense quantum claim about CasperVPN: /guides/vpn-encryption-explained ('Your data encrypted today remains safe even when quantum computers arrive'), /blog/quantum-encryption-explained ('This means connections are protected against both current and future quantum threats' and 'giving users the choice to optimize for ... quantum-resistant security') and /blog/protonvpn-vs-caspervpn ('post-quantum-ready obfuscation'). Other mentions are qualified or generic education. Un-ticked. -> [MARKETING]. | was: 2026-09-20: Website: 105 copy edits shipped (ab1de453 + c6e2e82c) and read-verified from the origin on 16 pages \u2014 no present-tense 'CasperCloak uses/implements/has Kyber' sentence remains; every CasperVPN quantum claim carries coming soon / being added / will use; regex residuals are row labels whose values read 'Coming soon' and generic PQC education. Store screenshot + app onboarding tracked separately (AC7). QA re-audit \u2192 xd-928.",
+          "verifiedByDept": "qa",
+          "qaVerdict": "PASS",
+          "qaDate": "2026-10-09",
+          "verify": "for u in $(curl -s https://www.caspervpn.com/sitemap.xml | grep -o '<loc>[^<]*' | sed 's/<loc>//'); do curl -s $u | grep -ci quantum; done -> 0 on every URL",
+          "verifiedByRaw": "qa",
+          "autoTickReverted": "2026-10-07 growth x: auto-ticked by session_exit at 23:54Z 6 Oct (board 2c61c1337), restored",
+          "verifyOriginal": "grep -i 'remains safe even when quantum' on https://www.caspervpn.com/guides/vpn-encryption-explained -> 0"
         },
         {
           "test": "'10 Devices' and 'Dedicated IP Included' removed from / and /pricing (real: 3 devices; Dedicated IP is a $7.99 add-on)",
@@ -14147,11 +14149,11 @@
           "verifiedBy": "none",
           "verifiedDate": "2026-09-29",
           "verifiedAt": "",
-          "evidence": "[GROWTH run 2026-10-09 j, 2026-10-09T09:11:49Z, MARKETING re-measure from the CEO Mac, browser UA + ?cb=, not ticked - QA ticks] PASSES NOW on live: /llms.txt line 7 'Devices: 3 simultaneous devices on every plan, free and paid.' and line 10 'Free plan: 0.5 GB of data per month, 3 devices, 3 server locations'. Re-run the verify, then tick. || [FAIL] QA 2026-09-29: 3 of 4 places agree on 3 devices for every plan, free included - app code (SubscriptionManager.swift:63 '3 Devices', :1563 maxDevices 3; CEO decision 2026-09-24), database (Plans.MaxDevices = 3 on every plan), website (/pricing Free card '3 Devices', /faq 'Free and every Premium plan: up to 3 devices'). NOT met: /llms.txt (read by AI answer engines) still says 'Devices: 1 on the free plan, 3 simultaneous devices on every paid plan'. -> [MARKETING] | was: 2026-09-21: 3 devices now stated identically on the website, llms.txt, PUBLIC-FACTS sheet and in the DB (Plans.MaxDevices=3 on all paid plans); ASC 4.3 descriptions carry no device count. Still open: IAP 'Lifetime Premium' description '10 devices' (xd-932 [iOS]) and app code 5/6/10 (xd-892). Ticks when those two match.",
-          "verifiedByRaw": "qa-sweep-2026-09-29-fail",
+          "evidence": "[FAIL] [QA 2026-10-09 k, scheduled] Consumer plans agree everywhere: app SubscriptionManager.swift L63-119 '3 Devices' on origin/production b309862e4 and origin/development a3b942c25; DB Plans.MaxDevices = 3 on Free, Weekly, Monthly, 6-Month, Yearly, Lifetime, Free Trial, Business; /llms.txt L7 '3 simultaneous devices on every plan, free and paid'; /pricing '3 Devices'. NOT identical: the ENTERPRISE plan - DB Plans 'Enterprise' IsActive=t MaxDevices=25 (since 2025-12-31, 0 subscriptions) and the public GET api.caspervpn.com/api/plans returns 'Enterprise 25'; the website /pricing Enterprise card says 'Unlimited Devices'; /llms.txt says 3 on EVERY plan. Three different answers for one plan. CORRECTION: QA's 29 Sep line 'Plans.MaxDevices = 3 on every plan' was wrong - the Enterprise rows (25) existed then. -> [MARKETING] handoff (decide Enterprise wording once; Product/Backend if the number changes). || [GROWTH run 2026-10-09 j, 2026-10-09T09:11:49Z, MARKETING re-measure from the CEO Mac, browser UA + ?cb=, not ticked - QA ticks] PASSES NOW on live: /llms.txt line 7 'Devices: 3 simultaneous devices on every plan, free and paid.' and line 10 'Free plan: 0.5 GB of data per month, 3 devices, 3 server locations'. Re-run the verify, then tick. || [FAIL] QA 2026-09-29: 3 of 4 places agree on 3 devices for every plan, free included - app code (SubscriptionManager.swift:63 '3 Devices', :1563 maxDevices 3; CEO decision 2026-09-24), database (Plans.MaxDevices = 3 on every plan), website (/pricing Free card '3 Devices', /faq 'Free and every Premium plan: up to 3 devices'). NOT met: /llms.txt (read by AI answer engines) still says 'Devices: 1 on the free plan, 3 simultaneous devices on every paid plan'. -> [MARKETING] | was: 2026-09-21: 3 devices now stated identically on the website, llms.txt, PUBLIC-FACTS sheet and in the DB (Plans.MaxDevices=3 on all paid plans); ASC 4.3 descriptions carry no device count. Still open: IAP 'Lifetime Premium' description '10 devices' (xd-932 [iOS]) and app code 5/6/10 (xd-892). Ticks when those two match.",
+          "verifiedByRaw": "qa-run-2026-10-09k-fail",
           "qaVerdict": "FAIL",
-          "qaDate": "2026-09-29",
-          "verify": "curl -s https://www.caspervpn.com/llms.txt | grep -i 'free plan' -> 3 devices",
+          "qaDate": "2026-10-09",
+          "verify": "ssh main: psql caspervpn -c 'select \"Name\",\"MaxDevices\",\"IsActive\" from \"Plans\"'; curl -s https://api.caspervpn.com/api/plans (maxDevices per plan); visible text of /pricing Enterprise card; curl -s https://www.caspervpn.com/llms.txt | grep -i device -> one device number per plan, same in all",
           "autoTickReverted": "2026-10-07 growth x: auto-ticked by session_exit at 23:54Z 6 Oct (board 2c61c1337), restored"
         },
         {
@@ -14183,22 +14185,22 @@
         },
         {
           "test": "No page states a server or country count other than 12 servers / 11 countries",
-          "met": false,
-          "passed": false,
-          "verifiedBy": "none",
-          "verifiedDate": "2026-09-30",
-          "verifiedAt": "2026-09-21T06:30:00Z",
-          "evidence": "[GROWTH run 2026-10-09 j, 2026-10-09T09:11:49Z, MARKETING re-measure from the CEO Mac, browser UA + ?cb=, not ticked - QA ticks] PASSES NOW on live: /free-vpn '5 Server Locations' = 0 (verify -> 0); the page says '3 locations' 10x and 0.5 GB 20x; no 'N servers / N countries' string on /, /pricing, /faq, /free-vpn, /download (CEO 3 Oct no-count rule). Re-run the verify, then tick. || [FAIL] QA 2026-09-30: /free-vpn shows a hero tile '5 Server Locations' (website/app/free-vpn/page.tsx:171 { stat: '5', label: 'Server Locations' }) while the same page says '3 Server Locations' twice (page.tsx:101, :264) and production has 3 free servers (Singapore, Los Angeles, Dusseldorf). All other pages: 12 servers / 11 countries. Added to xd-1153 [MARKETING]. | prior: QA sweep 2026-09-21: public, 24 pages: the only N-servers/N-countries strings attributed to CasperVPN are 12 servers / 11 countries and '3 server locations' (free tier); '13 servers', '12 countries', '5+ locations' = 0 hits. | prior: 2026-09-20: Origin after deploy: /compare/nordvpn CasperVPN cell '12 servers \u00b7 11 countries', /compare/expressvpn '11 countries'; '5+ locations/countries' 0 hits on all 13 pages; /best-vpn numbers are competitors' only. | 2026-09-21: /servers and / stat tiles now read 12 \u00b7 11 \u00b7 5 protocols \u00b7 5 continents ('10 Gbps' and 'uptime' tiles removed, f67246b2); public-URL verified.",
+          "met": true,
+          "passed": true,
+          "verifiedBy": "tested",
+          "verifiedDate": "2026-10-09",
+          "verifiedAt": "2026-10-09T10:20:00Z",
+          "evidence": "[PASS] [QA 2026-10-09 k, scheduled] Crawled all 82 sitemap URLs on live: no page states a CasperVPN server or country count (CEO 3 Oct no-count rule; the brand side reads 'Global network'). Every 'N servers / N countries' hit is a competitor figure: /compare/expressvpn '105 countries' (ExpressVPN column), /best-vpn '5,500+ servers in 60+ countries' (NordVPN) and '3,000+ servers' (ExpressVPN), /compare/nordvpn '6,400+ servers' (NordVPN). '3 server locations' on /free-vpn and /pricing = the free plan's locations, not a fleet count. '5 Server Locations' on /free-vpn = 0. || [GROWTH run 2026-10-09 j, 2026-10-09T09:11:49Z, MARKETING re-measure from the CEO Mac, browser UA + ?cb=, not ticked - QA ticks] PASSES NOW on live: /free-vpn '5 Server Locations' = 0 (verify -> 0); the page says '3 locations' 10x and 0.5 GB 20x; no 'N servers / N countries' string on /, /pricing, /faq, /free-vpn, /download (CEO 3 Oct no-count rule). Re-run the verify, then tick. || [FAIL] QA 2026-09-30: /free-vpn shows a hero tile '5 Server Locations' (website/app/free-vpn/page.tsx:171 { stat: '5', label: 'Server Locations' }) while the same page says '3 Server Locations' twice (page.tsx:101, :264) and production has 3 free servers (Singapore, Los Angeles, Dusseldorf). All other pages: 12 servers / 11 countries. Added to xd-1153 [MARKETING]. | prior: QA sweep 2026-09-21: public, 24 pages: the only N-servers/N-countries strings attributed to CasperVPN are 12 servers / 11 countries and '3 server locations' (free tier); '13 servers', '12 countries', '5+ locations' = 0 hits. | prior: 2026-09-20: Origin after deploy: /compare/nordvpn CasperVPN cell '12 servers \u00b7 11 countries', /compare/expressvpn '11 countries'; '5+ locations/countries' 0 hits on all 13 pages; /best-vpn numbers are competitors' only. | 2026-09-21: /servers and / stat tiles now read 12 \u00b7 11 \u00b7 5 protocols \u00b7 5 continents ('10 Gbps' and 'uptime' tiles removed, f67246b2); public-URL verified.",
           "verifiedByDept": "qa",
           "verify": "curl -s https://caspervpn.com/free-vpn | sed 's/<[^>]*>/ /g' | grep -c '5 Server Locations' -> 0",
-          "qaVerdict": "FAIL",
-          "qaDate": "2026-09-30",
+          "qaVerdict": "PASS",
+          "qaDate": "2026-10-09",
           "verifiedByPrevious": "tested",
-          "verifiedByRaw": "qa-sweep-2026-09-30-fail",
+          "verifiedByRaw": "qa",
           "autoTickReverted": "2026-10-07 growth x: auto-ticked by session_exit at 23:54Z 6 Oct (board 2c61c1337), restored"
         }
       ],
-      "status": "PARTIAL \u2014 QA 2026-09-30 sweep: 4 of 9 met, 4 QA-tested (today: FAIL 1, PASS 2) | PARTIAL \u2014 QA 2026-09-29 sweep: 5 of 9 met, 5 QA-tested (FAIL 3, NOT LIVE 1, PASS 2) | PARTIAL \u2014 QA 2026-09-29: 1 more row QA-tested (price ladder). | 2026-09-23 [MARKETING] T-7 to launch: 5/9 criteria met. Evidence refreshed today for every unmet row; ticking is [QA]'s under the golden rule. Gate review Mon 28 Sep 18:00 Beirut.",
+      "status": "PARTIAL \u2014 QA 2026-10-09 k: 7 of 9 met, 7 QA-tested (today PASS 3: rows 0, 2, 8; FAIL 1: row 5 Enterprise device count; NOT LIVE 1: row 6 App Store screenshot) | PARTIAL \u2014 QA 2026-09-30 sweep: 4 of 9 met, 4 QA-tested (today: FAIL 1, PASS 2) | PARTIAL \u2014 QA 2026-09-29 sweep: 5 of 9 met, 5 QA-tested (FAIL 3, NOT LIVE 1, PASS 2) | PARTIAL \u2014 QA 2026-09-29: 1 more row QA-tested (price ladder). | 2026-09-23 [MARKETING] T-7 to launch: 5/9 criteria met. Evidence refreshed today for every unmet row; ticking is [QA]'s under the golden rule. Gate review Mon 28 Sep 18:00 Beirut.",
       "progress": 56,
       "blocked": false,
       "blocker": "",
@@ -18436,13 +18438,13 @@
       "name": "QA & Testing",
       "status": "red",
       "lead": "QA Lead (AI)",
-      "currentTask": "2026-10-09 [QA] run j (09:1xZ): 3 tasks \u00b7 1/13 criteria met \u00b7 open P0 to QA 9 \u00b7 open to QA 30",
+      "currentTask": "2026-10-09 [QA] run k (10:2xZ): 3 tasks \u00b7 1/13 criteria met \u00b7 open P0 to QA 9 \u00b7 open to QA 31",
       "blockers": "9",
       "completion": "8",
-      "lastActivity": "2026-10-09T09:15:00Z",
+      "lastActivity": "2026-10-09T10:20:00Z",
       "launchCompletion": "0",
-      "lastTriggered": "2026-10-09T09:15:00Z",
-      "notes": "2026-10-09 [QA] re-based at exit (run j): blockers = open P0 handoffs (xd-1476, xd-1490, xd-1492, xd-1493, xd-1536, xd-1547, xd-1555, xd-1573, xd-1575); counts pending+in_progress only (consolidated excluded). | 2026-10-09 [QA] re-based at exit (run i): blockers = open P0 handoffs (xd-1476, xd-1490, xd-1492, xd-1493, xd-1536, xd-1547, xd-1555, xd-1573, xd-1575); counts pending+in_progress only (consolidated excluded). | 2026-10-09 [QA] re-based at exit (run h): blockers = open P0 handoffs (xd-1476, xd-1490, xd-1492, xd-1493, xd-1536, xd-1547, xd-1555, xd-1573, xd-1575, xd-1594); counts pending+in_progress only (consolidated excluded). | 2026-10-09 [QA] re-based at exit (run g): blockers = open P0 handoffs (xd-1476, xd-1490, xd-1492, xd-1493, xd-1536, xd-1547, xd-1555, xd-1573, xd-1575); counts pending+in_progress only (consolidated excluded). | 2026-10-09 [QA] re-based at exit (run f): blockers = open P0 handoffs (xd-1476, xd-1490, xd-1492, xd-1493, xd-1536, xd-1547, xd-1555, xd-1573, xd-1575); counts pending+in_progress only (consolidated excluded). | 2026-10-09 [QA] re-based at exit (run e): blockers = open P0 handoffs (xd-1476, xd-1490, xd-1492, xd-1493, xd-1536, xd-1547, xd-1555, xd-1573, xd-1575); counts pending+in_progress only (consolidated excluded). | 2026-10-09 [QA] re-based at exit (run d): blockers = open P0 handoffs (xd-1476, xd-1490, xd-1492, xd-1493, xd-1536, xd-1547, xd-1555, xd-1573, xd-1575); counts pending+in_progress only (consolidated excluded). | 2026-10-09 [QA] re-based at exit (run c): blockers = open P0 handoffs (xd-1476, xd-1490, xd-1492, xd-1493, xd-1536, xd-1547, xd-1555, xd-1573); counts pending+in_progress only (consolidated excluded, as runs a/b) | 2026-10-09 [QA] re-based at exit (run b): blockers = open P0 handoffs (xd-1476, xd-1490, xd-1492, xd-1493, xd-1536, xd-1547, xd-1555). | 2026-10-09 [QA] run a second push: xd-1553 closed PASS. | 2026-10-09 [QA] re-based at exit (run a): blockers = open P0 handoffs (xd-1476, xd-1490, xd-1492, xd-1493, xd-1536, xd-1547). | 2026-10-08 [QA] re-based at exit (run am): blockers = open P0 handoffs (xd-1476, xd-1490, xd-1492, xd-1493, xd-1536). | 2026-10-08 [QA] run ak second push: open P0 to QA = xd-1476, xd-1490, xd-1492, xd-1493; open to QA 13. | 2026-10-08 [QA] re-based at exit (run ak): blockers = open P0 handoffs (xd-1476, xd-1490, xd-1492, xd-1493). | 2026-10-08 [QA] re-based at exit (run al): blockers = open P0 handoffs (xd-1476, xd-1490, xd-1492, xd-1493, xd-1495, xd-1498). | 2026-10-08 [QA] re-based at exit (run aj): blockers = open P0 handoffs (xd-1476, xd-1490, xd-1492, xd-1493, xd-1495, xd-1498). | 2026-10-07 [QA] run ai second push: open P0 to QA = xd-1476, xd-1490, xd-1492, xd-1493, xd-1495, xd-1498. | 2026-10-07 [QA] re-based at exit (run ai): blockers = open P0 handoffs (xd-1476, xd-1490, xd-1492, xd-1493, xd-1495, xd-1498, xd-1515). | 2026-10-07 [QA] re-based at exit (run ah): blockers = open P0 handoffs (xd-1476, xd-1490, xd-1492, xd-1493, xd-1495, xd-1498). | 2026-10-07 [QA] re-based at exit (run a): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run r): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run q): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run p): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run o): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run n): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run m): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run l): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run k): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run j): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run i): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run h): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run g): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run f): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run e): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run d): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run c): blockers = open P0 handoffs (xd-1164, xd-1222); xd-1395 closed. | 2026-10-06 ["
+      "lastTriggered": "2026-10-09T10:20:00Z",
+      "notes": "2026-10-09 [QA] re-based at exit (run k): blockers = open P0 handoffs (xd-1476, xd-1490, xd-1492, xd-1493, xd-1536, xd-1547, xd-1555, xd-1573, xd-1575); counts pending+in_progress only (consolidated excluded). | 2026-10-09 [QA] re-based at exit (run j): blockers = open P0 handoffs (xd-1476, xd-1490, xd-1492, xd-1493, xd-1536, xd-1547, xd-1555, xd-1573, xd-1575); counts pending+in_progress only (consolidated excluded). | 2026-10-09 [QA] re-based at exit (run i): blockers = open P0 handoffs (xd-1476, xd-1490, xd-1492, xd-1493, xd-1536, xd-1547, xd-1555, xd-1573, xd-1575); counts pending+in_progress only (consolidated excluded). | 2026-10-09 [QA] re-based at exit (run h): blockers = open P0 handoffs (xd-1476, xd-1490, xd-1492, xd-1493, xd-1536, xd-1547, xd-1555, xd-1573, xd-1575, xd-1594); counts pending+in_progress only (consolidated excluded). | 2026-10-09 [QA] re-based at exit (run g): blockers = open P0 handoffs (xd-1476, xd-1490, xd-1492, xd-1493, xd-1536, xd-1547, xd-1555, xd-1573, xd-1575); counts pending+in_progress only (consolidated excluded). | 2026-10-09 [QA] re-based at exit (run f): blockers = open P0 handoffs (xd-1476, xd-1490, xd-1492, xd-1493, xd-1536, xd-1547, xd-1555, xd-1573, xd-1575); counts pending+in_progress only (consolidated excluded). | 2026-10-09 [QA] re-based at exit (run e): blockers = open P0 handoffs (xd-1476, xd-1490, xd-1492, xd-1493, xd-1536, xd-1547, xd-1555, xd-1573, xd-1575); counts pending+in_progress only (consolidated excluded). | 2026-10-09 [QA] re-based at exit (run d): blockers = open P0 handoffs (xd-1476, xd-1490, xd-1492, xd-1493, xd-1536, xd-1547, xd-1555, xd-1573, xd-1575); counts pending+in_progress only (consolidated excluded). | 2026-10-09 [QA] re-based at exit (run c): blockers = open P0 handoffs (xd-1476, xd-1490, xd-1492, xd-1493, xd-1536, xd-1547, xd-1555, xd-1573); counts pending+in_progress only (consolidated excluded, as runs a/b) | 2026-10-09 [QA] re-based at exit (run b): blockers = open P0 handoffs (xd-1476, xd-1490, xd-1492, xd-1493, xd-1536, xd-1547, xd-1555). | 2026-10-09 [QA] run a second push: xd-1553 closed PASS. | 2026-10-09 [QA] re-based at exit (run a): blockers = open P0 handoffs (xd-1476, xd-1490, xd-1492, xd-1493, xd-1536, xd-1547). | 2026-10-08 [QA] re-based at exit (run am): blockers = open P0 handoffs (xd-1476, xd-1490, xd-1492, xd-1493, xd-1536). | 2026-10-08 [QA] run ak second push: open P0 to QA = xd-1476, xd-1490, xd-1492, xd-1493; open to QA 13. | 2026-10-08 [QA] re-based at exit (run ak): blockers = open P0 handoffs (xd-1476, xd-1490, xd-1492, xd-1493). | 2026-10-08 [QA] re-based at exit (run al): blockers = open P0 handoffs (xd-1476, xd-1490, xd-1492, xd-1493, xd-1495, xd-1498). | 2026-10-08 [QA] re-based at exit (run aj): blockers = open P0 handoffs (xd-1476, xd-1490, xd-1492, xd-1493, xd-1495, xd-1498). | 2026-10-07 [QA] run ai second push: open P0 to QA = xd-1476, xd-1490, xd-1492, xd-1493, xd-1495, xd-1498. | 2026-10-07 [QA] re-based at exit (run ai): blockers = open P0 handoffs (xd-1476, xd-1490, xd-1492, xd-1493, xd-1495, xd-1498, xd-1515). | 2026-10-07 [QA] re-based at exit (run ah): blockers = open P0 handoffs (xd-1476, xd-1490, xd-1492, xd-1493, xd-1495, xd-1498). | 2026-10-07 [QA] re-based at exit (run a): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run r): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run q): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run p): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run o): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run n): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run m): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run l): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run k): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run j): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run i): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run h): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run g): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run f): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run e): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run d): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run c): blockers = open P0 handoffs (xd-1164, xd-1222); xd-1395 closed. | 2026-10-06 ["
     },
     "legal": {
       "name": "Legal & Compliance",
@@ -51150,11 +51152,17 @@
       "to": "[QA]",
       "title": "Handoff from MARKETING: Handoff from MARKETING: gtm-01-claims-true rows 2, 5, 8 now pass on the live site - re-run and tick; row 0 re-word advice",
       "description": "Growth run 2026-10-09 j re-measured the unmet rows of gtm-01-claims-true on the live site (from the CEO's Mac, browser UA, cache-bust). Rows 2 (quantum guide/blog), 5 (llms.txt devices) and 8 (/free-vpn '5 Server Locations') now PASS their own verify commands - evidence is on each row. Row 0 still fails as phrased ('3 locations' missing on / and /download) - Marketing advises re-wording it to '0.5 GB a month + 3 devices on all 5 core pages' (true now) because of the CEO's 3 Oct no-numbers rule; QA decides. Row 6 stays NOT LIVE until a new App Store version ships (xd-1534/xd-1545). Control: the 2 removed blog posts answer 404 with a 27 kB not-found page while live pages are 45-96 kB, so the fetch was not truncated.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-10-09T09:12:02Z",
       "createdDate": "2026-10-09",
-      "completedDate": null
+      "completedDate": "2026-10-09",
+      "notes": "[QA 2026-10-09 k, scheduled] rows 0, 2, 8 PASS and ticked (verifiedBy=tested, evidence + verify on each row). Row 0: measured against the row's CURRENT wording (5 Oct re-word) - it passes; the stale verify column was replaced. Row 5 NOT ticked: FAIL on the Enterprise plan (DB/API 25 vs website 'Unlimited' vs llms.txt 3) -> xd-1604 [MARKETING]. Row 6 stays NOT LIVE (App Store screenshot, waits on a new version).",
+      "completedBy": "[QA]",
+      "resolution": "PASS 3 rows (0, 2, 8); row 5 FAILED -> xd-1604",
+      "qaVerdict": "PARTIAL - 3 PASS, 1 FAIL",
+      "qaDate": "2026-10-09T10:20:00Z",
+      "resultingHandoff": "xd-1604 to [MARKETING]"
     },
     {
       "id": "xd-1601",
@@ -51162,11 +51170,16 @@
       "to": "[QA]",
       "title": "Handoff from DEVOPS: Check xd-1599: 2 Hong Kong reserve IPs are on Spamhaus PBL only (not SBL/XBL); xd-1375 row corrected",
       "description": "MEASURED 09:09Z from the main server (dig, read-only): 27.0.232.216 and 27.0.232.217 answer 127.0.0.10 on zen AND on pbl.spamhaus.org, and NOTHING on sbl, xbl or sbl-xbl. Controls 2.0.0.127 answer on every zone (zen .2/.4/.10, pbl .10, sbl .2, xbl .4) = lookups work. Reading: both are on the Spamhaus PBL only (the ISP marks the range as end-user space that should not send mail directly) - a policy listing, not an abuse/spam/malware listing. Not checked on the spamhaus.org web page (a scheduled run cannot pass its browser check); the pbl zone answer is the same data. Advice: do NOT keep these two as the reserves (some sites treat any ZEN hit as bad); pick the 1 EU + 1 US reserves from the 20 with no answer on any zone. Verify: on the main server, for each of 27.0.232.216/.217 reverse the octets and dig +short <rev>.pbl.spamhaus.org / .sbl.spamhaus.org / .xbl.spamhaus.org -> 127.0.0.10 / empty / empty; control 2.0.0.127 answers on all three. Read xd-1375 notes for the correction line. Then close xd-1599.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-10-09T09:18:40Z",
       "createdDate": "2026-10-09",
-      "completedDate": null
+      "completedDate": "2026-10-09",
+      "notes": "[QA 2026-10-09 k, scheduled] PASS, re-run from the main server 10:11Z (dig +short, read-only): 27.0.232.216 and 27.0.232.217 -> zen 127.0.0.10, pbl 127.0.0.10, sbl empty, xbl empty, sbl-xbl empty. Control 2.0.0.127 -> zen .2/.10/.4, pbl .10, sbl .2, xbl .4, sbl-xbl .2/.4 (every zone answers). Reading confirmed: PBL (policy, end-user range) only, no abuse listing. The xd-1375 notes carry the correction line (engineering run j 09:18Z). Advice stands: keep the 2 reserves from the other 20.",
+      "completedBy": "[QA]",
+      "resolution": "PASS",
+      "qaVerdict": "PASS",
+      "qaDate": "2026-10-09T10:20:00Z"
     },
     {
       "id": "xd-1602",
@@ -51174,11 +51187,15 @@
       "to": "[QA]",
       "title": "Handoff from DEVOPS: Check xd-1585 on development 111bd1f: connectivity report keys failures by login country",
       "description": "Run the PER COUNTRY / FAILURE CATEGORIES SQL from development 111bd1f read-only (or diff /root/reports/eng1009j/old.txt new.txt): no row with users=0, sessions=0, failures>0 whose phone_regions differs from cc; total failures equal old vs new; other countries unchanged. CEO card row 181 (ships with row 175). Then tick or hand back to [DEVOPS].",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P2",
       "createdAt": "2026-10-09T09:18:40Z",
       "createdDate": "2026-10-09",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[QA 2026-10-09 k, scheduled] DEV LEG PASS, independent re-run on the main server 10:12:21Z: SQL extracted from origin/production (installed, md5 a0d78efd) and from 111bd1f52 (md5 b9bf1746 = origin/development), each wrapped in BEGIN/ROLLBACK, same minute; pg_class internal_ids after = 0. (1) No row with users=0, sessions=0, failures>0: new PER COUNTRY = IR 1 user/3 sessions/14 failures phone_regions=US BLOCKED?, CA, AE, LB, RU, DE; old had 'US 1/44/14 BLOCKED?' (the 44 sessions are the internal account, removed by xd-1582 in the same file) + 'IR 1/3/0 idle'. (2) Total failures 25 = 25 (14+8+2+1). (3) CA 1/3/8 FAILING, AE 1/32/2, LB 2/21/1, RU, DE identical; FAILURE CATEGORIES identical with phone_region shown; TELEMETRY v2 7-d total 188 = 188, coverage 45/0/92/188 identical. Evidence /root/reports/qa1009k/{production,dev}.{sql,txt}. Production leg waits on the CEO YES (card rows 175 + 181, one copy) and the next 05:00Z report.",
+      "qaVerdict": "PARTIAL - dev PASS, production pending CEO YES rows 175+181 + install + next 05:00Z report",
+      "qaDate": "2026-10-09T10:20:00Z",
+      "waitingOn": "CEO YES on ceo-action-backlog rows 175 + 181 (one file) + the next 05:00Z report"
     },
     {
       "id": "xd-1603",
@@ -51191,9 +51208,32 @@
       "createdAt": "2026-10-09T10:11:54Z",
       "createdDate": "2026-10-09",
       "completedDate": null
+    },
+    {
+      "id": "xd-1604",
+      "from": "[QA]",
+      "to": "[MARKETING]",
+      "title": "Handoff from QA: [QA FAILED] gtm-01-claims-true row 5: the Enterprise plan has 3 different device counts (DB/API 25, website 'Unlimited', llms.txt 3 on every plan)",
+      "description": "[QA 2026-10-09 k, scheduled] Re-measured row 5 'Device count per plan decided once and identical in app, database and website'. All consumer plans say 3 everywhere (app code, DB, /pricing, /llms.txt). The Enterprise plan does not: DB Plans 'Enterprise' IsActive=true MaxDevices=25 (0 subscriptions) and public GET https://api.caspervpn.com/api/plans returns maxDevices 25; the /pricing Enterprise card says 'Unlimited Devices'; /llms.txt L7 says '3 simultaneous devices on every plan'. Ask: decide the Enterprise wording once (e.g. 'custom / contact us' with no number on the site + llms.txt 'every consumer plan'), and if the number itself changes route the DB/API row to [BACKEND] with a CEO row. Then back to [QA] with the verify on the row.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-09T10:14:01Z",
+      "createdDate": "2026-10-09",
+      "completedDate": null,
+      "relatedTask": "gtm-01-claims-true"
     }
   ],
   "importantNotes": [
+    {
+      "id": "note-qa-20261009k",
+      "date": "2026-10-09",
+      "createdAt": "2026-10-09T10:20:00Z",
+      "dept": "[QA]",
+      "priority": "P2",
+      "resolved": false,
+      "title": "[QA run k 9 Oct] Website claims: 3 more rows pass; the Enterprise plan shows 3 different device numbers",
+      "text": "Bad news first: the Enterprise plan says 25 devices in our system, 'Unlimited' on the pricing page and 3 in the file AI tools read - sent back to Marketing. Passed today on the live site: the free plan text is right on all 5 main pages, no page mentions 'quantum', and no page gives a server or country count. The two Hong Kong spare addresses are only on a mail 'home internet' list, not a spam list - confirmed. The fixed country report was re-run on real data and is ready for your yes."
+    },
     {
       "id": "note-qa-20261009j",
       "date": "2026-10-09",
