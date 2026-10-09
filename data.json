@@ -13379,6 +13379,16 @@
           "verifiedAt": "2026-10-09T23:13:24Z",
           "qaVerdict": "PASS",
           "qaDate": "2026-10-09T23:13:24Z"
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "addedAt": "2026-10-09T23:15:21Z",
+          "addedBy": "[DEVOPS] engineering run 1009-2304",
+          "test": "READY TO SHIP \u2014 if a crypto payment notice from NOWPayments is turned away by our website, the admin Operations page now shows it within the hour (a yellow 'warn' line), instead of nobody knowing \u00b7 why: NOWPayments does not send a turned-away notice again, so a customer who paid can stay 'pending' (this happened on 1 Oct) \u00b7 what changes: the hourly crypto job also counts turned-away notices and writes one line to the Operations page every hour (also shows if the hourly job itself stops) \u00b7 tested on dev: development 436110189, all three outcomes tested on the main server with stand-ins, nothing written to production \u00b7 rollback: put back the previous script from git (one copy command).",
+          "verify": "On the main server after ship: diff -q /opt/caspervpn/crypto_renewals_run.sh <(git -C /root/Casper/Casper-Code show origin/production:infrastructure/scripts/crypto_renewals_run.sh) = same; bash /opt/caspervpn/crypto_renewals_run.sh --scan-only prints rejected=...total; after the next :07 run: select \"Status\",\"Summary\" from \"RoutineRuns\" where \"Routine\"='crypto-renewals' order by \"RanAt\" desc limit 1 -> 1 row, status ok (or warn with counts).",
+          "evidence": "[ENGINEERING run 2026-10-09 2304, 2026-10-09T23:15:21Z] added for xd-1232 (c). development 436110189 (infrastructure/scripts/crypto_renewals_run.sh only, bash -n OK). Tested on the main server in /root/reports/eng1009-2304 without touching production: (A) control fixture with 2 bad-signature + 1 unknown-order lines -> scan reads signature 2, unknownOrder 1, total 3; (B) real production website container log, scan-only (read-only) -> total 0 (the container holds 0 [nowpayments-webhook] lines since its 16:22Z start); (C) full path with a stub docker + RoutineRuns INSERT into a throwaway postgres:16-alpine: 3 rows warn(rej 3)/ok(rej 0)/fail(rc 1), Details valid jsonb; control: production RoutineRuns rows named crypto-renewals = 0 (nothing written). Proof file /root/reports/eng1009-2304/proof.txt was removed at cleanup; numbers quoted here. Limit: container log lines are lost on a website container recreate, so a rejection in the same hour as a website deploy can be missed. Finding while measuring: the website nginx logs (25 Sep - 9 Oct) carry 0 requests to the webhook path, so nginx is not an instrument for this - the container log is. Install after YES (from git, never hand-edit): cherry-pick 436110189 to production, then git -C /root/Casper/Casper-Code fetch -q origin && git -C /root/Casper/Casper-Code show origin/production:infrastructure/scripts/crypto_renewals_run.sh > /opt/caspervpn/crypto_renewals_run.sh (cron line unchanged, :07 hourly). Rollback: same command with the previous commit 8679c616f."
         }
       ],
       "progress": 0,
@@ -43709,7 +43719,7 @@
       "needsRelease": true,
       "qaNote": "[QA 2026-10-08 ak ~22:18Z, scheduled] 7-day rule: past dueBy 2026-10-08T15:20 - close with evidence, hand back with a blocker, or defer with reason + revisit date (a P1 is never deferred silently).",
       "triageReason": "dueBy 2026-10-08 passed: close, hand back, or plan a month",
-      "notes": "[ENGINEERING run 2026-10-09 2304, 2026-10-09T23:08:05Z] CLAIMED item (c): rejected NOWPayments notices -> a RoutineRuns row, built on development now (unattended run; development only, no production change). Other runs: stay off item (c) until this note says done. || [ENGINEERING run 2026-10-09 h, 2026-10-09T07:20Z] TRIAGE (d) active, due 16 Oct. State: (a) receipt mail SHIPPED (CEO card row 85, waits for the first finished crypto order to prove it). Next concrete step: (c) a RoutineRuns row when the NOWPayments webhook answers 401/404 - build on development next engineering run. (b) status re-check needs the NOWPayments login token on the website container - only the CEO can add it; if no token by 16 Oct, split (b) into its own deferred row."
+      "notes": "[ENGINEERING run 2026-10-09 2304, 2026-10-09T23:15:21Z] item (c) DONE on development, NOT on production: the hourly crypto pass script now counts NOWPayments notices the website rejected in the last 65 min and writes one RoutineRuns row 'crypto-renewals' (ok / warn when >=1 rejected / fail when the pass does not answer 200). development 436110189 (infrastructure/scripts/crypto_renewals_run.sh only, bash -n OK). Tested on the main server in /root/reports/eng1009-2304 without touching production: (A) control fixture with 2 bad-signature + 1 unknown-order lines -> scan reads signature 2, unknownOrder 1, total 3; (B) real production website container log, scan-only (read-only) -> total 0 (the container holds 0 [nowpayments-webhook] lines since its 16:22Z start); (C) full path with a stub docker + RoutineRuns INSERT into a throwaway postgres:16-alpine: 3 rows warn(rej 3)/ok(rej 0)/fail(rc 1), Details valid jsonb; control: production RoutineRuns rows named crypto-renewals = 0 (nothing written). Proof file /root/reports/eng1009-2304/proof.txt was removed at cleanup; numbers quoted here. Limit: container log lines are lost on a website container recreate, so a rejection in the same hour as a website deploy can be missed. Finding while measuring: the website nginx logs (25 Sep - 9 Oct) carry 0 requests to the webhook path, so nginx is not an instrument for this - the container log is. Next: QA on the stub test, then CEO YES on the READY TO SHIP row (install from git + one manual --scan-only). Still open on this row: (b) needs the NOWPayments login token (CEO), due 16 Oct. Claim released. || [ENGINEERING run 2026-10-09 2304, 2026-10-09T23:08:05Z] CLAIMED item (c): rejected NOWPayments notices -> a RoutineRuns row, built on development now (unattended run; development only, no production change). Other runs: stay off item (c) until this note says done. || [ENGINEERING run 2026-10-09 h, 2026-10-09T07:20Z] TRIAGE (d) active, due 16 Oct. State: (a) receipt mail SHIPPED (CEO card row 85, waits for the first finished crypto order to prove it). Next concrete step: (c) a RoutineRuns row when the NOWPayments webhook answers 401/404 - build on development next engineering run. (b) status re-check needs the NOWPayments login token on the website container - only the CEO can add it; if no token by 16 Oct, split (b) into its own deferred row."
     },
     {
       "id": "xd-1233",
@@ -51753,6 +51763,19 @@
       "completedBy": "[QA]",
       "resolution": "PASSED on production (3 of 4 legs; leg 4 card click waits for the signed-in browser pass xd-1494)",
       "resultingHandoff": "none new - card click stays on xd-1494; trial-to-paying move re-read after 13 Oct by the next QA run"
+    },
+    {
+      "id": "xd-1623",
+      "from": "[DEVOPS]",
+      "to": "[QA]",
+      "title": "Handoff from DEVOPS: Check xd-1232 (c): hourly crypto job reports rejected NOWPayments notices to RoutineRuns (development 436110189)",
+      "description": "What: infrastructure/scripts/crypto_renewals_run.sh on development 436110189 counts '[nowpayments-webhook] Signature mismatch' / 'Unknown order_id' / 'NOWPAYMENTS_IPN_SECRET is not set' lines in the website container log (last 65 min) and writes RoutineRuns 'crypto-renewals' ok/warn/fail. How to check without touching production: copy the script to a scratch folder on the main server; (1) CRYPTO_WEBHOOK_LOG_FILE=<fixture with 2 mismatch + 1 unknown-order lines> bash script --scan-only -> total 3; (2) bash script --scan-only on the real container -> a number, no row written; (3) PATH=<folder with a stub docker that answers exec with '200 {...}'> RECORD_RUN=<stub INSERT into a throwaway postgres:16-alpine> -> warn/ok/fail rows, Details valid jsonb; control: production count of Routine='crypto-renewals' stays 0. Then the CEO card READY TO SHIP row (crypto notices turned away) waits for the CEO's YES. Task ref xd-1232.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-09T23:15:26Z",
+      "createdDate": "2026-10-09",
+      "completedDate": null,
+      "taskRef": "xd-1232"
     }
   ],
   "importantNotes": [
