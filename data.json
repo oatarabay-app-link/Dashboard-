@@ -13140,6 +13140,14 @@
           "addedAt": "2026-10-09T01:28:05Z",
           "addedBy": "[CTO] live chat 2026-10-09 (cloudflare-exit owner)",
           "evidence": "[CTO live chat 2026-10-09 01:16-01:5xZ (04:xx Beirut), owner of cloudflare-exit-phase1] added for cloudflare-exit crit index 4. Why it works today: restricted_countries LB = 3 (Advisory) -> ServersController.cs:1155-1167 sends no Cloudflare wiring -> the app dials the server's CasperCloakDomain s6.pompesh.com (DNS-only A 91.194.84.79 = the direct front)."
+        },
+        {
+          "test": "READY TO SHIP \u2014 SupportTickets: the two 'closed/resolved' date columns get a proper database migration \u00b7 why: they were added by hand on 9 Oct (your yes), so a rebuilt database would break ticket closing again \u00b7 tested on dev: migration applied 01:36Z, build 0 errors, 209/209 tests, control fails without it \u00b7 rollback: none needed - on production it changes nothing (columns already there); it ships with the next backend deploy",
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "verify": "production DB: select 1 from \"__EFMigrationsHistory\" where \"MigrationId\"='20261009000000_SupportTicketTimestamps' -> 1 after the ship; columns unchanged (2)",
+          "evidence": "[ENGINEERING run 2026-10-09 b, 2026-10-09T01:39:50Z] added; development 4e53185c9; xd-1561; QA xd-1572. Board advice: yes - zero risk, ride along with the next backend ship."
         }
       ],
       "progress": 0,
@@ -49983,12 +49991,14 @@
       "from": "[CTO]",
       "to": "[BACKEND]",
       "title": "Handoff from CTO: Put the SupportTickets ResolvedAt/ClosedAt columns into a migration (production got them by hand on 9 Oct)",
-      "description": "[ENGINEERING run 2026-10-09 b, 2026-10-09T01:07:40Z] CLAIMED: writing the idempotent migration on development now (second parallel firing; ships nothing). Other runs: leave this row. || [ENGINEERING run 2026-10-08 d, 2026-10-09T00:48:44Z] CEO YES 9 Oct: production SupportTickets had no ResolvedAt / ClosedAt although AdminSupportController.UpdateStatus (raw SQL, line ~268) writes them, so every admin status change failed with 42703 since the feature shipped (26 open, 7 in progress, 0 ever closed). Added by hand on production 00:4xZ (timestamptz NULL, as on the test server). TODO on development: an idempotent migration (ADD COLUMN IF NOT EXISTS, same style as 20261008000000_ScreenExitAndProbeNulls) so a rebuilt database has them; on production it is a no-op. Also check other raw-SQL columns the code writes but no migration creates (grep ExecuteSqlRaw / SqlQueryRaw column names vs information_schema).",
-      "status": "in_progress",
+      "description": "[ENGINEERING run 2026-10-09 b, 2026-10-09T01:39:50Z] DONE on development: development 4e53185c9 (1 commit, 2 files): new migration 20261009000000_SupportTicketTimestamps (idempotent: creates SupportTickets/SupportMessages in their exact production shape if missing - production shape read from information_schema 9 Oct - then ADD COLUMN IF NOT EXISTS ResolvedAt/ClosedAt) + SupportTicketsController.EnsureTablesAsync CREATE TABLE now has both columns. Why both: the support tables were only ever created at request time (EnsureTablesAsync), never by a migration, so a migration alone would run before the table exists on a rebuilt DB. PROOF: throwaway postgres:16 on the brain - T1 fresh DB -> 14 columns incl. both; T2 re-run no-op; T3 old shape (no cols, no SupportMessages) -> both added; T4 the admin UPDATE (COALESCE ResolvedAt/ClosedAt) succeeds; T5 CONTROL: same UPDATE without the columns fails 'column ClosedAt does not exist'; T6 Down+Up round trip. dotnet build -c Release 0 errors; dotnet test 209/209. DEV: before dev API 01:02:34Z, __EFMigrationsHistory row = 0; after redeploy 01:36:46Z log 'Applying migration 20261009000000_SupportTicketTimestamps', row = 1, /health 200. Audit asked in this row: every UPDATE ... SET / INSERT INTO (cols) column in raw SQL of 17 backend files vs production information_schema = 0 missing; the only identifiers absent from the schema are aliases (Count, Value, NeedsTriage) and index names. Production: no-op, nothing changed there by this run. || [ENGINEERING run 2026-10-09 b, 2026-10-09T01:07:40Z] CLAIMED: writing the idempotent migration on development now (second parallel firing; ships nothing). Other runs: leave this row. || [ENGINEERING run 2026-10-08 d, 2026-10-09T00:48:44Z] CEO YES 9 Oct: production SupportTickets had no ResolvedAt / ClosedAt although AdminSupportController.UpdateStatus (raw SQL, line ~268) writes them, so every admin status change failed with 42703 since the feature shipped (26 open, 7 in progress, 0 ever closed). Added by hand on production 00:4xZ (timestamptz NULL, as on the test server). TODO on development: an idempotent migration (ADD COLUMN IF NOT EXISTS, same style as 20261008000000_ScreenExitAndProbeNulls) so a rebuilt database has them; on production it is a no-op. Also check other raw-SQL columns the code writes but no migration creates (grep ExecuteSqlRaw / SqlQueryRaw column names vs information_schema).",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-10-09T00:48:49Z",
       "createdDate": "2026-10-09",
-      "completedDate": null
+      "completedDate": null,
+      "completedBy": "[BACKEND]",
+      "completedAt": "2026-10-09T01:39:50Z"
     },
     {
       "id": "xd-1562",
@@ -50120,6 +50130,19 @@
       "createdAt": "2026-10-09T01:36:34Z",
       "createdDate": "2026-10-09",
       "completedDate": null
+    },
+    {
+      "id": "xd-1572",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: Check xd-1561 on dev: SupportTickets ResolvedAt/ClosedAt migration (development 4e53185c9)",
+      "description": "Verify on the dev DB: select 1 from \"__EFMigrationsHistory\" where \"MigrationId\"='20261009000000_SupportTicketTimestamps' (expect 1); select count(*) from information_schema.columns where table_name='SupportTickets' and column_name in ('ResolvedAt','ClosedAt') (expect 2). Optional: on admin.dev change a test ticket's status to closed -> no 42703 in caspervpn-dev-api logs. Proof so far: development 4e53185c9 (1 commit, 2 files): new migration 20261009000000_SupportTicketTimestamps (idempotent: creates SupportTickets/SupportMessages in their exact production shape if missing - production shape read from information_schema 9 Oct - then ADD COLUMN IF NOT EXISTS ResolvedAt/ClosedAt) + SupportTicketsController.EnsureTablesAsync CREATE TABLE now has both columns. Why both: the support tables were only ever created at request time (EnsureTablesAsync), never by a migration, so a migration alone would run before the table exists on a rebuilt DB. PROOF: throwaway postgres:16 on the brain - T1 fresh DB -> 14 columns incl. both; T2 re-run no-op; T3 old shape (no cols, no SupportMessages) -> both added; T4 the admin UPDATE (COALESCE ResolvedAt/ClosedAt) succeeds; T5 CONTROL: same UPDATE without the columns fails 'column ClosedAt does not exist'; T6 Down+Up round trip. dotnet build -c Release 0 errors; dotnet test 209/209. DEV: before dev API 01:02:34Z, __EFMigrationsHistory row = 0; after redeploy 01:36:46Z log 'Applying migration 20261009000000_SupportTicketTimestamps', row = 1, /health 200. Audit asked in this row: every UPDATE ... SET / INSERT INTO (cols) column in raw SQL of 17 backend files vs production information_schema = 0 missing; the only identifiers absent from the schema are aliases (Count, Value, NeedsTriage) and index names. Production: no-op, nothing changed there by this run.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-09T01:39:54Z",
+      "createdDate": "2026-10-09",
+      "completedDate": null,
+      "taskRef": "xd-1561"
     }
   ],
   "importantNotes": [
