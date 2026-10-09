@@ -13224,6 +13224,16 @@
           "verify": "ssh main server: crontab -l | grep -c rotate-secrets -> 0 (or the line starts with #); ls /var/log/caspervpn -> absent until the new job exists",
           "addedBy": "[SECURITY] engineering run 1009i",
           "evidence": "[ENGINEERING run 2026-10-09 i, 2026-10-09T08:14:13Z] added for xd-1588. Measured: crontab '0 3 1 * * /root/rotate-secrets.sh >> /var/log/caspervpn/secret-rotation.log' + /var/log/caspervpn absent -> never started. Script read (values never printed): rotates Radius__ApiKey, SERVER_API_KEY, PUSH_API_KEY, PROBE_API_KEY, SCHEDULER_API_KEY, LiveVpnServer__Ikev2SharedSecret in /root/Casper/Casper-Code/.env + /etc/caspervpn/secrets.env + brain FreeRADIUS rest conf + brain /etc/ipsec.secrets, then 'docker compose up -d --no-deps api scheduler push' (no --env-file/override = the 24 Sep blank-secret trap), and only LOGS 'MANUAL: rotate on the other nodes'. Code: BandwidthController.cs:80 checks SERVER_API_KEY from the fleet; Radius:ApiKey gates RadiusAuthController/ServersController; Ikev2SharedSecret is served to apps (VpnServerService.cs:1374). Fleet-side breakage = hypothesis from code, not run."
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "addedAt": "2026-10-09T08:16:34Z",
+          "addedBy": "[DEVOPS] engineering run 1009i",
+          "test": "READY TO SHIP \u2014 bring back the code map tool on the main server and make it repair itself \u00b7 why: every session is told to use it, but it has been broken since 7 Oct, and its nightly refresh has failed every night since, so the map is also getting old \u00b7 how: build the tool again (one small download, run gently on one processor) and add one line to its nightly job that rebuilds it whenever it is missing \u00b7 tested: nothing to test on the test copy - it is a helper for our sessions only, it serves no customer \u00b7 rollback: delete the tool and the one line; no customer service is touched",
+          "verify": "ssh main server: docker image inspect casper-codegraph >/dev/null && echo OK; codegraph query SupportTickets -> prints nodes; next 23:30Z: tail -3 /var/log/codegraph.log has no 'Unable to find image'",
+          "evidence": "[ENGINEERING run 2026-10-09 i, 2026-10-09T08:16:34Z] added for xd-1574 / xd-1445 / xd-1589. Install after YES: nice -n 19 taskset -c 1 docker build -t casper-codegraph /opt/codegraph (Dockerfile = python:3.12-slim + pip graphifyy); add to the top of /opt/codegraph/rebuild.sh after 'set -e': 'docker image inspect casper-codegraph >/dev/null 2>&1 || nice -n 19 docker build -q -t casper-codegraph /opt/codegraph' (backup first). Board advice: yes - tooling only."
         }
       ],
       "progress": 0,
@@ -18347,7 +18357,7 @@
       "name": "Backend API",
       "status": "red",
       "lead": "Dev Team",
-      "currentTask": "2026-10-09 CEO office re-base (06:4xZ): 30 tasks \u00b7 106/158 criteria met \u00b7 open P0 to BACKEND 3",
+      "currentTask": "2026-10-09 engineering run i re-base (08:16Z): 30 tasks \u00b7 106/158 criteria met \u00b7 open P0 to BACKEND 3",
       "blockers": "3",
       "completion": "67",
       "launchCompletion": "68",
@@ -18364,7 +18374,7 @@
       "name": "DevOps & Infra",
       "status": "red",
       "lead": "Unassigned",
-      "currentTask": "2026-10-09 CEO office re-base (06:4xZ): 31 tasks \u00b7 86/205 criteria met \u00b7 open P0 to DEVOPS 3",
+      "currentTask": "2026-10-09 engineering run i re-base (08:16Z): 31 tasks \u00b7 86/205 criteria met \u00b7 open P0 to DEVOPS 3",
       "blockers": "3",
       "completion": "42",
       "progress": 98,
@@ -18403,7 +18413,7 @@
       "name": "Website",
       "status": "yellow",
       "lead": "Dev Team",
-      "currentTask": "2026-10-09 CEO office re-base (06:4xZ): 8 tasks \u00b7 28/46 criteria met \u00b7 open P0 to WEBSITE 0",
+      "currentTask": "2026-10-09 engineering run i re-base (08:16Z): 8 tasks \u00b7 28/46 criteria met \u00b7 open P0 to WEBSITE 0",
       "blockers": "0",
       "completion": "61",
       "launchCompletion": "61",
@@ -18465,7 +18475,7 @@
       "name": "CTO Office",
       "status": "yellow",
       "lead": "Waqar",
-      "currentTask": "2026-10-09 CEO office re-base (06:4xZ): 46 tasks \u00b7 169/272 criteria met \u00b7 open P0 to CTO 4",
+      "currentTask": "2026-10-09 engineering run i re-base (08:16Z): 46 tasks \u00b7 169/272 criteria met \u00b7 open P0 to CTO 4",
       "blockers": "4",
       "completion": "62",
       "launchCompletion": "63",
@@ -48040,13 +48050,14 @@
       "createdAt": "2026-10-07T04:26:47Z",
       "createdDate": "2026-10-07",
       "completedDate": null,
-      "notes": "[CEO office 2026-10-07T11:49:59Z] Not the cause of the run stall (xd-1450). Still down (apps run ab 10:0xZ: 'Unable to find image casper-codegraph:latest'). DevOps works only through the engineering run, which has not started since 5 Oct -> this waits on xd-1450.",
+      "notes": "[ENGINEERING run 2026-10-09 i, 2026-10-09T08:16:34Z] MEASURED: the prune hypothesis is NOT proven - 'untagged: casper-codegraph' appears 0 times in /var/log/docker-prune.log (4 untagged lines in total, all the CI test-reporter image) and 0 times in /var/log/caspervpn-disk-guard.log; cause of the removal still unknown. NEW: the nightly code-graph rebuild (/opt/codegraph/rebuild.sh, 23:30Z) fails with the same 'Unable to find image', so the code part of the map is also stale. Fix that works whatever the cause: rebuild + a self-heal line in rebuild.sh -> CEO card row 180 (READY TO SHIP). Side finding for xd-1485: the 04:00Z 'docker system prune -af' removes ghcr.io/enricomi/publish-unit-test-result-action:v2.24.0 (prune log), the image the CI step needs. || [CEO office 2026-10-07T11:49:59Z] Not the cause of the run stall (xd-1450). Still down (apps run ab 10:0xZ: 'Unable to find image casper-codegraph:latest'). DevOps works only through the engineering run, which has not started since 5 Oct -> this waits on xd-1450.",
       "category": "infra-fleet",
       "ageDays": 2,
       "lifecycle": "active",
       "updatedAt": "2026-10-07T22:20:00Z",
       "triageNote": "[QA 2026-10-07 ah ~22:15Z, scheduled] Still down at 22:09Z: 'codegraph query' on the brain -> 'Unable to find image casper-codegraph:latest locally ... pull access denied'.",
-      "needsRelease": false
+      "needsRelease": false,
+      "blocker": "Waits for CEO YES on ceo-action-backlog row 180"
     },
     {
       "id": "xd-1446",
@@ -48909,7 +48920,7 @@
       "createdAt": "2026-10-07T20:39:10Z",
       "createdDate": "2026-10-07",
       "completedDate": null,
-      "notes": "[ENGINEERING run 2026-10-07 e, 2026-10-07T21:01:49Z] fix on development 96aff2d25; the development CI run had not reached the backend job by 21:01Z (runner queue). QA xd-1487 checks the next run; after a green run, cherry-pick to production (CI file only). | [ENGINEERING run 2026-10-07 e, 2026-10-07T20:56:25Z] fix on development 96aff2d25 (.github/workflows/ci.yml: composite /linux variant of the test-report action, no image pull); watching the development CI run - another session leave this to run e. | ",
+      "notes": "[ENGINEERING run 2026-10-09 i, 2026-10-09T08:16:34Z] SIDE FINDING (not worked): /var/log/docker-prune.log shows the 04:00Z 'docker system prune -af --filter until=24h' untagging ghcr.io/enricomi/publish-unit-test-result-action:v2.24.0 (twice) - the CI step's image is deleted by our own nightly clean-up. || [ENGINEERING run 2026-10-07 e, 2026-10-07T21:01:49Z] fix on development 96aff2d25; the development CI run had not reached the backend job by 21:01Z (runner queue). QA xd-1487 checks the next run; after a green run, cherry-pick to production (CI file only). | [ENGINEERING run 2026-10-07 e, 2026-10-07T20:56:25Z] fix on development 96aff2d25 (.github/workflows/ci.yml: composite /linux variant of the test-report action, no image pull); watching the development CI run - another session leave this to run e. | ",
       "category": "infra-fleet",
       "ageDays": 2,
       "needsRelease": false,
@@ -50670,12 +50681,13 @@
       "createdAt": "2026-10-09T02:12:56Z",
       "createdDate": "2026-10-09",
       "completedDate": null,
-      "notes": "[QA 2026-10-09 d ~03:1xZ, scheduled] Still broken 03:06Z: `docker images | grep codegraph` = none; `codegraph query SupportTickets` -> 'pull access denied for casper-codegraph' rc 125. Graph files unchanged (graph-all.json 8 Oct 23:45Z). || ",
+      "notes": "[ENGINEERING run 2026-10-09 i, 2026-10-09T08:16:34Z] MEASURED: the prune hypothesis is NOT proven - 'untagged: casper-codegraph' appears 0 times in /var/log/docker-prune.log (4 untagged lines in total, all the CI test-reporter image) and 0 times in /var/log/caspervpn-disk-guard.log; cause of the removal still unknown. NEW: the nightly code-graph rebuild (/opt/codegraph/rebuild.sh, 23:30Z) fails with the same 'Unable to find image', so the code part of the map is also stale. Fix that works whatever the cause: rebuild + a self-heal line in rebuild.sh -> CEO card row 180 (READY TO SHIP). Side finding for xd-1485: the 04:00Z 'docker system prune -af' removes ghcr.io/enricomi/publish-unit-test-result-action:v2.24.0 (prune log), the image the CI step needs. || [QA 2026-10-09 d ~03:1xZ, scheduled] Still broken 03:06Z: `docker images | grep codegraph` = none; `codegraph query SupportTickets` -> 'pull access denied for casper-codegraph' rc 125. Graph files unchanged (graph-all.json 8 Oct 23:45Z). || ",
       "updatedAt": "2026-10-09T03:09:44Z",
       "category": "infra-fleet",
       "ageDays": 0,
       "needsRelease": false,
-      "lifecycle": "active"
+      "lifecycle": "active",
+      "blocker": "Waits for CEO YES on ceo-action-backlog row 180"
     },
     {
       "id": "xd-1575",
@@ -50951,7 +50963,8 @@
       "category": "trust-legal",
       "ageDays": 0,
       "needsRelease": false,
-      "lifecycle": "active"
+      "lifecycle": "active",
+      "notes": "[ENGINEERING run 2026-10-09 i, 2026-10-09T08:16:34Z] codegraph part: see xd-1574 (prune hypothesis not proven by the prune logs; row 180). Disk part not worked this run. || "
     },
     {
       "id": "xd-1590",
