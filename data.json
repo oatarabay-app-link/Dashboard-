@@ -13327,6 +13327,16 @@
           "test": "SHIPPED 2026-10-09 19:16Z (awaiting QA xd-1616) \u00b7 CEO YES 2026-10-09 (engineering run 1009-1728 chat: 'Yez row 189') READY TO SHIP \u2014 stop the main server's disk from filling up on busy days \u00b7 why: every time we update the app's server or website, the old copy stays on the disk for a full day; on 9 Oct that was 31 old copies (3.7 GB) and free space fell to 5 GB (the warning is at 8 GB; at 0 the server stops) \u00b7 how: one extra cleaning step every 3 hours that removes only old copies nothing uses and that are more than 6 hours old; the copies we keep for an emergency undo are never touched \u00b7 tested: the list of what it would remove was read on the live server (22 old copies, 2.3 GB, none in use, none of the undo copies); nothing was removed yet \u00b7 rollback: delete the one line",
           "verify": "ssh main server: md5sum /etc/cron.d/caspervpn-disk-guard = git production infrastructure/scripts/caspervpn-disk-guard.cron; after the next :15 run: grep -c 'Total reclaimed' /var/log/caspervpn-disk-guard.log grows; docker images -f dangling=true shows none older than 6 h; Prometheus min free space on / stays > 8 GB for 3 days",
           "evidence": "[ENGINEERING run 2026-10-09 1728, CEO live, 2026-10-09T19:16:46Z] SHIPPED 19:16Z: production 3a53154 = cherry-pick -x of development 9b1aefa ONLY ([skip ci], 1 file, +10 lines); /etc/cron.d/caspervpn-disk-guard md5 68462273 -> 765fc3e5 = production git; backup /root/backups/caspervpn-disk-guard.bak-row189-20261009T191601Z; cron active. Manual first run 19:17Z with the exact cron command: free space 6.8 GB -> 9.5 GB, 'Total reclaimed space: 2.809GB', untagged images 35 -> 11, tagged image set unchanged (hash 51f6352b4234 before = after; api rollback-202610090039/0029/082233 still present); api/health, caspervpn.com, admin all 200 after. Still to prove (QA xd-1616): the scheduled 21:15Z run writes 'Total reclaimed' in /var/log/caspervpn-disk-guard.log, and min free space stays > 8 GB for 3 days. Rollback: copy the backup over /etc/cron.d/caspervpn-disk-guard. | [CEO 2026-10-09 (2026-10-09T19:09:11Z)] 'Yez row 189' - live in the engineering run 1009-1728 chat. CLAIMED: shipping now in this live session; other runs do not touch /etc/cron.d/caspervpn-disk-guard. | [QA 2026-10-09 o, 2026-10-09T18:26:24Z] QA DEV PASS - ready for the CEO's YES (met stays false until it is installed and QA reads the first :15 run). One cron line, no -a, until=6h; read-only on the live server 18:06Z it would remove 24 untagged images nobody uses, 0 tagged, 0 of the 4 emergency-undo copies; syntax OK; installed file = production git (no drift). Details xd-1616. || [ENGINEERING run 2026-10-09 1728, 2026-10-09T17:41:10Z] added for xd-1589. FIX on development 9b1aefa (infrastructure/scripts/caspervpn-disk-guard.cron, +1 cron line): every 3 h at :15, 'docker image prune -f --filter until=6h' = only untagged images unused by any container and older than 6 h; tagged rollback/latest/codegraph images are never touched; nodes without docker skip it. Read-only selection on the live server 17:38Z: older than 6 h = 22 images / 2.28 GB (would be freed now); older than 2 h = 33 / 3.33 GB. Installed /etc/cron.d/caspervpn-disk-guard md5 68462273 = the previous git version exactly (no drift), so install = copy the git file over it. Not executed: no prune was run (production server, needs CEO YES). Install after YES: cherry-pick -x 9b1aefa to production, cp /etc/cron.d/caspervpn-disk-guard /root/backups/caspervpn-disk-guard.bak-<ts>, install -m 644 the git file to /etc/cron.d/caspervpn-disk-guard (cron reloads by itself). Board advice: yes - zero customer impact, removes only unused leftovers."
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "addedAt": "2026-10-09T19:32:49Z",
+          "addedBy": "[ADMIN-PANEL] engineering run 1009-1904",
+          "test": "READY TO SHIP \u2014 the admin stops counting free-trial users as paying customers \u00b7 why: today 2 of the 5 'paying' people in the admin are on Apple's free 7-day trial and have paid nothing yet, so the paying count and the monthly income look higher than they are \u00b7 what changes: the admin shows 3 paying and '2 on free trial' separately; monthly income counts only the 3 \u00b7 tested: automatic tests pass, and fail as they should when the fix is switched off; deployed 19:31Z (caspervpn-dev-api + dev-admin recreated; DLL grep PayingNow = 1); dev API with a minted admin token: recurring-summary 200 carries the new activeFreeTrials field (0 - dev has no live trial row) and MRR 12.96 = /api/admin/revenue MRR 12.96; admin.dev bundle main.ea458dbe.js contains 'on free trial' (1); QA will re-check on the test server \u00b7 rollback: undo one commit (admin numbers only, no customer data touched)",
+          "verify": "Production after ship: GET /api/admin/subscriptions/recurring-summary -> activeFreeTrials = count of real Production subs whose owner has Users.TrialEndsAt > now(); totalRecurring excludes them; same MRR on /api/admin/revenue",
+          "evidence": "[ENGINEERING run 2026-10-09 1904, 2026-10-09T19:32:49Z] added for xd-1430 (item 1); development e79aac85c; QA handoff xd-1619 created this run. Board advice: yes - it changes numbers only, nothing a customer sees."
         }
       ],
       "progress": 0,
@@ -18464,9 +18474,9 @@
       "name": "Backend API",
       "status": "red",
       "lead": "Dev Team",
-      "currentTask": "2026-10-09 engineering run 1728 re-base (17:41Z): 30 tasks \u00b7 106/158 criteria met \u00b7 open P0 to BACKEND 3",
-      "blockers": 3,
-      "completion": 67,
+      "currentTask": "2026-10-09 engineering run 1904 re-base (19:32Z): 30 tasks \u00b7 106/158 criteria met \u00b7 open P0 to BACKEND 3",
+      "blockers": "3",
+      "completion": "67",
       "launchCompletion": "68",
       "progress": 92,
       "lastActivity": "2026-10-09",
@@ -18475,19 +18485,19 @@
       "launch": 62,
       "lastSession": "2026-04-01",
       "currentStatus": "xd-322 COMPLETE. 22 admin tables live in DB. Rate-limiting 5req/sec auth policy operational. Multi-hop 4 endpoints active. Stripe code ready, needs prod keys in env.",
-      "lastTriggered": "2026-10-09T17:41:10Z"
+      "lastTriggered": "2026-10-09T19:32:49Z"
     },
     "devops": {
       "name": "DevOps & Infra",
       "status": "red",
       "lead": "Unassigned",
-      "currentTask": "2026-10-09 engineering run 1728 re-base (17:41Z): 31 tasks \u00b7 86/205 criteria met \u00b7 open P0 to DEVOPS 3",
-      "blockers": 3,
-      "completion": 42,
+      "currentTask": "2026-10-09 engineering run 1904 re-base (19:32Z): 31 tasks \u00b7 86/205 criteria met \u00b7 open P0 to DEVOPS 3",
+      "blockers": "3",
+      "completion": "42",
       "progress": 98,
       "launchCompletion": "41",
       "lastSession": "2026-03-16",
-      "lastTriggered": "2026-10-09T17:41:10Z",
+      "lastTriggered": "2026-10-09T19:32:49Z",
       "notes": "2026-09-21 [CTO] re-based by the board sweep (CEO golden rule): completion = criteria met / total on tasks this department owns (multi-owner tasks count for each owner); blockers = open P0 handoffs to this department. Previous text kept in git history.",
       "lastActivity": "2026-10-09"
     },
@@ -18520,12 +18530,12 @@
       "name": "Website",
       "status": "yellow",
       "lead": "Dev Team",
-      "currentTask": "2026-10-09 engineering run 1728 re-base (17:41Z): 8 tasks \u00b7 29/46 criteria met \u00b7 open P0 to WEBSITE 0",
-      "blockers": 0,
-      "completion": 63,
+      "currentTask": "2026-10-09 engineering run 1904 re-base (19:32Z): 8 tasks \u00b7 29/46 criteria met \u00b7 open P0 to WEBSITE 0",
+      "blockers": "0",
+      "completion": "63",
       "launchCompletion": "61",
       "lastSessionAt": "2026-03-30T20:00:00Z",
-      "lastTriggered": "2026-10-09T17:41:10Z",
+      "lastTriggered": "2026-10-09T19:32:49Z",
       "notes": "2026-09-28 [QA] re-based at QA exit (golden rule 8): completion = criteria met / total on tasks this department owns (multi-owner tasks count for each owner); blockers = open P0 handoffs to it.",
       "lastActivity": "2026-10-09"
     },
@@ -18582,12 +18592,12 @@
       "name": "CTO Office",
       "status": "yellow",
       "lead": "Waqar",
-      "currentTask": "2026-10-09 engineering run 1728 re-base (17:41Z): 46 tasks \u00b7 169/272 criteria met \u00b7 open P0 to CTO 4",
-      "blockers": 4,
-      "completion": 62,
+      "currentTask": "2026-10-09 engineering run 1904 re-base (19:32Z): 46 tasks \u00b7 169/272 criteria met \u00b7 open P0 to CTO 4",
+      "blockers": "4",
+      "completion": "62",
       "launchCompletion": "63",
       "lastSessionAt": "2026-09-28T22:40:35Z",
-      "lastTriggered": "2026-10-09T17:41:10Z",
+      "lastTriggered": "2026-10-09T19:32:49Z",
       "notes": "2026-09-21 [CTO] re-based by the board sweep (CEO golden rule): completion = criteria met / total on tasks this department owns (multi-owner tasks count for each owner); blockers = open P0 handoffs to this department. Previous text kept in git history.",
       "lastActivity": "2026-10-09"
     },
@@ -47873,8 +47883,8 @@
       "ageDays": 3,
       "lifecycle": "active",
       "needsRelease": false,
-      "notes": "[ENGINEERING run 2026-10-09 1904, 2026-10-09T19:08:11Z] CLAIMED: measuring now (which admin pages/queries count trials as subscribers; environment filter on payment lists) - one row per run.",
-      "updatedAt": "2026-10-09T19:08:11Z"
+      "notes": "[ENGINEERING run 2026-10-09 1904, 2026-10-09T19:32:49Z] PARTIAL \u2014 item 1 DONE on development e79aac85c: a free trial is never a paying subscriber. MEASURED on production first (read-only): 2 of the 5 real-customer subscriptions on a paid plan are Apple 7-day free trials (264ce8fe Yearly, ends 12 Oct; 2da84bfa Weekly, ends 13 Oct - its $9.99 payment is the Dedicated IP add-on) and were counted as paid and in MRR by: AdminService.GetRevenueDataAsync MRR, GetRecurringSubscriptionsSummaryAsync (dashboard card 'N active paid \u00b7 MRR'), PaidActiveSubscriptions, AdminController paidUsers, payments summary activePaidSubscriptions, AdminSecurityFeaturesController revenue-intelligence MRR. Fix: AdminService.PayingNow (BillingInterval != Trial AND owner's Users.TrialEndsAt not in the future) applied to all six; recurring summary + payments summary now report activeFreeTrials apart; dashboard card reads 'N active paid \u00b7 M on free trial \u00b7 MRR'. Tests on the main server (nice/taskset): AdminRealMoneyTests + AdminServiceTests 14/14 pass; CONTROL PayingNow=true -> 2 of 4 AdminRealMoneyTests fail. Admin tsc --noEmit 0 errors (planted error -> 1). Dev: deployed 19:31Z (caspervpn-dev-api + dev-admin recreated; DLL grep PayingNow = 1); dev API with a minted admin token: recurring-summary 200 carries the new activeFreeTrials field (0 - dev has no live trial row) and MRR 12.96 = /api/admin/revenue MRR 12.96; admin.dev bundle main.ea458dbe.js contains 'on free trial' (1). Expected on production after ship: paying real customers 5 -> 3, 2 on free trial (until 12/13 Oct). NOT done (item 2): Production vs Sandbox filter on every payment list incl. the dashboard deep link - next engineering run. Known limit: a user who buys a paid plan during a trial is shown as trial until TrialEndsAt (max 7 days). | [ENGINEERING run 2026-10-09 1904, 2026-10-09T19:08:11Z] CLAIMED: measuring now (which admin pages/queries count trials as subscribers; environment filter on payment lists) - one row per run.",
+      "updatedAt": "2026-10-09T19:32:49Z"
     },
     {
       "id": "xd-1431",
@@ -51600,6 +51610,18 @@
       "status": "pending",
       "priority": "P2",
       "createdAt": "2026-10-09T18:26:29Z",
+      "createdDate": "2026-10-09",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1619",
+      "from": "[ADMIN-PANEL]",
+      "to": "[QA]",
+      "title": "Handoff from ADMIN-PANEL: Test xd-1430 on dev: free trials are no longer counted as paying subscribers (admin card, MRR, payments summary)",
+      "description": "development e79aac85c (AdminService.PayingNow). On dev: (1) mint an admin JWT on the dev brain; create or pick a dev user with Users.TrialEndsAt in the future and an Active Weekly Production subscription with an AppleProductId; (2) GET /api/admin/subscriptions/recurring-summary -> that row is NOT in totalRecurring/MRR and activeFreeTrials counts it; set TrialEndsAt to the past -> it moves back into totalRecurring (control); (3) /api/admin/revenue MRR == recurring-summary MRR; /api/admin/revenue-intelligence/metrics MRR equal too; (4) payments summary activePaidSubscriptions excludes it, activeFreeTrials counts it; (5) admin.dev dashboard card text shows '\u00b7 N on free trial' (bundle grep 'on free trial'). Then the READY TO SHIP row on ceo-action-backlog waits for the CEO's yes. Production expectation after ship: 5 -> 3 paying, 2 on trial.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-09T19:32:54Z",
       "createdDate": "2026-10-09",
       "completedDate": null
     }
