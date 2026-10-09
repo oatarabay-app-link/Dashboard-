@@ -13116,6 +13116,30 @@
           "verifiedByRaw": null,
           "verifiedDate": null,
           "evidence": "[ENGINEERING run 2026-10-08 d, 2026-10-09T00:48:44Z] DONE (CEO YES 9 Oct): production SupportTickets got the 2 missing columns (ALTER TABLE ... ADD COLUMN IF NOT EXISTS \"ResolvedAt\" / \"ClosedAt\" timestamptz NULL, same as the test server; before 0 of 2, after 2 of 2). Proof: the admin status change that failed with 42703 at 00:42:18Z now answers 200 'Status updated from open to closed' for the test ticket fb554853 (DB Status=closed, ClosedAt set); 0 '42703' lines after. The schema still needs a migration in git so a rebuilt database gets the columns -> [BACKEND] handoff. -> QA xd-1560; migration in git -> xd-1561. | [CEO 2026-10-09 (2026-10-09T00:47:44Z), engineering run 1008d chat] 'Yes, add them (Recommended)' to: add the 2 missing columns so a ticket's status can be changed. [ENGINEERING run 2026-10-08 d] executing now."
+        },
+        {
+          "test": "READY TO SHIP - Duesseldorf: hidden mode stops going through Cloudflare (Cloudflare exit box 6, first server). What: one switch in our Cloudflare address book. The Duesseldorf hidden-mode address already points at our own Duesseldorf server; today phones reach it through Cloudflare, after the switch they go straight to our server. No app update, no server change. Why: your 6 Oct decision to leave Cloudflare. On our own door a long hidden-mode stream held 10 minutes with no drop. Tested tonight: a hidden-mode connection through that exact address, sent straight to our server, connected and held a full minute with data; the automatic test on our own door has passed 112 times in a row. Who it touches (last 7 days, Duesseldorf hidden mode): 1 customer session carried data (Pakistan); 5 people tried and failed (Iran 2, China, Russia, UK) - Cloudflare was not getting them through either. Risk: in heavily censored countries our own address is easier to block than Cloudflare's (box 8 plans a new disguise); for about 5 minutes after the switch a phone may fail one try and retry. Undo: flip the switch back, about 5 minutes. Phones in Lebanon already use our own door. Advice: YES. Answer 'yes door' in any chat.",
+          "verify": "CEO answers; then DEVOPS (xd-1569) switches s6-edge.pompesh.com to DNS-only, checks and hands to QA: authoritative dig = 91.194.84.79; hidden-mode hold test on wss://s6-edge.pompesh.com passes with no Cloudflare IP; Duesseldorf hidden-mode failures not above the 7-day rate in the first hour.",
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "verifiedByRaw": null,
+          "verifiedDate": null,
+          "addedAt": "2026-10-09T01:28:05Z",
+          "addedBy": "[CTO] live chat 2026-10-09 (cloudflare-exit owner)",
+          "evidence": "[CTO live chat 2026-10-09 01:16-01:5xZ (04:xx Beirut), owner of cloudflare-exit-phase1] PREP (xd-1558, read-only): METHOD = Cloudflare DNS record s6-edge.pompesh.com (A 91.194.84.79, proxied=True, ttl auto) -> proxied=False, content unchanged. The API keeps sending wss://s6-edge.pompesh.com/ (prod CloudfrontFronting__NativeFront__Enabled=true, default HostTemplate {entryId}-edge.pompesh.com; HostTemplate is GLOBAL - changing it would move all 11 relays at once, the DNS record is per relay). PROOF: (1) curl --resolve s6-edge.pompesh.com:443:91.194.84.79 -> HTTP 200, TLS verify 0, cert CN=*.pompesh.com Let's Encrypt YE1, valid to 12 Dec 2026; (2) one-off cc_canary.py with that name pinned to 91.194.84.79 (separate log/state, /root/reports/cc1009-edge-canary.txt, 01:22-01:23Z): pass, handshake, held 60 s, 7,488,000 B, cf_ip=false; (3) live canary wss://s6.pompesh.com 112 consecutive passes, 0 fails (00:45Z); (4) de-3: own resolver + wg0 REDIRECT of udp/tcp 53, wg-radius-accounting restarted 23:59Z (crit 3 QA-passed). EXPOSURE (prod DB, real users, 7 days, Duesseldorf hidden mode): ConnectionLogs Protocol=3 = 1 session / 1 user (PK, 11 MB); ConnectFailureEvents cloak = 30 / 5 users (IR 2 users 20 tries, CN 1/7, RU 1/2, GB 1/1). TOKEN: the certbot DNS-01 token for pompesh.com on the brain - verify=active, zone visible (30 records), never printed. ROLLBACK: proxied=True again (within ~5 min)."
+        },
+        {
+          "test": "CHECKLIST (10 minutes, any time today) - test hidden mode on build 65 (Cloudflare exit box 5). From Lebanon your phone already uses our own door for hidden mode, so nothing has to change first. (1) Open CasperVPN (build 65 is on your phone). (2) Settings > VPN Protocol > CasperCloak. (3) Pick Duesseldorf and connect. (4) Open 3 sites (for example google.com, youtube.com, bbc.com). (5) Run a speed test (fast.com) and note the number. (6) Stay connected 10 minutes, then open a site again. (7) Tell any chat: 'door test done' and the speed (or what went wrong). We check our server for the same minutes.",
+          "verify": "CEO answers; [CTO]/[QA] match his minutes: API log 'StealthTier: ... country=LB tier=Advisory server=Duesseldorf cfWiring=SUPPRESSED' and de-3 relay journal '#52=NEW' at that minute (direct front, no Cloudflare IP).",
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "verifiedByRaw": null,
+          "verifiedDate": null,
+          "addedAt": "2026-10-09T01:28:05Z",
+          "addedBy": "[CTO] live chat 2026-10-09 (cloudflare-exit owner)",
+          "evidence": "[CTO live chat 2026-10-09 01:16-01:5xZ (04:xx Beirut), owner of cloudflare-exit-phase1] added for cloudflare-exit crit index 4. Why it works today: restricted_countries LB = 3 (Advisory) -> ServersController.cs:1155-1167 sends no Cloudflare wiring -> the app dials the server's CasperCloakDomain s6.pompesh.com (DNS-only A 91.194.84.79 = the direct front)."
         }
       ],
       "progress": 0,
@@ -17423,7 +17447,7 @@
       "priority": "P0",
       "category": "infrastructure",
       "owner": "CTO",
-      "status": "PARTIAL - the CTO live chat owns this task (hourly Cloudflare run OFF, CEO 8 Oct). 4 of 8 QA-ticked: crit 0 root cause (Worker test waived by the CEO), crit 1 direct front on 443 (dev + test relay), crit 2 canary (9/9/9), crit 3 own DNS (wg-radius-accounting restarted 8 Oct 23:59Z with CEO YES row 163; QA xd-1551: 0 packets in 300 s). NEXT: production Duesseldorf first (crit 5 relay 1, needs a CEO yes) - the READY TO SHIP row is being prepared by the engineering run (xd-1558); it also makes crit 4 (the CEO's build-65 test) possible. crit 6 real users and crit 7 DPI note + new cover NOT started.",
+      "status": "PARTIAL - the CTO live chat owns this task (hourly Cloudflare run OFF, CEO 8 Oct). 4 of 8 QA-ticked (root cause, direct front, canary, own DNS). NEXT: crit 5 relay 1 = Duesseldorf hidden mode straight to our relay - READY TO SHIP CEO card row 171 ('yes door'), DEVOPS xd-1569 after the yes. crit 4: the CEO's build-65 test can run now from Lebanon (Advisory tier already uses the direct front) - CHECKLIST row 172. crit 6 real users and crit 7 DPI note + new cover NOT started (CTO next). App-side leftovers (tunnel DNS hard-coded 1.1.1.1, Cloudflare DoH): iOS xd-1570, P2.",
       "description": "CEO 6 Oct: Cloudflare's self-serve terms 2.2.1(j) forbid VPN/proxy use (row 129). Phase 1 moves all VPN traffic and VPN DNS off Cloudflare and proves hidden mode in build 65. Phase 2 (website/DNS hosting) later, separate yes.",
       "acceptanceCriteria": [
         {
@@ -17475,14 +17499,16 @@
           "verify": "server-side: CC session from the CEO's test account with bytes > 1 MB through the direct front",
           "met": false,
           "passed": false,
-          "verifiedBy": "none"
+          "verifiedBy": "none",
+          "evidence": "[CTO live chat 2026-10-09 01:16-01:5xZ (04:xx Beirut), owner of cloudflare-exit-phase1] FINDING (code + prod DB, read-only): Lebanon is tier Advisory (restricted_countries LB=3); for Advisory/Throttle the API sends no Cloudflare wiring (ServersController.cs:1155-1167, log 'cfWiring=SUPPRESSED (direct grey relay)') and the app dials the server's CasperCloakDomain = s<N>.pompesh.com on all 11 relays (DNS-only A -> relay IP = the direct front). So the CEO's phone in Lebanon already uses the direct front in hidden mode: the build-65 test can run now with no production change - CHECKLIST CEO card row 172. Auto-fallback leg (AUTO door, xd-1309, coded c9a61100) still needs a network that blocks one door (QA xd-1220). Today Fronted (BY CN CU IR KP MM RU TJ TM UZ), DirectFirst (AE BH EG OM PK SA TR VN) and every unlisted country get the Cloudflare front. || "
         },
         {
           "test": "Production: every relay switched one at a time; 0 VPN connections and 0 VPN DNS lookups reach Cloudflare for 7 days",
           "verify": "Cloudflare analytics for edge.pompesh.com = 0 requests 7 d; per-node resolver check",
           "met": false,
           "passed": false,
-          "verifiedBy": "none"
+          "verifiedBy": "none",
+          "evidence": "[CTO live chat 2026-10-09 01:16-01:5xZ (04:xx Beirut), owner of cloudflare-exit-phase1] RELAY 1 (Duesseldorf) PREPARED - READY TO SHIP CEO card row 171 ('yes door'), DEVOPS xd-1569 after the yes. Method per relay: Cloudflare DNS {entryId}-edge.pompesh.com proxied -> DNS-only (each record already points at its own relay; HostTemplate is global, so the API setting must NOT be used for one-at-a-time). ROLLOUT CHECKLIST FOR EVERY RELAY (learned on de-3): (a) own resolver + REDIRECT of udp/tcp 53 on every tunnel interface (de-3 has it on wg0 only) - needed because the iOS hidden-mode tunnel hard-codes 1.1.1.1 (CasperCloakTunnelProvider.swift:429) and the API's WireGuard configs default to 1.1.1.1/1.0.0.1/8.8.8.8/9.9.9.9 (VpnServerService.cs:341/366/1345/1413); (b) restart long-running services after the resolver switch (wg-radius-accounting kept 1.1.1.1 for months); (c) canary on the relay's direct name before the flip. Not fixable on relays: the app looks up relay addresses through Cloudflare DoH first (DoHResolver.swift:111) - iOS xd-1570 (P2). Exposure and proofs for Duesseldorf: row 171 evidence. || "
         },
         {
           "test": "Real users: hidden-mode sessions carry data in at least 3 countries (control: WireGuard sessions in the same countries)",
@@ -49909,12 +49935,16 @@
       "to": "[BACKEND]",
       "title": "Handoff from CTO: Prepare ONE READY TO SHIP row: production hidden mode on Duesseldorf uses our own door (wss://s6.pompesh.com/) instead of Cloudflare - first relay of cloudflare-exit crit 5, and what the CEO's build-65 test (crit 4) needs",
       "description": "cloudflare-exit-phase1: crit 0-3 are QA-ticked (root cause; direct front on dev + test relay; canary 9/9/9; own DNS on de-3, QA xd-1551). Next is production, one relay at a time (crit index 5, a CEO yes per relay), starting with Duesseldorf (s6: own front, own DNS, canary passing). It also unblocks crit index 4: a production-scheme build 65 (TestFlight; DEV_ENV builds use api.dev) only gets the new door when the PRODUCTION API hands it out. READ-ONLY prep, no production change: (1) how dev hands out the native front (dev api log 'CloudfrontFronting: NATIVE front for Duesseldorf -> wss://s6.pompesh.com/ (Worker bypassed, xd-774)') and the exact production setting that does the same for Duesseldorf only; (2) whether it can be limited to staff/test accounts first - if the code allows it, propose that as step 1; (3) what real users would see: Duesseldorf hidden-mode sessions in the last 7 days (count, countries; no names on the board) and the rollback (config only; how long it takes); (4) the proof to run right after shipping: canary on s6 + one real session carries data + 0 Cloudflare IPs in the path + no rise in ConnectFailureEvents for Duesseldorf in 1 h. Then write ONE READY TO SHIP row on the CEO card in plain English (why / what / tested / rollback / advice, ending with the exact words he answers) and hand back to [CTO]. Never ship it without the CEO YES on that row.",
-      "status": "in_progress",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-10-09T00:46:17Z",
       "createdDate": "2026-10-09",
-      "completedDate": null,
-      "notes": "[CTO live chat 2026-10-09T01:17:07Z] CLAIMED by the cloudflare-exit owner (CEO: 'keep going'): doing this read-only prep now in the CEO live chat. Engineering run: do not duplicate; nothing on production changes without the CEO YES on the row this produces."
+      "completedDate": "2026-10-09",
+      "notes": "[CTO live chat 2026-10-09T01:17:07Z] CLAIMED by the cloudflare-exit owner (CEO: 'keep going'): doing this read-only prep now in the CEO live chat. Engineering run: do not duplicate; nothing on production changes without the CEO YES on the row this produces.",
+      "completedAt": "2026-10-09",
+      "completedBy": "[CTO]",
+      "resolution": "Prep done in the CEO live chat: READY TO SHIP row 171 (per-relay DNS flip of s6-edge.pompesh.com; one-off hold test through that name pinned to the relay passed; exposure 7 days = 1 session with data + 5 failing users; rollback within ~5 min). Execution after the CEO's yes: xd-1569. CEO build-65 test card: row 172.",
+      "resultingHandoff": "xd-1569 to [DEVOPS] (after CEO YES row 171)"
     },
     {
       "id": "xd-1559",
@@ -50050,6 +50080,30 @@
       "status": "pending",
       "priority": "P2",
       "createdAt": "2026-10-09T01:14:15Z",
+      "createdDate": "2026-10-09",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1569",
+      "from": "[CTO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CTO: After CEO YES on CEO card row 171: switch s6-edge.pompesh.com to DNS-only (Duesseldorf hidden mode straight to our relay, cloudflare-exit crit 5 relay 1) - check, then hand to QA",
+      "description": "Prepared by [CTO] in the CEO live chat (xd-1558; evidence on the row and on cloudflare-exit crit index 5). On the brain, with the certbot DNS token for pompesh.com (its renewal config names it; never print it): (1) BEFORE: dig +short s6-edge.pompesh.com = Cloudflare IPs; GET the record = A 91.194.84.79 proxied=true. (2) PATCH that record: proxied=false, ttl=60, content unchanged. (3) AFTER: dig at Cloudflare's own nameserver = 91.194.84.79; run /opt/caspervpn/cc_canary.py wss://s6-edge.pompesh.com with CANARY_LOG and CANARY_STATE pointed at /root/reports files (keeps the live canary's counters clean) = pass, cf_ip=false. (4) Watch 1 h: de-3 relay journal '#52=' lines keep coming; ConnectFailureEvents (cloak) for Duesseldorf not above the 7-day rate (~0.2/h). (5) ROLLBACK if anything is worse: PATCH proxied=true (effect within ~5 min). (6) Mark the row SHIPPED, write evidence on crit index 5, hand to [QA]. Without the CEO YES: nothing on production.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-09T01:28:11Z",
+      "createdDate": "2026-10-09",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1570",
+      "from": "[CTO]",
+      "to": "[IOS]",
+      "title": "Handoff from CTO: Cloudflare exit, app side (P2, the build after 4.3.1): the hidden-mode tunnel asks Cloudflare 1.1.1.1 for DNS (hard-coded) and relay addresses are looked up through Cloudflare's DoH first",
+      "description": "Read-only finding by [CTO], 9 Oct: CasperCloakTunnelProvider.swift:429 sets NEDNSSettings(servers: [\"1.1.1.1\", \"1.0.0.1\"]) on every hidden-mode tunnel (the config's dns read at :93 is not used there); DoHResolver.swift:111 asks https://cloudflare-dns.com/dns-query first (dns.google second) for s*.pompesh.com. Server side, de-3 catches tunnel DNS with a wg0 REDIRECT to its own resolver, so the 1.1.1.1 setting is harmless only where that rule exists. Ask: (1) use the DNS list the config sends instead of the hard-coded one; (2) a non-Cloudflare first DoH endpoint (pick with [CTO]; the crit 7 DPI note lists options). Not in 4.3.1 (Apple review). Task owner: [CTO] cloudflare-exit-phase1.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-09T01:28:11Z",
       "createdDate": "2026-10-09",
       "completedDate": null
     }
