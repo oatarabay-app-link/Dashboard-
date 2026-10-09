@@ -13337,6 +13337,26 @@
           "test": "READY TO SHIP \u2014 the admin stops counting free-trial users as paying customers \u00b7 why: today 2 of the 5 'paying' people in the admin are on Apple's free 7-day trial and have paid nothing yet, so the paying count and the monthly income look higher than they are \u00b7 what changes: the admin shows 3 paying and '2 on free trial' separately; monthly income counts only the 3 \u00b7 tested: automatic tests pass, and fail as they should when the fix is switched off; deployed 19:31Z (caspervpn-dev-api + dev-admin recreated; DLL grep PayingNow = 1); dev API with a minted admin token: recurring-summary 200 carries the new activeFreeTrials field (0 - dev has no live trial row) and MRR 12.96 = /api/admin/revenue MRR 12.96; admin.dev bundle main.ea458dbe.js contains 'on free trial' (1); QA will re-check on the test server \u00b7 rollback: undo one commit (admin numbers only, no customer data touched)",
           "verify": "Production after ship: GET /api/admin/subscriptions/recurring-summary -> activeFreeTrials = count of real Production subs whose owner has Users.TrialEndsAt > now(); totalRecurring excludes them; same MRR on /api/admin/revenue",
           "evidence": "[QA 2026-10-09 q, scheduled, 2026-10-09T20:09:28Z] QA DEV PASS - ready for YES (xd-1619 5/5: one dev paying user put into a trial -> paying 1->0, MRR 12.96->0 on recurring-summary, revenue and revenue-intelligence, payments activePaidSubscriptions 1->0 + activeFreeTrials 0->1; restored -> all back; dev admin bundle shows 'on free trial'). Card render not opened (signed-in browser pass). || [ENGINEERING run 2026-10-09 1904, 2026-10-09T19:32:49Z] added for xd-1430 (item 1); development e79aac85c; QA handoff xd-1619 created this run. Board advice: yes - it changes numbers only, nothing a customer sees."
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "addedAt": "2026-10-09T20:10:03Z",
+          "addedBy": "[SECURITY] engineering run 1009-2004",
+          "test": "READY TO SHIP \u2014 the disk-alert script on the main server stops carrying our e-mail sending key inside its text \u00b7 why: a key written inside a script is copied everywhere the script goes (git, backups, other machines) \u00b7 what changes: the key moves to a locked file only the server's admin account can read; the nightly disk check works the same; if the file is ever missing it writes 'not e-mailed' in its log instead of failing silently \u00b7 tested: on the test copy, 3 small checks pass (key read from the locked file; a key given directly wins; no file = no key, no error), script syntax OK \u00b7 rollback: put back the old script from the backup copy (one file)",
+          "verify": "On the main server after ship: grep -cE 're_[A-Za-z0-9_]{20,}' /opt/caspervpn/disk-guard.sh = 0; stat -c '%a %U' /etc/caspervpn/resend.key = '600 root'; key length > 0 without printing it; diff -q /opt/caspervpn/disk-guard.sh = production git; next 03:30Z run log line present",
+          "evidence": "[ENGINEERING run 2026-10-09 2004, 2026-10-09T20:10:03Z] added for xd-1618; development 613f9c28a. Install after YES: cherry-pick -x 613f9c28a to production under the lock; on the main server: backup /opt/caspervpn/disk-guard.sh; write the key from the old installed file into /etc/caspervpn/resend.key (umask 077, root, 600; never printed); install the script from production git; run the verify. Board advice: yes - one file, no customer effect."
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "addedAt": "2026-10-09T20:10:03Z",
+          "addedBy": "[SECURITY] engineering run 1009-2004",
+          "test": "DECISION \u2014 change (rotate) our e-mail sending key \u00b7 why: the same key is written in 13 files of our private code store and in the vault notes, and has been for months; anyone who ever had a copy of the code can send e-mail as caspervpn.com \u00b7 options: (a) make a new key in the e-mail service (Resend) and switch every script to it, then turn the old key off \u2014 about 10 minutes for you, the runs do the rest; (b) leave it, only remove it from the scripts going forward \u00b7 advice: (a). The code store is private (checked) and nothing shows misuse, so this is not urgent tonight \u2014 but removing the key from files does not make an already-copied key secret again.",
+          "verify": "After (a): the old key answers 401 at the mail service; every alert script reads the key from the locked file; grep for the old key in the code store = 0",
+          "evidence": "[ENGINEERING run 2026-10-09 2004, 2026-10-09T20:10:03Z] added for xd-1618. Measured: 13 repo files carry the same key (sha256 prefix 415886f587); public board 0; repo private (404 unauthenticated)."
         }
       ],
       "progress": 0,
@@ -51609,12 +51629,13 @@
       "from": "[QA]",
       "to": "[SECURITY]",
       "title": "Handoff from QA: Remove the mail-service key written as a default value in disk-guard.sh (seen by DEVOPS on xd-1616, QA confirmed)",
-      "description": "[QA 2026-10-09 o] infrastructure/scripts/disk-guard.sh line 43 sets RESEND_API_KEY=\"${RESEND_API_KEY:-<literal key>}\" on origin/production AND origin/development, and the installed /opt/caspervpn/disk-guard.sh on the main server carries the same pattern (grep count 1, value not printed or copied). Same family as CLAUDE.md 9.6 'hardcoded secrets in repo'. Ask: (1) decide whether the key must be rotated (it is in git history); (2) remove the default so the script reads the key only from the environment / a root-only file; (3) -> [QA] to re-grep production + the installed file (expect 0) and confirm the 03:30Z disk-guard e-mail alert path still works. Not urgent for users; P2.",
-      "status": "pending",
+      "description": "[QA 2026-10-09 o] infrastructure/scripts/disk-guard.sh line 43 sets RESEND_API_KEY=\"${RESEND_API_KEY:-<literal key>}\" on origin/production AND origin/development, and the installed /opt/caspervpn/disk-guard.sh on the main server carries the same pattern (grep count 1, value not printed or copied). Same family as CLAUDE.md 9.6 'hardcoded secrets in repo'. Ask: (1) decide whether the key must be rotated (it is in git history); (2) remove the default so the script reads the key only from the environment / a root-only file; (3) -> [QA] to re-grep production + the installed file (expect 0) and confirm the 03:30Z disk-guard e-mail alert path still works. Not urgent for users; P2.\n\n[ENGINEERING run 2026-10-09 2004, 2026-10-09T20:10:03Z] [SECURITY] PARTIAL. MEASURED first: the SAME mail key (sha256 prefix 415886f587, never printed here) is written in 13 files of the private Casper-Code repo, not 1: disk-guard.sh, parity_monitor.sh, datacap_enforcement_monitor.sh, fleet_health_loop.sh, subdomain-resolution-check.sh, wildcard-renew.sh, active_probe_detector.py, ct_log_monitor.py, ip_reputation_monitor.py, monitoring/scripts/alertmanager_resend_bridge.py, dev-vps/.env.dev.example, memory/context/credentials.md, an old email template; 5 more scripts scrape it from the installed bridge/ct_log_monitor files. Control: the public Dashboard- board carries 0 mail keys; Casper-Code is private (unauthenticated GitHub API 404). Main server: /etc/caspervpn/secrets.env has no mail key; cron 30 3 * * * root /opt/caspervpn/disk-guard.sh. DONE on development 613f9c28a (1 file): disk-guard.sh reads RESEND_API_KEY from env, else root-only /etc/caspervpn/resend.key; empty -> logs 'ALERT NOT E-MAILED' and exits 1 instead of sending. Proof: bash -n OK; isolated tests: file -> key loaded, env wins over file, missing file -> empty and no stderr; literals in file 1 -> 0. Install needs CEO YES (row READY TO SHIP). Removing the key from git does not make it secret again - rotation is the real fix (row DECISION). Other 12 files: follow-up after the rotation decision (same pattern, one script per commit). Note for honesty: this run's own diff output showed the key once in the run transcript (Cowork, not stored anywhere new) - one more reason to rotate.",
+      "status": "in_progress",
       "priority": "P2",
       "createdAt": "2026-10-09T18:26:29Z",
       "createdDate": "2026-10-09",
-      "completedDate": null
+      "completedDate": null,
+      "claimedBy": "[SECURITY] engineering run 1009-2004"
     },
     {
       "id": "xd-1619",
@@ -51634,6 +51655,18 @@
       "qaDate": "2026-10-09T20:09:28Z",
       "lifecycle": "done",
       "notes": "[QA 2026-10-09 q, scheduled, 2026-10-09T20:09:28Z] PASS on dev, all 5 legs (development e79aac85c; caspervpn-dev-api created 19:31:00Z, after the 19:22Z commit). Method /root/reports/qa1009q/t.sh on the main server: 10-minute dev admin JWT (Users.Role=2, nothing printed); picked the one real-customer dev row on a paid plan (Weekly, AppleProductId set, Production, TrialEndsAt NULL; sub b9e63580); A before 20:07:54Z: recurring-summary totalRecurring 1 / MRR 12.96 / activeFreeTrials 0; /revenue summary.mrr 12.96; /revenue-intelligence/metrics mrr 12.96; payments summary activePaidSubscriptions 1 / activeFreeTrials 0. B TrialEndsAt = now()+3 d (UPDATE 1): totalRecurring 0 / MRR 0 / activeFreeTrials 1; revenue mrr 0; metrics mrr 0; payments activePaidSubscriptions 0 / activeFreeTrials 1. C CONTROL restored to NULL (UPDATE 1, re-read NULL): all numbers back to A. Three MRR numbers equal in A, B and C. No-token control 401. Leg 5: admin.dev bundle main.ea458dbe.js 'on free trial' 1, 'activeFreeTrials' 2; control production admin bundle main.6c17dc10.js 'on free trial' 0. LIMITS: the card render itself was not opened (no signed-in browser in an unattended run - folds into xd-1494); the BillingInterval=Trial branch had no real-customer row on dev (only staff/@caspervpn.com rows), proven by code read only (AdminService.cs PayingNow); dashboard stats PaidActiveSubscriptions/paidUsers not called. codegraph image missing (xd-1574), code read with git show at e79aac85c. Next: CEO YES on ceo-action-backlog row 190 -> ship -> QA production check (expected 5 -> 3 paying, 2 on trial)."
+    },
+    {
+      "id": "xd-1620",
+      "from": "[SECURITY]",
+      "to": "[QA]",
+      "title": "Handoff from SECURITY: Check xd-1618 on development: disk-guard.sh has no mail key and reads it from a root-only file",
+      "description": "development 613f9c28a (1 file). Re-run: (1) grep -cE 're_[A-Za-z0-9_]{20,}' infrastructure/scripts/disk-guard.sh on origin/development = 0 (control: origin/production = 1 until ship); (2) bash -n; (3) extract the RESEND_KEY_FILE + RESEND_API_KEY lines and run them with DISK_GUARD_RESEND_KEY_FILE pointing at a temp file -> key loaded; with RESEND_API_KEY set -> env wins; missing file -> empty, no stderr; (4) the alert block logs 'ALERT NOT E-MAILED' when the key is empty. Then the READY TO SHIP row on ceo-action-backlog waits for the CEO's yes. After ship: the verify on that row on the main server.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-09T20:10:09Z",
+      "createdDate": "2026-10-09",
+      "completedDate": null
     }
   ],
   "importantNotes": [
