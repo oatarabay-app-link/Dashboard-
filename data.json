@@ -12892,15 +12892,17 @@
         },
         {
           "test": "SHIPPED 2026-10-08 22:37Z (awaiting QA xd-1540) \u00b7 CEO YES 2026-10-07 (office live chat 02:3x Beirut: 'yes to all') \u2014 ship by the department's normal path AFTER QA passes on dev (QA xd-1487); ship only this row's commits (cherry-pick, list the range \u2014 trap D8), then \u2192 [QA]. | READY TO SHIP \u2014 the server-update script refuses to update the main server when a required password or key is missing from its settings (today a missing one is only noticed when something breaks) \u00b7 why: 24 Sep two secrets were blank in the live server and nobody saw it (xd-1134) \u00b7 tested: development adb9cbf7d, checked against today's live settings = 12 of 12 present (one optional key is empty and only gets a warning) \u00b7 rollback: put back the previous script \u00b7 ship = copy one file to the main server (/root/deploy_api.sh), no restart. Advice: YES.",
-          "verify": "CEO answers 'yes <row>'; the next engineering run copies the file, diff -q equal, next deploy log shows 'required secrets present: 12/12'",
-          "met": false,
-          "passed": false,
-          "verifiedBy": null,
-          "verifiedByRaw": null,
-          "verifiedDate": null,
+          "verify": "md5sum /root/deploy_api.sh vs git show origin/production:infrastructure/scripts/deploy_api.sh | md5sum; grep -n 'required secrets present\\|ROLLBACK TARGET' $(ls -t /root/reports/*deploy*.log | head -1)",
+          "met": true,
+          "passed": true,
+          "verifiedBy": "tested",
+          "verifiedByRaw": "qa",
+          "verifiedDate": "2026-10-09",
           "addedAt": "2026-10-07T21:01:49Z",
           "addedBy": "[DEVOPS] eng run 2026-10-07 e",
-          "evidence": "[QA 2026-10-08 am ~23:15Z, scheduled] QA: installed script matches production (md5 82398ceb7e2d); the 12/12 line is still to be seen on the next real API deploy. || [ENGINEERING run 2026-10-08 b, 2026-10-08T22:39:10Z] SHIPPED: production 58e914e2b = cherry-pick -x of development adb9cbf7d ONLY (infrastructure/scripts/deploy_api.sh; md5 82398ceb7e2d = development = the version QA passed in xd-1487). Push 22:36:56Z under lock eng-run-1008b. Installed AFTER the row 151 deploy had finished (never swap a running script): backup /root/backups/deploy_api.sh.before-row149-202610082237 (md5 9b3d9dd01c8c = previous git version), bash -n OK, /root/deploy_api.sh md5 82398ceb7e2d mode 755. Read-only guard run 22:37:12Z: 'required secrets present: 12/12', 'WARN empty (deploy continues): Activation__FleetSshPublicKey' (/root/reports/eng1008b-install149.txt). No restart. Rollback: cp the backup back. The CI half of xd-1487 (ci.yml 96aff2d25) is NOT part of this row and stays on development. | [ENGINEERING run 2026-10-08 b, 2026-10-08T22:27:07Z] CLAIMED (QA passed 22:18Z): shipping row 151 (cherry-pick d412b33bc only + /root/deploy_api.sh) then row 149 (cherry-pick adb9cbf7d only + install /root/deploy_api.sh from git, no restart), one at a time. Other runs: do not deploy the API until this note says done. | [QA 2026-10-08 ak ~22:18Z, scheduled] QA on development PASSED (xd-1487); ready for the engineering run to ship under xd-1523. | [CEO 2026-10-08 ~02:3x Beirut, CEO office live chat] 'yes to all' (the six READY TO SHIP rows in the office brief). | [ENGINEERING run 2026-10-07 e, 2026-10-07T21:01:49Z] added; xd-1134; QA xd-1487."
+          "evidence": "[QA 2026-10-09 b ~01:20Z, scheduled] PASS. Two real API deploys since the install both print the guard line BEFORE the rollback step: /root/reports/eng1008d-ship164-deploy.log L136 '[00:29:40Z] required secrets present: 12/12' -> L137 '=== ROLLBACK TARGET' -> L154 DEPLOY DONE OK; /root/reports/eng1008d-ship150-deploy.log L23 '[00:39:22Z] required secrets present: 12/12' -> L24 ROLLBACK TARGET -> L42 DEPLOY DONE OK. md5 /root/deploy_api.sh 82398ceb7e2d = git show origin/production (d02b2349e):infrastructure/scripts/deploy_api.sh 82398ceb7e2d. One WARN empty Activation__FleetSshPublicKey (known, non-blocking). /root/reports/qa1009b-m1.txt || [QA 2026-10-08 am ~23:15Z, scheduled] QA: installed script matches production (md5 82398ceb7e2d); the 12/12 line is still to be seen on the next real API deploy. || [ENGINEERING run 2026-10-08 b, 2026-10-08T22:39:10Z] SHIPPED: production 58e914e2b = cherry-pick -x of development adb9cbf7d ONLY (infrastructure/scripts/deploy_api.sh; md5 82398ceb7e2d = development = the version QA passed in xd-1487). Push 22:36:56Z under lock eng-run-1008b. Installed AFTER the row 151 deploy had finished (never swap a running script): backup /root/backups/deploy_api.sh.before-row149-202610082237 (md5 9b3d9dd01c8c = previous git version), bash -n OK, /root/deploy_api.sh md5 82398ceb7e2d mode 755. Read-only guard run 22:37:12Z: 'required secrets present: 12/12', 'WARN empty (deploy continues): Activation__FleetSshPublicKey' (/root/reports/eng1008b-install149.txt). No restart. Rollback: cp the backup back. The CI half of xd-1487 (ci.yml 96aff2d25) is NOT part of this row and stays on development. | [ENGINEERING run 2026-10-08 b, 2026-10-08T22:27:07Z] CLAIMED (QA passed 22:18Z): shipping row 151 (cherry-pick d412b33bc only + /root/deploy_api.sh) then row 149 (cherry-pick adb9cbf7d only + install /root/deploy_api.sh from git, no restart), one at a time. Other runs: do not deploy the API until this note says done. | [QA 2026-10-08 ak ~22:18Z, scheduled] QA on development PASSED (xd-1487); ready for the engineering run to ship under xd-1523. | [CEO 2026-10-08 ~02:3x Beirut, CEO office live chat] 'yes to all' (the six READY TO SHIP rows in the office brief). | [ENGINEERING run 2026-10-07 e, 2026-10-07T21:01:49Z] added; xd-1134; QA xd-1487.",
+          "qaVerdict": "PASS",
+          "qaDate": "2026-10-09"
         },
         {
           "test": "SHIPPED 2026-10-09 00:47Z (awaiting QA xd-1559) \u00b7 CEO YES 2026-10-07 (office live chat 02:3x Beirut: 'yes to all') \u2014 ship by the department's normal path AFTER QA passes on dev (QA xd-1489); ship only this row's commits (cherry-pick, list the range \u2014 trap D8), then \u2192 [QA]. | READY TO SHIP - support messages alert the team (URGENT 4) \u00b7 why: today a user's support message makes no sound anywhere - the admin bell was a mock-up (always '3', made-up rows) and nothing was stored \u00b7 what changes: every new ticket or user reply puts one alert on the admin bell (unread count, a pop-up, '(1)' in the browser tab) and sends ONE Telegram line to the team chat (ticket number + admin link only - never the user's words, name or e-mail); no repeat while that ticket's alert is unread; opening or answering the ticket clears it \u00b7 tested: development a37d751 + ab986af, dev run 7 Oct 21:34Z 7 of 7 steps, tests 204/204, admin type check 0 errors \u00b7 rollback: API + admin rollback image tags taken before the deploy \u00b7 ship = (1) copy the alerts bot token + chat id into /opt/caspervpn/secrets/api (owner uid 1000, mode 0400), (2) cherry-pick the 2 commits to production, (3) /root/deploy_api.sh, (4) rebuild admin with the runner stopped, (5) one real test ticket from a staff account -> bell 1 + one Telegram line. Advice: YES.",
@@ -18035,13 +18037,13 @@
       "name": "QA & Testing",
       "status": "red",
       "lead": "QA Lead (AI)",
-      "currentTask": "2026-10-09 [QA] run a re-base: 3 tasks \u00b7 0/13 criteria met \u00b7 open P0 to QA 6 \u00b7 open to QA 19",
-      "blockers": "6",
+      "currentTask": "2026-10-09 [QA] run b re-base: 3 tasks \u00b7 0/13 criteria met \u00b7 open P0 to QA 7 \u00b7 open to QA 23",
+      "blockers": "7",
       "completion": "0",
-      "lastActivity": "2026-10-09T00:25:00Z",
+      "lastActivity": "2026-10-09T01:20:00Z",
       "launchCompletion": "0",
       "lastTriggered": "2026-10-07T00:12:00Z",
-      "notes": "2026-10-09 [QA] run a second push: xd-1553 closed PASS. | 2026-10-09 [QA] re-based at exit (run a): blockers = open P0 handoffs (xd-1476, xd-1490, xd-1492, xd-1493, xd-1536, xd-1547). | 2026-10-08 [QA] re-based at exit (run am): blockers = open P0 handoffs (xd-1476, xd-1490, xd-1492, xd-1493, xd-1536). | 2026-10-08 [QA] run ak second push: open P0 to QA = xd-1476, xd-1490, xd-1492, xd-1493; open to QA 13. | 2026-10-08 [QA] re-based at exit (run ak): blockers = open P0 handoffs (xd-1476, xd-1490, xd-1492, xd-1493). | 2026-10-08 [QA] re-based at exit (run al): blockers = open P0 handoffs (xd-1476, xd-1490, xd-1492, xd-1493, xd-1495, xd-1498). | 2026-10-08 [QA] re-based at exit (run aj): blockers = open P0 handoffs (xd-1476, xd-1490, xd-1492, xd-1493, xd-1495, xd-1498). | 2026-10-07 [QA] run ai second push: open P0 to QA = xd-1476, xd-1490, xd-1492, xd-1493, xd-1495, xd-1498. | 2026-10-07 [QA] re-based at exit (run ai): blockers = open P0 handoffs (xd-1476, xd-1490, xd-1492, xd-1493, xd-1495, xd-1498, xd-1515). | 2026-10-07 [QA] re-based at exit (run ah): blockers = open P0 handoffs (xd-1476, xd-1490, xd-1492, xd-1493, xd-1495, xd-1498). | 2026-10-07 [QA] re-based at exit (run a): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run r): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run q): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run p): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run o): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run n): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run m): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run l): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run k): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run j): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run i): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run h): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run g): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run f): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run e): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run d): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run c): blockers = open P0 handoffs (xd-1164, xd-1222); xd-1395 closed. | 2026-10-06 ["
+      "notes": "2026-10-09 [QA] re-based at exit (run b): blockers = open P0 handoffs (xd-1476, xd-1490, xd-1492, xd-1493, xd-1536, xd-1547, xd-1555). | 2026-10-09 [QA] run a second push: xd-1553 closed PASS. | 2026-10-09 [QA] re-based at exit (run a): blockers = open P0 handoffs (xd-1476, xd-1490, xd-1492, xd-1493, xd-1536, xd-1547). | 2026-10-08 [QA] re-based at exit (run am): blockers = open P0 handoffs (xd-1476, xd-1490, xd-1492, xd-1493, xd-1536). | 2026-10-08 [QA] run ak second push: open P0 to QA = xd-1476, xd-1490, xd-1492, xd-1493; open to QA 13. | 2026-10-08 [QA] re-based at exit (run ak): blockers = open P0 handoffs (xd-1476, xd-1490, xd-1492, xd-1493). | 2026-10-08 [QA] re-based at exit (run al): blockers = open P0 handoffs (xd-1476, xd-1490, xd-1492, xd-1493, xd-1495, xd-1498). | 2026-10-08 [QA] re-based at exit (run aj): blockers = open P0 handoffs (xd-1476, xd-1490, xd-1492, xd-1493, xd-1495, xd-1498). | 2026-10-07 [QA] run ai second push: open P0 to QA = xd-1476, xd-1490, xd-1492, xd-1493, xd-1495, xd-1498. | 2026-10-07 [QA] re-based at exit (run ai): blockers = open P0 handoffs (xd-1476, xd-1490, xd-1492, xd-1493, xd-1495, xd-1498, xd-1515). | 2026-10-07 [QA] re-based at exit (run ah): blockers = open P0 handoffs (xd-1476, xd-1490, xd-1492, xd-1493, xd-1495, xd-1498). | 2026-10-07 [QA] re-based at exit (run a): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run r): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run q): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run p): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run o): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run n): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run m): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run l): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run k): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run j): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run i): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run h): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run g): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run f): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run e): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run d): blockers = open P0 handoffs (xd-1164, xd-1222). | 2026-10-06 [QA] re-based at exit (run c): blockers = open P0 handoffs (xd-1164, xd-1222); xd-1395 closed. | 2026-10-06 ["
     },
     "legal": {
       "name": "Legal & Compliance",
@@ -41011,8 +41013,8 @@
       "lifecycle": "active",
       "needsRelease": false,
       "qaNote": " | [QA 2026-10-06 d] OVERDUE since 5 Oct 22:xxZ (dueBy passed) and no named wait: [DEVOPS] close it, hand it back, or defer with reason + revisit date (7-day rule).",
-      "updatedAt": "2026-10-07T20:39:05Z",
-      "notes": "[ENGINEERING run 2026-10-08 b, 2026-10-08T22:39:10Z] Deploy-path guard LIVE: /root/deploy_api.sh = git production 58e914e2b (md5 82398ceb7e2d), read-only run 12/12 present. Still not guarded: a container started by hand (docker restart / compose up outside the script). QA xd-1540. | [ENGINEERING run 2026-10-07 e, 2026-10-07T21:01:49Z] guard DONE on development adb9cbf7d (proof in QA xd-1487); READY TO SHIP row 149. Still open: set ACTIVATION_FLEET_SSH_PUBLIC_KEY in the brain .env (public key of casper_fleet_admin) - separate READY TO SHIP after the next run measures the key file. | [ENGINEERING run 2026-10-07 e, 2026-10-07T20:56:25Z] run e is writing the deploy guard (infrastructure/scripts/deploy_api.sh) on development now - another session leave this to run e. | [ENGINEERING run 2026-10-07 e, 2026-10-07T20:39:05Z, Opus 5.5, session cse_013HHnL3pX1tjGqiLaWKnkk9] triage (d) active again, due 14 Oct. MEASURED (names only, values never read): running caspervpn-api has 71 env vars, ONE empty = Activation__FleetSshPublicKey (the brain .env has no ACTIVATION_FLEET_SSH_PUBLIC_KEY line; IServerActivationService.cs:570-574 throws 'not configured' -> activating a new server through the API fails today; matters before the GCC canary xd-1310 / new providers xd-1347); website 20, admin 9, postgres 11, nginx 5 vars: 0 empty. NEXT STEP: (1) the guard in infrastructure/scripts/deploy_api.sh on development (after the health check, refuse + roll back when a REQUIRED name is empty; list from docker-compose.yml) -> READY TO SHIP; (2) a separate READY TO SHIP to set the activation public key from /root/.ssh/casper_fleet_admin.pub."
+      "updatedAt": "2026-10-09T01:2xZ",
+      "notes": "[QA 2026-10-09 b ~01:20Z, scheduled] deploy leg PASS via xd-1540: /root/deploy_api.sh = production git (md5 82398ceb7e2d) and both 9 Oct API deploys (00:29Z, 00:39Z) logged 'required secrets present: 12/12' before the rollback step. || [ENGINEERING run 2026-10-08 b, 2026-10-08T22:39:10Z] Deploy-path guard LIVE: /root/deploy_api.sh = git production 58e914e2b (md5 82398ceb7e2d), read-only run 12/12 present. Still not guarded: a container started by hand (docker restart / compose up outside the script). QA xd-1540. | [ENGINEERING run 2026-10-07 e, 2026-10-07T21:01:49Z] guard DONE on development adb9cbf7d (proof in QA xd-1487); READY TO SHIP row 149. Still open: set ACTIVATION_FLEET_SSH_PUBLIC_KEY in the brain .env (public key of casper_fleet_admin) - separate READY TO SHIP after the next run measures the key file. | [ENGINEERING run 2026-10-07 e, 2026-10-07T20:56:25Z] run e is writing the deploy guard (infrastructure/scripts/deploy_api.sh) on development now - another session leave this to run e. | [ENGINEERING run 2026-10-07 e, 2026-10-07T20:39:05Z, Opus 5.5, session cse_013HHnL3pX1tjGqiLaWKnkk9] triage (d) active again, due 14 Oct. MEASURED (names only, values never read): running caspervpn-api has 71 env vars, ONE empty = Activation__FleetSshPublicKey (the brain .env has no ACTIVATION_FLEET_SSH_PUBLIC_KEY line; IServerActivationService.cs:570-574 throws 'not configured' -> activating a new server through the API fails today; matters before the GCC canary xd-1310 / new providers xd-1347); website 20, admin 9, postgres 11, nginx 5 vars: 0 empty. NEXT STEP: (1) the guard in infrastructure/scripts/deploy_api.sh on development (after the health check, refuse + roll back when a REQUIRED name is empty; list from docker-compose.yml) -> READY TO SHIP; (2) a separate READY TO SHIP to set the activation public key from /root/.ssh/casper_fleet_admin.pub."
     },
     {
       "id": "xd-1135",
@@ -49586,9 +49588,9 @@
       "createdAt": "2026-10-08T22:39:15Z",
       "createdDate": "2026-10-08",
       "completedDate": null,
-      "notes": "[QA 2026-10-09 a ~00:25Z, scheduled] 00:12Z: 0 CasperCloak (Protocol 3) ConnectionLogs rows since the 22:34:34Z deploy (7 rows, all WireGuard); 0 'adopt' lines in the api log; control: 10 rows in the same clock window on 7 Oct, 11-13 on 6 Oct = normal night volume. Still waiting for a real hidden-mode heartbeat. || [QA 2026-10-08 am ~23:15Z, scheduled] PARTIAL - not provable yet. API image c180b3945f61 created 22:34:34Z, 0 restarts. (1) docker logs since 22:34Z: 13 '[heartbeat]' lines, 0 '[heartbeat][adopt]'. (2) ConnectionLogs UserAgent 'heartbeat-adopt%': 0 rows ever on production; Protocol 3 rows started since 22:34Z: 0 (no hidden-mode session has begun since the deploy, so there was nothing to adopt). (3) CONTROL NOT CLEAN, but not from row 151: 1 user+server pair has 2 open rows - user 2eecd0e6 on Amsterdam 1a8394db, both 22:43:56Z 8 ms apart, UserAgent 'CasperVPN/iOS 4.4 (65)' (the test build), i.e. the app's own /connect called twice; 28 such sub-second duplicate pairs in 7 days (8 Oct: 3 from build 65 + 2 'CasperVPN/iOS'; 7 Oct: 14 from build 65). New handoff to [BACKEND]. Re-check after the next real hidden-mode session. || [ENGINEERING run 2026-10-08 b, 2026-10-08T22:59:51Z] Re-check 22:53Z (18 min after the deploy): API health 200, image c180b3945f61, admin MRR still 40.08 on all three endpoints, 90 heartbeat log lines, 0 '[heartbeat][adopt]' yet (every heartbeating user still had an open row). 4 exception lines since the deploy = ONE known sign-up error 'Error creating RADIUS user ... Connection refused (localhost:3000)' at 22:40:26Z - PRE-EXISTING (api-logs: 3 on 6 Oct, 33 on 7 Oct, 21 on 8 Oct incl. 18:32Z before tonight's deploys; measured before in xd-941) - not from row 151; do not count it against this check.",
+      "notes": "[QA 2026-10-09 b ~01:20Z, scheduled] STILL OPEN - first adopt on production seen, but from STAFF: ConnectionLogs ec288739 'heartbeat-adopt (xd-1434)' Protocol 3 at 00:30:44Z, S\u00e3o Paulo, user 212ddb7b = the CEO's own account (staff-accounts.md), right after an 'iOS 4.4 (65)' double /connect at 00:30:20Z; LastSeenAt kept moving to 00:32:47Z. Control: 0 user+server pairs with 2 open rows (01:07Z). Criterion asks for NOT probe/staff users -> wait for a real customer. Note: the api restarted 00:40:38Z, so the 00:30Z log line is gone; 0 '[heartbeat]' log lines since then while LastSeenAt still updates (01:07:08Z) = heartbeats arrive, the log line is just not printed on this image. /root/reports/qa1009b-m3.txt || [QA 2026-10-09 a ~00:25Z, scheduled] 00:12Z: 0 CasperCloak (Protocol 3) ConnectionLogs rows since the 22:34:34Z deploy (7 rows, all WireGuard); 0 'adopt' lines in the api log; control: 10 rows in the same clock window on 7 Oct, 11-13 on 6 Oct = normal night volume. Still waiting for a real hidden-mode heartbeat. || [QA 2026-10-08 am ~23:15Z, scheduled] PARTIAL - not provable yet. API image c180b3945f61 created 22:34:34Z, 0 restarts. (1) docker logs since 22:34Z: 13 '[heartbeat]' lines, 0 '[heartbeat][adopt]'. (2) ConnectionLogs UserAgent 'heartbeat-adopt%': 0 rows ever on production; Protocol 3 rows started since 22:34Z: 0 (no hidden-mode session has begun since the deploy, so there was nothing to adopt). (3) CONTROL NOT CLEAN, but not from row 151: 1 user+server pair has 2 open rows - user 2eecd0e6 on Amsterdam 1a8394db, both 22:43:56Z 8 ms apart, UserAgent 'CasperVPN/iOS 4.4 (65)' (the test build), i.e. the app's own /connect called twice; 28 such sub-second duplicate pairs in 7 days (8 Oct: 3 from build 65 + 2 'CasperVPN/iOS'; 7 Oct: 14 from build 65). New handoff to [BACKEND]. Re-check after the next real hidden-mode session. || [ENGINEERING run 2026-10-08 b, 2026-10-08T22:59:51Z] Re-check 22:53Z (18 min after the deploy): API health 200, image c180b3945f61, admin MRR still 40.08 on all three endpoints, 90 heartbeat log lines, 0 '[heartbeat][adopt]' yet (every heartbeating user still had an open row). 4 exception lines since the deploy = ONE known sign-up error 'Error creating RADIUS user ... Connection refused (localhost:3000)' at 22:40:26Z - PRE-EXISTING (api-logs: 3 on 6 Oct, 33 on 7 Oct, 21 on 8 Oct incl. 18:32Z before tonight's deploys; measured before in xd-941) - not from row 151; do not count it against this check.",
       "waitingOn": "the first real hidden-mode heartbeat with no open row after the 22:34Z deploy",
-      "updatedAt": "2026-10-09T00:2xZ"
+      "updatedAt": "2026-10-09T01:2xZ"
     },
     {
       "id": "xd-1540",
@@ -49596,14 +49598,17 @@
       "to": "[QA]",
       "title": "Handoff from DEVOPS: Row 149 LIVE on the main server - check: the next API deploy logs 'required secrets present: 12/12' before it builds",
       "description": "[ENGINEERING run 2026-10-08 b, 2026-10-08T22:39:10Z] production 58e914e2b (cherry-pick of development adb9cbf7d) and /root/deploy_api.sh installed 22:37Z from git (md5 82398ceb7e2d = development = what QA passed in xd-1487; backup /root/backups/deploy_api.sh.before-row149-202610082237, md5 9b3d9dd01c8c). Read-only guard run 22:37:12Z: 'required secrets present: 12/12' + 'WARN empty (deploy continues): Activation__FleetSshPublicKey' (/root/reports/eng1008b-install149.txt). CHECK: md5sum /root/deploy_api.sh = git show origin/production:infrastructure/scripts/deploy_api.sh; the NEXT real deploy log (/root/reports/*deploy-api*.log) has the 12/12 line before '=== ROLLBACK TARGET'. PASS -> tick CEO card row 149 + close xd-1134 deploy leg.",
-      "status": "in_progress",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-10-08T22:39:15Z",
       "createdDate": "2026-10-08",
-      "completedDate": null,
+      "completedDate": "2026-10-09",
       "waitingOn": "the next real API deploy on the main server",
-      "notes": "[QA 2026-10-09 a ~00:25Z, scheduled] 00:08Z: caspervpn-api Created 2026-10-08T22:34:34Z, 0 restarts = no new deploy yet. Still waiting. || [QA 2026-10-08 am ~23:15Z, scheduled] PARTIAL. PASS leg: md5 /root/deploy_api.sh = 82398ceb7e2d = git show origin/production (a7b328e, 9 Oct 02:05 +03):infrastructure/scripts/deploy_api.sh = 82398ceb7e2d. Read-only guard run 22:37:12Z shows 'required secrets present: 12/12' + one WARN empty Activation__FleetSshPublicKey (/root/reports/eng1008b-install149.txt). OPEN leg: no API deploy since the install (caspervpn-api created 22:34:34Z, before 22:37Z; newest deploy log eng1008b-deploy-api-151.log 22:34Z). Re-check the next *deploy-api*.log for the 12/12 line before '=== ROLLBACK TARGET'.",
-      "updatedAt": "2026-10-09T00:2xZ"
+      "notes": "[QA 2026-10-09 b ~01:20Z, scheduled] PASS. Two real API deploys since the install both print the guard line BEFORE the rollback step: /root/reports/eng1008d-ship164-deploy.log L136 '[00:29:40Z] required secrets present: 12/12' -> L137 '=== ROLLBACK TARGET' -> L154 DEPLOY DONE OK; /root/reports/eng1008d-ship150-deploy.log L23 '[00:39:22Z] required secrets present: 12/12' -> L24 ROLLBACK TARGET -> L42 DEPLOY DONE OK. md5 /root/deploy_api.sh 82398ceb7e2d = git show origin/production (d02b2349e):infrastructure/scripts/deploy_api.sh 82398ceb7e2d. One WARN empty Activation__FleetSshPublicKey (known, non-blocking). /root/reports/qa1009b-m1.txt -> CEO card row 149 ticked (tested); xd-1134 deploy leg passed. || [QA 2026-10-09 a ~00:25Z, scheduled] 00:08Z: caspervpn-api Created 2026-10-08T22:34:34Z, 0 restarts = no new deploy yet. Still waiting. || [QA 2026-10-08 am ~23:15Z, scheduled] PARTIAL. PASS leg: md5 /root/deploy_api.sh = 82398ceb7e2d = git show origin/production (a7b328e, 9 Oct 02:05 +03):infrastructure/scripts/deploy_api.sh = 82398ceb7e2d. Read-only guard run 22:37:12Z shows 'required secrets present: 12/12' + one WARN empty Activation__FleetSshPublicKey (/root/reports/eng1008b-install149.txt). OPEN leg: no API deploy since the install (caspervpn-api created 22:34:34Z, before 22:37Z; newest deploy log eng1008b-deploy-api-151.log 22:34Z). Re-check the next *deploy-api*.log for the 12/12 line before '=== ROLLBACK TARGET'.",
+      "updatedAt": "2026-10-09T01:2xZ",
+      "completedAt": "2026-10-09",
+      "completedBy": "[QA]",
+      "resolution": "PASS - 12/12 guard line on both 9 Oct deploys (QA run 2026-10-09 b)"
     },
     {
       "id": "xd-1541",
@@ -49824,11 +49829,14 @@
       "to": "[QA]",
       "title": "Handoff from BACKEND: Row 164 SHIPPED: screen_exit is saved on production + untested network checks are empty, not 'failed'",
       "description": "[ENGINEERING run 2026-10-08 d, 2026-10-09T00:32:25Z] SHIPPED (CEO YES 9 Oct): production d202aa392 = cherry-pick -x of development 1f6ea8add ONLY (7 files: FunnelEventsController, FunnelEvent model, NetworkProbe model + DTO, AdminOpsController, migration 20261008000000_ScreenExitAndProbeNulls, tests; shipped files vs development 0 diff lines). Built + tested ON THE SHIP TREE 00:26-00:28Z (nice): 0 errors, 196/196 (/root/reports/eng1008d-ship164-build.log, -test.log). Push 00:29:11Z under lock eng-run-1008d; CI runner stopped right after the push and restarted at the end. D8: the deploy clone brought in d202aa392 only (backend/admin/compose). /root/deploy_api.sh 00:29:40-00:31:31Z: rollback tag caspervpn-api:rollback-202610090029 = c180b3945f61 VERIFIED, healthy +15 s, DEPLOY DONE OK. BEFORE -> AFTER (no account, read-only): GET /api/admin/ops/screen-exits without a token 404 -> 401 (route exists); migration row 0 -> 1; NetworkProbes 'untested stored as failed' 9 -> 0; FunnelEvents new columns 4/4; https://api.caspervpn.com/health 200. Not yet seen live: a real screen_exit from a build-65 phone (next device session) - QA checks the stored row. Log /root/reports/eng1008d-ship164.log. PASS = (1) after the CEO's next build-65 session: SELECT \"Event\",\"Screen\",\"SecondsOnScreen\",\"Connected\",\"Plan\" FROM \"FunnelEvents\" WHERE \"Event\"='screen_exit' ORDER BY \"CreatedAt\" DESC LIMIT 3 shows rows; (2) SELECT count(*) FROM \"NetworkProbes\" WHERE (\"WsOk\"=false AND \"WsMs\" IS NULL) OR (\"WgUdpOk\"=false AND \"WgUdpMs\" IS NULL) = 0; (3) GET /api/admin/ops/screen-exits?days=7 with an admin token = 200 with realExits + allExits. Then tick xd-1392 / xd-1521 rows.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-10-09T00:32:31Z",
       "createdDate": "2026-10-09",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[QA 2026-10-09 b ~01:20Z, scheduled] PARTIAL. Leg 2 PASS: NetworkProbes untested-stored-as-failed = 0 (01:06Z). Route exists: /api/admin/ops/screen-exits?days=7 no token -> 401; migration 20261008000000_ScreenExitAndProbeNulls in __EFMigrationsHistory. Leg 1 OPEN: 0 screen_exit rows yet (needs a build-65 phone session). Leg 3 OPEN: needs an admin token (folded into xd-1494 signed-in pass). /root/reports/qa1009b-m1.txt",
+      "updatedAt": "2026-10-09T01:2xZ",
+      "waitingOn": "a build-65 phone session (screen_exit rows) + admin sign-in (xd-1494)"
     },
     {
       "id": "xd-1555",
@@ -49844,8 +49852,9 @@
       "taskRef": "xd-1535",
       "category": "release-4.3.1",
       "dueBy": "2026-10-11T18:00:00Z",
-      "notes": "[CEO office live 2026-10-09 01:04Z] Add to the build-66 check: the 5.4 privacy screen (xd-1564) appears once, before the first paywall and before the first Connect; its text matches Legal's; Settings > Privacy opens it again; marker is the new one (25p), not 25o.",
-      "updatedAt": "2026-10-09T01:04:30Z"
+      "notes": "[QA 2026-10-09 b ~01:20Z, scheduled] not started - build 66 is not built yet (CEO card row 168 ON HOLD for the 5.4 privacy screen). QA will run legs (1)-(4) once the CEO archives build 66 with the 25p marker. || [CEO office live 2026-10-09 01:04Z] Add to the build-66 check: the 5.4 privacy screen (xd-1564) appears once, before the first paywall and before the first Connect; its text matches Legal's; Settings > Privacy opens it again; marker is the new one (25p), not 25o.",
+      "updatedAt": "2026-10-09T01:2xZ",
+      "waitingOn": "CEO builds 4.3.1 build 66 (row 168, on hold for the privacy screen)"
     },
     {
       "id": "xd-1556",
@@ -49903,11 +49912,14 @@
       "to": "[QA]",
       "title": "Handoff from CTO: Row 150 SHIPPED: support messages alert the team (bell + one Telegram line) - check live",
       "description": "[ENGINEERING run 2026-10-08 d, 2026-10-09T00:48:44Z] SHIPPED (CEO YES 8 Oct + CEO live OK 9 Oct for the key copy): production ed5dcfb02 = cherry-pick -x of development a37d7513a + ab986afe5 ONLY (9 files; shipped files vs development 0 diff lines). Ship tree checks 00:32-00:38Z: backend 0 errors, 205/205 tests; admin npx tsc --noEmit 0 errors with a control (planted TS2322 -> rc 2, 1 error). Push 00:39:19Z under lock eng-run-1008d; CI runner stopped during the work, restarted 00:47:51Z. Secrets: /opt/caspervpn/secrets/api (uid 1000, 0500) + telegram_bot_token / telegram_chat_id copied file-to-file (0400, non-empty; never printed). D8: deploy brought in the 2 commits only. /root/deploy_api.sh -> DEPLOY DONE OK 00:40:54Z (rollback tag taken by the script); in the container the secrets are readable as uid 1000, 3 TeamAlerts__ env names, DLL 'support-alert' strings 10. Admin rebuilt with the runner stopped (rollback tag of the old admin image 1d4da3721056): bundle main.c5cf7782.js -> main.6c17dc10.js, 'View all notifications' 1, mock 'New user registered' 0, admin / 200. PRODUCTION TEST 00:41:37Z (probe-1789991690@caspervpn.com ticket fb554853, admin token minted in memory): ticket 200 -> admin bell 1 unread 'New support ticket'; log 'support-alert: telegram sent (200)'; 2nd user message -> still 1 (no repeat); admin opens the thread -> 0 unread; ticket closed 00:5xZ after the column fix. Script /root/reports/eng1008d-u4prod.py; logs /root/reports/eng1008d-ship150*.log. PASS = a real user's next support message gives ONE unread 'support' row in GET /api/admin/notifications and ONE Telegram line (no user words), no repeat while unread, cleared when the admin opens or answers the ticket; the admin header bell shows the count (signed-in browser).",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-10-09T00:48:49Z",
       "createdDate": "2026-10-09",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[QA 2026-10-09 b ~01:20Z, scheduled] PARTIAL. Server leg seen in the live api log (container started 00:40:38Z): 4 'support-alert' lines - 00:41:37 'telegram sent (200)', 00:41:39 'already has an unread alert ... no repeat', 00:41:40 '1 alert(s) marked read' - all for the engineering probe ticket fb554853 (staff/probe, not a real user). 1 ticket created since 00:40Z (that probe). OPEN: a real user's next support message (one unread row + one Telegram line) and the admin bell in a signed-in browser (xd-1494). /root/reports/qa1009b-m1.txt",
+      "updatedAt": "2026-10-09T01:2xZ",
+      "waitingOn": "the next real user's support message + admin sign-in (xd-1494)"
     },
     {
       "id": "xd-1560",
@@ -49915,11 +49927,14 @@
       "to": "[QA]",
       "title": "Handoff from BACKEND: Row 170 DONE: admins can change a ticket's status again (2 missing columns added)",
       "description": "[ENGINEERING run 2026-10-08 d, 2026-10-09T00:48:44Z] DONE (CEO YES 9 Oct): production SupportTickets got the 2 missing columns (ALTER TABLE ... ADD COLUMN IF NOT EXISTS \"ResolvedAt\" / \"ClosedAt\" timestamptz NULL, same as the test server; before 0 of 2, after 2 of 2). Proof: the admin status change that failed with 42703 at 00:42:18Z now answers 200 'Status updated from open to closed' for the test ticket fb554853 (DB Status=closed, ClosedAt set); 0 '42703' lines after. The schema still needs a migration in git so a rebuilt database gets the columns -> [BACKEND] handoff. PASS = with an admin session, set any ticket to 'resolved' -> 200, ResolvedAt set; 0 lines '42703' in docker logs caspervpn-api after 9 Oct 00:47Z.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-10-09T00:48:49Z",
       "createdDate": "2026-10-09",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[QA 2026-10-09 b ~01:20Z, scheduled] PARTIAL. Columns: SupportTickets has ResolvedAt + ClosedAt (2/2, information_schema). Log leg PASS: every '42703' line in docker logs caspervpn-api is BEFORE the fix (00:41:44Z, 00:42:18Z x2, all 'column \"ResolvedAt\" does not exist'); 0 after 00:47Z through 01:06Z. Test ticket fb554853 = closed, ClosedAt set. OPEN: an admin setting a ticket to 'resolved' -> 200 + ResolvedAt set (QA does not change production tickets; folded into xd-1494 signed-in pass). Git migration for the 2 columns stays with [BACKEND]. /root/reports/qa1009b-m2.txt",
+      "updatedAt": "2026-10-09T01:2xZ",
+      "waitingOn": "admin sign-in (xd-1494) for the resolve click"
     },
     {
       "id": "xd-1561",
@@ -49943,7 +49958,10 @@
       "priority": "P1",
       "createdAt": "2026-10-09T00:50:43Z",
       "createdDate": "2026-10-09",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[QA 2026-10-09 b ~01:20Z, scheduled] device-bound: 26w was built 00:34Z but not installed (phone not plugged in). Waits for the CEO to plug in the test iPhone and run the install file, then the console log.",
+      "updatedAt": "2026-10-09T01:2xZ",
+      "waitingOn": "CEO: plug in the test iPhone, run the 26w install, open the 5 screens"
     },
     {
       "id": "xd-1563",
@@ -49951,11 +49969,14 @@
       "to": "[QA]",
       "title": "Handoff from WEBSITE: Check on dev: blog Share button on a computer copies the link and shows 'Link copied' (xd-1519 item 1)",
       "description": "[ENGINEERING run 2026-10-08 d, 2026-10-09T00:54:56Z] item 1 FIXED on development 1368e2d1a (website/components/share-button.tsx only): computers (no coarse pointer) copy the link directly (clipboard API, textarea fallback) and show a visible 'Link copied'; phones keep navigator.share and fall back to copying on any error except AbortError (user closed the sheet). Type check on the dev tree: npx prisma generate + npx tsc --noEmit = 0 errors, control (planted TS2322) caught, node:20-alpine --cpus=0.8 (/root/reports/eng1008d-webtsc.log). Dev website redeploy follows the push (~10-20 min behind CI). NOT done: item 2 (/api/track rejects type 'conversion' -> every first-party conversion event dropped since 26 Sep; needs a place to store them - no conversion table exists in caspervpn_website and the website DB user cannot CREATE (website skill 5 Oct trap) -> new table = DB-admin step = CEO YES row; GA still receives them) and item 3 (hydration errors on /privacy and /terms). PASS on the dev website after its redeploy: on Mac Chrome open a blog post, click Share -> 'Link copied' appears and the clipboard holds the post URL (no ?query); on a phone -> the share sheet opens; control: production still does nothing on Mac Chrome until the CEO's YES. Then the READY TO SHIP row.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-10-09T00:55:01Z",
       "createdDate": "2026-10-09",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[QA 2026-10-09 b ~01:20Z, scheduled] BLOCKED on dev, code leg PASS. Code: origin/development 1368e2d1a website/components/share-button.tsx - pointer:coarse gate (L38), clipboard.writeText (L15) + textarea fallback, AbortError return (L44), visible 'Link copied' span (L59); production still the old navigator.share-first code. LIVE dev check impossible: dev.caspervpn.com/blog lists 0 posts and /blog/check-vpn-working-3-minutes = 404 on dev (headless Chromium 01:1xZ), so there is no Share button to click. Control note: on headless Linux Chromium (no navigator.share) PRODUCTION already copies the URL to the clipboard but shows no visible 'Link copied' - the Mac Chrome hang only reproduces with navigator.share present. -> handed back to [WEBSITE]: seed one blog post on dev (or give the dev URL of one) and re-hand to QA.",
+      "updatedAt": "2026-10-09T01:2xZ",
+      "waitingOn": "[WEBSITE] a blog post on the dev website"
     },
     {
       "id": "xd-1564",
@@ -49985,9 +50006,31 @@
       "category": "release-4.4",
       "handoffTo": "[QA]",
       "handoffNote": "QA: on the 4.4 build, tap Settings -> Privacy Policy and Terms of Use: both show the v1.8 website pages."
+    },
+    {
+      "id": "xd-1566",
+      "from": "[QA]",
+      "to": "[WEBSITE]",
+      "title": "Handoff from QA: [QA] xd-1563: dev website has no blog posts - cannot test the Share fix",
+      "description": "QA run 2026-10-09 b: dev.caspervpn.com/blog lists 0 posts and /blog/check-vpn-working-3-minutes is 404 on dev, so the share-button fix (development 1368e2d1a) cannot be clicked on dev. Code check PASSED (pointer:coarse gate, clipboard + fallback, AbortError, visible 'Link copied'). Need: one blog post on the dev website (seed or copy) and its URL on xd-1563, then QA runs the Mac-width click test (Link copied + clipboard = post URL without ?query) and the phone share-sheet check.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-09T01:10:06Z",
+      "createdDate": "2026-10-09",
+      "completedDate": null
     }
   ],
   "importantNotes": [
+    {
+      "id": "note-qa-20261009b",
+      "date": "2026-10-09",
+      "createdAt": "2026-10-09T01:20:00Z",
+      "dept": "[QA]",
+      "priority": "P2",
+      "resolved": false,
+      "title": "[QA] Night check: the deploy safety check now works on every update",
+      "text": "The new check that stops an update when a password setting is missing ran on both updates tonight and passed. Support alerts and the ticket-status fix work on the server; they still need one real customer message and one admin click to finish. The blog Share fix cannot be tested yet: the test website has no blog posts. Nothing for you to do."
+    },
     {
       "id": "note-qa-20261009a",
       "date": "2026-10-09",
