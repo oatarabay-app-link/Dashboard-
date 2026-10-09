@@ -13184,6 +13184,16 @@
           "addedAt": "2026-10-09T06:14:42Z",
           "addedBy": "[DEVOPS] engineering run 1009g",
           "evidence": "[QA 2026-10-09 h] tested on dev: PASS - new report read on today's data drops our own account from the US row (44 -> 0 sessions), prints 'INTERNAL ACCOUNTS EXCLUDED 12', other countries unchanged; control (current report) still counts it. Ready for your YES. | [ENGINEERING run 2026-10-09 g, 2026-10-09T06:14:42Z] added; development 6ae39cd; xd-1582; QA xd-1584; follow-up xd-1585 (the US row may still say BLOCKED? for a different reason - a real user in Iran whose phone is set to US). Ship = cherry-pick 6ae39cd to production, then copy from git to /opt/caspervpn/ (cron unchanged). Board advice: yes - read-only report, no user-facing change."
+        },
+        {
+          "test": "DECISION \u2014 people who sign up with e-mail and password never connect (0 of 15 in 30 days; Apple sign-in 31 of 46). They hit the 'confirm your e-mail' wall, the current iPhone app does not explain it, and 3 of this week's 8 confirmation e-mails bounced (typed wrong). Pick one: A) only ship the next iPhone build, which already explains the wall and offers 'resend' \u00b7 B) A + let a new e-mail account connect for its first 24 hours before it must confirm (server setting only, can be tested on dev; free plan stays capped at 0.5 GB) \u00b7 C) A + put 'Sign in with Apple' first on the sign-up screen (next app build). Advice: B and C. Also: are the Lebanon e-mail sign-ups of 7-8 Oct (some on build 65) your own tests? If yes we add them to the staff list. Reply 'B', 'B+C', etc. in any chat.",
+          "verify": "prod SQL read-only: real users created in 30 d grouped by AppleId/GoogleId/e-mail x IsEmailVerified x EXISTS(ConnectionLogs) \u2014 see product-strategy/ACTIVATION-EMAIL-SIGNUPS-2026-10-09.md",
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "addedAt": "2026-10-09T07:14:02Z",
+          "addedBy": "product",
+          "evidence": "xd-1590; product-strategy/ACTIVATION-EMAIL-SIGNUPS-2026-10-09.md"
         }
       ],
       "progress": 0,
@@ -18207,7 +18217,7 @@
       "ice": 294,
       "description": "Opened by the CEO office 2026-10-09 (board meeting 9, decision 3; routine 08 step 8: the factory model order is volume \u2192 first connection \u2192 conversion). ICE 294 = impact 7 \u00d7 confidence 6 \u00d7 ease 7. BASELINE 9 Oct 06:07Z (prod read-only): 28 new real people in 7 d, 12 connected (43 %); of the 16 who never connected, 7 have no login country (signed in, never connected) and 4 of those 7 never verified their email. FunnelEvents last 24 h = 2 rows only (the screen-exit signal ships with the next app). Hypothesis, not measured: the email gate (403 on connect for unverified accounts) stops part of them.",
       "dueBy": "2026-10-16",
-      "status": "PENDING \u2014 opened 2026-10-09 by the CEO office",
+      "status": "PARTIAL \u2014 measured 9 Oct: e-mail sign-ups never connect (0 of 15 in 30 d); CEO DECISION A/B/C on the CEO card; QA re-run pending",
       "acceptanceCriteria": [
         {
           "test": "Every week, for each real newcomer who never connected: where they signed up (app or website), email verified yes/no, the last screen seen, and any connect refusal (403/402) \u2014 listed on this task",
@@ -18216,7 +18226,7 @@
           "passed": false,
           "addedAt": "2026-10-09T06:15:28Z",
           "addedBy": "ceo-office",
-          "evidence": "baseline only (CEO office 2026-10-09): 16 never connected; 7 with no login country; 4 of those unverified.",
+          "evidence": "[PRODUCT growth run 2026-10-09 h 2026-10-09T07:14:02Z] MEASURED (prod read-only, staff excluded): 30 d real new users by sign-up: Apple 46 -> 31 connected, Google 25 -> 8, e-mail 15 -> 0 connected (13 never confirmed, 2 confirmed). Last 7 d: 27 newcomers, 16 never connected = 9 e-mail sign-ups (8 unconfirmed; 3 pressed Connect 9-35x and were refused, 403 AUTH_1006 email gate, GateVpnAccess=true in production appsettings.json) + 7 Apple/Google (5 made no server call after sign-in = left before Connect or at the iPhone VPN prompt, hypothesis; 1 Iran 26 failures; 1 key, no connection). Confirmation mails 2 Oct->now (Resend): 5 delivered, 3 BOUNCED (typo address - can never confirm). Live iPhone 4.2 APIClient L433 only matches 'email not verified' so the gate's 'Verify your email...' shows as a generic forbidden error (screen not seen = hypothesis); fixed on ios/trial-at-signup + b65-text-merge (xd-1506). Last screen: not measurable for 4.2 (FunnelEvents 8 rows/7 d). Spec + options: product-strategy/ACTIVATION-EMAIL-SIGNUPS-2026-10-09.md. Not ticked - QA re-runs (handoff). || baseline only (CEO office 2026-10-09): 16 never connected; 7 with no login country; 4 of those unverified.",
           "verifiedBy": "none"
         },
         {
@@ -50900,8 +50910,8 @@
       "from": "[CEO]",
       "to": "[PRODUCT]",
       "title": "Handoff from CEO: [P1] New people who sign in but never connect \u2014 find the step that stops them (task activation-silent-newcomers)",
-      "description": "[CEO office 2026-10-09 06:0x-06:4xZ (09:0x Beirut, daily run)] Board meeting 9 decision 3. Baseline 9 Oct: 28 new real people in 7 d, 12 connected (43 %); 16 never connected, 7 of them have no login country, 4 of those 7 never verified their email. Work with [BACKEND] (read-only SQL + API connect statuses) to list, per never-connected newcomer, sign-up source, email verified, last screen, connect refusals. If the email gate is the cause, spec the fix and put a READY TO SHIP row on the CEO card. Then \u2192 [QA].",
-      "status": "pending",
+      "description": "[CEO office 2026-10-09 06:0x-06:4xZ (09:0x Beirut, daily run)] Board meeting 9 decision 3. Baseline 9 Oct: 28 new real people in 7 d, 12 connected (43 %); 16 never connected, 7 of them have no login country, 4 of those 7 never verified their email. Work with [BACKEND] (read-only SQL + API connect statuses) to list, per never-connected newcomer, sign-up source, email verified, last screen, connect refusals. If the email gate is the cause, spec the fix and put a READY TO SHIP row on the CEO card. Then \u2192 [QA]. \u00b7 [PRODUCT growth run 2026-10-09 h 2026-10-09T07:14:02Z] MEASURED (prod read-only, staff excluded): 30 d real new users by sign-up: Apple 46 -> 31 connected, Google 25 -> 8, e-mail 15 -> 0 connected (13 never confirmed, 2 confirmed). Last 7 d: 27 newcomers, 16 never connected = 9 e-mail sign-ups (8 unconfirmed; 3 pressed Connect 9-35x and were refused, 403 AUTH_1006 email gate, GateVpnAccess=true in production appsettings.json) + 7 Apple/Google (5 made no server call after sign-in = left before Connect or at the iPhone VPN prompt, hypothesis; 1 Iran 26 failures; 1 key, no connection). Confirmation mails 2 Oct->now (Resend): 5 delivered, 3 BOUNCED (typo address - can never confirm). Live iPhone 4.2 APIClient L433 only matches 'email not verified' so the gate's 'Verify your email...' shows as a generic forbidden error (screen not seen = hypothesis); fixed on ios/trial-at-signup + b65-text-merge (xd-1506). Last screen: not measurable for 4.2 (FunnelEvents 8 rows/7 d). Spec + options: product-strategy/ACTIVATION-EMAIL-SIGNUPS-2026-10-09.md. Not ticked - QA re-runs (handoff).",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-10-09T06:15:40Z",
       "createdDate": "2026-10-09",
@@ -50911,7 +50921,8 @@
       "category": "factory-ops",
       "ageDays": 0,
       "needsRelease": false,
-      "lifecycle": "active"
+      "lifecycle": "active",
+      "blocker": "CEO: A/B/C on the e-mail sign-up DECISION row (advice B+C); then [BACKEND] builds B on dev"
     },
     {
       "id": "xd-1591",
@@ -50970,6 +50981,18 @@
       "status": "pending",
       "priority": "P0",
       "createdAt": "2026-10-09T06:16:34Z",
+      "createdDate": "2026-10-09",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1596",
+      "from": "[[PRODUCT]]",
+      "to": "[[QA]]",
+      "title": "Handoff from [PRODUCT]: Check xd-1590: e-mail sign-ups never connect (0 of 15 in 30 d) - re-run the measurement",
+      "description": "Re-run read-only on production: real users (factory filter + staff-accounts.md) created in the last 30 d, grouped by sign-up (AppleId / GoogleId / e-mail) x IsEmailVerified x ever in ConnectionLogs. Expect e-mail rows 15 -> 0 connected, Apple 46 -> 31, Google 25 -> 8 (9 Oct 07:2xZ). Control: SSO rows non-zero. Also confirm production appsettings.json EmailVerification:GateVpnAccess=true and production ios-app-v2 APIClient.swift 403 branch matches only 'email not verified'. Then tick row 0 of task activation-silent-newcomers if it holds. Spec: product-strategy/ACTIVATION-EMAIL-SIGNUPS-2026-10-09.md",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-09T07:14:08Z",
       "createdDate": "2026-10-09",
       "completedDate": null
     }
