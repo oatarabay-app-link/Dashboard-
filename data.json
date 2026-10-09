@@ -13081,6 +13081,14 @@
           "category": "release-4.3.1",
           "verify": "python3 tools/asc_metadata_scan.py --version 4.3.1 --assets-out a.json (main server) then python3 tools/asc_picture_ocr.py a.json --out pics -> 0 iPhone/iPad FAIL; look at each PNG",
           "evidence": "[CEO office live 2026-10-08 23:54Z] Partly done with the CEO's yes: 'Choose Your Plan' (prices) and 'restricted regions' pictures deleted; the set is now 10: 1 Connected \u00b7 2 Double VPN Connected \u00b7 3 server page (shows 'CasperCloak \u2014 Restrictive networks') \u00b7 4 Servers Worldwide \u00b7 5 Home, free plan \u00b7 6 You're Protected (shows 'military-grade security') \u00b7 7 Profile \u00b7 8 Servers list \u00b7 9 Double VPN routes \u00b7 10 Double VPN Los Angeles\u2192D\u00fcsseldorf. Still open for the CEO: picture 3 'Restrictive networks' and picture 6 'military-grade security' (house words, not in Apple's text) and iPad #1 + #2 (both show Paris, closed 1 Oct; iPad #2 also shows 'China (1) Hong Kong' and an Amsterdam\u2192Bangkok route \u2014 May screens). Read again tonight by OCR and by eye. || [MARKETING growth run 2026-10-08 d, 2026-10-08T23:23:29Z] asc_picture_ocr on the live 4.3.1 pictures: FAIL iPhone #2/#4/#5/#8 (texts quoted above, #2/#4/#5 also looked at by eye); submission e935c3c6 UNRESOLVED_ISSUES (not resent). xd-1534 / QA xd-1548."
+        },
+        {
+          "test": "READY TO SHIP \u2014 an alarm for when the scheduled runs stop. On 8 Oct no run reached your Mac for almost a day and nobody knew until night. This small check runs on the main server every 30 minutes: if nothing has been written to the vault or the dashboard for 2 hours between 7 in the morning and 11 at night (Beirut), you get one Telegram + e-mail alert, and it clears by itself when runs come back \u00b7 why: xd-1533 \u00b7 tested: replayed on the last 7 days of real history, it fires on the 8 Oct outage from 7:00 Beirut and on nothing else since the runs became hourly \u00b7 rollback: remove the one cron line \u00b7 say 'yes deadman'",
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "verify": "ssh brain: python3 /opt/caspervpn/factory_deadman.py --repo /opt/caspervpn/deadman-repo (dry run, prints ok/would alert) ; install = git show origin/production:infrastructure/scripts/factory_deadman.py > /opt/caspervpn/factory_deadman.py (md5 = git), git clone --bare -b production <Casper-Code> /opt/caspervpn/deadman-repo with origin fetch refspec, cron '*/30 * * * * /usr/bin/flock -n /var/lock/casper-deadman /usr/bin/python3 /opt/caspervpn/factory_deadman.py --repo /opt/caspervpn/deadman-repo --send >> /var/log/factory-deadman.log 2>&1'; first cherry-pick development 7d623ab5 to production",
+          "evidence": "[ENGINEERING run 2026-10-09 a, 2026-10-09T00:13:11Z] added; development 7d623ab5; xd-1533; replay proof /root/reports/eng1009a on the brain."
         }
       ],
       "progress": 0,
@@ -49421,7 +49429,7 @@
       "to": "[CTO]",
       "title": "Handoff from CEO: [P0] Factory down 21 h 42 min on 8 Oct: no scheduled session started on the Mac 00:05Z\u201321:47Z \u2014 find the cause and build a deadman",
       "description": "[CEO office 2026-10-08 22:5xZ (01:5x Beirut 9 Oct); run fired 06:03Z, started 21:47Z] MEASURED: Mac /sessions folder birth times: last born 2026-10-08T00:05:12Z, next 21:47:14Z (5 folders in 9 s: QA, engineering, growth, apps firings of 21:03-21:04Z + this office firing of 06:03:30Z = session cse_01T2RMZFMwDyajkYAwCJefzf). list_triggers: every task fired on schedule (SUCCEEDED = dispatch only). origin/production unchanged 00:20:43Z\u219221:47Z (Mac FETCH_HEAD == HEAD ca46fd39); board unchanged 00:09:47Z\u219221:47Z (406ca8117). The Mac was awake: its git timer fetched at 04:07:31Z and touched refs 06:45:20Z. So the Claude app took no work (closed / signed out / bridge down / account usage limit \u2014 NOT measured; ask the CEO). Triggers apps/growth/bot updated_at 20:35:12Z and engineering/qa 20:04:3xZ (someone changed them during the outage \u2014 check what). ASK: (1) cause, measured; (2) a deadman that runs on the MAIN SERVER (not the Mac): alert the CEO (Telegram) when no new vault/board commit and no session start for 2 h inside 07:00-23:00 Beirut; (3) the office report lists per-routine starts. Verify: stop nothing; simulate by reading the last commit time; the alert fires in a dry run. handoffTo QA.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P0",
       "createdAt": "2026-10-08T22:35:57Z",
       "createdDate": "2026-10-08",
@@ -49431,7 +49439,8 @@
       "category": "factory-ops",
       "ageDays": 0,
       "needsRelease": false,
-      "lifecycle": "active"
+      "lifecycle": "active",
+      "notes": "[ENGINEERING run 2026-10-09 a, 2026-10-09T00:13:11Z] ITEM 2 (deadman) BUILT ON DEVELOPMENT, NOT INSTALLED: infrastructure/scripts/factory_deadman.py @ development 7d623ab5 (md5 5b4285b8d897). Runs on the main server; alerts through the local Alertmanager (already routes to Telegram + e-mail, so no bot token is read or stored) when BOTH signals are stale: newest commit on Casper-Code production (every run writes its vault log there) AND newest commit on the Dashboard- board, for >120 min inside 07-23 Beirut. Dry run by default; --send posts. PROVEN (brain, /root/reports/eng1009a, read-only, --no-fetch on /root/eng1003a/code): dry run 00:11Z -> 'ok: outside the Beirut window'; replay 7 days every 15 min (4,110 production + 365 board commits) -> fires 8 Oct 04:00Z-19:45Z = the whole in-window part of the 21 h outage (would have told the CEO at 07:00 Beirut instead of ~01:35 next night); since the hourly cadence started (6 Oct 09:30Z) it fires on nothing else. Before that it also fires on 7 shorter gaps (2 Oct x3, 3 Oct x2, 4 Oct x2, 6 Oct 07:00-09:30Z) when runs were 9/day, so if the runs go back to daily the threshold must go to 240 min. PENDING: the --send path is not tested live (it would page the CEO); install needs CEO YES (row added on ceo-action-backlog). Items 1 (cause) and 3 (per-routine starts in the office report) NOT done."
     },
     {
       "id": "xd-1534",
@@ -49725,6 +49734,18 @@
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-10-09T00:05:39Z",
+      "createdDate": "2026-10-09",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1553",
+      "from": "[[CTO]]",
+      "to": "[[QA]]",
+      "title": "Handoff from [CTO]: Check the factory deadman on development 7d623ab5 (dry run + 7-day replay) - xd-1533",
+      "description": "On the brain: git show origin/development:infrastructure/scripts/factory_deadman.py > /tmp/fd.py (md5 5b4285b8d897); python3 /tmp/fd.py --repo <a clone with origin/production> (dry run: prints ok or 'DRY RUN would alert', exit 0/2, never posts without --send); python3 /tmp/fd.py --repo <clone> --replay-days 7 -> must list an ALERT span covering 8 Oct ~04:00Z-19:45Z and no span after 8 Oct 19:45Z. Control: --max-age-min 100000 -> 0 spans. Do NOT run --send (it pages the CEO). Then tell the CEO card row 'yes deadman' is ready.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-09T00:13:16Z",
       "createdDate": "2026-10-09",
       "completedDate": null
     }
