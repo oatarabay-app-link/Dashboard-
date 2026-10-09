@@ -46926,7 +46926,7 @@
       "from": "[CEO]",
       "to": "[BACKEND]",
       "title": "Handoff from CEO: Free quota leak: a Russian free user used 3,121 MB against a 512 MB limit (Sep 23-24)",
-      "description": "MEASURED 5 Oct: Users 596brdykg9@privaterelay (RU, Free, created 23 Sep) CurrentCycleDataUsedBytes = 3,121 MB vs limit 512 MB - 6x over; the other limit-hitters stopped at 519-528 MB (enforcement works within ~3%). Find why this one leaked (CasperCloak/IKEv2 path not metered? usage sync lag? multiple devices?), fix, add a test, and add a nightly check: any free user > 110% of limit -> alert. P1.\n[ENGINEERING run 2026-10-09 1810, 18:12Z] CLAIMED: read-only measurement on production first (is the leak still happening, which protocol/path), then a fix on development.",
+      "description": "MEASURED 5 Oct: Users 596brdykg9@privaterelay (RU, Free, created 23 Sep) CurrentCycleDataUsedBytes = 3,121 MB vs limit 512 MB - 6x over; the other limit-hitters stopped at 519-528 MB (enforcement works within ~3%). Find why this one leaked (CasperCloak/IKEv2 path not metered? usage sync lag? multiple devices?), fix, add a test, and add a nightly check: any free user > 110% of limit -> alert. P1.\n[ENGINEERING run 2026-10-09 1810, 18:12Z] CLAIMED: read-only measurement on production first (is the leak still happening, which protocol/path), then a fix on development.\n[ENGINEERING run 2026-10-09 1810, 18:20Z, read-only on production] PARTIAL - MEASURED. Now: 321 active users carry a 512 MB cycle limit; 14 real users (probe/staff/test excluded) are at or over 100%, 3 are over 110%. (1) The 5 Oct user (id 1d3ae4a9, Free, cycle 23 Sep-23 Oct) = 3,120 MB, ALL on WireGuard (Protocol 0), all booked 23 Sep 12:00Z-24 Sep 17:00Z on 2 servers (hourly rows 5,61,418,20,399,291,714,515 MB...), crossing 512 MB in the 23 Sep 16:00Z hour; no traffic since 24 Sep. Same window had 7 duplicate sessions opened in the same minute (18:00 and 18:18) - the address-collision pattern of xd-1065. (2) The cap cut existed then (WireGuardUsageSyncService, EnforceDataCap default true since June) but the peer->user mapping and the owner-guarded cut were fixed only 27-28 Sep (c1d98052f, ed9ccb5fc xd-1065) and the 'data cap reached' reason was added 27 Sep (1f532a852). HYPOTHESIS (not proven, API logs of 23 Sep are gone): the 23 Sep overrun is the pre-xd-1065 mapping fault (usage booked to / cut aimed at the wrong peer). (3) CONTROL - after the fix the cut fires: 7250d2c3 (Free) cut 3 Oct 05:16Z 'data cap reached' at 621 MB (121%, 479 MB in 15 min); 4f9a04c4 (expired Sandbox Weekly) cut 29 Sep 00:27Z 'data cap reached' at 652 MB (127%). No real free user has passed 130% since 28 Sep. STILL OPEN: (a) overshoot 21-27% on fast links although the poll is 60 s - cause not measured; (b) the nightly '>110% of limit -> alert' check is not built; (c) a test. verify: psql casper_prod READ ONLY: SELECT count(*) FROM \"Users\" WHERE \"IsActive\" AND \"CurrentCycleDataLimitBytes\" BETWEEN 1 AND 1073741824 AND \"CurrentCycleDataUsedBytes\" > 1.1*\"CurrentCycleDataLimitBytes\" AND \"CurrentCycleStartDate\" > '2026-09-28' -> expect only users whose ConnectionLogs show a 'data cap reached' cut. No production write.",
       "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-10-05T20:10:38Z",
@@ -46937,7 +46937,8 @@
       "ageDays": 4,
       "lifecycle": "active",
       "needsRelease": false,
-      "claimedBy": "[ENGINEERING run 2026-10-09 1810]"
+      "claimedBy": "[ENGINEERING run 2026-10-09 1810]",
+      "blocker": ""
     },
     {
       "id": "xd-1387",
@@ -51556,6 +51557,18 @@
       "status": "pending",
       "priority": "P2",
       "createdAt": "2026-10-09T17:41:15Z",
+      "createdDate": "2026-10-09",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1617",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: Re-check xd-1386 measurement: free data cap holds since 28 Sep (3,120 MB overrun was 23-24 Sep)",
+      "description": "Run the verify on xd-1386 read-only on production: real free users over 110% of the 512 MB cycle limit whose cycle started after 28 Sep must each have a ConnectionLogs row with DisconnectReason 'data cap reached'. Control: users between 100 and 110% exist (cut working within ~10%). Report pass/fail on xd-1386; do not tick the original's remaining items (nightly alert, overshoot cause, test) - they stay with [BACKEND]. taskRef xd-1386.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-09T18:15:49Z",
       "createdDate": "2026-10-09",
       "completedDate": null
     }
