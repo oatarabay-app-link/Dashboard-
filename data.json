@@ -1,6 +1,6 @@
 {
-  "lastUpdated": "2026-10-10T20:44:50Z",
-  "updatedBy": "[MARKETING] growth run 2104",
+  "lastUpdated": "2026-10-10T21:13:27Z",
+  "updatedBy": "[CTO] CEO live 2026-10-10 (cc bug)",
   "overall": {
     "completion": 69,
     "phase": "Phase 2: Go-to-market \u2014 launch plan 30 Sep 2026",
@@ -53446,9 +53446,41 @@
       "completedDate": null,
       "dueBy": "2026-10-17T21:08:01Z",
       "taskRef": "xd-1681"
+    },
+    {
+      "id": "xd-1689",
+      "from": "[CEO]",
+      "to": "[CTO]",
+      "title": "Handoff from CEO: [P0 tonight] Hidden mode (CasperCloak) loses traffic after 30-60 min on the CEO's phone and the app freezes on reconnect - build 65 / 4.4 line = inside build 67",
+      "description": "[CEO 2026-10-10 live ~21:0xZ] 'look into the recent cc bug sent from my phone to finalize store listings and new app tonight'. MEASURED (read-only): 2 in-app bug reports from the CEO's phone (iPhone15,2, iOS app 4.4 build 65, CasperCloak, server Duesseldorf 91.194.84.79): BugReports 5affd979 20:52:23Z 'My connection dropped - traffic lost after being connected to cc for over an hour; had to open the app to reconnect; VPN icon still on, no traffic' and 194dff2d 20:55:12Z 'Connection drops after over 30 min of cc connection ... app stuck on reconnecting / freezes on connecting until the app is closed and opened. P0'. Report 1 ExtraJson: connectedSince 19:31:16Z, lastHandshake 20:47:59Z, snapshot 20:51:39Z = WireGuard handshake 220 s old (>180 s = WG session dead), tunnel kernel status 'Connected', API calls timing out (heartbeat POST timed out 20:51:25Z) = tunnel up, no traffic, app did not notice. RELAY (de-3 caspercloak_ws, journal, local time = UTC+2): 20:45:54Z resume sid=7c7e5c01 gen=2, closed 20:46:07Z; 20:48:57Z 10 connections closed at once; 20:51:43Z 'ConnectionClosedError: no close frame received or sent' + #52 grace (wg0 socket held 600 s); 20:51:47Z resume gen=3 -> dropped again 2 s later with the same error; nothing after 20:51:49Z. HYPOTHESES (not measured): (1) the phone's line to the direct grey relay drops TCP silently (no close frame) every few minutes and the app's resume loop gives up after gen 3; (2) the app's background watchdog trusts kernel 'Connected' and does not check handshake age / bytes, so it never reconnects while in the background; (3) the 'connecting' freeze = the reconnect path blocking on the timed-out API calls. DO: tunnel-side log for 20:45-20:52Z from the CEO's phone (console/idevicesyslog if he repeats), relay pcap/ss on de-3 for his src, then fix in the 4.4 line = build 67 (xd-1656) BEFORE the CEO archives 67 tonight, or state plainly that 67 ships with it. Owner: CTO live chat (cloudflare-exit-phase1) + iOS. -> [QA].",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-10-10T21:13:33Z",
+      "createdDate": "2026-10-10",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1690",
+      "from": "[CEO]",
+      "to": "[IOS]",
+      "title": "Handoff from CEO: [P0 tonight] Same bug from the app side: background watchdog must detect a dead tunnel (handshake age > 180 s or 0 bytes) and reconnect; 'connecting' must not freeze on timed-out API calls",
+      "description": "[CEO 2026-10-10 live ~21:0xZ] 'look into the recent cc bug sent from my phone to finalize store listings and new app tonight'. MEASURED (read-only): 2 in-app bug reports from the CEO's phone (iPhone15,2, iOS app 4.4 build 65, CasperCloak, server Duesseldorf 91.194.84.79): BugReports 5affd979 20:52:23Z 'My connection dropped - traffic lost after being connected to cc for over an hour; had to open the app to reconnect; VPN icon still on, no traffic' and 194dff2d 20:55:12Z 'Connection drops after over 30 min of cc connection ... app stuck on reconnecting / freezes on connecting until the app is closed and opened. P0'. Report 1 ExtraJson: connectedSince 19:31:16Z, lastHandshake 20:47:59Z, snapshot 20:51:39Z = WireGuard handshake 220 s old (>180 s = WG session dead), tunnel kernel status 'Connected', API calls timing out (heartbeat POST timed out 20:51:25Z) = tunnel up, no traffic, app did not notice. RELAY (de-3 caspercloak_ws, journal, local time = UTC+2): 20:45:54Z resume sid=7c7e5c01 gen=2, closed 20:46:07Z; 20:48:57Z 10 connections closed at once; 20:51:43Z 'ConnectionClosedError: no close frame received or sent' + #52 grace (wg0 socket held 600 s); 20:51:47Z resume gen=3 -> dropped again 2 s later with the same error; nothing after 20:51:49Z. HYPOTHESES (not measured): (1) the phone's line to the direct grey relay drops TCP silently (no close frame) every few minutes and the app's resume loop gives up after gen 3; (2) the app's background watchdog trusts kernel 'Connected' and does not check handshake age / bytes, so it never reconnects while in the background; (3) the 'connecting' freeze = the reconnect path blocking on the timed-out API calls. DO: tunnel-side log for 20:45-20:52Z from the CEO's phone (console/idevicesyslog if he repeats), relay pcap/ss on de-3 for his src, then fix in the 4.4 line = build 67 (xd-1656) BEFORE the CEO archives 67 tonight, or state plainly that 67 ships with it. Owner: CTO live chat (cloudflare-exit-phase1) + iOS. -> [QA].",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-10-10T21:13:33Z",
+      "createdDate": "2026-10-10",
+      "completedDate": null
     }
   ],
   "importantNotes": [
+    {
+      "id": "note-cto-live-20261010-ccbug",
+      "date": "2026-10-10",
+      "dept": "cto",
+      "priority": "high",
+      "createdAt": "2026-10-10T21:13:27Z",
+      "text": "[CEO live 10 Oct 21:xx] Your 2 bug reports (20:52 and 20:55 UTC) are on the board as P0 for the CTO and iOS teams. What we measured: your hidden-mode link to Duesseldorf dropped 3 times between 20:45 and 20:52 UTC without a proper goodbye, the app still showed 'connected' and did not notice for minutes. This code is also inside build 67, so build 67 should not be archived until this is fixed or you decide to ship it anyway."
+    },
     {
       "id": "note-qa-20261010r",
       "date": "2026-10-10",
