@@ -13792,6 +13792,11 @@
           "verifiedByRaw": null,
           "verifiedDate": null,
           "evidence": "[ENGINEERING run 2026-10-10 2105, scheduled, 2026-10-10T21:22:51Z] added for xd-1694 (found while committing xd-1685). Only-in-backup lines 24, only-live 4; restore prepared at /root/reports/eng1010-2105/crontab.restore."
+        },
+        {
+          "test": "READY TO SHIP \u2014 the daily 'did every server check run?' report stops raising a false red alarm every month \u00b7 why: the monthly legal archive runs once a month, but the report expected it every day and a half, so it has said 'stale' since 2 Oct and every real alarm hides behind it \u00b7 tested: scratch test, old file 'stale 1', new file 'ok' (controls: a missed month still alarms, a never-run still alarms) \u00b7 rollback: copy the old file back (backup made at install) \u00b7 install: copy development c2b254f03 infrastructure/scripts/routines_watchdog.py to /opt/caspervpn/ (xd-1698, QA xd-1705)",
+          "met": false,
+          "evidence": "[ENGINEERING run 2026-10-10 2205, scheduled, 2026-10-10T22:1xZ] development c2b254f03; installed md5 4b5f7f425639 = git before; waits for CEO YES."
         }
       ],
       "progress": 0,
@@ -48938,19 +48943,23 @@
       "to": "[DEVOPS]",
       "title": "Handoff from ANDROID: [P2] codegraph is down on the main server: its Docker image was removed by the daily 04:00 prune",
       "description": "[absorbed xd-1401 2026-10-07T21:40Z] Handoff from CTO: Code graph is built from a stale code copy on the main server || [APPS run 2026-10-07 v] MEASURED 04:1xZ on do-production: `codegraph query ...` -> 'Unable to find image casper-codegraph:latest locally ... pull access denied'. `docker images | grep -i graph` -> nothing. /opt/codegraph still has Dockerfile (5 Oct 20:37) + graph-all.json (6 Oct 23:45). root crontab line 11: `0 4 * * * /usr/bin/docker system prune -af --filter until=24h` - it ran at 04:00:01Z (journal), and -a removes every image no running container uses that is older than 24 h; codegraph runs only as `docker run --rm`, so its image is never in use. The 03:28Z apps run still used codegraph (session log). Hypothesis until DevOps confirms in /var/log/docker-prune.log: the 04:00 prune deleted it. Fix: rebuild `docker build -t casper-codegraph /opt/codegraph` and protect it (label + `--filter label!=keep` on the prune, or a cron rebuild before 04:00). Every session must run codegraph (CEO rule 6 Oct), so until then sessions log 'codegraph: down'. verify: ssh brain 'docker image inspect casper-codegraph >/dev/null && echo OK'",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-10-07T04:26:47Z",
       "createdDate": "2026-10-07",
-      "completedDate": null,
-      "notes": "[ENGINEERING run 2026-10-09 i, 2026-10-09T08:16:34Z] MEASURED: the prune hypothesis is NOT proven - 'untagged: casper-codegraph' appears 0 times in /var/log/docker-prune.log (4 untagged lines in total, all the CI test-reporter image) and 0 times in /var/log/caspervpn-disk-guard.log; cause of the removal still unknown. NEW: the nightly code-graph rebuild (/opt/codegraph/rebuild.sh, 23:30Z) fails with the same 'Unable to find image', so the code part of the map is also stale. Fix that works whatever the cause: rebuild + a self-heal line in rebuild.sh -> CEO card row 180 (READY TO SHIP). Side finding for xd-1485: the 04:00Z 'docker system prune -af' removes ghcr.io/enricomi/publish-unit-test-result-action:v2.24.0 (prune log), the image the CI step needs. || [CEO office 2026-10-07T11:49:59Z] Not the cause of the run stall (xd-1450). Still down (apps run ab 10:0xZ: 'Unable to find image casper-codegraph:latest'). DevOps works only through the engineering run, which has not started since 5 Oct -> this waits on xd-1450.",
+      "completedDate": "2026-10-10",
+      "notes": "[ENGINEERING run 2026-10-10 2205, scheduled, 2026-10-10T22:1xZ] DONE: codegraph is back and protected. MEASURED 22:07Z on the main server: `docker images` -> casper-codegraph:latest built 2026-10-10 20:10:15Z, 345MB, label {\"casper.keep\":\"true\"}; `codegraph query \"routines watchdog expected max age\"` -> 'Graph: graph-all.json (29939 nodes) ... 281 nodes found', rc=0. Root crontab 50 lines md5 65f14cf05349 (= the 21:53Z restore, xd-1694). Survival through the 03:30/04:00 prunes is checked by QA xd-1695 after 11 Oct 04:05Z. Old blocker (row 180) cleared: row 180 shipped by CTO live 20:10Z; image rebuilt + labelled under xd-1685. || [ENGINEERING run 2026-10-09 i, 2026-10-09T08:16:34Z] MEASURED: the prune hypothesis is NOT proven - 'untagged: casper-codegraph' appears 0 times in /var/log/docker-prune.log (4 untagged lines in total, all the CI test-reporter image) and 0 times in /var/log/caspervpn-disk-guard.log; cause of the removal still unknown. NEW: the nightly code-graph rebuild (/opt/codegraph/rebuild.sh, 23:30Z) fails with the same 'Unable to find image', so the code part of the map is also stale. Fix that works whatever the cause: rebuild + a self-heal line in rebuild.sh -> CEO card row 180 (READY TO SHIP). Side finding for xd-1485: the 04:00Z 'docker system prune -af' removes ghcr.io/enricomi/publish-unit-test-result-action:v2.24.0 (prune log), the image the CI step needs. || [CEO office 2026-10-07T11:49:59Z] Not the cause of the run stall (xd-1450). Still down (apps run ab 10:0xZ: 'Unable to find image casper-codegraph:latest'). DevOps works only through the engineering run, which has not started since 5 Oct -> this waits on xd-1450.",
       "category": "infra-fleet",
       "ageDays": 3,
       "lifecycle": "active",
       "updatedAt": "2026-10-07T22:20:00Z",
       "triageNote": "[QA 2026-10-07 ah ~22:15Z, scheduled] Still down at 22:09Z: 'codegraph query' on the brain -> 'Unable to find image casper-codegraph:latest locally ... pull access denied'.",
       "needsRelease": false,
-      "blocker": "Waits for CEO YES on ceo-action-backlog row 180"
+      "blocker": null,
+      "completedAt": "2026-10-10",
+      "completedBy": "[DEVOPS]",
+      "resolution": "completed - codegraph image rebuilt + labelled casper.keep (xd-1685); query works 22:07Z",
+      "resultingHandoff": "xd-1695 to [QA] (image still present after 11 Oct 04:05Z)"
     },
     {
       "id": "xd-1446",
@@ -51597,18 +51606,22 @@
       "to": "[DEVOPS]",
       "title": "Handoff from QA: codegraph is broken on the main server: docker image 'casper-codegraph' is missing",
       "description": "[CEO office 2026-10-09 06:0x-06:4xZ (09:0x Beirut, daily run)] codegraph query still DOWN 06:12Z (\"Unable to find image casper-codegraph:latest\"); the vault map file is fresh (8 Oct 23:45Z). Hypothesis: the nightly \"docker system prune -af --filter until=24h\" removes the image because no container runs it \u2014 see the new disk handoff xd-1589. || [QA 2026-10-09 c ~02:15Z, scheduled] `codegraph query ...` on the brain fails: 'Unable to find image casper-codegraph:latest locally ... pull access denied'. /usr/local/bin/codegraph runs `docker run --rm -v /opt/codegraph:/g:ro casper-codegraph graphify ...`; `docker images | grep graph` = none; /opt/codegraph/Dockerfile (88 B, 5 Oct) and graph-all.json (40.9 MB, rebuilt 8 Oct 23:45Z) are present, so only the image is gone. HYPOTHESIS (not measured): removed by an image prune, since the image is only used by `docker run --rm`. Fix for [DEVOPS]: `docker build -t casper-codegraph /opt/codegraph` (nice -n 19, one heavy job at a time) and protect it from prune; PASS = `codegraph query \"SupportTickets\"` prints nodes. Every session's 'codegraph:' line (CEO rule 6 Oct) is impossible until fixed. Evidence /root/reports/qa1009c-m4.txt + m5.txt.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-10-09T02:12:56Z",
       "createdDate": "2026-10-09",
-      "completedDate": null,
-      "notes": "[ENGINEERING run 2026-10-09 i, 2026-10-09T08:16:34Z] MEASURED: the prune hypothesis is NOT proven - 'untagged: casper-codegraph' appears 0 times in /var/log/docker-prune.log (4 untagged lines in total, all the CI test-reporter image) and 0 times in /var/log/caspervpn-disk-guard.log; cause of the removal still unknown. NEW: the nightly code-graph rebuild (/opt/codegraph/rebuild.sh, 23:30Z) fails with the same 'Unable to find image', so the code part of the map is also stale. Fix that works whatever the cause: rebuild + a self-heal line in rebuild.sh -> CEO card row 180 (READY TO SHIP). Side finding for xd-1485: the 04:00Z 'docker system prune -af' removes ghcr.io/enricomi/publish-unit-test-result-action:v2.24.0 (prune log), the image the CI step needs. || [QA 2026-10-09 d ~03:1xZ, scheduled] Still broken 03:06Z: `docker images | grep codegraph` = none; `codegraph query SupportTickets` -> 'pull access denied for casper-codegraph' rc 125. Graph files unchanged (graph-all.json 8 Oct 23:45Z). || ",
+      "completedDate": "2026-10-10",
+      "notes": "[ENGINEERING run 2026-10-10 2205, scheduled, 2026-10-10T22:1xZ] DONE: codegraph is back and protected. MEASURED 22:07Z on the main server: `docker images` -> casper-codegraph:latest built 2026-10-10 20:10:15Z, 345MB, label {\"casper.keep\":\"true\"}; `codegraph query \"routines watchdog expected max age\"` -> 'Graph: graph-all.json (29939 nodes) ... 281 nodes found', rc=0. Root crontab 50 lines md5 65f14cf05349 (= the 21:53Z restore, xd-1694). Survival through the 03:30/04:00 prunes is checked by QA xd-1695 after 11 Oct 04:05Z. Old blocker (row 180) cleared: row 180 shipped by CTO live 20:10Z; image rebuilt + labelled under xd-1685. || [ENGINEERING run 2026-10-09 i, 2026-10-09T08:16:34Z] MEASURED: the prune hypothesis is NOT proven - 'untagged: casper-codegraph' appears 0 times in /var/log/docker-prune.log (4 untagged lines in total, all the CI test-reporter image) and 0 times in /var/log/caspervpn-disk-guard.log; cause of the removal still unknown. NEW: the nightly code-graph rebuild (/opt/codegraph/rebuild.sh, 23:30Z) fails with the same 'Unable to find image', so the code part of the map is also stale. Fix that works whatever the cause: rebuild + a self-heal line in rebuild.sh -> CEO card row 180 (READY TO SHIP). Side finding for xd-1485: the 04:00Z 'docker system prune -af' removes ghcr.io/enricomi/publish-unit-test-result-action:v2.24.0 (prune log), the image the CI step needs. || [QA 2026-10-09 d ~03:1xZ, scheduled] Still broken 03:06Z: `docker images | grep codegraph` = none; `codegraph query SupportTickets` -> 'pull access denied for casper-codegraph' rc 125. Graph files unchanged (graph-all.json 8 Oct 23:45Z). || ",
       "updatedAt": "2026-10-09T03:09:44Z",
       "category": "infra-fleet",
       "ageDays": 1,
       "needsRelease": false,
       "lifecycle": "active",
-      "blocker": "Waits for CEO YES on ceo-action-backlog row 180"
+      "blocker": null,
+      "completedAt": "2026-10-10",
+      "completedBy": "[DEVOPS]",
+      "resolution": "completed - codegraph image rebuilt + labelled casper.keep (xd-1685); query works 22:07Z",
+      "resultingHandoff": "xd-1695 to [QA] (image still present after 11 Oct 04:05Z)"
     },
     {
       "id": "xd-1575",
@@ -53645,12 +53658,16 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: Commit to git: codegraph image protected from the prune jobs (label casper.keep) - live files changed 10 Oct",
       "description": "CEO 10 Oct: 'are you sure graphify will not get wiped again?'. Measured: 3 jobs delete unused images: root crontab 04:00 'docker system prune -af --filter until=24h', /etc/cron.d/casper-docker-prune 03:30 'docker image prune -af --filter until=24h', /opt/caspervpn/disk-guard.sh line 61 'docker image prune -af'. DONE live 20:36-20:4xZ (backups /root/backups/codegraph-keep-20261010T2036Z): Dockerfile + 'LABEL casper.keep=true' (image rebuilt, label present); all three now add --filter \"label!=casper.keep\" (syntax proven by a no-op prune 'until=999999h' -> 0B). Self-repair stays as the second line of defence (rebuild.sh + wrapper). DO: commit the same changes to the repo copies (infrastructure/\u2026/disk-guard.sh, the cron.d file, crontab doc) so the next install from git keeps them; -> [QA]: after 11 Oct 04:00Z, docker image inspect casper-codegraph still OK.",
-      "status": "in_progress",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-10-10T20:41:29Z",
       "createdDate": "2026-10-10",
-      "completedDate": null,
-      "notes": " | [ENGINEERING run 2026-10-10 2105, scheduled, 2026-10-10T21:22:51Z] DONE in git: development f81f79920 (infrastructure/scripts/disk-guard.sh image prune + label!=casper.keep; infrastructure/brain/crontab-root.txt 04:00 prune + filter, body = the 50-line pre-edit crontab; new infrastructure/brain/cron.d-casper-docker-prune; new infrastructure/codegraph/ Dockerfile+rebuild.sh+codegraph+README = live copies). bash -n / sh -n OK; secret pattern count 0. Live disk-guard.sh still carries the old hard-coded mail key (xd-1618, fixed on development only) - not touched. FOUND: the live crontab lost 20 lines in the same 20:36Z edit -> xd-1694 + CEO card row 214."
+      "completedDate": "2026-10-10",
+      "notes": "[ENGINEERING run 2026-10-10 2205, scheduled, 2026-10-10T22:1xZ] Closed: git part DONE on development f81f79920 (previous run); live image labelled + query works (MEASURED 22:07Z on the main server: `docker images` -> casper-codegraph:latest built 2026-10-10 20:10:15Z, 345MB, label {\"casper.keep\":\"true\"}; `codegraph query \"routines watchdog expected max age\"` -> 'Graph: graph-all.json (29939 nodes) ... 281 nodes found', rc=0. Root crontab 50 lines md5 65f14cf05349 (= the 21:53Z restore, xd-1694). Survival through the 03:30/04:00 prunes is checked by QA xd-1695 after 11 Oct 04:05Z.) ||  | [ENGINEERING run 2026-10-10 2105, scheduled, 2026-10-10T21:22:51Z] DONE in git: development f81f79920 (infrastructure/scripts/disk-guard.sh image prune + label!=casper.keep; infrastructure/brain/crontab-root.txt 04:00 prune + filter, body = the 50-line pre-edit crontab; new infrastructure/brain/cron.d-casper-docker-prune; new infrastructure/codegraph/ Dockerfile+rebuild.sh+codegraph+README = live copies). bash -n / sh -n OK; secret pattern count 0. Live disk-guard.sh still carries the old hard-coded mail key (xd-1618, fixed on development only) - not touched. FOUND: the live crontab lost 20 lines in the same 20:36Z edit -> xd-1694 + CEO card row 214.",
+      "completedAt": "2026-10-10",
+      "completedBy": "[DEVOPS]",
+      "resolution": "completed - live 20:36Z + git development f81f79920",
+      "resultingHandoff": "xd-1695 to [QA]"
     },
     {
       "id": "xd-1686",
@@ -53724,11 +53741,16 @@
       "to": "[CTO]",
       "title": "Handoff from QA: board_reconcile.py counts \"NOT DONE\" as done (queue B false positives)",
       "description": "MEASURED 2026-10-10 21:06Z (QA run s): of the first 10 B-done-signal rows, 9 are Legal rows whose evidence starts 'QA 2026-09-28 NOT DONE ... DEFERRED (CEO 2026-09-28) revisit 2026-10-31' (privacy-policy 5, tos 5, no-log-audit 0-6). Cause: DONE regex has \\bDONE\\b and NEG has no 'NOT DONE'/'DEFERRED'/'SUPERSEDED', so the negation is missed. Fix: add NOT DONE|DEFERRED|SUPERSEDED|NOT MET to NEG (tools/board_reconcile.py line ~25) or skip tasks whose status starts 'PENDING \u2014 DEFERRED'. QA re-ran the 4 it worked (still not done, recorded). Back to [QA] after the change.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P3",
       "createdAt": "2026-10-10T21:15:01Z",
       "createdDate": "2026-10-10",
-      "completedDate": null
+      "completedDate": "2026-10-10",
+      "notes": "[ENGINEERING run 2026-10-10 2205, scheduled, 2026-10-10T22:1xZ] DONE on production 5e62964bc (CEO live 21:5xZ): tools/board_reconcile.py NEG now has NOT DONE|DEFERRED|NOT MEASURED|not shipped|not ticked|PARTL?Y. Proof 22:10Z, origin/production file run read-only: `board_reconcile.py --dept legal --limit 0` -> B-done-signal 0 (was 9 of the first 10 B rows at 21:06Z); whole board B 26 (CEO 20, iOS 3, Marketing 1, ceo 1, DevOps 1), C 410, W 55, A 2.",
+      "completedAt": "2026-10-10",
+      "completedBy": "[CTO]",
+      "resolution": "completed - fixed on production 5e62964bc; legal B 9 -> 0",
+      "resultingHandoff": "xd-1704 to [QA]"
     },
     {
       "id": "xd-1692",
@@ -53784,7 +53806,7 @@
       "createdAt": "2026-10-10T21:22:55Z",
       "createdDate": "2026-10-10",
       "completedDate": null,
-      "notes": "[QA 2026-10-10 t, scheduled, 2026-10-10T22:23:16Z] LEG 1 PASS: f81f79920 = 7 files, all under infrastructure/, on origin/development; md5 git = live for /opt/codegraph/Dockerfile (06ae8117), rebuild.sh (b2a36738), /usr/local/bin/codegraph (a3ea410a); git cron.d-casper-docker-prune has the label!=casper.keep filter, the commit adds 5 such lines, live /etc/cron.d/casper-docker-prune has it; image casper-codegraph present (sha256:14db1daa8dea). LEG 2 waits for 11 Oct 04:05Z. | "
+      "notes": "[ENGINEERING run 2026-10-10 2205, scheduled, 2026-10-10T22:1xZ] For the check: root crontab restored 21:53Z by CEO live (xd-1694); measured 22:07Z 50 lines, md5 65f14cf05349, codegraph label lines present (grep -c codegraph = 2), 42 cron CMD lines in the last 30 min. || [QA 2026-10-10 t, scheduled, 2026-10-10T22:23:16Z] LEG 1 PASS: f81f79920 = 7 files, all under infrastructure/, on origin/development; md5 git = live for /opt/codegraph/Dockerfile (06ae8117), rebuild.sh (b2a36738), /usr/local/bin/codegraph (a3ea410a); git cron.d-casper-docker-prune has the label!=casper.keep filter, the commit adds 5 such lines, live /etc/cron.d/casper-docker-prune has it; image casper-codegraph present (sha256:14db1daa8dea). LEG 2 waits for 11 Oct 04:05Z. | "
     },
     {
       "id": "xd-1696",
@@ -53817,11 +53839,16 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CEO: Routines watchdog expects legal-archive every 36 h, but it is monthly (1st 04:30) \u2014 false 'stale' (row 56 FAIL)",
       "description": "Measured 21:52Z: watchdog 'missing 0, stale 1' = legal-archive 233 h. Set its expected window to ~32 days. Then [QA] re-runs row 56 verify.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-10-10T21:56:45Z",
       "createdDate": "2026-10-10",
-      "completedDate": null
+      "completedDate": "2026-10-10",
+      "notes": "[ENGINEERING run 2026-10-10 2205, scheduled, 2026-10-10T22:1xZ] DONE on development c2b254f03 (infrastructure/scripts/routines_watchdog.py +3 lines: \"legal-archive\": 33 * 24). Measured first: installed /opt/caspervpn/routines_watchdog.py md5 4b5f7f425639 = git before the change; RoutineRuns read-only 22:07Z legal-archive 233.6 h; cron.d legal-archive 04:30Z on the 1st. Test (stubbed sql/mail/record_run, scratch dir, nothing sent): old file -> fail, stale 1 legal-archive (234 h > 36 h); new file -> ok 11 healthy; controls: 800 h -> stale (limit 792 h), never ran -> missing. Install = copy the git file to /opt/caspervpn/ after CEO YES (READY TO SHIP row on the CEO card).",
+      "completedAt": "2026-10-10",
+      "completedBy": "[DEVOPS]",
+      "resolution": "completed on development c2b254f03 - install waits for CEO YES",
+      "resultingHandoff": "xd-1705 to [QA]; READY TO SHIP row on ceo-action-backlog"
     },
     {
       "id": "xd-1699",
@@ -53891,6 +53918,30 @@
       "createdDate": "2026-10-10",
       "completedDate": null,
       "taskRef": "ceo-board-of-directors"
+    },
+    {
+      "id": "xd-1704",
+      "from": "[CTO]",
+      "to": "[QA]",
+      "title": "Handoff from CTO: Re-check board_reconcile.py after the NEG fix (xd-1691)",
+      "description": "production 5e62964bc. Run `python3 tools/board_reconcile.py --dept legal --limit 0` -> expect B-done-signal 0 (22:10Z: 0). Then read the 26 B rows of the whole board (22:10Z) and confirm none is a NOT DONE / DEFERRED row. Tick nothing on xd-1691 itself; close this handoff with the counts.",
+      "status": "pending",
+      "priority": "P3",
+      "createdAt": "2026-10-10T22:25:33Z",
+      "createdDate": "2026-10-10",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1705",
+      "from": "[DEVOPS]",
+      "to": "[QA]",
+      "title": "Handoff from DEVOPS: Check the routines-watchdog monthly window on development c2b254f03 (xd-1698)",
+      "description": "Diff = 3 lines (legal-archive: 33 * 24 + comment). Re-run the stub test: importlib-load the dev file in a scratch dir, stub sql() with the RoutineRuns ages, send_email and subprocess.run; expect ok with legal-archive 233 h, stale at 800 h, missing when absent. After the CEO YES + install: /root/reports/routines-watchdog-latest.txt says stale 0 and CEO card row 56 verify passes.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-10T22:25:33Z",
+      "createdDate": "2026-10-10",
+      "completedDate": null
     }
   ],
   "importantNotes": [
