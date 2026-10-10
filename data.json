@@ -18753,8 +18753,8 @@
       "name": "Backend API",
       "status": "red",
       "lead": "Dev Team",
-      "currentTask": "2026-10-10 engineering run 0505 re-base (05:43Z): 30 tasks \u00b7 106/158 criteria met \u00b7 open P0 handoffs 3",
-      "blockers": "3",
+      "currentTask": "2026-10-10 engineering run 0605 re-base (06:18Z): 30 tasks \u00b7 106/158 criteria met \u00b7 open P0 handoffs 4",
+      "blockers": "4",
       "completion": "67",
       "launchCompletion": "68",
       "progress": 92,
@@ -18764,19 +18764,19 @@
       "launch": 62,
       "lastSession": "2026-04-01",
       "currentStatus": "xd-322 COMPLETE. 22 admin tables live in DB. Rate-limiting 5req/sec auth policy operational. Multi-hop 4 endpoints active. Stripe code ready, needs prod keys in env.",
-      "lastTriggered": "2026-10-10T05:43:05Z"
+      "lastTriggered": "2026-10-10T06:18:58Z"
     },
     "devops": {
       "name": "DevOps & Infra",
       "status": "red",
       "lead": "Unassigned",
-      "currentTask": "2026-10-10 engineering run 0505 re-base (05:43Z): 31 tasks \u00b7 86/205 criteria met \u00b7 open P0 handoffs 3",
+      "currentTask": "2026-10-10 engineering run 0605 re-base (06:18Z): 31 tasks \u00b7 86/205 criteria met \u00b7 open P0 handoffs 3",
       "blockers": "3",
       "completion": "42",
       "progress": 98,
       "launchCompletion": "41",
       "lastSession": "2026-03-16",
-      "lastTriggered": "2026-10-10T05:43:05Z",
+      "lastTriggered": "2026-10-10T06:18:58Z",
       "notes": "2026-09-21 [CTO] re-based by the board sweep (CEO golden rule): completion = criteria met / total on tasks this department owns (multi-owner tasks count for each owner); blockers = open P0 handoffs to this department. Previous text kept in git history.",
       "lastActivity": "2026-10-10"
     },
@@ -18809,12 +18809,12 @@
       "name": "Website",
       "status": "yellow",
       "lead": "Dev Team",
-      "currentTask": "2026-10-10 engineering run 0505 re-base (05:43Z): 8 tasks \u00b7 29/46 criteria met \u00b7 open P0 handoffs 0",
+      "currentTask": "2026-10-10 engineering run 0605 re-base (06:18Z): 9 tasks \u00b7 32/49 criteria met \u00b7 open P0 handoffs 0",
       "blockers": "0",
-      "completion": "63",
+      "completion": "65",
       "launchCompletion": "61",
       "lastSessionAt": "2026-03-30T20:00:00Z",
-      "lastTriggered": "2026-10-10T05:43:05Z",
+      "lastTriggered": "2026-10-10T06:18:58Z",
       "notes": "2026-09-28 [QA] re-based at QA exit (golden rule 8): completion = criteria met / total on tasks this department owns (multi-owner tasks count for each owner); blockers = open P0 handoffs to it.",
       "lastActivity": "2026-10-10"
     },
@@ -18871,12 +18871,12 @@
       "name": "CTO Office",
       "status": "yellow",
       "lead": "Waqar",
-      "currentTask": "2026-10-10 engineering run 0505 re-base (05:43Z): 46 tasks \u00b7 169/272 criteria met \u00b7 open P0 handoffs 4",
+      "currentTask": "2026-10-10 engineering run 0605 re-base (06:18Z): 46 tasks \u00b7 169/272 criteria met \u00b7 open P0 handoffs 4",
       "blockers": "4",
       "completion": "62",
       "launchCompletion": "63",
       "lastSessionAt": "2026-09-28T22:40:35Z",
-      "lastTriggered": "2026-10-10T05:43:05Z",
+      "lastTriggered": "2026-10-10T06:18:58Z",
       "notes": "2026-09-21 [CTO] re-based by the board sweep (CEO golden rule): completion = criteria met / total on tasks this department owns (multi-owner tasks count for each owner); blockers = open P0 handoffs to this department. Previous text kept in git history.",
       "lastActivity": "2026-10-10"
     },
@@ -52258,8 +52258,8 @@
       "ageDays": 0,
       "needsRelease": false,
       "lifecycle": "active",
-      "notes": "[ENGINEERING run 2026-10-10 0605, 2026-10-10T06:12:04Z] CLAIMED: bring the dev database's threat tables level with production (ThreatDetections table + DdosAlerts.Timestamp), dev only, after reading both schemas read-only; no production change. Other runs: stay off xd-1630 until this note says done.",
-      "updatedAt": "2026-10-10T06:12:04Z"
+      "notes": "[ENGINEERING run 2026-10-10 0605, 2026-10-10T06:18:58Z] DONE on dev (awaiting QA xd-1637). CAUSE (measured read-only 06:0xZ): neither table was ever in an EF migration (Deploy4 SQL and Data/Migrations contain no CREATE for them; production's tables were made by hand); dev's DdosAlerts was a different hand-made shape (ServerId/BandwidthMbps/ThresholdMbps/Severity/DetectedAt/Resolved/ResolvedAt, 0 rows) and dev had no ThreatDetections. FIX (dev database only, one transaction): old dev table kept as \"DdosAlerts_devlegacy_20261010\" (renamed, nothing deleted), both tables created exactly as production (pg_dump -s of production, column types, defaults, PK, ThreatDetections_UserId_fkey ON DELETE CASCADE). SQL kept at brain:/root/reports/eng1010-0605-dev-threat-tables.sql. PROOF: CONTROL before - one GET https://api.dev.caspervpn.com/api/admin/threats/summary (minted dev admin token) 200 and the dev api log 'Threat-source MAX failed' count went 2 -> 4 (+2 per call: DdosAlerts.last + ThreatDetections.last); AFTER - same call 200, count stayed 4 -> 4 (+0), 0 lines in the 4 s after the apply; information_schema on dev: DdosAlerts 9 columns incl. Timestamp, ThreatDetections 27 incl. DetectedAt (= production 9/27). No production change, no code change (nothing to ship). Note: a fresh database built from migrations would still lack both tables - the real fix is an EF migration that creates them IF NOT EXISTS; left for a later backend row. | [ENGINEERING run 2026-10-10 0605, 2026-10-10T06:12:04Z] CLAIMED: bring the dev database's threat tables level with production (ThreatDetections table + DdosAlerts.Timestamp), dev only, after reading both schemas read-only; no production change. Other runs: stay off xd-1630 until this note says done.",
+      "updatedAt": "2026-10-10T06:18:58Z"
     },
     {
       "id": "xd-1631",
@@ -52342,6 +52342,19 @@
       "createdAt": "2026-10-10T06:11:27Z",
       "createdDate": "2026-10-10",
       "completedDate": null
+    },
+    {
+      "id": "xd-1637",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: Test on dev: dev threat tables now match production (xd-1630)",
+      "description": "Re-run QA's own verify from xd-1630 on dev: (1) dev psql information_schema shows ThreatDetections.DetectedAt and DdosAlerts.Timestamp (9 and 27 columns, same as production); (2) one GET /api/admin/threats/summary on api.dev with an admin token adds 0 'Threat-source MAX failed' lines to the caspervpn-dev-api log (before the fix: +2 per call). The old dev table is kept as DdosAlerts_devlegacy_20261010. Dev only - nothing to ship. Evidence on xd-1630.",
+      "status": "pending",
+      "priority": "P3",
+      "createdAt": "2026-10-10T06:19:02Z",
+      "createdDate": "2026-10-10",
+      "completedDate": null,
+      "taskRef": "xd-1630"
     }
   ],
   "importantNotes": [
