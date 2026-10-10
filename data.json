@@ -13422,7 +13422,7 @@
           "addedBy": "[BACKEND] engineering run 1010-0204",
           "test": "READY TO SHIP \u2014 the admin can see how many free trials start each day, and how they end (paid, ended without paying, still running) \u00b7 why: you asked on 4 Oct for 'trial starts per day' in the admin; today nobody can see it without a database query \u00b7 tested on dev: the dev copy answers with the right counts (26 trial starts on dev, 25 of them our own test accounts, 1 real - the same as a direct database count); 246 of 246 tests pass \u00b7 rollback: put back the previous API version (the deploy script keeps a rollback copy); no data changes",
           "verify": "After ship: production GET /api/admin/metrics/trials?days=30 with an admin token -> 200; data.started = inTrial+converted+endedUnpaid; data.allStartsUnfiltered = SELECT count(*) FROM \"Users\" WHERE \"TrialStartedAt\" >= date_trunc('day',now())-interval '29 days' AND \"TrialStartedAt\"<=now() (was 10 on 10 Oct); converted 1 / endedUnpaid 4 / inTrial 2 at most (10 Oct, before the config test-mail list).",
-          "evidence": "[QA 2026-10-10 d, scheduled, 2026-10-10T03:08:46Z] QA DEV PASS (xd-1626) on development 27c86b3b0 (dev api created 2026-10-10T02:49:24Z, healthy), /root/reports/qa1010d (t.sh, cmp.py, out.txt), minted 10-min dev admin + plain-user tokens, nothing printed, nothing written. Independent SQL recompute (dev Users.TrialStartedAt 26 starters, their Payments, Subscriptions.Environment, staff rule copy) vs GET /api/admin/metrics/trials: days 30/365/7/1/0/-5/9999/(none) -> 200, every field equal (started, inTrial, converted, endedUnpaid, allStartsUnfiltered, excludedStaffOrTest, startedToday, startedLast7Days, conversionPctOfFinished) AND every daily row equal (started/converted/endedUnpaid per date); days=30: all 26 / excluded 25 / real 1 = ended unpaid 1; days=7: all 12, excluded 12, real 0; started = inTrial+converted+endedUnpaid and sum(daily.started) = started on all 8 calls; clamp: 0 and -5 -> 1 row, 9999 -> 365 rows, no param -> 30; days=abc -> 400; no token 401; plain-user token 403 (role gate); CONTROL production (not shipped) 404. NOT EXERCISED on dev (0 cases): converted and in-trial among real customers (dev's 12 running trials are all staff), the ExcludeTestEmails list (0 entries on dev), Sandbox-subscription owners; those paths rest on TrialMetricsTests (read, not re-run). Sandbox payment tag: dev Payments exact '\"Environment\":\"Sandbox\"' 257 = loose 'sandbox' 257 (the code's exact match misses none). Next: CEO YES on this row, then QA runs the row verify on production. || [ENGINEERING run 2026-10-10 0204, 2026-10-10T02:50:49Z] added for xd-1311; development 27c86b3b0; QA dev check xd-1626; admin card xd-1627. Board advice: YES after QA's dev pass - read-only report, no money or access logic changed; ride in the next backend deploy together with rows 172/173.",
+          "evidence": "[ENGINEERING run 2026-10-10 0305, 2026-10-10T03:30:24Z] the admin overview card for this number is built on development 576401a85 (xd-1627, QA xd-1628); it ships in the same admin deploy as this row (production admin shows nothing new until then). | [QA 2026-10-10 d, scheduled, 2026-10-10T03:08:46Z] QA DEV PASS (xd-1626) on development 27c86b3b0 (dev api created 2026-10-10T02:49:24Z, healthy), /root/reports/qa1010d (t.sh, cmp.py, out.txt), minted 10-min dev admin + plain-user tokens, nothing printed, nothing written. Independent SQL recompute (dev Users.TrialStartedAt 26 starters, their Payments, Subscriptions.Environment, staff rule copy) vs GET /api/admin/metrics/trials: days 30/365/7/1/0/-5/9999/(none) -> 200, every field equal (started, inTrial, converted, endedUnpaid, allStartsUnfiltered, excludedStaffOrTest, startedToday, startedLast7Days, conversionPctOfFinished) AND every daily row equal (started/converted/endedUnpaid per date); days=30: all 26 / excluded 25 / real 1 = ended unpaid 1; days=7: all 12, excluded 12, real 0; started = inTrial+converted+endedUnpaid and sum(daily.started) = started on all 8 calls; clamp: 0 and -5 -> 1 row, 9999 -> 365 rows, no param -> 30; days=abc -> 400; no token 401; plain-user token 403 (role gate); CONTROL production (not shipped) 404. NOT EXERCISED on dev (0 cases): converted and in-trial among real customers (dev's 12 running trials are all staff), the ExcludeTestEmails list (0 entries on dev), Sandbox-subscription owners; those paths rest on TrialMetricsTests (read, not re-run). Sandbox payment tag: dev Payments exact '\"Environment\":\"Sandbox\"' 257 = loose 'sandbox' 257 (the code's exact match misses none). Next: CEO YES on this row, then QA runs the row verify on production. || [ENGINEERING run 2026-10-10 0204, 2026-10-10T02:50:49Z] added for xd-1311; development 27c86b3b0; QA dev check xd-1626; admin card xd-1627. Board advice: YES after QA's dev pass - read-only report, no money or access logic changed; ride in the next backend deploy together with rows 172/173.",
           "qaVerdict": "PASS (dev)",
           "qaDate": "2026-10-10"
         }
@@ -18562,7 +18562,7 @@
       "name": "Backend API",
       "status": "red",
       "lead": "Dev Team",
-      "currentTask": "2026-10-10 engineering run 0204 re-base (02:51Z): 30 tasks \u00b7 106/158 criteria met \u00b7 open P0 to BACKEND 3",
+      "currentTask": "2026-10-10 engineering run 0305 re-base (03:30Z): 30 tasks \u00b7 106/158 criteria met \u00b7 open P0 to BACKEND 3",
       "blockers": "3",
       "completion": "67",
       "launchCompletion": "68",
@@ -18579,7 +18579,7 @@
       "name": "DevOps & Infra",
       "status": "red",
       "lead": "Unassigned",
-      "currentTask": "2026-10-10 engineering run 0204 re-base (02:51Z): 31 tasks \u00b7 86/205 criteria met \u00b7 open P0 to DEVOPS 3",
+      "currentTask": "2026-10-10 engineering run 0305 re-base (03:30Z): 31 tasks \u00b7 86/205 criteria met \u00b7 open P0 to DEVOPS 3",
       "blockers": "3",
       "completion": "42",
       "progress": 98,
@@ -18618,7 +18618,7 @@
       "name": "Website",
       "status": "yellow",
       "lead": "Dev Team",
-      "currentTask": "2026-10-10 engineering run 0204 re-base (02:51Z): 8 tasks \u00b7 29/46 criteria met \u00b7 open P0 to WEBSITE 0",
+      "currentTask": "2026-10-10 engineering run 0305 re-base (03:30Z): 8 tasks \u00b7 29/46 criteria met \u00b7 open P0 to WEBSITE 0",
       "blockers": "0",
       "completion": "63",
       "launchCompletion": "61",
@@ -18680,7 +18680,7 @@
       "name": "CTO Office",
       "status": "yellow",
       "lead": "Waqar",
-      "currentTask": "2026-10-10 engineering run 0204 re-base (02:51Z): 46 tasks \u00b7 169/272 criteria met \u00b7 open P0 to CTO 4",
+      "currentTask": "2026-10-10 engineering run 0305 re-base (03:30Z): 46 tasks \u00b7 169/272 criteria met \u00b7 open P0 to CTO 4",
       "blockers": "4",
       "completion": "62",
       "launchCompletion": "63",
@@ -51898,7 +51898,19 @@
       "createdAt": "2026-10-10T02:50:53Z",
       "createdDate": "2026-10-10",
       "completedDate": null,
-      "notes": "[ENGINEERING run 2026-10-10 0305, 2026-10-10T03:06:18Z] CLAIMED: building the admin overview card on development now (unattended run; development only, no production change). Other runs: stay off this row until this note says done. | "
+      "notes": "[ENGINEERING run 2026-10-10 0305, 2026-10-10T03:30:24Z] BUILT on development (claim released): development 576401a85 (3 files: pages/Dashboard.tsx, services/adminService.ts, types/index.ts; +62/-2). Overview card 'Trial starts today' (value = startedToday; subtitle = last 7 days, last-30-day started, of finished trials paid / ended with % paid, control = all starts incl. staff/test). Null-safe: a dash + 'Trial numbers not available' when the endpoint does not answer. tsc --noEmit 0 errors (Mac VM, RHF stubs per admin trap B4) with a control: planted 'startedTodayX' -> TS2551, rc 2. Pushed blobs = the tsc-checked blobs (git hash-object equal on all 3). Dev admin redeployed by deploy-dev (runner job for 576401a85 started 03:20:51Z): bundle main.06745f2e.js -> main.53fef872.js at ~03:29Z; bundle grep 'Trial starts today' 1 / 'Trial numbers not available' 1 / '/api/admin/metrics/trials' 1; CONTROL production main.152f60c9.js 0. Dev API no token 401, production 404 (endpoint not shipped). No drill-down on purpose: the Users list has no trial filter (admin trap B9 - no fake link). Not on production; ships with CEO card row 197. | [ENGINEERING run 2026-10-10 0305, 2026-10-10T03:06:18Z] CLAIMED: building the admin overview card on development now (unattended run; development only, no production change). Other runs: stay off this row until this note says done. | "
+    },
+    {
+      "id": "xd-1628",
+      "from": "[ADMIN-PANEL]",
+      "to": "[QA]",
+      "title": "Handoff from ADMIN-PANEL: Check on dev: admin overview card 'Trial starts today' (xd-1627 / xd-1311)",
+      "description": "Check on dev the admin overview card 'Trial starts today' (xd-1627, development 576401a85). development 576401a85 (3 files: pages/Dashboard.tsx, services/adminService.ts, types/index.ts; +62/-2). Overview card 'Trial starts today' (value = startedToday; subtitle = last 7 days, last-30-day started, of finished trials paid / ended with % paid, control = all starts incl. staff/test). Null-safe: a dash + 'Trial numbers not available' when the endpoint does not answer. tsc --noEmit 0 errors (Mac VM, RHF stubs per admin trap B4) with a control: planted 'startedTodayX' -> TS2551, rc 2. Pushed blobs = the tsc-checked blobs (git hash-object equal on all 3). Dev admin redeployed by deploy-dev (runner job for 576401a85 started 03:20:51Z): bundle main.06745f2e.js -> main.53fef872.js at ~03:29Z; bundle grep 'Trial starts today' 1 / 'Trial numbers not available' 1 / '/api/admin/metrics/trials' 1; CONTROL production main.152f60c9.js 0. Dev API no token 401, production 404 (endpoint not shipped). No drill-down on purpose: the Users list has no trial filter (admin trap B9 - no fake link). Not on production; ships with CEO card row 197. CHECK: (1) bundle grep on admin.dev.caspervpn.com (main.53fef872.js or newer) = 1 for 'Trial starts today'; production 0. (2) Signed-in render on admin.dev.caspervpn.com (overview page): the card shows startedToday and the subtitle numbers equal GET https://api.dev.caspervpn.com/api/admin/metrics/trials?days=30 (startedLast7Days, started, converted, endedUnpaid, allStartsUnfiltered). (3) With the endpoint failing (e.g. production today, 404) the card shows a dash and 'Trial numbers not available' and the rest of the page still renders. Do not tick before (2) is seen.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-10T03:30:29Z",
+      "createdDate": "2026-10-10",
+      "completedDate": null
     }
   ],
   "importantNotes": [
