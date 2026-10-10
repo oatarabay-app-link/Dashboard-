@@ -13413,6 +13413,16 @@
           "evidence": "[QA 2026-10-10 c, scheduled, 2026-10-10T02:09:49Z] QA DEV PASS (xd-1625) on development 0a219a7e5 + 4d7d476ae (dev api + admin created 01:51Z), /root/reports/qa1010c (t.sh, out.txt, p.sh), minted 10-min dev admin token, nothing printed, nothing written: GET /api/admin/users/<id> for 54 of 60 dev users (all 12 with a trial end in the future, both add-on users, a seeded sample of 40 others) - planState equals the state worked out from the database 54/54 (Trial 12, Free 38, Manual 2, Paying 1, Ended 1); planTrialEndsAt = Users.TrialEndsAt on all 12 trials; addOns count = database 54/54: the holder of the dev IP -> Active, address shown, TH, Apple; the user whose IP was taken back -> Ended, no address; everyone else []; no token 401. Admin bundle dev main.06745f2e.js 'Trial until' 1, 'Add-ons' 1, 'planState' 3 / CONTROL production main.152f60c9.js 0/0/0. Refund fix: code read (MarkRefundedPaymentAsync now runs before the xd-866 add-on skip) + the 3 tests read (add-on refund -> Refunded and plan untouched; CONTROL unknown transaction -> nothing changes; plan refund still cancels) - NOT re-run by QA (no build on the live server). Data fix target checked on production read-only (default_transaction_read_only=on): exactly 1 Payments row carries TransactionId 1090000031895702 - user 2da84bfa, 9.99, Status 1 Succeeded; its OriginalTransactionId matches a DedicatedIpTokens.ProviderRef, so the 'Refunded' label will show once the row is set to 4. Production has 0 Refunded payment rows of any kind today. NOT RUN: signed-in look at the page (xd-1494). Ready for CEO YES. || [ENGINEERING run 2026-10-10 b, 2026-10-10T01:53:03Z] added for xd-1437 (b) + refund fix; QA dev check xd-1625. Data fix SQL (production, in a transaction, expect UPDATE 1): UPDATE \"Payments\" SET \"Status\"=4, \"RefundedAt\"='2026-10-08 20:03:07+00', \"RefundedAmount\"=\"Amount\", \"UpdatedAt\"=now() WHERE \"Metadata\" LIKE '%\"TransactionId\":\"1090000031895702\"%' AND \"Status\"=1; Measured 01:1xZ read-only: that row Status 1 (Succeeded), $9.99, Production; api log 2026-10-08 20:03:07Z 'xd-805: dedicated-IP lifecycle applied - REFUND -> expired for providerRef 1090000031895702' + 'xd-866: REFUND com.caspervpn.dedicated.monthly left the plan subscription untouched'. Board advice: YES after QA's dev pass - display + one refund bookkeeping fix; ride with row 195 in the same API + admin ship.",
           "qaVerdict": "PASS (dev)",
           "qaDate": "2026-10-10"
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "addedAt": "2026-10-10T02:50:49Z",
+          "addedBy": "[BACKEND] engineering run 1010-0204",
+          "test": "READY TO SHIP \u2014 the admin can see how many free trials start each day, and how they end (paid, ended without paying, still running) \u00b7 why: you asked on 4 Oct for 'trial starts per day' in the admin; today nobody can see it without a database query \u00b7 tested on dev: the dev copy answers with the right counts (26 trial starts on dev, 25 of them our own test accounts, 1 real - the same as a direct database count); 246 of 246 tests pass \u00b7 rollback: put back the previous API version (the deploy script keeps a rollback copy); no data changes",
+          "verify": "After ship: production GET /api/admin/metrics/trials?days=30 with an admin token -> 200; data.started = inTrial+converted+endedUnpaid; data.allStartsUnfiltered = SELECT count(*) FROM \"Users\" WHERE \"TrialStartedAt\" >= date_trunc('day',now())-interval '29 days' AND \"TrialStartedAt\"<=now() (was 10 on 10 Oct); converted 1 / endedUnpaid 4 / inTrial 2 at most (10 Oct, before the config test-mail list).",
+          "evidence": "[ENGINEERING run 2026-10-10 0204, 2026-10-10T02:50:49Z] added for xd-1311; development 27c86b3b0; QA dev check xd-1626; admin card xd-1627. Board advice: YES after QA's dev pass - read-only report, no money or access logic changed; ride in the next backend deploy together with rows 172/173."
         }
       ],
       "progress": 0,
@@ -45521,8 +45531,8 @@
       "ageDays": 5,
       "lifecycle": "active",
       "needsRelease": false,
-      "updatedAt": "2026-10-10T02:10:04Z",
-      "notes": "[ENGINEERING run 2026-10-10 0204, 2026-10-10T02:10:04Z] CLAIMED: trial-starts endpoint on development only (no production change). Other runs: stay off this row until this note says done. | "
+      "updatedAt": "2026-10-10T02:50:49Z",
+      "notes": "[ENGINEERING run 2026-10-10 0204, 2026-10-10T02:50:49Z] PARTIAL - endpoint built on development 27c86b3b0, NOT on production. GET /api/admin/metrics/trials?days=30 (1..365). Build 0 errors, tests 246/246 on the main server; control: dropping the add-on rule makes TrialMetricsTests fail (1 of 2). Dev: dev api recreated 2026-10-10T02:49:24Z by deploy-dev for 27c86b3b0 (healthy; DLL carries AdminTrialMetricsController). Minted 10-min dev admin JWT (nothing printed): GET ?days=30 -> 200 started 1 / endedUnpaid 1 / inTrial 0 / converted 0, allStartsUnfiltered 26 = dev SQL 26, excluded 25 (dev starters are staff/test mailboxes), real = dev SQL real 1; daily 30 rows, sum started 1; ?days=365 -> same, 365 rows; ?days=0 -> days 1; no token -> 401; CONTROL production (not shipped) -> 404. Production read-only measurement (same rules, SQL, 30 d): all starts 10, real 7 (3 staff/Sandbox out): converted 1, ended unpaid 4, in trial 2 (before the AdminAnalytics:ExcludeTestEmails list, which can only lower 'real'). Two signals agree for Apple trials: 3 Users.TrialStartedAt starts on 27 Sep / 5 Oct / 6 Oct = 3 '$0 free trial' Payments on the same days. Next: QA xd-1626 (dev check) -> CEO card READY TO SHIP row -> ship with deploy_api.sh after CEO YES; admin card xd-1627; the board north-star 'trial starts' line is for the CEO office routine once the endpoint is live. codegraph: down (xd-1574), grep used. | [ENGINEERING run 2026-10-10 0204, 2026-10-10T02:10:04Z] CLAIMED: trial-starts endpoint on development only (no production change). Other runs: stay off this row until this note says done. | "
     },
     {
       "id": "xd-1312",
@@ -51853,6 +51863,30 @@
       "completedBy": "[QA]",
       "resolution": "PASS (dev) - 54/54 users right on dev; refund fix code + tests read; CEO YES next on ceo-action-backlog row 196",
       "resultingHandoff": "CEO YES on ceo-action-backlog row 196 (READY TO SHIP), then QA checks production with the row verify"
+    },
+    {
+      "id": "xd-1626",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: Check on dev: GET /api/admin/metrics/trials (trial starts per day + outcomes, xd-1311)",
+      "description": "development 27c86b3b0 (3 files: Services/TrialMetrics.cs, Controllers/AdminTrialMetricsController.cs, Tests/TrialMetricsTests.cs). Definition: start = Users.TrialStartedAt; converted = Succeeded payment > $0 for a plan after the start (not Sandbox, not a Dedicated IP add-on); ended = trial over, no plan payment; in trial = the rest. Real customers only (staff/test mailboxes, AdminAnalytics:ExcludeTestEmails, Sandbox-subscription owners); allStartsUnfiltered is the control. CHECK on dev: mint a 10-min dev admin JWT (recipe /root/reports/qa1010b/t.sh), GET https://api.dev.caspervpn.com/api/admin/metrics/trials?days=30 and ?days=365 -> 200; started = inTrial+converted+endedUnpaid; sum(daily.started) = started; allStartsUnfiltered = dev SQL count of Users.TrialStartedAt in the window; days=0 -> days 1; no token -> 401. Re-run script: /root/eng1010-0204/devtest.sh on the main server. Engineering dev result: dev api recreated 2026-10-10T02:49:24Z by deploy-dev for 27c86b3b0 (healthy; DLL carries AdminTrialMetricsController). Minted 10-min dev admin JWT (nothing printed): GET ?days=30 -> 200 started 1 / endedUnpaid 1 / inTrial 0 / converted 0, allStartsUnfiltered 26 = dev SQL 26, excluded 25 (dev starters are staff/test mailboxes), real = dev SQL real 1; daily 30 rows, sum started 1; ?days=365 -> same, 365 rows; ?days=0 -> days 1; no token -> 401; CONTROL production (not shipped) -> 404.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-10T02:50:53Z",
+      "createdDate": "2026-10-10",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1627",
+      "from": "[BACKEND]",
+      "to": "[ADMIN-PANEL]",
+      "title": "Handoff from BACKEND: Admin overview card 'Trial starts today / 7 days' from GET /api/admin/metrics/trials (xd-1311)",
+      "description": "The endpoint is on development 27c86b3b0 (not production). Build the overview card: 'Trial starts' today + last 7 days (startedToday, startedLast7Days), and a small line 'of finished trials: N paid, M ended' (converted, endedUnpaid, conversionPctOfFinished). Response: {success,data:{days,fromUtc,toUtc,startedToday,startedLast7Days,started,inTrial,converted,endedUnpaid,conversionPctOfFinished,allStartsUnfiltered,excludedStaffOrTest,daily:[{date,started,converted,endedUnpaid}],definition}}. Null-safe render. Ship together with the backend READY TO SHIP row after the CEO YES.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-10T02:50:53Z",
+      "createdDate": "2026-10-10",
+      "completedDate": null
     }
   ],
   "importantNotes": [
