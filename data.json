@@ -13663,6 +13663,16 @@
           "met": false,
           "verifiedBy": "none",
           "evidence": "[GROWTH live chat 2026-10-10T21:21:21Z] CEO asked 'how can we make apple key read marketing data and change store descriptions'. Measured 5 Oct: App Manager key N82BB82TD6 -> 403 on analytics (trap C24). Store text: App Manager can edit version text while the next version is 'Prepare for Submission' (C18); the live 4.2 text cannot be edited by anyone until a new version ships."
+        },
+        {
+          "test": "READY TO SHIP \u2014 put back the 20 timed jobs the main server lost at 23:36 Beirut tonight (partner code e-mails, crypto renewals, every alert e-mail, the usage-meter check, the factory deadman, tonight's code-map rebuild) \u00b7 why: the code-map fix (row 180) also wrote an old copy of the job list; the server's own log shows none of these jobs ran after 20:37 UTC \u00b7 tested: the restore file = the backup taken just before that edit plus the one new line (1 line differs, 50 lines, no secrets); nothing installed yet \u00b7 rollback: put back the copy saved before the restore (one command) \u00b7 xd-1694",
+          "verify": "ssh brain 'crontab -l | wc -l' -> 50 and 'crontab -l | md5sum' -> 65f14cf05349...; journalctl -u cron shows affiliate_offer_codes every 5 min again",
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "verifiedByRaw": null,
+          "verifiedDate": null,
+          "evidence": "[ENGINEERING run 2026-10-10 2105, scheduled, 2026-10-10T21:22:51Z] added for xd-1694 (found while committing xd-1685). Only-in-backup lines 24, only-live 4; restore prepared at /root/reports/eng1010-2105/crontab.restore."
         }
       ],
       "progress": 0,
@@ -53422,11 +53432,12 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: Commit to git: codegraph image protected from the prune jobs (label casper.keep) - live files changed 10 Oct",
       "description": "CEO 10 Oct: 'are you sure graphify will not get wiped again?'. Measured: 3 jobs delete unused images: root crontab 04:00 'docker system prune -af --filter until=24h', /etc/cron.d/casper-docker-prune 03:30 'docker image prune -af --filter until=24h', /opt/caspervpn/disk-guard.sh line 61 'docker image prune -af'. DONE live 20:36-20:4xZ (backups /root/backups/codegraph-keep-20261010T2036Z): Dockerfile + 'LABEL casper.keep=true' (image rebuilt, label present); all three now add --filter \"label!=casper.keep\" (syntax proven by a no-op prune 'until=999999h' -> 0B). Self-repair stays as the second line of defence (rebuild.sh + wrapper). DO: commit the same changes to the repo copies (infrastructure/\u2026/disk-guard.sh, the cron.d file, crontab doc) so the next install from git keeps them; -> [QA]: after 11 Oct 04:00Z, docker image inspect casper-codegraph still OK.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-10-10T20:41:29Z",
       "createdDate": "2026-10-10",
-      "completedDate": null
+      "completedDate": null,
+      "notes": " | [ENGINEERING run 2026-10-10 2105, scheduled, 2026-10-10T21:22:51Z] DONE in git: development f81f79920 (infrastructure/scripts/disk-guard.sh image prune + label!=casper.keep; infrastructure/brain/crontab-root.txt 04:00 prune + filter, body = the 50-line pre-edit crontab; new infrastructure/brain/cron.d-casper-docker-prune; new infrastructure/codegraph/ Dockerfile+rebuild.sh+codegraph+README = live copies). bash -n / sh -n OK; secret pattern count 0. Live disk-guard.sh still carries the old hard-coded mail key (xd-1618, fixed on development only) - not touched. FOUND: the live crontab lost 20 lines in the same 20:36Z edit -> xd-1694 + CEO card row 214."
     },
     {
       "id": "xd-1686",
@@ -53528,6 +53539,32 @@
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-10-10T21:21:26Z",
+      "createdDate": "2026-10-10",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1694",
+      "from": "[DEVOPS]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from DEVOPS: P0: main server lost 20 timed jobs at 20:36Z (crontab replaced by an old copy) - restore after CEO YES",
+      "description": "[ENGINEERING run 2026-10-10 2105, scheduled, 2026-10-10T21:22:51Z] MEASURED read-only on the main server: /var/spool/cron/crontabs/root changed 2026-10-10 20:36:24Z (the xd-1685 label edit, CTO live). crontab -l = 30 lines; the backup taken just before the edit (/root/backups/codegraph-keep-20261010T2036Z/crontab.before) = 50 lines. Missing since then (cron journal after the 20:37:01Z RELOAD shows 0 CMD lines for any of them): affiliate_offer_codes */5 (last run 20:35Z), crypto_renewals hourly :07, routine_alert x9 (datacap */10, routines-status, connectivity, throughput, farm-guard, parity, cert-scan, disposable-refresh), meter_sanity :23, routines_watchdog, wg_wrong_row, wg_key_retire 03:41, certscan 04:50, disposable_refresh Mon, factory_deadman */30, codegraph rebuild 23:30 + vault-rebuild 23:45. Reverted to older lines: parity_monitor_run.sh -> parity_monitor.sh, record_backups 04:30 -> 03:20 (undoes xd-864), marketing_snapshot from git -> /opt copy. PREPARED (not installed): /root/reports/eng1010-2105/crontab.restore = crontab.before with only the 04:00 prune gaining --filter \"label!=casper.keep\" (diff vs before: 1 line; 50 lines; md5 65f14cf05349; 0 secret patterns; 0 unparsable lines). Live copy saved: /root/reports/eng1010-2105/crontab.live-2110 (md5 0ec63f69a205). SHIP after CEO YES on the CEO card: crontab -l > /root/backups/crontab-pre-restore-$(date -u +%Y%m%dT%H%MZ) && crontab /root/reports/eng1010-2105/crontab.restore && crontab -l | md5sum (expect 65f14cf05349) && crontab -l | wc -l (50). Prove: next */5 affiliate CMD + :07 crypto renewals in journalctl -u cron. Rollback: crontab <the pre-restore backup>. Same file is the repo snapshot infrastructure/brain/crontab-root.txt on development f81f79920. Then -> [QA].",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-10-10T21:22:55Z",
+      "createdDate": "2026-10-10",
+      "completedDate": null,
+      "blocker": "Waits for CEO YES on ceo-action-backlog row 214 (restore the crontab)",
+      "dueBy": "2026-10-11T21:00:00Z"
+    },
+    {
+      "id": "xd-1695",
+      "from": "[DEVOPS]",
+      "to": "[QA]",
+      "title": "Handoff from DEVOPS: Check xd-1685 in git (development f81f79920) and that the codegraph image survives the 03:30/04:00 prunes",
+      "description": "[ENGINEERING run 2026-10-10 2105, scheduled, 2026-10-10T21:22:51Z] (1) git show f81f79920 --stat = 7 files under infrastructure/ only; the three prune lines carry --filter \"label!=casper.keep\"; infrastructure/codegraph/* = /opt/codegraph/{Dockerfile,rebuild.sh} + /usr/local/bin/codegraph (md5). (2) After 11 Oct 04:05Z: ssh brain 'docker image inspect casper-codegraph --format {{{{.Id}}}}' still answers (today sha256:14db1daa8dea). NOTE: the root-crontab part of the live check depends on the restore (xd-1694); /etc/cron.d prune at 03:30 already filters the label.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-10T21:22:55Z",
       "createdDate": "2026-10-10",
       "completedDate": null
     }
