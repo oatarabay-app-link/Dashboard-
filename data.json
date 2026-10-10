@@ -8281,11 +8281,11 @@
           "passed": false,
           "verifiedByRaw": "none",
           "verifiedBy": "none",
-          "evidence": "[ENGINEERING run 2026-10-10 2305, scheduled, 2026-10-10T23:3xZ] DEFERRED to Dec 2026 \u2014 Stripe is ON HOLD (CEO 25 Sep: card payments not part of launch; launch = Apple + crypto). Re-measured 23:12Z: production API Stripe key prefix sk_test_ (only the prefix read). Revisit 1 Dec 2026 or when the CEO reopens Stripe. | QA 2026-09-24 NOT LIVE: Stripe runs TEST keys in production \u2014 no live Stripe lifecycle possible. | ON HOLD: CEO DECISION 2026-09-25 (in chat, recorded by QA): Stripe card payments are NOT part of the launch. Launch payment channels = Apple in-app purchase + crypto (NOWPayments).",
+          "evidence": "[BACKEND run 2026-10-10 2314, scheduled, unattended, 2026-10-10T23:54:44Z] DEFERRED to Jan 2027: CEO decision 25 Sep (recorded on this row) - card payments by Stripe are not part of the launch; launch channels are Apple in-app purchase + crypto. Revisit when the CEO puts web card payments on the roadmap. | [ENGINEERING run 2026-10-10 2305, scheduled, 2026-10-10T23:3xZ] DEFERRED to Dec 2026 \u2014 Stripe is ON HOLD (CEO 25 Sep: card payments not part of launch; launch = Apple + crypto). Re-measured 23:12Z: production API Stripe key prefix sk_test_ (only the prefix read). Revisit 1 Dec 2026 or when the CEO reopens Stripe. | QA 2026-09-24 NOT LIVE: Stripe runs TEST keys in production \u2014 no live Stripe lifecycle possible. | ON HOLD: CEO DECISION 2026-09-25 (in chat, recorded by QA): Stripe card payments are NOT part of the launch. Launch payment channels = Apple in-app purchase + crypto (NOWPayments).",
           "qaVerdict": "NOTLIVE",
           "qaDate": "2026-09-24",
           "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored",
-          "blocker": "CEO decision 25 Sep: Stripe on hold"
+          "blocker": "Deferred to Jan 2027 (CEO 25 Sep: Stripe not in launch; Apple IAP + crypto only)."
         },
         {
           "test": "DedicatedIp model + enums",
@@ -8350,10 +8350,11 @@
           "passed": false,
           "verifiedByRaw": "none",
           "verifiedBy": "none",
-          "evidence": "QA 2026-09-24 Needs an authenticated purchase/allocate on a test account.",
+          "evidence": "[BACKEND run 2026-10-10 2314, scheduled, unattended, 2026-10-10T23:54:44Z] The 'authenticated purchase/allocate' this row waited for no longer exists: rows 0+1 closed as superseded by the CEO ('2 close', 21:45Z today). What is left to validate is GET /api/dedicated-ip as a real holder after the 18:12Z ship of xd-1659 - that is QA's open handoff xd-1674. | QA 2026-09-24 Needs an authenticated purchase/allocate on a test account.",
           "qaVerdict": "BLOCKED",
           "qaDate": "2026-09-24",
-          "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored"
+          "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored",
+          "blocker": "QA: close this row with xd-1674 (GET /api/dedicated-ip as a production holder); purchase/allocate superseded by the CEO 10 Oct."
         }
       ],
       "name": "Dedicated IP \u2014 Backend Engineering",
@@ -13874,6 +13875,26 @@
           "test": "READY TO SHIP \u2014 the daily 'did every server check run?' report stops raising a false red alarm every month \u00b7 why: the monthly legal archive runs once a month, but the report expected it every day and a half, so it has said 'stale' since 2 Oct and every real alarm hides behind it \u00b7 tested: scratch test, old file 'stale 1', new file 'ok' (controls: a missed month still alarms, a never-run still alarms) \u00b7 rollback: copy the old file back (backup made at install) \u00b7 install: copy development c2b254f03 infrastructure/scripts/routines_watchdog.py to /opt/caspervpn/ (xd-1698, QA xd-1705)",
           "met": false,
           "evidence": "[ENGINEERING run 2026-10-10 2205, scheduled, 2026-10-10T22:1xZ] development c2b254f03; installed md5 4b5f7f425639 = git before; waits for CEO YES."
+        },
+        {
+          "test": "READY TO SHIP \u2014 people who sign up with an e-mail address can use the VPN for their first 24 hours before they confirm the address \u00b7 why: you said yes to option B on row 176; measured 9 Oct, none of the 15 real e-mail sign-ups in 30 days ever connected, because the confirm step came first (and 3 of 8 confirm e-mails bounced) \u00b7 after 24 h the old rule applies; throwaway addresses get no free day; the 0.5 GB free limit stays \u00b7 tested on dev: 6 of 6 new checks pass (the old version fails the 24-hour one), 300 of 300 tests \u00b7 rollback: one setting set to 0, no rebuild",
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "addedAt": "2026-10-10T23:54:44Z",
+          "addedBy": "[BACKEND] run 2026-10-10 2314",
+          "verify": "After ship: production DLL strings -el | grep -c SignupGraceHours = 1; a new unconfirmed e-mail account connects in its first 24 h (api log '[email-gate] Sign-up grace'); 7 days later: real e-mail sign-ups with a ConnectionLogs row > 0 (was 0 of 15 in 30 d on 9 Oct)",
+          "evidence": "[BACKEND run 2026-10-10 2314, scheduled, unattended, 2026-10-10T23:54:44Z] development 656584056; xd-1678; QA dev check handoff created this run. Board advice: yes - it is your own decision (row 176) turned into one setting, with an off switch."
+        },
+        {
+          "test": "READY TO SHIP \u2014 the admin 'infrastructure' screen stops showing made-up server numbers \u00b7 why: it carried a fake server called NL-VPN-01 with an hour of invented CPU and memory history, a fake certificate, and its 'check now' button returned random numbers (and could raise alarms on them) \u00b7 the live server list was already real \u00b7 tested on dev: 4 of 4 new checks pass, the old version fails all 4; 304 of 304 tests \u00b7 rollback: the deploy script keeps the previous API",
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "addedAt": "2026-10-10T23:54:44Z",
+          "addedBy": "[BACKEND] run 2026-10-10 2314",
+          "verify": "After ship: production DLL - no 'NL-VPN-01' seeded history (GET health history for 5ad01fa7-... returns []); certificates list has no 'nl-vpn.caspervpn.com'; collect on an unknown server -> 500, never random numbers",
+          "evidence": "[BACKEND run 2026-10-10 2314, scheduled, unattended, 2026-10-10T23:54:44Z] development 5a8f07b17; task admin-infra-monitor-real-prometheus row 0; QA dev check handoff created this run. Board advice: yes - admin-only display change, no customer effect."
         }
       ],
       "progress": 0,
@@ -13938,12 +13959,13 @@
           "verifiedBy": "none",
           "verifiedDate": "2026-09-29",
           "verifiedByRaw": "qa-sweep-2026-09-29-fail",
-          "evidence": "[FAIL] QA 2026-09-29 sweep: InfraHealthService.cs still invents CPU/RAM/disk numbers with Random(42) for NL-VPN-01 (:142, :254-261, :293). | was: QA 2026-09-24 NOT TICKED - PARTIAL: the real Prometheus path is in the deployed tree (InfraHealthService.cs:140 IPrometheusClient, 30 s cache), but the constructor still pre-seeds simulated 'NL-VPN-01' history from _random (L245-262) and the Random fallback remains. Proving the page serves real numbers needs an authenticated read of /api/admin/infrastructure/health (401 unauthenticated). Hand to next sweep with an admin token.",
+          "evidence": "[BACKEND run 2026-10-10 2314, scheduled, unattended, 2026-10-10T23:54:44Z] FIX on development 5a8f07b17 (not ticked - QA ticks): InfraHealthService no longer has any Random - no seeded fake 'NL-VPN-01' history, no fake 'nl-vpn.caspervpn.com' certificate, POST health/{id}/collect copies the real Prometheus reading or refuses. Measured first: production api log 24 h = 2 'REAL Prometheus-sourced' reads, 0 '(simulated)' - the live list was already real; history, certificates and collect were not. Tests InfraHealthNoFakeDataTests 4/4, CONTROL old service 0/4; full suite 304/304; grep -c Random Services/InfraHealthService.cs = 0 on development. Persisting alerts (InfraHealthAlerts) + all 13 nodes come from the Prometheus path already on production (QA to confirm). | [FAIL] QA 2026-09-29 sweep: InfraHealthService.cs still invents CPU/RAM/disk numbers with Random(42) for NL-VPN-01 (:142, :254-261, :293). | was: QA 2026-09-24 NOT TICKED - PARTIAL: the real Prometheus path is in the deployed tree (InfraHealthService.cs:140 IPrometheusClient, 30 s cache), but the constructor still pre-seeds simulated 'NL-VPN-01' history from _random (L245-262) and the Random fallback remains. Proving the page serves real numbers needs an authenticated read of /api/admin/infrastructure/health (401 unauthenticated). Hand to next sweep with an admin token.",
           "qaVerdict": "FAIL",
           "qaDate": "2026-09-29",
           "verify": "code",
           "passed": false,
-          "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored"
+          "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored",
+          "blocker": "Waits for QA dev check (new handoff this run), then a CEO YES on the new READY TO SHIP row"
         }
       ],
       "xdId": [],
@@ -16775,8 +16797,9 @@
           "verify": "SELECT count(*) FILTER (WHERE \"AppVersion\" IS NOT NULL), count(*) FROM \"ConnectionLogs\" WHERE \"ConnectedAt\">now()-interval '7 days'",
           "met": false,
           "verifiedBy": "none",
-          "evidence": "[QA 2026-10-10 u, scheduled, 2026-10-10T23:34:26Z] PARTIAL - production 23:10Z, last 7 days: ConnectionLogs AppVersion set on 16 of 646 rows (all 16 = 4.4 test builds, DeviceOs 16/16; store 4.2 rows 630 NULL); ConnectFailureEvents AppVersion 4.4 on 98 of 224 rows, and the table has NO OS-version column (information_schema: only AppVersion). App version half works in the next build; the OS half is missing on ConnectFailureEvents -> handed to [BACKEND]. || ",
-          "qaDate": "2026-10-10"
+          "evidence": "[BACKEND run 2026-10-10 2314, scheduled, unattended, 2026-10-10T23:54:44Z] MEASURED production read-only: ConnectionLogs has columns DeviceOs + AppVersion, ConnectFailureEvents has AppVersion (server side is live). Last 7 days: ConnectionLogs 16 of 647 rows carry an AppVersion (all '4.4' = build-65 testers), ConnectFailureEvents 99 of 230. The live App Store app (4.2) sends none. | [QA 2026-10-10 u, scheduled, 2026-10-10T23:34:26Z] PARTIAL - production 23:10Z, last 7 days: ConnectionLogs AppVersion set on 16 of 646 rows (all 16 = 4.4 test builds, DeviceOs 16/16; store 4.2 rows 630 NULL); ConnectFailureEvents AppVersion 4.4 on 98 of 224 rows, and the table has NO OS-version column (information_schema: only AppVersion). App version half works in the next build; the OS half is missing on ConnectFailureEvents -> handed to [BACKEND]. || ",
+          "qaDate": "2026-10-10",
+          "blocker": "Server side done; fills for everyone only when the next iPhone build (4.4) is live in the App Store - build 67 on HOLD, 4.3.1 rejected 8 Oct (owner: [IOS] + CEO upload). Re-measure the same query 7 days after release."
         },
         {
           "test": "The funnel is split by LastLoginCountry and the 3 countries with the largest never-connected share are named with their top failure reason (from ConnectFailureEvents), excluding probe/staff accounts",
@@ -18563,7 +18586,8 @@
           "met": false,
           "passed": false,
           "verifiedBy": "none",
-          "evidence": ""
+          "evidence": "[BACKEND run 2026-10-10 2314, scheduled, unattended, 2026-10-10T23:54:44Z] MEASURED production read-only 2026-10-10T23:54Z: active users with a cycle start > 31 days ago AND at/over their cycle limit = 0 (row-1 population); control: over the limit in the CURRENT cycle = 10 (normal free-cap users), AutoResetDataMonthly users with a cycle end in the past = 1 (hourly reset job picks it up). The server side needs no ship; the remaining fix is the iPhone one (SubscriptionManager, build-65 branch, marker 26p).",
+          "blocker": "Server query already 0; waits for the iPhone fix to reach users in the next App Store build (owner [IOS], xd-1488 device test; build 67 on HOLD)."
         }
       ],
       "dueBy": "2026-10-09T20:03:23Z",
@@ -53785,11 +53809,13 @@
       "to": "[BACKEND]",
       "title": "Handoff from PRODUCT: CEO YES (row 176, B): new e-mail accounts may connect for their first 24 h before confirming",
       "description": "CEO 10 Oct: yes = advice B+C on row 176 (xd-1590). B: server setting - an unconfirmed e-mail account can connect for 24 h after sign-up; free plan stays capped at 0.5 GB. Test on dev, QA on dev, READY TO SHIP row. Spec product-strategy/ACTIVATION-EMAIL-SIGNUPS-2026-10-09.md. Then -> [QA].",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-10-10T20:16:31Z",
       "createdDate": "2026-10-10",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[BACKEND run 2026-10-10 2314, scheduled, unattended, 2026-10-10T23:54:44Z] BUILT on development 656584056: EmailVerificationGate reads EmailVerification:SignupGraceHours (appsettings 24, 0=off, max 168); disposable addresses get no grace; data-cap gate unchanged. Proof: dotnet build 0 errors, tests 300/300, EmailVerificationGraceTests 6/6; CONTROL old gate 1 of 6 fails (inside-grace case). Dev API redeployed 23:40:42Z: dev DLL strings -el SignupGraceHours = 1, dev appsettings.json = 2. Kill switch without rebuild: env EmailVerification__SignupGraceHours=0. Next: QA on dev (new handoff), then READY TO SHIP row on the CEO card.",
+      "blocker": "Waits for QA dev check (new handoff this run), then a CEO YES on the new READY TO SHIP row (production change)"
     },
     {
       "id": "xd-1679",
@@ -54393,6 +54419,30 @@
       "status": "pending",
       "priority": "P2",
       "createdAt": "2026-10-10T23:45:28Z",
+      "createdDate": "2026-10-10",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1724",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: Test on dev: new e-mail accounts can connect for 24 h before confirming (xd-1678)",
+      "description": "[BACKEND run 2026-10-10 2314, scheduled, unattended, 2026-10-10T23:54:44Z] development 656584056 (dev API created 23:40:42Z, DLL has SignupGraceHours). On dev: (1) register a throwaway e-mail account (do not confirm) -> POST /api/servers/<id>/connect or GET /api/vpn/config answers 200, not 403 AUTH_1006; api log '[email-gate] Sign-up grace'. (2) CONTROL: set that account's CreatedAt to now()-25 h in caspervpn_dev -> 403 AUTH_1006 'Verify your email'. (3) a disposable-domain account (IsDisposableEmail=true) -> 403 at once. (4) the free 0.5 GB cap still answers 402 when exceeded. (5) RADIUS path (IKEv2) follows the same rule. Pass -> backend adds READY TO SHIP row; fail -> back to [BACKEND].",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-10T23:54:51Z",
+      "createdDate": "2026-10-10",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1725",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: Test on dev: the admin infrastructure monitor shows no invented numbers (admin-infra-monitor-real-prometheus row 0)",
+      "description": "[BACKEND run 2026-10-10 2314, scheduled, unattended, 2026-10-10T23:54:44Z] development 5a8f07b17. On dev: (1) grep -c Random backend-dotnet-core/Services/InfraHealthService.cs = 0; (2) GET <InfraHealthController route>/health (admin token) -> only servers from Prometheus, no 'NL-VPN-01' with 60 seeded minutes; (3) GET <same route>/health/5ad01fa7-2e88-4c0b-83fb-e090a1ec6977/history -> no seeded history; (4) certificates list has no 'nl-vpn.caspervpn.com'; (5) POST .../health/<unknown id>/collect -> 500 'Failed to collect' (not random numbers). Tests InfraHealthNoFakeDataTests 4/4 (control old code 0/4). Pass -> tick row 0 on dev leg, backend adds READY TO SHIP row.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-10T23:54:51Z",
       "createdDate": "2026-10-10",
       "completedDate": null
     }
