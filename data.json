@@ -13628,6 +13628,16 @@
           "addedBy": "[BACKEND] engineering run 1010-1705",
           "owner": "[BACKEND]",
           "dept": "backend"
+        },
+        {
+          "test": "READY TO SHIP \u2014 the hourly 'are our usage meters blind?' check stops raising a red alarm when one of OUR OWN test phones uses a live server \u00b7 why: the red alarms on Miami (6-8 Oct) and D\u00fcsseldorf (8-9 Oct) were our test phones (their keys come from the test database), not lost customer data; measured: the D\u00fcsseldorf alarm was one test key that moved 50 MB and stopped the hour after it went quiet \u00b7 what changes: test-phone traffic is shown as 'test traffic, not customers'; anything else still raises the red alarm; if the test database cannot be read, nothing is excused \u00b7 tested: stub test on the main server 5 of 5 (no mail sent), the current version still alarms on the same case (control) \u00b7 rollback: copy back the backup of the one file. Low priority \u2014 say yes whenever convenient.",
+          "verify": "main server: md5sum /opt/caspervpn/meter_sanity_check.py = git show production:infrastructure/scripts/meter_sanity_check.py | md5sum; next hourly line in /var/log/meter-sanity.log has no 'Traceback' and ends 'ok:' or names only customer peers",
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "verifiedByRaw": "none",
+          "verifiedDate": null,
+          "evidence": "[ENGINEERING run 2026-10-10 2005, scheduled, 2026-10-10T20:14:03Z] added for xd-1448; development 2e1bd826; QA xd-1676. Install after YES: cp -p /opt/caspervpn/meter_sanity_check.py /opt/caspervpn/backups/meter_sanity_check.py.bak-row212 && git show production:infrastructure/scripts/meter_sanity_check.py > /opt/caspervpn/meter_sanity_check.py (after cherry-pick to production)."
         }
       ],
       "progress": 0,
@@ -18949,7 +18959,7 @@
       "lastSession": "2026-03-16",
       "lastTriggered": "2026-10-10T16:27:04Z",
       "notes": "2026-09-21 [CTO] re-based by the board sweep (CEO golden rule): completion = criteria met / total on tasks this department owns (multi-owner tasks count for each owner); blockers = open P0 handoffs to this department. Previous text kept in git history.",
-      "lastActivity": "2026-10-10"
+      "lastActivity": "2026-10-10T20:14:03Z xd-1448 built on development 2e1bd826, QA xd-1676, CEO row 212"
     },
     "android": {
       "name": "Android",
@@ -48739,7 +48749,7 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CEO: [P1] Usage meter blind on Miami: 0.76 GB moved by a WireGuard peer that our records attribute to NOBODY (meter-sanity failing 12 h)",
       "description": "[CEO office 2026-10-09 06:0x-06:4xZ (09:0x Beirut, daily run)] meter-sanity has said \"blind 1\" every hour since 8 Oct 20:23Z \u2014 now D\u00fcsseldorf: \"1 peer moved 0.04 GB that our records attribute to NOBODY\" (23:23Z); 05:24Z run also \"1 unreachable\". Same family as this Miami row; re-read before closing. || Measured on the brain 07:44Z 7 Oct (CEO BOT run): /var/log/meter-sanity.log shows fail every hour since 2026-10-06T19:23Z except 21:23Z (one ok); latest 07:23:01Z 'crit Miami attribution 1 peer(s) moved 0.76 GB that our records attribute to NOBODY'; recorder-alive ok (last wrote 0 min ago); other 10 nodes ok. Alert mail went once (19:23Z 6 Oct 'mail: sent 200'), then 'not needed' \u2014 no session put it on the board; routines-watchdog 06:47Z lists meter-sanity as failing. Why it matters: unattributed traffic = free-limit and usage records miss a user (see xd-1386 free-data leak, xd-1290 meter). Ask: identify the peer (public key -> VpnConnections/user or an orphan/unknown peer), say whether it is a real user not being metered, a stale/orphan peer, or a leaked config; fix and show meter-sanity ok for 3 consecutive hours. Not measured by this run: which peer/user. Hand to [QA] when done.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-10-07T07:45:20Z",
       "createdDate": "2026-10-07",
@@ -48747,7 +48757,10 @@
       "category": "infra-fleet",
       "ageDays": 3,
       "lifecycle": "active",
-      "needsRelease": false
+      "needsRelease": false,
+      "notes": "[ENGINEERING run 2026-10-10 2005, scheduled, 2026-10-10T20:14:03Z] MEASURED + BUILT (DevOps). Read-only on the main server: /var/log/meter-sanity.log fail hours 6 Oct 4, 7 Oct 24, 8 Oct 15, 9 Oct 12, 10 Oct 0 (last fail 9 Oct 11:23Z; 20 ok runs today). Live peers vs both databases (wg show wg0 dump on all 11 servers): 0 live unattributed peers now; D\u00fcsseldorf carries dev-database key KM+kKDkY with 50.0 MB, last handshake 32.6 h before 20:10Z = 9 Oct ~11:35Z -> the 9 Oct 12:23Z run was the first ok: that dev test peer WAS the D\u00fcsseldorf 'blind' alarm. Miami 6-8 Oct (0.76 GB): Miami holds 3 dev-database keys today (none live) - same cause likely, NOT proven (the old crit detail is not kept). ROOT CAUSE: dev-scheme phones get keys from the dev database but connect to live servers (xd-1407), so production never attributes them. FIX on development 2e1bd826 (1 file): dev-database keys are reported as dev-test traffic, never as blind; unreadable dev DB = nothing excused. Stub test on the main server 5/5, control (installed file) crit on the same fixture, no mail, no RoutineRuns row; live dev_keys() 71 keys incl. KM+kKDkY. Installed file unchanged (md5 6c83a6a6 = production git). Side finding (not acted on): 1-8 peers per server in NEITHER database with 228-486 MB counters and no handshake for months or ever (e.g. Amsterdam, Hong Kong, Singapore, Sydney) - stale peers, not live; left for a cleanup decision. QA xd-1676; CEO card row 212.",
+      "blocker": "Waits QA xd-1676 (stub test) then CEO YES on ceo-action-backlog row 212",
+      "updatedAt": "2026-10-10T20:14:03Z"
     },
     {
       "id": "xd-1449",
@@ -53247,6 +53260,19 @@
       "completedBy": "[QA]",
       "resolution": "PASS 5/5 - [QA 2026-10-10 r, 2026-10-10T20:13:30Z] QA PASS 5 of 5 (headless Chromium, cloud container, live page ?v=<ts>, data lastUpdated 2026-10-10T20:06:18Z): #censorship 0 .stat-card; #ai stat cards = AI Features / Built / Designed only (the 5 'Success Criteria' hits are per-feature collapsible lists, not the removed card); #skills stat cards = ACTIVE + COWORK READY only; #systemscan has no '178.62.101.221' and says 'our VPN servers'; Infrastructure template stat labels = Total Servers + Risk Level only (read from the page source - the section stays locked, not unlocked by QA); 'Department skills', 'Tech stack', 'VPN ready', 'Monthly cost' 0 outside the data block. 13 tabs clicked: run 1 had 1 console 'Failed to load resource 404', re-run 0 responses >= 400 and 0 errors - transient, not reproduced. verify: playwright script in the ticket method (scratch t.js/t2.js).",
       "resultingHandoff": "none (no board row tied to xd-1644; CTO informed by this note)"
+    },
+    {
+      "id": "xd-1676",
+      "from": "[DEVOPS]",
+      "to": "[QA]",
+      "title": "Handoff from DEVOPS: Check xd-1448 on development 2e1bd826: meter sanity tells dev-test peers apart (stub test, no mail)",
+      "description": "WHAT: infrastructure/scripts/meter_sanity_check.py on development 2e1bd826 (1 file). Unattributed live peers whose key is in the DEV database are reported as dev-test traffic (status ok, count + GB in the detail); every other unattributed peer stays crit; if the dev database cannot be read nothing is excused (an 'unknown' dev-keys item + crit as before). VERIFY (main server, read-only, sends no mail, writes no RoutineRuns): cd /root/reports/eng1010-2005 && git -C <any clone> show origin/development:infrastructure/scripts/meter_sanity_check.py > msc_new.py (or reuse the copy there) && python3 t.py $PWD/msc_new.py /opt/caspervpn/meter_sanity_check.py -> expect 'RESULT PASS 5/5' (control: the installed version is crit on the dev-peer fixture) and 'LIVE dev_keys(): 71 has KM+kKDkY: True' (count may change). Also: md5 of /opt/caspervpn/meter_sanity_check.py still 6c83a6a6 (nothing installed). AFTER PASS: tick nothing on production; the CEO card READY TO SHIP row waits for his YES; then DevOps installs from git and QA checks the first hourly run in /var/log/meter-sanity.log.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-10T20:14:10Z",
+      "createdDate": "2026-10-10",
+      "completedDate": null,
+      "taskRef": "xd-1448"
     }
   ],
   "importantNotes": [
