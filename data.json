@@ -13595,9 +13595,9 @@
           "dept": "devops"
         },
         {
-          "test": "READY TO SHIP (CEO STANDING YES 2026-10-06, honesty rule; advice: PRODUCT xd-1659, no options) \u2014 the Dedicated IP card stops promising two things we do not have: it will say only 'Static IP', not 'Port Forwarding' and 'DDoS Protection' \u00b7 why: neither exists (port-forward rules are saved but never applied; no DDoS protection) \u00b7 tested on dev: the dev server has the new list, production still has the old one \u00b7 rollback: undo the one-line change and redeploy. Nothing for you to do: it ships after QA checks dev.",
+          "test": "SHIPPED 2026-10-10 18:15Z (awaiting QA xd-1674) \u00b7 READY TO SHIP (CEO STANDING YES 2026-10-06, honesty rule; advice: PRODUCT xd-1659, no options) \u2014 the Dedicated IP card stops promising two things we do not have: it will say only 'Static IP', not 'Port Forwarding' and 'DDoS Protection' \u00b7 why: neither exists (port-forward rules are saved but never applied; no DDoS protection) \u00b7 tested on dev: the dev server has the new list, production still has the old one \u00b7 rollback: undo the one-line change and redeploy. Nothing for you to do: it ships after QA checks dev.",
           "verify": "production: docker cp caspervpn-api:/app/CasperVPN.dll -> strings -el | grep -cF \"DDoS Protection\" == 0 and \"Static IP\" >= 1; GET /api/dedicated-ip for a holder -> features == [\"Static IP\"]",
-          "evidence": "[QA 2026-10-10 p, 2026-10-10T17:14:46Z] QA DEV PASS xd-1659: GET https://api.dev.caspervpn.com/api/dedicated-ip as the one dev holder (DedicatedIps Status 1 Allocated, 10-min dev token, never printed) -> HTTP 200, status Allocated, features == [\"Static IP\"]. Controls: same GET as a user with no dedicated IP -> 404; no token -> 401; CONTROL production DLL (api created 13:24:46Z, production tip dacf0c0 DedicatedIpDTOs.cs:172 still 3 features): strings -el 'Port Forwarding' 1 / 'DDoS Protection' 1 / 'Static IP' 1 vs dev 0 / 0 / 1 (docker cp, same method). Dev API created 16:23:47Z from development containing cc9fb94d7 (merge-base --is-ancestor ok). Not ticked: production not shipped yet. Re-run: brain bash /root/reports/qa1010p/t.sh </dev/null (GET legs) + t2.sh (DLL legs). | [ENGINEERING run 2026-10-10 1605, scheduled, 2026-10-10T16:27:04Z] development cc9fb94d7 (DedicatedIpDTOs.cs:172 default Features = {\"Static IP\"}). Dev API recreated 16:23:47Z healthy. strings -el CasperVPN.dll: dev DDoS Protection 0 / Port Forwarding 0 / Static IP 1; control production 1/1/1. QA dev check xd-1670.",
+          "evidence": "[ENGINEERING run 2026-10-10 1804, scheduled, 2026-10-10T18:17:14Z] SHIPPED: production 187a2eb83 = cherry-pick -x of development cc9fb94d7 ONLY (1 file backend-dotnet-core/DTOs/DedicatedIpDTOs.cs, 0 diff lines vs development); ship tree dotnet build 0 errors + dotnet test 236/236 on the main server; pushed 18:12:48Z under session lock casper-eng-1010-1804; /root/deploy_api.sh 18:12:52-18:15:05Z DEPLOY DONE OK, image 17781a45f4ce -> 9f535c507765, rollback tag caspervpn-api:rollback-202610101812; deploy brought in exactly 1 code commit (D8 check). MEASURED live DLL (docker cp + strings -el): BEFORE DDoS Protection 1 / Port Forwarding 1 / Static IP 1 -> AFTER 0 / 0 / 1; api healthy, external /health 200, /api/dedicated-ip no token 401; 0 new error lines in the api log after start. Not exercised: GET /api/dedicated-ip as a real production holder -> QA. Rollback: git revert 187a2eb83 + /root/deploy_api.sh (or retag the rollback image). Log /root/reports/eng1010-1804/ship.log. || [QA 2026-10-10 p, 2026-10-10T17:14:46Z] QA DEV PASS xd-1659: GET https://api.dev.caspervpn.com/api/dedicated-ip as the one dev holder (DedicatedIps Status 1 Allocated, 10-min dev token, never printed) -> HTTP 200, status Allocated, features == [\"Static IP\"]. Controls: same GET as a user with no dedicated IP -> 404; no token -> 401; CONTROL production DLL (api created 13:24:46Z, production tip dacf0c0 DedicatedIpDTOs.cs:172 still 3 features): strings -el 'Port Forwarding' 1 / 'DDoS Protection' 1 / 'Static IP' 1 vs dev 0 / 0 / 1 (docker cp, same method). Dev API created 16:23:47Z from development containing cc9fb94d7 (merge-base --is-ancestor ok). Not ticked: production not shipped yet. Re-run: brain bash /root/reports/qa1010p/t.sh </dev/null (GET legs) + t2.sh (DLL legs). | [ENGINEERING run 2026-10-10 1605, scheduled, 2026-10-10T16:27:04Z] development cc9fb94d7 (DedicatedIpDTOs.cs:172 default Features = {\"Static IP\"}). Dev API recreated 16:23:47Z healthy. strings -el CasperVPN.dll: dev DDoS Protection 0 / Port Forwarding 0 / Static IP 1; control production 1/1/1. QA dev check xd-1670.",
           "met": false,
           "verifiedBy": "none",
           "addedAt": "2026-10-10T16:27:04Z",
@@ -18922,7 +18922,7 @@
       "name": "Backend API",
       "status": "red",
       "lead": "Dev Team",
-      "currentTask": "2026-10-10 engineering run 1605 re-base (16:27Z): 30 tasks \u00b7 106/158 criteria met \u00b7 3 open P0 handoffs",
+      "currentTask": "2026-10-10 engineering run 1804 re-base (18:17Z): 30 tasks \u00b7 106/158 criteria met \u00b7 3 open P0 handoffs",
       "blockers": 3,
       "completion": 67,
       "launchCompletion": "68",
@@ -18939,7 +18939,7 @@
       "name": "DevOps & Infra",
       "status": "red",
       "lead": "Unassigned",
-      "currentTask": "2026-10-10 engineering run 1605 re-base (16:27Z): 31 tasks \u00b7 86/205 criteria met \u00b7 4 open P0 handoffs",
+      "currentTask": "2026-10-10 engineering run 1804 re-base (18:17Z): 31 tasks \u00b7 86/205 criteria met \u00b7 4 open P0 handoffs",
       "blockers": 4,
       "completion": 42,
       "progress": 98,
@@ -18978,7 +18978,7 @@
       "name": "Website",
       "status": "yellow",
       "lead": "Dev Team",
-      "currentTask": "2026-10-10 engineering run 1605 re-base (16:27Z): 9 tasks \u00b7 32/49 criteria met \u00b7 0 open P0 handoffs",
+      "currentTask": "2026-10-10 engineering run 1804 re-base (18:17Z): 9 tasks \u00b7 32/49 criteria met \u00b7 0 open P0 handoffs",
       "blockers": 0,
       "completion": 65,
       "launchCompletion": "61",
@@ -19040,7 +19040,7 @@
       "name": "CTO Office",
       "status": "yellow",
       "lead": "Waqar",
-      "currentTask": "2026-10-10 engineering run 1605 re-base (16:27Z): 46 tasks \u00b7 169/272 criteria met \u00b7 3 open P0 handoffs",
+      "currentTask": "2026-10-10 engineering run 1804 re-base (18:17Z): 46 tasks \u00b7 169/272 criteria met \u00b7 3 open P0 handoffs",
       "blockers": 3,
       "completion": 62,
       "launchCompletion": "63",
@@ -52958,13 +52958,17 @@
       "to": "[BACKEND]",
       "title": "Handoff from PRODUCT: Dedicated IP: server default feature list names two features that do not exist (DedicatedIpDTOs.cs:172)",
       "description": "backend-dotnet-core/DTOs/DedicatedIpDTOs.cs:172 default Features = {Static IP, Port Forwarding, DDoS Protection}; neither port forwarding (rules stored only, never applied: DedicatedIpService.cs:516, 0 DNAT code, 0 rows) nor DDoS protection exists. Fix on development: default {\"Static IP\"}; READY TO SHIP row (honesty fix -> CEO standing yes 6 Oct). verify: GET /api/dedicated-ip (dev, test account with a DI) features == ['Static IP']. Then -> [QA].",
-      "status": "in_progress",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-10-10T13:13:02Z",
       "createdDate": "2026-10-10",
-      "completedDate": null,
-      "notes": "[ENGINEERING run 2026-10-10 1705, scheduled, 2026-10-10T17:41:31Z] blocker written (step 0b). | [ENGINEERING run 2026-10-10 1605, scheduled, 2026-10-10T16:27:04Z] Fixed on development cc9fb94d7, proven in the dev DLL (dev 0/0/1 vs production 1/1/1 for DDoS Protection/Port Forwarding/Static IP). QA dev check xd-1670. CEO card row 209 (standing yes, honesty rule). Next: QA PASS -> next engineering run ships with deploy_api.sh. | [QA 2026-10-10 p, 2026-10-10T17:14:46Z] dev PASS (xd-1670): features == ['Static IP'] on dev; ship handoff xd-1671.",
-      "blocker": "Waits for QA dev check xd-1670; then the next engineering run ships it (standing yes, card row 209)"
+      "completedDate": "2026-10-10",
+      "notes": "[ENGINEERING run 2026-10-10 1705, scheduled, 2026-10-10T17:41:31Z] blocker written (step 0b). | [ENGINEERING run 2026-10-10 1605, scheduled, 2026-10-10T16:27:04Z] Fixed on development cc9fb94d7, proven in the dev DLL (dev 0/0/1 vs production 1/1/1 for DDoS Protection/Port Forwarding/Static IP). QA dev check xd-1670. CEO card row 209 (standing yes, honesty rule). Next: QA PASS -> next engineering run ships with deploy_api.sh. | [QA 2026-10-10 p, 2026-10-10T17:14:46Z] dev PASS (xd-1670): features == ['Static IP'] on dev; ship handoff xd-1671. | [ENGINEERING run 1010-1804 2026-10-10T18:17:14Z] SHIPPED to production 187a2eb83; QA live check xd-1674.",
+      "blocker": null,
+      "completedAt": "2026-10-10",
+      "completedBy": "[BACKEND]",
+      "resolution": "Fixed + shipped: production 187a2eb83 (row 209). QA live check xd-1674",
+      "resultingHandoff": "xd-1674 to [QA]"
     },
     {
       "id": "xd-1660",
@@ -53154,11 +53158,16 @@
       "to": "[BACKEND]",
       "title": "Handoff from QA: Ship xd-1659 to production (CEO card row 209, standing yes - honesty rule), then back to QA",
       "description": "QA DEV PASS on development cc9fb94d7 (xd-1670): dev GET /api/dedicated-ip for the holder -> features [\"Static IP\"]; no-DI user 404, no token 401; production DLL still carries Port Forwarding + DDoS Protection (control). BACKEND: ship cc9fb94d7 with /root/deploy_api.sh in the next engineering run, then hand to [QA]. verify after ship: docker cp caspervpn-api:/app/CasperVPN.dll -> strings -el: 'DDoS Protection' 0, 'Port Forwarding' 0, 'Static IP' >= 1 (recipe brain /root/reports/qa1010p/t2.sh); + GET /api/dedicated-ip for a test holder -> features == [\"Static IP\"]. Rollback: revert cc9fb94d7 + deploy_api.sh.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-10-10T17:14:51Z",
       "createdDate": "2026-10-10",
-      "completedDate": null
+      "completedDate": "2026-10-10",
+      "blocker": null,
+      "completedAt": "2026-10-10",
+      "completedBy": "[BACKEND]",
+      "resolution": "SHIPPED 2026-10-10T18:17:14Z: production 187a2eb83 = cherry-pick -x of development cc9fb94d7 ONLY (1 file backend-dotnet-core/DTOs/DedicatedIpDTOs.cs, 0 diff lines vs development); ship tree dotnet build 0 errors + dotnet test 236/236 on the main server; pushed 18:12:48Z under session lock casper-eng-1010-1804; /root/deploy_api.sh 18:12:52-18:15:05Z DEPLOY DONE OK, image 17781a45f4ce -> 9f535c507765, rollback tag caspervpn-api:rollback-202610101812; deploy brought in exactly 1 code commit (D8 check). MEASURED live DLL (docker cp + strings -el): BEFORE DDoS Protection 1 / Port Forwarding 1 / Static IP 1 -> AFTER 0 / 0 / 1; api healthy, external /health 200, /api/dedicated-ip no token 401; 0 new error lines in the api log after start. Not exercised: GET /api/dedicated-ip as a real production holder -> QA. Rollback: git revert 187a2eb83 + /root/deploy_api.sh (or retag the rollback image). Log /root/reports/eng1010-1804/ship.log.",
+      "resultingHandoff": "xd-1674 to [QA] (live check)"
     },
     {
       "id": "xd-1672",
@@ -53192,6 +53201,18 @@
       "completedDate": null,
       "blocker": "CEO YES on ceo-action-backlog row 211",
       "taskRef": "xd-1638"
+    },
+    {
+      "id": "xd-1674",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: Check xd-1659 LIVE: Dedicated IP card lists only Static IP (production 187a2eb83)",
+      "description": "SHIPPED 2026-10-10T18:17:14Z under CEO STANDING YES 2026-10-06 (honesty rule; card row 209). production 187a2eb83 = cherry-pick -x of development cc9fb94d7 ONLY (1 file backend-dotnet-core/DTOs/DedicatedIpDTOs.cs, 0 diff lines vs development); ship tree dotnet build 0 errors + dotnet test 236/236 on the main server; pushed 18:12:48Z under session lock casper-eng-1010-1804; /root/deploy_api.sh 18:12:52-18:15:05Z DEPLOY DONE OK, image 17781a45f4ce -> 9f535c507765, rollback tag caspervpn-api:rollback-202610101812; deploy brought in exactly 1 code commit (D8 check). MEASURED live DLL (docker cp + strings -el): BEFORE DDoS Protection 1 / Port Forwarding 1 / Static IP 1 -> AFTER 0 / 0 / 1; api healthy, external /health 200, /api/dedicated-ip no token 401; 0 new error lines in the api log after start. Not exercised: GET /api/dedicated-ip as a real production holder -> QA. Rollback: git revert 187a2eb83 + /root/deploy_api.sh (or retag the rollback image). Log /root/reports/eng1010-1804/ship.log. QA: (1) brain bash /root/reports/qa1010p/t2.sh (DLL legs) on production -> 'DDoS Protection' 0, 'Port Forwarding' 0, 'Static IP' >=1; (2) GET https://api.caspervpn.com/api/dedicated-ip for a holder (production has none active since the 8 Oct refund - if no holder, use the redeem/claim response on a test account, or record NOT EXERCISED) -> features == ['Static IP']; controls: no token 401. PASS -> tick row 209 + xd-1659.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-10T18:17:20Z",
+      "createdDate": "2026-10-10",
+      "completedDate": null
     }
   ],
   "importantNotes": [
