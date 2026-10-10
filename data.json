@@ -19373,6 +19373,111 @@
       "blocker": "",
       "deps": [],
       "weight": 0.68
+    },
+    {
+      "id": "build-67-gaps",
+      "title": "Build 67 gap list - what is NOT in the build, with time estimates (CEO 11 Oct)",
+      "owner": "iOS",
+      "department": "iOS",
+      "phase": 2,
+      "priority": "P0",
+      "status": "PARTIAL - 3 gaps fixed tonight in 27f (ios/431-67-merge-1656 85ece5a55 (marker 27f; Xcode BUILD SUCCEEDED on the Mac 23:52Z, installed on the CEO iPhone 14 Pro 23:52:19Z)): xd-1496, xd-1708, xd-1565; 10 left below. Next: phone test of 27f, then build 68.",
+      "description": "CEO 11 Oct 02:4x Beirut: 'what else is not added to the build and how long to build what is pending - create tasks and address them right away'. Measured against ios/431-67-merge-1656 85ece5a55 (marker 27f; Xcode BUILD SUCCEEDED on the Mac 23:52Z, installed on the CEO iPhone 14 Pro 23:52:19Z) by grep with file:line. Already in 67 (checked): keyboard no longer covers the sign-up form (LoginView ScrollViewReader, xd-1508/1520), tunnel logs key names only (PacketTunnelProvider L1562, xd-1502a), 'Ready in one tap' (xd-1649a), one connect at a time (xd-1071 slice 1).",
+      "createdAt": "2026-10-10T23:57:35Z",
+      "dueBy": "2026-10-17T23:57:40Z",
+      "acceptanceCriteria": [
+        {
+          "test": "FIXED IN 27f - the app retries telling the server it connected (3 tries) and the heartbeat self-heal works again (xd-1496)",
+          "verify": "prod nginx: hidden-mode config fetch followed by POST /connect within 180 s for the CEO phone on 27f",
+          "met": false,
+          "verifiedBy": "none",
+          "evidence": "[CEO live 2026-10-11 2026-10-10T23:57:35Z] ConnectionViewModel logConnectionToBackend retry + self-heal guard reset, ios/431-67-merge-1656 85ece5a55 (marker 27f; Xcode BUILD SUCCEEDED on the Mac 23:52Z, installed on the CEO iPhone 14 Pro 23:52:19Z); swiftc -parse 0 errors; Xcode build running on the Mac (_ios/phone67.log)"
+        },
+        {
+          "test": "FIXED IN 27f - sign-up screen shows 'By continuing you agree to our Terms of Use and Privacy Policy' with links (xd-1708)",
+          "verify": "phone: Create Account screen shows the line; links open caspervpn.com/terms and /privacy",
+          "met": false,
+          "verifiedBy": "none",
+          "evidence": "[CEO live 2026-10-11 2026-10-10T23:57:35Z] LoginView signUpConsentText, ios/431-67-merge-1656 85ece5a55 (marker 27f; Xcode BUILD SUCCEEDED on the Mac 23:52Z, installed on the CEO iPhone 14 Pro 23:52:19Z)"
+        },
+        {
+          "test": "FIXED IN 27f - Settings > Privacy Policy and Terms of Use open the live website, not the outdated in-app copy (xd-1565)",
+          "verify": "phone: both Settings rows open Safari on caspervpn.com",
+          "met": false,
+          "verifiedBy": "none",
+          "evidence": "[CEO live 2026-10-11 2026-10-10T23:57:35Z] SettingsView + SettingsView_iPad Link rows, ios/431-67-merge-1656 85ece5a55 (marker 27f; Xcode BUILD SUCCEEDED on the Mac 23:52Z, installed on the CEO iPhone 14 Pro 23:52:19Z)"
+        },
+        {
+          "test": "NOT IN BUILD 67 - Hidden mode: limit repeated same-session resumes per 10 min and shorten the 11.8 s dial timeouts after a drop (xd-1690 GAP B + dials). Estimate: 2-3 h of work after the 27f phone log is read. Owner: [IOS]. Ref: xd-1690.",
+          "verify": "the 27f bug-report TunnelLogSnippet shows the drop pattern; then a stubs test like 1010v",
+          "met": false,
+          "verifiedBy": "none",
+          "evidence": "[CEO live 2026-10-11 2026-10-10T23:57:35Z] NOT LIVE - not in ios/431-67-merge-1656 85ece5a55 (marker 27f; Xcode BUILD SUCCEEDED on the Mac 23:52Z, installed on the CEO iPhone 14 Pro 23:52:19Z); measured by grep tonight."
+        },
+        {
+          "test": "NOT IN BUILD 67 - Apple Ads: send the AdServices token at first launch + 5 anonymous sign-up events (xd-1687). Estimate: app 2-3 h + backend endpoint 2 h. Owner: [IOS] + [BACKEND]. Ref: xd-1687.",
+          "verify": "dev DB: attribution row + FunnelEvents rows without a user from a test install",
+          "met": false,
+          "verifiedBy": "none",
+          "evidence": "[CEO live 2026-10-11 2026-10-10T23:57:35Z] NOT LIVE - not in ios/431-67-merge-1656 85ece5a55 (marker 27f; Xcode BUILD SUCCEEDED on the Mac 23:52Z, installed on the CEO iPhone 14 Pro 23:52:19Z); measured by grep tonight."
+        },
+        {
+          "test": "NOT IN BUILD 67 - Hidden mode asks Cloudflare 1.1.1.1 for DNS (hard-coded, CasperCloakTunnelProvider.swift:429) and Cloudflare DoH first (xd-1570). Estimate: 1-2 h after [CTO] picks the non-Cloudflare resolver. Owner: [IOS] + [CTO]. Ref: xd-1570.",
+          "verify": "git grep '1.1.1.1' in CasperVPNTunnel = 0 on the hidden-mode path; device test resolves via the config DNS",
+          "met": false,
+          "verifiedBy": "none",
+          "evidence": "[CEO live 2026-10-11 2026-10-10T23:57:35Z] NOT LIVE - not in ios/431-67-merge-1656 85ece5a55 (marker 27f; Xcode BUILD SUCCEEDED on the Mac 23:52Z, installed on the CEO iPhone 14 Pro 23:52:19Z); measured by grep tonight."
+        },
+        {
+          "test": "NOT IN BUILD 67 - WireGuard private key travels in the tunnel settings text; move it to the keychain (xd-1502 part b; part a - log only key names - IS in 67). Estimate: 3-4 h + a full tunnel retest. Owner: [IOS] + [SECURITY]. Ref: xd-1502.",
+          "verify": "strings on the .appex + console capture: 0 'privateKey' values",
+          "met": false,
+          "verifiedBy": "none",
+          "evidence": "[CEO live 2026-10-11 2026-10-10T23:57:35Z] NOT LIVE - not in ios/431-67-merge-1656 85ece5a55 (marker 27f; Xcode BUILD SUCCEEDED on the Mac 23:52Z, installed on the CEO iPhone 14 Pro 23:52:19Z); measured by grep tonight."
+        },
+        {
+          "test": "NOT IN BUILD 67 - 'Connecting' still has no Cancel button and still insists on a fresh config when the network fails (xd-1071 slices 2+; slice 1 - one connect at a time, offline taps answered at once - IS in 67). Estimate: 2-3 h. Owner: [IOS]. Ref: xd-1071.",
+          "verify": "device: airplane mode during connect -> Cancel visible within 3 s, back to Disconnected",
+          "met": false,
+          "verifiedBy": "none",
+          "evidence": "[CEO live 2026-10-11 2026-10-10T23:57:35Z] NOT LIVE - not in ios/431-67-merge-1656 85ece5a55 (marker 27f; Xcode BUILD SUCCEEDED on the Mac 23:52Z, installed on the CEO iPhone 14 Pro 23:52:19Z); measured by grep tonight."
+        },
+        {
+          "test": "NOT IN BUILD 67 - One Connect tap sends the 'I connected' message twice (xd-1580; the server already merges them). Estimate: 1 h. Owner: [IOS]. Ref: xd-1580.",
+          "verify": "prod nginx: 0 pairs of /connect < 1 s apart from the new build",
+          "met": false,
+          "verifiedBy": "none",
+          "evidence": "[CEO live 2026-10-11 2026-10-10T23:57:35Z] NOT LIVE - not in ios/431-67-merge-1656 85ece5a55 (marker 27f; Xcode BUILD SUCCEEDED on the Mac 23:52Z, installed on the CEO iPhone 14 Pro 23:52:19Z); measured by grep tonight."
+        },
+        {
+          "test": "NOT IN BUILD 67 - Hidden-mode reconnect came back as a NEW session instead of resuming (xd-1645). Estimate: 1-3 h; the 27f phone test log may already show why. Owner: [IOS] + [CTO]. Ref: xd-1645.",
+          "verify": "relay journal: one '#52=RESUME' after a 20 s airplane-mode toggle",
+          "met": false,
+          "verifiedBy": "none",
+          "evidence": "[CEO live 2026-10-11 2026-10-10T23:57:35Z] NOT LIVE - not in ios/431-67-merge-1656 85ece5a55 (marker 27f; Xcode BUILD SUCCEEDED on the Mac 23:52Z, installed on the CEO iPhone 14 Pro 23:52:19Z); measured by grep tonight."
+        },
+        {
+          "test": "NOT IN BUILD 67 - Dedicated IP: decide whether Port Forwarding / 24-7 support / Server Access are real, hide them if not; simulator speeds show 0-1 ms (xd-1649 parts b+c). Estimate: 1 h after [PRODUCT] decides. Owner: [IOS] + [PRODUCT]. Ref: xd-1649.",
+          "verify": "app shows only features the server really gives",
+          "met": false,
+          "verifiedBy": "none",
+          "evidence": "[CEO live 2026-10-11 2026-10-10T23:57:35Z] NOT LIVE - not in ios/431-67-merge-1656 85ece5a55 (marker 27f; Xcode BUILD SUCCEEDED on the Mac 23:52Z, installed on the CEO iPhone 14 Pro 23:52:19Z); measured by grep tonight."
+        },
+        {
+          "test": "NOT IN BUILD 67 - Push notifications never register (0 device tokens ever) (xd-1158). Needs YOU first: turn on Push Notifications for the app in the Apple developer site; then 3-4 h app + server. Owner: [CEO] then [IOS] + [BACKEND]. Ref: xd-1158.",
+          "verify": "prod UserDeviceTokens > 0 and one support-reply push on the CEO phone",
+          "met": false,
+          "verifiedBy": "none",
+          "evidence": "[CEO live 2026-10-11 2026-10-10T23:57:35Z] NOT LIVE - not in ios/431-67-merge-1656 85ece5a55 (marker 27f; Xcode BUILD SUCCEEDED on the Mac 23:52Z, installed on the CEO iPhone 14 Pro 23:52:19Z); measured by grep tonight."
+        },
+        {
+          "test": "NOT IN BUILD 67 - Faster hidden mode by splitting traffic over 4-8 connections (xd-882). Estimate: 2-4 days; first a same-minute speed test. Owner: [CTO] + [IOS]. Ref: xd-882.",
+          "verify": "speed test no-VPN vs WireGuard vs hidden mode, same server, same minutes",
+          "met": false,
+          "verifiedBy": "none",
+          "evidence": "[CEO live 2026-10-11 2026-10-10T23:57:35Z] NOT LIVE - not in ios/431-67-merge-1656 85ece5a55 (marker 27f; Xcode BUILD SUCCEEDED on the Mac 23:52Z, installed on the CEO iPhone 14 Pro 23:52:19Z); measured by grep tonight."
+        }
+      ]
     }
   ],
   "verificationPolicy": {
@@ -50294,8 +50399,8 @@
       "from": "[BACKEND]",
       "to": "[IOS]",
       "title": "Handoff from BACKEND: Hidden-mode sessions never reach the server's session list: retry POST /connect + fix the dead self-heal",
-      "description": "MEASURED (read-only, production): nginx api_ssl_access 23 Sep-7 Oct: 14 of 141 hidden-mode config fetches (GET /servers/{id}/caspercloak-config) were followed by POST /servers/{id}/connect for the same server within 180 s; control = WireGuard-only config fetches: 59 of 93. CEO 6 Oct LA session: caspercloak-config 22:15:37Z, then ONLY heartbeats 22:26-22:52Z, no /connect. All 18 Protocol=3 rows in 30 days carry the old body UserAgent 'CasperVPN/iOS' (no build) - 0 from build 65. CAUSE: the app sends its single /connect the instant the tunnel says connected, before hidden mode carries data, and never retries; its heartbeat self-heal (ConnectionViewModel.sendHeartbeat -> logConnectionToBackend) is dead code because the hasLoggedConnectForSession guard is still true. ASK: (1) ConnectionViewModel.sendHeartbeat self-heal: reset hasLoggedConnectForSession before logConnectionToBackend() (today the guard returns at once, so the self-heal never runs); (2) for CasperCloak, send /connect after the tunnel carries data (or retry it with backoff on failure) - VPNConnectionManager ~3220 and ConnectionViewModel.logConnectionToBackend. The server now adopts the session from the heartbeat (development d412b33bc), so this is belt and braces, not a blocker. For build 66 or later.",
-      "status": "pending",
+      "description": "[CEO live 2026-10-11 2026-10-10T23:57:35Z] FIXED on ios/431-67-merge-1656 85ece5a55 (marker 27f; Xcode BUILD SUCCEEDED on the Mac 23:52Z, installed on the CEO iPhone 14 Pro 23:52:19Z); QA check xd-1726 (task build-67-gaps). || MEASURED (read-only, production): nginx api_ssl_access 23 Sep-7 Oct: 14 of 141 hidden-mode config fetches (GET /servers/{id}/caspercloak-config) were followed by POST /servers/{id}/connect for the same server within 180 s; control = WireGuard-only config fetches: 59 of 93. CEO 6 Oct LA session: caspercloak-config 22:15:37Z, then ONLY heartbeats 22:26-22:52Z, no /connect. All 18 Protocol=3 rows in 30 days carry the old body UserAgent 'CasperVPN/iOS' (no build) - 0 from build 65. CAUSE: the app sends its single /connect the instant the tunnel says connected, before hidden mode carries data, and never retries; its heartbeat self-heal (ConnectionViewModel.sendHeartbeat -> logConnectionToBackend) is dead code because the hasLoggedConnectForSession guard is still true. ASK: (1) ConnectionViewModel.sendHeartbeat self-heal: reset hasLoggedConnectForSession before logConnectionToBackend() (today the guard returns at once, so the self-heal never runs); (2) for CasperCloak, send /connect after the tunnel carries data (or retry it with backoff on failure) - VPNConnectionManager ~3220 and ConnectionViewModel.logConnectionToBackend. The server now adopts the session from the heartbeat (development d412b33bc), so this is belt and braces, not a blocker. For build 66 or later.",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-10-07T21:42:14Z",
       "createdDate": "2026-10-07",
@@ -51676,8 +51781,8 @@
       "from": "[LEGAL]",
       "to": "[IOS]",
       "title": "Handoff from LEGAL: [P1] Settings Privacy Policy + Terms screens: open the live website pages (4.4); optional text-only fix for 4.3.1 build 66",
-      "description": "Legal review memory/departments/legal/reviews/in-app-legal-text-2026-10-09.md (xd-1557). Measured 9 Oct ~01:10Z: live caspervpn.com privacy + terms = v1.8, 7 Oct 2026 (origin curl). Compiled in-app copies Features/Settings/PrivacyPolicyView.swift + TermsOfUseView.swift contradict v1.8 in 9 places, worst: 'VPN servers run in RAM-only mode with swap disabled' (live: NOT RAM-only), 'anonymous crash data' (live: linked to account ID + email, includes a screenshot of the app screen, 90 days), 'regular security audits' (live: no independent audit), under-18 (live 16), '14 days' notice, header 'matches v1.4', Terms '99.9% uptime' + 'January 2026'. LEGAL DECISION for 4.4: both Settings rows open https://caspervpn.com/privacy and /terms in SFSafariViewController (like ProfileView.swift:849/862 and the paywall), delete both copied views and the dead root copy ios-app-v2/CasperVPN/PrivacyPolicyView.swift. OPTIONAL for 4.3.1 build 66 (CEO's call, strings only): exact replacement strings are in the review file. Verify: grep -cE 'RAM-only|99\\.9%|anonymous crash|security audits|under 18|v1\\.4|January 2026' on both Settings files = 0 (or files removed and the rows open the URLs). Then -> [QA].",
-      "status": "pending",
+      "description": "[CEO live 2026-10-11 2026-10-10T23:57:35Z] FIXED on ios/431-67-merge-1656 85ece5a55 (marker 27f; Xcode BUILD SUCCEEDED on the Mac 23:52Z, installed on the CEO iPhone 14 Pro 23:52:19Z); QA check xd-1726 (task build-67-gaps). || Legal review memory/departments/legal/reviews/in-app-legal-text-2026-10-09.md (xd-1557). Measured 9 Oct ~01:10Z: live caspervpn.com privacy + terms = v1.8, 7 Oct 2026 (origin curl). Compiled in-app copies Features/Settings/PrivacyPolicyView.swift + TermsOfUseView.swift contradict v1.8 in 9 places, worst: 'VPN servers run in RAM-only mode with swap disabled' (live: NOT RAM-only), 'anonymous crash data' (live: linked to account ID + email, includes a screenshot of the app screen, 90 days), 'regular security audits' (live: no independent audit), under-18 (live 16), '14 days' notice, header 'matches v1.4', Terms '99.9% uptime' + 'January 2026'. LEGAL DECISION for 4.4: both Settings rows open https://caspervpn.com/privacy and /terms in SFSafariViewController (like ProfileView.swift:849/862 and the paywall), delete both copied views and the dead root copy ios-app-v2/CasperVPN/PrivacyPolicyView.swift. OPTIONAL for 4.3.1 build 66 (CEO's call, strings only): exact replacement strings are in the review file. Verify: grep -cE 'RAM-only|99\\.9%|anonymous crash|security audits|under 18|v1\\.4|January 2026' on both Settings files = 0 (or files removed and the rows open the URLs). Then -> [QA].",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-10-09T01:09:57Z",
       "createdDate": "2026-10-09",
@@ -54223,8 +54328,8 @@
       "from": "[LEGAL]",
       "to": "[IOS]",
       "title": "Handoff from LEGAL: Sign-up screen: add 'By continuing you agree to the Terms and Privacy Policy' with links",
-      "description": "tos row 6: measured 0 acceptance lines in ios-app-v2 Swift (git grep 'agree to|by signing|by creating|by continuing' on origin/production c5c274e6b). Settings/paywall links already exist. Add one line under Sign in with Apple / e-mail sign-up linking https://caspervpn.com/terms and /privacy. Next build after build 67 HOLD; no store text change. verify: git grep -n 'agree to' origin/production -- ios-app-v2 >= 1 hit on the sign-up view. Then -> [QA].",
-      "status": "pending",
+      "description": "[CEO live 2026-10-11 2026-10-10T23:57:35Z] FIXED on ios/431-67-merge-1656 85ece5a55 (marker 27f; Xcode BUILD SUCCEEDED on the Mac 23:52Z, installed on the CEO iPhone 14 Pro 23:52:19Z); QA check xd-1726 (task build-67-gaps). || tos row 6: measured 0 acceptance lines in ios-app-v2 Swift (git grep 'agree to|by signing|by creating|by continuing' on origin/production c5c274e6b). Settings/paywall links already exist. Add one line under Sign in with Apple / e-mail sign-up linking https://caspervpn.com/terms and /privacy. Next build after build 67 HOLD; no store text change. verify: git grep -n 'agree to' origin/production -- ios-app-v2 >= 1 hit on the sign-up view. Then -> [QA].",
+      "status": "in_progress",
       "priority": "P2",
       "createdAt": "2026-10-10T23:08:57Z",
       "createdDate": "2026-10-10",
@@ -54445,6 +54550,22 @@
       "createdAt": "2026-10-10T23:54:51Z",
       "createdDate": "2026-10-10",
       "completedDate": null
+    },
+    {
+      "id": "xd-1726",
+      "from": "[IOS]",
+      "to": "[QA]",
+      "status": "pending",
+      "priority": "P0",
+      "title": "Handoff from IOS: check build 67 27f fixes on the CEO phone - /connect retry (xd-1496), sign-up consent line (xd-1708), Settings legal rows open the website (xd-1565)",
+      "description": "Build 67 marker 27f is being installed on the CEO's iPhone by _ios/phone67.command (console in _ios/console-phone67.log). Check each row 0-2 of task build-67-gaps with its verify; also the 27e hidden-mode check (xd-1711). FAIL -> back to [IOS].",
+      "taskRef": "build-67-gaps",
+      "criteriaIdx": [],
+      "createdAt": "2026-10-10T23:57:35Z",
+      "createdDate": "2026-10-10",
+      "dueBy": "2026-10-13T23:57:40Z",
+      "handoffTo": null,
+      "handoffNote": ""
     }
   ],
   "importantNotes": [
