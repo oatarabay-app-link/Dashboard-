@@ -13545,6 +13545,16 @@
           "addedAt": "2026-10-10T12:41:58Z",
           "addedBy": "[CTO] live chat 2026-10-10",
           "evidence": "[CEO 2026-10-10 15:4x Beirut (12:4xZ), CTO live chat] 'we need to solve point 4 before' (point 4 = hidden mode is slow on weak lines; 'before' = before the TestFlight build)"
+        },
+        {
+          "test": "READY TO SHIP \u2014 admin Payments page: pick Real customers / Test money / All and a period (today, last 7 days, this week, this month, last month, this quarter, this year, all time); the server works the numbers out, and it shows what customers paid AND what we keep after Apple's cut, next to a note on how this compares with Appfigures \u00b7 why: CEO 5 Oct 'I can't filter sandbox, or month/week/quarter, only a date' and 'why is Appfigures not similar to admin revenue' (xd-1338 items 3-4); also removes a made-up '+15% vs last month' on the Monthly Revenue card \u00b7 tested on dev: development f9e46942c (backend: AdminService.cs, AdminDTOs.cs, Tests/AdminRevenueFilterTests.cs) + 7bfcfb766 (admin: Payments.tsx, adminService.ts, types/index.ts). Main-server build 0 errors; dotnet test 292/292 (new AdminRevenueFilterTests 22/22); CONTROL: default 'real' planted as 'all' -> 7 of 22 fail, file restored (hash-object 468099dd = pushed blob). Admin tsc --noEmit 0 errors in the Mac VM; CONTROL planted 'grossRevenueX' -> TS2551 rc 2. Dev API recreated 12:39:07Z (DLL grep BuildRevenueSelectionAsync 8); minted admin token (never printed): GET /api/admin/revenue?environment=real|sandbox|all&preset=last_month -> 200, 11/$32.89 | 0/$0 | 11/$32.89 = dev SQL (read-only) 11/32.89 | 0/0 | 11/32.89; all_time all 324/$1,688.08 = SQL 324/1688.08; custom 2026-09-01..2026-09-30 = last_month (end day included, To 2026-10-01); no token 401. Dev admin bundle main.ef5a1e71.js: 'Money in a period' 1, 'Same period, every group' 1, made-up 'vs last month' 0 (production bundle main.152f60c9.js: 0 / 1). \u00b7 rollback: revert the two commits and redeploy (/root/deploy_api.sh rolls the API back by itself if health fails; admin = previous bundle); no database change, no app change",
+          "verify": "After ship, with an admin token: GET https://api.caspervpn.com/api/admin/revenue?environment=real&preset=last_month (in October) -> data.summary.selected.transactionCount 11, grossRevenue 32.79 (production read-only SQL 10 Oct: 11 rows $32.79), estimatedAppleProceeds 22.95; environment=sandbox -> 12 / 35.88; environment=all -> 23 / 68.67; no token 401. admin.caspervpn.com bundle grep 'Money in a period' >= 1 and 'vs last month' = 0.",
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "addedAt": "2026-10-10T12:46:25Z",
+          "addedBy": "[BACKEND][ADMIN-PANEL] engineering run 1010-1205",
+          "evidence": "[ENGINEERING run 2026-10-10 1205, 2026-10-10T12:46:25Z] built + dev-checked by engineering; QA dev check xd-1655 pending. Not on production."
         }
       ],
       "progress": 0,
@@ -18857,7 +18867,7 @@
       "status": "red",
       "lead": "Unassigned",
       "currentTask": "2026-10-10 engineering run 1004 re-base (10:17Z): 31 tasks \u00b7 86/205 criteria met \u00b7 open P0 handoffs 3",
-      "blockers": 3,
+      "blockers": 4,
       "completion": 42,
       "progress": 98,
       "launchCompletion": "41",
@@ -46361,8 +46371,8 @@
       "ageDays": 6,
       "needsRelease": false,
       "lifecycle": "active",
-      "notes": "[ENGINEERING run 2026-10-10 1205, 2026-10-10T12:09:07Z] CLAIMED: item (3) Real/Sandbox/All + period presets applied by the API (and the gross vs estimated-proceeds field of item 4) on development only. No production change. Other runs: stay off this row until this note says done. | [ENGINEERING run 2026-10-08 b, 2026-10-08T22:24:23Z] Items 1-2 LIVE on production (row 122, 9649fb6ab, 22:03Z): the three admin money endpoints agree (mrr 40.08 / arr 480.96 / total 323.89 at 22:03:50Z; before 40.08 / 183.11 / 196.09); renewals carry Environment from now on; the 60 old renewal rows are tagged Production (backup taken). STILL OPEN: (3) Real/Sandbox/All + period presets applied by the API, (4) gross vs Apple proceeds + Appfigures line, (5) September acceptance $39.55 / 13 rows - next backend run, then [ADMIN-PANEL] UI. QA of 1-2: xd-1529.",
-      "updatedAt": "2026-10-10T12:09:07Z"
+      "notes": "[ENGINEERING run 2026-10-10 1205, 2026-10-10T12:46:25Z] Items (3)+(4) BUILT on development and checked on dev (claim released). API: GET /api/admin/revenue?environment=real|sandbox|all (default real; unknown = real) & preset=today|7d|week|month|last_month|quarter|ytd|all_time|custom (custom = startDate..endDate, end day included) -> Summary.Selected: gross, paid vs $0 rows, Apple vs other, estimated proceeds (Apple cut from config AdminAnalytics:AppleCommissionRate, default 0.30), the rule in words, the Appfigures note, and a control (real / sandbox / all for the same period). Chart + by-plan follow the population. UI: Payments page 'Money in a period' card (Real / Test / All + period list); the made-up '+15% vs last month' on Monthly Revenue removed. development f9e46942c (backend: AdminService.cs, AdminDTOs.cs, Tests/AdminRevenueFilterTests.cs) + 7bfcfb766 (admin: Payments.tsx, adminService.ts, types/index.ts). Main-server build 0 errors; dotnet test 292/292 (new AdminRevenueFilterTests 22/22); CONTROL: default 'real' planted as 'all' -> 7 of 22 fail, file restored (hash-object 468099dd = pushed blob). Admin tsc --noEmit 0 errors in the Mac VM; CONTROL planted 'grossRevenueX' -> TS2551 rc 2. Dev API recreated 12:39:07Z (DLL grep BuildRevenueSelectionAsync 8); minted admin token (never printed): GET /api/admin/revenue?environment=real|sandbox|all&preset=last_month -> 200, 11/$32.89 | 0/$0 | 11/$32.89 = dev SQL (read-only) 11/32.89 | 0/0 | 11/32.89; all_time all 324/$1,688.08 = SQL 324/1688.08; custom 2026-09-01..2026-09-30 = last_month (end day included, To 2026-10-01); no token 401. Dev admin bundle main.ef5a1e71.js: 'Money in a period' 1, 'Same period, every group' 1, made-up 'vs last month' 0 (production bundle main.152f60c9.js: 0 / 1). PRODUCTION today (read-only, 12:1xZ): September real customers = 11 rows $32.79 (10 paid weekly renewals + 1 $0 free-trial start), all Apple; Sandbox 12 rows $35.88 (one tester, 3-minute renewals); all 23 rows $68.67. Estimated Apple proceeds at 30% = $22.95 vs Appfigures September $22.55 (gap $0.40 - taxes, hypothesis). ITEM 5 FINDING: the $39.55 / 13 rows written on 5 Oct cannot be reproduced from today's rows - no non-Sandbox September row is excluded by the staff or Sandbox-subscription rules (each flag checked per row); the extra $6.76 was most likely two 28 Aug renewals ($3.22 + $3.54) counted in a Beirut-time or created-date window - hypothesis, not measured. Measured acceptance after ship: real September gross $32.79 / 11 rows. NOT on production: READY TO SHIP row on the CEO card; QA dev check handed over. Appfigures API line (part of 4) still waits for an Appfigures key. | [ENGINEERING run 2026-10-10 1205, 2026-10-10T12:09:07Z] CLAIMED: item (3) Real/Sandbox/All + period presets applied by the API (and the gross vs estimated-proceeds field of item 4) on development only. No production change. Other runs: stay off this row until this note says done. | [ENGINEERING run 2026-10-08 b, 2026-10-08T22:24:23Z] Items 1-2 LIVE on production (row 122, 9649fb6ab, 22:03Z): the three admin money endpoints agree (mrr 40.08 / arr 480.96 / total 323.89 at 22:03:50Z; before 40.08 / 183.11 / 196.09); renewals carry Environment from now on; the 60 old renewal rows are tagged Production (backup taken). STILL OPEN: (3) Real/Sandbox/All + period presets applied by the API, (4) gross vs Apple proceeds + Appfigures line, (5) September acceptance $39.55 / 13 rows - next backend run, then [ADMIN-PANEL] UI. QA of 1-2: xd-1529.",
+      "updatedAt": "2026-10-10T12:46:25Z"
     },
     {
       "id": "xd-1339",
@@ -52757,6 +52767,18 @@
       "completedDate": null,
       "taskRef": "ceo-action-backlog",
       "dueBy": "2026-10-11T12:33:00Z"
+    },
+    {
+      "id": "xd-1655",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: Check the admin revenue filters on dev: Real / Test / All + period presets (xd-1338 items 3-4)",
+      "description": "[ENGINEERING run 2026-10-10 1205] Built on development f9e46942c + 7bfcfb766. Check on dev: (1) admin.dev.caspervpn.com > Payments: card 'Money in a period' - switch Real / Test / All and Last month / This month / This year; numbers change and match the API; (2) API with an admin token: GET https://api.dev.caspervpn.com/api/admin/revenue?environment=real&preset=last_month -> data.summary.selected transactionCount/grossRevenue = dev SQL (read-only: succeeded USD payments, 1 Sep-1 Oct UTC, no Sandbox receipt, no staff mailbox, no user with a Sandbox subscription); sandbox and all likewise; populations[] real+sandbox <= all; (3) custom startDate=2026-09-01&endDate=2026-09-30 = last_month (end day included); (4) no token -> 401; (5) Monthly Revenue card has no '+15% vs last month'. Engineering's own numbers: development f9e46942c (backend: AdminService.cs, AdminDTOs.cs, Tests/AdminRevenueFilterTests.cs) + 7bfcfb766 (admin: Payments.tsx, adminService.ts, types/index.ts). Main-server build 0 errors; dotnet test 292/292 (new AdminRevenueFilterTests 22/22); CONTROL: default 'real' planted as 'all' -> 7 of 22 fail, file restored (hash-object 468099dd = pushed blob). Admin tsc --noEmit 0 errors in the Mac VM; CONTROL planted 'grossRevenueX' -> TS2551 rc 2. Dev API recreated 12:39:07Z (DLL grep BuildRevenueSelectionAsync 8); minted admin token (never printed): GET /api/admin/revenue?environment=real|sandbox|all&preset=last_month -> 200, 11/$32.89 | 0/$0 | 11/$32.89 = dev SQL (read-only) 11/32.89 | 0/0 | 11/32.89; all_time all 324/$1,688.08 = SQL 324/1688.08; custom 2026-09-01..2026-09-30 = last_month (end day included, To 2026-10-01); no token 401. Dev admin bundle main.ef5a1e71.js: 'Money in a period' 1, 'Same period, every group' 1, made-up 'vs last month' 0 (production bundle main.152f60c9.js: 0 / 1). Tick nothing on production until the CEO YES row ships.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-10T12:46:35Z",
+      "createdDate": "2026-10-10",
+      "completedDate": null
     }
   ],
   "importantNotes": [
