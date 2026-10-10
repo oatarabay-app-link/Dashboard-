@@ -1,6 +1,6 @@
 {
   "lastUpdated": "2026-10-10T20:44:50Z",
-  "updatedBy": "[MARKETING] growth live chat",
+  "updatedBy": "[MARKETING] growth run 2104",
   "overall": {
     "completion": 69,
     "phase": "Phase 2: Go-to-market \u2014 launch plan 30 Sep 2026",
@@ -53350,12 +53350,14 @@
       "from": "[MARKETING]",
       "to": "[MARKETING]",
       "title": "Handoff from MARKETING: Measure what the 24 Apple Ads installs became (sign-ups, connected, paid)",
-      "description": "[2026-10-10T20:21:59Z] Apple Ads last 7 days: 24 installs (UK 5, CA 9, DE 10). DB, same 7 days, real new users (staff/test/throwaway excluded): 35 of 37 total; by last-login country UK 3, CA 1, DE 2 = 6 (hypothesis only - no ad attribution in our data; country is where they last signed in). DO: daily line in the growth run (spend, taps, installs, real sign-ups in UK/CA/DE, connected, paid); ask [BACKEND] for install-source tagging (Apple AdServices token) so ad users can be counted, not guessed. Stop rule: connect <40% or cost per install >\\$3 after day 7.\n[2026-10-10T20:44:50Z] MEASURED: FunnelEvents (7 d) holds only build-65 events (4 trial_offer_shown, 26 screen_exit from 1 user) and 0 events without a user - so nothing records a download that opens the app but never signs up. Need from [IOS]: an anonymous 'app_opened' + 'signup_screen_shown' + 'signup_failed(reason)' event before sign-in, and Apple AdServices attribution token at first launch. Meanwhile read 'first-time downloads' vs 'sessions' in App Store Connect > Analytics (CEO; API key cannot read it, trap C24).",
-      "status": "pending",
+      "description": "[2026-10-10T20:21:59Z] Apple Ads last 7 days: 24 installs (UK 5, CA 9, DE 10). DB, same 7 days, real new users (staff/test/throwaway excluded): 35 of 37 total; by last-login country UK 3, CA 1, DE 2 = 6 (hypothesis only - no ad attribution in our data; country is where they last signed in). DO: daily line in the growth run (spend, taps, installs, real sign-ups in UK/CA/DE, connected, paid); ask [BACKEND] for install-source tagging (Apple AdServices token) so ad users can be counted, not guessed. Stop rule: connect <40% or cost per install >\\$3 after day 7.\n[2026-10-10T20:44:50Z] MEASURED: FunnelEvents (7 d) holds only build-65 events (4 trial_offer_shown, 26 screen_exit from 1 user) and 0 events without a user - so nothing records a download that opens the app but never signs up. Need from [IOS]: an anonymous 'app_opened' + 'signup_screen_shown' + 'signup_failed(reason)' event before sign-in, and Apple AdServices attribution token at first launch. Meanwhile read 'first-time downloads' vs 'sessions' in App Store Connect > Analytics (CEO; API key cannot read it, trap C24).\n[2026-10-10T21:07:56Z] [GROWTH run 2026-10-10 2104, scheduled, unattended] DAILY LINE (prod DB read-only, window 3 Oct 21:00Z-10 Oct 21:00Z, last sign-in country; no ad attribution - hypothesis only): UK/CA/DE real new accounts 7 (GB 3 \u00b7 CA 2 \u00b7 DE 2; control all rows 9) -> connected >1 MB 2 (both GB) -> store purchase/trial 0. By day (real, ad countries): 07 Oct 4 \u00b7 08 Oct 2 \u00b7 09 Oct 1 \u00b7 10 Oct 0. Other countries: 27 real (control 28), 8 connected, 2 store purchase/trial. Apple Ads spend/taps/installs NOT re-read this run (no API access - xd-1340 IDs not given; browser not used unattended). Read against the stop rule: if most of the 24 installs are UK/CA/DE, about 2 of 24 connected (~8%) - far under the 40% line; not decidable until attribution exists. Handed off: xd-1687, xd-1688 ([IOS] token + 5 pre-sign-in events, [BACKEND] endpoint). [LEGAL] draft disclosure: memory/departments/legal/reviews/apple-ads-attribution-disclosure-2026-10-10.md. skill: coreyhaines31-analytics -> event names object_action, context in properties.",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-10-10T20:22:04Z",
       "createdDate": "2026-10-10",
-      "completedDate": null
+      "completedDate": null,
+      "progressNote": "2026-10-10T21:07:56Z growth 2104: daily line written; attribution handed to xd-1687, xd-1688; blocker for real numbers = those builds.",
+      "blocker": "[IOS]/[BACKEND] xd-1687, xd-1688: no install-source data until the AdServices token ships; Apple Ads numbers need the CEO's screen or the API IDs (xd-1340)."
     },
     {
       "id": "xd-1682",
@@ -53416,6 +53418,34 @@
       "createdAt": "2026-10-10T20:41:29Z",
       "createdDate": "2026-10-10",
       "completedDate": null
+    },
+    {
+      "id": "xd-1687",
+      "from": "[MARKETING]",
+      "to": "[IOS]",
+      "title": "Handoff from MARKETING: [P1] Apple Ads is live: send the AdServices token at first launch + 5 anonymous sign-up events (replaces deferred xd-919)",
+      "description": "[GROWTH run 2026-10-10 2104, scheduled, unattended] 2026-10-10T21:07:56Z. Apple Ads is LIVE (CEO live 10 Oct: 3 campaigns, 24 installs in 7 days), so the premise of the deferral of xd-919 ('paid installs start only after 4.3.1 goes live') no longer holds - this handoff replaces it for the next build. MEASURED 21:0xZ prod DB read-only, window 3 Oct 21:00Z-10 Oct 21:00Z: real new accounts with last sign-in UK/CA/DE = 7 (GB 3, CA 2, DE 2; control all rows 9), of them connected >1 MB = 2, store purchase/trial = 0; all other countries 27 real (control 28). 24 installs vs 7 accounts = we cannot see where the other ~17 stop, because FunnelEvents has 0 rows without a user (CEO live 20:44Z). DO (next build after 67): (1) at first launch call AAAttribution.attributionToken() (AdServices, no ATT prompt, no IDFA) and POST it once, retried from the offline report queue; (2) anonymous events before sign-in, keyed by the existing random install id: app_opened {first_launch}, signup_screen_viewed {method_shown}, signup_started {method: apple|google|email}, signup_failed {method, error_code}, signup_completed {method} (object_action names, context in properties - skill coreyhaines31-analytics). GATE: privacy lines drafted by [LEGAL] in memory/departments/legal/reviews/apple-ads-attribution-disclosure-2026-10-10.md must be live in the policy + 'Your privacy' screen before the build ships. Verify: on dev, a fresh install with no account -> FunnelEvents rows with UserId null and the install id; token POST seen in the dev API log. Refs xd-919, xd-1161, xd-1681.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-10T21:08:01Z",
+      "createdDate": "2026-10-10",
+      "completedDate": null,
+      "dueBy": "2026-10-17T21:08:01Z",
+      "taskRef": "xd-1681"
+    },
+    {
+      "id": "xd-1688",
+      "from": "[MARKETING]",
+      "to": "[BACKEND]",
+      "title": "Handoff from MARKETING: [P1] Apple Ads attribution endpoint + anonymous sign-up events (replaces deferred xd-1161)",
+      "description": "[GROWTH run 2026-10-10 2104, scheduled, unattended] 2026-10-10T21:07:56Z. Backend half of the new [IOS] handoff (replaces deferred xd-1161 for the same reason: Apple Ads spend is live). (1) POST /api/attribution/apple-ads {token} (anonymous or signed-in; rate-limited per install id): server POSTs the token as text/plain to https://api-adservices.apple.com/api/v1/ (no key), retries on 404 for ~1 min, stores attribution, orgId, campaignId, adGroupId, keywordId, countryOrRegion, conversionType, clickDate on the install and the user (null = organic). (2) accept FunnelEvents with UserId null + install id (allow-list of the 5 event names only), and link them to the user at sign-in. (3) admin/daily query: installs-from-ads -> sign-up -> connected >1 MB -> paid, per campaign. Dev first; READY TO SHIP row after QA. Refs xd-1161, xd-1681.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-10T21:08:01Z",
+      "createdDate": "2026-10-10",
+      "completedDate": null,
+      "dueBy": "2026-10-17T21:08:01Z",
+      "taskRef": "xd-1681"
     }
   ],
   "importantNotes": [
