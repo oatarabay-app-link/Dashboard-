@@ -7932,14 +7932,15 @@
           "passed": false,
           "verifiedBy": "none",
           "verifiedAt": "",
-          "evidence": "[FAIL] QA 2026-09-29 22:0xZ fleet probe (12 of 12 active nodes, from the brain): Unbound is active on 12/12 and refuses 0.0.0.0/0; the allow list has each node's WireGuard /24, IKEv2 10.10.10.0/24 and OpenVPN UDP 10.8.0.0/24, but NOT OpenVPN TCP 10.9.0.0/24 (checked Amsterdam, Singapore; 0 of 12 lines listed it). Harmless today because OpenVPN pushes 1.1.1.1 as DNS. External queries from the non-whitelisted Bangkok host time out on 7 of 7 nodes probed. -> [DEVOPS] P3: add 10.9.0.0/24 or re-word.",
+          "evidence": "[DEVOPS run 2026-10-11 d, scheduled, unattended, 2026-10-11T03:30Z] STILL FAIL (not re-probed: measured 02:32Z today by devops run c, /root/reports/devops1011c/probe.log on the main server): 10.9.0.0 in Unbound access-control = 0 on 11/11 VPN servers (10 + Amsterdam). Control: main server's own list has 10.66.66-70 + 10.8.0.0 and 'refuse 0.0.0.0/0' (read 03:3xZ). Fix = fleet config change (Bangkok first, then 11) -> needs CEO YES. || [FAIL] QA 2026-09-29 22:0xZ fleet probe (12 of 12 active nodes, from the brain): Unbound is active on 12/12 and refuses 0.0.0.0/0; the allow list has each node's WireGuard /24, IKEv2 10.10.10.0/24 and OpenVPN UDP 10.8.0.0/24, but NOT OpenVPN TCP 10.9.0.0/24 (checked Amsterdam, Singapore; 0 of 12 lines listed it). Harmless today because OpenVPN pushes 1.1.1.1 as DNS. External queries from the non-whitelisted Bangkok host time out on 7 of 7 nodes probed. -> [DEVOPS] P3: add 10.9.0.0/24 or re-word.",
           "met": false,
           "verifiedDate": "2026-09-29",
           "verifiedByRaw": "qa-sweep-2026-09-29-fail",
           "qaVerdict": "FAIL",
           "qaDate": "2026-09-29",
           "verify": "ssh <node> grep access-control /etc/unbound/unbound.conf.d/*.conf | grep 10.9.0.0",
-          "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored"
+          "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored",
+          "blocker": "fleet Unbound change needs CEO YES (Bangkok first); revisit Nov 2026"
         },
         {
           "test": "AC5: Prometheus (9090), Grafana (3100), node-exporter (9100), blackbox-exporter (9115) bound to 127.0.0.1 or firewalled. NOT accessible from internet. Verify: external curl to each port REFUSED or timeout.",
@@ -8073,7 +8074,7 @@
           "passed": false,
           "verifiedBy": "none",
           "verifiedAt": "2026-09-24T21:05:00Z",
-          "evidence": "[FAIL] QA 2026-09-30: INPUT policy is DROP, but the last rule (69) 'ctstate NEW limit 625/sec ACCEPT' still accepts every new inbound connection: 48,696 packets matched the measuring rule 68 ('anything else still relying on the catch-all'). From Bangkok, 9443 answers (not in this row's allow-list). Open under xd-1014 [DEVOPS]. | prior: QA 2026-09-24 PASS: iptables -S INPUT: -P INPUT DROP.",
+          "evidence": "[DEVOPS run 2026-10-11 d, scheduled, unattended, 2026-10-11T03:30Z] STILL FAIL, read 03:3xZ on the main server: INPUT policy DROP, but rule 69 'ctstate NEW limit 625/sec ACCEPT' (catch-all) has 233K packets / 13M; the measuring rule 68 just above it counts the same 233K = new connections that still rely on the catch-all. Removing it is a live firewall change on production -> needs a CEO YES after we list what those 233K are (next step: a LOG rule sample by port, read-only). || [FAIL] QA 2026-09-30: INPUT policy is DROP, but the last rule (69) 'ctstate NEW limit 625/sec ACCEPT' still accepts every new inbound connection: 48,696 packets matched the measuring rule 68 ('anything else still relying on the catch-all'). From Bangkok, 9443 answers (not in this row's allow-list). Open under xd-1014 [DEVOPS]. | prior: QA 2026-09-24 PASS: iptables -S INPUT: -P INPUT DROP.",
           "met": false,
           "verifiedDate": "2026-09-30",
           "verifiedByRaw": "qa-sweep-2026-09-30-fail",
@@ -8081,7 +8082,8 @@
           "qaDate": "2026-09-30",
           "verify": "brain: iptables -L INPUT -n -v --line-numbers | tail -3 -> no unconditional NEW ACCEPT at the end",
           "verifiedByPrevious": "tested",
-          "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored"
+          "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored",
+          "blocker": "production firewall change needs CEO YES; first measure what uses the catch-all; revisit Nov 2026"
         },
         {
           "test": "AC15: ip6tables INPUT and FORWARD chains default policy set to DROP. IPv6 disabled at kernel (sysctl) but firewall rules as belt-and-suspenders. Verify: ip6tables -L shows DROP policy on INPUT/FORWARD.",
@@ -8215,14 +8217,15 @@
           "passed": false,
           "verifiedBy": "none",
           "verifiedAt": "",
-          "evidence": "[FAIL] QA 2026-09-29, 2 of 3 met: the cap cuts (one real over-limit cut 2026-09-29 00:27:16Z at 100.1%, owner-checked) and cycles reset (546 of 547 users have a current cycle start within 35 days; 1 overdue); NOT met: 'user receives a clear error in the app' - the CEO's build-62 log shows the phone stayed 'Connected' without internet after that cut until switched off by hand (xd-1063).",
+          "evidence": "[DEVOPS run 2026-10-11 d, scheduled, unattended, 2026-10-11T03:30Z] RE-MEASURED 03:3xZ, production DB read-only: 10 active users are at/over their data cap; connections they started in the last 24 h = 0; open sessions in 7 d = 0. Control: all users started 86 connections in the same 24 h, so the table is alive. So the cut holds. API log since its 00:38Z restart has 0 '[over-limit]' lines (window too short to say more). Part still NOT met is in the app: 'the user sees a clear message' (xd-1063, iOS) - not a DevOps fix. || [FAIL] QA 2026-09-29, 2 of 3 met: the cap cuts (one real over-limit cut 2026-09-29 00:27:16Z at 100.1%, owner-checked) and cycles reset (546 of 547 users have a current cycle start within 35 days; 1 overdue); NOT met: 'user receives a clear error in the app' - the CEO's build-62 log shows the phone stayed 'Connected' without internet after that cut until switched off by hand (xd-1063).",
           "met": false,
           "verifiedDate": "2026-09-29",
           "verifiedByRaw": "qa-sweep-2026-09-29-fail",
           "qaVerdict": "FAIL",
           "qaDate": "2026-09-29",
           "verify": "brain: grep '[wg-sync][over-limit]' api log; app shows the data-cap screen",
-          "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored"
+          "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored",
+          "blocker": "remaining part is iOS (clear in-app message after the cap cut, xd-1063)"
         }
       ],
       "xdId": [
@@ -18183,14 +18186,16 @@
           "verify": "brain: ls -lt /root/reports/web-deploy-*.log | head -2 (hand deploys leave these); GitHub Actions deploy-website last run = success",
           "met": false,
           "verifiedBy": "none",
-          "evidence": "[CEO office 2026-10-02 06:2xZ (09:2x Beirut, daily run)] FAIL: the workflow's type check fails on a checkout typo since 30 Sep 22:56Z (xd-1211); the 1 Oct website changes were deployed BY HAND (web-deploy-1001c/d/e.log 11:10Z, 16:17Z, 16:42Z). Fix is on development, READY TO SHIP row 'three small website fixes' (needs CEO YES); QA xd-1226."
+          "evidence": "[DEVOPS run 2026-10-11 d, scheduled, unattended, 2026-10-11T03:30Z] STILL FAIL, measured 03:3xZ from the main server: newest github-actions[bot] commit on development = 2026-10-09T16:56:47Z (104 bot commits since 9 Oct 12:00Z, none after); control: our own commits keep landing (1,861 'Claude (CasperVPN session)' in the same window). GitHub's hosted jobs are still stopped, so website pushes do not deploy by themselves. Waits on the CEO's billing answer + YES on CEO card row 208 (fix 9a359a109 QA DEV PASS). || [CEO office 2026-10-02 06:2xZ (09:2x Beirut, daily run)] FAIL: the workflow's type check fails on a checkout typo since 30 Sep 22:56Z (xd-1211); the 1 Oct website changes were deployed BY HAND (web-deploy-1001c/d/e.log 11:10Z, 16:17Z, 16:42Z). Fix is on development, READY TO SHIP row 'three small website fixes' (needs CEO YES); QA xd-1226.",
+          "blocker": "waits CEO card row 208 (GitHub billing check + YES)"
         },
         {
           "test": "A run can read whether the last deploy workflow passed (GitHub Actions status readable from the brain)",
           "verify": "brain: curl -s -o /dev/null -w '%{http_code}' -H \"Authorization: Bearer $GH_RO\" https://api.github.com/repos/oatarabay-app-link/Casper-Code/actions/runs?per_page=1 \u2192 200",
           "met": false,
           "verifiedBy": "none",
-          "evidence": "[CEO office 2026-10-02 06:2xZ (09:2x Beirut, daily run)] FAIL: the only GitHub token answers 401 since 22 May (marketing skill T17); a read-only fine-grained token is a CEO action \u2014 CHECKLIST row (P3) on the CEO card."
+          "evidence": "[DEVOPS run 2026-10-11 d, scheduled, unattended, 2026-10-11T03:30Z] STILL FAIL, measured 03:3xZ: the GitHub token in the cloud workspace answers 'The token in GH_TOKEN is invalid' (gh auth status) and repo access 403; the main server has no gh and no read-only token. A read-only GitHub token is a CEO action (CHECKLIST row on the CEO card). || [CEO office 2026-10-02 06:2xZ (09:2x Beirut, daily run)] FAIL: the only GitHub token answers 401 since 22 May (marketing skill T17); a read-only fine-grained token is a CEO action \u2014 CHECKLIST row (P3) on the CEO card.",
+          "blocker": "needs a read-only GitHub token from the CEO"
         }
       ],
       "progress": 0,
@@ -18299,35 +18304,40 @@
           "verify": "memory/finance/ledger.md rows = 13; each row has a price and an invoice reference",
           "met": false,
           "verifiedBy": "none",
-          "evidence": "[CEO office 2026-10-02 07:0xZ (10:0x Beirut, CEO live in chat)] FAIL: OneProvider panel + inbox show OneCloud refills ($25.20 28 Sep, $8.76 17 Sep) and DigitalOcean $84.48; no invoice for the 3 legacy nodes reaches applinks123 (Gmail 45 d). Needs the OneProvider panel (CEO sign-in) or the former billing address."
+          "evidence": "[DEVOPS run 2026-10-11 d, scheduled, unattended, 2026-10-11T03:30Z] NOT DONE - BLOCKED: the ledger needs each server's invoice (provider panels and billing mail), which unattended runs cannot open. Revisit Nov 2026 with xd-1347. || [CEO office 2026-10-02 07:0xZ (10:0x Beirut, CEO live in chat)] FAIL: OneProvider panel + inbox show OneCloud refills ($25.20 28 Sep, $8.76 17 Sep) and DigitalOcean $84.48; no invoice for the 3 legacy nodes reaches applinks123 (Gmail 45 d). Needs the OneProvider panel (CEO sign-in) or the former billing address.",
+          "blocker": "needs CEO invoices / provider panel access; revisit Nov 2026"
         },
         {
           "test": "A 7-day canary on the Bangkok dev node at the ~$6 general-purpose 1 vCPU / 1 GB tier: all services up (WireGuard, strongSwan, CasperCloak relay, node exporter), protocol-health passes, max RAM < 85%",
           "verify": "brain: RoutineRuns protocol-health rows for bkk over 7 d = ok; Prometheus max RAM on bkk-01 < 0.85 GB",
           "met": false,
           "verifiedBy": "none",
-          "evidence": "[CEO office 2026-10-02 07:0xZ (10:0x Beirut, CEO live in chat)] not started (dev node only - no CEO yes needed for dev; resize up = rollback)"
+          "evidence": "[DEVOPS run 2026-10-11 d, scheduled, unattended, 2026-10-11T03:30Z] DEFERRED to Nov 2026 - reason: every step needs the provider panels or a purchase (resize, new IPv4, provider sign-up) = CEO account actions, and the hosting-provider research that feeds rows 4-5 is open as xd-1347 (CEO, in progress). Revisit at the first devops run of Nov 2026. || [CEO office 2026-10-02 07:0xZ (10:0x Beirut, CEO live in chat)] not started (dev node only - no CEO yes needed for dev; resize up = rollback)",
+          "blocker": "deferred Nov 2026: provider panel / purchase steps are CEO actions; xd-1347 first"
         },
         {
           "test": "A right-sizing proposal with the saving in dollars per month per node (which nodes, which tier, same city) is written as a READY TO SHIP row on the CEO card",
           "verify": "ceo-action-backlog row 'READY TO SHIP - right-size N servers' exists with $/month before -> after",
           "met": false,
           "verifiedBy": "none",
-          "evidence": "[CEO office 2026-10-02 07:0xZ (10:0x Beirut, CEO live in chat)] waits on rows 2-3; board estimate 25-45% of the fleet bill (7 x ~$6 instead of ~$12 = ~$42/month; LA + Dusseldorf unknown until the ledger)"
+          "evidence": "[DEVOPS run 2026-10-11 d, scheduled, unattended, 2026-10-11T03:30Z] DEFERRED to Nov 2026 - reason: every step needs the provider panels or a purchase (resize, new IPv4, provider sign-up) = CEO account actions, and the hosting-provider research that feeds rows 4-5 is open as xd-1347 (CEO, in progress). Revisit at the first devops run of Nov 2026. || [CEO office 2026-10-02 07:0xZ (10:0x Beirut, CEO live in chat)] waits on rows 2-3; board estimate 25-45% of the fleet bill (7 x ~$6 instead of ~$12 = ~$42/month; LA + Dusseldorf unknown until the ledger)",
+          "blocker": "deferred Nov 2026: provider panel / purchase steps are CEO actions; xd-1347 first"
         },
         {
           "test": "The per-IP price of an additional IPv4 at OneProvider is known in writing, and compared with Vultr's $3/month reserved IP (docs.vultr.com, 15 Apr 2026) against our $5 COGS / $7.99 price",
           "verify": "ledger note + the provider's price page or ticket reply quoted",
           "met": false,
           "verifiedBy": "none",
-          "evidence": "[CEO office 2026-10-02 07:0xZ (10:0x Beirut, CEO live in chat)] OneCloud price page shows no IPv4 add-on price (read 2 Oct); 0 of 2 pool IPs in use - do not buy more"
+          "evidence": "[DEVOPS run 2026-10-11 d, scheduled, unattended, 2026-10-11T03:30Z] DEFERRED to Nov 2026 - reason: every step needs the provider panels or a purchase (resize, new IPv4, provider sign-up) = CEO account actions, and the hosting-provider research that feeds rows 4-5 is open as xd-1347 (CEO, in progress). Revisit at the first devops run of Nov 2026. || [CEO office 2026-10-02 07:0xZ (10:0x Beirut, CEO live in chat)] OneCloud price page shows no IPv4 add-on price (read 2 Oct); 0 of 2 pool IPs in use - do not buy more",
+          "blocker": "deferred Nov 2026: provider panel / purchase steps are CEO actions; xd-1347 first"
         },
         {
           "test": "Each candidate provider's written policy on VPN exit traffic and its accepted payment methods (card from Lebanon / PayPal / crypto) are recorded before any move",
           "verify": "research digest table B has the policy + payment column filled from the provider's own page",
           "met": false,
           "verifiedBy": "none",
-          "evidence": "[CEO office 2026-10-02 07:0xZ (10:0x Beirut, CEO live in chat)] digest B lists prices/locations (Hetzner, Vultr, DigitalOcean, Cloudzy crypto, Contabo, Kamatera, OVH, Scaleway); VPN policy and card acceptance not yet read"
+          "evidence": "[DEVOPS run 2026-10-11 d, scheduled, unattended, 2026-10-11T03:30Z] DEFERRED to Nov 2026 - reason: every step needs the provider panels or a purchase (resize, new IPv4, provider sign-up) = CEO account actions, and the hosting-provider research that feeds rows 4-5 is open as xd-1347 (CEO, in progress). Revisit at the first devops run of Nov 2026. || [CEO office 2026-10-02 07:0xZ (10:0x Beirut, CEO live in chat)] digest B lists prices/locations (Hetzner, Vultr, DigitalOcean, Cloudzy crypto, Contabo, Kamatera, OVH, Scaleway); VPN policy and card acceptance not yet read",
+          "blocker": "deferred Nov 2026: provider panel / purchase steps are CEO actions; xd-1347 first"
         }
       ],
       "progress": 0,
@@ -19638,13 +19648,14 @@
           "test": "Playwright + headless Chromium installed for the QA runs (no new paid service); version pinned in the qa skill",
           "met": false,
           "verify": "python3 -c 'import playwright' and one headless screenshot of https://caspervpn.com saved",
-          "evidence": ""
+          "evidence": "[DEVOPS run 2026-10-11 d, scheduled, unattended, 2026-10-11T03:30Z] MEASURED, nothing to install: the Cowork cloud workspace every scheduled run gets (where QA already ran Playwright on 11 Oct 03:0xZ) has Playwright 1.56.0 (python package + npm) and Chromium 141.0.7390.37 headless preinstalled at /opt/pw-browsers (PLAYWRIGHT_BROWSERS_PATH). Proof 03:26Z: python3 -c 'import playwright' ok; headless screenshot https://caspervpn.com -> 200 'CasperVPN \u2014 Privacy-First WireGuard VPN' (home.png 322 KB) and https://admin.dev.caspervpn.com -> 200 'CasperVPN Admin' (admindev.png 223 KB). Not on the main server (import fails there, by design: no browser on production). Pin to write in the qa skill: playwright 1.56.0 / chromium 141.0.7390.37 -> QA xd (this run). No spend. || "
         },
         {
           "test": "A TEST admin account exists on the DEVELOPMENT system only (never production, never a real password); its login lives in the vault credentials file, not on the board",
           "met": false,
           "verify": "dev admin login with the test account -> 200; production login with it -> 401",
-          "evidence": ""
+          "evidence": "[DEVOPS run 2026-10-11 d, scheduled, unattended, 2026-10-11T03:30Z] NOT DONE - BLOCKED. Measured read-only 03:3xZ on the dev database (dev host 188.166.174.132, caspervpn_dev): 60 users, Role=2 (admin) on 3 existing staff addresses (ip-*, dev*, ceo* @caspervpn.com), none is a dedicated QA test admin. This unattended run does not create log-in accounts or handle passwords (run rule: never print or store a password), so the handoff's 'login in credentials.md' step cannot be done here. Options for the CEO: (a) in a live chat, say which existing dev admin QA may use, or (b) create the dev-only test admin yourself in a live session and save its login where you keep logins. || ",
+          "blocker": "needs CEO: unattended runs do not create accounts or store passwords - pick an existing dev admin for QA or create one in a live session; revisit next CEO chat"
         },
         {
           "test": "QA uses it to check the signed-in admin pages that wait on it (rows 174, 195-199) and records the screenshots",
@@ -54578,11 +54589,12 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CEO: CEO YES 10 Oct ('1 yes'): set up Playwright for QA (task playwright-admin-checks rows 0-1)",
       "description": "Install Playwright + headless Chromium where the QA runs work; make a TEST admin account on the DEVELOPMENT system only (never production; login in memory/context/credentials.md, never on the board). Free tool, no spend. Then hand to [QA].",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-10-10T21:56:45Z",
       "createdDate": "2026-10-10",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[DEVOPS run 2026-10-11 d, scheduled, unattended, 2026-10-11T03:30Z] Row 0 measured ready (Playwright 1.56.0 + Chromium 141 preinstalled in every Cowork cloud workspace; screenshots of caspervpn.com and admin.dev 200) -> QA. Row 1 BLOCKED: unattended runs do not create log-in accounts or store passwords; dev DB has 3 staff admins, no QA test admin. CEO: name one dev admin for QA, or create one in a live session. || "
     },
     {
       "id": "xd-1697",
@@ -55693,6 +55705,18 @@
       "completedDate": null,
       "taskRef": "xd-1687",
       "dueBy": "2026-10-18T03:20:00Z"
+    },
+    {
+      "id": "xd-1772",
+      "from": "[DEVOPS]",
+      "to": "[QA]",
+      "title": "Handoff from DEVOPS: Check Playwright row 0 (playwright-admin-checks) and pin the version in the qa skill",
+      "description": "xd-1696 row 0: Playwright 1.56.0 (python + npm) and Chromium 141.0.7390.37 headless are preinstalled in the Cowork cloud workspace (PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers); nothing was installed. Verify: python3 -c 'import playwright'; one headless screenshot of https://caspervpn.com (devops got 200 at 03:26Z). If it passes: tick playwright-admin-checks row 0 and write the pin in the qa skill. Row 1 (dev test admin) is blocked on the CEO - see the row.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-11T03:30:26Z",
+      "createdDate": "2026-10-11",
+      "completedDate": null
     }
   ],
   "importantNotes": [
