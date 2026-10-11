@@ -14216,7 +14216,7 @@
         {
           "test": "CEO YES 2026-10-11 (live chat: 'yes to all') \u00b7 READY TO SHIP \u2014 three helpful emails go out by themselves: (1) two days before an App Store free trial turns into a paid plan, a reminder with how to cancel; (2) when a trial ends without paying, 'you're on the free plan and it still works'; (3) two days after sign-up, if the person never connected, '3 things that usually stop people' \u00b7 why: 45 new users in 30 days never connected in their first 2 days, and trial users today get no warning before the charge \u00b7 tested on the test server: it picked exactly the test account that never connected and skipped the one that did; nothing was sent there (practice mode) \u00b7 what the ship does: adds the emails but keeps them OFF; your yes also switches them on \u00b7 not included: the day-5 'tips' email (legal says wait), Apple 'hide my email' users (about 3 in 10 - they need your Apple step on the row for xd-1677) \u00b7 rollback: one setting turns them off",
           "verify": "After ship + switch-on: api log 'Lifecycle mails on: every 60 min, dryRun=False' and 'Lifecycle mail pass:' each hour; SELECT \"Kind\",count(*) FROM \"LifecycleEmailSends\" WHERE NOT \"DryRun\" GROUP BY 1 grows only for real users; control: SELECT count(*) FROM \"LifecycleEmailSends\" s JOIN \"ConnectionLogs\" l ON l.\"UserId\"=s.\"UserId\" AND l.\"ConnectedAt\" < s.\"SentAt\" WHERE s.\"Kind\"='B2' = 0",
-          "evidence": "[CEO YES 2026-10-11] 'go wwith your advisre and yes ti all' (Cowork CTO live chat ~22:3xZ / 01:3x Beirut 12 Oct, answering the list of 12 decisions + 27 ship rows). Ship by the owner's normal path (one change at a time, trap D8), then [QA] live check. || [QA 2026-10-11 e, scheduled, 2026-10-11T04:13:59Z] QA DEV PASS, not ticked (waits CEO YES + ship) - dev 04:1xZ: LifecycleEmailSends = B2 DryRun=t 1 row (only); test user lifecycle-dryrun-b2 1 send / 0 connections; CONTROL lifecycle-dryrun-control 0 sends / 1 connection; migration 20261011030000_LifecycleEmails applied; dev api log 'Lifecycle mail pass' 03:52:28 (1 due, 1 handled, dryRun=True) and 04:07:28 (0 due) = every 15 min; 0 'Email sent to' lines. Bodies (LifecycleEmailService.cs on dev ddf3d86ba): banned-word grep 0 hits, A2 has no price / 'Plans start' line, B2 help only (Legal review lifecycle-emails-consent-2026-10-11). Opt-out wrong token: dev 400; CONTROL production same URL 404. || [BACKEND run 2026-10-11 0315, scheduled, unattended, 2026-10-11T03:54:32Z] xd-1744; development d1607eaeb + ddf3d86ba; QA dev check xd-1782. development d1607eaeb + ddf3d86ba. Main-server build 0 errors; suite 342/342; LifecycleEmailTests 9/9; CONTROL (B2 ignores 'never connected') 1/9 fail. Dev live 03:50Z: migration 20261011030000_LifecycleEmails applied; api log 'Lifecycle mails on: every 15 min, dryRun=True'; first pass 03:52:28Z 'B2 DRY-RUN (not sent) for user 0a1e0000' = the dev test account made 60 h ago with no connection; CONTROL account (same age, one ConnectionLogs row) got none; 'Email sent to' lines on dev 0. Opt-out link on dev: wrong token 400, right token 200 + MarketingEmailOptOut f->t, same token on another user 400; production same URL 404 (control). Production read-only 03:28Z (who would be in a window right now): B2 11 (8 without Apple relay), A1 1, A2 0; 30 d: 45 never-connected new users (36 without relay); real users 322, of them 95 Apple private-relay addresses = skipped until xd-1677. Ship = cherry-pick both + env LifecycleEmails__Enabled=true (code default stays off). Board advice: yes after QA - service mails cleared by Legal (xd-1745), each user gets each mail once, short windows so no old account is mailed.",
+          "evidence": "[BACKEND run 2026-10-11 2215, scheduled, unattended, 2026-10-11T22:43:32Z] B2 wording changed per [IOS] xd-1805 (development 3aa124e92): 'open CasperVPN, go to the Settings tab, tap Protocol, choose CasperCloak, then tap Connect again'; LifecycleEmailTests 9/9; QA xd-1849. Ships with this row. | [CEO YES 2026-10-11] 'go wwith your advisre and yes ti all' (Cowork CTO live chat ~22:3xZ / 01:3x Beirut 12 Oct, answering the list of 12 decisions + 27 ship rows). Ship by the owner's normal path (one change at a time, trap D8), then [QA] live check. || [QA 2026-10-11 e, scheduled, 2026-10-11T04:13:59Z] QA DEV PASS, not ticked (waits CEO YES + ship) - dev 04:1xZ: LifecycleEmailSends = B2 DryRun=t 1 row (only); test user lifecycle-dryrun-b2 1 send / 0 connections; CONTROL lifecycle-dryrun-control 0 sends / 1 connection; migration 20261011030000_LifecycleEmails applied; dev api log 'Lifecycle mail pass' 03:52:28 (1 due, 1 handled, dryRun=True) and 04:07:28 (0 due) = every 15 min; 0 'Email sent to' lines. Bodies (LifecycleEmailService.cs on dev ddf3d86ba): banned-word grep 0 hits, A2 has no price / 'Plans start' line, B2 help only (Legal review lifecycle-emails-consent-2026-10-11). Opt-out wrong token: dev 400; CONTROL production same URL 404. || [BACKEND run 2026-10-11 0315, scheduled, unattended, 2026-10-11T03:54:32Z] xd-1744; development d1607eaeb + ddf3d86ba; QA dev check xd-1782. development d1607eaeb + ddf3d86ba. Main-server build 0 errors; suite 342/342; LifecycleEmailTests 9/9; CONTROL (B2 ignores 'never connected') 1/9 fail. Dev live 03:50Z: migration 20261011030000_LifecycleEmails applied; api log 'Lifecycle mails on: every 15 min, dryRun=True'; first pass 03:52:28Z 'B2 DRY-RUN (not sent) for user 0a1e0000' = the dev test account made 60 h ago with no connection; CONTROL account (same age, one ConnectionLogs row) got none; 'Email sent to' lines on dev 0. Opt-out link on dev: wrong token 400, right token 200 + MarketingEmailOptOut f->t, same token on another user 400; production same URL 404 (control). Production read-only 03:28Z (who would be in a window right now): B2 11 (8 without Apple relay), A1 1, A2 0; 30 d: 45 never-connected new users (36 without relay); real users 322, of them 95 Apple private-relay addresses = skipped until xd-1677. Ship = cherry-pick both + env LifecycleEmails__Enabled=true (code default stays off). Board advice: yes after QA - service mails cleared by Legal (xd-1745), each user gets each mail once, short windows so no old account is mailed.",
           "met": false,
           "passed": false,
           "verifiedBy": "none",
@@ -14346,6 +14346,33 @@
           "verifiedDate": "2026-10-11",
           "evidence": "[CEO 2026-10-11] 'go wwith your advisre and yes ti all' -> (b) - row 179 decided the same night (the board's advice). || [WEBSITE+ADMIN run 2026-10-11 2204, scheduled, unattended, 2026-10-11T22:20:21Z] added for xd-1422 slice 6 F7 [SECURITY]. Measured 22:1xZ hash-equality only: API Radius__Secret = old literal; 1 of 13 /etc/freeradius/3.0/clients.conf secrets = old literal. File fix development e7bcfc9c -> QA xd-1830.",
           "addedBy": "[SECURITY] website+admin run 1011-2204"
+        },
+        {
+          "test": "READY TO SHIP \u2014 when someone changes or resets their password, every OTHER phone or computer signed in to that account is signed out \u00b7 why: today a stolen sign-in keeps working after the owner changes the password (security audit finding) \u00b7 what the ship does: change password keeps only the device that changed it; reset by e-mail link and an admin reset sign out everywhere \u00b7 tested: all 365 checks pass, 4 new ones fail if the fix is removed; on the test server two sign-ins, change password on one -> the other is refused (401), the first still works \u00b7 risk: a customer who changes the password on the website is signed out in the app once and must sign in again (that is the point) \u00b7 rollback: redeploy the previous version \u00b7 advice: yes",
+          "verify": "After ship: two logins for a test account, change-password with the first -> /api/auth/refresh with the second = 401, the first = 200; production api log 'xd-1810 ended' >= 1; build proof strings -el /app/CasperVPN.dll | grep -c 'xd-1810: password reset ended' = 1 (production 0 on 11 Oct 22:32Z)",
+          "evidence": "[BACKEND run 2026-10-11 2215, scheduled, unattended, 2026-10-11T22:43:32Z] xd-1810 BUILT: development 3aa124e92 (4 commits on e7bcfc9c3); main-server build 0 errors, suite 365/365, new 19/19; dev live 22:42Z (dev DLL strings 1/1/1/1, production 0/0/0/0). Dev live proof 22:42Z: refresh B 200 before -> 401 after change-password with A; A 200; sessions 2 -> 1. QA xd-1846.",
+          "met": false,
+          "verifiedBy": "none",
+          "createdBy": "[BACKEND] run 1011-2215",
+          "createdAt": "2026-10-11T22:43:32Z"
+        },
+        {
+          "test": "READY TO SHIP \u2014 when Apple refunds a dedicated IP, the buyer can no longer take the IP back with the old purchase code \u00b7 why: on 8 Oct the only real buyer was refunded; the IP was freed but the code stayed valid, and our 'claim again' path would have given the IP back for free \u00b7 what the ship does: a refund or revoke from Apple cancels the code too; a normal end of term does not (so a re-subscribe still works) \u00b7 tested: all 365 checks pass, 3 new ones \u00b7 risk: none for paying users \u00b7 rollback: redeploy the previous version \u00b7 note: the one old code from 8 Oct stays as it is; a one-off fix of that row needs your separate yes \u00b7 advice: yes",
+          "verify": "After ship: production DLL strings -el | grep -c 'revoked {N} dedicated-IP token' = 1 (0 on 11 Oct 22:32Z); on the next Apple REFUND of a dedicated-IP add-on the api log shows 'xd-1825: refund for providerRef ... revoked 1' and DedicatedIpTokens.Status = 3 for that ProviderRef",
+          "evidence": "[BACKEND run 2026-10-11 2215, scheduled, unattended, 2026-10-11T22:43:32Z] xd-1825 BUILT: development 3aa124e92 (4 commits on e7bcfc9c3); main-server build 0 errors, suite 365/365, new 19/19; dev live 22:42Z (dev DLL strings 1/1/1/1, production 0/0/0/0). DedicatedIpRefundTokenTests 3/3, control 2/3 fail. QA xd-1847.",
+          "met": false,
+          "verifiedBy": "none",
+          "createdBy": "[BACKEND] run 1011-2215",
+          "createdAt": "2026-10-11T22:43:32Z"
+        },
+        {
+          "test": "READY TO SHIP \u2014 one connection shows as one session again, with the app version on it \u00b7 why: on your phone (build 68) the server closed the app's session after 55 seconds and opened a second one without the app version; 35 sessions in 7 days were split this way, so our numbers by version were wrong \u00b7 what the ship does: when the server's own connect record arrives, it joins the app's session instead of replacing it \u00b7 tested: all 365 checks pass, 3 new ones \u00b7 risk: low; only how sessions are recorded changes, not the connection \u00b7 rollback: redeploy the previous version \u00b7 advice: yes",
+          "verify": "After ship: production api log '[radius-connect] ADOPT' >= 1 within a day; ConnectionLogs closed with 'RADIUS Start dedup (xd-513)' that carry an AppVersion = 0 after the ship time (7 d before: 8); build proof strings -el | grep -c '[radius-connect] ADOPT' = 1 (production 0 on 11 Oct 22:32Z)",
+          "evidence": "[BACKEND run 2026-10-11 2215, scheduled, unattended, 2026-10-11T22:43:32Z] xd-1827 BUILT: development 3aa124e92 (4 commits on e7bcfc9c3); main-server build 0 errors, suite 365/365, new 19/19; dev live 22:42Z (dev DLL strings 1/1/1/1, production 0/0/0/0). Root cause measured read-only on production 22:3xZ (CEO phone rows 21:50:52Z app row closed 21:51:47Z by 'RADIUS Start dedup (xd-513)'). RadiusStartAdoptsAppRowTests 3/3, control 1/3 fail. QA xd-1848.",
+          "met": false,
+          "verifiedBy": "none",
+          "createdBy": "[BACKEND] run 1011-2215",
+          "createdAt": "2026-10-11T22:43:32Z"
         }
       ],
       "progress": 0,
@@ -57112,15 +57139,20 @@
       "to": "[BACKEND]",
       "title": "Handoff from IOS: [P3] xd-1784 answer: the help-mail words match the app - keep them, one wording tweak",
       "description": "Measured in the code of the live App Store build line (App Store version 4.2, released 2026-09-18 16:39Z per itunes lookup; code at production 0db1accc6, 2026-09-18 08:52Z = hypothesis it equals the 4.2 binary) AND the current build line (ios/68 3d5a40ec0): home button label 'Connect' (ConnectionView.swift Label(\"Connect\")), bottom tab 'Settings' (CasperVPNApp.swift Label(\"Settings\")), Settings row titled 'Protocol' (SettingsView.swift:166) opening a list where the option reads 'CasperCloak' (SettingsViewModel VPNProtocolType.casperCloak = \"CasperCloak\"). 'Allow' is the iPhone's own VPN permission button. So all four words exist. Suggested exact text (matches the screens): 'open CasperVPN, go to the Settings tab, tap Protocol, choose CasperCloak, then tap Connect again.' Note: in some countries the app already forces CasperCloak (ProtocolSettingsView 'On this network CasperCloak works best') - the step is harmless there. Android is not live, so the mail must not be sent to Android users with these words. Then -> [QA] on the mail text before ship.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P3",
       "createdAt": "2026-10-11T21:16:28Z",
       "createdDate": "2026-10-11",
-      "completedDate": null,
+      "completedDate": "2026-10-11",
       "category": "trust-legal",
       "ageDays": 0,
       "needsRelease": false,
-      "lifecycle": "active"
+      "lifecycle": "active",
+      "notes": "[BACKEND run 2026-10-11 2215, scheduled, unattended, 2026-10-11T22:43:32Z] DONE: wording applied in LifecycleEmailService B2 (development 3aa124e92), tests 9/9 -> QA xd-1849; ships with row 234.",
+      "completedAt": "2026-10-11",
+      "completedBy": "[BACKEND]",
+      "resolution": "Wording applied on development 3aa124e92; QA xd-1849; ships with CEO row 234",
+      "resultingHandoff": "xd-1849 to [QA]"
     },
     {
       "id": "xd-1806",
@@ -57204,7 +57236,7 @@
       "to": "[BACKEND]",
       "title": "Handoff from SECURITY: [P1] Changing or resetting a password does not sign out other devices (refresh sessions survive) - audit xd-1422 slice 5 F5",
       "description": "[SECURITY run 1011-2104] Code read on development 72eeecf + production (same code). Since xd-940 every device has a RefreshSessions row (7-day expiry that slides on every use). ResetPasswordAsync (AuthService ~L1273) and ChangePasswordAsync (~L1406) clear only Users.RefreshToken/PreviousRefreshToken; neither touches RefreshSessions (grep 0). AdminController.AdminResetPassword (POST api/admin/users/{id}/reset-password) clears nothing. FindLiveSessionAsync checks only token + expiry (no security stamp). Effect: anyone holding a refresh token keeps the account after the owner changes/resets the password. Also means the admin password rotation (xd-1522) alone does not end open admin sessions. Fix: in all three paths delete RefreshSessions for the user in the same SaveChanges (change-password may keep the caller's own session via the access token's sid claim). Unit test: two sessions, change password, refresh with the other -> 401. Ship dev -> QA -> READY TO SHIP row. Report: memory/departments/security/audits/2026-10-11/REPORT-slice5-auth.md.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-10-11T21:33:34Z",
       "createdDate": "2026-10-11",
@@ -57215,7 +57247,9 @@
       "category": "trust-legal",
       "ageDays": 0,
       "needsRelease": false,
-      "lifecycle": "active"
+      "lifecycle": "active",
+      "blocker": "Waits for QA dev check xd-1846, then a CEO YES on READY TO SHIP row 247",
+      "notes": "[BACKEND run 2026-10-11 2215, scheduled, unattended, 2026-10-11T22:43:32Z] BUILT on development (development 3aa124e92 (4 commits on e7bcfc9c3); main-server build 0 errors, suite 365/365, new 19/19; dev live 22:42Z (dev DLL strings 1/1/1/1, production 0/0/0/0)). -> QA xd-1846, CEO card row 247."
     },
     {
       "id": "xd-1811",
@@ -57234,7 +57268,9 @@
       "category": "trust-legal",
       "ageDays": 0,
       "needsRelease": false,
-      "lifecycle": "active"
+      "lifecycle": "active",
+      "blocker": "Next backend run: plan = count 2FA failures per user (FailedLoginAttempts Reason='2fa'), lock 15 min after 5, map /api/twofactor/verify-login to the 'auth' rate policy (this run spent its time on xd-1810/1825/1827/1805)",
+      "notes": "[BACKEND run 2026-10-11 2215, scheduled, unattended, 2026-10-11T22:43:32Z] not started this run; blocker states the plan and the next run."
     },
     {
       "id": "xd-1812",
@@ -57423,11 +57459,14 @@
       "to": "[BACKEND]",
       "title": "Handoff from CTO: Dedicated IP token left active after Apple refund (user 2da84bfa)",
       "description": "Apple refunded the add-on 8 Oct 20:03Z; DedicatedIps 040718ae released (status 3) but DedicatedIpTokens row (ProviderRef 1090000031895702) still status 1 with DedicatedIpId set, ExpiresAt 5 Nov. Mark the token revoked on REFUND (same place as MarkRefundedPaymentAsync, xd-1437) via development + READY TO SHIP row; no production data edit by hand.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P3",
       "createdAt": "2026-10-11T21:59:54Z",
       "createdDate": "2026-10-11",
-      "completedDate": null
+      "completedDate": null,
+      "handoffTo": "[QA]",
+      "blocker": "Waits for QA dev check xd-1847, then a CEO YES on READY TO SHIP row 248",
+      "notes": "[BACKEND run 2026-10-11 2215, scheduled, unattended, 2026-10-11T22:43:32Z] BUILT on development (development 3aa124e92 (4 commits on e7bcfc9c3); main-server build 0 errors, suite 365/365, new 19/19; dev live 22:42Z (dev DLL strings 1/1/1/1, production 0/0/0/0)). -> QA xd-1847, CEO card row 248."
     },
     {
       "id": "xd-1826",
@@ -57447,11 +57486,14 @@
       "to": "[BACKEND]",
       "title": "Handoff from QA: build 68: the app's hidden-mode session row is closed after 55 s and replaced by a server-made row with no version (session split)",
       "description": "[QA 2026-10-11 h, scheduled, 2026-10-11T22:14:21Z] CEO phone, build 68: ConnectionLogs row 21:50:52Z protocol 3, AppVersion 4.3.1 / 68 / cellular / connected, closed 21:51:47Z; a new row opened the SAME second with SessionId 'wg-669d9...' and AppVersion/BuildNumber/NetworkType NULL, still open, LastSeenAt 22:09:57Z, 770 MB. Control 24 h: 80 rows, only 5 carry a version. Find which code path closes the app's row and opens the 'wg-' row (codegraph: heartbeat self-heal / peer sync), make it extend the app's row (keep version fields), test on dev with a two-step connect, then READY TO SHIP row. Recipe: brain /root/reports/qa1011h/b68.sql. Blocks build-67-gaps row 0.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P2",
       "createdAt": "2026-10-11T22:14:24Z",
       "createdDate": "2026-10-11",
-      "completedDate": null
+      "completedDate": null,
+      "handoffTo": "[QA]",
+      "blocker": "Waits for QA dev check xd-1848, then a CEO YES on READY TO SHIP row 249",
+      "notes": "[BACKEND run 2026-10-11 2215, scheduled, unattended, 2026-10-11T22:43:32Z] BUILT on development (development 3aa124e92 (4 commits on e7bcfc9c3); main-server build 0 errors, suite 365/365, new 19/19; dev live 22:42Z (dev DLL strings 1/1/1/1, production 0/0/0/0)). -> QA xd-1848, CEO card row 249."
     },
     {
       "id": "xd-1828",
@@ -57672,6 +57714,54 @@
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-10-11T22:39:01Z",
+      "createdDate": "2026-10-11",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1846",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: Check on dev: password change/reset ends the OTHER devices' sign-in (xd-1810, development 74d3d1dce)",
+      "description": "Dev API runs 3aa124e92 since 22:42Z. Backend dev proof 22:42Z (test user xd1810-sessions-224231@example.org, made by row copy, no mail): 2 logins -> 2 RefreshSessions; refresh B before = 200 (control); change-password with A's token = 200; after: refresh A 200, refresh B 401; sessions 2 -> 1; dev api log 'xd-1810 ended 1 other refresh' = 1. Re-run with your own two logins; also (2) reset-password by e-mail link ends both (unit test ResetPassword_ByEmailLink_EndsEveryDevice), (3) admin POST api/admin/users/{id}/reset-password ends all sessions (code path, same RefreshSessionRevoker). Unit: PasswordChangeEndsOtherSessionsTests 4/4, control (revoker removes nothing) 4/4 fail. Then CEO card row for xd-1810.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-11T22:43:36Z",
+      "createdDate": "2026-10-11",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1847",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: Check on dev: Apple refund of the dedicated-IP add-on revokes its activation token (xd-1825, development baac1b038)",
+      "description": "REFUND/REVOKE now map to 'refunded': IP released + every Unredeemed/Redeemed token of that purchase set to Revoked (3), so the idempotent re-redeem in RedeemTokenAsync can no longer hand the IP back; plain EXPIRED keeps the token (a re-subscribe re-binds). Not reproducible on dev without a signed Apple notification: check the code + unit proof (DedicatedIpRefundTokenTests 3/3; control 2/3 fail, expiry case passes by design) + dev DLL string 'revoked {N} dedicated-IP token' = 1 (production 0). Existing production row (user 2da84bfa, token ProviderRef 1090000031895702, status 1) is NOT changed by this code - it fires only on a new notification; the CEO row says so.",
+      "status": "pending",
+      "priority": "P3",
+      "createdAt": "2026-10-11T22:43:36Z",
+      "createdDate": "2026-10-11",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1848",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: Check on dev: RADIUS accounting Start adopts the app's session row (xd-1827, development 8737acfe5)",
+      "description": "Root cause (measured production read-only 22:3xZ): RadiusAuthController Start 'Dedup B' (xd-513) closed the app's own row (SessionId NULL, AppVersion 4.3.1/68) 55 s after connect and opened 'wg-669d935868f2-179175' with no version. 7 d: 35 rows closed by 'RADIUS Start dedup (xd-513)', 8 with an app version, 2 users; wg- rows 203, 0 with a version. Fix: the newest open app row (no SessionId, same user+server, <=10 min) takes the RADIUS session id and stays open; other rapid rows still close. Unit: RadiusStartAdoptsAppRowTests 3/3, control 1/3 fail. Dev check: a dev device connect on WireGuard to a dev-fleet node (if any sends accounting) -> api log '[radius-connect] ADOPT' and one row with AppVersion; else accept unit + DLL ('[radius-connect] ADOPT' dev 1, production 0). After ship, production re-run of /root/reports/qa1011h/b68.sql must show no new 'RADIUS Start dedup (xd-513)' closes of rows with an AppVersion.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-11T22:43:36Z",
+      "createdDate": "2026-10-11",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1849",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: Check the B2 help-mail wording (xd-1805, development 3aa124e92)",
+      "description": "B2 'never connected' mail now says: open CasperVPN, go to the Settings tab, tap Protocol, choose CasperCloak, then tap Connect again (iOS words, measured by [IOS] xd-1805). LifecycleEmailTests 9/9. Dev DLL string 'go to the <b>Settings</b> tab' = 1, production 0. Rides with CEO row 234 (lifecycle mails ship). Note from [IOS]: Android is not live, so these words fit iOS users only - today every real user is iOS.",
+      "status": "pending",
+      "priority": "P3",
+      "createdAt": "2026-10-11T22:43:36Z",
       "createdDate": "2026-10-11",
       "completedDate": null
     }
