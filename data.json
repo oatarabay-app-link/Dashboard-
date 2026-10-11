@@ -14141,7 +14141,7 @@
         {
           "test": "READY TO SHIP \u2014 we can see which Apple Ads campaign brought each new install, and where people stop before they make an account \u00b7 why: Apple Ads is running (24 installs in a week) but we could only guess which sign-ups came from the ads, and anyone who opened the app and left before signing up was invisible \u00b7 tested: all 333 checks pass, including 12 new ones; on the test server a made-up Apple code is refused and nothing is kept; a real 'this came from campaign X' answer needs a real ad install, so the first real proof comes after the ship and the next app build \u00b7 what the ship does: adds two small server addresses the app can call before sign-in (no personal data, no IP, only a random install number), one new table, and a helper that asks Apple again for up to a day when Apple is not ready yet \u00b7 rollback: put back the previous server version (the deploy keeps a copy); the new table is simply ignored",
           "verify": "After ship: SELECT 1 FROM \"__EFMigrationsHistory\" WHERE \"MigrationId\"='20261011020000_InstallAttribution'; curl -s -X POST https://api.caspervpn.com/api/funnel/install-events -H 'Content-Type: application/json' -d '{\"event\":\"app_opened\",\"installId\":\"qa-check-0001\"}' -> success:true; after the app build with xd-1687: SELECT \"Status\", count(*) FROM \"AppleAdsAttributions\" GROUP BY 1",
-          "evidence": "[BACKEND run 2026-10-11 0215, scheduled, unattended, 2026-10-11T02:59:51Z] development 89c58d9c7; xd-1688; QA dev check xd-1763. Board advice: yes - it is what the growth team needs to judge the ads; nothing changes for customers until the app sends the events, and the Legal privacy lines gate that app build.",
+          "evidence": "[BACKEND run 2026-10-11 0415, scheduled, unattended, 2026-10-11T04:41:49Z] QA DEV PASS recorded: xd-1763 legs 1-4 passed on dev (QA 2026-10-11 d); leg 5 = backend build proof (InstallAttributionTests 12/12, suite 333/333). Waits CEO YES. || [BACKEND run 2026-10-11 0215, scheduled, unattended, 2026-10-11T02:59:51Z] development 89c58d9c7; xd-1688; QA dev check xd-1763. Board advice: yes - it is what the growth team needs to judge the ads; nothing changes for customers until the app sends the events, and the Legal privacy lines gate that app build.",
           "met": false,
           "passed": false,
           "verifiedBy": "none",
@@ -14244,6 +14244,24 @@
           "evidence": "[WEBSITE+ADMIN run 2026-10-11 0404, scheduled, unattended, 2026-10-11T04:34:55Z] added for xd-1422 slice 3 [SECURITY]; QA xd-1791 on dev. Board advice: yes, ship first - it is a free-paid-plan hole and the change only touches a payment door we do not use.",
           "verifiedByRaw": null,
           "verifiedDate": null
+        },
+        {
+          "test": "READY TO SHIP \u2014 close an unlocked side door on the server \u00b7 why: 13 server addresses for an old 'AI' feature answered anyone on the internet without a sign-in; one of them hands out the newest records of all users, and others let anyone write fake records for any user \u00b7 who uses them: nobody - not the iPhone app, Android, the website or the admin pages (checked) \u00b7 tested: all 344 checks pass, plus 2 new ones that fail if the lock is removed; QA checks it on the test server next \u00b7 what the ship does: only admins can use these addresses \u00b7 rollback: put back the previous server version (the deploy keeps a copy) \u00b7 advice: yes, it is a safety fix with nothing depending on it",
+          "verify": "After ship: curl -s -o /dev/null -w '%{http_code}' https://api.caspervpn.com/api/ai/threats/recent -> 401 (was 200 on 11 Oct 04:24Z); control https://api.caspervpn.com/api/health -> 200; docker cp caspervpn-api:/app/CasperVPN.dll + grep AIController attribute via dotnet test is the build proof",
+          "evidence": "[BACKEND run 2026-10-11 0415, scheduled, unattended, 2026-10-11T04:41:49Z] development 9f62fee; xd-1776; QA dev check xd-1794. Production read-only 04:2xZ: ThreatEvents 1 row, ThreatStatistics 0, ThreatDetections 10, DdosAlerts 5; the other 8 tables this controller writes (GameSessions, LeakTestResults, NetworkMetrics, PrivacyScores, StreamingSessions, ThrottlingAnalyses, UserPatterns, WiFiNetworks) do not exist on production (those POSTs fail there). Production api log since the container start (~4 h): 0 /api/ai requests (control: 118 /api/auth lines in the same log). Fix built on development 9f62fee (admin-only), build 0 errors, 344/344, new 2/2, control 1/2 fail. skill: affaan-m-csharp-testing (reflection attribute test + control). DEV LIVE 04:39Z (dev API recreated with 9f62fee): no token /api/ai/threats/recent, /threats/statistics, /analytics, /privacy/score/<guid>, POST /threats/report -> 401 (were 200 at 04:24Z); /api/health 200; control production /api/ai/threats/recent still 200.",
+          "met": false,
+          "verifiedBy": "none",
+          "createdBy": "[BACKEND] run 1011-0415",
+          "createdAt": "2026-10-11T04:41:49Z"
+        },
+        {
+          "test": "DECISION \u2014 replace a built-in password that protects some VPN keys (xd-1777) \u00b7 what we found: when the app does not bring its own key, the server makes one from the account number plus a fixed password written inside our code; anyone with our code could work those keys out \u00b7 how many it touches: almost nobody now - 1 user in the last 7 days (most keys are made by the app itself), but about 200 accounts used such keys in the past \u00b7 options: A) set a real secret password on the server now (test server first); the few people with server-made keys get a new key on their next connect, nothing to do for them; then remove the built-in one \u00b7 B) wait until the Android app is out and see who still needs server-made keys \u00b7 advice: A - it is a small change, it touches about 1 person a week, and it closes the hole for good",
+          "verify": "CEO replies 'A' or 'B' in any chat; the next backend run writes it here and builds the dev step first. After A ships: docker exec caspervpn-api printenv WireGuard__Secret | wc -c > 1 (length only), and the deterministic-key count script (/root/reports/be1011-0415 method) shows 0 NEW peers with the old fallback key",
+          "evidence": "[BACKEND run 2026-10-11 0415, scheduled, unattended, 2026-10-11T04:41:49Z] xd-1777 measured read-only. MEASURED 04:3xZ (production, read-only, nothing printed): the fallback string is the same in OptimizedVpnServerService, VpnServerService, RadiusAuthController and WireGuardUsageSyncService (length 21); production has no WireGuard__Secret. WireGuardPeerUsages: 1,248 of 1,346 rows carry the server-made (deterministic) key, 198 users - mostly history; last 30 days 269 of 318 rows; last 7 days 3 of 28 rows = 1 user (account made 9 Oct, not a caspervpn.com address, platform not recorded, 6 connects, last 9 Oct 18:11Z). So almost every live peer today uses a key the app made itself, and setting a real secret would touch about 1 user a week. PLAN (after the CEO's yes): (1) dev first - set WireGuard__Secret on the dev API, prove a server-made config still connects on a dev node and that a client-made key is untouched; (2) production - set the secret in .env (via deploy_api.sh, never by hand), the few server-made peers get a new key on their next connect; (3) only then remove the fallback string (fail closed: refuse to make a server key without a secret), with a test. Never remove the fallback before the secret is set.",
+          "met": false,
+          "verifiedBy": "none",
+          "createdBy": "[BACKEND] run 1011-0415",
+          "createdAt": "2026-10-11T04:41:49Z"
         }
       ],
       "progress": 0,
@@ -55821,11 +55839,15 @@
       "to": "[BACKEND]",
       "title": "Handoff from QA: [QA FAILED] security-lockdown-p1 AC22: IKEv2 ConnectionLogs carry 0 bytes; no real IKEv2/OpenVPN rows",
       "description": "QA 2026-10-11 d, production 03:09Z, ConnectionLogs last 7 d: IKEv2 (Protocol 2) 306 rows, ALL from one @caspervpn.com account, BytesUploaded+BytesDownloaded = 0 on 306/306 (WireGuard 273/314 and CasperCloak 34/35 carry bytes). OpenVPN 2 rows, one staff account. AC22 asks every connect/disconnect writes correct bytes for ALL protocols. Find where IKEv2 sessions are logged (RADIUS accounting -> ConnectionLogs?) and write the byte counts; skill \u00a722: IKEv2 proof lives on the node (ipsec statusall bytes_i/bytes_o). Verify: SQL per Protocol count(*) filter (bytes>0) over 7 d, real-user filter from staff-accounts.md.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-10-11T03:13:15Z",
       "createdDate": "2026-10-11",
-      "completedDate": null
+      "completedDate": "2026-10-11",
+      "completedAt": "2026-10-11",
+      "completedBy": "[BACKEND]",
+      "resolution": "[BACKEND run 2026-10-11 0415, scheduled, unattended, 2026-10-11T04:41:49Z] MEASURED, no code fault: acct-forward.log 1,561 records http=200, 182 with bytes (newest 29 Sep, 27.5 MB real session reached the API); last 7 d detail files 0 records with octets > 0; IKEv2 ConnectionLogs 7 d = 306 rows all from the probe, median 0.38 s. Not a code fault: no real IKEv2 traffic in the window.",
+      "resultingHandoff": "xd-1795 to [QA]: re-run AC22 with a real IKEv2 session that carries traffic"
     },
     {
       "id": "xd-1769",
@@ -55833,11 +55855,15 @@
       "to": "[BACKEND]",
       "title": "Handoff from QA: QA DEV PASS xd-1763 (Apple Ads attribution + install events): add the READY TO SHIP row",
       "description": "Legs 1-4 PASS on dev (see xd-1763 resolution). Leg 5 (InstallAttributionTests 12/12) is your build proof, not re-run by QA. Add the CEO-card READY TO SHIP row (production control today: migration 0, /api/funnel/install-events 404). xd-1764 stays with QA until the dev 05:00Z log line exists.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-10-11T03:13:15Z",
       "createdDate": "2026-10-11",
-      "completedDate": null
+      "completedDate": "2026-10-11",
+      "completedAt": "2026-10-11",
+      "completedBy": "[BACKEND]",
+      "resolution": "[BACKEND run 2026-10-11 0415, scheduled, unattended, 2026-10-11T04:41:49Z] The READY TO SHIP row already exists: CEO-card row 230 (added 02:59Z by backend run 0215); QA's pass now written on it.",
+      "resultingHandoff": "none - row 230 waits for the CEO's yes"
     },
     {
       "id": "xd-1770",
@@ -55923,14 +55949,18 @@
       "to": "[BACKEND]",
       "title": "Handoff from SECURITY: Dev database misses column Tenants.DnsVerified - dev API 500 for internal calls (blocks dev tests of the account devices card)",
       "description": "[WEBSITE+ADMIN run 2026-10-11 0305, scheduled, unattended, 2026-10-11T03:38:27Z] MEASURED 03:36Z: from inside caspervpn-dev-website, GET http://api:8080/api/user/devices (no token) -> 500 SRV_6001; dev api log: 'Npgsql.PostgresException 42703: column t.DnsVerified does not exist'. Public https://api.dev.caspervpn.com/api/user/devices -> 401 (control), production internal call -> 401, production DB has Tenants.DnsVerified (information_schema). Dev __EFMigrationsHistory newest 20261011020000_InstallAttribution - the column's migration is missing or was skipped on dev (admin skill trap A4). Fix on dev only: apply the migration that adds Tenants.DnsVerified. Verify: docker exec caspervpn-dev-website node -e \"fetch('http://api:8080/api/user/devices').then(r=>console.log(r.status))\" -> 401.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-10-11T03:38:31Z",
       "createdDate": "2026-10-11",
-      "completedDate": null,
+      "completedDate": "2026-10-11",
       "taskRef": "xd-1396",
       "dueBy": "2026-10-14T00:00:00Z",
-      "needsRelease": false
+      "needsRelease": false,
+      "completedAt": "2026-10-11",
+      "completedBy": "[BACKEND]",
+      "resolution": "[BACKEND run 2026-10-11 0415, scheduled, unattended, 2026-10-11T04:41:49Z] DONE on dev only: Dev database Tenants lacked 14 model columns (incl. DnsVerified) - NO EF migration creates them (production's were made by hand; grep Data/Migrations for DnsVerified = 0 files). Applied on caspervpn-dev-postgres only, one transaction: ADD COLUMN IF NOT EXISTS MaxBandwidthBytes, MaxConcurrentConnections, SubscriptionExpiresAt, DedicatedServersEnabled, CustomBrandingEnabled, AdvancedAnalyticsEnabled, SsoEnabled, AuditLogsEnabled, DnsVerified, DnsVerificationToken, DnsSslEnabled, DnsVerifiedAt, RevenueSharePercent, Settings (production types/defaults); Tenants columns 21 -> 35. Verify (from inside caspervpn-dev-website, fetch http://api:8080/api/user/devices no token): BEFORE 500 (dev api log 42703 'column t.DnsVerified does not exist' 12 lines in 2 min) -> AFTER 401, re-run 25 s later 401, 42703 lines in the next 15 s = 0. Production untouched.",
+      "resultingHandoff": "none - dev database only; lasting fix = an EF migration (same pattern as xd-1638)"
     },
     {
       "id": "xd-1776",
@@ -55938,14 +55968,16 @@
       "to": "[BACKEND]",
       "title": "Handoff from SECURITY: AIController (api/ai/*): 13 endpoints answer with no sign-in - lock to Admin or delete (xd-1422 slice 2, F1)",
       "description": "[WEBSITE+ADMIN run 2026-10-11 0305, scheduled, unattended, 2026-10-11T03:38:27Z] Source origin/development c5b3756be, backend-dotnet-core/Controllers/AIController.cs: no [Authorize] on class or actions, no global fallback policy in Program.cs. 10 POSTs take UserId from the body and insert rows (threats/report, privacy/leak-tests, privacy/score, network/metrics, network/throttling, gaming/session, gaming/ddos, streaming/session, predictive/pattern, predictive/wifi); GET threats/recent with no userId returns the newest up to 1000 rows of ALL users (domain, category, time); GET privacy/score/{userId} returns any user's score. DEV PROOF 03:20Z, no token: /api/ai/threats/recent 200, /threats/statistics 200, /analytics 200, /privacy/score/<guid> 200; control /api/user/devices 401. Clients: 0 references to api/ai in ios-app-v2, android, admin-panel-react/src, website, desktop. SMALLEST FIX: [Authorize(Roles = \"Admin\")] on the class (or delete the controller). Also measure read-only on production: row counts in ThreatEvents/PrivacyScores/WiFiNetworks (real domains = privacy exposure). Then QA on dev + READY TO SHIP row. Report: memory/departments/security/audits/2026-10-11/REPORT-slice2-backend.md",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-10-11T03:38:31Z",
       "createdDate": "2026-10-11",
       "completedDate": null,
       "taskRef": "xd-1422",
       "dueBy": "2026-10-14T00:00:00Z",
-      "needsRelease": false
+      "needsRelease": false,
+      "blocker": "Waits for QA dev check xd-1794, then a CEO YES on CEO-card row 240 (production change).",
+      "notes": "[BACKEND run 2026-10-11 0415, scheduled, unattended, 2026-10-11T04:41:49Z] Production read-only 04:2xZ: ThreatEvents 1 row, ThreatStatistics 0, ThreatDetections 10, DdosAlerts 5; the other 8 tables this controller writes (GameSessions, LeakTestResults, NetworkMetrics, PrivacyScores, StreamingSessions, ThrottlingAnalyses, UserPatterns, WiFiNetworks) do not exist on production (those POSTs fail there). Production api log since the container start (~4 h): 0 /api/ai requests (control: 118 /api/auth lines in the same log). Fix built on development 9f62fee (admin-only), build 0 errors, 344/344, new 2/2, control 1/2 fail. skill: affaan-m-csharp-testing (reflection attribute test + control). DEV LIVE 04:39Z (dev API recreated with 9f62fee): no token /api/ai/threats/recent, /threats/statistics, /analytics, /privacy/score/<guid>, POST /threats/report -> 401 (were 200 at 04:24Z); /api/health 200; control production /api/ai/threats/recent still 200. -> QA xd-1794, READY TO SHIP row 240."
     },
     {
       "id": "xd-1777",
@@ -55953,14 +55985,16 @@
       "to": "[BACKEND]",
       "title": "Handoff from SECURITY: WireGuard server-made keys use a hard-coded fallback secret in production (xd-1422 slice 2, F2)",
       "description": "[WEBSITE+ADMIN run 2026-10-11 0305, scheduled, unattended, 2026-10-11T03:38:27Z] Code: OptimizedVpnServerService.cs:632 and RadiusAuthController.cs:50 read config WireGuard:Secret, else a fixed string written in the source. WireGuardKeyGenerator.GenerateDeterministicKeyPair = HMAC-SHA256(secret, 'userId:serverId') -> the client PRIVATE key returned to clients that do not send their own public key. MEASURED read-only 03:2xZ on production caspervpn-api: env WireGuard__Secret length 0, no 'WireGuard' section in /app/appsettings*.json, no such env name -> the source-code string is the live secret. Impact: anyone with the source and a user id + server id can compute that user's key for server-made keys. iOS sends its own key (comment at line 636); which clients/versions still get server-made keys is NOT measured - do that first (count live peers whose public key = the deterministic one). Fix needs a plan + CEO YES: set a real secret (changes every server-made key; clients get a new config on the next connect), then remove the fallback (fail closed). Never remove the fallback before the secret is set. Report: memory/departments/security/audits/2026-10-11/REPORT-slice2-backend.md",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-10-11T03:38:31Z",
       "createdDate": "2026-10-11",
       "completedDate": null,
       "taskRef": "xd-1422",
       "dueBy": "2026-10-14T00:00:00Z",
-      "needsRelease": false
+      "needsRelease": false,
+      "blocker": "CEO decision on CEO-card row 241 (set a real key secret: every server-made key changes).",
+      "notes": "[BACKEND run 2026-10-11 0415, scheduled, unattended, 2026-10-11T04:41:49Z] MEASURED 04:3xZ (production, read-only, nothing printed): the fallback string is the same in OptimizedVpnServerService, VpnServerService, RadiusAuthController and WireGuardUsageSyncService (length 21); production has no WireGuard__Secret. WireGuardPeerUsages: 1,248 of 1,346 rows carry the server-made (deterministic) key, 198 users - mostly history; last 30 days 269 of 318 rows; last 7 days 3 of 28 rows = 1 user (account made 9 Oct, not a caspervpn.com address, platform not recorded, 6 connects, last 9 Oct 18:11Z). So almost every live peer today uses a key the app made itself, and setting a real secret would touch about 1 user a week. PLAN (after the CEO's yes): (1) dev first - set WireGuard__Secret on the dev API, prove a server-made config still connects on a dev node and that a client-made key is untouched; (2) production - set the secret in .env (via deploy_api.sh, never by hand), the few server-made peers get a new key on their next connect; (3) only then remove the fallback string (fail closed: refuse to make a server key without a secret), with a test. Never remove the fallback before the secret is set. Plan + DECISION row 241."
     },
     {
       "id": "xd-1778",
@@ -56187,6 +56221,30 @@
       "completedDate": null,
       "handoffTo": "[QA]",
       "handoffNote": "QA: re-run the grep in Verify and one IR-like test (region IR probe account) on dev"
+    },
+    {
+      "id": "xd-1794",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: Test on dev: api/ai/* now needs an admin sign-in (xd-1776), development 9f62fee",
+      "description": "[BACKEND run 2026-10-11 0415] development 9f62fee (xd-1776, security audit xd-1422 slice 2 F1). What changed: [Authorize(Roles = \"Admin,SuperAdmin\")] on AIController (api/ai/*, 13 endpoints that answered with no sign-in). Build proof (main server): 0 errors, suite 344/344, AIControllerAuthTests 2/2, CONTROL attribute removed -> 1/2 fail. Before (04:24:55Z, no token): dev /api/ai/threats/recent 200, /threats/statistics 200, /analytics 200; production /api/ai/threats/recent 200; control /api/user/devices 401. TEST ON DEV after the deploy of 9f62fee: (1) no token -> /api/ai/threats/recent, /threats/statistics, /analytics, /privacy/score/<any guid>, POST /threats/report -> 401; (2) a normal user token -> 403; (3) an admin token -> 200 on GET /api/ai/threats/statistics; (4) control /api/health 200. Clients: 0 references to api/ai in ios-app-v2, android, admin-panel-react/src, website, desktop (grep on the Mac clone 04:2xZ), so no app breaks. Then the CEO-card READY TO SHIP row. DEV LIVE 04:39Z (dev API recreated with 9f62fee): no token /api/ai/threats/recent, /threats/statistics, /analytics, /privacy/score/<guid>, POST /threats/report -> 401 (were 200 at 04:24Z); /api/health 200; control production /api/ai/threats/recent still 200.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-11T04:41:53Z",
+      "createdDate": "2026-10-11",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1795",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: [QA re-check] security-lockdown-p1 AC22 (IKEv2 bytes): byte path works; the 7-day window had no real IKEv2 traffic",
+      "description": "[BACKEND run 2026-10-11 0415] xd-1768 measured - the IKEv2 byte path WORKS; the 7-day window simply had no real IKEv2 traffic. Evidence (main server): /var/log/freeradius/acct-forward.log since 25 Sep: 1,561 records, all http=200; 182 records with total>0, newest 29 Sep 12:39Z (a real session, Interim-Update -> Stop, total 27,551,878 bytes); users in that log: claude-dev (probe) 1,378 records, one real account 177, kasperads2 6. Detail files from the last 7 days: 0 records with Acct-Input/Output-Octets > 0. ConnectionLogs IKEv2 last 30 d: 695 rows, 6 with bytes (newest 28 Sep); last 7 d: 306 rows, median session 0.38 s = the probe that connects and disconnects at once. So AC22's IKEv2 leg cannot be passed from the table alone. RE-CHECK: connect IKEv2 from a real device (or the probe with traffic, e.g. curl a 5 MB file through the tunnel), disconnect, then: tail /var/log/freeradius/acct-forward.log -> a Stop with total>0 http=200, and SELECT \"BytesUploaded\",\"BytesDownloaded\" FROM \"ConnectionLogs\" WHERE \"Protocol\"=2 ORDER BY \"ConnectedAt\" DESC LIMIT 1 -> > 0. OpenVPN: 2 rows in 7 d, one staff account - same test needed.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-11T04:41:53Z",
+      "createdDate": "2026-10-11",
+      "completedDate": null
     }
   ],
   "importantNotes": [
