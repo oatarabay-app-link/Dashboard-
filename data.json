@@ -14285,13 +14285,15 @@
         },
         {
           "test": "READY TO SHIP \u2014 tell the team within the hour when a VPN server drops out of the list users can pick \u00b7 why: on 1 Oct Paris was switched off by the server watch and nobody was told, so the website, store text and social posts kept the old server count \u00b7 tested: development 4e8d8823e (one small check script + its timer line); run read-only on the main server: with nothing changed it stays silent, and when told 'Paris was up last time' it would send exactly one alert naming Paris \u00b7 rollback: delete the timer file; nothing else changes \u00b7 CEO: say yes or no",
-          "met": false,
+          "met": true,
           "passed": false,
-          "verifiedBy": "none",
+          "verifiedBy": "verified",
           "addedAt": "2026-10-11T21:30:25Z",
           "addedBy": "[DEVOPS] devops run 1011g",
           "verify": "main server: ls /etc/cron.d/fleet-rotation-guard; md5 /opt/caspervpn/fleet_rotation_guard.py = git production copy; tail -1 /var/log/fleet-rotation-guard.log shows a run < 20 min old with servers=13",
-          "evidence": "[DEVOPS run 2026-10-11 g, scheduled, unattended, 2026-10-11T21:30:25Z] prepared, not installed (xd-1701). Dry runs: control 0 alerts; simulated Paris drop 1 alert."
+          "evidence": "[CEO YES 2026-10-11] 'yes' (Cowork, devops run 1011g follow-up, 2026-10-11T21:49:09Z). Install after QA dev check xd-1808. || [DEVOPS run 2026-10-11 g, scheduled, unattended, 2026-10-11T21:30:25Z] prepared, not installed (xd-1701). Dry runs: control 0 alerts; simulated Paris drop 1 alert.",
+          "verifiedByRaw": "ceo",
+          "verifiedDate": "2026-10-11"
         },
         {
           "test": "READY TO SHIP \u2014 give people in Iran a second way in when hidden mode fails at once \u00b7 why: in 8\u201311 Oct both Iran users who tried hidden mode failed within 2 seconds on 3 servers and never connected; the server kept giving them the same blocked road (through Cloudflare) \u00b7 what the ship does: after a fast failure, and only for Iran, the next try connects straight to our server instead of through Cloudflare; after 30 minutes it tries Cloudflare again \u00b7 tested: all 355 checks pass, 6 new ones, and one fails if the rule is broken on purpose; it is ON on the test server now; QA checks it there next \u00b7 risk: the straight road shows our server's address to the censor, so that server could get blocked in Iran (it does not affect other countries) \u00b7 rollback: one setting turns it off without a new version \u00b7 advice: yes \u2014 today Iran gets 0 connections, so there is nothing to lose there",
@@ -55168,7 +55170,7 @@
       "completedDate": null,
       "taskRef": "public-fleet-count-guard",
       "dueBy": "2026-10-17T22:10:29Z",
-      "blocker": "Needs CEO YES on the new ceo-action-backlog READY TO SHIP row (install = cron on the main server); QA dev check first",
+      "blocker": "CEO YES 2026-10-11 (row 243). Next devops run: install after QA xd-1808 passes on dev (cp script to /opt/caspervpn + cron.d), then verify live and hand to QA.",
       "notes": "[DEVOPS run 2026-10-11 g, scheduled, unattended, 2026-10-11T21:30:25Z] Prepared on development 7de529f65 + 4e8d8823e: infrastructure/scripts/fleet_rotation_guard.py (every 15 min: SELECT Id/Name/IsActive/AutoDisabled from VpnServers, compare with last snapshot, IsActive true->false -> one Alertmanager alert VpnServerLeftRotation severity=warning -> existing Telegram + mail webhooks, naming the node + surfaces to re-check; false->true logged only; first run = baseline) + fleet-rotation-guard.cron. Dry runs on the main server (copy /root/reports/devops1011g/, md5 787d2879 = git): T1 no state -> baseline, would_send 0; T2 CONTROL state=now -> left [], would_send 0; T3 state with Paris up -> left ['Paris'], would_send 1. Nothing installed, no alert posted, no DB write (13 rows, 11 active). || ",
       "category": "growth",
       "ageDays": 1,
@@ -57277,6 +57279,18 @@
       "status": "pending",
       "priority": "P3",
       "createdAt": "2026-10-11T21:46:25Z",
+      "createdDate": "2026-10-11",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1821",
+      "from": "[CEO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CEO: CEO YES 11 Oct (row 243): install the server-leaves-rotation alert (xd-1701)",
+      "description": "Omar said yes 2026-10-11 ~21:48Z. After QA xd-1808 passes on dev: cherry-pick development 7de529f65 + 4e8d8823e to production under the lock; on the main server cp infrastructure/scripts/fleet_rotation_guard.py /opt/caspervpn/ and fleet-rotation-guard.cron /etc/cron.d/fleet-rotation-guard; first run = baseline (no alert). Verify: /var/log/fleet-rotation-guard.log line <20 min old, servers=13, md5 = git. Then -> [QA] live check. Rollback: rm /etc/cron.d/fleet-rotation-guard.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-11T21:49:14Z",
       "createdDate": "2026-10-11",
       "completedDate": null
     }
