@@ -7136,14 +7136,16 @@
           "passed": false,
           "verifiedBy": "none",
           "verifiedAt": "2026-02-25T20:30:00Z",
-          "evidence": "[NOT LIVE] QA 2026-09-29 sweep: There is no guest mode - sign-up or login is required. | was: LoginView shows after OnboardingContainerView. User can login, register, or skip (Apple Sign In, Google). Guest mode implicit via skip.",
+          "evidence": "[APPS run 2026-10-11 f 2026-10-11T05:10:57Z] NOT LIVE, deferred to 2026-12: there is no guest mode; the app needs an account. Code ios/68 3d5a40ec0 LoginView.swift: the only skip is 'Skip for Now' on the VPN-permission page (line 542, onSkip line 316 'Skip VPN permission but still authenticate'). Building guest mode is a [PRODUCT] call (accounts are how trials, devices and support work), not an iOS bug. | was: [NOT LIVE] QA 2026-09-29 sweep: There is no guest mode - sign-up or login is required. | was: LoginView shows after OnboardingContainerView. User can login, register, or skip (Apple Sign In, Google). Guest mode implicit via skip.",
           "met": false,
           "verifiedDate": "2026-09-29",
           "verifiedByRaw": "qa-sweep-2026-09-29-not_live",
           "qaVerdict": "NOT LIVE",
           "qaDate": "2026-09-29",
           "verify": "code",
-          "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored"
+          "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored",
+          "plannedMonth": "2026-12",
+          "deferReason": "guest mode not built; needs a PRODUCT decision"
         },
         {
           "test": "Onboarding shown only once per device \u2014 returning users skip directly to home",
@@ -8807,9 +8809,10 @@
           "verifiedBy": "none",
           "qaVerdict": "BLOCKED",
           "qaDate": "2026-09-29",
-          "evidence": "[BLOCKED] QA 2026-09-29 sweep: No real purchase yet; needs one on a phone.",
+          "evidence": "[APPS run 2026-10-11 f 2026-10-11T05:10:57Z] BLOCKED, re-measured: prod DB read-only (BEGIN READ ONLY, casper_prod/caspervpn) 05:0xZ: DedicatedIps has 2 rows, 0 allocated to a user (AllocatedToUserId null on both; Status 0 and 3); DedicatedIpTokens 2. No real dedicated-IP purchase exists, so purchase -> activation -> connect cannot be run. control: Users 598, ConnectionLogs 86 in 24 h, so the query path works. | was: [BLOCKED] QA 2026-09-29 sweep: No real purchase yet; needs one on a phone.",
           "verify": "phone + purchase",
-          "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored"
+          "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored",
+          "blocker": "CEO/QA: one real (or TestFlight sandbox) dedicated-IP purchase on a phone; nothing to build first"
         },
         {
           "test": "iOS: Remove 'COMING SOON' gate in EnhancedSettingsView (xd-429 reversal)",
@@ -9663,12 +9666,13 @@
           "passed": false,
           "verifiedBy": "none",
           "verifiedDate": "2026-09-29",
-          "evidence": "[QA 2026-10-11 f, scheduled, 2026-10-11T05:10:23Z] FAIL - re-measured 05:1xZ: production UserDeviceTokens = 0 - no ticket_reply push can be delivered (fix path CEO row 223 / xd-1738). || [FAIL] QA 2026-09-29 sweep: Cannot happen in production: no device has a push token (UserDeviceTokens = 0), so no ticket_reply push is ever delivered. | was: commit ca296315",
+          "evidence": "[APPS run 2026-10-11 f 2026-10-11T05:10:57Z] BLOCKED on xd-1158, re-measured: prod DB read-only (BEGIN READ ONLY, casper_prod/caspervpn) 05:0xZ: UserDeviceTokens 0 rows ever, 0 in 24 h (control: Users 598, ConnectionLogs 86 in 24 h, so the query path works). Prod API log, last 6 h: exactly ONE POST /api/devices/register, 01:08:54Z -> 400 (build 68b, the 'Token field is required' bug); ZERO register calls after build 68c was installed at 01:17Z (control: 134 /api/auth lines in the same 6 h). So no device can receive a ticket_reply push yet. Hypothesis (not measured): the CEO has not opened 68c signed-in since, or 68c does not re-send the token it already got. | was: [QA 2026-10-11 f, scheduled, 2026-10-11T05:10:23Z] FAIL - re-measured 05:1xZ: production UserDeviceTokens = 0 - no ticket_reply push can be delivered (fix path CEO row 223 / xd-1738). || [FAIL] QA 2026-09-29 sweep: Cannot happen in production: no device has a push token (UserDeviceTokens = 0), so no",
           "verifiedByRaw": "qa-sweep-2026-09-29-fail",
           "qaVerdict": "FAIL",
           "qaDate": "2026-10-11",
           "verify": "psql",
-          "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored"
+          "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored",
+          "blocker": "xd-1158 [IOS]: prove register 200 + a UserDeviceTokens row on build 68c (CEO phone, open the app signed in); then QA re-runs this row"
         },
         {
           "test": "ResilientMessage wrapper prevents silent-drop on decode error (xd-422)",
@@ -14666,11 +14670,12 @@
           "verifiedBy": "none",
           "qaVerdict": "NOT REACHED",
           "qaDate": "2026-09-29",
-          "evidence": "[NOT REACHED] QA 2026-09-29 sweep: Root cause not found yet.",
+          "evidence": "[APPS run 2026-10-11 f 2026-10-11T05:10:57Z] BLOCKED, not re-investigated: root cause still not found (no new capture since QA 2026-09-29). Code check ios/68 3d5a40ec0: CasperCloak over Double VPN is still offered in the app (MultiHopView.swift:648-674, 768-783), so the row stays open. Needs a phone connected CC-over-Double-VPN while [DEVOPS] captures on the entry relay. | was: [NOT REACHED] QA 2026-09-29 sweep: Root cause not found yet.",
           "verify": "board",
           "passed": false,
           "verifiedDate": "2026-09-29",
-          "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored"
+          "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored",
+          "blocker": "[DEVOPS] + a phone on CasperCloak over Double VPN at the same time (CEO/QA device); unattended run has no device"
         },
         {
           "test": "CC-over-MH connects successfully, device-tested from a restricted region (served=caspercloak outcome=success)",
@@ -14679,9 +14684,10 @@
           "verifiedBy": "none",
           "qaVerdict": "BLOCKED",
           "qaDate": "2026-09-29",
-          "evidence": "[BLOCKED] QA 2026-09-29 sweep: Needs a device test from a restricted region.",
+          "evidence": "[APPS run 2026-10-11 f 2026-10-11T05:10:57Z] BLOCKED: needs a device test from a restricted region (served=caspercloak, outcome=success). No change since QA 2026-09-29; build 68 is on the CEO phone and can be used for it. | was: [BLOCKED] QA 2026-09-29 sweep: Needs a device test from a restricted region.",
           "verify": "phone in region",
-          "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored"
+          "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored",
+          "blocker": "CEO/QA: phone in a restricted region (or the CEO's blocking-network test) on build 68, Double VPN + CasperCloak"
         },
         {
           "test": "FAIL-CLOSED: restricted-region user whose CC-MH fails is NOT silently given plain WireGuard (warn / block / retry CC), no silent stealth drop",
@@ -14703,11 +14709,12 @@
           "verifiedBy": "none",
           "qaVerdict": "NOT LIVE",
           "qaDate": "2026-10-11",
-          "evidence": "[QA 2026-10-11 f, scheduled, 2026-10-11T05:10:23Z] NOT LIVE - re-measured 05:1xZ: codegraph query \"alert when asked caspercloak served wireguard\" names only MultiHopProtocolServedDto (asked/served recorded) + DiagnosticsController/MultiHopController; git grep production (08a7d07bf) finds no alert on the asked!=served rate. || [NOT LIVE] QA 2026-09-29 sweep: No alarm on 'asked CasperCloak, served WireGuard' yet.",
+          "evidence": "[APPS run 2026-10-11 f 2026-10-11T05:10:57Z] NOT LIVE, re-measured: prod DB read-only (BEGIN READ ONLY, casper_prod/caspervpn) 05:0xZ: ConnectionLogs columns = Id,UserId,ServerId,ConnectedAt,DisconnectedAt,Bytes*,Device*,Status,DisconnectReason,Protocol,SessionId,LastSeenAt,DeviceId,AppVersion,BuildNumber,NetworkType,StageReached,StageTimingsJson - there is NO 'asked for' protocol, only the served one, so an 'asked CasperCloak, served WireGuard' alarm cannot be computed from it. ConnectFailureEvents exists (failures only). | was: [QA 2026-10-11 f, scheduled, 2026-10-11T05:10:23Z] NOT LIVE - re-measured 05:1xZ: codegraph query \"alert when asked caspercloak served wireguard\" names only MultiHopProtocolServedDto (asked/served recorded) + DiagnosticsController/MultiHopController; git grep production (08a7d07bf) finds no alert on",
           "verify": "board",
           "passed": false,
           "verifiedDate": "2026-09-29",
-          "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored"
+          "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored",
+          "blocker": "[BACKEND]: store the protocol the user asked for next to the served one (ConnectionLogs) before [DEVOPS] can alarm the rate"
         }
       ],
       "progress": 0,
@@ -14747,11 +14754,12 @@
           "verifiedBy": "none",
           "qaVerdict": "NOT REACHED",
           "qaDate": "2026-09-29",
-          "evidence": "[NOT REACHED] QA 2026-09-29 sweep: Root cause not found yet.",
+          "evidence": "[APPS run 2026-10-11 f 2026-10-11T05:10:57Z] BLOCKED, not re-investigated: root cause of the inner WireGuard handshake failure over CasperCloak still not found (no new capture since QA 2026-09-29). Build 68 (27g hidden-mode fixes) is on the CEO phone; a 30-min background run with the console captured (iOS skill: console first) is the next measurement. | was: [NOT REACHED] QA 2026-09-29 sweep: Root cause not found yet.",
           "verify": "board",
           "passed": false,
           "verifiedDate": "2026-09-29",
-          "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored"
+          "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored",
+          "blocker": "CEO/QA phone run on build 68 with the device console captured; [DEVOPS] node-side counters at the same time"
         },
         {
           "test": "Honor autoConnect=false: do not force-arm on-demand for a user who opted out (log shows the contradiction) \u2014 RESOLVED AS NOT-A-BUG (verified): 'autoConnectEnabled' (opt-IN, logged as autoConnect=false) is a DIFFERENT flag from 'autoConnectOptOut' (opt-OUT). The restricted-region arm is gated on !autoConnectOptOut BY DESIGN and is ESCAPABLE via Settings->Background Auto-Connect. On-demand is REQUIRED for bg recovery \u2014 changing it would break recovery. No change made.",
@@ -14775,7 +14783,7 @@
           "verifiedBy": "none",
           "qaVerdict": "PARTIAL",
           "qaDate": "2026-10-11",
-          "evidence": "[QA 2026-10-11 f, scheduled, 2026-10-11T05:10:23Z] PARTIAL - re-measured 05:1xZ: xd-1115 completed 3 Oct (92 peers removed once); ConnectionLogs still open after > 1 day = 2 (1 in the last 8 days) of 3 open - orphan sessions are being closed; the peer-reaper half is not re-measured on the nodes this run. || [BLOCKED] QA 2026-09-29 sweep: Waits on xd-1115 (peer reaper).",
+          "evidence": "[APPS run 2026-10-11 f 2026-10-11T05:10:57Z] READY FOR QA, re-measured: (1) peer reap: xd-1115 completed by [DEVOPS] 2026-10-03 (92 abandoned peers removed on 10 nodes, 28 held by the QA rule). (2) orphan sessions: prod DB read-only (BEGIN READ ONLY, casper_prod/caspervpn) 05:0xZ: ConnectionLogs with no DisconnectedAt = 3, of which 0 are older than 24 h and 3 were seen in the last hour (live sessions); 86 closed in 24 h. So no orphan ConnectionLogs right now. NOT measured this run: the abandoned-peer share per node today (fleet) - QA re-runs it. | was: [QA 2026-10-11 f, scheduled, 2026-10-11T05:10:23Z] PARTIAL - re-measured 05:1xZ: xd-1115 completed 3 Oct (92 peers removed once); ConnectionLogs still open after > 1 day = 2 (1 in the last 8 days) of 3 open - orphan sessions are being closed; the peer-reaper half is not re-measured on the nodes this",
           "verify": "xd-1115",
           "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored"
         },
@@ -14786,9 +14794,10 @@
           "verifiedBy": "none",
           "qaVerdict": "BLOCKED",
           "qaDate": "2026-09-29",
-          "evidence": "[BLOCKED] QA 2026-09-29 sweep: 30-minute background test needs a phone.",
+          "evidence": "[APPS run 2026-10-11 f 2026-10-11T05:10:57Z] BLOCKED: 30+ min background with CasperCloak needs a phone. Build 68 (27g) on the CEO phone is the build to test; no change since QA 2026-09-29. | was: [BLOCKED] QA 2026-09-29 sweep: 30-minute background test needs a phone.",
           "verify": "phone run",
-          "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored"
+          "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored",
+          "blocker": "CEO/QA: 30-minute background test on build 68, CasperCloak, then check the phone still has internet"
         }
       ],
       "progress": 0,
@@ -17840,9 +17849,10 @@
           "test": "On a real iPad (or the iPad simulator) the sidebar renders with its sections and a connect from the Home destination works",
           "met": false,
           "verifiedBy": "none",
-          "evidence": "[CEO office 2026-09-30 22:06Z (01:06 Beirut 1 Oct, hourly run)] device-bound \u2014 handed to [QA]",
+          "evidence": "[APPS run 2026-10-11 f 2026-10-11T05:10:57Z] BLOCKED: needs an iPad simulator render or a real iPad; this run has no Xcode. The CEO's build command for 4.3.1 build 66 already has an iPad simulator render step (CEO card row 187). Code present on ios/68: ServerListView_iPad.swift, SettingsView_iPad.swift. | was: [CEO office 2026-09-30 22:06Z (01:06 Beirut 1 Oct, hourly run)] device-bound \u2014 handed to [QA]",
           "verify": "simulator: xcrun simctl boot 'iPad Pro' + launch + screenshot (qa skill \u00a716) or a real iPad",
-          "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored"
+          "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored",
+          "blocker": "CEO Mac: iPad simulator render (build command with the iPad step, CEO card row 187) or a real iPad; then QA"
         }
       ],
       "progress": 0,
@@ -19191,7 +19201,7 @@
           "met": false,
           "passed": false,
           "verifiedBy": "none",
-          "evidence": ""
+          "evidence": "[APPS run 2026-10-11 f 2026-10-11T05:10:57Z] SUPERSEDED - build 65 was never uploaded and is replaced by builds 66, 67 and 68 (build-67-gaps: build 68 installed on the CEO phone 2026-10-11 01:17Z). The TestFlight upload row now belongs to the newest build. Close with the CEO's yes ('close superseded')."
         }
       ],
       "dueBy": "2026-10-09T20:03:23Z",
@@ -43614,7 +43624,7 @@
       "from": "[QA]",
       "to": "[IOS]",
       "title": "Handoff from QA: [QA] Push notifications never register - 0 device tokens ever saved, so support replies never notify anyone",
-      "description": "[CEO live 2026-10-11 2026-10-11T01:20:10Z] BUILD 68 ON THE CEO PHONE: branch ios/68 3d5a40ec0 (marker 68c = 27f + 27g + 68b + 68c). _ios/build68.log: BUILD SUCCEEDED 01:17:17Z; marker 68c 1 / old 0; appex [CC-LIVE] 5; Info 4.3.1 (68); signed entitlement aps-environment 1; installed 01:17:37Z on iPhone 14 Pro. 68b before it (01:08Z): first APNs token EVER on the CEO phone ('APNs device token received'), then POST /api/devices/register -> 400 'The Token field is required' (app sent deviceToken; DeviceController wants token) -> fixed in 68c. NOT PROVEN yet: register 200 + a UserDeviceTokens row (needs the CEO to open the app; console _ios/console-build68.log), a real push (BACKEND APNs config). First 68a Mac build failed (Task<()?,Never> type) -> fixed; then 3 tries to start the build failed because sed/python rewrites left build68.command without its execute bit (Terminal: 'could not be executed because you do not have appropriate access privileges') -> chmod 755. || [CEO live 2026-10-11 2026-10-11T00:57:03Z] App half in build 68: ios/68 515189f14 (marker 68b = 27f + 27g + 68b; _ios/build68.command builds + installs; first Mac build of 68a failed on 1 Swift type error, fixed in 68b, NOT yet rebuilt - CEO to double-click build68.command). Server half: xd-1738. || [CEO office 2026-09-30] dueBy set by the 7-day rule (xdPolicy: createdAt + 7 d; already past \u2192 7 Oct). QA 2026-09-29, production: the UserDeviceTokens table has 0 rows - ever. The app asks for push (AppDelegate.swift:193-201 registerForRemoteNotifications) and passes the token to PushNotificationManager (AppDelegate.swift:72), but nothing is stored by the backend. Result: notifications-system #1 FAIL, live-support-chat #7 FAIL, apns-deep-link #5 FAIL - a support reply never reaches the user's phone. The backend half (no APNs settings in the API) is on [BACKEND] in a sibling ticket created in the same write. ASK: find where the token is lost (permission prompt never shown? request never sent? refused?), fix it, and hand back to [QA] with the build number. QA then checks UserDeviceTokens > 0 and one ticket-reply push on the CEO's phone.\n\n--- [CTO] 2026-09-30 \u2014 MEASURED CAUSE LEAD ---\nThe CEO's phone log (export 2026-10-01 00:32 Beirut) says: 'APNs registration failed: no valid \"aps-environment\" entitlement string found for application', then 'PushNotificationManager: no APNs token available \u2014 skipping register'. The repo matches it: ios-app-v2/CasperVPN/CasperVPN/CasperVPN.entitlements (the file every app configuration signs with, pbxproj CODE_SIGN_ENTITLEMENTS x4) has NO aps-environment key. Without it iOS never gives the app a push token, so 0 tokens can ever be saved. Caveat: the phone ran an Xcode-installed build; check that the App Store build is signed with the same file (it is the same CODE_SIGN_ENTITLEMENTS). Fix = Push Notifications capability on the App ID + aps-environment=production in the entitlements + a new build. | [APPS run 2026-10-07 s] 7-day rule: due 2026-10-07 -> 2026-10-14 (waits for the CEO action (Push Notifications capability on the App ID) + a new build; apps runs cannot do it unattended).",
+      "description": "[APPS run 2026-10-11 f 2026-10-11T05:10:57Z] MEASURED prod: UserDeviceTokens 0 rows; API log last 6 h has ONE POST /api/devices/register (01:08:54Z, 400 = build 68b) and NONE after 68c was installed 01:17Z (control 134 /api/auth lines). Next: CEO opens the 68c app signed in and checks for 'APNs device token received' + register 200 in _ios/console-build68.log; if no call appears, 68c does not re-send a token it already has (hypothesis). || [CEO live 2026-10-11 2026-10-11T01:20:10Z] BUILD 68 ON THE CEO PHONE: branch ios/68 3d5a40ec0 (marker 68c = 27f + 27g + 68b + 68c). _ios/build68.log: BUILD SUCCEEDED 01:17:17Z; marker 68c 1 / old 0; appex [CC-LIVE] 5; Info 4.3.1 (68); signed entitlement aps-environment 1; installed 01:17:37Z on iPhone 14 Pro. 68b before it (01:08Z): first APNs token EVER on the CEO phone ('APNs device token received'), then POST /api/devices/register -> 400 'The Token field is required' (app sent deviceToken; DeviceController wants token) -> fixed in 68c. NOT PROVEN yet: register 200 + a UserDeviceTokens row (needs the CEO to open the app; console _ios/console-build68.log), a real push (BACKEND APNs config). First 68a Mac build failed (Task<()?,Never> type) -> fixed; then 3 tries to start the build failed because sed/python rewrites left build68.command without its execute bit (Terminal: 'could not be executed because you do not have appropriate access privileges') -> chmod 755. || [CEO live 2026-10-11 2026-10-11T00:57:03Z] App half in build 68: ios/68 515189f14 (marker 68b = 27f + 27g + 68b; _ios/build68.command builds + installs; first Mac build of 68a failed on 1 Swift type error, fixed in 68b, NOT yet rebuilt - CEO to double-click build68.command). Server half: xd-1738. || [CEO office 2026-09-30] dueBy set by the 7-day rule (xdPolicy: createdAt + 7 d; already past \u2192 7 Oct). QA 2026-09-29, production: the UserDeviceTokens table has 0 rows - ever. The app asks for push (AppDelegate.swift:193-201 registerForRemoteNotifications) and passes the token to PushNotificationManager (AppDelegate.swift:72), but nothing is stored by the backend. Result: notifications-system #1 FAIL, live-support-chat #7 FAIL, apns-deep-link #5 FAIL - a support reply never reaches the user's phone. The backend half (no APNs settings in the API) is on [BACKEND] in a sibling ticket created in the same write. ASK: find where the token is lost (permission prompt never shown? request never sent? refused?), fix it, and hand back to [QA] with the build number. QA then checks UserDeviceTokens > 0 and one ticket-reply push on the CEO's phone.\n\n--- [CTO] 2026-09-30 \u2014 MEASURED CAUSE LEAD ---\nThe CEO's phone log (export 2026-10-01 00:32 Beirut) says: 'APNs registration failed: no valid \"aps-environment\" entitlement string found for application', then 'PushNotificationManager: no APNs token available \u2014 skipping register'. The repo matches it: ios-app-v2/CasperVPN/CasperVPN/CasperVPN.entitlements (the file every app configuration signs with, pbxproj CODE_SIGN_ENTITLEMENTS x4) has NO aps-environment key. Without it iOS never gives the app a push token, so 0 tokens can ever be saved. Caveat: the phone ran an Xcode-installed build; check that the App Store build is signed with the same file (it is the same CODE_SIGN_ENTITLEMENTS). Fix = Push Notifications capability on the App ID + aps-environment=production in the entitlements + a new build. | [APPS run 2026-10-07 s] 7-day rule: due 2026-10-07 -> 2026-10-14 (waits for the CEO action (Push Notifications capability on the App ID) + a new build; apps runs cannot do it unattended).",
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-09-29T22:11:52Z",
@@ -56285,6 +56295,23 @@
       "createdAt": "2026-10-11T05:10:30Z",
       "createdDate": "2026-10-11",
       "completedDate": null
+    },
+    {
+      "id": "xd-1798",
+      "from": "[APPS]",
+      "to": "[QA]",
+      "title": "Handoff from APPS: ios-ondemand-halfopen-tunnel-freeze row 3 - re-check peer reap + orphan sessions and tick if they pass",
+      "description": "Row 3 (Reap abandoned WG peers + close orphan ConnectionLogs). Measured 2026-10-11 05:0xZ, prod DB read-only: ConnectionLogs open (no DisconnectedAt) = 3, older than 24 h = 0, seen in the last hour = 3; closed in 24 h = 86. Peer reap: xd-1115 completed by DEVOPS 2026-10-03 (92 removed on 10 nodes, 28 held). Verify: psql SELECT count(*) FROM \"ConnectionLogs\" WHERE \"DisconnectedAt\" IS NULL AND COALESCE(\"LastSeenAt\",\"ConnectedAt\") < now()-interval '24 hours' -> expect 0; plus the abandoned-peer share per node (wg show on the fleet, handshake 0 + 0 bytes) -> QA decides the pass line. Not measured by APPS: the per-node peer share.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-11T05:11:08Z",
+      "createdDate": "2026-10-11",
+      "completedDate": null,
+      "taskRef": "ios-ondemand-halfopen-tunnel-freeze",
+      "criteriaIdx": [
+        3
+      ],
+      "dueBy": "2026-10-18T05:11:08Z"
     }
   ],
   "importantNotes": [
