@@ -57800,6 +57800,30 @@
       "createdAt": "2026-10-11T22:46:23Z",
       "createdDate": "2026-10-11",
       "completedDate": null
+    },
+    {
+      "id": "xd-1852",
+      "from": "[CTO]",
+      "to": "[IOS]",
+      "title": "Handoff from CTO: P0 hidden mode: liveness must ignore cover frames - a trickling stalled link looks alive (CEO 3 reports tonight)",
+      "description": "MEASURED 2026-10-11 23:01-23:03Z (CEO bug reports 67153498 22:56:39Z + ae37791b 23:01:33Z, build 68, D\u00fcsseldorf, Lebanon cellular): phone tunnel rx 22:59:11 5,024,192 -> 23:00:11 5,041,340 (+17 KB/min) while tx kept growing; WG handshake age 119 -> 159 -> 172 s; app ZOMBIE-PROBE 2x timeout 23:00:44/51 -> verdict overruled (xd-1137, handshake < 180 s); [CC-LIVE] never fired. Relay side (ss -tni on 91.194.84.79 at 23:03:07Z, the CEO's TCP 91.197.47.167:37073): lastrcv 105 s, lastack 100 s, Send-Q 115,806 B, unacked 231 segs, rto 6.5 s, rtt 1154 ms, bytes_retrans 120 KB = the TCP path to the phone is stalled both ways but still trickles. Relay code: websockets.serve(ping_interval=None, ...) and no TCP_USER_TIMEOUT -> a stuck socket is never closed by the server. Earlier the same night 22:53:39Z cellular->wifi switch: two 11.9 s dial timeouts ('Network is unreachable' on en0) then clean restart at 22:56:09Z (2.5 min without internet). WHY 27d/27e misses it (code, b68-delta Obfs4Transport livenessTick): any inbound frame counts as alive (rule 3) and the relay's cover frames (0.1-1 s) plus TCP retransmits trickle in, so lastInboundAt never ages 15 s -> no ping -> no miss. Hypothesis for the root of the stall: mobile path congestion/throttling of the long TCP flow (not proven). DO (app, build 68d): (1) count only REAL inbound (non-cover WG data) for liveness and for 'rule 3'; (2) if real inbound < 2 KB in 20 s while outbound > 0, send a ping and on 2 misses run the #52 resume; (3) do not overrule two failed foreground probes when the WG handshake is older than 120 s - resume instead; (4) cellular<->wifi switch: shorten the 11.9 s dial timeout and dial the new interface at once. Render + device test on the CEO phone; supersedes the open part of xd-1834. Then [QA].",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-10-11T23:04:29Z",
+      "createdDate": "2026-10-11",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1853",
+      "from": "[CTO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CTO: P0 hidden-mode relay: close stuck TCP sockets (TCP_USER_TIMEOUT ~20 s + WS ping 20 s) so phones resume instead of hanging",
+      "description": "MEASURED 2026-10-11 23:01-23:03Z (CEO bug reports 67153498 22:56:39Z + ae37791b 23:01:33Z, build 68, D\u00fcsseldorf, Lebanon cellular): phone tunnel rx 22:59:11 5,024,192 -> 23:00:11 5,041,340 (+17 KB/min) while tx kept growing; WG handshake age 119 -> 159 -> 172 s; app ZOMBIE-PROBE 2x timeout 23:00:44/51 -> verdict overruled (xd-1137, handshake < 180 s); [CC-LIVE] never fired. Relay side (ss -tni on 91.194.84.79 at 23:03:07Z, the CEO's TCP 91.197.47.167:37073): lastrcv 105 s, lastack 100 s, Send-Q 115,806 B, unacked 231 segs, rto 6.5 s, rtt 1154 ms, bytes_retrans 120 KB = the TCP path to the phone is stalled both ways but still trickles. Relay code: websockets.serve(ping_interval=None, ...) and no TCP_USER_TIMEOUT -> a stuck socket is never closed by the server. Earlier the same night 22:53:39Z cellular->wifi switch: two 11.9 s dial timeouts ('Network is unreachable' on en0) then clean restart at 22:56:09Z (2.5 min without internet). WHY 27d/27e misses it (code, b68-delta Obfs4Transport livenessTick): any inbound frame counts as alive (rule 3) and the relay's cover frames (0.1-1 s) plus TCP retransmits trickle in, so lastInboundAt never ages 15 s -> no ping -> no miss. Hypothesis for the root of the stall: mobile path congestion/throttling of the long TCP flow (not proven). DO (server, helps the App Store app too because its #52 resume already works on a closed socket): in caspercloak_ws.py/relay_ws.py set TCP_USER_TIMEOUT=20000 on accepted sockets and ping_interval=20, ping_timeout=20 (keep the 600 s #52 grace so the phone resumes the same session). Test on Bangkok dev 46.16.129.246 with a phone/emulated stall (tc netem loss 100% for 40 s): socket closed within ~25 s, session resumed. Then add a READY TO SHIP row on the CEO card (fleet-wide, one node first, rollback = restore the file). Then [QA].",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-10-11T23:04:29Z",
+      "createdDate": "2026-10-11",
+      "completedDate": null
     }
   ],
   "importantNotes": [
