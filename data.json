@@ -7522,18 +7522,19 @@
         },
         {
           "criterion": "Automated database migration on deploy",
-          "passed": false,
-          "verifiedBy": "none",
-          "evidence": "[CTO run 2026-10-11 0034, scheduled, 2026-10-11T00:42:41Z] MEASURED, awaiting QA (xd-1734): migrations run automatically at API start on every deploy (Program.cs:569 Database.Migrate()); production __EFMigrationsHistory (read-only) 41 rows, newest 20261009000000_SupportTicketTimestamps = newest file in backend-dotnet-core/Data/Migrations. Not a workflow step - QA may re-word the row. | QA 2026-09-24 FAIL: No workflow references EF migrations / 'database update'. -> [DEVOPS] (or re-word if migrations run at API startup).",
+          "passed": true,
+          "verifiedBy": "tested",
+          "evidence": "[QA 2026-10-11 b, scheduled, 2026-10-11T01:19:27Z] PASS (re-worded per QA 24 Sep: migrations run at API start, not as a workflow step) - production 023f919 backend-dotnet-core/Program.cs:569 dbContext.Database.Migrate(); production __EFMigrationsHistory (read-only 01:0xZ) 41 rows, newest 20261009000000_SupportTicketTimestamps = newest migration file on production (control: the file before it, 20261008000000_ScreenExitAndProbeNulls, is also applied). || [CTO run 2026-10-11 0034, scheduled, 2026-10-11T00:42:41Z] MEASURED, awaiting QA (xd-1734): migrations run automatically at API start on every deploy (Program.cs:569 Database.Migrate()); production __EFMigrationsHistory (read-only) 41 rows, newest 20261009000000_SupportTicketTimestamps = newest file in backend-dotnet-core/Data/Migrations. Not a workflow step - QA may re-word the row. | QA 2026-09-24 FAIL: No workflow references EF migrations / 'database update'. -> [DEVOPS] (or re-word if migrations run at API startup).",
           "verifiedAt": "2026-03-01T14:16:13Z",
-          "met": false,
-          "verifiedDate": "2026-09-24",
-          "verifiedByRaw": "devops",
-          "qaVerdict": "FAIL",
-          "qaDate": "2026-09-24",
+          "met": true,
+          "verifiedDate": "2026-10-11",
+          "verifiedByRaw": "qa",
+          "qaVerdict": "PASS",
+          "qaDate": "2026-10-11",
           "verifiedByPrevious": "self",
           "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored",
-          "test": "Automated database migration on deploy"
+          "test": "Automated database migration on deploy",
+          "verify": "main server: psql caspervpn -Atc 'select count(*),max(\"MigrationId\") from \"__EFMigrationsHistory\"' == newest non-Designer file in git ls-tree origin/production backend-dotnet-core/Data/Migrations/"
         }
       ],
       "xdId": [
@@ -9495,14 +9496,14 @@
         },
         {
           "test": "factory_bootstrap.DEPT_ALIASES has cto + ceo entries",
-          "met": false,
-          "passed": false,
-          "verifiedBy": "none",
-          "verifiedDate": "2026-09-29",
-          "evidence": "[CTO run 2026-10-11 0034, scheduled, 2026-10-11T00:42:41Z] FIXED, awaiting QA (xd-1734): DEPT_ALIASES has 'ceo': ['ceo','ceo-office'] on production 74bebcbb (api_get re-read equal). | [FAIL] QA 2026-09-29: tools/factory_bootstrap.py DEPT_ALIASES (line 640) has 'cto' but no 'ceo' entry (1 of 2). -> [CTO] P3 | was: Pushed both branches",
-          "verifiedByRaw": "qa-sweep-2026-09-29-fail",
-          "qaVerdict": "FAIL",
-          "qaDate": "2026-09-29",
+          "met": true,
+          "passed": true,
+          "verifiedBy": "tested",
+          "verifiedDate": "2026-10-11",
+          "evidence": "[QA 2026-10-11 b, scheduled, 2026-10-11T01:19:27Z] PASS - production 023f919 tools/factory_bootstrap.py:654 '\"ceo\": [\"ceo\", \"ceo-office\"]' (git show on the main server 01:0xZ); the 'cto' entry was already there. || [CTO run 2026-10-11 0034, scheduled, 2026-10-11T00:42:41Z] FIXED, awaiting QA (xd-1734): DEPT_ALIASES has 'ceo': ['ceo','ceo-office'] on production 74bebcbb (api_get re-read equal). | [FAIL] QA 2026-09-29: tools/factory_bootstrap.py DEPT_ALIASES (line 640) has 'cto' but no 'ceo' entry (1 of 2). -> [CTO] P3 | was: Pushed both branches",
+          "verifiedByRaw": "qa",
+          "qaVerdict": "PASS",
+          "qaDate": "2026-10-11",
           "verify": "grep -n '\"ceo\"' tools/factory_bootstrap.py -> an alias entry",
           "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored"
         }
@@ -10595,15 +10596,15 @@
         },
         {
           "test": "Cache-Control: public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400 (CDN-friendly)",
-          "met": false,
-          "verifiedBy": "none",
-          "verifiedDate": "2026-09-29",
-          "verifiedByRaw": "qa-sweep-2026-09-29-fail",
-          "qaVerdict": "FAIL",
-          "qaDate": "2026-09-29",
-          "evidence": "[CTO run 2026-10-11 0034, scheduled, 2026-10-11T00:42:41Z] LIVE NOW MATCHES, awaiting QA (xd-1734): curl -sI https://www.caspervpn.com/og/no-log-vpn -> HTTP/2 200, cache-control: public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400 (single value; was doubled on 29 Sep). | [FAIL] QA 2026-09-29: the live header is 'Cache-Control: public, immutable, no-transform, max-age=31536000, public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400' - the route's value is there, but a second layer adds 'immutable, max-age=31536000' in front, so caches may keep a hero for a year (two conflicting max-age values). -> [WEBSITE] P3: send one Cache-Control value.",
+          "met": true,
+          "verifiedBy": "tested",
+          "verifiedDate": "2026-10-11",
+          "verifiedByRaw": "qa",
+          "qaVerdict": "PASS",
+          "qaDate": "2026-10-11",
+          "evidence": "[QA 2026-10-11 b, scheduled, 2026-10-11T01:19:27Z] PASS - live 01:10Z: curl -sI https://www.caspervpn.com/og/no-log-vpn -> HTTP/2 200 image/png, cache-control 'public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400' (one max-age; the 29 Sep doubled value is gone). || [CTO run 2026-10-11 0034, scheduled, 2026-10-11T00:42:41Z] LIVE NOW MATCHES, awaiting QA (xd-1734): curl -sI https://www.caspervpn.com/og/no-log-vpn -> HTTP/2 200, cache-control: public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400 (single value; was doubled on 29 Sep). | [FAIL] QA 2026-09-29: the live header is 'Cache-Control: public, immutable, no-transform, max-age=31536000, public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400' - the route's value is there, but a second layer adds 'immutable, max-age=31536000' in front, so caches may keep a hero for a year (two conflicting max-age values). -> [WEBSITE] P3: send one Cache-Control value.",
           "verify": "curl -sI https://www.caspervpn.com/og/no-log-vpn | grep -i cache-control -> exactly one max-age",
-          "passed": false,
+          "passed": true,
           "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored"
         },
         {
@@ -12424,7 +12425,7 @@
           "verifiedBy": "none",
           "verifiedByRaw": "none",
           "verifiedDate": null,
-          "evidence": "[QA 2026-10-11 a, scheduled, 2026-10-11T00:11:15Z] PENDING - waits for the first real paid crypto order: website orders since 1 Oct = completed 1 (1 Oct), failed 1, pending 2 (newest 6 Oct) - 00:08Z. | [QA 2026-10-10 t, scheduled, 2026-10-10T22:23:16Z] PENDING - waits for the first real paid crypto order. Re-measured: website orders since 1 Oct = completed 1 (1 Oct), failed 1, pending 2 (newest 6 Oct); transactional_emails kind crypto_receipt = 0. | [CEO office 2026-10-05 06:5xZ (09:5x Beirut, daily run)] still unproven: 0 crypto orders since 1 Oct 16:43Z (website orders 7 d = 12, newest 1 Oct); the receipt mail fires only on a finished order \u2192 waits for the first real one (QA watches transactional_emails). | [PARTIAL] QA 2026-10-04 run c: the live website bundle carries the mail step (route.js contains crypto_receipt; container created 22:05:27Z). The mail itself is proven only by the next real payment: transactional_emails kind crypto_receipt = 0 rows, no crypto order since 1 Oct. | [CTO live chat 2026-10-04 21:5x-22:1xZ (CEO 'all 9')] shipped; see the row text. | [CTO live chat 2026-10-04T21:53:34Z] CEO YES recorded; ship in progress. | [CEO office 2026-10-04 06:2xZ (09:2x Beirut, daily run)] no answer yet (day 2). Board advice unchanged: YES \u2014 one receipt mail per paid crypto order. | [CEO office 2026-10-03 06:2xZ (09:2x Beirut, daily run)] no answer yet. Board advice: YES \u2014 one receipt mail per paid crypto order; your own 1 Oct payment got none.",
+          "evidence": "[QA 2026-10-11 b, scheduled, 2026-10-11T01:19:27Z] PENDING - re-measured 01:1xZ: website crypto orders since 1 Oct = completed 1, failed 1, pending 2 (newest 6 Oct); the only paid crypto Payment is the CEO's own account - still waits for a real paid order. || [QA 2026-10-11 a, scheduled, 2026-10-11T00:11:15Z] PENDING - waits for the first real paid crypto order: website orders since 1 Oct = completed 1 (1 Oct), failed 1, pending 2 (newest 6 Oct) - 00:08Z. | [QA 2026-10-10 t, scheduled, 2026-10-10T22:23:16Z] PENDING - waits for the first real paid crypto order. Re-measured: website orders since 1 Oct = completed 1 (1 Oct), failed 1, pending 2 (newest 6 Oct); transactional_emails kind crypto_receipt = 0. | [CEO office 2026-10-05 06:5xZ (09:5x Beirut, daily run)] still unproven: 0 crypto orders since 1 Oct 16:43Z (website orders 7 d = 12, newest 1 Oct); the receipt mail fires only on a finished order \u2192 waits for the first real one (QA watches transactional_emails). | [PARTIAL] QA 2026-10-04 run c: the live website bundle carries the mail step (route.js contains crypto_receipt; container created 22:05:27Z). The mail itself is proven only by the next real payment: transactional_emails kind crypto_receipt = 0 rows, no crypto order since 1 Oct. | [CTO live chat 2026-10-04 21:5x-22:1xZ (CEO 'all 9')] shipped; see the row text. | [CTO live chat 2026-10-04T21:53:34Z] CEO YES recorded; ship in progress. | [CEO office 2026-10-04 06:2xZ (09:2x Beirut, daily run)] no answer yet (day 2). Board advice unchanged: YES \u2014 one receipt mail per paid crypto order. | [CEO office 2026-10-03 06:2xZ (09:2x Beirut, daily run)] no answer yet. Board advice: YES \u2014 one receipt mail per paid crypto order; your own 1 Oct payment got none.",
           "verify": "CEO card: row reads CEO YES <date> or SHIPPED <date>",
           "qaVerdict": "PENDING",
           "qaDate": "2026-10-11",
@@ -13135,7 +13136,7 @@
           "verifiedDate": null,
           "addedAt": "2026-10-07T21:40:42Z",
           "addedBy": "[CTO] live chat 2026-10-07",
-          "evidence": "[QA 2026-10-11 a, scheduled, 2026-10-11T00:11:15Z] PENDING - waits for a real support message: 0 new SupportTickets since 9 Oct 00:45Z (33 total, newest 9 Oct 00:41Z) - 00:08Z. | [QA 2026-10-10 t, scheduled, 2026-10-10T22:23:16Z] PENDING - waits for a real user's support message. Re-measured: 0 new SupportTickets since 9 Oct 00:45Z; 0 'support-alert' lines in the api log since its 18:14Z recreate. | [ENGINEERING run 2026-10-08 d, 2026-10-09T00:48:44Z] SHIPPED (CEO YES 8 Oct + CEO live OK 9 Oct for the key copy): production ed5dcfb02 = cherry-pick -x of development a37d7513a + ab986afe5 ONLY (9 files; shipped files vs development 0 diff lines). Ship tree checks 00:32-00:38Z: backend 0 errors, 205/205 tests; admin npx tsc --noEmit 0 errors with a control (planted TS2322 -> rc 2, 1 error). Push 00:39:19Z under lock eng-run-1008d; CI runner stopped during the work, restarted 00:47:51Z. Secrets: /opt/caspervpn/secrets/api (uid 1000, 0500) + telegram_bot_token / telegram_chat_id copied file-to-file (0400, non-empty; never printed). D8: deploy brought in the 2 commits only. /root/deploy_api.sh -> DEPLOY DONE OK 00:40:54Z (rollback tag taken by the script); in the container the secrets are readable as uid 1000, 3 TeamAlerts__ env names, DLL 'support-alert' strings 10. Admin rebuilt with the runner stopped (rollback tag of the old admin image 1d4da3721056): bundle main.c5cf7782.js -> main.6c17dc10.js, 'View all notifications' 1, mock 'New user registered' 0, admin / 200. PRODUCTION TEST 00:41:37Z (probe-1789991690@caspervpn.com ticket fb554853, admin token minted in memory): ticket 200 -> admin bell 1 unread 'New support ticket'; log 'support-alert: telegram sent (200)'; 2nd user message -> still 1 (no repeat); admin opens the thread -> 0 unread; ticket closed 00:5xZ after the column fix. Script /root/reports/eng1008d-u4prod.py; logs /root/reports/eng1008d-ship150*.log. -> QA xd-1559. | [CEO 2026-10-09 (2026-10-08T23:57:12Z), engineering run 1008d chat, answered 4 questions] 'Yes, do it (Recommended)' to: the last step copies the alerts bot key from one locked file on the server into another; I never see or print the key. [ENGINEERING run 2026-10-08 d, 2026-10-08T23:57:12Z] CLAIMED: executing now in this live session, one at a time (163 -> 159 -> 164 -> 150). Other runs: do not deploy the API or touch de-3/LA/SG peers until this note says done. | [CEO 2026-10-08 ~02:3x Beirut, CEO office live chat] 'yes to all' (the six READY TO SHIP rows in the office brief). | [CTO live chat 2026-10-07] added; task urgent-support-notify-admin; QA xd-1489.",
+          "evidence": "[QA 2026-10-11 b, scheduled, 2026-10-11T01:19:27Z] PENDING - re-measured 01:1xZ: SupportTickets 33, newest 9 Oct 00:41Z - still no real support message since the ship. || [QA 2026-10-11 a, scheduled, 2026-10-11T00:11:15Z] PENDING - waits for a real support message: 0 new SupportTickets since 9 Oct 00:45Z (33 total, newest 9 Oct 00:41Z) - 00:08Z. | [QA 2026-10-10 t, scheduled, 2026-10-10T22:23:16Z] PENDING - waits for a real user's support message. Re-measured: 0 new SupportTickets since 9 Oct 00:45Z; 0 'support-alert' lines in the api log since its 18:14Z recreate. | [ENGINEERING run 2026-10-08 d, 2026-10-09T00:48:44Z] SHIPPED (CEO YES 8 Oct + CEO live OK 9 Oct for the key copy): production ed5dcfb02 = cherry-pick -x of development a37d7513a + ab986afe5 ONLY (9 files; shipped files vs development 0 diff lines). Ship tree checks 00:32-00:38Z: backend 0 errors, 205/205 tests; admin npx tsc --noEmit 0 errors with a control (planted TS2322 -> rc 2, 1 error). Push 00:39:19Z under lock eng-run-1008d; CI runner stopped during the work, restarted 00:47:51Z. Secrets: /opt/caspervpn/secrets/api (uid 1000, 0500) + telegram_bot_token / telegram_chat_id copied file-to-file (0400, non-empty; never printed). D8: deploy brought in the 2 commits only. /root/deploy_api.sh -> DEPLOY DONE OK 00:40:54Z (rollback tag taken by the script); in the container the secrets are readable as uid 1000, 3 TeamAlerts__ env names, DLL 'support-alert' strings 10. Admin rebuilt with the runner stopped (rollback tag of the old admin image 1d4da3721056): bundle main.c5cf7782.js -> main.6c17dc10.js, 'View all notifications' 1, mock 'New user registered' 0, admin / 200. PRODUCTION TEST 00:41:37Z (probe-1789991690@caspervpn.com ticket fb554853, admin token minted in memory): ticket 200 -> admin bell 1 unread 'New support ticket'; log 'support-alert: telegram sent (200)'; 2nd user message -> still 1 (no repeat); admin opens the thread -> 0 unread; ticket closed 00:5xZ after the column fix. Script /root/reports/eng1008d-u4prod.py; logs /root/reports/eng1008d-ship150*.log. -> QA xd-1559. | [CEO 2026-10-09 (2026-10-08T23:57:12Z), engineering run 1008d chat, answered 4 questions] 'Yes, do it (Recommended)' to: the last step copies the alerts bot key from one locked file on the server into another; I never see or print the key. [ENGINEERING run 2026-10-08 d, 2026-10-08T23:57:12Z] CLAIMED: executing now in this live session, one at a time (163 -> 159 -> 164 -> 150). Other runs: do not deploy the API or touch de-3/LA/SG peers until this note says done. | [CEO 2026-10-08 ~02:3x Beirut, CEO office live chat] 'yes to all' (the six READY TO SHIP rows in the office brief). | [CTO live chat 2026-10-07] added; task urgent-support-notify-admin; QA xd-1489.",
           "qaVerdict": "PENDING",
           "qaDate": "2026-10-11"
         },
@@ -13367,7 +13368,7 @@
           "verifiedBy": "none",
           "verifiedByRaw": null,
           "verifiedDate": null,
-          "evidence": "[QA 2026-10-11 a, scheduled, 2026-10-11T00:11:15Z] PENDING - waits for an admin to close a ticket in a signed-in session: SupportTickets with ClosedAt = 1 of 33 (00:08Z). | [QA 2026-10-10 t, scheduled, 2026-10-10T22:23:16Z] PENDING - waits for an admin to resolve a ticket in a signed-in session (QA does not change production tickets). Re-measured: SupportTickets 33; ClosedAt set 1 (the probe ticket), ResolvedAt 0; 0 real '42703' errors in the api log since 18:14Z (1 grep hit was a byte count). | [ENGINEERING run 2026-10-08 d, 2026-10-09T00:48:44Z] DONE (CEO YES 9 Oct): production SupportTickets got the 2 missing columns (ALTER TABLE ... ADD COLUMN IF NOT EXISTS \"ResolvedAt\" / \"ClosedAt\" timestamptz NULL, same as the test server; before 0 of 2, after 2 of 2). Proof: the admin status change that failed with 42703 at 00:42:18Z now answers 200 'Status updated from open to closed' for the test ticket fb554853 (DB Status=closed, ClosedAt set); 0 '42703' lines after. The schema still needs a migration in git so a rebuilt database gets the columns -> [BACKEND] handoff. -> QA xd-1560; migration in git -> xd-1561. | [CEO 2026-10-09 (2026-10-09T00:47:44Z), engineering run 1008d chat] 'Yes, add them (Recommended)' to: add the 2 missing columns so a ticket's status can be changed. [ENGINEERING run 2026-10-08 d] executing now.",
+          "evidence": "[QA 2026-10-11 b, scheduled, 2026-10-11T01:19:27Z] PENDING - re-measured 01:1xZ: SupportTickets with ClosedAt 1 of 33; waits for a signed-in admin to close one (xd-1697). || [QA 2026-10-11 a, scheduled, 2026-10-11T00:11:15Z] PENDING - waits for an admin to close a ticket in a signed-in session: SupportTickets with ClosedAt = 1 of 33 (00:08Z). | [QA 2026-10-10 t, scheduled, 2026-10-10T22:23:16Z] PENDING - waits for an admin to resolve a ticket in a signed-in session (QA does not change production tickets). Re-measured: SupportTickets 33; ClosedAt set 1 (the probe ticket), ResolvedAt 0; 0 real '42703' errors in the api log since 18:14Z (1 grep hit was a byte count). | [ENGINEERING run 2026-10-08 d, 2026-10-09T00:48:44Z] DONE (CEO YES 9 Oct): production SupportTickets got the 2 missing columns (ALTER TABLE ... ADD COLUMN IF NOT EXISTS \"ResolvedAt\" / \"ClosedAt\" timestamptz NULL, same as the test server; before 0 of 2, after 2 of 2). Proof: the admin status change that failed with 42703 at 00:42:18Z now answers 200 'Status updated from open to closed' for the test ticket fb554853 (DB Status=closed, ClosedAt set); 0 '42703' lines after. The schema still needs a migration in git so a rebuilt database gets the columns -> [BACKEND] handoff. -> QA xd-1560; migration in git -> xd-1561. | [CEO 2026-10-09 (2026-10-09T00:47:44Z), engineering run 1008d chat] 'Yes, add them (Recommended)' to: add the 2 missing columns so a ticket's status can be changed. [ENGINEERING run 2026-10-08 d] executing now.",
           "qaVerdict": "PENDING",
           "qaDate": "2026-10-11"
         },
@@ -13638,7 +13639,9 @@
           "addedBy": "[SECURITY] engineering run 1009-2004",
           "test": "PARTIAL 2026-10-11 \u2014 steps 1-3 done, old key still ON (step 4 next devops run) \u00b7 CEO YES 2026-10-10 (live chat ~23:20Z) \u00b7 DECISION \u2014 change (rotate) our e-mail sending key \u00b7 why: the same key is written in 13 files of our private code store and in the vault notes, and has been for months; anyone who ever had a copy of the code can send e-mail as caspervpn.com \u00b7 options: (a) make a new key in the e-mail service (Resend) and switch every script to it, then turn the old key off \u2014 about 10 minutes for you, the runs do the rest; (b) leave it, only remove it from the scripts going forward \u00b7 advice: (a). The code store is private (checked) and nothing shows misuse, so this is not urgent tonight \u2014 but removing the key from files does not make an already-copied key secret again.",
           "verify": "After (a): the old key answers 401 at the mail service; every alert script reads the key from the locked file; grep for the old key in the code store = 0",
-          "evidence": "[DEVOPS run 2026-10-11 a, scheduled, 2026-10-11T00:53:32Z] Steps 1-3 DONE, step 4-5 NOT yet. (1) new Resend key 'CasperVPN Production 2026-10' (id 8d83f7d6) made by the server 00:30Z with the old key, written to /opt/caspervpn/secrets/resend_api_key (600 root, 36 chars, never printed; sha prefix 65f8db754f); GET /domains with it = 200. (2) exact replace, backups in /root/backups/devops-1011a/: main server 10 live files (fleet_health_loop, wildcard-renew, ct_log_monitor, alertmanager_resend_bridge (service restarted, active), ip_reputation_monitor, datacap_enforcement_monitor, parity_monitor, security_sweep_weekly x2, /usr/local/bin/subdomain-resolution-check.sh (not on the old list), /etc/caspervpn/resend.key) -> old key left 0/10; syntax checks ok. Bangkok FIRST 00:33Z (active_probe_detector.py; its 00:35Z cron run 'no anomalies', 0 Traceback), then 10 prod VPN servers disk-guard.sh 00:38Z (bash -n ok, old left 0 each; Amsterdam had none); dev host 188.166.174.132 disk-guard.sh + dev .env (dev containers keep the old key until the next dev deploy). (3) .env SMTP_PASSWORD replaced (119 lines before/after); api via /root/deploy_api.sh 00:38Z (image unchanged 914ce12ef7d2, healthy 15 s, rollback tag rollback-202610110038); website recreated --no-build 00:39Z (same image 395fe9e81150), caspervpn.com 200, /pricing /blog /download 200; both containers: new key 1, old 0. Test mails: API forgot-password for claude-dev@ 00:39:42Z -> 'Email sent'; alert bridge test -> Resend 200. 15-min watch to 00:52Z: 0 mail errors in api/website logs, bridge 4/4 status 200. OLD KEY STILL ON (rollback = put backups back). Next: step 4 (delete old key, prove 401) after dev containers show the new key; step 5 redact 13 repo files + .bak copies + reality-repo/codegraph copies; scripts in git must read the secrets file first or a reinstall brings the old key back. | [CEO live 23:3xZ, measured read-only on the main server] NO LOGIN NEEDED: the current key has full access (GET https://api.resend.com/api-keys = 200, 1 key 'CasperVPN Production' made 2026-03-15), so the new key can be made by the server itself and never shown to anyone. Old key found (by exact match, value not printed) in 12 live places: /root/Casper/Casper-Code/.env (api/website/scheduler), /opt/caspervpn/{fleet_health_loop.sh, parity_monitor.sh, disk-guard.sh, datacap_enforcement_monitor.sh, security_sweep_weekly.sh, ct_log_monitor.py, ip_reputation_monitor.py, wildcard-cert/wildcard-renew.sh, monitoring/alertmanager_resend_bridge.py}, /root/Casper/Casper-Code/scripts/security-sweep-weekly.sh; plus ~20 .bak files and old vault notes. Fleet nodes not checked yet. -> xd to [DEVOPS] with the runbook. | [CEO 2026-10-10 ~23:20Z live chat] '192yes' (option a: new key, switch everything, old key off). Recorded 23:3xZ (bridge was down at 23:20Z). | [ENGINEERING run 2026-10-09 2004, 2026-10-09T20:10:03Z] added for xd-1618. Measured: 13 repo files carry the same key (sha256 prefix 415886f587); public board 0; repo private (404 unauthenticated)."
+          "evidence": "[QA 2026-10-11 b, scheduled, 2026-10-11T01:19:27Z] PARTIAL - steps 1-3 main-server leg PASS 01:0xZ: api + website containers hold the new key (grep -cF over printenv: new 1, old 0 each); /etc/caspervpn/resend.key differs from the old backup (cmp); 0 live main-server files hold the old key - the 21 hits are all .bak copies plus one stale __pycache__ .pyc from 16 Sep (the .py was rewritten 00:30:59Z, so it is not loaded); alertmanager-resend-bridge active, 14 sends 'status=200' in 3 h. NOT re-measured by QA: the 10 VPN servers + Bangkok files (DevOps evidence only). Old key still ON (step 4) and still sits in the .bak files (step 5). || [DEVOPS run 2026-10-11 a, scheduled, 2026-10-11T00:53:32Z] Steps 1-3 DONE, step 4-5 NOT yet. (1) new Resend key 'CasperVPN Production 2026-10' (id 8d83f7d6) made by the server 00:30Z with the old key, written to /opt/caspervpn/secrets/resend_api_key (600 root, 36 chars, never printed; sha prefix 65f8db754f); GET /domains with it = 200. (2) exact replace, backups in /root/backups/devops-1011a/: main server 10 live files (fleet_health_loop, wildcard-renew, ct_log_monitor, alertmanager_resend_bridge (service restarted, active), ip_reputation_monitor, datacap_enforcement_monitor, parity_monitor, security_sweep_weekly x2, /usr/local/bin/subdomain-resolution-check.sh (not on the old list), /etc/caspervpn/resend.key) -> old key left 0/10; syntax checks ok. Bangkok FIRST 00:33Z (active_probe_detector.py; its 00:35Z cron run 'no anomalies', 0 Traceback), then 10 prod VPN servers disk-guard.sh 00:38Z (bash -n ok, old left 0 each; Amsterdam had none); dev host 188.166.174.132 disk-guard.sh + dev .env (dev containers keep the old key until the next dev deploy). (3) .env SMTP_PASSWORD replaced (119 lines before/after); api via /root/deploy_api.sh 00:38Z (image unchanged 914ce12ef7d2, healthy 15 s, rollback tag rollback-202610110038); website recreated --no-build 00:39Z (same image 395fe9e81150), caspervpn.com 200, /pricing /blog /download 200; both containers: new key 1, old 0. Test mails: API forgot-password for claude-dev@ 00:39:42Z -> 'Email sent'; alert bridge test -> Resend 200. 15-min watch to 00:52Z: 0 mail errors in api/website logs, bridge 4/4 status 200. OLD KEY STILL ON (rollback = put backups back). Next: step 4 (delete old key, prove 401) after dev containers show the new key; step 5 redact 13 repo files + .bak copies + reality-repo/codegraph copies; scripts in git must read the secrets file first or a reinstall brings the old key back. | [CEO live 23:3xZ, measured read-only on the main server] NO LOGIN NEEDED: the current key has full access (GET https://api.resend.com/api-keys = 200, 1 key 'CasperVPN Production' made 2026-03-15), so the new key can be made by the server itself and never shown to anyone. Old key found (by exact match, value not printed) in 12 live places: /root/Casper/Casper-Code/.env (api/website/scheduler), /opt/caspervpn/{fleet_health_loop.sh, parity_monitor.sh, disk-guard.sh, datacap_enforcement_monitor.sh, security_sweep_weekly.sh, ct_log_monitor.py, ip_reputation_monitor.py, wildcard-cert/wildcard-renew.sh, monitoring/alertmanager_resend_bridge.py}, /root/Casper/Casper-Code/scripts/security-sweep-weekly.sh; plus ~20 .bak files and old vault notes. Fleet nodes not checked yet. -> xd to [DEVOPS] with the runbook. | [CEO 2026-10-10 ~23:20Z live chat] '192yes' (option a: new key, switch everything, old key off). Recorded 23:3xZ (bridge was down at 23:20Z). | [ENGINEERING run 2026-10-09 2004, 2026-10-09T20:10:03Z] added for xd-1618. Measured: 13 repo files carry the same key (sha256 prefix 415886f587); public board 0; repo private (404 unauthenticated).",
+          "qaVerdict": "PARTIAL",
+          "qaDate": "2026-10-11"
         },
         {
           "met": true,
@@ -13657,16 +13660,18 @@
           "qaDate": "2026-10-09T23:13:24Z"
         },
         {
-          "met": false,
-          "passed": false,
-          "verifiedBy": "none",
+          "met": true,
+          "passed": true,
+          "verifiedBy": "tested",
           "addedAt": "2026-10-09T23:15:21Z",
           "addedBy": "[DEVOPS] engineering run 1009-2304",
           "test": "SHIPPED 2026-10-11 (devops run) \u00b7 CEO YES 2026-10-10 (row 200, live chat '200 yes') \u00b7 READY TO SHIP \u2014 if a crypto payment notice from NOWPayments is turned away by our website, the admin Operations page now shows it within the hour (a yellow 'warn' line), instead of nobody knowing \u00b7 why: NOWPayments does not send a turned-away notice again, so a customer who paid can stay 'pending' (this happened on 1 Oct) \u00b7 what changes: the hourly crypto job also counts turned-away notices and writes one line to the Operations page every hour (also shows if the hourly job itself stops) \u00b7 tested on dev: development 436110189, all three outcomes tested on the main server with stand-ins, nothing written to production \u00b7 rollback: put back the previous script from git (one copy command).",
           "verify": "On the main server after ship: diff -q /opt/caspervpn/crypto_renewals_run.sh <(git -C /root/Casper/Casper-Code show origin/production:infrastructure/scripts/crypto_renewals_run.sh) = same; bash /opt/caspervpn/crypto_renewals_run.sh --scan-only prints rejected=...total; after the next :07 run: select \"Status\",\"Summary\" from \"RoutineRuns\" where \"Routine\"='crypto-renewals' order by \"RanAt\" desc limit 1 -> 1 row, status ok (or warn with counts).",
-          "evidence": "[DEVOPS run 2026-10-11 a, scheduled, 2026-10-11T00:53:32Z] SHIPPED: production 90cdedb65 -> 8c1ea23df (exact cherry-pick of 436110189; production blob = its parent blob d82d7157, mode 100755 kept), lock casper-devops-1011a 00:28Z. Installed from git 00:28Z: diff -q /opt/caspervpn/crypto_renewals_run.sh vs origin/production = same (md5 6d658bf775de; before dfec763fd6b1, backup /root/backups/devops-1011a/); bash -n ok; --scan-only 00:28:50Z -> rejected total 0 (window 65m), no RoutineRuns row. Cron :07 unchanged. PENDING: the first RoutineRuns 'crypto-renewals' row after 01:07Z -> QA. Rollback: git show 8679c616f:infrastructure/scripts/crypto_renewals_run.sh > /opt/caspervpn/crypto_renewals_run.sh. | [QA 2026-10-11 a, scheduled, 2026-10-11T00:11:15Z] NOT DONE - not shipped yet: /opt/caspervpn/crypto_renewals_run.sh (dated 1 Oct) = production git at 2c281609a (same file, no new code), and RoutineRuns has 0 'crypto-renewals' rows (00:08Z). Waits for the engineering run to ship under the CEO's YES, then QA. | [CEO 2026-10-10 23:03Z live chat] '200 yes' via row 200 \u2014 shippable now by the engineering run (routine 09 step 5). | [QA 2026-10-10 a, scheduled, 2026-10-10T00:26:16Z] QA DEV PASS (xd-1623): fixtures count 3/2/0 correctly, real container scan-only 0 (no notices since 9 Oct 16:22Z), stubbed run writes ok/warn/fail with valid Details, production 'crypto-renewals' rows 0 before/after. Ready for the CEO's YES; met stays false until production shows the hourly row. | [ENGINEERING run 2026-10-09 2304, 2026-10-09T23:15:21Z] added for xd-1232 (c). development 436110189 (infrastructure/scripts/crypto_renewals_run.sh only, bash -n OK). Tested on the main server in /root/reports/eng1009-2304 without touching production: (A) control fixture with 2 bad-signature + 1 unknown-order lines -> scan reads signature 2, unknownOrder 1, total 3; (B) real production website container log, scan-only (read-only) -> total 0 (the container holds 0 [nowpayments-webhook] lines since its 16:22Z start); (C) full path with a stub docker + RoutineRuns INSERT into a throwaway postgres:16-alpine: 3 rows warn(rej 3)/ok(rej 0)/fail(rc 1), Details valid jsonb; control: production RoutineRuns rows named crypto-renewals = 0 (nothing written). Proof file /root/reports/eng1009-2304/proof.txt was removed at cleanup; numbers quoted here. Limit: container log lines are lost on a website container recreate, so a rejection in the same hour as a website deploy can be missed. Finding while measuring: the website nginx logs (25 Sep - 9 Oct) carry 0 requests to the webhook path, so nginx is not an instrument for this - the container log is. Install after YES (from git, never hand-edit): cherry-pick 436110189 to production, then git -C /root/Casper/Casper-Code fetch -q origin && git -C /root/Casper/Casper-Code show origin/production:infrastructure/scripts/crypto_renewals_run.sh > /opt/caspervpn/crypto_renewals_run.sh (cron line unchanged, :07 hourly). Rollback: same command with the previous commit 8679c616f.",
-          "qaVerdict": "NOT",
-          "qaDate": "2026-10-11"
+          "evidence": "[QA 2026-10-11 b, scheduled, 2026-10-11T01:19:27Z] PASS (QA tested) - main server 01:0xZ: /opt/caspervpn/crypto_renewals_run.sh byte-equal (cmp) to origin/production 023f919 infrastructure/scripts/crypto_renewals_run.sh (installed 00:28:50Z); first RoutineRuns row after the ship: Routine 'crypto-renewals' Status ok RanAt 01:07:02Z (cron :07 line unchanged); /var/log/crypto-renewals.log 01:07:01Z rc=0 200. No crypto notice was turned away in the window, so the yellow 'warn' path itself is not exercised yet. || [DEVOPS run 2026-10-11 a, scheduled, 2026-10-11T00:53:32Z] SHIPPED: production 90cdedb65 -> 8c1ea23df (exact cherry-pick of 436110189; production blob = its parent blob d82d7157, mode 100755 kept), lock casper-devops-1011a 00:28Z. Installed from git 00:28Z: diff -q /opt/caspervpn/crypto_renewals_run.sh vs origin/production = same (md5 6d658bf775de; before dfec763fd6b1, backup /root/backups/devops-1011a/); bash -n ok; --scan-only 00:28:50Z -> rejected total 0 (window 65m), no RoutineRuns row. Cron :07 unchanged. PENDING: the first RoutineRuns 'crypto-renewals' row after 01:07Z -> QA. Rollback: git show 8679c616f:infrastructure/scripts/crypto_renewals_run.sh > /opt/caspervpn/crypto_renewals_run.sh. | [QA 2026-10-11 a, scheduled, 2026-10-11T00:11:15Z] NOT DONE - not shipped yet: /opt/caspervpn/crypto_renewals_run.sh (dated 1 Oct) = production git at 2c281609a (same file, no new code), and RoutineRuns has 0 'crypto-renewals' rows (00:08Z). Waits for the engineering run to ship under the CEO's YES, then QA. | [CEO 2026-10-10 23:03Z live chat] '200 yes' via row 200 \u2014 shippable now by the engineering run (routine 09 step 5). | [QA 2026-10-10 a, scheduled, 2026-10-10T00:26:16Z] QA DEV PASS (xd-1623): fixtures count 3/2/0 correctly, real container scan-only 0 (no notices since 9 Oct 16:22Z), stubbed run writes ok/warn/fail with valid Details, production 'crypto-renewals' rows 0 before/after. Ready for the CEO's YES; met stays false until production shows the hourly row. | [ENGINEERING run 2026-10-09 2304, 2026-10-09T23:15:21Z] added for xd-1232 (c). development 436110189 (infrastructure/scripts/crypto_renewals_run.sh only, bash -n OK). Tested on the main server in /root/reports/eng1009-2304 without touching production: (A) control fixture with 2 bad-signature + 1 unknown-order lines -> scan reads signature 2, unknownOrder 1, total 3; (B) real production website container log, scan-only (read-only) -> total 0 (the container holds 0 [nowpayments-webhook] lines since its 16:22Z start); (C) full path with a stub docker + RoutineRuns INSERT into a throwaway postgres:16-alpine: 3 rows warn(rej 3)/ok(rej 0)/fail(rc 1), Details valid jsonb; control: production RoutineRuns rows named crypto-renewals = 0 (nothing written). Proof file /root/reports/eng1009-2304/proof.txt was removed at cleanup; numbers quoted here. Limit: container log lines are lost on a website container recreate, so a rejection in the same hour as a website deploy can be missed. Finding while measuring: the website nginx logs (25 Sep - 9 Oct) carry 0 requests to the webhook path, so nginx is not an instrument for this - the container log is. Install after YES (from git, never hand-edit): cherry-pick 436110189 to production, then git -C /root/Casper/Casper-Code fetch -q origin && git -C /root/Casper/Casper-Code show origin/production:infrastructure/scripts/crypto_renewals_run.sh > /opt/caspervpn/crypto_renewals_run.sh (cron line unchanged, :07 hourly). Rollback: same command with the previous commit 8679c616f.",
+          "qaVerdict": "PASS",
+          "qaDate": "2026-10-11",
+          "verifiedByRaw": "qa",
+          "verifiedDate": "2026-10-11"
         },
         {
           "met": false,
@@ -13849,15 +13854,15 @@
         {
           "test": "SHIPPED 2026-10-10 18:15Z (awaiting QA xd-1674) \u00b7 READY TO SHIP (CEO STANDING YES 2026-10-06, honesty rule; advice: PRODUCT xd-1659, no options) \u2014 the Dedicated IP card stops promising two things we do not have: it will say only 'Static IP', not 'Port Forwarding' and 'DDoS Protection' \u00b7 why: neither exists (port-forward rules are saved but never applied; no DDoS protection) \u00b7 tested on dev: the dev server has the new list, production still has the old one \u00b7 rollback: undo the one-line change and redeploy. Nothing for you to do: it ships after QA checks dev.",
           "verify": "production: docker cp caspervpn-api:/app/CasperVPN.dll -> strings -el | grep -cF \"DDoS Protection\" == 0 and \"Static IP\" >= 1; GET /api/dedicated-ip for a holder -> features == [\"Static IP\"]",
-          "evidence": "[QA 2026-10-10 u, scheduled, 2026-10-10T23:34:26Z] PENDING stays - re-measured 23:06Z: DedicatedIps by Status = (0: 1 row, 0 allocated), (3: 1 row, 0 allocated) -> still 0 holders on production, so GET /api/dedicated-ip as a holder cannot run read-only (xd-1674). || [QA verify in CEO live chat 2026-10-10 21:52Z, CEO order 'check off all boxes now' \u2014 ticked only where the verify command passed now] QA-mode check 21:52Z: PASS part 1 \u2014 production CasperVPN.dll strings: 'DDoS Protection' 0, 'Static IP' 1. Part 2 (GET /api/dedicated-ip for a holder) not run \u2014 stays unmet (xd-1674). | prior: [QA 2026-10-10 r, 2026-10-10T20:13:30Z] QA PASS 1 of 2 on production; demand 2 NOT EXERCISED. (1) PASS: api created 2026-10-10T18:14:48Z healthy, image 9f535c507765 (rollback tag rollback-202610101812 = 17781a45f4ce present); docker cp caspervpn-api:/app/CasperVPN.dll -> strings -el: 'DDoS Protection' 0, 'Port Forwarding' 0, 'Static IP' 1, positive control 'No dedicated IP allocated' 1 (before deploy, per run p and the ship log: 1/1/1); production tip 7b18d1c7 DTOs/DedicatedIpDTOs.cs:172 Features default = new() { \"Static IP\" }. (2) NOT EXERCISED: production DedicatedIps has 0 holders (Status 1/2 with AllocatedToUserId: 0; rows: status 0 x1, status 3 x1), so GET /api/dedicated-ip as a holder cannot run read-only; the same file (0 diff, cherry-pick -x of cc9fb94d7) returned features == ['Static IP'] for the dev holder in run p. Controls: no token 401, /health 200. api log since start: 12 fail/exception lines = 8 expired-token warnings + 1 localhost:3000 connection refused, none mention dedicated IP. Not ticked: the holder leg waits for the first real production holder. verify: bash /root/reports/qa1010r/t.sh </dev/null | [ENGINEERING run 2026-10-10 1804, scheduled, 2026-10-10T18:17:14Z] SHIPPED: production 187a2eb83 = cherry-pick -x of development cc9fb94d7 ONLY (1 file backend-dotnet-core/DTOs/DedicatedIpDTOs.cs, 0 diff lines vs development); ship tree dotnet build 0 errors + dotnet test 236/236 on the main server; pushed 18:12:48Z under session lock casper-eng-1010-1804; /root/deploy_api.sh 18:12:52-18:15:05Z DEPLOY DONE OK, image 17781a45f4ce -> 9f535c507765, rollback tag caspervpn-api:rollback-202610101812; deploy brought in exactly 1 code commit (D8 check). MEASURED live DLL (docker cp + strings -el): BEFORE DDoS Protection 1 / Port Forwarding 1 / Static IP 1 -> AFTER 0 / 0 / 1; api healthy, external /health 200, /api/dedicated-ip no token 401; 0 new error lines in the api log after start. Not exercised: GET /api/dedicated-ip as a real production holder -> QA. Rollback: git revert 187a2eb83 + /root/deploy_api.sh (or retag the rollback image). Log /root/reports/eng1010-1804/ship.log. || [QA 2026-10-10 p, 2026-10-10T17:14:46Z] QA DEV PASS xd-1659: GET https://api.dev.caspervpn.com/api/dedicated-ip as the one dev holder (DedicatedIps Status 1 Allocated, 10-min dev token, never printed) -> HTTP 200, status Allocated, features == [\"Static IP\"]. Controls: same GET as a user with no dedicated IP -> 404; no token -> 401; CONTROL production DLL (api created 13:24:46Z, production tip dacf0c0 DedicatedIpDTOs.cs:172 still 3 features): strings -el 'Port Forwarding' 1 / 'DDoS Protection' 1 / 'Static IP' 1 vs dev 0 / 0 / 1 (docker cp, same method). Dev API created 16:23:47Z from development containing cc9fb94d7 (merge-base --is-ancestor ok). Not ticked: production not shipped yet. Re-run: brain bash /root/reports/qa1010p/t.sh </dev/null (GET legs) + t2.sh (DLL legs). | [ENGINEERING run 2026-10-10 1605, scheduled, 2026-10-10T16:27:04Z] development cc9fb94d7 (DedicatedIpDTOs.cs:172 default Features = {\"Static IP\"}). Dev API recreated 16:23:47Z healthy. strings -el CasperVPN.dll: dev DDoS Protection 0 / Port Forwarding 0 / Static IP 1; control production 1/1/1. QA dev check xd-1670.",
+          "evidence": "[QA 2026-10-11 b, scheduled, 2026-10-11T01:19:27Z] PENDING - re-measured 01:1xZ: DedicatedIps by Status (0: 1, 3: 1), 0 holders - the holder half cannot be checked yet. || [QA 2026-10-10 u, scheduled, 2026-10-10T23:34:26Z] PENDING stays - re-measured 23:06Z: DedicatedIps by Status = (0: 1 row, 0 allocated), (3: 1 row, 0 allocated) -> still 0 holders on production, so GET /api/dedicated-ip as a holder cannot run read-only (xd-1674). || [QA verify in CEO live chat 2026-10-10 21:52Z, CEO order 'check off all boxes now' \u2014 ticked only where the verify command passed now] QA-mode check 21:52Z: PASS part 1 \u2014 production CasperVPN.dll strings: 'DDoS Protection' 0, 'Static IP' 1. Part 2 (GET /api/dedicated-ip for a holder) not run \u2014 stays unmet (xd-1674). | prior: [QA 2026-10-10 r, 2026-10-10T20:13:30Z] QA PASS 1 of 2 on production; demand 2 NOT EXERCISED. (1) PASS: api created 2026-10-10T18:14:48Z healthy, image 9f535c507765 (rollback tag rollback-202610101812 = 17781a45f4ce present); docker cp caspervpn-api:/app/CasperVPN.dll -> strings -el: 'DDoS Protection' 0, 'Port Forwarding' 0, 'Static IP' 1, positive control 'No dedicated IP allocated' 1 (before deploy, per run p and the ship log: 1/1/1); production tip 7b18d1c7 DTOs/DedicatedIpDTOs.cs:172 Features default = new() { \"Static IP\" }. (2) NOT EXERCISED: production DedicatedIps has 0 holders (Status 1/2 with AllocatedToUserId: 0; rows: status 0 x1, status 3 x1), so GET /api/dedicated-ip as a holder cannot run read-only; the same file (0 diff, cherry-pick -x of cc9fb94d7) returned features == ['Static IP'] for the dev holder in run p. Controls: no token 401, /health 200. api log since start: 12 fail/exception lines = 8 expired-token warnings + 1 localhost:3000 connection refused, none mention dedicated IP. Not ticked: the holder leg waits for the first real production holder. verify: bash /root/reports/qa1010r/t.sh </dev/null | [ENGINEERING run 2026-10-10 1804, scheduled, 2026-10-10T18:17:14Z] SHIPPED: production 187a2eb83 = cherry-pick -x of development cc9fb94d7 ONLY (1 file backend-dotnet-core/DTOs/DedicatedIpDTOs.cs, 0 diff lines vs development); ship tree dotnet build 0 errors + dotnet test 236/236 on the main server; pushed 18:12:48Z under session lock casper-eng-1010-1804; /root/deploy_api.sh 18:12:52-18:15:05Z DEPLOY DONE OK, image 17781a45f4ce -> 9f535c507765, rollback tag caspervpn-api:rollback-202610101812; deploy brought in exactly 1 code commit (D8 check). MEASURED live DLL (docker cp + strings -el): BEFORE DDoS Protection 1 / Port Forwarding 1 / Static IP 1 -> AFTER 0 / 0 / 1; api healthy, external /health 200, /api/dedicated-ip no token 401; 0 new error lines in the api log after start. Not exercised: GET /api/dedicated-ip as a real production holder -> QA. Rollback: git revert 187a2eb83 + /root/deploy_api.sh (or retag the rollback image). Log /root/reports/eng1010-1804/ship.log. || [QA 2026-10-10 p, 2026-10-10T17:14:46Z] QA DEV PASS xd-1659: GET https://api.dev.caspervpn.com/api/dedicated-ip as the one dev holder (DedicatedIps Status 1 Allocated, 10-min dev token, never printed) -> HTTP 200, status Allocated, features == [\"Static IP\"]. Controls: same GET as a user with no dedicated IP -> 404; no token -> 401; CONTROL production DLL (api created 13:24:46Z, production tip dacf0c0 DedicatedIpDTOs.cs:172 still 3 features): strings -el 'Port Forwarding' 1 / 'DDoS Protection' 1 / 'Static IP' 1 vs dev 0 / 0 / 1 (docker cp, same method). Dev API created 16:23:47Z from development containing cc9fb94d7 (merge-base --is-ancestor ok). Not ticked: production not shipped yet. Re-run: brain bash /root/reports/qa1010p/t.sh </dev/null (GET legs) + t2.sh (DLL legs). | [ENGINEERING run 2026-10-10 1605, scheduled, 2026-10-10T16:27:04Z] development cc9fb94d7 (DedicatedIpDTOs.cs:172 default Features = {\"Static IP\"}). Dev API recreated 16:23:47Z healthy. strings -el CasperVPN.dll: dev DDoS Protection 0 / Port Forwarding 0 / Static IP 1; control production 1/1/1. QA dev check xd-1670.",
           "met": false,
           "verifiedBy": "none",
           "addedAt": "2026-10-10T16:27:04Z",
           "addedBy": "[BACKEND] engineering run 1010-1605",
           "owner": "[BACKEND]",
           "dept": "backend",
-          "qaVerdict": "PARTIAL",
-          "qaDate": "2026-10-10"
+          "qaVerdict": "PENDING",
+          "qaDate": "2026-10-11"
         },
         {
           "test": "READY TO SHIP \u2014 the Share button on our blog works on a computer: one click copies the article link and shows 'Link copied' (on a phone it opens the phone's share menu) \u00b7 why: on a Mac the button did nothing (QA found it, xd-1519) \u00b7 tested on dev: QA PASS on the dev website (computer: Link copied + right link; phone: share menu called with the right title and link) \u00b7 rollback: undo the change and redeploy the website. Note: the website deploy must be done by hand while GitHub's machines are stopped (row 208). Say YES to ship.",
@@ -14131,75 +14136,83 @@
       "acceptanceCriteria": [
         {
           "test": "Step 1: OneProvider hard-reboot completes \u2014 bkk-01 SSH answers.",
-          "met": false,
-          "passed": false,
-          "verifiedBy": "none",
+          "met": true,
+          "passed": true,
+          "verifiedBy": "tested",
           "verifiedAt": "2026-09-20T22:21:32Z",
-          "verifiedDate": "2026-09-21",
-          "evidence": "[DEVOPS run 2026-10-11 a, scheduled, 2026-10-11T00:53:32Z] Measured 00:40Z from the main server: bkk-01 SSH answers (casper_fleet_admin), up since 2026-09-15 17:02Z (26 days); Prometheus blackbox-fleet-icmp and -ssh probe_success=1. -> QA | QA 2026-09-24 NOT LIVE: NOT DONE: no post-mortem written (unchanged since 09-21). Bangkok is up 1 week 2 days.",
-          "qaVerdict": "NOTLIVE",
-          "qaDate": "2026-09-24",
+          "verifiedDate": "2026-10-11",
+          "evidence": "[QA 2026-10-11 b, scheduled, 2026-10-11T01:19:27Z] PASS - main server 01:1xZ: ssh -i casper_fleet_admin root@46.16.129.246 answers; uptime -s = 2026-09-15 17:02:14 (up 26 days). || [DEVOPS run 2026-10-11 a, scheduled, 2026-10-11T00:53:32Z] Measured 00:40Z from the main server: bkk-01 SSH answers (casper_fleet_admin), up since 2026-09-15 17:02Z (26 days); Prometheus blackbox-fleet-icmp and -ssh probe_success=1. -> QA | QA 2026-09-24 NOT LIVE: NOT DONE: no post-mortem written (unchanged since 09-21). Bangkok is up 1 week 2 days.",
+          "qaVerdict": "PASS",
+          "qaDate": "2026-10-11",
           "verifiedByPrevious": "tested",
-          "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored"
+          "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored",
+          "verifiedByRaw": "qa",
+          "verify": "ssh root@46.16.129.246 'uptime -s' from the main server (casper_fleet_admin key)"
         },
         {
           "test": "Step 2: Post-mortem boot logs: journalctl --boot=-1, dmesg | grep oom|panic, /var/log/auth.log, df -h.",
           "met": false,
-          "evidence": "[DEVOPS run 2026-10-11 a, scheduled, 2026-10-11T00:53:32Z] Not measurable any more: journalctl --list-boots on bkk-01 starts 2026-06-23 (the hang was 17 May). No hang since: one boot 15 Sep -> now. | QA 2026-09-24 NOT LIVE: NOT DONE: no post-mortem written (unchanged since 09-21). Bangkok is up 1 week 2 days.",
+          "evidence": "[QA 2026-10-11 b, scheduled, 2026-10-11T01:19:27Z] SUPERSEDED (proposed, CEO yes needed to close) - QA agrees with DevOps: the hang was 17 May and bkk-01's journal starts 23 Jun, so the cause cannot be read any more; no repeat in 26 days (uptime since 15 Sep). || [DEVOPS run 2026-10-11 a, scheduled, 2026-10-11T00:53:32Z] Not measurable any more: journalctl --list-boots on bkk-01 starts 2026-06-23 (the hang was 17 May). No hang since: one boot 15 Sep -> now. | QA 2026-09-24 NOT LIVE: NOT DONE: no post-mortem written (unchanged since 09-21). Bangkok is up 1 week 2 days.",
           "sweepNote": "2026-09-21",
           "verifiedByRaw": "none",
           "verifiedBy": "none",
           "passed": false,
-          "qaVerdict": "NOTLIVE",
-          "qaDate": "2026-09-24",
+          "qaVerdict": "SUPERSEDED",
+          "qaDate": "2026-10-11",
           "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored",
           "blocker": "Boot logs of the May hang no longer exist (oldest boot 23 Jun) \u2014 QA to close as superseded"
         },
         {
           "test": "Step 3: Document root cause of hang in memory/departments/devops/session-log.md.",
           "met": false,
-          "evidence": "[DEVOPS run 2026-10-11 a, scheduled, 2026-10-11T00:53:32Z] Same as row 1: the root cause can no longer be read; nothing to document beyond 'logs gone, no repeat in 26 days'. | QA 2026-09-24 NOT LIVE: NOT DONE: no post-mortem written (unchanged since 09-21). Bangkok is up 1 week 2 days.",
+          "evidence": "[QA 2026-10-11 b, scheduled, 2026-10-11T01:19:27Z] SUPERSEDED (proposed, CEO yes needed to close) - same as row 1: nothing left to document beyond 'logs gone, no repeat in 26 days'. || [DEVOPS run 2026-10-11 a, scheduled, 2026-10-11T00:53:32Z] Same as row 1: the root cause can no longer be read; nothing to document beyond 'logs gone, no repeat in 26 days'. | QA 2026-09-24 NOT LIVE: NOT DONE: no post-mortem written (unchanged since 09-21). Bangkok is up 1 week 2 days.",
           "sweepNote": "2026-09-21",
           "verifiedByRaw": "none",
           "verifiedBy": "none",
           "passed": false,
-          "qaVerdict": "NOTLIVE",
-          "qaDate": "2026-09-24",
+          "qaVerdict": "SUPERSEDED",
+          "qaDate": "2026-10-11",
           "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored",
           "blocker": "Boot logs of the May hang no longer exist \u2014 QA to close as superseded"
         },
         {
           "test": "Step 4: Apply preventive based on cause (swap, logrotate, monitoring).",
-          "met": false,
-          "verifiedByRaw": "none",
-          "verifiedBy": "none",
-          "passed": false,
-          "evidence": "[DEVOPS run 2026-10-11 a, scheduled, 2026-10-11T00:53:32Z] Preventive present (00:40Z): 1 GB /swapfile active (3.8 MB used), RAM 1963 MB, disk 20 % used. -> QA | QA 2026-09-24 NOT LIVE: NOT DONE: no post-mortem written (unchanged since 09-21). Bangkok is up 1 week 2 days.",
-          "qaVerdict": "NOTLIVE",
-          "qaDate": "2026-09-24",
-          "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored"
+          "met": true,
+          "verifiedByRaw": "qa",
+          "verifiedBy": "tested",
+          "passed": true,
+          "evidence": "[QA 2026-10-11 b, scheduled, 2026-10-11T01:19:27Z] PASS - Bangkok 01:1xZ: swapon --show = /swapfile file 1024M, 3.8M used (preventive swap in place). || [DEVOPS run 2026-10-11 a, scheduled, 2026-10-11T00:53:32Z] Preventive present (00:40Z): 1 GB /swapfile active (3.8 MB used), RAM 1963 MB, disk 20 % used. -> QA | QA 2026-09-24 NOT LIVE: NOT DONE: no post-mortem written (unchanged since 09-21). Bangkok is up 1 week 2 days.",
+          "qaVerdict": "PASS",
+          "qaDate": "2026-10-11",
+          "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored",
+          "verifiedDate": "2026-10-11",
+          "verify": "ssh bkk-01 'swapon --show' -> a /swapfile line"
         },
         {
           "test": "Step 5: Verify DevFleetNodeDown alert auto-resolves.",
-          "met": false,
-          "verifiedByRaw": "none",
-          "verifiedBy": "none",
-          "passed": false,
-          "evidence": "[DEVOPS run 2026-10-11 a, scheduled, 2026-10-11T00:53:32Z] DevFleetNodeDown rule loaded in Prometheus; firing alerts at 00:40Z = 1 (HighCPU do-production during a backend build), none for bkk-01. -> QA | QA 2026-09-24 NOT LIVE: NOT DONE: no post-mortem written (unchanged since 09-21). Bangkok is up 1 week 2 days.",
-          "qaVerdict": "NOTLIVE",
-          "qaDate": "2026-09-24",
-          "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored"
+          "met": true,
+          "verifiedByRaw": "qa",
+          "verifiedBy": "tested",
+          "passed": true,
+          "evidence": "[QA 2026-10-11 b, scheduled, 2026-10-11T01:19:27Z] PASS - main server 01:1xZ: Prometheus /api/v1/rules lists DevFleetNodeDown; /api/v1/alerts has 0 DevFleetNodeDown firing (Bangkok up). || [DEVOPS run 2026-10-11 a, scheduled, 2026-10-11T00:53:32Z] DevFleetNodeDown rule loaded in Prometheus; firing alerts at 00:40Z = 1 (HighCPU do-production during a backend build), none for bkk-01. -> QA | QA 2026-09-24 NOT LIVE: NOT DONE: no post-mortem written (unchanged since 09-21). Bangkok is up 1 week 2 days.",
+          "qaVerdict": "PASS",
+          "qaDate": "2026-10-11",
+          "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored",
+          "verifiedDate": "2026-10-11",
+          "verify": "docker exec prometheus wget -qO- localhost:9090/api/v1/rules | grep -c DevFleetNodeDown >= 1"
         },
         {
           "test": "Step 6: Re-enable fleet-tier promotion workflow per devops SKILL.md \u00a70.",
-          "met": false,
-          "verifiedByRaw": "none",
-          "verifiedBy": "none",
-          "passed": false,
-          "evidence": "[DEVOPS run 2026-10-11 a, scheduled, 2026-10-11T00:53:32Z] Bangkok-first used in this run: the mail-key change went to bkk-01 first (00:33Z), its */5 cron ran green at 00:35Z, then the 10 production servers (00:38Z). -> QA | QA 2026-09-24 NOT LIVE: NOT DONE: no post-mortem written (unchanged since 09-21). Bangkok is up 1 week 2 days.",
-          "qaVerdict": "NOTLIVE",
-          "qaDate": "2026-09-24",
-          "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored"
+          "met": true,
+          "verifiedByRaw": "qa",
+          "verifiedBy": "tested",
+          "passed": true,
+          "evidence": "[QA 2026-10-11 b, scheduled, 2026-10-11T01:19:27Z] PASS - memory/departments/devops/session-log.md entry 2026-10-11 a: the mail-key change went to Bangkok first (00:33Z, its */5 cron green 00:35Z) and only then to the 10 production servers (00:38Z) - Bangkok-first used in practice. || [DEVOPS run 2026-10-11 a, scheduled, 2026-10-11T00:53:32Z] Bangkok-first used in this run: the mail-key change went to bkk-01 first (00:33Z), its */5 cron ran green at 00:35Z, then the 10 production servers (00:38Z). -> QA | QA 2026-09-24 NOT LIVE: NOT DONE: no post-mortem written (unchanged since 09-21). Bangkok is up 1 week 2 days.",
+          "qaVerdict": "PASS",
+          "qaDate": "2026-10-11",
+          "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored",
+          "verifiedDate": "2026-10-11",
+          "verify": "devops session-log newest entries name Bangkok first before a fleet change"
         }
       ],
       "xdId": [],
@@ -15199,10 +15212,10 @@
           "verifiedBy": "none",
           "verifiedDate": "",
           "verifiedAt": "",
-          "evidence": "[GROWTH run 2026-10-11 0003, scheduled, 2026-10-11T00:14:32Z] MEASURED production DB read-only 00:1xZ: Payments Method=Crypto(3) Status=Succeeded(1): 1 row, $2.99 USDTBSC, PaidAt 2026-10-01 16:23Z, account not on the staff/CEO list (email pattern check); plus Crypto Refunded 1 (6 Oct). /login -> customer sign-in (QA 29 Sep). So /checkout has completed at least one real payment -> to [QA] to confirm against the website order record and xd-949. || [BLOCKED] QA 2026-09-29: /login -> /account/login, a customer sign-in page ('Use the same email and password as in the CasperVPN app') - met. /checkout renders its own crypto flow; no real crypto payment has ever completed (xd-949, P0) - 'completes a payment' is unproven until the CEO's one real $1 payment (CEO checklist row 1). | was: 2026-09-23: /login \u2192 /download is live and verified. /checkout still renders its own flow (xd-837). New today, same family: the ADMIN login could never succeed (JWT_SECRET absent from the container) \u2014 fixed in 2d82bc3f, admin@caspervpn.com now signs in and lands on the new Marketing page.",
+          "evidence": "[QA 2026-10-11 b, scheduled, 2026-10-11T01:19:27Z] FAIL (claim corrected) - the only Succeeded crypto Payment ($2.99 USDTBSC, PaidAt 2026-10-01 16:23Z) belongs to the account gm@applinkoffshore.com, which is on the staff list (memory/context/staff-accounts.md) - it is the CEO's own test, not a stranger's /checkout payment. The growth run's 'not a staff email' was wrong (email pattern check missed it). Website orders since 1 Oct (01:1xZ): completed 1 (1 Oct 10:39Z), failed 1, pending 2 (newest 6 Oct). Stays BLOCKED on the first real paid order (xd-1492). -> [PRODUCT] || [GROWTH run 2026-10-11 0003, scheduled, 2026-10-11T00:14:32Z] MEASURED production DB read-only 00:1xZ: Payments Method=Crypto(3) Status=Succeeded(1): 1 row, $2.99 USDTBSC, PaidAt 2026-10-01 16:23Z, account not on the staff/CEO list (email pattern check); plus Crypto Refunded 1 (6 Oct). /login -> customer sign-in (QA 29 Sep). So /checkout has completed at least one real payment -> to [QA] to confirm against the website order record and xd-949. || [BLOCKED] QA 2026-09-29: /login -> /account/login, a customer sign-in page ('Use the same email and password as in the CasperVPN app') - met. /checkout renders its own crypto flow; no real crypto payment has ever completed (xd-949, P0) - 'completes a payment' is unproven until the CEO's one real $1 payment (CEO checklist row 1). | was: 2026-09-23: /login \u2192 /download is live and verified. /checkout still renders its own flow (xd-837). New today, same family: the ADMIN login could never succeed (JWT_SECRET absent from the container) \u2014 fixed in 2d82bc3f, admin@caspervpn.com now signs in and lands on the new Marketing page.",
           "verifiedByRaw": "none",
           "qaVerdict": "BLOCKED",
-          "qaDate": "2026-09-29",
+          "qaDate": "2026-10-11",
           "verify": "curl -sL -o /dev/null -w '%{url_effective}' https://www.caspervpn.com/login -> /account/login",
           "autoTickReverted": "2026-10-07 growth x: auto-ticked by session_exit at 23:54Z 6 Oct (board 2c61c1337), restored",
           "blocker": ""
@@ -16962,10 +16975,14 @@
         {
           "test": "A DECISION row on the CEO card asks yes/no with the advice, the expected new users per month at today's base, and the pre-mortem",
           "verify": "ceo-action-backlog has a row starting 'DECISION \u2014 Referral'",
-          "met": false,
-          "verifiedBy": "none",
-          "evidence": "[GROWTH run 2026-10-11 0003, scheduled, 2026-10-11T00:14:32Z] DONE for QA: ceo-action-backlog row 137 now carries the per-month number (~0.1 new paying user/month: 2 real payers x 5 %/month target) and the 4-line pre-mortem from spec s12, at the top of its evidence. Back to [QA] (xd-1713 resolution). || [QA 2026-10-10 u, scheduled, 2026-10-10T23:34:26Z] PARTIAL - the DECISION row exists (ceo-action-backlog row 137) and is answered: CEO YES 10 Oct to advice B (park until 100 paying or 1 Dec). The row carries yes/no options + advice; the expected new users are only words ('very few'; spec: 'a handful per quarter'), not a per-month number, and the pre-mortem is only in the spec (section 12), not on the row. Not ticked (part-measured tick = trap L425). Back to Product/Marketing via this run's handback. || [GROWTH run 2026-10-10 2204, scheduled, 2026-10-10T22:10:19Z] MEASURED on the board: ceo-action-backlog row 137 'DECISION - invite a friend rewards' exists and is answered: CEO YES 2026-10-10 to advice B (park rewards until 100 paying or 1 Dec). Self-report - for [QA]. || ",
-          "qaDate": "2026-10-10"
+          "met": true,
+          "verifiedBy": "tested",
+          "evidence": "[QA 2026-10-11 b, scheduled, 2026-10-11T01:19:27Z] PASS - board read 01:07Z: ceo-action-backlog row 137 is the DECISION row (CEO YES 10 Oct, advice B: park until 100 paying or 1 Dec) and its evidence now opens with the per-month number (~0.1 new paying user/month = 2 real payers x the spec's 5 %/month) and the 4-line pre-mortem (nobody invites; farm accounts; Apple code cap; renewal not linkable). || [GROWTH run 2026-10-11 0003, scheduled, 2026-10-11T00:14:32Z] DONE for QA: ceo-action-backlog row 137 now carries the per-month number (~0.1 new paying user/month: 2 real payers x 5 %/month target) and the 4-line pre-mortem from spec s12, at the top of its evidence. Back to [QA] (xd-1713 resolution). || [QA 2026-10-10 u, scheduled, 2026-10-10T23:34:26Z] PARTIAL - the DECISION row exists (ceo-action-backlog row 137) and is answered: CEO YES 10 Oct to advice B (park until 100 paying or 1 Dec). The row carries yes/no options + advice; the expected new users are only words ('very few'; spec: 'a handful per quarter'), not a per-month number, and the pre-mortem is only in the spec (section 12), not on the row. Not ticked (part-measured tick = trap L425). Back to Product/Marketing via this run's handback. || [GROWTH run 2026-10-10 2204, scheduled, 2026-10-10T22:10:19Z] MEASURED on the board: ceo-action-backlog row 137 'DECISION - invite a friend rewards' exists and is answered: CEO YES 2026-10-10 to advice B (park rewards until 100 paying or 1 Dec). Self-report - for [QA]. || ",
+          "qaDate": "2026-10-11",
+          "passed": true,
+          "verifiedByRaw": "qa",
+          "verifiedDate": "2026-10-11",
+          "qaVerdict": "PASS"
         },
         {
           "test": "If YES: one handoff each to [iOS] (share sheet + code entry), [BACKEND] (code minting per user, fraud caps), [LEGAL] (terms line) with the spec section cited",
@@ -17356,14 +17373,14 @@
         {
           "test": "The same table shows the control for the same week: GA4 sessions and real sign-ups (north-star definition), so a store number can be sanity-checked",
           "verify": "the report file has the four store columns AND sessions + real sign-ups for the same ISO week; \u00a77.2.1 control named",
-          "met": false,
-          "passed": false,
-          "verifiedBy": "none",
-          "verifiedByRaw": "none",
-          "verifiedDate": null,
-          "evidence": "[GROWTH run 2026-10-11 0003, scheduled, 2026-10-11T00:14:32Z] DONE for QA (this row = the control columns): marketing/reports/store-funnel-2026-W41.md on production (ce810075): GA4 sessions W41 (5-10 Oct) 26 vs W40 27; new real users 33 (14 connected) vs W40 12 (4 connected); control: W40 re-run matches the 5 Oct KPI report exactly (27 / 12 / 4). The 4 App Store columns are written NOT MEASURED - need the CEO (API 403, trap C24): new CEO card checklist row added. || [QA 2026-10-10 u, scheduled, 2026-10-10T23:34:26Z] NOT DONE - re-measured 23:07Z: git ls-tree -r origin/production | grep -iE 'store-funnel|storefunnel' -> nothing; no table with the four store columns + GA4 sessions + real sign-ups for one week exists. Analytics API still 403 (row 3), so the table needs the CEO's App Store Connect -> Analytics numbers by hand. || [QA 2026-10-10 t, scheduled, 2026-10-10T22:23:16Z] NOT DONE - re-measured: no store-funnel report file in the repo (find -iname '*store-funnel*' = 0); the 2 Oct reading came from Apple's weekly mail, not a saved table. | [CEO office 2026-10-02 06:2xZ (09:2x Beirut, daily run)] First external control, from Apple's App Analytics weekly summary mail (company inbox, 29 Sep 21:52Z, week 21\u201327 Sep): 1,559 impressions \u2192 45 first-time installs (2.9%; AppTweak average 3.8%, 2025 US data) \u2192 our DB: ~17 real sign-ups that week (38% of installs) \u2192 9 connected \u2192 0 paid. Not ticked (owner Marketing; the saved script is still the demand). | ",
-          "qaVerdict": "FAIL",
-          "qaDate": "2026-10-10"
+          "met": true,
+          "passed": true,
+          "verifiedBy": "tested",
+          "verifiedByRaw": "qa",
+          "verifiedDate": "2026-10-11",
+          "evidence": "[QA 2026-10-11 b, scheduled, 2026-10-11T01:19:27Z] PASS (this row = the control columns only) - production marketing/reports/store-funnel-2026-W41.md (git show 01:0xZ): GA4 sessions + real sign-ups for W41 next to the W40 control, and a section '## Control (CLAUDE.md \u00a77.2.1)' stating the W40 re-run matches the 5 Oct KPI report. The 4 App Store columns read 'NOT MEASURED - needs the CEO' (rows 0/2 stay open). || [GROWTH run 2026-10-11 0003, scheduled, 2026-10-11T00:14:32Z] DONE for QA (this row = the control columns): marketing/reports/store-funnel-2026-W41.md on production (ce810075): GA4 sessions W41 (5-10 Oct) 26 vs W40 27; new real users 33 (14 connected) vs W40 12 (4 connected); control: W40 re-run matches the 5 Oct KPI report exactly (27 / 12 / 4). The 4 App Store columns are written NOT MEASURED - need the CEO (API 403, trap C24): new CEO card checklist row added. || [QA 2026-10-10 u, scheduled, 2026-10-10T23:34:26Z] NOT DONE - re-measured 23:07Z: git ls-tree -r origin/production | grep -iE 'store-funnel|storefunnel' -> nothing; no table with the four store columns + GA4 sessions + real sign-ups for one week exists. Analytics API still 403 (row 3), so the table needs the CEO's App Store Connect -> Analytics numbers by hand. || [QA 2026-10-10 t, scheduled, 2026-10-10T22:23:16Z] NOT DONE - re-measured: no store-funnel report file in the repo (find -iname '*store-funnel*' = 0); the 2 Oct reading came from Apple's weekly mail, not a saved table. | [CEO office 2026-10-02 06:2xZ (09:2x Beirut, daily run)] First external control, from Apple's App Analytics weekly summary mail (company inbox, 29 Sep 21:52Z, week 21\u201327 Sep): 1,559 impressions \u2192 45 first-time installs (2.9%; AppTweak average 3.8%, 2025 US data) \u2192 our DB: ~17 real sign-ups that week (38% of installs) \u2192 9 connected \u2192 0 paid. Not ticked (owner Marketing; the saved script is still the demand). | ",
+          "qaVerdict": "PASS",
+          "qaDate": "2026-10-11"
         },
         {
           "test": "The launch-week reading is written as one plain sentence on north-star-kpis (evidence) and in the Monday KPI report: how many saw the listing, how many installed, the conversion, and the top 3 countries",
@@ -17761,12 +17778,16 @@
         {
           "test": "The public facts sheet carries the live fleet count with its measurement date, and the growth run re-measures it before scheduling any post that names a number",
           "verify": "grep -n 'Fleet' marketing/PUBLIC-FACTS-2026-09-21.md \u2192 matches VpnServers active count; marketing SKILL.md \u00a75.1 step lists the re-measure",
-          "met": false,
-          "verifiedBy": "none",
+          "met": true,
+          "verifiedBy": "tested",
           "autoTickReverted": "2026-10-07 growth x: auto-ticked by session_exit at 23:54Z 6 Oct (board 2c61c1337), restored",
-          "evidence": "[GROWTH run 2026-10-11 0003, scheduled, 2026-10-11T00:14:32Z] DONE for QA: re-measured 00:1xZ VpnServers IsActive 11 / 10 countries; PUBLIC-FACTS Fleet row now carries 're-measured again 2026-10-11 00:1xZ' (production bbb039ce); marketing SKILL s5.1 step 2a added (production 521b12b1): T1 SQL + update the facts row before any post/caption/store text that names a number. || [QA 2026-10-10 u, scheduled, 2026-10-10T23:34:26Z] PARTIAL - re-measured 23:07Z: production VpnServers IsActive = 11 servers / 10 countries = the internal count on PUBLIC-FACTS line 9 (CEO decision 3 Oct: no public number), but that count is dated 're-measured 2026-10-01' (9 days) and marketing SKILL has no step that re-measures it before a post (grep re-measure/PUBLIC-FACTS: none for the fleet). Not ticked. || [GROWTH run 2026-10-10 2304, scheduled, 2026-10-10T23:08:53Z] MEASURED prod DB read-only 23:1xZ: VpnServers IsActive 11 of 13 rows, 10 countries. Public facts sheet line 9 names no number by CEO decision 3 Oct (xd-1267), so nothing public changes. Daily re-measure done this run. | [GROWTH run 2026-10-10 2204, scheduled, 2026-10-10T22:10:19Z] MEASURED: git show origin/production:marketing/PUBLIC-FACTS-2026-09-21.md line 9 Fleet = 'No server or country count anywhere public (CEO decision 3 Oct, xd-1267)' + internal count 11 servers / 10 countries 're-measured 2026-10-01' - 9 days old, so the daily re-measure is NOT happening. Under the CEO's no-number decision the public part is met; the dated internal count is stale. || ",
+          "evidence": "[QA 2026-10-11 b, scheduled, 2026-10-11T01:19:27Z] PASS - production marketing/PUBLIC-FACTS-2026-09-21.md line 9 carries 're-measured again 2026-10-11 00:1xZ by the growth run: 11 active, 10 co(untries)'; control: production VpnServers IsActive = 11 servers / 10 countries (01:0xZ) - equal; marketing SKILL.md line 275 '2a. **Fleet count before any numbered post' (re-measure step) present on production. || [GROWTH run 2026-10-11 0003, scheduled, 2026-10-11T00:14:32Z] DONE for QA: re-measured 00:1xZ VpnServers IsActive 11 / 10 countries; PUBLIC-FACTS Fleet row now carries 're-measured again 2026-10-11 00:1xZ' (production bbb039ce); marketing SKILL s5.1 step 2a added (production 521b12b1): T1 SQL + update the facts row before any post/caption/store text that names a number. || [QA 2026-10-10 u, scheduled, 2026-10-10T23:34:26Z] PARTIAL - re-measured 23:07Z: production VpnServers IsActive = 11 servers / 10 countries = the internal count on PUBLIC-FACTS line 9 (CEO decision 3 Oct: no public number), but that count is dated 're-measured 2026-10-01' (9 days) and marketing SKILL has no step that re-measures it before a post (grep re-measure/PUBLIC-FACTS: none for the fleet). Not ticked. || [GROWTH run 2026-10-10 2304, scheduled, 2026-10-10T23:08:53Z] MEASURED prod DB read-only 23:1xZ: VpnServers IsActive 11 of 13 rows, 10 countries. Public facts sheet line 9 names no number by CEO decision 3 Oct (xd-1267), so nothing public changes. Daily re-measure done this run. | [GROWTH run 2026-10-10 2204, scheduled, 2026-10-10T22:10:19Z] MEASURED: git show origin/production:marketing/PUBLIC-FACTS-2026-09-21.md line 9 Fleet = 'No server or country count anywhere public (CEO decision 3 Oct, xd-1267)' + internal count 11 servers / 10 countries 're-measured 2026-10-01' - 9 days old, so the daily re-measure is NOT happening. Under the CEO's no-number decision the public part is met; the dated internal count is stale. || ",
           "blocker": "Growth runs must re-measure VpnServers IsActive daily and update line 9 - next growth run; [QA] then judges the row.",
-          "qaDate": "2026-10-10"
+          "qaDate": "2026-10-11",
+          "passed": true,
+          "verifiedByRaw": "qa",
+          "verifiedDate": "2026-10-11",
+          "qaVerdict": "PASS"
         },
         {
           "test": "A node leaving rotation (VpnServers IsActive false) raises one alert that names the public surfaces to re-check (website, Buffer queue, App Review notes)",
@@ -18080,15 +18101,20 @@
         },
         {
           "test": "No public surface names any of these five as available (quantum only as 'coming soon')",
-          "met": false,
-          "verifiedBy": "none",
+          "met": true,
+          "verifiedBy": "tested",
           "verify": "origin curl of the sitemap pages | grep -ciE 'shadowroute|quic|grpc|dpi lab' = 0; quantum total vs qualified (marketing A7)",
-          "evidence": "[GROWTH run 2026-10-11 0003, scheduled, 2026-10-11T00:14:32Z] MEASURED: origin/production 1f40a2c98 (00:10Z) website/app+components+lib+public grep shadowroute|quantumshield|quantum|kyber|quic|grpc = 4 lines, all code comments/filters (page.tsx L5, L285 filter, features/page.tsx L3, features-data.ts quantumUpgradeSoon:false) - 0 public claims; published blog posts with those words = 0. To [QA] for the live check. || [PRODUCT 2026-10-02] not re-measured this run; xd-1206 [MARKETING] is the open quantum/censorship sweep",
-          "blocker": ""
+          "evidence": "[QA 2026-10-11 b, scheduled, 2026-10-11T01:19:27Z] PASS - live 01:1xZ: all 84 sitemap URLs of www.caspervpn.com fetched raw (scripts included): 0 pages contain shadowroute / quic / grpc / 'dpi lab' / quantum (control: 'WireGuard' found on /features, so the fetch reads the page). Production code grep (git grep 023f919 website/app components lib public) = 4 lines, all the word 'Quick' (Quick Tiles / Quick Actions / Quick Create) - 0 claims. || [GROWTH run 2026-10-11 0003, scheduled, 2026-10-11T00:14:32Z] MEASURED: origin/production 1f40a2c98 (00:10Z) website/app+components+lib+public grep shadowroute|quantumshield|quantum|kyber|quic|grpc = 4 lines, all code comments/filters (page.tsx L5, L285 filter, features/page.tsx L3, features-data.ts quantumUpgradeSoon:false) - 0 public claims; published blog posts with those words = 0. To [QA] for the live check. || [PRODUCT 2026-10-02] not re-measured this run; xd-1206 [MARKETING] is the open quantum/censorship sweep",
+          "blocker": "",
+          "passed": true,
+          "verifiedByRaw": "qa",
+          "verifiedDate": "2026-10-11",
+          "qaVerdict": "PASS",
+          "qaDate": "2026-10-11"
         }
       ],
       "progress": 0,
-      "status": "pending",
+      "status": "PARTIAL \u2014 pending",
       "blocked": false,
       "blocker": "",
       "weight": 0.15
@@ -19747,13 +19773,13 @@
       "name": "QA & Testing",
       "status": "red",
       "lead": "QA Lead (AI)",
-      "currentTask": "2026-10-11 [QA] run a (scheduled, 00:05-00:2xZ): 5 tasks \u00b7 2/19 criteria met \u00b7 open P0 to QA 13 \u00b7 open to QA 47",
+      "currentTask": "2026-10-11 [QA] run b (scheduled, 01:05-01:2xZ): 5 tasks \u00b7 2/19 criteria met \u00b7 open P0 to QA 13 \u00b7 open to QA 52",
       "blockers": 13,
       "completion": 11,
-      "lastActivity": "2026-10-11T00:11:15Z",
+      "lastActivity": "2026-10-11T01:19:27Z",
       "launchCompletion": "0",
       "lastTriggered": "2026-10-10T17:05:00Z",
-      "notes": "2026-10-11 [QA] re-based at exit (run a): blockers = open P0 handoffs (xd-1476, xd-1490, xd-1492, xd-1493, xd-1536, xd-1547, xd-1555, xd-1573, xd-1575, xd-1648, xd-1686, xd-1711, xd-1726); completion = criteria met / total on QA-owned tasks."
+      "notes": "2026-10-11 [QA] re-based at exit (run b): blockers = open P0 handoffs (xd-1476, xd-1490, xd-1492, xd-1493, xd-1536, xd-1547, xd-1555, xd-1573, xd-1575, xd-1648, xd-1686, xd-1711, xd-1726); completion = criteria met / total on QA-owned tasks."
     },
     "legal": {
       "name": "Legal & Compliance",
@@ -54781,11 +54807,14 @@
       "to": "[QA]",
       "title": "Handoff from MARKETING: Re-check xd-1713 items: referral row 1, store-funnel row 1, fleet-guard row 1",
       "description": "Growth run 11 Oct 0003. (1) ceo-action-backlog row 137 evidence top: '~0.1 new paying user/month' + pre-mortem -> tick referral-invite-a-friend-spec row 1 if it satisfies. (2) git show origin/production:marketing/reports/store-funnel-2026-W41.md: GA4 + real sign-ups + control columns present; App Store 4 columns wait on the CEO (row 0/2 of store-funnel-measured stay open). (3) grep -n 'Fleet' marketing/PUBLIC-FACTS-2026-09-21.md -> 're-measured again 2026-10-11'; grep -n '2a. \\*\\*Fleet count' memory/departments/marketing/skill/SKILL.md. Control: VpnServers IsActive = 11 / 10 countries.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-10-11T00:14:37Z",
       "createdDate": "2026-10-11",
-      "completedDate": null
+      "completedDate": "2026-10-11",
+      "completedAt": "2026-10-11",
+      "completedBy": "[QA]",
+      "resolution": "PASS 3/3: row 137 carries the per-month number + pre-mortem; W41 report has GA4 + real sign-ups + control section; PUBLIC-FACTS line 9 re-measured 11 Oct = VpnServers 11/10, SKILL step 2a present. Ticked referral 1, store-funnel 1, fleet-guard 1."
     },
     {
       "id": "xd-1730",
@@ -54793,11 +54822,14 @@
       "to": "[QA]",
       "title": "Handoff from PRODUCT: Check: gtm-03 row 6 (one real crypto payment) + phase3-stealth-roadmap row 5 (no public claims)",
       "description": "Growth run 11 Oct 0003. (a) gtm-03-web-funnel row 6: Payments has Method=Crypto Status=Succeeded 1 row, $2.99 USDTBSC, PaidAt 2026-10-01 16:23Z (not a staff email). Confirm against the website order + xd-949 and tick if it is a real stranger's /checkout payment. (b) phase3-stealth-roadmap row 5: git grep -niE 'shadowroute|quantumshield|quantum|kyber|quic|grpc' origin/production -- website/app website/components website/lib website/public -> only comments/filters; blog published hits 0; add a live check of /features and the guides titles.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-10-11T00:14:37Z",
       "createdDate": "2026-10-11",
-      "completedDate": null
+      "completedDate": "2026-10-11",
+      "completedAt": "2026-10-11",
+      "completedBy": "[QA]",
+      "resolution": "(b) PASS - 84 sitemap pages 0 hits, code hits are only 'Quick': ticked phase3-stealth-roadmap 5. (a) FAIL - the one paid crypto Payment is gm@applinkoffshore.com (staff list = the CEO's own test), not a stranger: gtm-03 row 6 stays BLOCKED on xd-1492; handback to [PRODUCT]."
     },
     {
       "id": "xd-1731",
@@ -54817,7 +54849,7 @@
       "from": "[ADMIN-PANEL]",
       "to": "[QA]",
       "title": "Handoff from ADMIN-PANEL: Check the new admin bundle live (admin parts of CEO-YES rows 195-198, main.6594630c.js)",
-      "description": "[WEBSITE+ADMIN run 2026-10-11 0004, scheduled, unattended, 2026-10-11T00:37:25Z] admin bundle SHIPPED 2026-10-11 under CEO YES row 200 (xd-1722): admin-react only, built from the production clone (HEAD 21ecf0c18 contains 1d4f264e5; admin-panel-react last change = 1d4f264e5). Type check first: npx tsc --noEmit on the 1d4f264e5 admin tree = 0 errors, planted error = 1 (node:20-alpine --cpus=0.8). Runner stopped only after its job finished (Build Admin Panel: Succeeded 00:23:32Z; stopped 00:23:42Z, started again 00:34:21Z 'active' - no CI job cancelled). Rollback image caspervpn-admin-react:rollback-202610110015 (054933e6941e). Build 'Compiled successfully' + BUILD SUCCESS; container recreated 00:33:55Z, healthy. MEASURED live bundle main.b40e4fb7.js -> main.6594630c.js: 'What was bought' 0->1, 'Trial until' 0->1, 'Trial starts today' 0->1, 'sources reporting' 0->1 (control strings still present: admin-spa 1, View all notifications 1); admin.caspervpn.com 200; /api/admin/metrics/trials without token 401; api /health 200 during the build. NOT PROVEN: the pages rendering with real data under an admin login (QA). DO (with an admin login on admin.caspervpn.com): (1) Payments list shows 'What was bought' (plan / add-on / trial words) and a click opens the user's page (row 197/xd-1437); (2) user page shows 'Trial until' for a live Apple trial (row 195/xd-1430); (3) overview card 'Trial starts today / 7 days' shows numbers equal to GET /api/admin/metrics/trials (row 198/xd-1627); (4) Live Threats card says 'N of 5 sources reporting' (xd-1339 item 1). Verify: H=$(curl -s https://admin.caspervpn.com/ | grep -oE 'main\\.[a-f0-9]+\\.js'|head -1); curl -s https://admin.caspervpn.com/static/js/$H | grep -c 'Trial starts today' -> >=1. Rollback if broken: docker tag caspervpn-admin-react:rollback-202610110015 caspervpn-admin-react:latest && docker compose up -d --no-deps admin-react. Then -> CEO note.",
+      "description": "[QA 2026-10-11 b 01:1xZ] public half PASS: live bundle main.6594630c.js has 'What was bought' 1, 'Trial until' 1, 'Trial starts today' 1, 'sources reporting' 1 (control 'View all notifications' 1); /api/admin/metrics/trials without token 401. The 4 signed-in checks wait for an admin browser session (xd-1697 / xd-1494).\n\n[WEBSITE+ADMIN run 2026-10-11 0004, scheduled, unattended, 2026-10-11T00:37:25Z] admin bundle SHIPPED 2026-10-11 under CEO YES row 200 (xd-1722): admin-react only, built from the production clone (HEAD 21ecf0c18 contains 1d4f264e5; admin-panel-react last change = 1d4f264e5). Type check first: npx tsc --noEmit on the 1d4f264e5 admin tree = 0 errors, planted error = 1 (node:20-alpine --cpus=0.8). Runner stopped only after its job finished (Build Admin Panel: Succeeded 00:23:32Z; stopped 00:23:42Z, started again 00:34:21Z 'active' - no CI job cancelled). Rollback image caspervpn-admin-react:rollback-202610110015 (054933e6941e). Build 'Compiled successfully' + BUILD SUCCESS; container recreated 00:33:55Z, healthy. MEASURED live bundle main.b40e4fb7.js -> main.6594630c.js: 'What was bought' 0->1, 'Trial until' 0->1, 'Trial starts today' 0->1, 'sources reporting' 0->1 (control strings still present: admin-spa 1, View all notifications 1); admin.caspervpn.com 200; /api/admin/metrics/trials without token 401; api /health 200 during the build. NOT PROVEN: the pages rendering with real data under an admin login (QA). DO (with an admin login on admin.caspervpn.com): (1) Payments list shows 'What was bought' (plan / add-on / trial words) and a click opens the user's page (row 197/xd-1437); (2) user page shows 'Trial until' for a live Apple trial (row 195/xd-1430); (3) overview card 'Trial starts today / 7 days' shows numbers equal to GET /api/admin/metrics/trials (row 198/xd-1627); (4) Live Threats card says 'N of 5 sources reporting' (xd-1339 item 1). Verify: H=$(curl -s https://admin.caspervpn.com/ | grep -oE 'main\\.[a-f0-9]+\\.js'|head -1); curl -s https://admin.caspervpn.com/static/js/$H | grep -c 'Trial starts today' -> >=1. Rollback if broken: docker tag caspervpn-admin-react:rollback-202610110015 caspervpn-admin-react:latest && docker compose up -d --no-deps admin-react. Then -> CEO note.",
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-10-11T00:37:30Z",
@@ -54830,11 +54862,14 @@
       "to": "[QA]",
       "title": "Handoff from CTO: Check xd-1712 board_reconcile fix (production 05752762)",
       "description": "board_reconcile.py on production 05752762: (1) DONE regex now counts only '[CEO <date>]'/'[CEO YES <date>]', not run tags like '[CEO office 2026-09-30 ...]'; (2) a 'SHIPPED ... awaiting QA' row whose newest evidence (first 200 chars) has FAIL is no longer B. Measured by the CTO run 00:5xZ on the live board: --json old vs new differ in exactly 2 rows: ios-ipad-sidebar-layout#1 B-done-signal -> C-stale, ceo-action-backlog#56 B-done-signal -> (not listed, FAIL measured within 7 days). Verify: python3 tools/board_reconcile.py --json | jq '.[] | select(.task==\"ios-ipad-sidebar-layout\" or (.task==\"ceo-action-backlog\" and .row==56)) | .kind' -> no B-done-signal.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P3",
       "createdAt": "2026-10-11T00:42:46Z",
       "createdDate": "2026-10-11",
-      "completedDate": null
+      "completedDate": "2026-10-11",
+      "completedAt": "2026-10-11",
+      "completedBy": "[QA]",
+      "resolution": "PASS 01:1xZ: board_reconcile.py --json on the live board = 270 rows (C 199, W 50, B 21); ios-ipad-sidebar-layout#1 = C-stale, ceo-action-backlog#56 not listed - no B-done-signal for either."
     },
     {
       "id": "xd-1734",
@@ -54842,11 +54877,14 @@
       "to": "[QA]",
       "title": "Handoff from CTO: Check 3 CTO rows proven/fixed on 11 Oct: cto-ceo-departments#3, blog-hero-image-system#2, ci-cd-pipeline#8",
       "description": "(1) cto-ceo-departments row 3: tools/factory_bootstrap.py DEPT_ALIASES now has a 'ceo' entry (production 74bebcbb). Verify: grep -n '\"ceo\"' tools/factory_bootstrap.py. (2) blog-hero-image-system row 2: live header 11 Oct 00:4xZ = 'cache-control: public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400' (one max-age; the 29 Sep FAIL had a doubled value). Verify: curl -sI https://www.caspervpn.com/og/no-log-vpn | grep -i cache-control. (3) ci-cd-pipeline row 8: migrations are applied automatically at API start (backend-dotnet-core/Program.cs:569 dbContext.Database.Migrate(), runs on every deploy_api.sh rebuild), not by a workflow step; production __EFMigrationsHistory read-only 00:4xZ = 41 rows, newest 20261009000000_SupportTicketTimestamps = newest migration file in the repo. Verify: same read-only query vs ls backend-dotnet-core/Data/Migrations | sort | tail -1.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P3",
       "createdAt": "2026-10-11T00:42:46Z",
       "createdDate": "2026-10-11",
-      "completedDate": null
+      "completedDate": "2026-10-11",
+      "completedAt": "2026-10-11",
+      "completedBy": "[QA]",
+      "resolution": "PASS 3/3: ceo alias at factory_bootstrap.py:654 (production 023f919); og cache-control single max-age; migrations 41 = newest file, Migrate() at Program.cs:569. Ticked cto-ceo-departments 3, blog-hero-image-system 2, ci-cd-pipeline 8."
     },
     {
       "id": "xd-1735",
@@ -54854,11 +54892,14 @@
       "to": "[QA]",
       "title": "Handoff from DEVOPS: Check CEO-YES rows 194 (crypto rejected-notice count) and 192 steps 1-3 (new mail key) on production",
       "description": "Row 194: diff -q /opt/caspervpn/crypto_renewals_run.sh vs origin/production = same; after 01:07Z one RoutineRuns row 'crypto-renewals' (ok/warn). Row 192 steps 1-3: grep -lF -f <old key backup /root/backups/devops-1011a/brain/etc/caspervpn/resend.key> over the 10 main-server files + docker exec printenv api/website = 0; same with the new key = 1 each; alertmanager-resend-bridge active and its log shows status=200; disk-guard.sh on 10 VPN servers + active_probe_detector.py on Bangkok carry no old key. Old key is still ON (step 4 is DevOps' next run). Never print a key: compare by grep -F -f file / sha prefix only.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-10-11T00:53:36Z",
       "createdDate": "2026-10-11",
-      "completedDate": null
+      "completedDate": "2026-10-11",
+      "completedAt": "2026-10-11",
+      "completedBy": "[QA]",
+      "resolution": "Row 194 PASS (installed = production git; RoutineRuns crypto-renewals ok 01:07:02Z) - ticked. Row 192 steps 1-3 main-server leg PASS (containers new 1 / old 0; 0 live files with the old key; bridge 14x 200); VPN-server leg not re-measured by QA; row stays PARTIAL for step 4 (old key still on) + step 5 (.bak copies)."
     },
     {
       "id": "xd-1736",
@@ -54866,11 +54907,14 @@
       "to": "[QA]",
       "title": "Handoff from DEVOPS: Bangkok post-mortem task: rows 0,3,4,5 measured; rows 1-2 cannot be done (logs gone)",
       "description": "bangkok-recovery-post-mortem-2026-05-17: re-run row 0 (ssh bkk-01, uptime -s), row 3 (swapon --show), row 4 (Prometheus rules list DevFleetNodeDown, not firing), row 5 (devops session log 2026-10-11 a shows Bangkok-first). Rows 1-2: journal starts 23 Jun, hang was 17 May \u2014 close as superseded if you agree.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P3",
       "createdAt": "2026-10-11T00:53:36Z",
       "createdDate": "2026-10-11",
-      "completedDate": null
+      "completedDate": "2026-10-11",
+      "completedAt": "2026-10-11",
+      "completedBy": "[QA]",
+      "resolution": "Rows 0,3,4,5 PASS (uptime since 15 Sep; 1 GB swap; DevFleetNodeDown loaded, 0 firing; devops log Bangkok-first) - ticked. Rows 1-2 agreed SUPERSEDED (logs gone) - left unmet until the CEO says close."
     },
     {
       "id": "xd-1737",
@@ -54925,7 +54969,7 @@
       "from": "[BACKEND]",
       "to": "[QA]",
       "title": "Handoff from BACKEND: Production check of CEO card row 199 (Top Countries counts real people; API shipped 00:35Z, production a1094971c)",
-      "description": "[BACKEND run 2026-10-11 0015, scheduled, unattended, 2026-10-11T00:59:41Z] SHIPPED under CEO YES 2026-10-10 ~23:20Z: production a1094971c = cherry-pick -x of development a7bcdd898 (clean, 5 files; each shipped file = development, 0 differing lines). Ship tree build 0 errors, tests 288/288, RealUserFilterTests 18/18. /root/deploy_api.sh 00:31:04-00:35:45Z DEPLOY DONE OK, rollback caspervpn-api:rollback-202610110031 (= 65615a32ec2c), D8 = 1 code commit. DLL RealUserRule 0->1, TopCountriesAll 0->3; /health 200; /api/admin/analytics no token 401 before and after. CHECK with an admin token (row verify): GET /api/admin/analytics -> topCountries = real users by LastLoginCountry, topCountriesAll = all accounts, realUsersTotal < allUsersTotal (baseline 10 Oct: 311 real of 592, DE 8 of 170). Admin screen half is NOT deployed - added to xd-1722 [ADMIN-PANEL].",
+      "description": "[QA 2026-10-11 b 01:1xZ] not runnable unattended: needs an admin token; /api/admin/analytics without token = 401 (route alive). Waits for xd-1697 (signed-in checks).\n\n[BACKEND run 2026-10-11 0015, scheduled, unattended, 2026-10-11T00:59:41Z] SHIPPED under CEO YES 2026-10-10 ~23:20Z: production a1094971c = cherry-pick -x of development a7bcdd898 (clean, 5 files; each shipped file = development, 0 differing lines). Ship tree build 0 errors, tests 288/288, RealUserFilterTests 18/18. /root/deploy_api.sh 00:31:04-00:35:45Z DEPLOY DONE OK, rollback caspervpn-api:rollback-202610110031 (= 65615a32ec2c), D8 = 1 code commit. DLL RealUserRule 0->1, TopCountriesAll 0->3; /health 200; /api/admin/analytics no token 401 before and after. CHECK with an admin token (row verify): GET /api/admin/analytics -> topCountries = real users by LastLoginCountry, topCountriesAll = all accounts, realUsersTotal < allUsersTotal (baseline 10 Oct: 311 real of 592, DE 8 of 170). Admin screen half is NOT deployed - added to xd-1722 [ADMIN-PANEL].",
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-10-11T00:59:45Z",
@@ -54937,7 +54981,7 @@
       "from": "[BACKEND]",
       "to": "[QA]",
       "title": "Handoff from BACKEND: Test on dev: OS version on failure reports (xd-1714 item 2) + standard shape for invalid-body errors (backend-api row 7), development 32981aec7",
-      "description": "[BACKEND run 2026-10-11 0015, scheduled, unattended, 2026-10-11T00:59:41Z] development 3a26132ae (xd-1714 item 2: ConnectFailureEvents.OsVersion varchar(30), body osVersion else header X-Device-OS, cleared after 30 d by DataPurgeService; migration 20261011000000_ConnectFailureOsVersion ADD COLUMN IF NOT EXISTS) + 32981aec7 (backend-api row 7: InvalidModelStateResponseFactory -> success=false, errorCode VALID_3001, message = first field error, timestamp; superset - errors/type/title/status/traceId kept). Main-server build 0 errors, suite 312/312; ConnectFailureOsVersionTests 5/5, ValidationErrorResponseTests 3/3, ConnectTelemetryV2 still green; CONTROL: with the OsVersion assignment removed 4/5 fail. Dev deploy (deploy-dev-backend 00:50Z) live 00:58Z: POST https://api.dev.caspervpn.com/api/auth/register {} -> {success:false,errorCode:VALID_3001,message:'The Email field is required.',timestamp,...}; production control still the old ProblemDetails body. Dev DB: __EFMigrationsHistory row 1, column OsVersion 1, dev api log migration line 1. CHECK: (1) the register curl on dev; (2) POST /api/diagnostics/connect-failure on dev with osVersion 'iOS 18.1.0' and a second with only header X-Device-OS: Android 14 -> rows carry them; (3) the iPhone app still shows a sentence (not raw JSON) on a bad sign-up form. Then the two READY TO SHIP rows on the CEO card.",
+      "description": "[QA 2026-10-11 b 01:09Z] leg 1 PASS: dev POST /api/auth/register {} -> success:false, errorCode VALID_3001, message 'The Email field is required.', timestamp, errors kept; production control still the old ProblemDetails body. Legs 2 (connect-failure osVersion rows on dev) and 3 (phone) not run this hour.\n\n[BACKEND run 2026-10-11 0015, scheduled, unattended, 2026-10-11T00:59:41Z] development 3a26132ae (xd-1714 item 2: ConnectFailureEvents.OsVersion varchar(30), body osVersion else header X-Device-OS, cleared after 30 d by DataPurgeService; migration 20261011000000_ConnectFailureOsVersion ADD COLUMN IF NOT EXISTS) + 32981aec7 (backend-api row 7: InvalidModelStateResponseFactory -> success=false, errorCode VALID_3001, message = first field error, timestamp; superset - errors/type/title/status/traceId kept). Main-server build 0 errors, suite 312/312; ConnectFailureOsVersionTests 5/5, ValidationErrorResponseTests 3/3, ConnectTelemetryV2 still green; CONTROL: with the OsVersion assignment removed 4/5 fail. Dev deploy (deploy-dev-backend 00:50Z) live 00:58Z: POST https://api.dev.caspervpn.com/api/auth/register {} -> {success:false,errorCode:VALID_3001,message:'The Email field is required.',timestamp,...}; production control still the old ProblemDetails body. Dev DB: __EFMigrationsHistory row 1, column OsVersion 1, dev api log migration line 1. CHECK: (1) the register curl on dev; (2) POST /api/diagnostics/connect-failure on dev with osVersion 'iOS 18.1.0' and a second with only header X-Device-OS: Android 14 -> rows carry them; (3) the iPhone app still shows a sentence (not raw JSON) on a bad sign-up form. Then the two READY TO SHIP rows on the CEO card.",
       "status": "pending",
       "priority": "P2",
       "createdAt": "2026-10-11T00:59:45Z",
@@ -55003,9 +55047,30 @@
       "createdAt": "2026-10-11T01:12:57Z",
       "createdDate": "2026-10-11",
       "completedDate": null
+    },
+    {
+      "id": "xd-1747",
+      "from": "[QA]",
+      "to": "[PRODUCT]",
+      "title": "Handoff from QA: [QA FAILED] gtm-03 row 6: the only paid crypto order is the CEO's own test account",
+      "description": "QA 2026-10-11 b: Payments Method=3 Status=1 has 1 row ($2.99 USDTBSC, PaidAt 2026-10-01 16:23Z) and its account is gm@applinkoffshore.com - on memory/context/staff-accounts.md (the CEO's own). The growth/product claim 'not a staff email' came from an email-pattern check that misses the CEO's domains. Fix: use the staff list (staff-accounts.md, skill \u00a7112) for every real-user claim; gtm-03-web-funnel row 6 stays BLOCKED until the first real paid order (xd-1492). Verify: psql caspervpn: select u.\"Email\" from \"Payments\" p join \"Users\" u on u.\"Id\"=p.\"UserId\" where p.\"Method\"=3 and p.\"Status\"=1 -> any address NOT on the staff list.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-11T01:19:31Z",
+      "createdDate": "2026-10-11",
+      "completedDate": null
     }
   ],
   "importantNotes": [
+    {
+      "id": "note-qa-20261011b",
+      "date": "2026-10-11",
+      "createdAt": "2026-10-11T01:19:27Z",
+      "dept": "[QA]",
+      "priority": "P2",
+      "title": "[QA] run b (scheduled, 01:05Z): 12 rows ticked, 6 handoffs closed; the 'first real crypto payment' was your own test",
+      "text": "Bad news first: the one paid crypto order counted as a real customer is your own test account, so we still have no stranger paying with crypto. Ticked with a test: the crypto warning you approved now runs (first clean run 01:07), the mail-key change is in place on the main server (old key still on until the next DevOps step), 4 Bangkok server checks, the public site makes no claims about unreleased features, the invite-a-friend decision row, the store-funnel control, the fleet-count rule, and 3 CTO fixes. Two old Bangkok log questions can no longer be answered (logs gone) - QA suggests closing them. Waiting: admin-screen checks need a signed-in browser."
+    },
     {
       "id": "note-ceobot-20261011a",
       "date": "2026-10-11",
