@@ -14087,6 +14087,30 @@
           "evidence": "[WEBSITE+ADMIN run 2026-10-11 0205, scheduled, unattended, 2026-10-11T02:34:52Z] added for xd-1422 slice 1 [SECURITY]+[WEBSITE]. development 1dcd34792 (7 files, +75, guard only). tsc --noEmit 0 errors (planted error -> 1). dev 02:34Z after deploy-dev (runner job 02:26Z), no cookie: /api/tasks, /api/tasks/<fake id>, /api/admin/funnels, /api/admin/analytics/geo, /api/admin/contacts|segments|campaigns/<fake id> all 401 (before 02:13Z: 200/200/200/404 = handler ran); POST /api/tasks 401; control /api/admin/contacts 401 before and after; smoke / /pricing /blog /account/login 200. QA handoff xd-1760. Production code change -> waits for CEO YES; advice: YES (small, guard-only change).",
           "verifiedByRaw": null,
           "verifiedDate": null
+        },
+        {
+          "test": "READY TO SHIP \u2014 we can see which Apple Ads campaign brought each new install, and where people stop before they make an account \u00b7 why: Apple Ads is running (24 installs in a week) but we could only guess which sign-ups came from the ads, and anyone who opened the app and left before signing up was invisible \u00b7 tested: all 333 checks pass, including 12 new ones; on the test server a made-up Apple code is refused and nothing is kept; a real 'this came from campaign X' answer needs a real ad install, so the first real proof comes after the ship and the next app build \u00b7 what the ship does: adds two small server addresses the app can call before sign-in (no personal data, no IP, only a random install number), one new table, and a helper that asks Apple again for up to a day when Apple is not ready yet \u00b7 rollback: put back the previous server version (the deploy keeps a copy); the new table is simply ignored",
+          "verify": "After ship: SELECT 1 FROM \"__EFMigrationsHistory\" WHERE \"MigrationId\"='20261011020000_InstallAttribution'; curl -s -X POST https://api.caspervpn.com/api/funnel/install-events -H 'Content-Type: application/json' -d '{\"event\":\"app_opened\",\"installId\":\"qa-check-0001\"}' -> success:true; after the app build with xd-1687: SELECT \"Status\", count(*) FROM \"AppleAdsAttributions\" GROUP BY 1",
+          "evidence": "[BACKEND run 2026-10-11 0215, scheduled, unattended, 2026-10-11T02:59:51Z] development 89c58d9c7; xd-1688; QA dev check xd-1763. Board advice: yes - it is what the growth team needs to judge the ads; nothing changes for customers until the app sends the events, and the Legal privacy lines gate that app build.",
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "addedAt": "2026-10-11T02:59:51Z",
+          "addedBy": "[BACKEND] run 2026-10-11 0215",
+          "owner": "[BACKEND]",
+          "dept": "backend"
+        },
+        {
+          "test": "READY TO SHIP \u2014 the team gets one message if a free user ever goes far past the free monthly limit without being cut off \u00b7 why: in September one free user used six times the limit before the cut was fixed; today nobody would notice if it happened again \u00b7 tested: all 333 checks pass, including 3 new ones; today the check would find nobody (measured: 0 free users over the limit without a cut) \u00b7 what the ship does: adds a once-a-day check at 08:00 Beirut, nothing else \u00b7 rollback: put back the previous server version, or switch the check off with one setting",
+          "verify": "After ship: api log has 'FreeQuotaOverrun check:' once a day after 05:00Z; control: SELECT count(*) FROM \"Users\" WHERE \"IsActive\" AND \"CurrentCycleDataLimitBytes\" BETWEEN 1 AND 1073741824 AND \"CurrentCycleDataUsedBytes\" > 1.1*\"CurrentCycleDataLimitBytes\" AND \"CurrentCycleStartDate\" > now() - interval '35 days' -> compare with the logged number",
+          "evidence": "[BACKEND run 2026-10-11 0215, scheduled, unattended, 2026-10-11T02:59:51Z] development c5b3756be; xd-1386 (b)+(c); QA dev check xd-1764. Board advice: yes - read-only check plus one message; no customer change.",
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "addedAt": "2026-10-11T02:59:51Z",
+          "addedBy": "[BACKEND] run 2026-10-11 0215",
+          "owner": "[BACKEND]",
+          "dept": "backend"
         }
       ],
       "progress": 0,
@@ -48009,8 +48033,10 @@
       "category": "money-admin",
       "ageDays": 5,
       "lifecycle": "active",
-      "updatedAt": "2026-10-07T21:40:42Z",
-      "needsRelease": false
+      "updatedAt": "2026-10-11T02:59:51Z",
+      "needsRelease": false,
+      "notes": "[BACKEND run 2026-10-11 0215, scheduled, unattended, 2026-10-11T02:59:51Z] MEASURED on production 02:20Z (register with a probe address, both refused, no account made): 6-char password -> 400 'minimum length of 10'; a known leaked 14-char password -> 400 AUTH_1001 'This password appeared in a known data breach'. So items (2)+(3) are live. Item (1) 2FA-required dropped by the CEO 5 Oct. Absorbed xd-1449 (Apple/Google sign-in skips 2FA): confirmed in code (AuthService.AppleSignInAsync/GoogleSignInAsync never read TwoFactorEnabled; LoginAsync L519 does) but measured production read-only: users with 2FA on = 0 - nobody is affected today. Deferred to Nov 2026 (needs an app half: a 2FA step after Apple/Google sign-in) - revisit when 2FA is offered in the apps or any user turns it on. QA: tick items 2+3 from this proof or re-run it.",
+      "blocker": "Waits for QA to tick items 2+3 from the 11 Oct 02:20Z production proof (weak -> 400, leaked -> 400 AUTH_1001); the Apple/Google 2FA part is deferred to Nov 2026 (0 users with 2FA)."
     },
     {
       "id": "xd-1370",
@@ -48367,9 +48393,9 @@
       "lifecycle": "active",
       "needsRelease": false,
       "claimedBy": "[ENGINEERING run 2026-10-09 1810]",
-      "blocker": "",
-      "updatedAt": "2026-10-09T19:12:00Z",
-      "notes": "[BACKEND run 2026-10-11 0118, scheduled, unattended, 2026-10-11T01:39:44Z] verify re-run (production read-only): free users >110% of limit with a cycle after 28 Sep = 1, and that 1 has a 'data cap reached' cut; highest = 127%. Still not built: (b) nightly >110% alert, (c) its test."
+      "blocker": "Waits for QA dev check xd-1764, then a CEO YES on the new READY TO SHIP row.",
+      "updatedAt": "2026-10-11T02:59:51Z",
+      "notes": "[BACKEND run 2026-10-11 0215, scheduled, unattended, 2026-10-11T02:59:51Z] (b)+(c) BUILT on development c5b3756be: FreeQuotaOverrunAlertService (daily 05:00Z; alert only for >110% with NO 'data cap reached' cut this cycle) + FreeQuotaOverrunAlertTests 3/3, CONTROL (cut ignored) 2/3 fail; build 0 errors, suite 333/333. QA dev check xd-1764; READY TO SHIP row on the CEO card. (a) overshoot 21-27% stays a known limit (cut lands at 121-127%, measured). | [BACKEND run 2026-10-11 0118, scheduled, unattended, 2026-10-11T01:39:44Z] verify re-run (production read-only): free users >110% of limit with a cycle after 28 Sep = 1, and that 1 has a 'data cap reached' cut; highest = 127%. Still not built: (b) nightly >110% alert, (c) its test."
     },
     {
       "id": "xd-1387",
@@ -49403,9 +49429,10 @@
       "ageDays": 4,
       "lifecycle": "active",
       "note": "[ENGINEERING run 2026-10-07 g, 2026-10-07T21:42:10Z] PARTIAL - MEASURED (read-only, production): nginx api_ssl_access 23 Sep-7 Oct: 14 of 141 hidden-mode config fetches (GET /servers/{id}/caspercloak-config) were followed by POST /servers/{id}/connect for the same server within 180 s; control = WireGuard-only config fetches: 59 of 93. CEO 6 Oct LA session: caspercloak-config 22:15:37Z, then ONLY heartbeats 22:26-22:52Z, no /connect. All 18 Protocol=3 rows in 30 days carry the old body UserAgent 'CasperVPN/iOS' (no build) - 0 from build 65. CAUSE: the app sends its single /connect the instant the tunnel says connected, before hidden mode carries data, and never retries; its heartbeat self-heal (ConnectionViewModel.sendHeartbeat -> logConnectionToBackend) is dead code because the hasLoggedConnectForSession guard is still true. FIX on development d412b33bc (ServersController.Heartbeat): a heartbeat with no open row ADOPTS the session through the normal connect path (quota gate, premium gate, device limit) when the last row is not an admin/device termination and closed > 2 min ago; row marked UserAgent 'heartbeat-adopt (xd-1434)'; a WireGuard-labelled open row becomes CasperCloak when the heartbeat says CasperCloak (xd-1438 item 2). Build 0 errors, tests 195/195 (/root/reports/eng1007g-backend-*.log). DEV PROOF: dev API redeployed 21:38:52Z (DLL carries 'heartbeat-adopt' x1). BEFORE (old dev image 19:33Z, 21:23:59Z): heartbeat CasperCloak on Singapore for probe user probe-renewal-1790807482 -> sessionActive=false reason=no-session, 0 rows. AFTER 21:40:45Z: sessionActive=true + 1 row Protocol=3 UserAgent 'heartbeat-adopt (xd-1434)'; 2nd heartbeat 21:40:51Z -> same single row; POST /disconnect closed it 21:41:06Z; a heartbeat right after the disconnect was NOT adopted ('Session closed (status:Disconnected)'). Files /root/reports/eng1007g-devtest-{before,after1,after2,negative}.txt. Dev data only; no production change. Waits: QA xd-1495 on dev, then CEO YES on the READY TO SHIP row, then ship + re-run xd-1389's counts. iOS half: xd-1496. [ENGINEERING run 2026-10-07 g, 2026-10-07T21:10:55Z] claimed: measuring why hidden-mode (CasperCloak) sessions get no ConnectionLogs row (read-only on production, code on the brain clone); any fix goes to development only. ",
-      "updatedAt": "2026-10-07T21:40:42Z",
-      "notes": "[BACKEND run 2026-10-11 0118, scheduled, unattended, 2026-10-11T01:39:44Z] MEASURED production read-only since the server leg went live (8 Oct 22:35Z, ~50 h): ConnectionLogs Protocol 3 (hidden mode) = 26 rows / 4 users / 9 rows >1 MB down; the 48 h BEFORE = 7 rows / 3 users / 3 >1 MB. CONTROL WireGuard (Protocol 0) same windows 114 vs 136 rows (no general rise). 8 rows since the deploy carry the 'adopt' marker. Staff list not applied (4 users - may include the CEO's phones). Server leg works; left: backfill of pre-8-Oct sessions (heartbeat logs are not kept that long - likely impossible) and the xd-1389 re-run. | [ENGINEERING run 2026-10-08 b, 2026-10-08T22:39:10Z] Server leg LIVE on production (row 151, f29362b0b, 22:34:51Z): a heartbeat with no open row now opens the hidden-mode session (DLL 'heartbeat-adopt' 0 -> 1). Real-traffic proof -> QA xd-1539 within 24 h. App leg (retry /connect, dead self-heal) stays with [iOS] xd-1496. | [CTO live 2026-10-07 21:0x-21:5xZ, CEO chat, Opus 5.5] More evidence: ConnectionLogs row for RU user d4062d5d on Singapore 1 Oct 15:00:49-15:31:02Z says 348 B down / 276 B up; the same session carried 197 MB (WireGuardPeerUsages, peer created 15:00:57Z; relay journal sid 7e000b89). The subscriber's rows on Amsterdam are labelled Protocol 0 (WireGuard) while wg0 shows his endpoint at 127.0.0.1 (via the relay). || ",
-      "needsRelease": false
+      "updatedAt": "2026-10-11T02:59:51Z",
+      "notes": "[BACKEND run 2026-10-11 0215, scheduled, unattended, 2026-10-11T02:59:51Z] No new work: server leg live since 8 Oct; real-traffic numbers written 01:39Z (26 rows / 4 users vs 7 / 3 before; control WireGuard 114 vs 136). Waits for QA xd-1750 to tick; backfill of pre-8-Oct sessions not possible (heartbeat logs not kept that long). | [BACKEND run 2026-10-11 0118, scheduled, unattended, 2026-10-11T01:39:44Z] MEASURED production read-only since the server leg went live (8 Oct 22:35Z, ~50 h): ConnectionLogs Protocol 3 (hidden mode) = 26 rows / 4 users / 9 rows >1 MB down; the 48 h BEFORE = 7 rows / 3 users / 3 >1 MB. CONTROL WireGuard (Protocol 0) same windows 114 vs 136 rows (no general rise). 8 rows since the deploy carry the 'adopt' marker. Staff list not applied (4 users - may include the CEO's phones). Server leg works; left: backfill of pre-8-Oct sessions (heartbeat logs are not kept that long - likely impossible) and the xd-1389 re-run. | [ENGINEERING run 2026-10-08 b, 2026-10-08T22:39:10Z] Server leg LIVE on production (row 151, f29362b0b, 22:34:51Z): a heartbeat with no open row now opens the hidden-mode session (DLL 'heartbeat-adopt' 0 -> 1). Real-traffic proof -> QA xd-1539 within 24 h. App leg (retry /connect, dead self-heal) stays with [iOS] xd-1496. | [CTO live 2026-10-07 21:0x-21:5xZ, CEO chat, Opus 5.5] More evidence: ConnectionLogs row for RU user d4062d5d on Singapore 1 Oct 15:00:49-15:31:02Z says 348 B down / 276 B up; the same session carried 197 MB (WireGuardPeerUsages, peer created 15:00:57Z; relay journal sid 7e000b89). The subscriber's rows on Amsterdam are labelled Protocol 0 (WireGuard) while wg0 shows his endpoint at 127.0.0.1 (via the relay). || ",
+      "needsRelease": false,
+      "blocker": "Waits for QA xd-1750 (real hidden-mode traffic since 8 Oct, numbers on the row)."
     },
     {
       "id": "xd-1435",
@@ -54400,13 +54427,16 @@
       "to": "[BACKEND]",
       "title": "Handoff from MARKETING: [P1] Apple Ads attribution endpoint + anonymous sign-up events (replaces deferred xd-1161)",
       "description": "[GROWTH run 2026-10-10 2104, scheduled, unattended] 2026-10-10T21:07:56Z. Backend half of the new [IOS] handoff (replaces deferred xd-1161 for the same reason: Apple Ads spend is live). (1) POST /api/attribution/apple-ads {token} (anonymous or signed-in; rate-limited per install id): server POSTs the token as text/plain to https://api-adservices.apple.com/api/v1/ (no key), retries on 404 for ~1 min, stores attribution, orgId, campaignId, adGroupId, keywordId, countryOrRegion, conversionType, clickDate on the install and the user (null = organic). (2) accept FunnelEvents with UserId null + install id (allow-list of the 5 event names only), and link them to the user at sign-in. (3) admin/daily query: installs-from-ads -> sign-up -> connected >1 MB -> paid, per campaign. Dev first; READY TO SHIP row after QA. Refs xd-1161, xd-1681.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-10-10T21:08:01Z",
       "createdDate": "2026-10-10",
       "completedDate": null,
       "dueBy": "2026-10-17T21:08:01Z",
-      "taskRef": "xd-1681"
+      "taskRef": "xd-1681",
+      "notes": "[BACKEND run 2026-10-11 0215, scheduled, unattended, 2026-10-11T02:59:51Z] BUILT on development: 89c58d9c7 (endpoints + migration + retry service) - build 0 errors, 333/333, InstallAttributionTests 12/12, CONTROL old allow-list 5/12 fail. DEV LIVE 02:59Z (deploy-dev of c5b3756be): migration row 1, FunnelEvents.UserId nullable YES; anonymous app_opened -> 200 success:true, row with UserId NULL + install id + FirstLaunch t; signup_failed with free text 'Typed: a@b.c!' -> stored with ErrorCode NULL (dropped); screen_exit -> success:false, not stored; bad install id -> success:false; made-up token -> Apple's real endpoint answered 400 -> status failed, Token NULL (api log 'Apple says the token is invalid (400)'). CONTROL production same call -> 404 (not shipped). Contract sent to [IOS] xd-1765; QA dev check xd-1763; READY TO SHIP row on the CEO card. Part (3) (daily per-campaign query/admin line) is the next step once rows exist: SELECT a.\"CampaignId\", count(*) installs, count(a.\"UserId\") signed_up FROM \"AppleAdsAttributions\" a WHERE a.\"Status\"='resolved' GROUP BY 1.",
+      "updatedAt": "2026-10-11T02:59:51Z",
+      "blocker": "Waits for QA dev check xd-1763, then a CEO YES on the new READY TO SHIP row; the app half is [IOS] xd-1687 (Legal privacy lines must be live first)."
     },
     {
       "id": "xd-1689",
@@ -55230,7 +55260,9 @@
       "priority": "P2",
       "createdAt": "2026-10-11T01:12:57Z",
       "createdDate": "2026-10-11",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[BACKEND run 2026-10-11 0215, scheduled, unattended, 2026-10-11T02:59:51Z] Read 02:2xZ: [LEGAL] answered (wire A1, A2, B1, B2, C1-C3; NOT B3; add a per-user marketing-email opt-out flag). Not started this run (time went to xd-1688 which unblocks [IOS] build work). Plan: next backend run builds the opt-out flag + A1/A2/B2 triggers on development first (dev test account, control: a connected user gets no B2), C1 owner agreed with [WEBSITE] before wiring receipts.",
+      "updatedAt": "2026-10-11T02:59:51Z"
     },
     {
       "id": "xd-1745",
@@ -55489,6 +55521,48 @@
       "createdAt": "2026-10-11T02:44:16Z",
       "createdDate": "2026-10-11",
       "completedDate": null
+    },
+    {
+      "id": "xd-1763",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: Test on dev: Apple Ads attribution + install events before sign-in (xd-1688), development 89c58d9c7",
+      "description": "[BACKEND run 2026-10-11 0215] development 89c58d9c7 (xd-1688). What changed: POST /api/attribution/apple-ads {token, installId, platform?} and POST /api/funnel/install-events {event, installId, firstLaunch?, method?, errorCode?, appVersion?, build?, platform?} - both anonymous (a sign-in, if sent, links the install's earlier rows); allow-list app_opened, signup_screen_viewed, signup_started, signup_failed, signup_completed; 30/min per install; migration 20261011020000_InstallAttribution (FunnelEvents.UserId nullable + InstallId/Method/ErrorCode/FirstLaunch; table AppleAdsAttributions); 30 s retry service for Apple's 404. Dev live 02:59Z, legs (1)-(4) already measured by this run (numbers on xd-1688). Proof so far: main-server build 0 errors, suite 333/333, InstallAttributionTests 12/12, CONTROL old allow-list on the new endpoint -> 5/12 fail. CHECK on dev (https://api.dev.caspervpn.com): (1) migration row + FunnelEvents.UserId is_nullable=YES + table AppleAdsAttributions exists; (2) POST /api/funnel/install-events {event:'app_opened',installId:'qa-<uuid>',firstLaunch:true} no token -> 200 success:true and one row with UserId NULL; (3) event 'screen_exit' -> success:false, no row; (4) POST /api/attribution/apple-ads with a made-up token -> Apple answers 400 -> status 'failed', Token NULL (a real attributed answer needs a real ad install - say so, do not tick it); (5) the 12 tests. Then the READY TO SHIP row on the CEO card.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-11T02:59:56Z",
+      "createdDate": "2026-10-11",
+      "completedDate": null,
+      "taskRef": "xd-1688",
+      "dueBy": "2026-10-14T02:59:56Z"
+    },
+    {
+      "id": "xd-1764",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: Test on dev: daily free-limit leak alert (xd-1386 b+c), development c5b3756be",
+      "description": "[BACKEND run 2026-10-11 0215] development c5b3756be (xd-1386 b+c). FreeQuotaOverrunAlertService: once a day at 05:00Z lists real free users over 110% of the limit this cycle; an overrun with a 'data cap reached' cut is normal, one with no cut sends one team alert. Proof: build 0 errors, suite 333/333, FreeQuotaOverrunAlertTests 3/3, CONTROL (cut ignored) 2/3 fail. CHECK: (1) run the 3 tests; (2) after 05:00Z on dev, the dev api log has one line 'FreeQuotaOverrun check: N real free users over 110%' (dev has few users - N may be 0; the line is the proof the job runs); (3) production read-only control for the ship row: SELECT count(*) of free users >110% with a cycle after 28 Sep and no cut = 0 today (measured 11 Oct 01:3xZ by the backend run) - so after the ship no alert is expected until a real leak. Then the READY TO SHIP row on the CEO card.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-11T02:59:56Z",
+      "createdDate": "2026-10-11",
+      "completedDate": null,
+      "taskRef": "xd-1386",
+      "dueBy": "2026-10-14T02:59:56Z"
+    },
+    {
+      "id": "xd-1765",
+      "from": "[BACKEND]",
+      "to": "[IOS]",
+      "title": "Handoff from BACKEND: Server half ready on dev for xd-1687: install events before sign-in + Apple Ads token endpoint",
+      "description": "[BACKEND run 2026-10-11 0215] The two endpoints xd-1687 waits for are on development 89c58d9c7 (dev API https://api.dev.caspervpn.com; production after QA + CEO YES). CONTRACT: (1) POST /api/funnel/install-events JSON {event, installId, firstLaunch?, method?, errorCode?, appVersion?, build?, platform?}; no sign-in needed; event one of app_opened | signup_screen_viewed | signup_started | signup_failed | signup_completed; installId = your random install id, 8-64 chars of letters/digits/'-'; method apple|google|email; errorCode [a-z0-9_] max 48 (anything else is dropped, never free text); answer 200 {success:true|false} - never retry on success:false; 429 above 30/min per install. (2) POST /api/attribution/apple-ads JSON {token: AAAttribution.attributionToken(), installId, platform:'ios'}; send once at first launch; answer 200 {success, status: resolved|organic|pending|failed}; a repeat for the same install after resolved/organic/pending never calls Apple again (only a 'failed' one is tried again, max 5 an hour), so a queue retry is safe. (3) Link at sign-in: send the same installId on the first signed-in POST /api/user/funnel-events (new optional field installId) OR send signup_completed to install-events WITH the bearer token - either links the install's earlier rows to the account. GATE unchanged: the Legal privacy lines must be live before the build ships.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-11T02:59:56Z",
+      "createdDate": "2026-10-11",
+      "completedDate": null,
+      "taskRef": "xd-1687",
+      "dueBy": "2026-10-14T02:59:56Z"
     }
   ],
   "importantNotes": [
