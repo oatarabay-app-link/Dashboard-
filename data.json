@@ -14292,6 +14292,24 @@
           "addedBy": "[DEVOPS] devops run 1011g",
           "verify": "main server: ls /etc/cron.d/fleet-rotation-guard; md5 /opt/caspervpn/fleet_rotation_guard.py = git production copy; tail -1 /var/log/fleet-rotation-guard.log shows a run < 20 min old with servers=13",
           "evidence": "[DEVOPS run 2026-10-11 g, scheduled, unattended, 2026-10-11T21:30:25Z] prepared, not installed (xd-1701). Dry runs: control 0 alerts; simulated Paris drop 1 alert."
+        },
+        {
+          "test": "READY TO SHIP \u2014 give people in Iran a second way in when hidden mode fails at once \u00b7 why: in 8\u201311 Oct both Iran users who tried hidden mode failed within 2 seconds on 3 servers and never connected; the server kept giving them the same blocked road (through Cloudflare) \u00b7 what the ship does: after a fast failure, and only for Iran, the next try connects straight to our server instead of through Cloudflare; after 30 minutes it tries Cloudflare again \u00b7 tested: all 355 checks pass, 6 new ones, and one fails if the rule is broken on purpose; it is ON on the test server now; QA checks it there next \u00b7 risk: the straight road shows our server's address to the censor, so that server could get blocked in Iran (it does not affect other countries) \u00b7 rollback: one setting turns it off without a new version \u00b7 advice: yes \u2014 today Iran gets 0 connections, so there is nothing to lose there",
+          "verify": "After ship + switch-on (StealthTier__FastFailFailover__Enabled=true): grep 'cfWiring=SUPPRESSED (fast-fail failover' in the production api log for an IR user after a caspercloak failure <= 5 s; control: non-IR config calls still 'cfWiring=minted'; build proof: strings -el /app/CasperVPN.dll | grep -c 'fast-fail failover' = 1 (production 0 on 11 Oct 21:41Z)",
+          "evidence": "[BACKEND run 2026-10-11 2115, scheduled, unattended, 2026-10-11T21:46:20Z] development 458a4c5e4 (xd-1793; code first built by the 05:15Z backend run that left no log - picked up, rebased on 4e8d8823e, re-tested). Main-server build 0 errors, suite 355/355, StealthFailoverTests 6/6, CONTROL (connected-since check removed) 1 fail. Dev live 21:40Z: dev DLL 'fast-fail failover' 1, appsettings.Development FastFailFailover Enabled=true; production DLL 0 (control). appsettings.json Enabled=false: shipping the code alone changes nothing until the setting is turned on. QA dev check: see the new QA handoff.",
+          "met": false,
+          "verifiedBy": "none",
+          "createdBy": "[BACKEND] run 1011-2115",
+          "createdAt": "2026-10-11T21:46:20Z"
+        },
+        {
+          "test": "READY TO SHIP \u2014 Apple payment messages must be about our app \u00b7 why: a safety check found that the server checks Apple's signature on payment messages but not WHICH app the message is about, and it found the customer by a partial match of the purchase number \u00b7 what the ship does: messages about another app are answered 'OK' and ignored; the customer is found by the exact purchase number \u00b7 tested: all 355 checks pass, 5 new ones; 2 fail if the new check is removed; every one of our 457 Apple payment records already carries the exact number (checked on the live database, read-only) \u00b7 rollback: put back the previous server version (the deploy keeps a copy) \u00b7 advice: yes, a small safety lock with no change for real customers",
+          "verify": "After ship: strings -el /app/CasperVPN.dll in caspervpn-api | grep -c 'notification for another app' >= 1 (production 0 on 11 Oct 21:41Z); next real Apple notification in the api log is processed as before ('Apple Server Notification: Type=' followed by no 'another app' line); 0 'No payment found for original transaction' increase vs the 7 days before",
+          "evidence": "[BACKEND run 2026-10-11 2115, scheduled, unattended, 2026-10-11T21:46:20Z] development 4a327451f (xd-1799, security audit xd-1422 F4). Production read-only 21:2xZ: Apple Payments rows 457, with exact '\"OriginalTransactionId\":\"' key 457 (control: rows mentioning originalTransactionId at all 457); bundle in metadata com.applinkoffshore.CasperVPN 396 (rest older rows without the field); api log 168 h: 0 notifications, 0 'No payment found'. Build 0 errors, suite 355/355, AppleNotificationBundleTests 5/5 + AppleAddOnRefundTests 3/3; CONTROL (bundle check removed) 2 fail. Dev live 21:40Z: dev DLL 'notification for another app' 2, production 0 (control).",
+          "met": false,
+          "verifiedBy": "none",
+          "createdBy": "[BACKEND] run 1011-2115",
+          "createdAt": "2026-10-11T21:46:20Z"
         }
       ],
       "progress": 0,
@@ -44101,7 +44119,7 @@
       "lifecycle": "active",
       "needsRelease": false,
       "qaNote": "[QA 2026-10-08 ak ~22:18Z, scheduled] 7-day rule: past dueBy 2026-10-07T18:00 - close with evidence, hand back with a blocker, or defer with reason + revisit date (a P0 is never deferred silently).",
-      "notes": "[ENGINEERING run 2026-10-08 d, 2026-10-08T23:54:17Z] Row 165 SHIPPED (funnel file = git bc3e3321) -> QA xd-1549. Remaining: real app-version data after build 65 is in the store; crit 4 to [MARKETING]/[ADMIN-PANEL] then. | [ENGINEERING run 2026-10-08 d, 2026-10-08T23:53:17Z] CEO YES on CEO card row 165 (updated funnel file) - installing now. | [ENGINEERING run 2026-10-08 d, 2026-10-08T23:10:25Z] TRIAGE (xd-1538) -> (d) kept active, dueBy 15 Oct. MEASURED tonight: crit 1 installed (activation_funnel.sql, 3 Oct copy md5 49555bca; QA xd-1270); crit 2 backend side LIVE on production (ConnectionLogs.AppVersion/BuildNumber/NetworkType exist; 10 of 581 sessions in 7 days carry a build, all build 65 = test phones) - real data waits for build 65 in the App Store (4.3.1 rejected 8 Oct, rows 159/160); crit 3 measured with the git version read-only (IR 15/15 never connected, top reason 'unknown' 168; RU 24/32, 'cc-wg-nohandshake-cf' 115; LB the only country with named steps, 40). Next concrete steps: (1) CEO card row 165 - install the 7 Oct funnel file; (2) after build 65 is in the store, re-run and hand crit 1-3 to [QA]; crit 4 (Monday KPI + admin Marketing page) to [MARKETING]/[ADMIN-PANEL] then. | ",
+      "notes": "[BACKEND run 2026-10-11 2115, scheduled, unattended, 2026-10-11T21:46:20Z] re-measured read-only 21:2xZ: ConnectionLogs 7 d = 670, of which 650 carry no app version (24 users); with a version: 4.4 b65 16 (2 users), 4.3.1 b67 3, b68 1 - all test phones. Blocker unchanged: real data waits for a store build that sends the version. | [ENGINEERING run 2026-10-08 d, 2026-10-08T23:54:17Z] Row 165 SHIPPED (funnel file = git bc3e3321) -> QA xd-1549. Remaining: real app-version data after build 65 is in the store; crit 4 to [MARKETING]/[ADMIN-PANEL] then. | [ENGINEERING run 2026-10-08 d, 2026-10-08T23:53:17Z] CEO YES on CEO card row 165 (updated funnel file) - installing now. | [ENGINEERING run 2026-10-08 d, 2026-10-08T23:10:25Z] TRIAGE (xd-1538) -> (d) kept active, dueBy 15 Oct. MEASURED tonight: crit 1 installed (activation_funnel.sql, 3 Oct copy md5 49555bca; QA xd-1270); crit 2 backend side LIVE on production (ConnectionLogs.AppVersion/BuildNumber/NetworkType exist; 10 of 581 sessions in 7 days carry a build, all build 65 = test phones) - real data waits for build 65 in the App Store (4.3.1 rejected 8 Oct, rows 159/160); crit 3 measured with the git version read-only (IR 15/15 never connected, top reason 'unknown' 168; RU 24/32, 'cc-wg-nohandshake-cf' 115; LB the only country with named steps, 40). Next concrete steps: (1) CEO card row 165 - install the 7 Oct funnel file; (2) after build 65 is in the store, re-run and hand crit 1-3 to [QA]; crit 4 (Monday KPI + admin Marketing page) to [MARKETING]/[ADMIN-PANEL] then.",
       "blocker": "Real app-version data waits for build 65 in the App Store (4.3.1 rejected 8 Oct)."
     },
     {
@@ -53949,7 +53967,7 @@
       "createdAt": "2026-10-10T07:07:40Z",
       "createdDate": "2026-10-10",
       "completedDate": null,
-      "notes": "QA dev check xd-1672. | [ENGINEERING run 2026-10-10 1705, scheduled, 2026-10-10T17:41:31Z] BUILT on development 8fccacb0b (Data/Migrations/20261010000000_ThreatTablesIfMissing.cs + Tests/ThreatTablesMigrationTests.cs). Shape = production pg_dump -s (read-only): DdosAlerts 9 cols, ThreatDetections 27 cols, 2 pkeys + FK to Users, no other index. SQL tested on dev postgres in a rolled-back transaction: empty schema -> 9 + 27 cols, 3 constraints; public -> 'already exists, skipping' x2; scratch schema gone after (count 0). dotnet build 0 errors, dotnet test 294/294 (2 new). Dev proof: dev api recreated 17:38:32Z healthy; dev __EFMigrationsHistory has 20261010000000_ThreatTablesIfMissing (1 line in the api log, 0 migration errors); DdosAlerts 9 / ThreatDetections 27 columns unchanged; 0 'Threat-source MAX failed' since the recreate; control production history row 0. Production unchanged (control: no history row there). Next: QA dev check, then CEO YES on the READY TO SHIP row.",
+      "notes": "[BACKEND run 2026-10-11 2115, scheduled, unattended, 2026-10-11T21:46:20Z] same family on dev: 'CustomerHealthScores' (exists on production, made by hand - in no EF migration's CREATE) was missing on the dev DB -> RevenueIntelligenceAggregator 42P01 6x/24 h. Created on dev from production's pg_dump -s shape (23 columns, pkey + FK to Users, IF NOT EXISTS, one transaction). Lasting fix belongs in the same IF-NOT-EXISTS migration as DdosAlerts/ThreatDetections. | QA dev check xd-1672. | [ENGINEERING run 2026-10-10 1705, scheduled, 2026-10-10T17:41:31Z] BUILT on development 8fccacb0b (Data/Migrations/20261010000000_ThreatTablesIfMissing.cs + Tests/ThreatTablesMigrationTests.cs). Shape = production pg_dump -s (read-only): DdosAlerts 9 cols, ThreatDetections 27 cols, 2 pkeys + FK to Users, no other index. SQL tested on dev postgres in a rolled-back transaction: empty schema -> 9 + 27 cols, 3 constraints; public -> 'already exists, skipping' x2; scratch schema gone after (count 0). dotnet build 0 errors, dotnet test 294/294 (2 new). Dev proof: dev api recreated 17:38:32Z healthy; dev __EFMigrationsHistory has 20261010000000_ThreatTablesIfMissing (1 line in the api log, 0 migration errors); DdosAlerts 9 / ThreatDetections 27 columns unchanged; 0 'Threat-source MAX failed' since the recreate; control production history row 0. Production unchanged (control: no history row there). Next: QA dev check, then CEO YES on the READY TO SHIP row.",
       "blocker": "Waits for QA dev check (new handoff) and then a CEO YES on the READY TO SHIP row (backend change -> production needs a yes)",
       "category": "infra-fleet",
       "ageDays": 1,
@@ -55922,7 +55940,7 @@
       "createdAt": "2026-10-11T01:12:57Z",
       "createdDate": "2026-10-11",
       "completedDate": null,
-      "notes": "[BACKEND run 2026-10-11 0215, scheduled, unattended, 2026-10-11T02:59:51Z] Read 02:2xZ: [LEGAL] answered (wire A1, A2, B1, B2, C1-C3; NOT B3; add a per-user marketing-email opt-out flag). Not started this run (time went to xd-1688 which unblocks [IOS] build work). Plan: next backend run builds the opt-out flag + A1/A2/B2 triggers on development first (dev test account, control: a connected user gets no B2), C1 owner agreed with [WEBSITE] before wiring receipts.\n\n[BACKEND run 2026-10-11 0315, scheduled, unattended, 2026-10-11T03:54:32Z] BUILT on development (A1, A2, B2 + opt-out flag/link; B3 NOT wired; C1-C3 not wired - owner question to [WEBSITE] xd-1783). development d1607eaeb + ddf3d86ba. Main-server build 0 errors; suite 342/342; LifecycleEmailTests 9/9; CONTROL (B2 ignores 'never connected') 1/9 fail. Dev live 03:50Z: migration 20261011030000_LifecycleEmails applied; api log 'Lifecycle mails on: every 15 min, dryRun=True'; first pass 03:52:28Z 'B2 DRY-RUN (not sent) for user 0a1e0000' = the dev test account made 60 h ago with no connection; CONTROL account (same age, one ConnectionLogs row) got none; 'Email sent to' lines on dev 0. Opt-out link on dev: wrong token 400, right token 200 + MarketingEmailOptOut f->t, same token on another user 400; production same URL 404 (control). Production read-only 03:28Z (who would be in a window right now): B2 11 (8 without Apple relay), A1 1, A2 0; 30 d: 45 never-connected new users (36 without relay); real users 322, of them 95 Apple private-relay addresses = skipped until xd-1677. -> QA xd-1782; words check [IOS] xd-1784; CEO card READY TO SHIP row added.",
+      "notes": "[BACKEND run 2026-10-11 2115, scheduled, unattended, 2026-10-11T21:46:20Z] xd-1792 (Website) answered: C1-C3 are Website's; Backend senders stay unwired. Unchanged otherwise: waits QA xd-1782 + CEO row 234. | [BACKEND run 2026-10-11 0215, scheduled, unattended, 2026-10-11T02:59:51Z] Read 02:2xZ: [LEGAL] answered (wire A1, A2, B1, B2, C1-C3; NOT B3; add a per-user marketing-email opt-out flag). Not started this run (time went to xd-1688 which unblocks [IOS] build work). Plan: next backend run builds the opt-out flag + A1/A2/B2 triggers on development first (dev test account, control: a connected user gets no B2), C1 owner agreed with [WEBSITE] before wiring receipts.\n\n[BACKEND run 2026-10-11 0315, scheduled, unattended, 2026-10-11T03:54:32Z] BUILT on development (A1, A2, B2 + opt-out flag/link; B3 NOT wired; C1-C3 not wired - owner question to [WEBSITE] xd-1783). development d1607eaeb + ddf3d86ba. Main-server build 0 errors; suite 342/342; LifecycleEmailTests 9/9; CONTROL (B2 ignores 'never connected') 1/9 fail. Dev live 03:50Z: migration 20261011030000_LifecycleEmails applied; api log 'Lifecycle mails on: every 15 min, dryRun=True'; first pass 03:52:28Z 'B2 DRY-RUN (not sent) for user 0a1e0000' = the dev test account made 60 h ago with no connection; CONTROL account (same age, one ConnectionLogs row) got none; 'Email sent to' lines on dev 0. Opt-out link on dev: wrong token 400, right token 200 + MarketingEmailOptOut f->t, same token on another user 400; production same URL 404 (control). Production read-only 03:28Z (who would be in a window right now): B2 11 (8 without Apple relay), A1 1, A2 0; 30 d: 45 never-connected new users (36 without relay); real users 322, of them 95 Apple private-relay addresses = skipped until xd-1677. -> QA xd-1782; words check [IOS] xd-1784; CEO card READY TO SHIP row added.",
       "updatedAt": "2026-10-11T03:54:32Z",
       "blocker": "Waits for QA dev check xd-1782, then a CEO YES on the READY TO SHIP row (production would send real mails).",
       "category": "growth",
@@ -56794,17 +56812,21 @@
       "to": "[BACKEND]",
       "title": "Handoff from WEBSITE: Answer to xd-1783: (a) Website owns crypto mails C1-C3 - keep the Backend senders unwired",
       "description": "[WEBSITE+ADMIN run 2026-10-11 0404, scheduled, unattended, 2026-10-11T04:34:55Z] Details on xd-1783. Nothing to build on Backend. C3 (renewal switched off) has no mail today; if wanted, Website builds it. Close this when read.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P3",
       "createdAt": "2026-10-11T04:34:59Z",
       "createdDate": "2026-10-11",
-      "completedDate": null,
+      "completedDate": "2026-10-11",
       "taskRef": "xd-1783",
       "dueBy": "2026-10-18T00:00:00Z",
       "category": "money-admin",
       "ageDays": 0,
       "needsRelease": false,
-      "lifecycle": "active"
+      "lifecycle": "active",
+      "completedAt": "2026-10-11",
+      "completedBy": "[BACKEND]",
+      "resolution": "[BACKEND run 2026-10-11 2115, scheduled, unattended, 2026-10-11T21:46:20Z] Read and agreed: Website owns crypto mails C1-C3; the Backend crypto senders stay unwired (xd-1744 built only A1/A2/B2). Nothing to build on Backend.",
+      "resultingHandoff": "none"
     },
     {
       "id": "xd-1793",
@@ -56812,7 +56834,7 @@
       "to": "[BACKEND]",
       "title": "Handoff from CTO: Iran users get only the Cloudflare road for hidden mode and 0 of 2 ever connected (8-11 Oct) - offer a second road",
       "description": "[CTO 2026-10-11 0434, from xd-1646, read-only] Every IR config call 8-11 Oct = StealthTier tier=Fronted cfWiring=minted (2 users, 20 calls); both users failed caspercloak within 0.6-2 s on Duesseldorf/LA/Singapore and never connected (ConnectionLogs 0). Control: old-build clients made 33 CasperCloak sessions elsewhere in 7 d. DO: (1) read StealthTier selection for IR and say why only Fronted is offered; (2) after a fast caspercloak failure on Fronted, the next config for that user should offer a non-Cloudflare road (native/direct relay) - check with the CTO live chat owning xd-1421 (retire Cloudflare) so the two do not clash; (3) work on development, tested on dev, READY TO SHIP row. Verify: grep 'StealthTier:.*country=IR' /opt/caspervpn/api-logs/caspervpn-2026101*.log | grep -c 'tier=\"Fronted\"' vs other tiers. Evidence files: /root/reports/cto1011-0434/user.log on the main server.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P2",
       "createdAt": "2026-10-11T04:39:59Z",
       "createdDate": "2026-10-11",
@@ -56822,7 +56844,9 @@
       "category": "infra-fleet",
       "ageDays": 0,
       "needsRelease": false,
-      "lifecycle": "active"
+      "lifecycle": "active",
+      "blocker": "Waits for QA dev check xd-1819, then a CEO YES on READY TO SHIP row 244 (ship + switch on for Iran)",
+      "notes": "[BACKEND run 2026-10-11 2115, scheduled, unattended, 2026-10-11T21:46:20Z] BUILT on development 458a4c5e4: StealthFailover - after a caspercloak failure <= 5 s in 30 min with no connection since, an IR user's next config leaves out the Cloudflare wiring (direct relay, same road as Throttle/Advisory). Off in production config, on on dev. Build 0 errors, 355/355, StealthFailoverTests 6/6, control 1 fail. Dev live 21:40Z (dev DLL 1, production 0). No clash with xd-1421 (it uses Cloudflare less, never more). -> QA xd-1819, CEO row 244. Note: the code was first built by the 05:15Z backend run, which stopped before committing or logging (Mac went offline); this run reviewed, rebased and re-tested it."
     },
     {
       "id": "xd-1794",
@@ -56864,15 +56888,19 @@
       "to": "[BACKEND]",
       "title": "Handoff from QA: Add READY TO SHIP row: api/ai/* admin-only (9f62fee, xd-1776) - dev passed",
       "description": "QA 2026-10-11 f on dev: 5/5 AI endpoints 401 without sign-in (were 200), health 200, controls OK; production /api/ai/threats/recent still answers 200 without sign-in. Legs user 403 / admin 200 not run (no tokens). Please add the READY TO SHIP row on the CEO card (or ship under the security standing rule if one applies) and hand back to [QA] after production deploy: same 5 calls on api.caspervpn.com -> 401.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-10-11T05:10:30Z",
       "createdDate": "2026-10-11",
-      "completedDate": null,
+      "completedDate": "2026-10-11",
       "category": "money-admin",
       "ageDays": 0,
       "needsRelease": false,
-      "lifecycle": "active"
+      "lifecycle": "active",
+      "completedAt": "2026-10-11",
+      "completedBy": "[BACKEND]",
+      "resolution": "[BACKEND run 2026-10-11 2115, scheduled, unattended, 2026-10-11T21:46:20Z] The READY TO SHIP row already exists: ceo-action-backlog row 240 (created 04:41Z, development 9f62fee, QA dev pass recorded). Not shipped: no CEO YES yet, and an unattended run may not ship without one. After the ship, QA re-checks via xd-1794 (5 calls on api.caspervpn.com -> 401).",
+      "resultingHandoff": "none new - row 240 + xd-1794 already cover it"
     },
     {
       "id": "xd-1797",
@@ -56920,7 +56948,7 @@
       "to": "[BACKEND]",
       "title": "Handoff from SECURITY: Apple server notifications: check the bundle id + match the transaction exactly (xd-1422 F4, LOW)",
       "description": "[SECURITY run 2026-10-11 0505] From the xd-1422 audit, slice 4 (report memory/departments/security/audits/2026-10-11/REPORT-slice4-backend-payments.md). F4 LOW (defense in depth, code only, origin/development b5e769b32): AppleReceiptService.HandleServerNotificationAsync never checks the bundle - the receipt path rejects a foreign bundleId (ValidateAndSyncAsync ~L171) but the notification path checks neither data.bundleId nor transactionInfo.BundleId, so any notification genuinely signed by Apple for ANOTHER developer's app passes the (strong, pinned-root) signature check. Then the user is found by SUBSTRING: Payments.FirstOrDefault(p => p.Metadata.Contains(originalTransactionId)) (~L1079) instead of an exact match on the OriginalTransactionId field. Not exploitable in practice today (Apple assigns the ids, an attacker cannot pick one that occurs in our metadata) - it is a missing second lock. Do: (1) reject/acknowledge-without-change when data.bundleId or transactionInfo.BundleId is not in the accepted bundle set (reuse the receipt path's set; ideally also data.appAppleId); (2) match '\"OriginalTransactionId\":\"<id>\"' exactly; (3) unit test: foreign bundle -> no change, control: our bundle -> processed (+ a control that fails when the check is removed). Ship path: development -> QA on dev -> READY TO SHIP row (production change needs a CEO YES). Production config measured read-only 05:1xZ: Apple__VerifyWebhookSignature unset and absent from appsettings -> verification ON (default true).",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P2",
       "createdAt": "2026-10-11T05:16:00Z",
       "createdDate": "2026-10-11",
@@ -56931,7 +56959,9 @@
       "category": "trust-legal",
       "ageDays": 0,
       "needsRelease": false,
-      "lifecycle": "active"
+      "lifecycle": "active",
+      "blocker": "Waits for QA dev check xd-1820, then a CEO YES on READY TO SHIP row 245",
+      "notes": "[BACKEND run 2026-10-11 2115, scheduled, unattended, 2026-10-11T21:46:20Z] BUILT on development 4a327451f: (1) data.bundleId and the transaction bundleId must be in AcceptedBundleIds() (shared with the receipt path) - otherwise 200 'Acknowledged: notification for another app - no change'; (2) payment found by exact '\"OriginalTransactionId\":\"<id>\"' (production 457/457 Apple rows carry it). appAppleId not checked (not in our config). Tests 5 new + 3 refund pass, control 2 fail. -> QA xd-1820, CEO row 245."
     },
     {
       "id": "xd-1800",
@@ -57223,6 +57253,30 @@
       "status": "pending",
       "priority": "P2",
       "createdAt": "2026-10-11T21:43:46Z",
+      "createdDate": "2026-10-11",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1819",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: Check on dev: Iran hidden-mode second road (xd-1793, development 458a4c5e4)",
+      "description": "Dev API runs 458a4c5e4 since 21:40Z with StealthTier:FastFailFailover Enabled=true, Countries=IR. Check: (1) a dev account whose StealthTier country resolves to IR, with a ConnectFailureEvents row protocol caspercloak, ElapsedMsBeforeFailure <= 5000, in the last 30 min and no ConnectionLogs row since -> its next CasperCloak config call logs 'cfWiring=SUPPRESSED (fast-fail failover' and the config carries no Cloudflare URL; (2) CONTROL: same account after a ConnectionLogs row, or a non-IR account -> 'cfWiring=minted'; (3) after 30 min the fronted road comes back. Unit proof: StealthFailoverTests 6/6, control 1 fail. Then the CEO card row 244.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-11T21:46:25Z",
+      "createdDate": "2026-10-11",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1820",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: Check on dev: Apple notifications for another app are ignored (xd-1799, development 4a327451f)",
+      "description": "Dev API runs 4a327451f since 21:40Z. We cannot sign as Apple, so the live leg is: (1) dev DLL strings -el contains 'notification for another app' (2 at 21:41Z); (2) an unsigned POST to https://api.dev.caspervpn.com/api/payments/apple-webhook is still refused by the signature check (unchanged behaviour); (3) re-run AppleNotificationBundleTests (5) + AppleAddOnRefundTests (3) on development and the control (bundle check removed -> 2 fail). Production read-only: 457/457 Apple Payments rows carry the exact OriginalTransactionId key, so no real customer stops matching. Then the CEO card row 245.",
+      "status": "pending",
+      "priority": "P3",
+      "createdAt": "2026-10-11T21:46:25Z",
       "createdDate": "2026-10-11",
       "completedDate": null
     }
