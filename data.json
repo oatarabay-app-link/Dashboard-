@@ -14350,7 +14350,7 @@
         {
           "test": "READY TO SHIP \u2014 when someone changes or resets their password, every OTHER phone or computer signed in to that account is signed out \u00b7 why: today a stolen sign-in keeps working after the owner changes the password (security audit finding) \u00b7 what the ship does: change password keeps only the device that changed it; reset by e-mail link and an admin reset sign out everywhere \u00b7 tested: all 365 checks pass, 4 new ones fail if the fix is removed; on the test server two sign-ins, change password on one -> the other is refused (401), the first still works \u00b7 risk: a customer who changes the password on the website is signed out in the app once and must sign in again (that is the point) \u00b7 rollback: redeploy the previous version \u00b7 advice: yes",
           "verify": "After ship: two logins for a test account, change-password with the first -> /api/auth/refresh with the second = 401, the first = 200; production api log 'xd-1810 ended' >= 1; build proof strings -el /app/CasperVPN.dll | grep -c 'xd-1810: password reset ended' = 1 (production 0 on 11 Oct 22:32Z)",
-          "evidence": "[BACKEND run 2026-10-11 2215, scheduled, unattended, 2026-10-11T22:43:32Z] xd-1810 BUILT: development 3aa124e92 (4 commits on e7bcfc9c3); main-server build 0 errors, suite 365/365, new 19/19; dev live 22:42Z (dev DLL strings 1/1/1/1, production 0/0/0/0). Dev live proof 22:42Z: refresh B 200 before -> 401 after change-password with A; A 200; sessions 2 -> 1. QA xd-1846.",
+          "evidence": "[CEO YES 2026-10-11] 'Yes' (Cowork, reply to backend run 1011-2215 report asking yes/no on rows 247, 248, 249; 2026-10-11T22:47:18Z). Shippable by the next backend run (routine 09 step 5); not yet shipped. | [BACKEND run 2026-10-11 2215, scheduled, unattended, 2026-10-11T22:43:32Z] xd-1810 BUILT: development 3aa124e92 (4 commits on e7bcfc9c3); main-server build 0 errors, suite 365/365, new 19/19; dev live 22:42Z (dev DLL strings 1/1/1/1, production 0/0/0/0). Dev live proof 22:42Z: refresh B 200 before -> 401 after change-password with A; A 200; sessions 2 -> 1. QA xd-1846.",
           "met": false,
           "verifiedBy": "none",
           "createdBy": "[BACKEND] run 1011-2215",
@@ -14359,7 +14359,7 @@
         {
           "test": "READY TO SHIP \u2014 when Apple refunds a dedicated IP, the buyer can no longer take the IP back with the old purchase code \u00b7 why: on 8 Oct the only real buyer was refunded; the IP was freed but the code stayed valid, and our 'claim again' path would have given the IP back for free \u00b7 what the ship does: a refund or revoke from Apple cancels the code too; a normal end of term does not (so a re-subscribe still works) \u00b7 tested: all 365 checks pass, 3 new ones \u00b7 risk: none for paying users \u00b7 rollback: redeploy the previous version \u00b7 note: the one old code from 8 Oct stays as it is; a one-off fix of that row needs your separate yes \u00b7 advice: yes",
           "verify": "After ship: production DLL strings -el | grep -c 'revoked {N} dedicated-IP token' = 1 (0 on 11 Oct 22:32Z); on the next Apple REFUND of a dedicated-IP add-on the api log shows 'xd-1825: refund for providerRef ... revoked 1' and DedicatedIpTokens.Status = 3 for that ProviderRef",
-          "evidence": "[BACKEND run 2026-10-11 2215, scheduled, unattended, 2026-10-11T22:43:32Z] xd-1825 BUILT: development 3aa124e92 (4 commits on e7bcfc9c3); main-server build 0 errors, suite 365/365, new 19/19; dev live 22:42Z (dev DLL strings 1/1/1/1, production 0/0/0/0). DedicatedIpRefundTokenTests 3/3, control 2/3 fail. QA xd-1847.",
+          "evidence": "[CEO YES 2026-10-11] 'Yes' (Cowork, reply to backend run 1011-2215 report asking yes/no on rows 247, 248, 249; 2026-10-11T22:47:18Z). Shippable by the next backend run (routine 09 step 5); not yet shipped. | [BACKEND run 2026-10-11 2215, scheduled, unattended, 2026-10-11T22:43:32Z] xd-1825 BUILT: development 3aa124e92 (4 commits on e7bcfc9c3); main-server build 0 errors, suite 365/365, new 19/19; dev live 22:42Z (dev DLL strings 1/1/1/1, production 0/0/0/0). DedicatedIpRefundTokenTests 3/3, control 2/3 fail. QA xd-1847.",
           "met": false,
           "verifiedBy": "none",
           "createdBy": "[BACKEND] run 1011-2215",
@@ -14368,7 +14368,7 @@
         {
           "test": "READY TO SHIP \u2014 one connection shows as one session again, with the app version on it \u00b7 why: on your phone (build 68) the server closed the app's session after 55 seconds and opened a second one without the app version; 35 sessions in 7 days were split this way, so our numbers by version were wrong \u00b7 what the ship does: when the server's own connect record arrives, it joins the app's session instead of replacing it \u00b7 tested: all 365 checks pass, 3 new ones \u00b7 risk: low; only how sessions are recorded changes, not the connection \u00b7 rollback: redeploy the previous version \u00b7 advice: yes",
           "verify": "After ship: production api log '[radius-connect] ADOPT' >= 1 within a day; ConnectionLogs closed with 'RADIUS Start dedup (xd-513)' that carry an AppVersion = 0 after the ship time (7 d before: 8); build proof strings -el | grep -c '[radius-connect] ADOPT' = 1 (production 0 on 11 Oct 22:32Z)",
-          "evidence": "[BACKEND run 2026-10-11 2215, scheduled, unattended, 2026-10-11T22:43:32Z] xd-1827 BUILT: development 3aa124e92 (4 commits on e7bcfc9c3); main-server build 0 errors, suite 365/365, new 19/19; dev live 22:42Z (dev DLL strings 1/1/1/1, production 0/0/0/0). Root cause measured read-only on production 22:3xZ (CEO phone rows 21:50:52Z app row closed 21:51:47Z by 'RADIUS Start dedup (xd-513)'). RadiusStartAdoptsAppRowTests 3/3, control 1/3 fail. QA xd-1848.",
+          "evidence": "[CEO YES 2026-10-11] 'Yes' (Cowork, reply to backend run 1011-2215 report asking yes/no on rows 247, 248, 249; 2026-10-11T22:47:18Z). Shippable by the next backend run (routine 09 step 5); not yet shipped. | [BACKEND run 2026-10-11 2215, scheduled, unattended, 2026-10-11T22:43:32Z] xd-1827 BUILT: development 3aa124e92 (4 commits on e7bcfc9c3); main-server build 0 errors, suite 365/365, new 19/19; dev live 22:42Z (dev DLL strings 1/1/1/1, production 0/0/0/0). Root cause measured read-only on production 22:3xZ (CEO phone rows 21:50:52Z app row closed 21:51:47Z by 'RADIUS Start dedup (xd-513)'). RadiusStartAdoptsAppRowTests 3/3, control 1/3 fail. QA xd-1848.",
           "met": false,
           "verifiedBy": "none",
           "createdBy": "[BACKEND] run 1011-2215",
@@ -57256,8 +57256,8 @@
       "ageDays": 0,
       "needsRelease": false,
       "lifecycle": "active",
-      "blocker": "Waits for QA dev check xd-1846, then a CEO YES on READY TO SHIP row 247",
-      "notes": "[BACKEND run 2026-10-11 2215, scheduled, unattended, 2026-10-11T22:43:32Z] BUILT on development (development 3aa124e92 (4 commits on e7bcfc9c3); main-server build 0 errors, suite 365/365, new 19/19; dev live 22:42Z (dev DLL strings 1/1/1/1, production 0/0/0/0)). -> QA xd-1846, CEO card row 247."
+      "blocker": "CEO YES on row 247 (2026-10-11); waits ship to production by the next backend run, then QA live check",
+      "notes": "[BACKEND live 2026-10-11T22:47:18Z] CEO YES recorded on row 247. || [BACKEND run 2026-10-11 2215, scheduled, unattended, 2026-10-11T22:43:32Z] BUILT on development (development 3aa124e92 (4 commits on e7bcfc9c3); main-server build 0 errors, suite 365/365, new 19/19; dev live 22:42Z (dev DLL strings 1/1/1/1, production 0/0/0/0)). -> QA xd-1846, CEO card row 247."
     },
     {
       "id": "xd-1811",
@@ -57473,8 +57473,8 @@
       "createdDate": "2026-10-11",
       "completedDate": null,
       "handoffTo": "[QA]",
-      "blocker": "Waits for QA dev check xd-1847, then a CEO YES on READY TO SHIP row 248",
-      "notes": "[BACKEND run 2026-10-11 2215, scheduled, unattended, 2026-10-11T22:43:32Z] BUILT on development (development 3aa124e92 (4 commits on e7bcfc9c3); main-server build 0 errors, suite 365/365, new 19/19; dev live 22:42Z (dev DLL strings 1/1/1/1, production 0/0/0/0)). -> QA xd-1847, CEO card row 248."
+      "blocker": "CEO YES on row 248 (2026-10-11); waits ship to production by the next backend run, then QA live check",
+      "notes": "[BACKEND live 2026-10-11T22:47:18Z] CEO YES recorded on row 248. || [BACKEND run 2026-10-11 2215, scheduled, unattended, 2026-10-11T22:43:32Z] BUILT on development (development 3aa124e92 (4 commits on e7bcfc9c3); main-server build 0 errors, suite 365/365, new 19/19; dev live 22:42Z (dev DLL strings 1/1/1/1, production 0/0/0/0)). -> QA xd-1847, CEO card row 248."
     },
     {
       "id": "xd-1826",
@@ -57500,8 +57500,8 @@
       "createdDate": "2026-10-11",
       "completedDate": null,
       "handoffTo": "[QA]",
-      "blocker": "Waits for QA dev check xd-1848, then a CEO YES on READY TO SHIP row 249",
-      "notes": "[BACKEND run 2026-10-11 2215, scheduled, unattended, 2026-10-11T22:43:32Z] BUILT on development (development 3aa124e92 (4 commits on e7bcfc9c3); main-server build 0 errors, suite 365/365, new 19/19; dev live 22:42Z (dev DLL strings 1/1/1/1, production 0/0/0/0)). -> QA xd-1848, CEO card row 249."
+      "blocker": "CEO YES on row 249 (2026-10-11); waits ship to production by the next backend run, then QA live check",
+      "notes": "[BACKEND live 2026-10-11T22:47:18Z] CEO YES recorded on row 249. || [BACKEND run 2026-10-11 2215, scheduled, unattended, 2026-10-11T22:43:32Z] BUILT on development (development 3aa124e92 (4 commits on e7bcfc9c3); main-server build 0 errors, suite 365/365, new 19/19; dev live 22:42Z (dev DLL strings 1/1/1/1, production 0/0/0/0)). -> QA xd-1848, CEO card row 249."
     },
     {
       "id": "xd-1828",
