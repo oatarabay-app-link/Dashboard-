@@ -3354,7 +3354,7 @@
           "passed": false,
           "verifiedBy": "none",
           "verifiedAt": "2026-03-01T13:25:00Z",
-          "evidence": "QA 2026-09-24 FAIL: radacct has 0 rows with acctstarttime in the last 7 days \u2014 accounting is NOT reaching the DB (IKEv2 also has ~0 sessions, so partly expected). -> [DEVOPS]",
+          "evidence": "[CTO run 2026-10-11 0134, scheduled, unattended, 2026-10-11T01:43:15Z] RE-MEASURED FAIL: production DB (read-only) radacct = 0 rows in total, 0 in 7 days, max(acctstarttime) empty. CONTROL: ConnectionLogs has 657 rows with ConnectedAt in the last 7 days - users connect, RADIUS accounting never lands in this table. | QA 2026-09-24 FAIL: radacct has 0 rows with acctstarttime in the last 7 days \u2014 accounting is NOT reaching the DB (IKEv2 also has ~0 sessions, so partly expected). -> [DEVOPS]",
           "met": false,
           "verifiedDate": "2026-09-24",
           "verifiedByRaw": "ceo-cowork",
@@ -3362,7 +3362,8 @@
           "qaDate": "2026-09-24",
           "verifiedByPrevious": "self",
           "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored",
-          "test": "RADIUS accounting logs session start/stop to backend"
+          "test": "RADIUS accounting logs session start/stop to backend",
+          "blocker": "[DEVOPS] find where FreeRADIUS accounting writes (or if it is off) - or the CEO accepts ConnectionLogs as the session record and closes this row"
         },
         {
           "criterion": "RADIUS failover/retry configured for multi-server deployment",
@@ -4728,7 +4729,7 @@
           "criterion": "Grafana dashboard accessible with VPN server metrics",
           "passed": false,
           "verifiedBy": "none",
-          "evidence": "[FAIL] QA 2026-09-30: Grafana answers /api/health 200 (v12.4.0) but holds 0 dashboards: grafana.db dashboard table = 0 rows, dashboard_provisioning = 0; the provider folder /var/lib/grafana/dashboards is empty. There is no dashboard with VPN server metrics to open. Handed to [DEVOPS]. | prior: QA 2026-09-24 PASS: Grafana /api/health -> 200 on the brain.",
+          "evidence": "[CTO run 2026-10-11 0134, scheduled, unattended, 2026-10-11T01:43:15Z] RE-MEASURED FAIL: brain 01:39Z read-only: grafana container up 5 months; /var/lib/grafana/dashboards is EMPTY (only . and ..); /api/search without login = 401 (count not readable without the admin login). | [FAIL] QA 2026-09-30: Grafana answers /api/health 200 (v12.4.0) but holds 0 dashboards: grafana.db dashboard table = 0 rows, dashboard_provisioning = 0; the provider folder /var/lib/grafana/dashboards is empty. There is no dashboard with VPN server metrics to open. Handed to [DEVOPS]. | prior: QA 2026-09-24 PASS: Grafana /api/health -> 200 on the brain.",
           "verifiedAt": "2026-09-24T21:05:00Z",
           "met": false,
           "verifiedDate": "2026-09-30",
@@ -4738,7 +4739,8 @@
           "verify": "brain: docker cp grafana:/var/lib/grafana/grafana.db /tmp/g.db; sqlite3 /tmp/g.db 'select count(*) from dashboard' -> must be > 0",
           "verifiedByPrevious": "tested",
           "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored",
-          "test": "Grafana dashboard accessible with VPN server metrics"
+          "test": "Grafana dashboard accessible with VPN server metrics",
+          "blocker": "[DEVOPS] add a CasperVPN dashboard JSON (node + blackbox + caspercloak panels) into the provisioned folder; handoff below"
         },
         {
           "criterion": "node-exporter running on all VPN servers",
@@ -4760,7 +4762,7 @@
           "passed": false,
           "verifiedBy": "none",
           "verifiedAt": "2026-03-01T13:25:00Z",
-          "evidence": "QA 2026-09-24 FAIL: Targets by job: blackbox-api/website/fleet-*, caspercloak, node, postgres, vpn-ports \u2014 NO push, scheduler or probe-service targets. -> [DEVOPS]",
+          "evidence": "[CTO run 2026-10-11 0134, scheduled, unattended, 2026-10-11T01:43:15Z] RE-MEASURED FAIL: Prometheus active targets 72/72 up; jobs = blackbox-api 3, blackbox-fleet-flask 11, -icmp 12, -ssh 12, blackbox-relay-tls 11, blackbox-website 3, caspercloak 1, grafana 1, node 13, node-do-production 1, postgres 1, prometheus 1, vpn-ports 2. No push, scheduler or probe-service job. | QA 2026-09-24 FAIL: Targets by job: blackbox-api/website/fleet-*, caspercloak, node, postgres, vpn-ports \u2014 NO push, scheduler or probe-service targets. -> [DEVOPS]",
           "met": false,
           "verifiedDate": "2026-04-21",
           "verifiedByRaw": "devops",
@@ -4768,7 +4770,8 @@
           "qaDate": "2026-09-24",
           "verifiedByPrevious": "self",
           "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored",
-          "test": "Prometheus scrape targets include all VPN services (API, probes, push, scheduler)"
+          "test": "Prometheus scrape targets include all VPN services (API, probes, push, scheduler)",
+          "blocker": "[DEVOPS] needs a /metrics or a blackbox probe for push, scheduler and probe services - or the CEO drops this row"
         },
         {
           "criterion": "Alert rules configured for service downtime (>5 min)",
@@ -4789,7 +4792,7 @@
           "criterion": "Grafana provisioned with pre-built CasperVPN dashboard",
           "passed": false,
           "verifiedBy": "none",
-          "evidence": "[FAIL] QA 2026-09-30: The provider 'CasperVPN' (/etc/grafana/provisioning/dashboards/dashboards.yml) points at /var/lib/grafana/dashboards, which is empty; Grafana has 0 dashboards. No pre-built CasperVPN dashboard exists. Handed to [DEVOPS]. | prior: QA 2026-09-24 PASS: grafana /etc/grafana/provisioning/dashboards/dashboards.yml present.",
+          "evidence": "[CTO run 2026-10-11 0134, scheduled, unattended, 2026-10-11T01:43:15Z] RE-MEASURED FAIL: brain 01:39Z read-only: grafana container up 5 months; /var/lib/grafana/dashboards is EMPTY (only . and ..); /api/search without login = 401 (count not readable without the admin login). The provider folder still holds no .json. | [FAIL] QA 2026-09-30: The provider 'CasperVPN' (/etc/grafana/provisioning/dashboards/dashboards.yml) points at /var/lib/grafana/dashboards, which is empty; Grafana has 0 dashboards. No pre-built CasperVPN dashboard exists. Handed to [DEVOPS]. | prior: QA 2026-09-24 PASS: grafana /etc/grafana/provisioning/dashboards/dashboards.yml present.",
           "verifiedAt": "2026-09-24T21:05:00Z",
           "met": false,
           "verifiedDate": "2026-09-30",
@@ -4799,7 +4802,8 @@
           "verify": "brain: docker exec grafana ls /var/lib/grafana/dashboards -> must list a .json",
           "verifiedByPrevious": "tested",
           "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored",
-          "test": "Grafana provisioned with pre-built CasperVPN dashboard"
+          "test": "Grafana provisioned with pre-built CasperVPN dashboard",
+          "blocker": "[DEVOPS] same work as row 1 (one dashboard JSON in /var/lib/grafana/dashboards)"
         },
         {
           "criterion": "Prometheus retention and storage configured for 30-day history",
@@ -4824,12 +4828,13 @@
           "verifiedByRaw": "qa-sweep-2026-09-30-fail",
           "passed": false,
           "verifiedAt": "2026-09-24T21:05:00Z",
-          "evidence": "[FAIL] QA 2026-09-30: 2 of 3 named sites are probed: caspervpn.com, www.caspervpn.com and api.caspervpn.com (+ /health) every 30 s, all probe_success=1; admin.caspervpn.com has NO probe in any job (58 probe_success series, 0 for admin). The job 'blackbox-external' no longer exists (now blackbox-website / blackbox-api). Handed to [DEVOPS]. | prior: QA 2026-09-24 PASS: blackbox-api (3) + blackbox-website (3) targets all up; cert series for api/www/caspervpn.com 80 days.",
+          "evidence": "[CTO run 2026-10-11 0134, scheduled, unattended, 2026-10-11T01:43:15Z] RE-MEASURED FAIL: 0 active targets whose instance contains 'admin' (admin.caspervpn.com still not probed); api + website probes up. | [FAIL] QA 2026-09-30: 2 of 3 named sites are probed: caspervpn.com, www.caspervpn.com and api.caspervpn.com (+ /health) every 30 s, all probe_success=1; admin.caspervpn.com has NO probe in any job (58 probe_success series, 0 for admin). The job 'blackbox-external' no longer exists (now blackbox-website / blackbox-api). Handed to [DEVOPS]. | prior: QA 2026-09-24 PASS: blackbox-api (3) + blackbox-website (3) targets all up; cert series for api/www/caspervpn.com 80 days.",
           "qaVerdict": "FAIL",
           "qaDate": "2026-09-30",
           "verify": "brain: curl -s localhost:9090/api/v1/query --data-urlencode 'query=probe_success' | grep -c admin.caspervpn.com -> must be >= 1",
           "verifiedByPrevious": "tested",
-          "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored"
+          "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored",
+          "blocker": "[DEVOPS] add admin.caspervpn.com to the blackbox-website job (reload by SIGHUP)"
         }
       ],
       "xdId": [
@@ -7470,7 +7475,7 @@
           "criterion": "Unit test gate \u2014 PRs blocked if tests fail",
           "passed": false,
           "verifiedBy": "none",
-          "evidence": "[FAIL] QA 2026-09-30: Tests run on pull requests (ci.yml, pr-backend-build-check.yml), but 0 of the 871 production commits since 20 Jul came through a pull request (132 merges, all local merges) - code reaches production by direct push, so a failing test blocks nothing. Branch protection is not readable without a token. Handed to [DEVOPS]. | prior: QA 2026-09-24 PASS: ci.yml / deploy-backend*.yml run 'dotnet test'; pr-backend-build-check.yml exists. Branch protection itself not readable without the API.",
+          "evidence": "[CTO run 2026-10-11 0134, scheduled, unattended, 2026-10-11T01:43:15Z] RE-MEASURED: still FAIL by design of the current rules - production takes direct pushes (Phase A, CLAUDE.md \u00a75) and deploys by deploy_api.sh, so a PR test gate blocks nothing. | [FAIL] QA 2026-09-30: Tests run on pull requests (ci.yml, pr-backend-build-check.yml), but 0 of the 871 production commits since 20 Jul came through a pull request (132 merges, all local merges) - code reaches production by direct push, so a failing test blocks nothing. Branch protection is not readable without a token. Handed to [DEVOPS]. | prior: QA 2026-09-24 PASS: ci.yml / deploy-backend*.yml run 'dotnet test'; pr-backend-build-check.yml exists. Branch protection itself not readable without the API.",
           "verifiedAt": "2026-09-24T21:05:00Z",
           "met": false,
           "verifiedDate": "2026-09-30",
@@ -7480,7 +7485,8 @@
           "verify": "git log --format=%s origin/production | grep -cE 'Merge pull request|\\(#[0-9]+\\)$' -> 0",
           "verifiedByPrevious": "tested",
           "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored",
-          "test": "Unit test gate \u2014 PRs blocked if tests fail"
+          "test": "Unit test gate \u2014 PRs blocked if tests fail",
+          "blocker": "Waits the CEO's Phase B 'stable' declaration (then: development -> PR -> production with a required CI check). Revisit at Phase B."
         },
         {
           "criterion": "Status badges in README for build/test status",
@@ -7516,7 +7522,7 @@
           "criterion": "Slack/Discord notification on build failure",
           "passed": false,
           "verifiedBy": "none",
-          "evidence": "[FAIL] QA 2026-09-30: notify-failure.yml:16 and :23 put the secrets context inside step 'if:' (secrets.DISCORD_WEBHOOK != '' / secrets.SLACK_WEBHOOK != ''). GitHub does not allow secrets in if-conditions, so this workflow cannot run. Weakest word: by the file and GitHub's documented rule - the Actions page is not readable to confirm. Handed to [DEVOPS]. | prior: QA 2026-09-24 PASS: notify-failure.yml present (+ notify steps in 6 other workflows).",
+          "evidence": "[CTO run 2026-10-11 0134, scheduled, unattended, 2026-10-11T01:43:15Z] FIXED on development ec1637e0 (awaiting QA): notify-failure.yml maps DISCORD_WEBHOOK/SLACK_WEBHOOK secrets to job env and tests env in the step if (GitHub forbids secrets in if). Verify grep 'if: .*secrets\\.' -> old file 2 hits, new 0; yaml parses. NOT PROVEN: that either webhook secret is set (no token can read repo secrets) - with none set the workflow runs but sends nothing. workflow_run workflows run only from the default branch, so this cannot be tested on dev - it needs the CEO YES row. | [FAIL] QA 2026-09-30: notify-failure.yml:16 and :23 put the secrets context inside step 'if:' (secrets.DISCORD_WEBHOOK != '' / secrets.SLACK_WEBHOOK != ''). GitHub does not allow secrets in if-conditions, so this workflow cannot run. Weakest word: by the file and GitHub's documented rule - the Actions page is not readable to confirm. Handed to [DEVOPS]. | prior: QA 2026-09-24 PASS: notify-failure.yml present (+ notify steps in 6 other workflows).",
           "verifiedAt": "2026-09-24T21:05:00Z",
           "met": false,
           "verifiedDate": "2026-09-30",
@@ -14022,6 +14028,18 @@
           "verifiedByRaw": null,
           "verifiedDate": null,
           "evidence": "[WEBSITE+ADMIN run 2026-10-11 0107, scheduled, unattended, 2026-10-11T01:40:19Z] development f39fc4062 (xd-1519 item 2); dev proof: dev 01:39Z after deploy-dev 01:39:08Z: billing_toggle -> 200 {success:true} + row 'billing_toggle annual /pricing' in conversion_events; event 'nope' -> 400 'Invalid conversion event'; type 'whatever' -> 400 'Invalid type' (unchanged); dev / /pricing /blog 200; SQL /root/reports/webadmin-1011-0107/conversion_events.sql + GRANT INSERT,SELECT,UPDATE,DELETE ON conversion_events TO casper_website (owner casper_prod, like page_views). Production control 01:39Z: 400 'Invalid type'. Board advice: yes - measurement only, no customer-visible change."
+        },
+        {
+          "test": "READY TO SHIP - the 'tell us when a build fails' alarm can actually run: today GitHub refuses it because of how it checks for the chat link \u00b7 why: no failure message has ever been able to go out \u00b7 tested on dev: cannot be tested on the test copy (GitHub only runs this alarm from the main branch); the file check passes (0 bad lines, before 2) \u00b7 rollback: put back the old file (one file) \u00b7 note: it only sends if a Slack or Discord link is saved in GitHub - we cannot see if one is",
+          "verify": "After ship: grep -n 'if: .*secrets\\.' .github/workflows/notify-failure.yml on production -> empty; next failed CI run -> notify job not skipped for a syntax error",
+          "evidence": "[CTO run 2026-10-11 0134, scheduled, unattended, 2026-10-11T01:43:15Z] development ec1637e0; ci-cd-pipeline row 7. Board advice: yes - one file, no risk to the app or servers.",
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "addedAt": "2026-10-11T01:43:15Z",
+          "addedBy": "[CTO] run 2026-10-11 0134",
+          "owner": "[CTO]",
+          "dept": "cto"
         }
       ],
       "progress": 0,
@@ -53612,7 +53630,8 @@
       "createdDate": "2026-10-10",
       "completedDate": null,
       "blocker": "Needs a device reproduction on the CEO's iPhone with the console captured (hidden mode on Duesseldorf, airplane mode 20 s, expect one '#52=RESUME'); the 9 Oct console file was empty. Unattended runs cannot reproduce it.",
-      "lastUpdated": "2026-10-10T15:11:38Z"
+      "lastUpdated": "2026-10-10T15:11:38Z",
+      "notes": "[CTO run 2026-10-11 0134, scheduled, unattended, 2026-10-11T01:43:15Z] xd-1737 counts on report 8dc6a021: 0 resume/NEW sid/WS drop/CC-LIVE lines - no drop in its 7.5-min window, so no evidence for or against this item. Fix to the instrument: xd-1752. | "
     },
     {
       "id": "xd-1646",
@@ -54322,7 +54341,8 @@
       "createdAt": "2026-10-10T21:13:33Z",
       "createdDate": "2026-10-10",
       "completedDate": null,
-      "blocker": "device test of build 67 27e on the CEO's phone (hidden mode 60+ min, lock screen, Wi-Fi <-> cellular): CEO runs _ios/build431-67.command, installs, sends a bug report; QA reads the '[CC-LIVE]' lines (xd-1711)"
+      "blocker": "device test of build 67 27e on the CEO's phone (hidden mode 60+ min, lock screen, Wi-Fi <-> cellular): CEO runs _ios/build431-67.command, installs, sends a bug report; QA reads the '[CC-LIVE]' lines (xd-1711)",
+      "notes": "[CTO run 2026-10-11 0134, scheduled, unattended, 2026-10-11T01:43:15Z] xd-1737 counts on report 8dc6a021: 0 resume/NEW sid/WS drop/CC-LIVE lines - no drop in its 7.5-min window, so no evidence for or against this item. Fix to the instrument: xd-1752. | "
     },
     {
       "id": "xd-1691",
@@ -54984,7 +55004,7 @@
       "id": "xd-1737",
       "from": "[CEO]",
       "to": "[CTO]",
-      "status": "pending",
+      "status": "completed",
       "priority": "P0",
       "title": "Read the CEO's 11 Oct bug report 8dc6a021 tunnel log (build 67 27f, hidden mode) for drops / resumes / [CC-LIVE] lines",
       "description": "[CEO live 2026-10-11 2026-10-11T00:57:03Z] Bug report id 8dc6a021-517d-4368-8dce-e1be19c9df59 (reportedAt 2026-10-11T00:45:17Z, title 'Vonnected', state connected). Tunnel session started 00:36:42Z. Grep TunnelLogSnippet for: [CC-LIVE], '#52', 'SESSION RESUMED', 'WS drop', 'handshake STALE', 'NEW sid', 'horizon'. Write the counts on xd-1690 (GAP B: resume storms; slow 11.8 s dials) and xd-1645 (resume came back as a NEW session). The live session cannot reach the main server (fleet key refused from the Mac VM).",
@@ -54994,7 +55014,13 @@
       "createdDate": "2026-10-11",
       "dueBy": "2026-10-13T00:57:07Z",
       "handoffTo": "[IOS]",
-      "handoffNote": "then IOS adds the fix to the next build"
+      "handoffNote": "then IOS adds the fix to the next build",
+      "evidence": "[CTO run 2026-10-11 0134, scheduled, unattended, 2026-10-11T01:43:15Z] Report 8dc6a021 (build 4.3.1/67, hidden mode, 00:45:17Z) read on the main server (BugReports, read-only): counts in TunnelLogSnippet (501 lines, 53,288 chars): [CC-LIVE] 0, #52 0, SESSION RESUMED 0, WS drop 0, handshake STALE 0, NEW sid 0, horizon 0, resume 0. Why zero: (a) NO drop happened in the window - hidden-mode session up from 00:37:19Z (relay 91.194.84.79, ep 127.0.0.1:49409), watchdog OK every 60 s 00:38-00:44Z, handshake age 57-120 s, rx 24.7 -> 28.1 MB; (b) the window is too short to ever show a 30-60 min drop: the CURRENT-SESSION tail is 25,601 B and covers only 00:37:32-00:45:08Z (7.5 min); 19,619 B of it (77%) are 'Bridge RX/TX #N' lines (PacketTunnelProvider.swift:2355/2401 log every 100th packet - production checkout); (c) the string 'CC-LIVE' is in no .swift file of the Mac's production checkout or its worktrees (NOT PROVEN for branch ios/68 - not checked out on the Mac). Previous session (plain WireGuard, ep 51.158.147.210:51820) ended 00:37:15Z with 'setTunnelNetworkSettings FAILED (NEAgentErrorDomain error 1)' when the switch to hidden mode happened. So this report can answer neither GAP B (resume storms / 11.8 s dials) nor xd-1645 (resume as NEW session). Next: iOS throttles bridge logging by time (xd below) so the next report covers 30-60 min.",
+      "completedAt": "2026-10-11",
+      "completedDate": "2026-10-11",
+      "completedBy": "[CTO]",
+      "resolution": "completed: read - 0 drop markers because no drop in the 7.5-min window; window too short (77% bridge lines)",
+      "resultingHandoff": "xd-1752 to [IOS] (throttle bridge logging); notes on xd-1690 + xd-1645"
     },
     {
       "id": "xd-1738",
@@ -55179,6 +55205,42 @@
       "status": "pending",
       "priority": "P2",
       "createdAt": "2026-10-11T01:40:22Z",
+      "createdDate": "2026-10-11",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1752",
+      "from": "[CTO]",
+      "to": "[IOS]",
+      "title": "Handoff from CTO: Tunnel log window holds only 7.5 min in hidden mode - per-packet 'Bridge RX/TX' lines fill 77% (drop evidence can never reach a report)",
+      "description": "[CTO run 2026-10-11 0134, scheduled, unattended, 2026-10-11T01:43:15Z] Measured on report 8dc6a021 (xd-1737): current-session 25 KB tail = 00:37:32-00:45:08Z; 19,619 of 25,601 B are 'Bridge RX #N'/'Bridge TX #N' lines (PacketTunnelProvider.swift:2355 and :2401, every 100th packet; at ~30 MB/min that is several lines per second). A drop after 30-60 min (xd-1689/xd-1652) is therefore outside every report. ASK: log bridge counters once per 60 s (one summary line: rx/tx packets+bytes since last) instead of every 100th packet, and keep the first 3 lines; optional: raise the CC tail. Then the next CEO report must show the 30-60 min point. Also: grep for 'CC-LIVE' - the string is in no Swift file of the Mac's production checkout; confirm build 68 emits it. Owner of build 68 = CEO live session (claim live1011-b68) - add, do not collide. Then QA reads the next report.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-11T01:43:19Z",
+      "createdDate": "2026-10-11",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1753",
+      "from": "[CTO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CTO: Monitoring gaps re-measured 11 Oct: Grafana has no dashboard, admin site not probed, no push/scheduler targets, radacct empty",
+      "description": "[CTO run 2026-10-11 0134, scheduled, unattended, 2026-10-11T01:43:15Z] monitoring-prometheus rows 1,5 (dashboards folder empty), 7 (no admin.caspervpn.com probe), 3 (no push/scheduler/probe jobs; 72/72 targets up); radius-finalize row 5 (radacct 0 rows ever; control ConnectionLogs 657 in 7 d). Evidence on each row. Fix on the brain needs a CEO YES row (live server); prepare the files on development first. Then QA.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-11T01:43:19Z",
+      "createdDate": "2026-10-11",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1754",
+      "from": "[CTO]",
+      "to": "[QA]",
+      "title": "Handoff from CTO: Check ci-cd-pipeline row 7 fix on development ec1637e0 (notify-failure secrets-in-if)",
+      "description": "[CTO run 2026-10-11 0134, scheduled, unattended, 2026-10-11T01:43:15Z] grep -n 'if: .*secrets\\.' .github/workflows/notify-failure.yml on origin/development -> must be empty (production still 2). Also read xd-1737 evidence. CEO card row 226 READY TO SHIP.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-11T01:43:19Z",
       "createdDate": "2026-10-11",
       "completedDate": null
     }
