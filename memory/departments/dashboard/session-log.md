@@ -4,6 +4,18 @@
 
 ---
 
+### Session: 2026-10-11 — CTO
+**Timestamp:** 2026-10-11T02:44:16Z
+
+**Change:** New tab 'CEO Decisions' (renderCeoDecisions, port of board_reconcile W+A) + load guard coercing tasks[].weight/progress to numbers
+
+**Files changed:**
+- `index.html`
+
+**Structure affected:** YES
+
+---
+
 ### Session: 2026-10-02 — CEO
 **Timestamp:** 2026-10-02T19:35:10Z
 
