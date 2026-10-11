@@ -14797,7 +14797,7 @@
           "verifiedBy": "none",
           "qaVerdict": "PARTIAL",
           "qaDate": "2026-10-11",
-          "evidence": "[QA 2026-10-11 g, scheduled, 2026-10-11T21:10:07Z] PARTIAL - orphan half PASS, peer half NOT MET. Orphan sessions (prod DB 21:0xZ): ConnectionLogs open 0, open > 24 h 0; CONTROL closed in 24 h 88, opened in 24 h 80 (the close path is working). Peers (wg show wg0 dump, 11/11 active relays, 21:1xZ): 106 of 235 peers never handshaked and moved 0 bytes (30-58% per node: Paris-class 51.158.147.210 9/30, 91.194.84.79 27/60, 208.87.243.205 14/32 ...). codegraph: the only reap is the one-off xd-808/xd-1115 (3 Oct); no recurring peer-reap job on the main server (crontab has wg_key_retire = keys, not peers). Not ticked -> xd handoff to [DEVOPS] for the xd-1115 rule count. || [APPS run 2026-10-11 f 2026-10-11T05:10:57Z] READY FOR QA, re-measured: (1) peer reap: xd-1115 completed by [DEVOPS] 2026-10-03 (92 abandoned peers removed on 10 nodes, 28 held by the QA rule). (2) orphan sessions: prod DB read-only (BEGIN READ ONLY, casper_prod/caspervpn) 05:0xZ: ConnectionLogs with no DisconnectedAt = 3, of which 0 are older than 24 h and 3 were seen in the last hour (live sessions); 86 closed in 24 h. So no orphan ConnectionLogs right now. NOT measured this run: the abandoned-peer share per node today (fleet) - QA re-runs it. | was: [QA 2026-10-11 f, scheduled, 2026-10-11T05:10:23Z] PARTIAL - re-measured 05:1xZ: xd-1115 completed 3 Oct (92 peers removed once); ConnectionLogs still open after > 1 day = 2 (1 in the last 8 days) of 3 open - orphan sessions are being closed; the peer-reaper half is not re-measured on the nodes this",
+          "evidence": "[DEVOPS run 2026-10-11 f, scheduled, unattended, 2026-10-11T21:3xZ] DRY RUN ONLY - nothing removed. Fresh dump 21:2xZ on 11/11 relays (recipe brain /root/reports/devops1011f/wg.sh + dry.sh + dry2.sh): 235 peers, 106 never handshaked + 0 bytes (same as QA). Joined to WireGuardKeys by public key + open ConnectionLogs by user: QUALIFY under the xd-1115 rule = 21 (16 key inactive + 5 active key older than 30 d; all 21 have no open session). HOLD = 59 (active key 7-30 d: 38; under 7 d: 21). Open sessions among the 106 = 0. NEW FINDING: 26 of the 106 have NO row in WireGuardKeys at all and none in WireGuardPeerUsages - 15 sit in 10.66.250.x (the Multi-Hop client pool, keyed outside WireGuardKeys - NOT safe to treat as abandoned) and 11 in node/legacy subnets (Amsterdam 2, Hong Kong 1, Los Angeles 1, Miami 2, Sydney 3, Tokyo 2) = true orphans. Qualify per node: Amsterdam 3, Duesseldorf 6, Hong  | [QA 2026-10-11 g, scheduled, 2026-10-11T21:10:07Z] PARTIAL - orphan half PASS, peer half NOT MET. Orphan sessions (prod DB 21:0xZ): ConnectionLogs open 0, open > 24 h 0; CONTROL closed in 24 h 88, opened in 24 h 80 (the close path is working). Peers (wg show wg0 dump, 11/11 active relays, 21:1xZ): 106 of 235 peers never handshaked and moved 0 bytes (30-58% per node: Paris-class 51.158.147.210 9/30, 91.194.84.79 27/60, 208.87.243.205 14/32 ...). codegraph: the only reap is the one-off xd-808/xd-1115 (3 Oct); no recurring peer-reap job on the main server (crontab has wg_key_retire = keys, not peers). Not ticked -> xd handoff to [DEVOPS] for the xd-1115 rule count. || [APPS run 2026-10-11 f 2026-10-11T05:10:57Z] READY FOR QA, re-measured: (1) peer reap: xd-1115 completed by [DEVOPS] 2026-10-03 (92 abandoned peers removed on 10 nodes, 28 held by the QA rule). (2) orphan sessions: prod DB read-only (BEGIN READ ONLY, casper_prod/caspervpn) 05:0xZ: ConnectionLogs with no DisconnectedAt = 3, of which 0 are older than 24 h and 3 were seen in the last hour (live sessions); 86 closed in 24 h. So no orphan ConnectionLogs right now. NOT measured this run: the abandoned-peer share per node today (fleet) - QA re-runs it. | was: [QA 2026-10-11 f, scheduled, 2026-10-11T05:10:23Z] PARTIAL - re-measured 05:1xZ: xd-1115 completed 3 Oct (92 peers removed once); ConnectionLogs still open after > 1 day = 2 (1 in the last 8 days) of 3 open - orphan sessions are being closed; the peer-reaper half is not re-measured on the nodes this",
           "verify": "xd-1115",
           "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored"
         },
@@ -56408,11 +56408,15 @@
       "to": "[DEVOPS]",
       "title": "Handoff from QA: ios-ondemand row 3: 106 of 235 relay peers never handshaked (0 bytes) - count how many the xd-1115 rule may remove",
       "description": "[QA 2026-10-11 g, scheduled, 2026-10-11T21:10:07Z] Measured 21:1xZ on 11/11 relays (wg show wg0 dump col5=0,col6=0,col7=0): 106/235 peers. Peer reap was a one-off (xd-1115, 3 Oct). Ask: dry-run the xd-1115 rule (never handshaked on that node, 0 bytes, no open session, key inactive or > 30 d) and report how many of the 106 qualify; if a recurring reap is wanted, prepare it on development + a READY TO SHIP row. Recipe: /root/reports/qa1011g/wg.sh. Task ios-ondemand-halfopen-tunnel-freeze row 3.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P3",
       "createdAt": "2026-10-11T21:10:11Z",
       "createdDate": "2026-10-11",
-      "completedDate": null
+      "completedDate": "2026-10-11",
+      "completedAt": "2026-10-11",
+      "completedBy": "[DEVOPS]",
+      "resolution": "[DEVOPS run 2026-10-11 f, scheduled, unattended, 2026-10-11T21:3xZ] DRY RUN ONLY - nothing removed. Fresh dump 21:2xZ on 11/11 relays (recipe brain /root/reports/devops1011f/wg.sh + dry.sh + dry2.sh): 235 peers, 106 never handshaked + 0 bytes (same as QA). Joined to WireGuardKeys by public key + open ConnectionLogs by user: QUALIFY under the xd-1115 rule = 21 (16 key inactive + 5 active key older than 30 d; all 21 have no open session). HOLD = 59 (active key 7-30 d: 38; under 7 d: 21). Open sessions among the 106 = 0. NEW FINDING: 26 of the 106 have NO row in WireGuardKeys at all and none in WireGuardPeerUsages - 15 sit in 10.66.250.x (the Multi-Hop client pool, keyed outside WireGuardKeys - NOT safe to treat as abandoned) and 11 in node/legacy subnets (Amsterdam 2, Hong Kong 1, Los Angeles 1, Miami 2, Sydney 3, Tokyo 2) = true orphans. Qualify per node: Amsterdam 3, Duesseldorf 6, Hong Kong 0, Los Angeles 1, Mexico City 3, Miami 2, Montreal 4, Sao Paulo 0, Singapore 0, Sydney 2, Tokyo 0. Control: WireGuardKeys total 3093, active 161. Advice: a one-off removal of the 21 does not change users (never connected, no session) - low value; the 11 true orphans + the meter-blind peer family (xd-1448, Miami) are the more useful follow-up. A recurring reap is NOT prepared: it is a fleet change and needs the CEO's wish first.",
+      "resultingHandoff": "xd to [QA]: re-run the dry-run counts"
     },
     {
       "id": "xd-1804",
@@ -56435,6 +56439,18 @@
       "status": "pending",
       "priority": "P3",
       "createdAt": "2026-10-11T21:16:28Z",
+      "createdDate": "2026-10-11",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1806",
+      "from": "[DEVOPS]",
+      "to": "[QA]",
+      "title": "Handoff from DEVOPS: Check xd-1803 dry-run: 21 of 106 never-handshaked relay peers qualify for the xd-1115 reap; 26 have no key row",
+      "description": "Re-run on the main server: bash /root/reports/devops1011f/wg.sh then bash /root/reports/devops1011f/dry.sh and dry2.sh (read-only; wg show dump on 11 relays + SELECT only). Expect ALL|106|26|16|5|38|21|0|21 within normal drift. Control: WireGuardKeys total vs active. Nothing was removed. Task ios-ondemand-halfopen-tunnel-freeze row 3 (peer half).",
+      "status": "pending",
+      "priority": "P3",
+      "createdAt": "2026-10-11T21:22:56Z",
       "createdDate": "2026-10-11",
       "completedDate": null
     }
