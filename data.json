@@ -2033,7 +2033,7 @@
           "passed": false,
           "verifiedBy": "none",
           "verifiedAt": "2026-03-01T14:10:41Z",
-          "evidence": "QA 2026-09-24 FAIL: NOT AS SPECIFIED: 'probes' are inferred from ConnectionLogs (CensorshipResponseService.cs:1455), nothing probes from inside a country's network. -> [CTO]",
+          "evidence": "[BACKEND run 2026-10-11 0118, scheduled, unattended, 2026-10-11T01:39:44Z] DEFERRED to Jan 2027: CEO 29 Sep (xd-1016, recorded on this task's status) - real in-country probes are Phase 3 roadmap (xd-1131); they need a vantage point inside each country, which we do not have. Interim signal the next backend run can use: ConnectFailureEvents.RegionHint per protocol + ConnectionLogs by Users.LastLoginCountry. | QA 2026-09-24 FAIL: NOT AS SPECIFIED: 'probes' are inferred from ConnectionLogs (CensorshipResponseService.cs:1455), nothing probes from inside a country's network. -> [CTO]",
           "met": false,
           "verifiedDate": "2026-09-24",
           "verifiedByRaw": "ceo-cowork",
@@ -2042,7 +2042,8 @@
           "verifiedByPrevious": "self",
           "roadmap": "phase-3",
           "decision": "CEO 2026-09-29 (xd-1016): not built and not claimed \u2014 Phase 3 roadmap; do not build before launch",
-          "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored"
+          "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored",
+          "blocker": "Deferred to Jan 2027 (CEO 29 Sep: in-country probes = Phase 3, xd-1131)."
         },
         {
           "test": "Emergency protocol rotation: one-click switches all users in a blocked country to working protocol",
@@ -13989,6 +13990,18 @@
           "addedBy": "[BACKEND] run 2026-10-11 0015",
           "owner": "[BACKEND]",
           "dept": "backend"
+        },
+        {
+          "test": "READY TO SHIP \u2014 the app can receive push messages from us (for example 'your support ticket was answered') \u00b7 why: the server is set up to send them, but the secret signing file Apple gives us was never placed where the server looks, so not one message could ever go out; you turned Push on for the app today and build 68 asks for it \u00b7 tested: the new sending code passes all 318 checks, including 6 new ones; a real message cannot be tried on the test server (it has no phones and no Apple file), so the first real proof is one test message to your phone after the ship \u00b7 what the ship does: copies the existing Apple file into a private folder only the server can read, points the server at it, restarts the server once \u00b7 rollback: put back the previous server version (the deploy keeps a copy) and remove the folder",
+          "verify": "After ship: docker exec caspervpn-api test -s /app/keys/AuthKey_MLKCGXNWXW.p8 -> present; after the CEO opens build 68: SELECT count(*) FROM \"UserDeviceTokens\" WHERE \"IsActive\" >= 1; one test push to the CEO account -> api log 'APNs push sent successfully'",
+          "evidence": "[BACKEND run 2026-10-11 0118, scheduled, unattended, 2026-10-11T01:39:44Z] development e19e1de78; xd-1738; QA dev check xd-1749. Board advice: yes - without it no push can ever be sent; nothing customer-visible changes until a phone registers.",
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "addedAt": "2026-10-11T01:39:44Z",
+          "addedBy": "[BACKEND] run 2026-10-11 0118",
+          "owner": "[BACKEND]",
+          "dept": "backend"
         }
       ],
       "progress": 0,
@@ -19267,7 +19280,7 @@
           "passed": false,
           "addedAt": "2026-10-09T06:15:28Z",
           "addedBy": "ceo-office",
-          "evidence": "[GROWTH run 2026-10-11 0003, scheduled, 2026-10-11T00:14:32Z] Share measured 9 Oct (e-mail sign-ups connect 0 of 15 in 30 d; Apple sign-in 31 of 46). Fix built: xd-1678 24 h connect window on development 656584056 by the backend run (23:38Z 10 Oct), CEO YES row 176. Ships through the backend run; then QA. || not started",
+          "evidence": "[BACKEND run 2026-10-11 0118, scheduled, unattended, 2026-10-11T01:39:44Z] DONE for QA: ceo-action-backlog row 216 is the READY TO SHIP row and names the measured share ('none of the 15 real e-mail sign-ups in 30 days ever connected'); fix on development 656584056 (QA dev check xd-1724). | [GROWTH run 2026-10-11 0003, scheduled, 2026-10-11T00:14:32Z] Share measured 9 Oct (e-mail sign-ups connect 0 of 15 in 30 d; Apple sign-in 31 of 46). Fix built: xd-1678 24 h connect window on development 656584056 by the backend run (23:38Z 10 Oct), CEO YES row 176. Ships through the backend run; then QA. || not started",
           "verifiedBy": "none",
           "blocker": "[BACKEND] ship of xd-1678 (CEO YES row 176) then [QA]."
         },
@@ -47240,8 +47253,9 @@
       "ageDays": 6,
       "needsRelease": false,
       "lifecycle": "active",
-      "notes": "[ENGINEERING run 2026-10-10 1205, 2026-10-10T13:31:19Z] Items 3-4 LIVE on production (row 205). SHIPPED 2026-10-10 13:22-13:30Z (CEO YES 12:58Z, live): production 21992ae93 + 4b7d6be6f = cherry-pick -x of development f9e46942c + 7bfcfb766; conflict resolved by dropping only the dev-only xd-1437 DescribePurchase context and the dev-only Link import (shipped diff = the 6 files of the two dev commits, same line counts). Ship tree: dotnet build 0 errors, dotnet test 236/236; admin tsc 0 errors, control 1. Pushed under LOCK ACQUIRED 13:22:34Z. /root/deploy_api.sh DEPLOY DONE OK 13:25:03Z (rollback caspervpn-api:rollback-202610101322 = 82d08daa7a31; only the known ACTIVATION_FLEET_SSH_PUBLIC_KEY blank warning); DLL BuildRevenueSelectionAsync 8. Admin rebuilt (runner stopped, restarted active; admin rollback tag of 2f39ae850d0c): bundle main.152f60c9.js -> main.b40e4fb7.js, 'Money in a period' 1, 'vs last month' 0; admin / 200, api /health 200. LIVE (minted admin token, never printed): last_month real 11 / $32.79 (10 paid), est. Apple proceeds $22.95; sandbox 12 / $35.88; all 23 / $68.67 - all three = the production read-only SQL of 12:1xZ; this month real 6 / $27.96 = SQL; MRR 22.95 and total 327.43 unchanged (= SQL real all-time 86 / $327.43); no token 401. Note: a first GO at 13:14Z was set before the lock was taken; that push was REJECTED (non-fast-forward), nothing landed - repeated correctly under the lock. STILL OPEN: Appfigures API line (needs a key); item 5 acceptance re-stated as measured ($32.79 / 11 rows - the 5 Oct $39.55 / 13 is not reproducible). | [CEO 2026-10-10 2026-10-10T12:58:23Z] CEO YES on row 205 ('Yes', engineering run 1205 chat) - shipping items 3-4 to production now. | [ENGINEERING run 2026-10-10 1205, 2026-10-10T12:46:25Z] Items (3)+(4) BUILT on development and checked on dev (claim released). API: GET /api/admin/revenue?environment=real|sandbox|all (default real; unknown = real) & preset=today|7d|week|month|last_month|quarter|ytd|all_time|custom (custom = startDate..endDate, end day included) -> Summary.Selected: gross, paid vs $0 rows, Apple vs other, estimated proceeds (Apple cut from config AdminAnalytics:AppleCommissionRate, default 0.30), the rule in words, the Appfigures note, and a control (real / sandbox / all for the same period). Chart + by-plan follow the population. UI: Payments page 'Money in a period' card (Real / Test / All + period list); the made-up '+15% vs last month' on Monthly Revenue removed. development f9e46942c (backend: AdminService.cs, AdminDTOs.cs, Tests/AdminRevenueFilterTests.cs) + 7bfcfb766 (admin: Payments.tsx, adminService.ts, types/index.ts). Main-server build 0 errors; dotnet test 292/292 (new AdminRevenueFilterTests 22/22); CONTROL: default 'real' planted as 'all' -> 7 of 22 fail, file restored (hash-object 468099dd = pushed blob). Admin tsc --noEmit 0 errors in the Mac VM; CONTROL planted 'grossRevenueX' -> TS2551 rc 2. Dev API recreated 12:39:07Z (DLL grep BuildRevenueSelectionAsync 8); minted admin token (never printed): GET /api/admin/revenue?environment=real|sandbox|all&preset=last_month -> 200, 11/$32.89 | 0/$0 | 11/$32.89 = dev SQL (read-only) 11/32.89 | 0/0 | 11/32.89; all_time all 324/$1,688.08 = SQL 324/1688.08; custom 2026-09-01..2026-09-30 = last_month (end day included, To 2026-10-01); no token 401. Dev admin bundle main.ef5a1e71.js: 'Money in a period' 1, 'Same period, every group' 1, made-up 'vs last month' 0 (production bundle main.152f60c9.js: 0 / 1). PRODUCTION today (read-only, 12:1xZ): September real customers = 11 rows $32.79 (10 paid weekly renewals + 1 $0 free-trial start), all Apple; Sandbox 12 rows $35.88 (one tester, 3-minute renewals); all 23 rows $68.67. Estimated Apple proceeds at 30% = $22.95 vs Appfigures September $22.55 (gap $0.40 - taxes, hypothesis). ITEM 5 FINDING: the $39.55 / 13 rows written on 5 Oct cannot be reproduced from today's rows - no non-Sandbox September row is excluded by the staff or Sandbox-subscription rules (each flag checked per row); the extra $6.76 was most likely two 28 Aug renewals ($3.22 + $3.54) counted in a Beirut-time or created-date window - hypothesis, not measured. Measured acceptance after ship: real September gross $32.79 / 11 rows. NOT on production: READY TO SHIP row on the CEO card; QA dev check handed over. Appfigures API line (part of 4) still waits for an Appfigures key. | [ENGINEERING run 2026-10-10 1205, 2026-10-10T12:09:07Z] CLAIMED: item (3) Real/Sandbox/All + period presets applied by the API (and the gross vs estimated-proceeds field of item 4) on development only. No production change. Other runs: stay off this row until this note says done. | [ENGINEERING run 2026-10-08 b, 2026-10-08T22:24:23Z] Items 1-2 LIVE on production (row 122, 9649fb6ab, 22:03Z): the three admin money endpoints agree (mrr 40.08 / arr 480.96 / total 323.89 at 22:03:50Z; before 40.08 / 183.11 / 196.09); renewals carry Environment from now on; the 60 old renewal rows are tagged Production (backup taken). STILL OPEN: (3) Real/Sandbox/All + period presets applied by the API, (4) gross vs Apple proceeds + Appfigures line, (5) September acceptance $39.55 / 13 rows - next backend run, then [ADMIN-PANEL] UI. QA of 1-2: xd-1529.",
-      "updatedAt": "2026-10-10T13:31:19Z"
+      "notes": "[BACKEND run 2026-10-11 0118, scheduled, unattended, 2026-10-11T01:39:44Z] STATE: items 1-2 live (row 122, QA xd-1529); items 3-4 live (row 205, QA xd-1655 dev + xd-1663 production PASS); item 5 re-measured 10 Oct = 11 rows $32.79 (the ticket's $39.55/13 is not reproducible, see backend skill trap 1010-1205). ONLY LEFT: the 'Appfigures (external)' line - needs an Appfigures API key; /opt/caspervpn/secrets/marketing/appfigures.key is MISSING (checked 2026-10-11T01:39Z; credentials row 4 says 'CEO to create'). | [ENGINEERING run 2026-10-10 1205, 2026-10-10T13:31:19Z] Items 3-4 LIVE on production (row 205). SHIPPED 2026-10-10 13:22-13:30Z (CEO YES 12:58Z, live): production 21992ae93 + 4b7d6be6f = cherry-pick -x of development f9e46942c + 7bfcfb766; conflict resolved by dropping only the dev-only xd-1437 DescribePurchase context and the dev-only Link import (shipped diff = the 6 files of the two dev commits, same line counts). Ship tree: dotnet build 0 errors, dotnet test 236/236; admin tsc 0 errors, control 1. Pushed under LOCK ACQUIRED 13:22:34Z. /root/deploy_api.sh DEPLOY DONE OK 13:25:03Z (rollback caspervpn-api:rollback-202610101322 = 82d08daa7a31; only the known ACTIVATION_FLEET_SSH_PUBLIC_KEY blank warning); DLL BuildRevenueSelectionAsync 8. Admin rebuilt (runner stopped, restarted active; admin rollback tag of 2f39ae850d0c): bundle main.152f60c9.js -> main.b40e4fb7.js, 'Money in a period' 1, 'vs last month' 0; admin / 200, api /health 200. LIVE (minted admin token, never printed): last_month real 11 / $32.79 (10 paid), est. Apple proceeds $22.95; sandbox 12 / $35.88; all 23 / $68.67 - all three = the production read-only SQL of 12:1xZ; this month real 6 / $27.96 = SQL; MRR 22.95 and total 327.43 unchanged (= SQL real all-time 86 / $327.43); no token 401. Note: a first GO at 13:14Z was set before the lock was taken; that push was REJECTED (non-fast-forward), nothing landed - repeated correctly under the lock. STILL OPEN: Appfigures API line (needs a key); item 5 acceptance re-stated as measured ($32.79 / 11 rows - the 5 Oct $39.55 / 13 is not reproducible). | [CEO 2026-10-10 2026-10-10T12:58:23Z] CEO YES on row 205 ('Yes', engineering run 1205 chat) - shipping items 3-4 to production now. | [ENGINEERING run 2026-10-10 1205, 2026-10-10T12:46:25Z] Items (3)+(4) BUILT on development and checked on dev (claim released). API: GET /api/admin/revenue?environment=real|sandbox|all (default real; unknown = real) & preset=today|7d|week|month|last_month|quarter|ytd|all_time|custom (custom = startDate..endDate, end day included) -> Summary.Selected: gross, paid vs $0 rows, Apple vs other, estimated proceeds (Apple cut from config AdminAnalytics:AppleCommissionRate, default 0.30), the rule in words, the Appfigures note, and a control (real / sandbox / all for the same period). Chart + by-plan follow the population. UI: Payments page 'Money in a period' card (Real / Test / All + period list); the made-up '+15% vs last month' on Monthly Revenue removed. development f9e46942c (backend: AdminService.cs, AdminDTOs.cs, Tests/AdminRevenueFilterTests.cs) + 7bfcfb766 (admin: Payments.tsx, adminService.ts, types/index.ts). Main-server build 0 errors; dotnet test 292/292 (new AdminRevenueFilterTests 22/22); CONTROL: default 'real' planted as 'all' -> 7 of 22 fail, file restored (hash-object 468099dd = pushed blob). Admin tsc --noEmit 0 errors in the Mac VM; CONTROL planted 'grossRevenueX' -> TS2551 rc 2. Dev API recreated 12:39:07Z (DLL grep BuildRevenueSelectionAsync 8); minted admin token (never printed): GET /api/admin/revenue?environment=real|sandbox|all&preset=last_month -> 200, 11/$32.89 | 0/$0 | 11/$32.89 = dev SQL (read-only) 11/32.89 | 0/0 | 11/32.89; all_time all 324/$1,688.08 = SQL 324/1688.08; custom 2026-09-01..2026-09-30 = last_month (end day included, To 2026-10-01); no token 401. Dev admin bundle main.ef5a1e71.js: 'Money in a period' 1, 'Same period, every group' 1, made-up 'vs last month' 0 (production bundle main.152f60c9.js: 0 / 1). PRODUCTION today (read-only, 12:1xZ): September real customers = 11 rows $32.79 (10 paid weekly renewals + 1 $0 free-trial start), all Apple; Sandbox 12 rows $35.88 (one tester, 3-minute renewals); all 23 rows $68.67. Estimated Apple proceeds at 30% = $22.95 vs Appfigures September $22.55 (gap $0.40 - taxes, hypothesis). ITEM 5 FINDING: the $39.55 / 13 rows written on 5 Oct cannot be reproduced from today's rows - no non-Sandbox September row is excluded by the staff or Sandbox-subscription rules (each flag checked per row); the extra $6.76 was most likely two 28 Aug renewals ($3.22 + $3.54) counted in a Beirut-time or created-date window - hypothesis, not measured. Measured acceptance after ship: real September gross $32.79 / 11 rows. NOT on production: READY TO SHIP row on the CEO card; QA dev check handed over. Appfigures API line (part of 4) still waits for an Appfigures key. | [ENGINEERING run 2026-10-10 1205, 2026-10-10T12:09:07Z] CLAIMED: item (3) Real/Sandbox/All + period presets applied by the API (and the gross vs estimated-proceeds field of item 4) on development only. No production change. Other runs: stay off this row until this note says done. | [ENGINEERING run 2026-10-08 b, 2026-10-08T22:24:23Z] Items 1-2 LIVE on production (row 122, 9649fb6ab, 22:03Z): the three admin money endpoints agree (mrr 40.08 / arr 480.96 / total 323.89 at 22:03:50Z; before 40.08 / 183.11 / 196.09); renewals carry Environment from now on; the 60 old renewal rows are tagged Production (backup taken). STILL OPEN: (3) Real/Sandbox/All + period presets applied by the API, (4) gross vs Apple proceeds + Appfigures line, (5) September acceptance $39.55 / 13 rows - next backend run, then [ADMIN-PANEL] UI. QA of 1-2: xd-1529.",
+      "updatedAt": "2026-10-10T13:31:19Z",
+      "blocker": "Appfigures API key not created yet (CEO: appfigures.com -> API key; file /opt/caspervpn/secrets/marketing/appfigures.key missing). Everything else on this handoff is live and QA-passed."
     },
     {
       "id": "xd-1339",
@@ -48225,7 +48239,8 @@
       "needsRelease": false,
       "claimedBy": "[ENGINEERING run 2026-10-09 1810]",
       "blocker": "",
-      "updatedAt": "2026-10-09T19:12:00Z"
+      "updatedAt": "2026-10-09T19:12:00Z",
+      "notes": "[BACKEND run 2026-10-11 0118, scheduled, unattended, 2026-10-11T01:39:44Z] verify re-run (production read-only): free users >110% of limit with a cycle after 28 Sep = 1, and that 1 has a 'data cap reached' cut; highest = 127%. Still not built: (b) nightly >110% alert, (c) its test."
     },
     {
       "id": "xd-1387",
@@ -49253,7 +49268,7 @@
       "lifecycle": "active",
       "note": "[ENGINEERING run 2026-10-07 g, 2026-10-07T21:42:10Z] PARTIAL - MEASURED (read-only, production): nginx api_ssl_access 23 Sep-7 Oct: 14 of 141 hidden-mode config fetches (GET /servers/{id}/caspercloak-config) were followed by POST /servers/{id}/connect for the same server within 180 s; control = WireGuard-only config fetches: 59 of 93. CEO 6 Oct LA session: caspercloak-config 22:15:37Z, then ONLY heartbeats 22:26-22:52Z, no /connect. All 18 Protocol=3 rows in 30 days carry the old body UserAgent 'CasperVPN/iOS' (no build) - 0 from build 65. CAUSE: the app sends its single /connect the instant the tunnel says connected, before hidden mode carries data, and never retries; its heartbeat self-heal (ConnectionViewModel.sendHeartbeat -> logConnectionToBackend) is dead code because the hasLoggedConnectForSession guard is still true. FIX on development d412b33bc (ServersController.Heartbeat): a heartbeat with no open row ADOPTS the session through the normal connect path (quota gate, premium gate, device limit) when the last row is not an admin/device termination and closed > 2 min ago; row marked UserAgent 'heartbeat-adopt (xd-1434)'; a WireGuard-labelled open row becomes CasperCloak when the heartbeat says CasperCloak (xd-1438 item 2). Build 0 errors, tests 195/195 (/root/reports/eng1007g-backend-*.log). DEV PROOF: dev API redeployed 21:38:52Z (DLL carries 'heartbeat-adopt' x1). BEFORE (old dev image 19:33Z, 21:23:59Z): heartbeat CasperCloak on Singapore for probe user probe-renewal-1790807482 -> sessionActive=false reason=no-session, 0 rows. AFTER 21:40:45Z: sessionActive=true + 1 row Protocol=3 UserAgent 'heartbeat-adopt (xd-1434)'; 2nd heartbeat 21:40:51Z -> same single row; POST /disconnect closed it 21:41:06Z; a heartbeat right after the disconnect was NOT adopted ('Session closed (status:Disconnected)'). Files /root/reports/eng1007g-devtest-{before,after1,after2,negative}.txt. Dev data only; no production change. Waits: QA xd-1495 on dev, then CEO YES on the READY TO SHIP row, then ship + re-run xd-1389's counts. iOS half: xd-1496. [ENGINEERING run 2026-10-07 g, 2026-10-07T21:10:55Z] claimed: measuring why hidden-mode (CasperCloak) sessions get no ConnectionLogs row (read-only on production, code on the brain clone); any fix goes to development only. ",
       "updatedAt": "2026-10-07T21:40:42Z",
-      "notes": "[ENGINEERING run 2026-10-08 b, 2026-10-08T22:39:10Z] Server leg LIVE on production (row 151, f29362b0b, 22:34:51Z): a heartbeat with no open row now opens the hidden-mode session (DLL 'heartbeat-adopt' 0 -> 1). Real-traffic proof -> QA xd-1539 within 24 h. App leg (retry /connect, dead self-heal) stays with [iOS] xd-1496. | [CTO live 2026-10-07 21:0x-21:5xZ, CEO chat, Opus 5.5] More evidence: ConnectionLogs row for RU user d4062d5d on Singapore 1 Oct 15:00:49-15:31:02Z says 348 B down / 276 B up; the same session carried 197 MB (WireGuardPeerUsages, peer created 15:00:57Z; relay journal sid 7e000b89). The subscriber's rows on Amsterdam are labelled Protocol 0 (WireGuard) while wg0 shows his endpoint at 127.0.0.1 (via the relay). || ",
+      "notes": "[BACKEND run 2026-10-11 0118, scheduled, unattended, 2026-10-11T01:39:44Z] MEASURED production read-only since the server leg went live (8 Oct 22:35Z, ~50 h): ConnectionLogs Protocol 3 (hidden mode) = 26 rows / 4 users / 9 rows >1 MB down; the 48 h BEFORE = 7 rows / 3 users / 3 >1 MB. CONTROL WireGuard (Protocol 0) same windows 114 vs 136 rows (no general rise). 8 rows since the deploy carry the 'adopt' marker. Staff list not applied (4 users - may include the CEO's phones). Server leg works; left: backfill of pre-8-Oct sessions (heartbeat logs are not kept that long - likely impossible) and the xd-1389 re-run. | [ENGINEERING run 2026-10-08 b, 2026-10-08T22:39:10Z] Server leg LIVE on production (row 151, f29362b0b, 22:34:51Z): a heartbeat with no open row now opens the hidden-mode session (DLL 'heartbeat-adopt' 0 -> 1). Real-traffic proof -> QA xd-1539 within 24 h. App leg (retry /connect, dead self-heal) stays with [iOS] xd-1496. | [CTO live 2026-10-07 21:0x-21:5xZ, CEO chat, Opus 5.5] More evidence: ConnectionLogs row for RU user d4062d5d on Singapore 1 Oct 15:00:49-15:31:02Z says 348 B down / 276 B up; the same session carried 197 MB (WireGuardPeerUsages, peer created 15:00:57Z; relay journal sid 7e000b89). The subscriber's rows on Amsterdam are labelled Protocol 0 (WireGuard) while wg0 shows his endpoint at 127.0.0.1 (via the relay). || ",
       "needsRelease": false
     },
     {
@@ -54088,7 +54103,9 @@
       "priority": "P1",
       "createdAt": "2026-10-10T20:16:31Z",
       "createdDate": "2026-10-10",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[BACKEND run 2026-10-11 0118, scheduled, unattended, 2026-10-11T01:39:44Z] Not started on purpose: the spec says register our sender with Apple's private relay BEFORE the first send (8 of 12 at-limit users use Hide My Email); NOT PROVEN that it is registered - no record on the board or in credentials. This is an Apple Developer account step (Certificates, Identifiers & Profiles -> Sign in with Apple for Email Communication -> add caspervpn.com sender) that only the account holder can do.",
+      "blocker": "CEO: register our e-mail sender with Apple's private relay (Apple Developer -> Sign in with Apple for Email Communication). Backend builds the mail the run after."
     },
     {
       "id": "xd-1678",
@@ -54943,7 +54960,7 @@
       "id": "xd-1738",
       "from": "[CEO]",
       "to": "[BACKEND]",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P1",
       "title": "Push notifications: confirm the API can SEND (APNs key + topic configured) now that the app has the push entitlement (build 68, xd-1158)",
       "description": "[CEO live 2026-10-11 2026-10-11T00:57:03Z] App side measured on the CEO phone 27f: 'APNs registration failed: no valid aps-environment entitlement' -> fixed in build 68 (entitlement + register retry). CEO turned Push on for the App ID (11 Oct). Backend: check ApnsPushNotificationService config (key id, team id, .p8, topic com.applinkoffshore.CasperVPN, sandbox for Debug builds) is set in prod .env without printing secrets; after the CEO installs 68, UserDeviceTokens must get its first row; then send one test push to the CEO account.",
@@ -54953,7 +54970,9 @@
       "createdDate": "2026-10-11",
       "dueBy": "2026-10-13T00:57:07Z",
       "handoffTo": "[IOS]",
-      "handoffNote": "then IOS adds the fix to the next build"
+      "handoffNote": "then IOS adds the fix to the next build",
+      "notes": "[BACKEND run 2026-10-11 0118, scheduled, unattended, 2026-10-11T01:39:44Z] MEASURED on production (read-only): config KeyPath /app/keys/AuthKey_MLKCGXNWXW.p8 (appsettings.json, UseSandbox=false, topic com.applinkoffshore.CasperVPN) but /app/keys does NOT exist in caspervpn-api (mounts: geoip, api-logs, apple.p8, reports, secrets/api; 0 PushNotifications env vars) -> the API cannot sign a single push today. The matching key exists on the main server only at /opt/caspervpn/push-service/keys/ (root:root 0600 - the API runs as uid 1000, so a plain mount would not be readable). UserDeviceTokens = 0 rows; api log 7 d 'apns' lines = 0. Dev API has no key either. FIX on development e19e1de78: compose mounts /opt/caspervpn/secrets/apns -> /app/keys:ro; sender retries the other APNs gateway once on 400 BadDeviceToken (Xcode installs = sandbox tokens, TestFlight/App Store = production). Main-server build 0 errors, suite 318/318, ApnsGatewayFallbackTests 6/6 (real ES256 JWT from a temp key); CONTROL old sender 3/6 fail (the retry cases). Dev API recreated 01:38:40Z healthy; dev DLL literal 'retrying on the other gateway' = 1, production DLL = 0 (control). Ship needs the CEO YES on the new READY TO SHIP row (production compose + key copy + api recreate).",
+      "blocker": "CEO YES on the READY TO SHIP row (push key mount, development e19e1de78); then the CEO opens build 68 so UserDeviceTokens gets its first row, then one test push."
     },
     {
       "id": "xd-1739",
@@ -55084,6 +55103,30 @@
       "status": "pending",
       "priority": "P3",
       "createdAt": "2026-10-11T01:23:47Z",
+      "createdDate": "2026-10-11",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1749",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: Test on dev: push sender retry + key mount (xd-1738), development e19e1de78",
+      "description": "[BACKEND run 2026-10-11 0118, scheduled, unattended, 2026-10-11T01:39:44Z] development e19e1de78 (xd-1738). What changed: docker-compose.yml api volume /opt/caspervpn/secrets/apns:/app/keys:ro; ApnsPushNotificationService retries the other gateway once on 400 BadDeviceToken. Build 0 errors, 318/318, ApnsGatewayFallbackTests 6/6, control old sender 3/6 fail. Dev API recreated 01:38:40Z healthy; dev DLL literal 'retrying on the other gateway' = 1, production DLL = 0 (control). CHECK on dev: (1) git show e19e1de78 --stat = 3 files; (2) dev DLL has the literal 'retrying on the other gateway' (strings -el) and production does not; (3) run the 6 tests. A real send cannot be tested on dev (no key, no device tokens there) - say so, do not tick a send. Then the READY TO SHIP row on the CEO card.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-11T01:39:48Z",
+      "createdDate": "2026-10-11",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1750",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: Re-checks: hidden-mode sessions recorded (xd-1434), silent-newcomers row 1, censorship row 3 (push) is ticked but no push can be sent",
+      "description": "[BACKEND run 2026-10-11 0118, scheduled, unattended, 2026-10-11T01:39:44Z] (1) xd-1434 server leg: production ConnectionLogs Protocol 3 since 8 Oct 22:35Z = 26 rows/4 users/9 >1 MB vs 7/3/3 in the 48 h before; control Protocol 0 114 vs 136 - re-run and tick what the server leg promised (apply the staff list). (2) activation-silent-newcomers row 1: verify 'board: a READY TO SHIP row naming the measured share' = ceo-action-backlog row 216 - tick if you agree. (3) admin-censorship-response row 3 ('push notification to all users in affected country') is met=true, but measured today the API cannot send ANY push (APNs key not mounted, 0 device tokens, xd-1738) - re-verify and un-tick if the row means a delivered push. Row 223 on the CEO card is the fix.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-11T01:39:48Z",
       "createdDate": "2026-10-11",
       "completedDate": null
     }
