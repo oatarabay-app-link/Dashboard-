@@ -14230,14 +14230,14 @@
           "evidence": "[QA 2026-10-11 g, scheduled, 2026-10-11T21:10:07Z] QA DEV PASS (xd-1790): (1) development 9f86dc0d security_sweep_weekly.sh: bash -n OK; key literals re_... = 0 (reads the key from env / secrets file); S2 skips only freeradius UDP ports >= 32768 (code L61-62); S6 allow-list = 6 monitoring containers (L132). Not executed by QA (first run writes a baseline). (2) development b5e769b3 vpn-conntrack-nat-tidy.sh: bash -n OK, = DevOps copy (md5 ffcb5097); default is a dry run; DRY RUN on Bangkok 46.16.129.246 21:1xZ -> before udp_timeout_stream=120 udp_timeout=30 bare_masq_live=3 rules.v4=2, plan = write sysctl.d 600/120, delete 2 live copies, drop 2 from rules.v4, PostUp -C||-A; nothing changed. Rows stay FAIL until installed after CEO YES rows 236/237/238. || [DEVOPS run 2026-10-11 e, scheduled, unattended, 2026-10-11T04:32:46Z] xd-1781. Measured: udp/57125 = freeradius (pid started 30 Sep 06:07Z, its random high port; udp/59057 was the previous one). eng1009b-pg (postgres:16-alpine, created 9 Oct 01:11Z, volume 48 MB, 0 user tables, 0 client connections); buildx builders 7dad5b2a (state 261 MB) + 8c857513 (283 MB), not in 'docker buildx ls' (orphans). Install steps: copy dev file to /opt/caspervpn (chmod 755), rm /var/lib/casper-security-sweep/ports.baseline (re-baseline), docker rm -f eng1009b-pg + the 2 builders, docker volume rm their 3 volumes. NOT done (live server needs CEO YES)."
         },
         {
-          "test": "READY TO SHIP \u2014 keep phones' VPN connections alive while the phone sleeps (servers forget a quiet connection after 2 minutes today; this makes it 10) and remove a doubled network rule on the servers \u00b7 why: QA found this still open on all 11 servers (task vpn-background-stability-cluster rows 1, 2, 4); it is one of the known causes of 'VPN connected but no internet' after the phone wakes \u00b7 tested: development b5e769b3 (infrastructure/scripts/vpn-conntrack-nat-tidy.sh), dry run on Sydney and Miami changed nothing and listed exactly the expected steps \u00b7 order: Bangkok test server first, check, then the 11 \u00b7 rollback: the script keeps a backup of every file and the old values; restore takes one command per server \u00b7 CEO: say yes or no",
+          "test": "CEO YES 2026-10-11 (live chat: 'yes 237') \u00b7 READY TO SHIP \u2014 keep phones' VPN connections alive while the phone sleeps (servers forget a quiet connection after 2 minutes today; this makes it 10) and remove a doubled network rule on the servers \u00b7 why: QA found this still open on all 11 servers (task vpn-background-stability-cluster rows 1, 2, 4); it is one of the known causes of 'VPN connected but no internet' after the phone wakes \u00b7 tested: development b5e769b3 (infrastructure/scripts/vpn-conntrack-nat-tidy.sh), dry run on Sydney and Miami changed nothing and listed exactly the expected steps \u00b7 order: Bangkok test server first, check, then the 11 \u00b7 rollback: the script keeps a backup of every file and the old values; restore takes one command per server \u00b7 CEO: say yes or no",
           "met": false,
           "passed": false,
           "verifiedBy": "none",
           "addedAt": "2026-10-11T04:32:46Z",
           "addedBy": "[DEVOPS] devops run 1011e",
           "verify": "on each relay: cat /proc/sys/net/netfilter/nf_conntrack_udp_timeout_stream = 600, nf_conntrack_udp_timeout = 120, /etc/sysctl.d/99-vpn-conntrack.conf exists; iptables -t nat -S POSTROUTING | grep -cx -- '-A POSTROUTING -o eth0 -j MASQUERADE' = 1; then \u00a70.5 real traffic: >=10 wg handshakes <2 min per node",
-          "evidence": "[QA 2026-10-11 g, scheduled, 2026-10-11T21:10:07Z] QA DEV PASS (xd-1790): (1) development 9f86dc0d security_sweep_weekly.sh: bash -n OK; key literals re_... = 0 (reads the key from env / secrets file); S2 skips only freeradius UDP ports >= 32768 (code L61-62); S6 allow-list = 6 monitoring containers (L132). Not executed by QA (first run writes a baseline). (2) development b5e769b3 vpn-conntrack-nat-tidy.sh: bash -n OK, = DevOps copy (md5 ffcb5097); default is a dry run; DRY RUN on Bangkok 46.16.129.246 21:1xZ -> before udp_timeout_stream=120 udp_timeout=30 bare_masq_live=3 rules.v4=2, plan = write sysctl.d 600/120, delete 2 live copies, drop 2 from rules.v4, PostUp -C||-A; nothing changed. Rows stay FAIL until installed after CEO YES rows 236/237/238. || [DEVOPS run 2026-10-11 e, scheduled, unattended, 2026-10-11T04:32:46Z] xd-1787. Root cause of the doubled rule measured on Sydney + Miami: /etc/iptables/rules.v4 (netfilter-persistent enabled) holds 2 bare copies AND wg0 PostUp appends 1 at every start -> live 2 (Sydney) / 3 (Miami). Script: sysctl.d file + sysctl -p; delete extra live copies down to 1; remove bare copies from rules.v4; PostUp made idempotent (-C || -A). Dry-run output Sydney: before 120/30/live 2/saved 2; Miami: 120/30/live 3/saved 2. NOT applied anywhere."
+          "evidence": "[CEO YES 2026-10-11] 'yes 237' (Cowork CTO live chat, ~22:2xZ / 01:2x Beirut 12 Oct). Ship by the owner's normal path, then [QA] live check. || [QA 2026-10-11 g, scheduled, 2026-10-11T21:10:07Z] QA DEV PASS (xd-1790): (1) development 9f86dc0d security_sweep_weekly.sh: bash -n OK; key literals re_... = 0 (reads the key from env / secrets file); S2 skips only freeradius UDP ports >= 32768 (code L61-62); S6 allow-list = 6 monitoring containers (L132). Not executed by QA (first run writes a baseline). (2) development b5e769b3 vpn-conntrack-nat-tidy.sh: bash -n OK, = DevOps copy (md5 ffcb5097); default is a dry run; DRY RUN on Bangkok 46.16.129.246 21:1xZ -> before udp_timeout_stream=120 udp_timeout=30 bare_masq_live=3 rules.v4=2, plan = write sysctl.d 600/120, delete 2 live copies, drop 2 from rules.v4, PostUp -C||-A; nothing changed. Rows stay FAIL until installed after CEO YES rows 236/237/238. || [DEVOPS run 2026-10-11 e, scheduled, unattended, 2026-10-11T04:32:46Z] xd-1787. Root cause of the doubled rule measured on Sydney + Miami: /etc/iptables/rules.v4 (netfilter-persistent enabled) holds 2 bare copies AND wg0 PostUp appends 1 at every start -> live 2 (Sydney) / 3 (Miami). Script: sysctl.d file + sysctl -p; delete extra live copies down to 1; remove bare copies from rules.v4; PostUp made idempotent (-C || -A). Dry-run output Sydney: before 120/30/live 2/saved 2; Miami: 120/30/live 3/saved 2. NOT applied anywhere."
         },
         {
           "test": "READY TO SHIP \u2014 take the e-mail key out of 7 monitoring scripts on the main server, then change the key once more \u00b7 why: the new key (made 11 Oct) is still written inside 7 scripts on the main server (the clean versions are already in our code but were never put in place), and this run showed it once in its own work log by mistake \u00b7 plan: put the 6 clean scripts from production code + the security check from the row above in place, check each still sends mail, then make a fresh key the same way as row 192 and delete this one \u00b7 rollback: old copies kept; the old key works until the last step \u00b7 CEO: say yes or no",
@@ -14302,9 +14302,9 @@
           "verifiedDate": "2026-10-11"
         },
         {
-          "test": "READY TO SHIP \u2014 give people in Iran a second way in when hidden mode fails at once \u00b7 why: in 8\u201311 Oct both Iran users who tried hidden mode failed within 2 seconds on 3 servers and never connected; the server kept giving them the same blocked road (through Cloudflare) \u00b7 what the ship does: after a fast failure, and only for Iran, the next try connects straight to our server instead of through Cloudflare; after 30 minutes it tries Cloudflare again \u00b7 tested: all 355 checks pass, 6 new ones, and one fails if the rule is broken on purpose; it is ON on the test server now; QA checks it there next \u00b7 risk: the straight road shows our server's address to the censor, so that server could get blocked in Iran (it does not affect other countries) \u00b7 rollback: one setting turns it off without a new version \u00b7 advice: yes \u2014 today Iran gets 0 connections, so there is nothing to lose there",
+          "test": "CEO YES 2026-10-11 (live chat: 'yes 244') \u00b7 READY TO SHIP \u2014 give people in Iran a second way in when hidden mode fails at once \u00b7 why: in 8\u201311 Oct both Iran users who tried hidden mode failed within 2 seconds on 3 servers and never connected; the server kept giving them the same blocked road (through Cloudflare) \u00b7 what the ship does: after a fast failure, and only for Iran, the next try connects straight to our server instead of through Cloudflare; after 30 minutes it tries Cloudflare again \u00b7 tested: all 355 checks pass, 6 new ones, and one fails if the rule is broken on purpose; it is ON on the test server now; QA checks it there next \u00b7 risk: the straight road shows our server's address to the censor, so that server could get blocked in Iran (it does not affect other countries) \u00b7 rollback: one setting turns it off without a new version \u00b7 advice: yes \u2014 today Iran gets 0 connections, so there is nothing to lose there",
           "verify": "After ship + switch-on (StealthTier__FastFailFailover__Enabled=true): grep 'cfWiring=SUPPRESSED (fast-fail failover' in the production api log for an IR user after a caspercloak failure <= 5 s; control: non-IR config calls still 'cfWiring=minted'; build proof: strings -el /app/CasperVPN.dll | grep -c 'fast-fail failover' = 1 (production 0 on 11 Oct 21:41Z)",
-          "evidence": "[BACKEND run 2026-10-11 2115, scheduled, unattended, 2026-10-11T21:46:20Z] development 458a4c5e4 (xd-1793; code first built by the 05:15Z backend run that left no log - picked up, rebased on 4e8d8823e, re-tested). Main-server build 0 errors, suite 355/355, StealthFailoverTests 6/6, CONTROL (connected-since check removed) 1 fail. Dev live 21:40Z: dev DLL 'fast-fail failover' 1, appsettings.Development FastFailFailover Enabled=true; production DLL 0 (control). appsettings.json Enabled=false: shipping the code alone changes nothing until the setting is turned on. QA dev check: see the new QA handoff.",
+          "evidence": "[CEO YES 2026-10-11] 'yes 244' (Cowork CTO live chat, ~22:2xZ / 01:2x Beirut 12 Oct). Ship by the owner's normal path, then [QA] live check. || [BACKEND run 2026-10-11 2115, scheduled, unattended, 2026-10-11T21:46:20Z] development 458a4c5e4 (xd-1793; code first built by the 05:15Z backend run that left no log - picked up, rebased on 4e8d8823e, re-tested). Main-server build 0 errors, suite 355/355, StealthFailoverTests 6/6, CONTROL (connected-since check removed) 1 fail. Dev live 21:40Z: dev DLL 'fast-fail failover' 1, appsettings.Development FastFailFailover Enabled=true; production DLL 0 (control). appsettings.json Enabled=false: shipping the code alone changes nothing until the setting is turned on. QA dev check: see the new QA handoff.",
           "met": false,
           "verifiedBy": "none",
           "createdBy": "[BACKEND] run 1011-2115",
@@ -57481,6 +57481,42 @@
       "status": "pending",
       "priority": "P3",
       "createdAt": "2026-10-11T22:20:28Z",
+      "createdDate": "2026-10-11",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1832",
+      "from": "[CTO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CTO: SHIP row 237 (CEO YES 2026-10-11): keep quiet phone connections 10 min + remove doubled NAT rule, Bangkok first then the 11 servers",
+      "description": "CEO YES in live chat 2026-10-11 ~22:2xZ. development b5e769b3 infrastructure/scripts/vpn-conntrack-nat-tidy.sh (QA DEV PASS xd-1790). Order: Bangkok test server, check, then the 11; backup per server; rollback one command per server. Then [QA] re-runs vpn-background-stability-cluster rows 1/2/4 live.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-11T22:24:09Z",
+      "createdDate": "2026-10-11",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1833",
+      "from": "[CTO]",
+      "to": "[BACKEND]",
+      "title": "Handoff from CTO: SHIP row 244 (CEO YES 2026-10-11): Iran fast-fail -> direct road (xd-1793), then switch FastFailFailover on in production",
+      "description": "CEO YES in live chat 2026-10-11 ~22:2xZ. development 458a4c5e4 (suite 355/355, StealthFailoverTests 6/6). Cherry-pick only this change (trap D8), /root/deploy_api.sh, then set FastFailFailover Enabled=true; rollback = the setting off. [QA]: prove the App Store build (4.2) follows the server's direct road for an Iran-tagged fast failure (store app has directRelay since May - not yet proven on 4.2).",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-11T22:24:09Z",
+      "createdDate": "2026-10-11",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1834",
+      "from": "[CTO]",
+      "to": "[IOS]",
+      "title": "Handoff from CTO: P0 build 68 report 2: hidden mode stalled ~1 min while the app kept it (probe failures overruled by xd-1137)",
+      "description": "CEO bug report 5a45efbc 2026-10-11 22:15:16Z, build 68, D\u00fcsseldorf cellular, title 'Connection brak' / 'Breaking traffic'. Tunnel log: 22:13:51 -> 22:14:51 rx +0.75 MB only; app [ZOMBIE-PROBE] 2x FAIL (-1001 timeout 5 s) 22:14:36/22:14:43; [ZOMBIE-VERDICT] handshake 72 s ago -> 'overruled by extension view - no teardown (xd-1137)'; [CC-LIVE] never fired (transport still answers pongs). So the user sees 'connected' with no internet. Proposal to measure first (\u00a77.1): log per-minute rx delta + pong RTT, and when 2 probes fail AND rx grew < 1 MB in 60 s, do a #52 resume instead of overruling. Hypothesis only: relay/carrier stall on the data path while the control ping survives. Links xd-1689/1690.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-10-11T22:24:09Z",
       "createdDate": "2026-10-11",
       "completedDate": null
     }
