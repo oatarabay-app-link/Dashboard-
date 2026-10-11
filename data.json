@@ -14071,6 +14071,16 @@
           "addedBy": "[DEVOPS] devops run 1011c",
           "verify": "ssh main server: grep -E '^ *daily|rotate 7' /etc/logrotate.d/casper-vpn-logs (2 lines); logrotate -d /etc/logrotate.d/casper-vpn-logs 0 errors; diff with production git = none",
           "evidence": "[DEVOPS run 2026-10-11 c, scheduled, unattended, 2026-10-11T02:4xZ] prepared on development 2acaa8520; NOT installed (live server file needs a CEO YES). Live today: weekly / maxsize 50M / rotate 4."
+        },
+        {
+          "test": "READY TO SHIP \u2014 7 hidden website addresses ask for the admin sign-in again \u00b7 why: our security check found that anyone on the internet could use them without signing in: with a record number they could read, change or delete a newsletter contact (email, name, phone), and anyone could add or delete rows in two old unused lists \u00b7 tested on dev: all 7 now answer 'sign in first' without the admin sign-in; the normal website pages still open \u00b7 rollback: undo the one change and redeploy the website. Say YES to ship.",
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "verify": "curl -s -o /dev/null -w '%{http_code}' https://caspervpn.com/api/tasks -> 401 after ship (and /api/admin/contacts/x, /api/admin/funnels -> 401)",
+          "evidence": "[WEBSITE+ADMIN run 2026-10-11 0205, scheduled, unattended, 2026-10-11T02:34:52Z] added for xd-1422 slice 1 [SECURITY]+[WEBSITE]. development 1dcd34792 (7 files, +75, guard only). tsc --noEmit 0 errors (planted error -> 1). dev 02:34Z after deploy-dev (runner job 02:26Z), no cookie: /api/tasks, /api/tasks/<fake id>, /api/admin/funnels, /api/admin/analytics/geo, /api/admin/contacts|segments|campaigns/<fake id> all 401 (before 02:13Z: 200/200/200/404 = handler ran); POST /api/tasks 401; control /api/admin/contacts 401 before and after; smoke / /pricing /blog /account/login 200. QA handoff xd-1760. Production code change -> waits for CEO YES; advice: YES (small, guard-only change).",
+          "verifiedByRaw": null,
+          "verifiedDate": null
         }
       ],
       "progress": 0,
@@ -49141,8 +49151,8 @@
       "from": "[CEO]",
       "to": "[SECURITY]",
       "title": "Handoff from CEO: Run a full source security audit of Casper-Code with Cloudflare's security-audit skill (CEO 6 Oct)",
-      "description": "[WEBSITE+ADMIN run 2026-10-11 0107, scheduled, unattended, 2026-10-11T01:40:19Z] Planned in slices, one per website+admin run: slice 1 = admin-panel-react + website (our own code) next run; then backend, infrastructure, ios, caspercloak. Output to memory/departments/security/audits/<date>/ (no secrets). || CEO 6 Oct asked for a complete security audit for the cyber-security team. Tool: github.com/cloudflare/security-audit-skill (MIT, commit c1c8a8c, reviewed by the CEO's live session: source-only, no live probing, no network in its validators). Install for Claude Code: copy skills/security-audit into ~/.claude/skills/ (or the CEO saves the .skill file sent in chat). Run 'full audit, profile standard' on a clean clone of production (backend-dotnet-core, admin-panel-react, website, ios-app-v2, infrastructure, caspercloak-protocol), output OUTSIDE the repo and never in Dropbox; findings.json + REPORT.md into the vault under memory/departments/security/audits/<date>/ (no secrets). Every confirmed finding becomes a handoff to its owner with the file:line and the smallest fix. Live servers, legal and provider settings are NOT covered by this skill - list them as needs_validation for DevOps/Legal.",
-      "status": "pending",
+      "description": "[WEBSITE+ADMIN run 2026-10-11 0205, scheduled, unattended, 2026-10-11T02:34:52Z] SLICE 1 DONE (admin-panel-react + website, production 6aa38c2f, quick single-agent profile = partial coverage): 3 needs_validation + 2 rejected, findings.json schema-valid (validate-findings.cjs PASS 5). Main result: 7 website API handlers had NO sign-in check (admin contacts/segments/campaigns by id: read/change/delete contact email+name+phone given an id; /api/tasks + /api/admin/funnels anonymous CRUD on unused tables; /api/admin/analytics/geo aggregate stats). Fixed on development 1dcd34792 (getSession guard per handler; tsc 0 errors, planted 1). dev 02:34Z after deploy-dev (runner job 02:26Z), no cookie: /api/tasks, /api/tasks/<fake id>, /api/admin/funnels, /api/admin/analytics/geo, /api/admin/contacts|segments|campaigns/<fake id> all 401 (before 02:13Z: 200/200/200/404 = handler ran); POST /api/tasks 401; control /api/admin/contacts 401 before and after; smoke / /pricing /blog /account/login 200. Report: memory/departments/security/audits/2026-10-11/REPORT.md. Next slice: backend (one per website+admin run). || [WEBSITE+ADMIN run 2026-10-11 0107, scheduled, unattended, 2026-10-11T01:40:19Z] Planned in slices, one per website+admin run: slice 1 = admin-panel-react + website (our own code) next run; then backend, infrastructure, ios, caspercloak. Output to memory/departments/security/audits/<date>/ (no secrets). || CEO 6 Oct asked for a complete security audit for the cyber-security team. Tool: github.com/cloudflare/security-audit-skill (MIT, commit c1c8a8c, reviewed by the CEO's live session: source-only, no live probing, no network in its validators). Install for Claude Code: copy skills/security-audit into ~/.claude/skills/ (or the CEO saves the .skill file sent in chat). Run 'full audit, profile standard' on a clean clone of production (backend-dotnet-core, admin-panel-react, website, ios-app-v2, infrastructure, caspercloak-protocol), output OUTSIDE the repo and never in Dropbox; findings.json + REPORT.md into the vault under memory/departments/security/audits/<date>/ (no secrets). Every confirmed finding becomes a handoff to its owner with the file:line and the smallest fix. Live servers, legal and provider settings are NOT covered by this skill - list them as needs_validation for DevOps/Legal.",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-10-06T22:00:44Z",
       "createdDate": "2026-10-06",
@@ -49151,7 +49161,7 @@
       "ageDays": 4,
       "lifecycle": "active",
       "needsRelease": false,
-      "updatedAt": "2026-10-11T01:40:19Z"
+      "updatedAt": "2026-10-11T02:34:52Z"
     },
     {
       "id": "xd-1423",
@@ -55428,6 +55438,22 @@
       "createdAt": "2026-10-11T02:33:55Z",
       "createdDate": "2026-10-11",
       "completedDate": null
+    },
+    {
+      "id": "xd-1760",
+      "from": "[SECURITY]",
+      "to": "[QA]",
+      "title": "Handoff from SECURITY: Check: 7 website API routes now need admin sign-in (development 1dcd34792, xd-1422 slice 1)",
+      "description": "[WEBSITE+ADMIN run 2026-10-11 0205, scheduled, unattended, 2026-10-11T02:34:52Z] What changed: website/app/api/admin/contacts/[id], segments/[id], campaigns/[id], admin/funnels, admin/analytics/geo, api/tasks, api/tasks/[id] - each handler now starts with getSession() -> 401 without the admin_token cookie (same guard as the list routes). VERIFY on dev (no cookie): curl -s -o /dev/null -w '%{http_code}' https://dev.caspervpn.com/api/tasks -> 401 (was 200); same for /api/admin/funnels, /api/admin/analytics/geo?period=24h, /api/admin/contacts/x, /api/admin/segments/x, /api/admin/campaigns/x -> 401 (fake id was 404 = handler ran). Control /api/admin/contacts 401 both before and after. Smoke / /pricing /blog 200. My dev check: dev 02:34Z after deploy-dev (runner job 02:26Z), no cookie: /api/tasks, /api/tasks/<fake id>, /api/admin/funnels, /api/admin/analytics/geo, /api/admin/contacts|segments|campaigns/<fake id> all 401 (before 02:13Z: 200/200/200/404 = handler ran); POST /api/tasks 401; control /api/admin/contacts 401 before and after; smoke / /pricing /blog /account/login 200. NOT checked: signed-in admin pages (dev website has 0 admin users) - code path for a signed-in caller is unchanged. PRODUCTION owner check (read-only, nothing written): GET https://caspervpn.com/api/tasks and https://caspervpn.com/api/admin/contacts/x without a cookie -> 200 / 404 means production is exposed today (the audit could not see the proxy). Then CEO card READY TO SHIP row.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-11T02:36:08Z",
+      "createdDate": "2026-10-11",
+      "completedDate": null,
+      "taskRef": "xd-1422",
+      "dueBy": "2026-10-14T00:00:00Z",
+      "needsRelease": false,
+      "category": "trust-legal"
     }
   ],
   "importantNotes": [
