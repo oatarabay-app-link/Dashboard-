@@ -2059,15 +2059,15 @@
         },
         {
           "test": "User notification system: push notification to all users in affected country with instructions",
-          "passed": true,
-          "verifiedBy": "self",
+          "passed": false,
+          "verifiedBy": "none",
           "verifiedAt": "2026-03-01T14:10:41Z",
-          "evidence": "QA 2026-09-24 BLOCKED (admin sign-in): UI behaviour needs a signed-in click-through (same gap as xd-971). Backend code for the feature exists; admin routes answer 401 unauthenticated.",
-          "met": true,
+          "evidence": "[QA 2026-10-11 c, scheduled, 2026-10-11T02:20:32Z] FAIL - un-ticked (was met=true by self). Measured 02:1xZ on production: UserDeviceTokens = 0 rows; the api container has no /app/keys mount (no APNs key), so no push can reach any user. The row promises a push to every user in a country; nothing can be delivered. Fix = CEO card row 223 / xd-1738 (push sender + key mount, on development e19e1de78). || QA 2026-09-24 BLOCKED (admin sign-in): UI behaviour needs a signed-in click-through (same gap as xd-971). Backend code for the feature exists; admin routes answer 401 unauthenticated.",
+          "met": false,
           "verifiedDate": "2026-03-31",
-          "verifiedByRaw": "ceo-cowork",
-          "qaVerdict": "BLOCKED",
-          "qaDate": "2026-09-24"
+          "verifiedByRaw": "qa-untick-2026-10-11",
+          "qaVerdict": "FAIL",
+          "qaDate": "2026-10-11"
         },
         {
           "test": "Fallback domain management: maintain list of backup domains/IPs, auto-switch when primary is blocked",
@@ -7531,13 +7531,13 @@
           "criterion": "Slack/Discord notification on build failure",
           "passed": false,
           "verifiedBy": "none",
-          "evidence": "[CTO run 2026-10-11 0134, scheduled, unattended, 2026-10-11T01:43:15Z] FIXED on development ec1637e0 (awaiting QA): notify-failure.yml maps DISCORD_WEBHOOK/SLACK_WEBHOOK secrets to job env and tests env in the step if (GitHub forbids secrets in if). Verify grep 'if: .*secrets\\.' -> old file 2 hits, new 0; yaml parses. NOT PROVEN: that either webhook secret is set (no token can read repo secrets) - with none set the workflow runs but sends nothing. workflow_run workflows run only from the default branch, so this cannot be tested on dev - it needs the CEO YES row. | [FAIL] QA 2026-09-30: notify-failure.yml:16 and :23 put the secrets context inside step 'if:' (secrets.DISCORD_WEBHOOK != '' / secrets.SLACK_WEBHOOK != ''). GitHub does not allow secrets in if-conditions, so this workflow cannot run. Weakest word: by the file and GitHub's documented rule - the Actions page is not readable to confirm. Handed to [DEVOPS]. | prior: QA 2026-09-24 PASS: notify-failure.yml present (+ notify steps in 6 other workflows).",
+          "evidence": "[QA 2026-10-11 c, scheduled, 2026-10-11T02:20:32Z] PENDING - dev leg PASS: grep 'if: .*secrets\\.' .github/workflows/notify-failure.yml on origin/development ec1637e09 = 0 lines, production 6aa38c2f7 = 2 (control). Stays unmet: workflow_run runs only from the default branch, so it needs the ship (CEO card row 226) and one real failed run that posts a message (no tool can read whether a webhook secret is set). || [CTO run 2026-10-11 0134, scheduled, unattended, 2026-10-11T01:43:15Z] FIXED on development ec1637e0 (awaiting QA): notify-failure.yml maps DISCORD_WEBHOOK/SLACK_WEBHOOK secrets to job env and tests env in the step if (GitHub forbids secrets in if). Verify grep 'if: .*secrets\\.' -> old file 2 hits, new 0; yaml parses. NOT PROVEN: that either webhook secret is set (no token can read repo secrets) - with none set the workflow runs but sends nothing. workflow_run workflows run only from the default branch, so this cannot be tested on dev - it needs the CEO YES row. | [FAIL] QA 2026-09-30: notify-failure.yml:16 and :23 put the secrets context inside step 'if:' (secrets.DISCORD_WEBHOOK != '' / secrets.SLACK_WEBHOOK != ''). GitHub does not allow secrets in if-conditions, so this workflow cannot run. Weakest word: by the file and GitHub's documented rule - the Actions page is not readable to confirm. Handed to [DEVOPS]. | prior: QA 2026-09-24 PASS: notify-failure.yml present (+ notify steps in 6 other workflows).",
           "verifiedAt": "2026-09-24T21:05:00Z",
           "met": false,
           "verifiedDate": "2026-09-30",
           "verifiedByRaw": "qa-sweep-2026-09-30-fail",
-          "qaVerdict": "FAIL",
-          "qaDate": "2026-09-30",
+          "qaVerdict": "PENDING",
+          "qaDate": "2026-10-11",
           "verify": "grep -n \"if: .*secrets\\.\" .github/workflows/notify-failure.yml -> must be empty",
           "verifiedByPrevious": "tested",
           "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored",
@@ -8017,12 +8017,12 @@
           "passed": false,
           "verifiedBy": "none",
           "verifiedAt": "2026-03-11T01:11:17Z",
-          "evidence": "[DEVOPS run 2026-10-11 b, scheduled, unattended, 2026-10-11T01:50Z] PASS on the main server, re-measured 01:3xZ: /etc/logrotate.d/casper-vpn-logs covers /var/log/openvpn/openvpn-tcp.log, server.log, server-tcp.log and /var/log/caspercloak-relay.log; rotated files exist (caspercloak-relay.log.1, .2.gz-.4.gz). Not ticked (only QA ticks) -> QA. || QA 2026-09-24 FAIL: No logrotate entry for openvpn or caspercloak in /etc/logrotate.d. -> [DEVOPS]",
+          "evidence": "[QA 2026-10-11 c, scheduled, 2026-10-11T02:20:32Z] FAIL - re-measured 02:1xZ on the main server: /etc/logrotate.d/casper-vpn-logs covers the 3 openvpn logs + caspercloak-relay.log, compress, rotated files exist (relay .1, .2-.4.gz; openvpn .2-.3.gz), logrotate -d 0 errors - BUT the row asks daily rotation with 7-day retention and the file says 'weekly / rotate 4 / maxsize 50M' = about 4 weeks kept. For a no-log VPN that is 3 weeks more connection log than the row allows. -> handback [DEVOPS]. || [DEVOPS run 2026-10-11 b, scheduled, unattended, 2026-10-11T01:50Z] PASS on the main server, re-measured 01:3xZ: /etc/logrotate.d/casper-vpn-logs covers /var/log/openvpn/openvpn-tcp.log, server.log, server-tcp.log and /var/log/caspercloak-relay.log; rotated files exist (caspercloak-relay.log.1, .2.gz-.4.gz). Not ticked (only QA ticks) -> QA. || QA 2026-09-24 FAIL: No logrotate entry for openvpn or caspercloak in /etc/logrotate.d. -> [DEVOPS]",
           "met": false,
           "verifiedDate": "2026-09-24",
           "verifiedByRaw": "CEO-Cowork",
           "qaVerdict": "FAIL",
-          "qaDate": "2026-09-24",
+          "qaDate": "2026-10-11",
           "verifiedByPrevious": "self",
           "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored"
         },
@@ -13662,7 +13662,7 @@
           "addedBy": "[SECURITY] engineering run 1009-2004",
           "test": "PARTIAL 2026-10-11 \u2014 steps 1-4 done, OLD KEY OFF 01:32Z (step 5: take the dead key out of the code copies, next devops run) \u00b7 CEO YES 2026-10-10 (live chat ~23:20Z) \u00b7 DECISION \u2014 change (rotate) our e-mail sending key \u00b7 why: the same key is written in 13 files of our private code store and in the vault notes, and has been for months; anyone who ever had a copy of the code can send e-mail as caspervpn.com \u00b7 options: (a) make a new key in the e-mail service (Resend) and switch every script to it, then turn the old key off \u2014 about 10 minutes for you, the runs do the rest; (b) leave it, only remove it from the scripts going forward \u00b7 advice: (a). The code store is private (checked) and nothing shows misuse, so this is not urgent tonight \u2014 but removing the key from files does not make an already-copied key secret again.",
           "verify": "After (a): the old key answers 401 at the mail service; every alert script reads the key from the locked file; grep for the old key in the code store = 0",
-          "evidence": "[DEVOPS run 2026-10-11 b, scheduled, unattended, 2026-10-11T01:50Z] Step 4 DONE: (precondition) dev API container holds the new key (grep -cF over printenv: new 1, old 0; created 00:57:50Z); live old-key scan 0 everywhere that runs: main server (grep -rlF over /opt /etc /usr/local/bin /root /home /var/spool/cron, minus backups/.bak/.git/code copies = 0 live files; api + website containers new 1 old 0; scheduler/push/admin hold no mail key), 10 VPN servers + Amsterdam + Bangkok re-scanned read-only with node_swap.py --dry: live hits 0 on all 12. Resend before delete: old key 'CasperVPN Production' (aa180122) last_used_at 00:30:11Z = the rotation itself, new key last used 01:27:23Z. Lock casper-devops-1011-0125 01:32:00Z; DELETE /api-keys/aa180122 at 01:32:15Z -> 200 {deleted:true}; after: old key GET /domains -> 400 'API key is invalid', old key POST /emails -> 401; new key GET /domains -> 200; key list = 1 (8d83f7d6 'CasperVPN Production 2026-10'). Mail still flows: alertmanager-resend-bridge 01:32:23Z 'forwarded to Resend: status=200'; api log since 01:32Z: 0 mail/401 lines. No key value printed or stored. NOT DONE: step 5. Residual risk: anything outside our servers that still used the old key (e.g. a script on the Mac) now fails - none seen in the last-used time. -> QA xd-1755 || [QA 2026-10-11 b, scheduled, 2026-10-11T01:19:27Z] PARTIAL - steps 1-3 main-server leg PASS 01:0xZ: api + website containers hold the new key (grep -cF over printenv: new 1, old 0 each); /etc/caspervpn/resend.key differs from the old backup (cmp); 0 live main-server files hold the old key - the 21 hits are all .bak copies plus one stale __pycache__ .pyc from 16 Sep (the .py was rewritten 00:30:59Z, so it is not loaded); alertmanager-resend-bridge active, 14 sends 'status=200' in 3 h. NOT re-measured by QA: the 10 VPN servers + Bangkok files (DevOps evidence only). Old key still ON (step 4) and still sits in the .bak files (step 5). || [DEVOPS run 2026-10-11 a, scheduled, 2026-10-11T00:53:32Z] Steps 1-3 DONE, step 4-5 NOT yet. (1) new Resend key 'CasperVPN Production 2026-10' (id 8d83f7d6) made by the server 00:30Z with the old key, written to /opt/caspervpn/secrets/resend_api_key (600 root, 36 chars, never printed; sha prefix 65f8db754f); GET /domains with it = 200. (2) exact replace, backups in /root/backups/devops-1011a/: main server 10 live files (fleet_health_loop, wildcard-renew, ct_log_monitor, alertmanager_resend_bridge (service restarted, active), ip_reputation_monitor, datacap_enforcement_monitor, parity_monitor, security_sweep_weekly x2, /usr/local/bin/subdomain-resolution-check.sh (not on the old list), /etc/caspervpn/resend.key) -> old key left 0/10; syntax checks ok. Bangkok FIRST 00:33Z (active_probe_detector.py; its 00:35Z cron run 'no anomalies', 0 Traceback), then 10 prod VPN servers disk-guard.sh 00:38Z (bash -n ok, old left 0 each; Amsterdam had none); dev host 188.166.174.132 disk-guard.sh + dev .env (dev containers keep the old key until the next dev deploy). (3) .env SMTP_PASSWORD replaced (119 lines before/after); api via /root/deploy_api.sh 00:38Z (image unchanged 914ce12ef7d2, healthy 15 s, rollback tag rollback-202610110038); website recreated --no-build 00:39Z (same image 395fe9e81150), caspervpn.com 200, /pricing /blog /download 200; both containers: new key 1, old 0. Test mails: API forgot-password for claude-dev@ 00:39:42Z -> 'Email sent'; alert bridge test -> Resend 200. 15-min watch to 00:52Z: 0 mail errors in api/website logs, bridge 4/4 status 200. OLD KEY STILL ON (rollback = put backups back). Next: step 4 (delete old key, prove 401) after dev containers show the new key; step 5 redact 13 repo files + .bak copies + reality-repo/codegraph copies; scripts in git must read the secrets file first or a reinstall brings the old key back. | [CEO live 23:3xZ, measured read-only on the main server] NO LOGIN NEEDED: the current key has full access (GET https://api.resend.com/api-keys = 200, 1 key 'CasperVPN Production' made 2026-03-15), so the new key can be made by the server itself and never shown to anyone. Old key found (by exact match, value not printed) in 12 live places: /root/Casper/Casper-Code/.env (api/website/scheduler), /opt/caspervpn/{fleet_health_loop.sh, parity_monitor.sh, disk-guard.sh, datacap_enforcement_monitor.sh, security_sweep_weekly.sh, ct_log_monitor.py, ip_reputation_monitor.py, wildcard-cert/wildcard-renew.sh, monitoring/alertmanager_resend_bridge.py}, /root/Casper/Casper-Code/scripts/security-sweep-weekly.sh; plus ~20 .bak files and old vault notes. Fleet nodes not checked yet. -> xd to [DEVOPS] with the runbook. | [CEO 2026-10-10 ~23:20Z live chat] '192yes' (option a: new key, switch everything, old key off). Recorded 23:3xZ (bridge was down at 23:20Z). | [ENGINEERING run 2026-10-09 2004, 2026-10-09T20:10:03Z] added for xd-1618. Measured: 13 repo files carry the same key (sha256 prefix 415886f587); public board 0; repo private (404 unauthenticated).",
+          "evidence": "[QA 2026-10-11 c, scheduled, 2026-10-11T02:20:32Z] PARTIAL - steps 1-4 PASS re-measured 02:0xZ on the main server: old key (backup copy, 37 B, hash differs from the new 36 B file) -> Resend GET /domains 400 'API key is invalid'; new key -> 200; GET /api-keys -> 1 key (8d83f7d6); alertmanager-resend-bridge 3x status=200 since 01:32Z; QA's own read-only scan of the 11 active VPN servers (DB VpnServers IsActive, both SSH keys) + 51.158.147.210: 0 live files hold the old key in /opt/caspervpn /usr/local/bin /etc/caspervpn /etc/default /etc/cron.d (only the DevOps backup copies under /root/backups/devops-1011a). Step 5 FAIL: production code (reality-repo 75b4e48c3) still holds the dead key in 12 files (alertmanager_resend_bridge.py, fleet_health_loop.sh, parity_monitor.sh, wildcard-renew.sh, security-sweep-weekly.sh, .env.dev.example ...) - the row's verify asks 0. Harmless now (key revoked) but must go. -> [DEVOPS] (same handback as logrotate). || [DEVOPS run 2026-10-11 b, scheduled, unattended, 2026-10-11T01:50Z] Step 4 DONE: (precondition) dev API container holds the new key (grep -cF over printenv: new 1, old 0; created 00:57:50Z); live old-key scan 0 everywhere that runs: main server (grep -rlF over /opt /etc /usr/local/bin /root /home /var/spool/cron, minus backups/.bak/.git/code copies = 0 live files; api + website containers new 1 old 0; scheduler/push/admin hold no mail key), 10 VPN servers + Amsterdam + Bangkok re-scanned read-only with node_swap.py --dry: live hits 0 on all 12. Resend before delete: old key 'CasperVPN Production' (aa180122) last_used_at 00:30:11Z = the rotation itself, new key last used 01:27:23Z. Lock casper-devops-1011-0125 01:32:00Z; DELETE /api-keys/aa180122 at 01:32:15Z -> 200 {deleted:true}; after: old key GET /domains -> 400 'API key is invalid', old key POST /emails -> 401; new key GET /domains -> 200; key list = 1 (8d83f7d6 'CasperVPN Production 2026-10'). Mail still flows: alertmanager-resend-bridge 01:32:23Z 'forwarded to Resend: status=200'; api log since 01:32Z: 0 mail/401 lines. No key value printed or stored. NOT DONE: step 5. Residual risk: anything outside our servers that still used the old key (e.g. a script on the Mac) now fails - none seen in the last-used time. -> QA xd-1755 || [QA 2026-10-11 b, scheduled, 2026-10-11T01:19:27Z] PARTIAL - steps 1-3 main-server leg PASS 01:0xZ: api + website containers hold the new key (grep -cF over printenv: new 1, old 0 each); /etc/caspervpn/resend.key differs from the old backup (cmp); 0 live main-server files hold the old key - the 21 hits are all .bak copies plus one stale __pycache__ .pyc from 16 Sep (the .py was rewritten 00:30:59Z, so it is not loaded); alertmanager-resend-bridge active, 14 sends 'status=200' in 3 h. NOT re-measured by QA: the 10 VPN servers + Bangkok files (DevOps evidence only). Old key still ON (step 4) and still sits in the .bak files (step 5). || [DEVOPS run 2026-10-11 a, scheduled, 2026-10-11T00:53:32Z] Steps 1-3 DONE, step 4-5 NOT yet. (1) new Resend key 'CasperVPN Production 2026-10' (id 8d83f7d6) made by the server 00:30Z with the old key, written to /opt/caspervpn/secrets/resend_api_key (600 root, 36 chars, never printed; sha prefix 65f8db754f); GET /domains with it = 200. (2) exact replace, backups in /root/backups/devops-1011a/: main server 10 live files (fleet_health_loop, wildcard-renew, ct_log_monitor, alertmanager_resend_bridge (service restarted, active), ip_reputation_monitor, datacap_enforcement_monitor, parity_monitor, security_sweep_weekly x2, /usr/local/bin/subdomain-resolution-check.sh (not on the old list), /etc/caspervpn/resend.key) -> old key left 0/10; syntax checks ok. Bangkok FIRST 00:33Z (active_probe_detector.py; its 00:35Z cron run 'no anomalies', 0 Traceback), then 10 prod VPN servers disk-guard.sh 00:38Z (bash -n ok, old left 0 each; Amsterdam had none); dev host 188.166.174.132 disk-guard.sh + dev .env (dev containers keep the old key until the next dev deploy). (3) .env SMTP_PASSWORD replaced (119 lines before/after); api via /root/deploy_api.sh 00:38Z (image unchanged 914ce12ef7d2, healthy 15 s, rollback tag rollback-202610110038); website recreated --no-build 00:39Z (same image 395fe9e81150), caspervpn.com 200, /pricing /blog /download 200; both containers: new key 1, old 0. Test mails: API forgot-password for claude-dev@ 00:39:42Z -> 'Email sent'; alert bridge test -> Resend 200. 15-min watch to 00:52Z: 0 mail errors in api/website logs, bridge 4/4 status 200. OLD KEY STILL ON (rollback = put backups back). Next: step 4 (delete old key, prove 401) after dev containers show the new key; step 5 redact 13 repo files + .bak copies + reality-repo/codegraph copies; scripts in git must read the secrets file first or a reinstall brings the old key back. | [CEO live 23:3xZ, measured read-only on the main server] NO LOGIN NEEDED: the current key has full access (GET https://api.resend.com/api-keys = 200, 1 key 'CasperVPN Production' made 2026-03-15), so the new key can be made by the server itself and never shown to anyone. Old key found (by exact match, value not printed) in 12 live places: /root/Casper/Casper-Code/.env (api/website/scheduler), /opt/caspervpn/{fleet_health_loop.sh, parity_monitor.sh, disk-guard.sh, datacap_enforcement_monitor.sh, security_sweep_weekly.sh, ct_log_monitor.py, ip_reputation_monitor.py, wildcard-cert/wildcard-renew.sh, monitoring/alertmanager_resend_bridge.py}, /root/Casper/Casper-Code/scripts/security-sweep-weekly.sh; plus ~20 .bak files and old vault notes. Fleet nodes not checked yet. -> xd to [DEVOPS] with the runbook. | [CEO 2026-10-10 ~23:20Z live chat] '192yes' (option a: new key, switch everything, old key off). Recorded 23:3xZ (bridge was down at 23:20Z). | [ENGINEERING run 2026-10-09 2004, 2026-10-09T20:10:03Z] added for xd-1618. Measured: 13 repo files carry the same key (sha256 prefix 415886f587); public board 0; repo private (404 unauthenticated).",
           "qaVerdict": "PARTIAL",
           "qaDate": "2026-10-11"
         },
@@ -19097,15 +19097,24 @@
         },
         {
           "test": "The cause of the 8 Oct outage is measured and written on the board (app closed / signed out / bridge / usage limit)",
-          "met": false,
-          "verifiedBy": "none",
-          "verify": "xd-1533 carries the measurement"
+          "met": true,
+          "verifiedBy": "tested",
+          "verify": "xd-1533 carries the measurement",
+          "evidence": "[QA 2026-10-11 c, scheduled, 2026-10-11T02:20:32Z] PASS - xd-1533 carries the measurement (Mac /sessions birth times: none 00:05:12Z-21:47:14Z 8 Oct; Mac awake, git timer ran 04:07Z; board and production unchanged) plus the CEO's cause 'Claude app was closed' (card row 161). || ",
+          "passed": true,
+          "verifiedByRaw": "qa",
+          "verifiedDate": "2026-10-11",
+          "qaVerdict": "PASS",
+          "qaDate": "2026-10-11"
         },
         {
           "test": "The office report lists, per routine, the session starts of the last 24 h",
           "met": false,
           "verifiedBy": "none",
-          "verify": "today's CEO office report section \"factory\" with per-routine counts"
+          "verify": "today's CEO office report section \"factory\" with per-routine counts",
+          "evidence": "[QA 2026-10-11 c, scheduled, 2026-10-11T02:20:32Z] NOT DONE - re-measured 02:1xZ: CEO office minutes 2026-10-10 have one 'Factory' sentence (runs started every hour except 9 Oct 12:05-14:31Z) but no per-routine count of session starts for the last 24 h. Handoff xd-1568 [CEO] still pending. || ",
+          "qaVerdict": "NOT",
+          "qaDate": "2026-10-11"
         }
       ],
       "progress": 0,
@@ -19345,13 +19354,17 @@
         {
           "test": "The share stopped by the email gate is measured; if it is the cause, a fix is on the CEO card as READY TO SHIP",
           "verify": "board: a READY TO SHIP row naming the measured share",
-          "met": false,
-          "passed": false,
+          "met": true,
+          "passed": true,
           "addedAt": "2026-10-09T06:15:28Z",
           "addedBy": "ceo-office",
-          "evidence": "[BACKEND run 2026-10-11 0118, scheduled, unattended, 2026-10-11T01:39:44Z] DONE for QA: ceo-action-backlog row 216 is the READY TO SHIP row and names the measured share ('none of the 15 real e-mail sign-ups in 30 days ever connected'); fix on development 656584056 (QA dev check xd-1724). | [GROWTH run 2026-10-11 0003, scheduled, 2026-10-11T00:14:32Z] Share measured 9 Oct (e-mail sign-ups connect 0 of 15 in 30 d; Apple sign-in 31 of 46). Fix built: xd-1678 24 h connect window on development 656584056 by the backend run (23:38Z 10 Oct), CEO YES row 176. Ships through the backend run; then QA. || not started",
-          "verifiedBy": "none",
-          "blocker": "[BACKEND] ship of xd-1678 (CEO YES row 176) then [QA]."
+          "evidence": "[QA 2026-10-11 c, scheduled, 2026-10-11T02:20:32Z] PASS - CEO card row 216 is a READY TO SHIP row naming the measured share (none of the 15 real e-mail sign-ups in 30 d connected). QA control 02:1xZ (staff list applied, Apple sign-in excluded): 30-day sign-ups with an unconfirmed e-mail and no Apple/Google id = 30, with any ConnectionLogs row = 0; confirmed or social sign-ups connect (Apple 12/18, Google 8/28). || [BACKEND run 2026-10-11 0118, scheduled, unattended, 2026-10-11T01:39:44Z] DONE for QA: ceo-action-backlog row 216 is the READY TO SHIP row and names the measured share ('none of the 15 real e-mail sign-ups in 30 days ever connected'); fix on development 656584056 (QA dev check xd-1724). | [GROWTH run 2026-10-11 0003, scheduled, 2026-10-11T00:14:32Z] Share measured 9 Oct (e-mail sign-ups connect 0 of 15 in 30 d; Apple sign-in 31 of 46). Fix built: xd-1678 24 h connect window on development 656584056 by the backend run (23:38Z 10 Oct), CEO YES row 176. Ships through the backend run; then QA. || not started",
+          "verifiedBy": "tested",
+          "blocker": "[BACKEND] ship of xd-1678 (CEO YES row 176) then [QA].",
+          "verifiedByRaw": "qa",
+          "verifiedDate": "2026-10-11",
+          "qaVerdict": "PASS",
+          "qaDate": "2026-10-11"
         },
         {
           "test": "New people who connect at least once \u2265 60 % for two weeks in a row (43 % on 9 Oct)",
@@ -19578,13 +19591,17 @@
           "test": "memory/context/pile-<date>.md exists: every open row from board_reconcile.py --json grouped by department + theme, duplicates merged (consolidated into one row with links, per task-lifecycle-policy (b)), each group names the skill(s) to use from external-skills.md routing + the department SKILL.md",
           "met": false,
           "verify": "file exists; group count; open rows before/after merge printed by board_reconcile.py",
-          "evidence": ""
+          "evidence": "[QA 2026-10-11 c, scheduled, 2026-10-11T02:20:32Z] NOT DONE - re-measured 02:1xZ: no memory/context/pile-<date>.md exists in the vault (ls memory/context | grep pile = 0); row 1 depends on it. Handoff xd-1707 [CTO] still pending. || ",
+          "qaVerdict": "NOT",
+          "qaDate": "2026-10-11"
         },
         {
           "test": "Every department run takes the oldest group of its pile first (routine 09 step 3c) and logs 'skill: <name>' for it",
           "met": false,
           "verify": "grep 'queue:' and 'skill:' in the department session logs of the next 24 h",
-          "evidence": ""
+          "evidence": "[QA 2026-10-11 c, scheduled, 2026-10-11T02:20:32Z] NOT DONE - re-measured 02:1xZ: no memory/context/pile-<date>.md exists in the vault (ls memory/context | grep pile = 0); row 1 depends on it. Handoff xd-1707 [CTO] still pending. || ",
+          "qaVerdict": "NOT",
+          "qaDate": "2026-10-11"
         },
         {
           "test": "Pile shrinks: board_reconcile.py total open rows falls by at least 50 in 7 days (start count recorded at creation)",
@@ -19612,13 +19629,17 @@
           "test": "New tab 'CEO Decisions' lists every row waiting on the CEO (board_reconcile kinds W + A), newest board meeting first, each with a one-line board advice and its age",
           "met": false,
           "verify": "open the live dashboard: tab count = board_reconcile.py W+A count",
-          "evidence": ""
+          "evidence": "[QA 2026-10-11 c, scheduled, 2026-10-11T02:20:32Z] NOT DONE - re-measured 02:1xZ on the live page (8.45 MB, cache-busted): no 'CEO Decisions' tab; the string and the Casperceobot?start=d<row>_<answer> pattern appear only inside task text, not as a tab or buttons. Handoff xd-1706 [CTO] still pending. || ",
+          "qaVerdict": "NOT",
+          "qaDate": "2026-10-11"
         },
         {
           "test": "Each card has answer buttons that open https://t.me/Casperceobot?start=d<row>_<answer> (no password or token on the public page; Telegram proves it is the CEO)",
           "met": false,
           "verify": "view-source: links match the pattern; grep for token/secret = 0",
-          "evidence": ""
+          "evidence": "[QA 2026-10-11 c, scheduled, 2026-10-11T02:20:32Z] NOT DONE - re-measured 02:1xZ on the live page (8.45 MB, cache-busted): no 'CEO Decisions' tab; the string and the Casperceobot?start=d<row>_<answer> pattern appear only inside task text, not as a tab or buttons. Handoff xd-1706 [CTO] still pending. || ",
+          "qaVerdict": "NOT",
+          "qaDate": "2026-10-11"
         },
         {
           "test": "The CEO bot run records the answer on the row and fires the owning department's scheduled task (routine 11 steps 4b-4c, already written)",
@@ -55195,11 +55216,12 @@
       "to": "[QA]",
       "title": "Handoff from MARKETING: [P2] Growth run 0105: 3 things to check",
       "description": "(1) gtm-10-launch-signoff row 5: weekly KPI report running - marketing/reports/KPI-WEEKLY-2026-W39/W40/W41.md on production; next one due Mon 12 Oct (check it lands). (2) dedicated-ip row 0: Product decision recorded - the add-on stays reached from Settings -> Dedicated IP (SettingsView.swift:217, iPad :228), not the paywall; check the row's re-worded test against the live build. (3) marketing/LIFECYCLE-EMAILS-2026-10-11.md (production c60e5812): run the file's banned-word grep on the mail bodies -> 0 hits, and with [IOS] confirm the setting names Kill Switch / Auto-Connect / CasperCloak exist in the live build.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P2",
       "createdAt": "2026-10-11T01:12:57Z",
       "createdDate": "2026-10-11",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[QA 2026-10-11 c, scheduled, 2026-10-11T02:20:32Z] (1) KPI-WEEKLY W39/W40/W41 present on production; W42 due Mon 12 Oct - re-check then. (3) LIFECYCLE-EMAILS-2026-10-11.md on production 6aa38c2f7: the file's banned-word grep on the mail bodies (lines 1-136) = 0 body hits (2 hits are the facts header line 6 and the 'never add' rule line 47). Setting names in the live build + leg (2) need the iOS build check - not done this run."
     },
     {
       "id": "xd-1747",
@@ -55235,11 +55257,12 @@
       "to": "[QA]",
       "title": "Handoff from BACKEND: Test on dev: push sender retry + key mount (xd-1738), development e19e1de78",
       "description": "[BACKEND run 2026-10-11 0118, scheduled, unattended, 2026-10-11T01:39:44Z] development e19e1de78 (xd-1738). What changed: docker-compose.yml api volume /opt/caspervpn/secrets/apns:/app/keys:ro; ApnsPushNotificationService retries the other gateway once on 400 BadDeviceToken. Build 0 errors, 318/318, ApnsGatewayFallbackTests 6/6, control old sender 3/6 fail. Dev API recreated 01:38:40Z healthy; dev DLL literal 'retrying on the other gateway' = 1, production DLL = 0 (control). CHECK on dev: (1) git show e19e1de78 --stat = 3 files; (2) dev DLL has the literal 'retrying on the other gateway' (strings -el) and production does not; (3) run the 6 tests. A real send cannot be tested on dev (no key, no device tokens there) - say so, do not tick a send. Then the READY TO SHIP row on the CEO card.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-10-11T01:39:48Z",
       "createdDate": "2026-10-11",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[QA 2026-10-11 c, scheduled, 2026-10-11T02:20:32Z] legs 1-2 PASS: e19e1de78 = 3 files (ApnsPushNotificationService.cs, ApnsGatewayFallbackTests.cs, docker-compose.yml), on origin/development; dev DLL literal 'retrying on the other gateway' = 1, production DLL = 0 (control). Leg 3 (6 tests) NOT run: no heavy build on the live server (trap 7 Oct). Note: the dev api container mounts only /app/geoip - the new /app/keys mount is not on dev (dev compose differs), so the key mount is provable only after the production ship. Kept open for the test run."
     },
     {
       "id": "xd-1750",
@@ -55247,11 +55270,16 @@
       "to": "[QA]",
       "title": "Handoff from BACKEND: Re-checks: hidden-mode sessions recorded (xd-1434), silent-newcomers row 1, censorship row 3 (push) is ticked but no push can be sent",
       "description": "[BACKEND run 2026-10-11 0118, scheduled, unattended, 2026-10-11T01:39:44Z] (1) xd-1434 server leg: production ConnectionLogs Protocol 3 since 8 Oct 22:35Z = 26 rows/4 users/9 >1 MB vs 7/3/3 in the 48 h before; control Protocol 0 114 vs 136 - re-run and tick what the server leg promised (apply the staff list). (2) activation-silent-newcomers row 1: verify 'board: a READY TO SHIP row naming the measured share' = ceo-action-backlog row 216 - tick if you agree. (3) admin-censorship-response row 3 ('push notification to all users in affected country') is met=true, but measured today the API cannot send ANY push (APNs key not mounted, 0 device tokens, xd-1738) - re-verify and un-tick if the row means a delivered push. Row 223 on the CEO card is the fix.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-10-11T01:39:48Z",
       "createdDate": "2026-10-11",
-      "completedDate": null
+      "completedDate": "2026-10-11",
+      "notes": "[QA 2026-10-11 c, scheduled, 2026-10-11T02:20:32Z] (1) xd-1434 server leg re-run with the staff list: ConnectionLogs Protocol 3 real users since 8 Oct 22:35Z = 10 rows / 2 users / 4 >1 MB vs 4 / 1 / 1 in the 48 h before (staff: 16 vs 3); control Protocol 0 real 76/5 vs 87/9. Hidden-mode sessions ARE recorded; no unmet row names this leg. (2) activation-silent-newcomers row 1 TICKED (tested). (3) admin-censorship-response row 3 UN-TICKED: 0 device tokens, no APNs key mount on production.",
+      "completedAt": "2026-10-11",
+      "completedBy": "[QA]",
+      "resolution": "completed",
+      "resultingHandoff": "xd-1758 to [DEVOPS] (this run); censorship fix = row 223 / xd-1738"
     },
     {
       "id": "xd-1751",
@@ -55259,11 +55287,16 @@
       "to": "[QA]",
       "title": "Handoff from WEBSITE: Test on dev: conversion events are stored (xd-1519 item 2, development f39fc4062)",
       "description": "[WEBSITE+ADMIN run 2026-10-11 0107, scheduled, unattended, 2026-10-11T01:40:19Z] What: POST https://dev.caspervpn.com/api/track {type:'conversion', event:'billing_toggle', value:'annual', page:'/pricing'} -> 200 {success:true} and one new row in caspervpn_website_dev.conversion_events; event 'nope' -> 400 'Invalid conversion event'; other types unchanged (pageview still 200). Also click Toggle billing period on dev /pricing in a browser and see a row appear. Dev result at hand-off: dev 01:39Z after deploy-dev 01:39:08Z: billing_toggle -> 200 {success:true} + row 'billing_toggle annual /pricing' in conversion_events; event 'nope' -> 400 'Invalid conversion event'; type 'whatever' -> 400 'Invalid type' (unchanged); dev / /pricing /blog 200. Production control: still 400 'Invalid type' (needs CEO YES; table must be created on caspervpn_website first). Then a READY TO SHIP row for the CEO card.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-10-11T01:40:22Z",
       "createdDate": "2026-10-11",
-      "completedDate": null
+      "completedDate": "2026-10-11",
+      "notes": "[QA 2026-10-11 c, scheduled, 2026-10-11T02:20:32Z] PASS on dev (QA's own requests 02:09Z): conversion billing_toggle -> 200 {success:true} and a new row 'billing_toggle annual /pricing 02:09:44' in caspervpn_website_dev.conversion_events; event 'nope' -> 400 'Invalid conversion event'; type 'whatever' -> 400 'Invalid type'; pageview with session ids -> 200 (a pageview without sessionId -> 500 'Failed to track' - old behaviour, unchanged by this commit). Production control: still 400 'Invalid type'. Browser toggle click not done (no browser this run). f39fc4062 is on development.",
+      "completedAt": "2026-10-11",
+      "completedBy": "[QA]",
+      "resolution": "completed",
+      "resultingHandoff": "none - READY TO SHIP row is WEBSITE's next step"
     },
     {
       "id": "xd-1752",
@@ -55299,11 +55332,16 @@
       "to": "[QA]",
       "title": "Handoff from CTO: Check ci-cd-pipeline row 7 fix on development ec1637e0 (notify-failure secrets-in-if)",
       "description": "[CTO run 2026-10-11 0134, scheduled, unattended, 2026-10-11T01:43:15Z] grep -n 'if: .*secrets\\.' .github/workflows/notify-failure.yml on origin/development -> must be empty (production still 2). Also read xd-1737 evidence. CEO card row 226 READY TO SHIP.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-10-11T01:43:19Z",
       "createdDate": "2026-10-11",
-      "completedDate": null
+      "completedDate": "2026-10-11",
+      "notes": "[QA 2026-10-11 c, scheduled, 2026-10-11T02:20:32Z] dev leg PASS: notify-failure.yml on development ec1637e09 0 'if: secrets.' lines vs production 2. Row 7 stays open until the ship (row 226) and one real failed run posts a message.",
+      "completedAt": "2026-10-11",
+      "completedBy": "[QA]",
+      "resolution": "completed",
+      "resultingHandoff": "none - row 226 READY TO SHIP is the next step; QA re-checks after ship"
     },
     {
       "id": "xd-1755",
@@ -55311,11 +55349,16 @@
       "to": "[QA]",
       "title": "Handoff from DEVOPS: Check DevOps run 1011b: old e-mail key off, dev deploy fix, dev on c2b254f, dev servers, logrotate row",
       "description": "Re-run with your own instruments; nothing ticked by DevOps. (1) ceo-action-backlog row 192 step 4: on the brain, with the old key from /root/backups/devops-1011a/brain/etc/caspervpn/resend.key: GET https://api.resend.com/domains -> expect 400 'API key is invalid'; with /opt/caspervpn/secrets/resend_api_key -> 200; GET /api-keys -> 1 key (8d83f7d6); journalctl -u alertmanager-resend-bridge shows status=200 after 01:32Z. Also re-run the VPN-server leg you did not measure: node_swap.py --dry (/root/backups/devops-1011a) -> live hits 0 on 12 nodes. (2) xd-1719: development 6809cbec2 infrastructure/dev-vps/dev-deploy.sh - next dev deploy: dev api/admin/website all 'running', api.dev /health 200, admin.dev 200. (3) xd-1723: dev host HEAD contains c2b254f03. (4) xd-1407: caspervpn_dev VpnServers active = 4. (5) security-lockdown-p1 row 11: /etc/logrotate.d/casper-vpn-logs lists the openvpn + caspercloak-relay logs; .gz rotations exist.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-10-11T01:52:14Z",
       "createdDate": "2026-10-11",
-      "completedDate": null
+      "completedDate": "2026-10-11",
+      "notes": "[QA 2026-10-11 c, scheduled, 2026-10-11T02:20:32Z] (1) PASS old key 400 invalid / new 200 / 1 key 8d83f7d6 / bridge 3x200 since 01:32Z; VPN leg QA scan 11 active servers + Paris-2 = 0 live files. (2) xd-1719 PASS: dev host /root/Casper/Casper-Code HEAD 6809cbec2; dev-api/admin/website Up 21 min (api healthy, created 01:47:21Z); api.dev /health 200, admin.dev 200. (3) xd-1723 PASS: that HEAD contains c2b254f03. (4) xd-1407 PASS: caspervpn_dev VpnServers active 4 (inactive 11). (5) FAIL on spec: weekly/rotate 4 vs daily/7 d -> xd-1758. Row 192 step 5 (12 code files) -> xd-1758.",
+      "completedAt": "2026-10-11",
+      "completedBy": "[QA]",
+      "resolution": "completed",
+      "resultingHandoff": "xd-1758 to [DEVOPS]"
     },
     {
       "id": "xd-1756",
@@ -55340,9 +55383,30 @@
       "createdAt": "2026-10-11T02:16:40Z",
       "createdDate": "2026-10-11",
       "completedDate": null
+    },
+    {
+      "id": "xd-1758",
+      "from": "[QA]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from QA: [QA FAILED] Logrotate keeps VPN logs ~4 weeks (row asks daily / 7 days) + dead mail key still in 12 code files",
+      "description": "[QA 2026-10-11 c] (1) security-lockdown-p1 row 11: /etc/logrotate.d/casper-vpn-logs on the main server says weekly / rotate 4 / maxsize 50M; the row asks daily rotation, 7-day retention, compress. Change to daily + rotate 7 (or get the CEO to change the row), then hand back to [QA]. Verify: grep -E 'daily|rotate 7' /etc/logrotate.d/casper-vpn-logs; logrotate -d 0 errors; repo copy matches. (2) ceo-action-backlog row 192 step 5: git grep -lF <old Resend key> on production 75b4e48c3 = 12 files (infrastructure/monitoring/scripts/alertmanager_resend_bridge.py, infrastructure/scripts/{active_probe_detector.py,ct_log_monitor.py,datacap_enforcement_monitor.sh,fleet_health_loop.sh,ip_reputation_monitor.py,parity_monitor.sh,subdomain-resolution-check.sh}, infrastructure/wildcard-cert/wildcard-renew.sh, infrastructure/dev-vps/.env.dev.example, scripts/security-sweep-weekly.sh, memory/sessions/2026-05-03-incident-reconciliation/03-email-apology-template.md). Must be 0. Key is revoked (400 'API key is invalid'), so this is clean-up, not an emergency.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-11T02:20:38Z",
+      "createdDate": "2026-10-11",
+      "completedDate": null
     }
   ],
   "importantNotes": [
+    {
+      "id": "note-qa-20261011c",
+      "date": "2026-10-11",
+      "createdAt": "2026-10-11T02:20:32Z",
+      "dept": "[QA]",
+      "priority": "P2",
+      "title": "[QA] run c (scheduled, 02:05Z): 2 ticked, 1 wrong tick removed, 4 handoffs closed, 1 sent back to DevOps",
+      "text": "Bad news first: the 'warn every user in a blocked country by push' item was marked done, but today no push can reach anyone (no phone tokens stored, no Apple key on the server) - QA removed the tick; the fix is already on your card. The VPN log clean-up keeps logs about 4 weeks, the item asks 7 days - sent back to DevOps. Done with proof: the old e-mail key is dead (the mail service refuses it) and no running server holds it; 2 rows ticked (the e-mail sign-up gate finding, the 8 Oct outage cause). Still waiting: the dead key must also leave 12 code files; the dashboard decisions tab and the task pile file are not built yet."
+    },
     {
       "id": "note-ceobot-20261011b",
       "date": "2026-10-11",
