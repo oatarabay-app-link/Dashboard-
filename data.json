@@ -20031,7 +20031,7 @@
           "verify": "git grep '1.1.1.1' in CasperVPNTunnel = 0 on the hidden-mode path; device test resolves via the config DNS",
           "met": false,
           "verifiedBy": "none",
-          "evidence": "[CTO live 2026-10-11 ~22:0xZ, CEO chat: bug report from build 68] HALF DONE in build 68: the APP's DoH now asks Google first (b68-delta DoHResolver primary dns.google). The TUNNEL still hands the phone Cloudflare DNS: build-68 bug report log 21:50:51Z 'dns: [\"1.1.1.1\", \"1.0.0.1\"]' (CasperCloakTunnelProvider hard-coded) -> [IOS]. || [CEO live 2026-10-11 2026-10-10T23:57:35Z] NOT LIVE - not in ios/431-67-merge-1656 85ece5a55 (marker 27f; Xcode BUILD SUCCEEDED on the Mac 23:52Z, installed on the CEO iPhone 14 Pro 23:52:19Z); measured by grep tonight."
+          "evidence": "[APPS run 2026-10-11 h 2026-10-11T22:14:09Z, unattended] NOT LIVE - waits on the server: the tunnel DNS comes from the server config (production OptimizedVpnServerService.cs:856 \"1.1.1.1\",\"1.0.0.1\"), not from CasperCloakTunnelProvider:429 (not the hidden-mode path). Blocker: [CTO] xd-1739 (server half). The verify's git-grep test should change to \"tunnel log dns != 1.1.1.1 on a hidden-mode connect\". || [CTO live 2026-10-11 ~22:0xZ, CEO chat: bug report from build 68] HALF DONE in build 68: the APP's DoH now asks Google first (b68-delta DoHResolver primary dns.google). The TUNNEL still hands the phone Cloudflare DNS: build-68 bug report log 21:50:51Z 'dns: [\"1.1.1.1\", \"1.0.0.1\"]' (CasperCloakTunnelProvider hard-coded) -> [IOS]. || [CEO live 2026-10-11 2026-10-10T23:57:35Z] NOT LIVE - not in ios/431-67-merge-1656 85ece5a55 (marker 27f; Xcode BUILD SUCCEEDED on the Mac 23:52Z, installed on the CEO iPhone 14 Pro 23:52:19Z); measured by grep tonight."
         },
         {
           "test": "NOT IN BUILD 67 - WireGuard private key travels in the tunnel settings text; move it to the keychain (xd-1502 part b; part a - log only key names - IS in 67). Estimate: 3-4 h + a full tunnel retest. Owner: [IOS] + [SECURITY]. Ref: xd-1502.",
@@ -38225,8 +38225,8 @@
       "from": "[CTO]",
       "to": "[IOS]",
       "title": "Handoff from CTO: SPEED LEVER B (client half): stripe CasperCloak across 4-8 parallel connections - the 2-4x that works TODAY through Cloudflare",
-      "description": "[CEO live 2026-10-11 2026-10-11T00:40:15Z] SPEED, CEO phone, build 67 27f, 03:10-03:40 Beirut (CEO screenshots + his summary): no VPN ~50 Mbps (fast.com, twice; speed.cloudflare 26 at 03:29); WireGuard 21-22 (fast.com x2), then 41 (latest); hidden mode (Duesseldorf, direct) 15.5-17, then 22 (latest). Latest pair: hidden mode = ~54% of WireGuard; WireGuard = ~82% of no-VPN. The line swings a lot (WireGuard 21 -> 41 in minutes), so the item-10 before/after must be back-to-back on one server, 2 runs each. Reading: the hidden-mode single TCP/WebSocket carrier is the bottleneck -> striping over 4-8 connections (xd-882 client + xd-883 relay) moves up; CEO advised to start after build 68 is checked. || [CEO live 2026-10-11 2026-10-11T00:15:35Z] CEO speed test on build 67 27f, hidden mode Duesseldorf (91.194.84.79, direct, no Cloudflare), mobile data, speed.cloudflare.com 03:10:26 Beirut: download 15.5 Mbps, upload 3.22, latency 120 ms (loaded 275/229), jitter 231 ms, loss 0%. Control 3 min later, WireGuard to Amsterdam (51.158.147.210), phone path = Wi-Fi, 03:13:41 Beirut: download 15.8, upload 2.99, latency 113 (loaded 128/353), jitter 65.1, loss 0%. So on this line hidden mode costs ~2% download, ~same upload; jitter 231 vs 65 ms (TCP carrier). Not a perfect control: different server, and a no-VPN run is still missing. Older reference, 10 Sep, same phone + relay, fast.com: no VPN 23, direct relay 8.3 / 3.9 / 5.9 Mbps. || CEO DIRECTIVE 2026-09-19: do the deeper speed work BEFORE deciding whether the UAE may go direct by default. This is the client half; the relay half and the QUIC prototype are the paired DevOps task. MEASURED RECORD (do not re-derive; source: .claude/skills/caspervpn-anticensorship/references/caspercloak-throughput.md). CEO device, Lebanon, Dusseldorf s6, fast.com, n=5 PAIRS, 2026-09-10: no-VPN 23/23/23/14/13 Mbps; CF-fronted 4.5, 9.1, 2.4, 1.0, 1.5 (mean 3.7); direct grey relay 8.3, 3.9, 5.9, 8.8, 10 (mean 7.4). Direct wins 4/5 and never collapsed; CF collapsed to 7-12% of line on the worst pairs; the ONE CF win (9.1) matched direct, so the CF tax is mostly the old Worker's redial FLAPPING, not fronting per se. CRITICAL: even on the DIRECT road we only reach 36-63% of line (best pairs 63-77%) => removing Cloudflare is NOT sufficient; the residual loss is H2 (single loss-sensitive TCP stream: head-of-line blocking + TCP-over-TCP meltdown + throughput ~ MSS/(RTT*sqrt(loss))) plus obfs size-padding 7-15%. Relay hardware is NOT the cap (CPU 0.0%, 85 MB/s downlink, load ~0, mtl-01 2026-06-27) and the relay software ceiling held 8/16/32/64 Mbps single stream on BOTH the direct and native-front roads. Reference architecture check: VLESS/VMess-over-WS-over-TLS-over-CDN (our exact shape) delivers 10-50 Mbps through CF while we get 1-3 => a fixable inefficiency exists; 'fundamental' is rejected. REGION INVERSION (decides the transport): GCC (AE/SA) = DPI/SNI/IP blocking with UDP/QUIC largely ALLOWED; Lebanon = carrier UDP throttle with shallow DPI. So a UDP transport is the answer for the Gulf and is useless in Lebanon - never treat 'restricted regions' as one bucket for speed. || SCOPE (client): today one WireGuard-over-WebSocket connection carries everything, so ONE lost segment stalls every inner flow (head-of-line blocking) and a single TCP flow on a 150-200 ms path cannot fill the line. Open N=4-8 parallel WS connections to the SAME relay, stripe WG packets across them, reassemble on arrival. N independent flows ~ N x single-flow throughput on a lossy link and a loss on one no longer stalls the others. Keeps full stealth (identical TLS/obfs shape, just more of it) and works through Cloudflare unchanged, which is why it is the interim lever while the transport work runs. ACCEPTANCE: (1) N is configurable and defaults conservatively; (2) packet ordering/reassembly verified under induced loss and reorder; (3) graceful degrade to 1 stream when the extra dials fail (never worse than today); (4) MEASURED before/after on a real device, 3+ paired runs, reported as mean AND spread - within-road spread was 3.8x in the 09-10 test, so a single run proves nothing; (5) battery/CPU delta recorded (N sockets on cellular). TRAPS: connection COUNT is itself a DPI signal - 8 simultaneous TLS sessions to one host is unusual; grade the stealth cost before raising N, and stagger the dials. MTU: CasperCloak already fragments at 1400 over obfs/WS/TLS/TCP (known trap) - re-check the effective MTU per stream. Do NOT re-add any per-packet sleep (removed fleet-wide 2026-06-16/17; it capped throughput at 0.4 Mbps). PAIRED WITH: the DevOps task created in the same push (relay reassembly + QUIC/HTTP-3 prototype + relay efficiency). SUPERSEDES the client half of xd-807.\n\n[iOS 2026-09-27] Open. Code change + device proof required.",
-      "status": "pending",
+      "description": "[APPS run 2026-10-11 h 2026-10-11T22:14:09Z, unattended] TRIAGE (xd-1815): deferred to 2026-11-15 - see resolution. || [CEO live 2026-10-11 2026-10-11T00:40:15Z] SPEED, CEO phone, build 67 27f, 03:10-03:40 Beirut (CEO screenshots + his summary): no VPN ~50 Mbps (fast.com, twice; speed.cloudflare 26 at 03:29); WireGuard 21-22 (fast.com x2), then 41 (latest); hidden mode (Duesseldorf, direct) 15.5-17, then 22 (latest). Latest pair: hidden mode = ~54% of WireGuard; WireGuard = ~82% of no-VPN. The line swings a lot (WireGuard 21 -> 41 in minutes), so the item-10 before/after must be back-to-back on one server, 2 runs each. Reading: the hidden-mode single TCP/WebSocket carrier is the bottleneck -> striping over 4-8 connections (xd-882 client + xd-883 relay) moves up; CEO advised to start after build 68 is checked. || [CEO live 2026-10-11 2026-10-11T00:15:35Z] CEO speed test on build 67 27f, hidden mode Duesseldorf (91.194.84.79, direct, no Cloudflare), mobile data, speed.cloudflare.com 03:10:26 Beirut: download 15.5 Mbps, upload 3.22, latency 120 ms (loaded 275/229), jitter 231 ms, loss 0%. Control 3 min later, WireGuard to Amsterdam (51.158.147.210), phone path = Wi-Fi, 03:13:41 Beirut: download 15.8, upload 2.99, latency 113 (loaded 128/353), jitter 65.1, loss 0%. So on this line hidden mode costs ~2% download, ~same upload; jitter 231 vs 65 ms (TCP carrier). Not a perfect control: different server, and a no-VPN run is still missing. Older reference, 10 Sep, same phone + relay, fast.com: no VPN 23, direct relay 8.3 / 3.9 / 5.9 Mbps. || CEO DIRECTIVE 2026-09-19: do the deeper speed work BEFORE deciding whether the UAE may go direct by default. This is the client half; the relay half and the QUIC prototype are the paired DevOps task. MEASURED RECORD (do not re-derive; source: .claude/skills/caspervpn-anticensorship/references/caspercloak-throughput.md). CEO device, Lebanon, Dusseldorf s6, fast.com, n=5 PAIRS, 2026-09-10: no-VPN 23/23/23/14/13 Mbps; CF-fronted 4.5, 9.1, 2.4, 1.0, 1.5 (mean 3.7); direct grey relay 8.3, 3.9, 5.9, 8.8, 10 (mean 7.4). Direct wins 4/5 and never collapsed; CF collapsed to 7-12% of line on the worst pairs; the ONE CF win (9.1) matched direct, so the CF tax is mostly the old Worker's redial FLAPPING, not fronting per se. CRITICAL: even on the DIRECT road we only reach 36-63% of line (best pairs 63-77%) => removing Cloudflare is NOT sufficient; the residual loss is H2 (single loss-sensitive TCP stream: head-of-line blocking + TCP-over-TCP meltdown + throughput ~ MSS/(RTT*sqrt(loss))) plus obfs size-padding 7-15%. Relay hardware is NOT the cap (CPU 0.0%, 85 MB/s downlink, load ~0, mtl-01 2026-06-27) and the relay software ceiling held 8/16/32/64 Mbps single stream on BOTH the direct and native-front roads. Reference architecture check: VLESS/VMess-over-WS-over-TLS-over-CDN (our exact shape) delivers 10-50 Mbps through CF while we get 1-3 => a fixable inefficiency exists; 'fundamental' is rejected. REGION INVERSION (decides the transport): GCC (AE/SA) = DPI/SNI/IP blocking with UDP/QUIC largely ALLOWED; Lebanon = carrier UDP throttle with shallow DPI. So a UDP transport is the answer for the Gulf and is useless in Lebanon - never treat 'restricted regions' as one bucket for speed. || SCOPE (client): today one WireGuard-over-WebSocket connection carries everything, so ONE lost segment stalls every inner flow (head-of-line blocking) and a single TCP flow on a 150-200 ms path cannot fill the line. Open N=4-8 parallel WS connections to the SAME relay, stripe WG packets across them, reassemble on arrival. N independent flows ~ N x single-flow throughput on a lossy link and a loss on one no longer stalls the others. Keeps full stealth (identical TLS/obfs shape, just more of it) and works through Cloudflare unchanged, which is why it is the interim lever while the transport work runs. ACCEPTANCE: (1) N is configurable and defaults conservatively; (2) packet ordering/reassembly verified under induced loss and reorder; (3) graceful degrade to 1 stream when the extra dials fail (never worse than today); (4) MEASURED before/after on a real device, 3+ paired runs, reported as mean AND spread - within-road spread was 3.8x in the 09-10 test, so a single run proves nothing; (5) battery/CPU delta recorded (N sockets on cellular). TRAPS: connection COUNT is itself a DPI signal - 8 simultaneous TLS sessions to one host is unusual; grade the stealth cost before raising N, and stagger the dials. MTU: CasperCloak already fragments at 1400 over obfs/WS/TLS/TCP (known trap) - re-check the effective MTU per stream. Do NOT re-add any per-packet sleep (removed fleet-wide 2026-06-16/17; it capped throughput at 0.4 Mbps). PAIRED WITH: the DevOps task created in the same push (relay reassembly + QUIC/HTTP-3 prototype + relay efficiency). SUPERSEDES the client half of xd-807.\n\n[iOS 2026-09-27] Open. Code change + device proof required.",
+      "status": "deferred",
       "priority": "P1",
       "createdAt": "2026-09-20T00:03:59Z",
       "createdDate": "2026-09-20",
@@ -38234,15 +38234,16 @@
       "handoffNote": "[iOS 2026-09-27] BLOCKER: needs an iOS session on the CEO Mac (Xcode build) \u2014 Cowork cannot build iOS.",
       "deferReason": "Multi-day transport work (4\u20138 striped connections + reassembly + measured runs); not a launch item. Pairs with the DevOps relay half.",
       "revisitBy": "2026-10-14",
-      "deferredUntil": "2026-10-14",
+      "deferredUntil": "2026-11-15",
       "category": "release-4.3.1",
       "ageDays": 21,
-      "lifecycle": "triage",
+      "lifecycle": "deferred",
       "needsRelease": false,
       "notes": "[CTO live chat 2026-10-10 12:4xZ, owner of cloudflare-exit-phase1] UN-PARKED by the CEO decision ([CEO 2026-10-10 15:4x Beirut (12:4xZ), CTO live chat] 'we need to solve point 4 before' (point 4 = hidden mode is slow on weak lines; 'before' = before the TestFlight build)): blocks the TestFlight build of 65. STEP 0 first (CTO live chat, today): find where hidden-mode speed goes - CEO phone no-VPN vs WireGuard vs CasperCloak on Duesseldorf in the same minutes, server side watched. Known facts: de-3 already runs BBR (net.ipv4.tcp_congestion_control=bbr, fq), so the relay -> phone direction is not CUBIC-limited; one CC WebSocket brain -> de-3 carried 100 Mbit/s (relay capacity fine); CEO line 9 Oct 16:1xZ: rtt 126-407 ms, ~6-14% retransmits, 0.06-0.63 Mbit/s. History 10 Sep (same phone/route): no VPN 23 Mbit/s, CC direct mean 7.4. Do NOT build until step 0 says which part is the limit. | [was resolution, kept as history] DEFERRED to 2026-10-14 \u2014 Multi-day transport work (4\u20138 striped connections + reassembly + measured runs); not a launch item. Pairs with the DevOps relay half.",
       "blocker": "CTO live chat: STEP 0 speed test first (CEO phone no-VPN vs WireGuard vs CasperCloak on Duesseldorf, same minutes, server watched) - 'do not build until step 0' (CTO note 10 Oct 12:4xZ).",
-      "lastUpdated": "2026-10-10T15:11:38Z",
-      "triageReason": "dueBy 2026-09-27 passed: close, hand back, or plan a month"
+      "lastUpdated": "2026-10-11T22:14:09Z",
+      "triageReason": "dueBy 2026-09-27 passed: close, hand back, or plan a month",
+      "resolution": "DEFERRED to 2026-11-15 - client striping over 4-8 connections is useless until the relay accepts and reassembles several streams (xd-883 [DEVOPS], itself deferred to 2026-11-01). Step 0 speed data now exists (CEO phone 11 Oct: hidden mode ~54% of WireGuard). The CEO advised starting after build 68 is checked, and the next iPhone build is on HOLD (CEO card row 207). Unblocks: xd-883 relay half live on one relay + a test build slot."
     },
     {
       "id": "xd-883",
@@ -55852,7 +55853,7 @@
       "status": "pending",
       "priority": "P1",
       "title": "Hidden mode: the server hands the phone Cloudflare DNS 1.1.1.1 (measured in the tunnel log) - give hidden-mode configs our own resolver (xd-1570 server half)",
-      "description": "[CEO live 2026-10-11 2026-10-11T00:57:03Z] Measured 11 Oct on the CEO phone (console-phone67.log): CasperCloak tunnel setTunnelNetworkSettings dns = ['1.1.1.1','1.0.0.1'] - the app uses whatever the config 'dns' field says (PacketTunnelProvider.swift:1584). App half (Google DoH first) is in build 68. Server half: put the relay's own resolver in the caspercloak-config dns list; DEVOPS checks the wg0 REDIRECT exists on every relay.",
+      "description": "[APPS run 2026-10-11 h 2026-10-11T22:14:09Z, unattended] [IOS] measured for xd-1824: the app passes the server list through unchanged unless the user picked a DNS in Settings (WireGuardManager.resolveActiveDNS). Production OptimizedVpnServerService.cs:856 defaults every WireGuard config to \"1.1.1.1\",\"1.0.0.1\" (6b0337f1f) - the CEO's hidden-mode log 21:50:51Z shows exactly that pair. Change the list here (and in VpnServerService.cs:341, the duplicate - CLAUDE.md 9.6) and every installed build follows. || [CEO live 2026-10-11 2026-10-11T00:57:03Z] Measured 11 Oct on the CEO phone (console-phone67.log): CasperCloak tunnel setTunnelNetworkSettings dns = ['1.1.1.1','1.0.0.1'] - the app uses whatever the config 'dns' field says (PacketTunnelProvider.swift:1584). App half (Google DoH first) is in build 68. Server half: put the relay's own resolver in the caspercloak-config dns list; DEVOPS checks the wg0 REDIRECT exists on every relay.",
       "taskRef": "xd-1570",
       "criteriaIdx": [],
       "createdAt": "2026-10-11T00:57:03Z",
@@ -55863,7 +55864,8 @@
       "category": "infra-fleet",
       "ageDays": 0,
       "needsRelease": false,
-      "lifecycle": "active"
+      "lifecycle": "active",
+      "lastUpdated": "2026-10-11T22:14:09Z"
     },
     {
       "id": "xd-1740",
@@ -57224,11 +57226,14 @@
       "to": "[IOS]",
       "title": "Handoff from CEO: TRIAGE 1 aged/deferred rows (IOS): close, hand back, or plan a month",
       "description": "[CEO office 2026-10-11] Per task-lifecycle-policy.md: no task stays active > 1 week; every deferred task gets a reason and a decision. Rows today: xd-882. For EACH row write one of: (a) completed with proof, (b) consolidated into <xd>, (c) deferred with deferredUntil=<month> + resolution=<why deferred and what unblocks it>, (d) keep active ONLY with a dueBy inside 7 days and the next concrete step. No row may be left in lifecycle=triage after your next run. Do this BEFORE taking new work.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P0",
       "createdAt": "2026-10-11T21:42:58Z",
       "createdDate": "2026-10-11",
-      "completedDate": null
+      "completedDate": "2026-10-11",
+      "completedAt": "2026-10-11",
+      "completedBy": "[IOS]",
+      "resolution": "completed: 1 row handled - xd-882 deferred to 2026-11-15 with reason + what unblocks it (relay half xd-883 first; build slot after row 207 HOLD)."
     },
     {
       "id": "xd-1816",
@@ -57331,12 +57336,14 @@
       "from": "[CTO]",
       "to": "[IOS]",
       "title": "Handoff from CTO: build 68: hidden-mode tunnel still gives Cloudflare DNS 1.1.1.1 (build-67-gaps row 5) + misleading PROBE lines",
-      "description": "Bug report 4246783e log 21:50:51Z: tunnel dns [1.1.1.1, 1.0.0.1] while the app DoH already prefers Google (b68). Move the tunnel DNS off Cloudflare (CasperCloakTunnelProvider hard-coded) per xd-1570. Also: '\ud83d\udd2c PROBE [0-9s]: \u274c NO HANDSHAKE' prints while the handshake gate passed at 506 ms - the probe reads the wrong counter; fix the log so diagnosis is not misled. The app also polls /api/bandwidth/live every ~3 s while open (45 calls in ~2 min, console-build68.log) - consider slowing it when the screen is idle.",
-      "status": "pending",
+      "description": "[APPS run 2026-10-11 h 2026-10-11T22:14:09Z, unattended] MEASURED + PART 2 FIXED. (1) DNS: the hidden-mode path is PacketTunnelProvider's CasperCloak bridge (console: \"CasperCloak: Starting WireGuard adapter via bridge\"), NOT CasperCloakTunnelProvider (its hard-coded 1.1.1.1 at :429 is not on the live path). The tunnel DNS = the config \"dns\" field: WireGuardManager.resolveActiveDNS = user setting > server list > default; the server sends \"1.1.1.1\",\"1.0.0.1\" for WireGuard servers (production 6b0337f1f OptimizedVpnServerService.cs:856; CasperCloak-protocol servers 1.1.1.1/8.8.8.8/9.9.9.9 at :878). So the fix is the server half xd-1739 [CTO] - it also reaches every phone already installed, with no App Store build. (2) PROBE: PacketTunnelProvider.swift:1463 dropFirst(23) on the 24-char \"last_handshake_time_sec=\" -> hs kept \"=\" -> Int nil -> always NO HANDSHAKE; the watchdog parsers (:818, :1091, :1762) use 24 and are right. Fixed on ios/68-probe-1824 c7e75d6f1 -> QA. (3) /api/bandwidth/live every ~3 s: not started. || Bug report 4246783e log 21:50:51Z: tunnel dns [1.1.1.1, 1.0.0.1] while the app DoH already prefers Google (b68). Move the tunnel DNS off Cloudflare (CasperCloakTunnelProvider hard-coded) per xd-1570. Also: '\ud83d\udd2c PROBE [0-9s]: \u274c NO HANDSHAKE' prints while the handshake gate passed at 506 ms - the probe reads the wrong counter; fix the log so diagnosis is not misled. The app also polls /api/bandwidth/live every ~3 s while open (45 calls in ~2 min, console-build68.log) - consider slowing it when the screen is idle.",
+      "status": "in_progress",
       "priority": "P2",
       "createdAt": "2026-10-11T21:59:54Z",
       "createdDate": "2026-10-11",
-      "completedDate": null
+      "completedDate": null,
+      "lastUpdated": "2026-10-11T22:14:09Z",
+      "blocker": "Part 2 (PROBE log) fixed on ios/68-probe-1824 c7e75d6f1 -> QA (device-bound, next build after the row 207 HOLD). Part 1 (DNS) needs no app change: the server sends 1.1.1.1 -> [CTO] xd-1739. Part 3 (bandwidth poll every 3 s) not started (P3)."
     },
     {
       "id": "xd-1825",
@@ -57347,6 +57354,18 @@
       "status": "pending",
       "priority": "P3",
       "createdAt": "2026-10-11T21:59:54Z",
+      "createdDate": "2026-10-11",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1826",
+      "from": "[IOS]",
+      "to": "[QA]",
+      "title": "Handoff from IOS: Test on the next iPhone build: the tunnel PROBE lines print HANDSHAKE when the handshake gate passed (xd-1824)",
+      "description": "Branch ios/68-probe-1824 c7e75d6f1 (from ios/68 3d5a40ec0), file ios-app-v2/CasperVPN/CasperVPNTunnel/PacketTunnelProvider.swift:1463. Fix: the 0/3/6/9 s probe read last_handshake_time_sec with dropFirst(23) on a 24-char prefix, so every probe printed NO HANDSHAKE (build-68 console 21:50:51Z: PROBE [3s] NO HANDSHAKE tx=56740 rx=74764 next to Handshake gate PASSED after 506ms). Proof so far: harness on the real 8 lines 5/5 ok, base 2 FAIL (control), swiftc 6.1.2 -parse 0 errors; pushed diff sha256 f136d2bf = tested. NOT PROVEN: Xcode build, device. Verify: connect hidden mode on a build that includes c7e75d6f1, export the tunnel log: PROBE [3s] shows HANDSHAKE age=..s whenever the gate PASSED. Device-bound: waits for the next build after the build-67 HOLD (CEO card row 207).",
+      "status": "pending",
+      "priority": "P3",
+      "createdAt": "2026-10-11T22:14:15Z",
       "createdDate": "2026-10-11",
       "completedDate": null
     }
