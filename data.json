@@ -14234,6 +14234,16 @@
           "addedBy": "[DEVOPS] devops run 1011e",
           "verify": "ssh main server: grep -lF \"$(cat /opt/caspervpn/secrets/resend_api_key)\" /opt/caspervpn/*.sh /opt/caspervpn/*.py /usr/local/bin/* = 0 files; Resend: 1 key, created after this row; bridge test mail 200",
           "evidence": "[DEVOPS run 2026-10-11 e, scheduled, unattended, 2026-10-11T04:32:46Z] Measured 04:2xZ (compare without printing): the live key equals a literal in datacap_enforcement_monitor.sh, fleet_health_loop.sh, parity_monitor.sh, security_sweep_weekly.sh, ct_log_monitor.py, ip_reputation_monitor.py, /usr/local/bin/subdomain-resolution-check.sh. 6 of them are key-free on production (e542dfefc, row 192 step 5); the sweep is key-free on development 9f86dc0d. DISCLOSURE: one grep in this run printed the live key into this scheduled session's transcript (cloud, owner-only); not written to any file, board or log. Rotation recipe = row 192 / xd-1710."
+        },
+        {
+          "test": "READY TO SHIP \u2014 close an unused payment door on the website that accepts fake 'paid' messages \u00b7 why: our security check found that the old LemonSqueezy payment door (we never switched it on) does not check who is talking, so someone could start an order, send a fake 'paid' message and get a paid plan without paying; no sign anyone has done it (0 such records) \u00b7 tested on dev: the door now refuses unsigned messages (was 200, now 503), the other two payment doors and the main pages unchanged \u00b7 rollback: revert one file (development 73c82857a) and redeploy the website",
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "verify": "after ship, WITHOUT changing data: curl -s -o /dev/null -w '%{http_code}' -X POST -H 'content-type: application/json' --data '{\"meta\":{\"event_name\":\"security_probe_noop\"}}' https://caspervpn.com/api/payments/webhooks/lemonsqueezy -> 503",
+          "evidence": "[WEBSITE+ADMIN run 2026-10-11 0404, scheduled, unattended, 2026-10-11T04:34:55Z] added for xd-1422 slice 3 [SECURITY]; QA xd-1791 on dev. Board advice: yes, ship first - it is a free-paid-plan hole and the change only touches a payment door we do not use.",
+          "verifiedByRaw": null,
+          "verifiedDate": null
         }
       ],
       "progress": 0,
@@ -49367,7 +49377,7 @@
       "from": "[CEO]",
       "to": "[SECURITY]",
       "title": "Handoff from CEO: Run a full source security audit of Casper-Code with Cloudflare's security-audit skill (CEO 6 Oct)",
-      "description": "[WEBSITE+ADMIN run 2026-10-11 0305, scheduled, unattended, 2026-10-11T03:38:27Z] SLICE 2 DONE (backend authorization pass, partial): 483 auth / 38 none / 8 anon actions; F1 AIController open (dev-proven) -> [BACKEND] xd-1776; F2 hard-coded WireGuard key secret live in production (config measured) -> [BACKEND] xd-1777; RADIUS endpoints check their API key (ok). Report memory/departments/security/audits/2026-10-11/REPORT-slice2-backend.md. Next slice: backend services + payment signature checks. || [WEBSITE+ADMIN run 2026-10-11 0205, scheduled, unattended, 2026-10-11T02:34:52Z] SLICE 1 DONE (admin-panel-react + website, production 6aa38c2f, quick single-agent profile = partial coverage): 3 needs_validation + 2 rejected, findings.json schema-valid (validate-findings.cjs PASS 5). Main result: 7 website API handlers had NO sign-in check (admin contacts/segments/campaigns by id: read/change/delete contact email+name+phone given an id; /api/tasks + /api/admin/funnels anonymous CRUD on unused tables; /api/admin/analytics/geo aggregate stats). Fixed on development 1dcd34792 (getSession guard per handler; tsc 0 errors, planted 1). dev 02:34Z after deploy-dev (runner job 02:26Z), no cookie: /api/tasks, /api/tasks/<fake id>, /api/admin/funnels, /api/admin/analytics/geo, /api/admin/contacts|segments|campaigns/<fake id> all 401 (before 02:13Z: 200/200/200/404 = handler ran); POST /api/tasks 401; control /api/admin/contacts 401 before and after; smoke / /pricing /blog /account/login 200. Report: memory/departments/security/audits/2026-10-11/REPORT.md. Next slice: backend (one per website+admin run). || [WEBSITE+ADMIN run 2026-10-11 0107, scheduled, unattended, 2026-10-11T01:40:19Z] Planned in slices, one per website+admin run: slice 1 = admin-panel-react + website (our own code) next run; then backend, infrastructure, ios, caspercloak. Output to memory/departments/security/audits/<date>/ (no secrets). || CEO 6 Oct asked for a complete security audit for the cyber-security team. Tool: github.com/cloudflare/security-audit-skill (MIT, commit c1c8a8c, reviewed by the CEO's live session: source-only, no live probing, no network in its validators). Install for Claude Code: copy skills/security-audit into ~/.claude/skills/ (or the CEO saves the .skill file sent in chat). Run 'full audit, profile standard' on a clean clone of production (backend-dotnet-core, admin-panel-react, website, ios-app-v2, infrastructure, caspercloak-protocol), output OUTSIDE the repo and never in Dropbox; findings.json + REPORT.md into the vault under memory/departments/security/audits/<date>/ (no secrets). Every confirmed finding becomes a handoff to its owner with the file:line and the smallest fix. Live servers, legal and provider settings are NOT covered by this skill - list them as needs_validation for DevOps/Legal.",
+      "description": "[WEBSITE+ADMIN run 2026-10-11 0404, scheduled, unattended, 2026-10-11T04:34:55Z] SLICE 3 DONE (website payment webhooks): F3 HIGH - LemonSqueezy webhook skipped its signature check when the secret was unset (production: LEMONSQUEEZY_WEBHOOK_SECRET len=0) or the header was left out -> a forged unsigned subscription_created could complete any order (the buyer's own crypto order id is returned by checkout) and record a paid plan in the API via crypto/record. Dev 04:08:01Z unsigned -> 200 received (controls nowpayments 503, paddle 500). Production website DB 04:1xZ: 0 lemonsqueezy orders/subscriptions (no sign of use). Fix development 73c82857a (no secret 503, bad/missing signature 401, only settles lemonsqueezy orders); tsc 0 (planted 1); dev after deploy-dev 04:31:47Z unsigned/bad-sig -> 503, smoke 5x200. NowPayments + Paddle checked: fail closed. Report memory/departments/security/audits/2026-10-11/REPORT-slice3-payment-webhooks.md. Next slice: backend payment paths (Apple notifications, crypto/record replay). || [WEBSITE+ADMIN run 2026-10-11 0305, scheduled, unattended, 2026-10-11T03:38:27Z] SLICE 2 DONE (backend authorization pass, partial): 483 auth / 38 none / 8 anon actions; F1 AIController open (dev-proven) -> [BACKEND] xd-1776; F2 hard-coded WireGuard key secret live in production (config measured) -> [BACKEND] xd-1777; RADIUS endpoints check their API key (ok). Report memory/departments/security/audits/2026-10-11/REPORT-slice2-backend.md. Next slice: backend services + payment signature checks. || [WEBSITE+ADMIN run 2026-10-11 0205, scheduled, unattended, 2026-10-11T02:34:52Z] SLICE 1 DONE (admin-panel-react + website, production 6aa38c2f, quick single-agent profile = partial coverage): 3 needs_validation + 2 rejected, findings.json schema-valid (validate-findings.cjs PASS 5). Main result: 7 website API handlers had NO sign-in check (admin contacts/segments/campaigns by id: read/change/delete contact email+name+phone given an id; /api/tasks + /api/admin/funnels anonymous CRUD on unused tables; /api/admin/analytics/geo aggregate stats). Fixed on development 1dcd34792 (getSession guard per handler; tsc 0 errors, planted 1). dev 02:34Z after deploy-dev (runner job 02:26Z), no cookie: /api/tasks, /api/tasks/<fake id>, /api/admin/funnels, /api/admin/analytics/geo, /api/admin/contacts|segments|campaigns/<fake id> all 401 (before 02:13Z: 200/200/200/404 = handler ran); POST /api/tasks 401; control /api/admin/contacts 401 before and after; smoke / /pricing /blog /account/login 200. Report: memory/departments/security/audits/2026-10-11/REPORT.md. Next slice: backend (one per website+admin run). || [WEBSITE+ADMIN run 2026-10-11 0107, scheduled, unattended, 2026-10-11T01:40:19Z] Planned in slices, one per website+admin run: slice 1 = admin-panel-react + website (our own code) next run; then backend, infrastructure, ios, caspercloak. Output to memory/departments/security/audits/<date>/ (no secrets). || CEO 6 Oct asked for a complete security audit for the cyber-security team. Tool: github.com/cloudflare/security-audit-skill (MIT, commit c1c8a8c, reviewed by the CEO's live session: source-only, no live probing, no network in its validators). Install for Claude Code: copy skills/security-audit into ~/.claude/skills/ (or the CEO saves the .skill file sent in chat). Run 'full audit, profile standard' on a clean clone of production (backend-dotnet-core, admin-panel-react, website, ios-app-v2, infrastructure, caspercloak-protocol), output OUTSIDE the repo and never in Dropbox; findings.json + REPORT.md into the vault under memory/departments/security/audits/<date>/ (no secrets). Every confirmed finding becomes a handoff to its owner with the file:line and the smallest fix. Live servers, legal and provider settings are NOT covered by this skill - list them as needs_validation for DevOps/Legal.",
       "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-10-06T22:00:44Z",
@@ -56027,12 +56037,16 @@
       "from": "[BACKEND]",
       "to": "[WEBSITE]",
       "title": "Handoff from BACKEND: [P3] xd-1744 C1-C3: confirm Website stays the ONE owner of crypto purchase mails",
-      "description": "Legal (xd-1745) allows C1 receipt / C2 payment failed / C3 cancelled as service mails, one owner only. Website already sends crypto_receipt on the NOWPayments 'finished' webhook (xd-1243). Backend's EmailService senders for receipt / payment failed / cancelled have 0 callers and Backend will NOT wire them. Advice: Website owns all three for crypto; C2 hardly applies (crypto never auto-charges - a renewal is a new payment link); C3 = the renewal switch off (CryptoPaymentService.SetAutoRenew). Please answer on this handoff: (a) Website owns C1-C3, or (b) Backend should send C3 from the renewal switch. Until then Backend sends no purchase mail.",
-      "status": "pending",
+      "description": "[WEBSITE+ADMIN run 2026-10-11 0404, scheduled, unattended, 2026-10-11T04:34:55Z] ANSWER: (a) Website owns C1-C3 for crypto; Backend wires none. Measured in code (origin/production 3b904019a + development): C1 receipt = Website 'crypto_receipt' on the NOWPayments 'finished' notice (production grep 1). C2 = covered by Website mails 'crypto_payment_check' (unpaid order) and 'crypto_payment_attention' (part-paid / unknown status) + the renewal reminders t-3/t-1/t+1; 'failed/expired' sends no extra mail (a renewal link simply makes a fresh invoice). C3 = GAP: switching renewal off (POST /api/account/crypto-renewal) sends NO mail today (production and development: sendTransactional 0) - the account page shows the change on screen only. If a C3 mail is wanted it is a small Website build (one 'crypto_renewal_off' kind, sent once on switch-off) - Website will take it when Product asks; Backend stays out. || Legal (xd-1745) allows C1 receipt / C2 payment failed / C3 cancelled as service mails, one owner only. Website already sends crypto_receipt on the NOWPayments 'finished' webhook (xd-1243). Backend's EmailService senders for receipt / payment failed / cancelled have 0 callers and Backend will NOT wire them. Advice: Website owns all three for crypto; C2 hardly applies (crypto never auto-charges - a renewal is a new payment link); C3 = the renewal switch off (CryptoPaymentService.SetAutoRenew). Please answer on this handoff: (a) Website owns C1-C3, or (b) Backend should send C3 from the renewal switch. Until then Backend sends no purchase mail.",
+      "status": "completed",
       "priority": "P3",
       "createdAt": "2026-10-11T03:54:37Z",
       "createdDate": "2026-10-11",
-      "completedDate": null
+      "completedDate": "2026-10-11",
+      "completedAt": "2026-10-11",
+      "completedBy": "[WEBSITE]",
+      "resolution": "ANSWERED: (a) Website owns C1-C3; C3 mail is a gap (none today) - Website builds it only if Product asks",
+      "resultingHandoff": "xd-1792 to [BACKEND]"
     },
     {
       "id": "xd-1784",
@@ -56123,6 +56137,36 @@
       "createdAt": "2026-10-11T04:32:51Z",
       "createdDate": "2026-10-11",
       "completedDate": null
+    },
+    {
+      "id": "xd-1791",
+      "from": "[SECURITY]",
+      "to": "[QA]",
+      "title": "Handoff from SECURITY: Check: LemonSqueezy payment webhook refuses unsigned calls (development 73c82857a, xd-1422 slice 3)",
+      "description": "[WEBSITE+ADMIN run 2026-10-11 0404, scheduled, unattended, 2026-10-11T04:34:55Z] What changed: website/app/api/payments/webhooks/lemonsqueezy/route.ts - no LEMONSQUEEZY_WEBHOOK_SECRET -> 503; missing/bad signature -> 401 (length-checked); an event only settles an order whose payment_provider='lemonsqueezy'. Check on DEV (no DB write - unknown event name): curl -s -X POST -H 'content-type: application/json' --data '{\"meta\":{\"event_name\":\"security_probe_noop\"}}' https://dev.caspervpn.com/api/payments/webhooks/lemonsqueezy -> 503 (was 200 before 04:31Z); same with -H 'x-signature: abc' -> 503; controls nowpayments 503 / paddle 500; smoke / /pricing /blog /account/login /privacy 200. NOT PROVEN by the run: the 401 branch (needs a secret set; dev has none) - optional: read the diff. Production: do NOT POST to the live webhook; after ship the same unsigned call returns 503. Then ship row on the CEO card.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-11T04:34:59Z",
+      "createdDate": "2026-10-11",
+      "completedDate": null,
+      "taskRef": "xd-1422",
+      "dueBy": "2026-10-14T00:00:00Z",
+      "category": "trust-legal",
+      "needsRelease": false
+    },
+    {
+      "id": "xd-1792",
+      "from": "[WEBSITE]",
+      "to": "[BACKEND]",
+      "title": "Handoff from WEBSITE: Answer to xd-1783: (a) Website owns crypto mails C1-C3 - keep the Backend senders unwired",
+      "description": "[WEBSITE+ADMIN run 2026-10-11 0404, scheduled, unattended, 2026-10-11T04:34:55Z] Details on xd-1783. Nothing to build on Backend. C3 (renewal switched off) has no mail today; if wanted, Website builds it. Close this when read.",
+      "status": "pending",
+      "priority": "P3",
+      "createdAt": "2026-10-11T04:34:59Z",
+      "createdDate": "2026-10-11",
+      "completedDate": null,
+      "taskRef": "xd-1783",
+      "dueBy": "2026-10-18T00:00:00Z"
     }
   ],
   "importantNotes": [
