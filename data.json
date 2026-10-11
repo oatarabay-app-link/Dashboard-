@@ -14282,6 +14282,16 @@
           "addedBy": "[DEVOPS] devops run 1011f",
           "verify": "main server: md5 /opt/caspervpn/monitoring/prometheus/prometheus.yml = git production copy; curl localhost:9090/api/v1/query?query=probe_success | grep -c admin.caspervpn.com >= 1; up{job=\"blackbox-internal-services\"} = 2 series value 1; Grafana /api/dashboards/uid/caspervpn-overview -> 200",
           "evidence": "[QA 2026-10-11 g, scheduled, 2026-10-11T21:10:07Z] QA DEV PASS (xd-1800): development 72eeecf8b = 2 files under infrastructure/monitoring; promtool check config on the dev prometheus.yml + the LIVE alerts.yml -> SUCCESS (47 rules); blackbox from the main server: https://admin.caspervpn.com http_2xx probe_success 1, caspervpn-push:5020 tcp 1, caspervpn-scheduler:5030 tcp 1, CONTROL caspervpn-push:5999 tcp 0; dashboard json.tool OK. NOT LIVE yet: production /opt/caspervpn/monitoring/prometheus/prometheus.yml unchanged - installs after CEO YES on row 242. Scratch /root/reports/qa1011g/prom. || [DEVOPS run 2026-10-11 f, scheduled, unattended, 2026-10-11T05:31:53Z] xd-1753. Install steps (after CEO YES): cp prometheus.yml -> /opt/caspervpn/monitoring/prometheus/ (backup .bak-<date>), cp caspervpn-overview.json -> /opt/caspervpn/monitoring/grafana/dashboards/, reload Prometheus with SIGHUP (docker kill -s HUP prometheus), Grafana picks the file up by itself. Then QA checks rows monitoring-prometheus 1,3,5,7 live. Tests on the main server (scratch /root/reports/devops1011f, live files untouched): promtool check config SUCCESS; probe admin 200/probe_success 1, tcp push 1, tcp scheduler 1; 10 queries ran on live Prometheus; throwaway grafana:latest with live provisioning -> 'loaded panels 9 folder CasperVPN', container removed."
+        },
+        {
+          "test": "READY TO SHIP \u2014 tell the team within the hour when a VPN server drops out of the list users can pick \u00b7 why: on 1 Oct Paris was switched off by the server watch and nobody was told, so the website, store text and social posts kept the old server count \u00b7 tested: development 4e8d8823e (one small check script + its timer line); run read-only on the main server: with nothing changed it stays silent, and when told 'Paris was up last time' it would send exactly one alert naming Paris \u00b7 rollback: delete the timer file; nothing else changes \u00b7 CEO: say yes or no",
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "addedAt": "2026-10-11T21:30:25Z",
+          "addedBy": "[DEVOPS] devops run 1011g",
+          "verify": "main server: ls /etc/cron.d/fleet-rotation-guard; md5 /opt/caspervpn/fleet_rotation_guard.py = git production copy; tail -1 /var/log/fleet-rotation-guard.log shows a run < 20 min old with servers=13",
+          "evidence": "[DEVOPS run 2026-10-11 g, scheduled, unattended, 2026-10-11T21:30:25Z] prepared, not installed (xd-1701). Dry runs: control 0 alerts; simulated Paris drop 1 alert."
         }
       ],
       "progress": 0,
@@ -54873,13 +54883,15 @@
       "to": "[DEVOPS]",
       "title": "Handoff from MARKETING: Alert when a VPN server leaves rotation (public-fleet-count-guard row 2)",
       "description": "Measured 10 Oct 22:1xZ: git grep -iE 'IsActive|fleet.?count' origin/production -- infrastructure/monitoring -> 0 hits. When the node watchdog sets VpnServers.IsActive=false (Paris, 1 Oct 04:04Z) nobody is told. Ask: one alert (Telegram, existing alert path) within 1 h of any IsActive true->false, naming the node and the surfaces to re-check (website, store text, social schedule). Verify: flip a test row on dev or read the rule file; control: no alert when nothing changes. Then -> [QA].",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P2",
       "createdAt": "2026-10-10T22:10:29Z",
       "createdDate": "2026-10-10",
       "completedDate": null,
       "taskRef": "public-fleet-count-guard",
-      "dueBy": "2026-10-17T22:10:29Z"
+      "dueBy": "2026-10-17T22:10:29Z",
+      "blocker": "Needs CEO YES on the new ceo-action-backlog READY TO SHIP row (install = cron on the main server); QA dev check first",
+      "notes": "[DEVOPS run 2026-10-11 g, scheduled, unattended, 2026-10-11T21:30:25Z] Prepared on development 7de529f65 + 4e8d8823e: infrastructure/scripts/fleet_rotation_guard.py (every 15 min: SELECT Id/Name/IsActive/AutoDisabled from VpnServers, compare with last snapshot, IsActive true->false -> one Alertmanager alert VpnServerLeftRotation severity=warning -> existing Telegram + mail webhooks, naming the node + surfaces to re-check; false->true logged only; first run = baseline) + fleet-rotation-guard.cron. Dry runs on the main server (copy /root/reports/devops1011g/, md5 787d2879 = git): T1 no state -> baseline, would_send 0; T2 CONTROL state=now -> left [], would_send 0; T3 state with Paris up -> left ['Paris'], would_send 1. Nothing installed, no alert posted, no DB write (13 rows, 11 active). || "
     },
     {
       "id": "xd-1702",
@@ -56468,6 +56480,18 @@
       "status": "pending",
       "priority": "P2",
       "createdAt": "2026-10-11T21:29:17Z",
+      "createdDate": "2026-10-11",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1808",
+      "from": "[DEVOPS]",
+      "to": "[QA]",
+      "title": "Handoff from DEVOPS: Check on dev: server-leaves-rotation alert (xd-1701)",
+      "description": "development 4e8d8823e: infrastructure/scripts/fleet_rotation_guard.py + fleet-rotation-guard.cron. Re-run on the main server READ-ONLY with --dry-run --state <scratch file>: (1) state = current rows -> would_send 0 (control); (2) state where a node now inactive was active (Paris) -> would_send 1, left=[Paris]. Recipe + test states: /root/reports/devops1011g/. Alert payload: labels alertname=VpnServerLeftRotation severity=warning instance=<node>, same shape as cc_drop_alarm.py. Never run without --dry-run (writes /var/log + state). Then the CEO card READY TO SHIP row added by devops run 1011g waits for CEO YES.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-11T21:30:29Z",
       "createdDate": "2026-10-11",
       "completedDate": null
     }
