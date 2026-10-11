@@ -14398,6 +14398,16 @@
           "verifiedBy": "none",
           "createdBy": "[DEVOPS] devops run 1011i",
           "createdAt": "2026-10-11T23:26:01Z"
+        },
+        {
+          "test": "READY TO SHIP \u2014 hidden mode stops hanging when a phone's connection stalls: the server now drops a stuck connection after 20 seconds, so the app reconnects by itself instead of sitting with no internet \u00b7 why: on 11 Oct the CEO's phone in D\u00fcsseldorf hung for minutes; the server kept a dead connection open for 100+ seconds \u00b7 tested on dev: Bangkok test server, a stuck connection is now closed in 20-25 seconds (today's version keeps it open past 70 seconds), a healthy connection is not touched, and a real hidden-mode connection to Bangkok works \u00b7 order: D\u00fcsseldorf first (one server, watch 1 hour), then the other 10 \u00b7 rollback: put back the saved copy and restart, one command per server \u00b7 note: a phone mid-stall gets one quick reconnect instead of a long hang \u00b7 CEO: say yes or no",
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "addedAt": "2026-10-11T23:43:41Z",
+          "addedBy": "[DEVOPS] devops run 1011j",
+          "verify": "on each relay: journalctl -u caspercloak-ws | grep -c 'TCP_USER_TIMEOUT on accepted sockets = 20000 ms' >= 1; md5 of /usr/local/bin/caspercloak_ws.py = patched copy; Bangkok: bash /root/xd1853test/stall_test.sh python3 /usr/local/bin/caspercloak_ws.py 18450 recheck -> established=0 by +25 s; then skill 0.5 real traffic: >=10 'client connected' per relay in 12 h and no rise in 'connection closed' errors",
+          "evidence": "[DEVOPS run 2026-10-11 j, scheduled, unattended, 2026-10-11T23:43:41Z] Bangkok dev 46.16.129.246, harness on 127.0.0.1 test ports (test PSK, not the live one), client switches obfs on, then iptables drops the relay->client packets: CURRENT code v16 (control) still open at +70 s (unacked 1->6); CURRENT DE code v13 (websockets 13.1, control) still open at +71 s; PATCHED v16 closed between +20 and +25 s (relay log ETIMEDOUT 23:33:08Z); PATCHED v13 closed between +20 and +25 s (ETIMEDOUT 23:35:07Z); PATCHED with NO stall (healthy idle) still open at +71 s. Then installed on Bangkok's own relay 23:38Z (backup /root/backups/xd1853-20261011T2338Z, md5 4292dfd4 -> b675109e), service active, :443 listening; real canary wss://s13.pompesh.com from the main server: handshake PASS, held 15 s, 360 KB sent; relay journal 'xd-1853 TCP_USER_TIMEOUT on accepted sockets = 20000 ms'. Logs: main server /root/reports/devops1011j/ (control16.out patched16.out patched13.out control13_healthy16.out canary.jsonl); Bangkok /root/xd1853test/. development 5191ad45. xd-1853, QA xd-1869."
         }
       ],
       "progress": 0,
@@ -38361,11 +38371,11 @@
       "category": "release-4.3.1",
       "ageDays": 21,
       "lifecycle": "deferred",
-      "deferredUntil": "2026-11-01",
+      "deferredUntil": "2026-11",
       "needsRelease": false,
       "notes": "[CTO live chat 2026-10-10 12:4xZ, owner of cloudflare-exit-phase1] UN-PARKED by the CEO decision ([CEO 2026-10-10 15:4x Beirut (12:4xZ), CTO live chat] 'we need to solve point 4 before' (point 4 = hidden mode is slow on weak lines; 'before' = before the TestFlight build)): blocks the TestFlight build of 65. STEP 0 first (CTO live chat, today): find where hidden-mode speed goes - CEO phone no-VPN vs WireGuard vs CasperCloak on Duesseldorf in the same minutes, server side watched. Known facts: de-3 already runs BBR (net.ipv4.tcp_congestion_control=bbr, fq), so the relay -> phone direction is not CUBIC-limited; one CC WebSocket brain -> de-3 carried 100 Mbit/s (relay capacity fine); CEO line 9 Oct 16:1xZ: rtt 126-407 ms, ~6-14% retransmits, 0.06-0.63 Mbit/s. History 10 Sep (same phone/route): no VPN 23 Mbit/s, CC direct mean 7.4. Do NOT build until step 0 says which part is the limit. | [was resolution, kept as history] DEFERRED to 2026-11-01 (triage 4 Oct c) \u2014 before building speed levers for the Gulf we need the UAE/KSA canary (xd-1310) and telemetry v2 (xd-1308) to say WHERE sessions fail; building on 0.4 Mbps folklore repeats the 2026-06 inverted diagnosis. Unblocks: first canary report.",
       "triageReason": "dueBy 2026-10-07 passed: close, hand back, or plan a month",
-      "resolution": "Deferred to Nov 2026: waits build 68 phone check + Gulf canary data; xd-882 client half first."
+      "resolution": "[DEVOPS run 2026-10-11 j, scheduled, unattended, 2026-10-11T23:43:41Z] DEFERRED to Nov 2026 (P0 kept, not silent): speed striping needs the build-68 check the CEO asked for first, and the stuck-connection fix xd-1853 (prepared this run) must land before measuring hidden-mode speed again. Unblocks: xd-1853 shipped + QA pass, then a back-to-back WireGuard vs hidden-mode speed pair on one server."
     },
     {
       "id": "xd-884",
@@ -41128,7 +41138,7 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: P1: change the production database password \u2014 it is a single dictionary word and is in git history",
       "description": "[DEVOPS run 2026-10-11 i, scheduled, unattended, 2026-10-11T23:26:01Z] TRIAGE (xd-1813): (d) ACTIVE, dueBy 18 Oct. Missed the 10 Oct window (no run did it). Next step: a devops run that fires inside 23:00-01:00Z first lists every holder of the DB password without printing it (grep -lF on main server .env, FreeRADIUS sql, exporters, backup scripts, dev host), then rotates all in one step and proves a real IKEv2 login. CEO YES of 5 Oct still stands. || [CEO YES 5 Oct 01:1xZ - quiet window 02:00-04:00 Beirut, all consumers in one step.] [2026-10-05T14:41:24Z eng run 1005b] xd-978 done this run (3 accounts rotated 14:12Z). Order unchanged: xd-1024 next (02:00-04:00 Beirut window \u2014 the 03:19 Beirut apps run is the only firing inside it; it takes postgres + API .env + FreeRADIUS + exporters + backup in one step, then a real IKEv2 login); xd-896 dual-accept only with the 4.4 app. \u00b7 [2026-10-05T08:04Z eng run 1005a] [DEVOPS/SECURITY] CEO YES row 118 read this run; not executed this run (the run's time went to xd-1356/1338, xd-1357, xd-1359, xd-1353). Order kept: node sudo password (xd-978) first \u2014 measure which nodes still use the caspervpn user + password and that root key access works on each BEFORE changing it; relay PSK (xd-896) only as dual-accept PREV+NEW and the client half rides 4.4; DB password (xd-1024) in the 02:00-04:00 Beirut window with postgres + API env + FreeRADIUS + exporters + backup switched together and a real IKEv2 login proven after. Next engineering run (17:57 Beirut) takes xd-978. \u00b7 [CEO 5 Oct 01:1xZ] CEO YES: 'yes to all four' rotations. DevOps executes under /run/casper-deploy.lock with a rollback: relay PSK + node sudo + dev test-account first; the production DB password last, in a quiet window (02:00-04:00 Beirut), every consumer (.env of api/website/admin/exporters/backup) switched in one step, health checks after, old password revoked only after 24 h clean. Never print a secret anywhere but /opt/caspervpn/secrets and the brain's .env. [ENGINEERING run 2026-10-04 c (fired 22:48Z = 01:48 Beirut 5 Oct, Cowork, Mac folder attached)] (d) ACTIVE again, dueBy 2026-10-11 \u2014 production database password: a live-server/production change \u2014 needs a CEO yes. Next step: the CEO answers DECISION row 'secret rotations' on the CEO card (added tonight); the next engineering run then rotates under the session lock, one secret per run, value recorded only in the credentials note. No answer by 11 Oct \u2192 deferred with that reason.\n\n[CEO office 2026-09-30] dueBy set by the 7-day rule (xdPolicy: createdAt + 7 d; already past \u2192 7 Oct). MEASURED 2026-09-25: the casper_prod database password is ONE ordinary English word (it appears 9 times in the DevOps skill as normal prose). It was also written into that skill as the password itself (now removed from the current text) and so remains in git history. Change it to a long random value and record it ONLY in memory/context/credentials.md. \u26a0\ufe0f Plan it, do not rush it: the DevOps skill itself records that a past casper_prod password change reached postgres and the API but NOT FreeRADIUS, which broke every IKEv2 login fleet-wide. The change must update, together: postgres, the API environment, FreeRADIUS on the brain, and every script that reads it \u2014 then prove a real IKEv2 login on a node.\n\n[2026-09-27 DEVOPS] CEO 2026-09-26: the CEO is handling the rotation.\n\n[2026-09-27b DEVOPS] Before rotating: do the postgres-exporter/consumer-check spin-off first (the 2026-07-14 rotation left monitoring broken for 6 days).",
-      "status": "in_progress",
+      "status": "deferred",
       "priority": "P1",
       "createdAt": "2026-09-25T01:50:24Z",
       "createdDate": "2026-09-25",
@@ -41136,10 +41146,10 @@
       "dueBy": "2026-10-18T01:00:00Z",
       "category": "infra-fleet",
       "ageDays": 16,
-      "lifecycle": "active",
+      "lifecycle": "deferred",
       "reactivatedAt": "2026-10-04T22:59:32Z",
       "needsRelease": false,
-      "deferredUntil": "2026-10-10",
+      "deferredUntil": "2026-10-18",
       "revisitBy": "2026-10-10",
       "deferredAt": "2026-10-07T21:40:42Z",
       "deferredBy": "[CTO] live chat (CEO URGENT 6)",
@@ -41147,7 +41157,8 @@
       "updatedAt": "2026-10-07T21:40:42Z",
       "triageReason": "deferred with no future revisit date: close, or plan a month, or keep with a date + reason",
       "completedAt": null,
-      "previousResolution": "DEFERRED to 2026-10-10 - CEO YES 5 Oct. Plan: the 02:00-04:00 Beirut window on 10 Oct - postgres + API .env + FreeRADIUS + exporters + backup in one step, then a real IKEv2 login; together with xd-1384."
+      "previousResolution": "DEFERRED to 2026-10-10 - CEO YES 5 Oct. Plan: the 02:00-04:00 Beirut window on 10 Oct - postgres + API .env + FreeRADIUS + exporters + backup in one step, then a real IKEv2 login; together with xd-1384.",
+      "resolution": "[DEVOPS run 2026-10-11 j, scheduled, unattended, 2026-10-11T23:43:41Z] RE-DEFERRED to 18 Oct (window 10 Oct 02:00-04:00 Beirut passed unused; measured tonight: 3+ other sessions were changing the main server at 23:1x-23:3xZ - backend build, admin deploy, devops run i - so a password change across the database, API, FreeRADIUS and exporters cannot be done safely in a shared night). CEO YES 5 Oct still stands. Unblocks: one quiet 02:00-04:00 Beirut window with the factory paused for 30 min (CEO flips factory-status), xd-1024 and xd-1384 together."
     },
     {
       "id": "xd-1025",
@@ -48761,15 +48772,15 @@
       "to": "[DEVOPS]",
       "title": "Handoff from QA: Re-rotate the 3 passwords rotated in xd-978: QA printed the new values into its run transcript",
       "description": "[DEVOPS run 2026-10-11 i, scheduled, unattended, 2026-10-11T23:26:01Z] TRIAGE (xd-1813): (d) ACTIVE, dueBy 18 Oct, blocked on the CEO: a rotation means writing new passwords into the vault, which runs may not do. Asked as DECISION row 250 on the CEO card: (a) lock the 3 passwords (advice) or (b) rotate in a live chat. || [QA 2026-10-05 c 15:14Z] While verifying xd-1381 QA ran a grep over memory/context/credentials.md rows 2-4 and the three NEW values (root@LA 208.87.243.205, root@DE 91.194.84.79, caspervpn@NL-AM2 51.158.147.210) were displayed in this scheduled run's own transcript (a QA mistake; nothing was sent anywhere else). SSH password login is OFF on all 13 nodes and root key access is unchanged, so exposure is limited to sudo on NL-AM2 and a console login, but treat the 3 values as burnt. Re-run the xd-978 rotation for the same 3 accounts, update credentials.md rows 2-4, then hand back to QA for `passwd -S` dates. QA will not print credentials.md again.",
-      "status": "pending",
+      "status": "deferred",
       "priority": "P1",
       "createdAt": "2026-10-05T15:14:07Z",
       "createdDate": "2026-10-05",
       "completedDate": null,
       "category": "infra-fleet",
       "ageDays": 6,
-      "lifecycle": "active",
-      "deferredUntil": "2026-10-10",
+      "lifecycle": "deferred",
+      "deferredUntil": "2026-10-18",
       "revisitBy": "2026-10-10",
       "deferredAt": "2026-10-07T21:40:42Z",
       "deferredBy": "[CTO] live chat (CEO URGENT 6)",
@@ -48780,7 +48791,8 @@
       "dueBy": "2026-10-18T01:00:00Z",
       "blocker": "CEO decision row 250: lock the 3 passwords (a, advised) or rotate live (b)",
       "completedAt": null,
-      "previousResolution": "DEFERRED to 2026-10-10 - Re-rotate the 3 passwords QA printed (LA root, DE root, NL-AM2 caspervpn). Plan: in the 10 Oct 02:00-04:00 Beirut window with xd-1024 (CEO YES 5 Oct covers rotations)."
+      "previousResolution": "DEFERRED to 2026-10-10 - Re-rotate the 3 passwords QA printed (LA root, DE root, NL-AM2 caspervpn). Plan: in the 10 Oct 02:00-04:00 Beirut window with xd-1024 (CEO YES 5 Oct covers rotations).",
+      "resolution": "[DEVOPS run 2026-10-11 j, scheduled, unattended, 2026-10-11T23:43:41Z] RE-DEFERRED to 18 Oct (window 10 Oct 02:00-04:00 Beirut passed unused; measured tonight: 3+ other sessions were changing the main server at 23:1x-23:3xZ - backend build, admin deploy, devops run i - so a password change across the database, API, FreeRADIUS and exporters cannot be done safely in a shared night). CEO YES 5 Oct still stands. Unblocks: one quiet 02:00-04:00 Beirut window with the factory paused for 30 min (CEO flips factory-status), xd-1024 and xd-1384 together."
     },
     {
       "id": "xd-1385",
@@ -57366,7 +57378,7 @@
       "completedDate": "2026-10-11",
       "completedAt": "2026-10-11",
       "completedBy": "[DEVOPS]",
-      "resolution": "xd-883 deferred Nov 2026 (reason on row); xd-1024 active dueBy 18 Oct with next step; xd-1384 active dueBy 18 Oct, CEO decision row 250",
+      "resolution": "[DEVOPS run 2026-10-11 j, scheduled, unattended, 2026-10-11T23:43:41Z] TRIAGE done: xd-883 deferred Nov 2026 with reason; xd-1024 + xd-1384 re-deferred to 18 Oct with reason + unblock step.",
       "resultingHandoff": "DECISION row 250 to [CEO]"
     },
     {
@@ -57474,11 +57486,14 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CEO: CEO YES 11 Oct (row 243): install the server-leaves-rotation alert (xd-1701)",
       "description": "Omar said yes 2026-10-11 ~21:48Z. After QA xd-1808 passes on dev: cherry-pick development 7de529f65 + 4e8d8823e to production under the lock; on the main server cp infrastructure/scripts/fleet_rotation_guard.py /opt/caspervpn/ and fleet-rotation-guard.cron /etc/cron.d/fleet-rotation-guard; first run = baseline (no alert). Verify: /var/log/fleet-rotation-guard.log line <20 min old, servers=13, md5 = git. Then -> [QA] live check. Rollback: rm /etc/cron.d/fleet-rotation-guard.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-10-11T21:49:14Z",
       "createdDate": "2026-10-11",
-      "completedDate": null
+      "completedDate": "2026-10-11",
+      "completedAt": "2026-10-11",
+      "completedBy": "[DEVOPS]",
+      "resolution": "[DEVOPS run 2026-10-11 j, scheduled, unattended, 2026-10-11T23:43:41Z] ALREADY DONE by DEVOPS run h 22:29Z (production 51c73b410; /opt/caspervpn/fleet_rotation_guard.py md5 787d2879 = git; /etc/cron.d/fleet-rotation-guard). QA run i PASS LIVE: cron runs 22:30/22:45/23:00Z servers=13 left [] sent 0. Re-checked this run 23:4xZ: md5 787d2879, last cron line 23:30:06Z servers=13 active=11 left [] sent 0."
     },
     {
       "id": "xd-1822",
@@ -57934,12 +57949,13 @@
       "from": "[CTO]",
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: P0 hidden-mode relay: close stuck TCP sockets (TCP_USER_TIMEOUT ~20 s + WS ping 20 s) so phones resume instead of hanging",
-      "description": "[DEVOPS run 2026-10-11 i, scheduled, unattended, 2026-10-11T23:26:01Z] MEASURED 23:17Z on Bangkok dev relay 46.16.129.246: /usr/local/bin/caspercloak_ws.py (408 lines, md5 4292dfd4) websockets.serve(... ping_interval=None, ping_timeout=30) at L400-402; no TCP_USER_TIMEOUT or keepalive anywhere in the file; websockets 16.0, Python 3.10.12 -> the CTO reading of the code holds. D\u00fcsseldorf answered \"Permission denied (publickey)\" to the casper_fleet_admin key from the brain (use vpn_nodes). NOT STARTED: the patch + the Bangkok netem stall test (needs a full run; next devops run takes it first). || MEASURED 2026-10-11 23:01-23:03Z (CEO bug reports 67153498 22:56:39Z + ae37791b 23:01:33Z, build 68, D\u00fcsseldorf, Lebanon cellular): phone tunnel rx 22:59:11 5,024,192 -> 23:00:11 5,041,340 (+17 KB/min) while tx kept growing; WG handshake age 119 -> 159 -> 172 s; app ZOMBIE-PROBE 2x timeout 23:00:44/51 -> verdict overruled (xd-1137, handshake < 180 s); [CC-LIVE] never fired. Relay side (ss -tni on 91.194.84.79 at 23:03:07Z, the CEO's TCP 91.197.47.167:37073): lastrcv 105 s, lastack 100 s, Send-Q 115,806 B, unacked 231 segs, rto 6.5 s, rtt 1154 ms, bytes_retrans 120 KB = the TCP path to the phone is stalled both ways but still trickles. Relay code: websockets.serve(ping_interval=None, ...) and no TCP_USER_TIMEOUT -> a stuck socket is never closed by the server. Earlier the same night 22:53:39Z cellular->wifi switch: two 11.9 s dial timeouts ('Network is unreachable' on en0) then clean restart at 22:56:09Z (2.5 min without internet). WHY 27d/27e misses it (code, b68-delta Obfs4Transport livenessTick): any inbound frame counts as alive (rule 3) and the relay's cover frames (0.1-1 s) plus TCP retransmits trickle in, so lastInboundAt never ages 15 s -> no ping -> no miss. Hypothesis for the root of the stall: mobile path congestion/throttling of the long TCP flow (not proven). DO (server, helps the App Store app too because its #52 resume already works on a closed socket): in caspercloak_ws.py/relay_ws.py set TCP_USER_TIMEOUT=20000 on accepted sockets and ping_interval=20, ping_timeout=20 (keep the 600 s #52 grace so the phone resumes the same session). Test on Bangkok dev 46.16.129.246 with a phone/emulated stall (tc netem loss 100% for 40 s): socket closed within ~25 s, session resumed. Then add a READY TO SHIP row on the CEO card (fleet-wide, one node first, rollback = restore the file). Then [QA].",
-      "status": "pending",
+      "description": "[DEVOPS run 2026-10-11 j, scheduled, unattended, 2026-10-11T23:43:41Z] PREPARED: development 5191ad45; Bangkok dev installed. Bangkok dev 46.16.129.246, harness on 127.0.0.1 test ports (test PSK, not the live one), client switches obfs on, then iptables drops the relay->client packets: CURRENT code v16 (control) still open at +70 s (unacked 1->6); CURRENT DE code v13 (websockets 13.1, control) still open at +71 s; PATCHED v16 closed between +20 and +25 s (relay log ETIMEDOUT 23:33:08Z); PATCHED v13 closed between +20 and +25 s (ETIMEDOUT 23:35:07Z); PATCHED with NO stall (healthy idle) still open at +71 s. Then installed on Bangkok's own relay 23:38Z (backup /root/backups/xd1853-20261011T2338Z, md5 4292dfd4 -> b675109e), service active, :443 listening; real canary wss://s13.pompesh.com from the main server: handshake PASS, held 15 s, 360 KB sent; relay journal 'xd-1853 TCP_USER_TIMEOUT on accepted sockets = 20000 ms'. Logs: main server /root/reports/devops1011j/ (control16.out patched16.out patched13.out control13_healthy16.out canary.jsonl); Bangkok /root/xd1853test/. DEVIATION from the ask: WebSocket ping_interval=20 NOT turned on (2026-06-16 server pings broke obfs clients; kept as env switch CC_WS_PING_INTERVAL, default off). Running fleet files differ from git (xd-1499) so the rollout patches each live file with patch_xd1853_tcp_user_timeout.py. -> QA xd-1869 || [DEVOPS run 2026-10-11 i, scheduled, unattended, 2026-10-11T23:26:01Z] MEASURED 23:17Z on Bangkok dev relay 46.16.129.246: /usr/local/bin/caspercloak_ws.py (408 lines, md5 4292dfd4) websockets.serve(... ping_interval=None, ping_timeout=30) at L400-402; no TCP_USER_TIMEOUT or keepalive anywhere in the file; websockets 16.0, Python 3.10.12 -> the CTO reading of the code holds. D\u00fcsseldorf answered \"Permission denied (publickey)\" to the casper_fleet_admin key from the brain (use vpn_nodes). NOT STARTED: the patch + the Bangkok netem stall test (needs a full run; next devops run takes it first). || MEASURED 2026-10-11 23:01-23:03Z (CEO bug reports 67153498 22:56:39Z + ae37791b 23:01:33Z, build 68, D\u00fcsseldorf, Lebanon cellular): phone tunnel rx 22:59:11 5,024,192 -> 23:00:11 5,041,340 (+17 KB/min) while tx kept growing; WG handshake age 119 -> 159 -> 172 s; app ZOMBIE-PROBE 2x timeout 23:00:44/51 -> verdict overruled (xd-1137, handshake < 180 s); [CC-LIVE] never fired. Relay side (ss -tni on 91.194.84.79 at 23:03:07Z, the CEO's TCP 91.197.47.167:37073): lastrcv 105 s, lastack 100 s, Send-Q 115,806 B, unacked 231 segs, rto 6.5 s, rtt 1154 ms, bytes_retrans 120 KB = the TCP path to the phone is stalled both ways but still trickles. Relay code: websockets.serve(ping_interval=None, ...) and no TCP_USER_TIMEOUT -> a stuck socket is never closed by the server. Earlier the same night 22:53:39Z cellular->wifi switch: two 11.9 s dial timeouts ('Network is unreachable' on en0) then clean restart at 22:56:09Z (2.5 min without internet). WHY 27d/27e misses it (code, b68-delta Obfs4Transport livenessTick): any inbound frame counts as alive (rule 3) and the relay's cover frames (0.1-1 s) plus TCP retransmits trickle in, so lastInboundAt never ages 15 s -> no ping -> no miss. Hypothesis for the root of the stall: mobile path congestion/throttling of the long TCP flow (not proven). DO (server, helps the App Store app too because its #52 resume already works on a closed socket): in caspercloak_ws.py/relay_ws.py set TCP_USER_TIMEOUT=20000 on accepted sockets and ping_interval=20, ping_timeout=20 (keep the 600 s #52 grace so the phone resumes the same session). Test on Bangkok dev 46.16.129.246 with a phone/emulated stall (tc netem loss 100% for 40 s): socket closed within ~25 s, session resumed. Then add a READY TO SHIP row on the CEO card (fleet-wide, one node first, rollback = restore the file). Then [QA].",
+      "status": "in_progress",
       "priority": "P0",
       "createdAt": "2026-10-11T23:04:29Z",
       "createdDate": "2026-10-11",
-      "completedDate": null
+      "completedDate": null,
+      "blocker": "Prepared on development + Bangkok; fleet rollout waits CEO YES on the new READY TO SHIP row and QA xd-1869"
     },
     {
       "id": "xd-1854",
@@ -58118,6 +58134,18 @@
       "status": "pending",
       "priority": "P2",
       "createdAt": "2026-10-11T23:37:51Z",
+      "createdDate": "2026-10-11",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1869",
+      "from": "[DEVOPS]",
+      "to": "[QA]",
+      "title": "Handoff from DEVOPS: xd-1853 hidden-mode relay closes a stalled phone connection after 20 s - check on Bangkok dev",
+      "description": "DEVOPS run 1011j. development 5191ad45 (caspercloak_ws.py 80d2f967, caspercloak_ws.v13.py eb82707f, new patch_xd1853_tcp_user_timeout.py). Installed on Bangkok dev only. Bangkok dev 46.16.129.246, harness on 127.0.0.1 test ports (test PSK, not the live one), client switches obfs on, then iptables drops the relay->client packets: CURRENT code v16 (control) still open at +70 s (unacked 1->6); CURRENT DE code v13 (websockets 13.1, control) still open at +71 s; PATCHED v16 closed between +20 and +25 s (relay log ETIMEDOUT 23:33:08Z); PATCHED v13 closed between +20 and +25 s (ETIMEDOUT 23:35:07Z); PATCHED with NO stall (healthy idle) still open at +71 s. Then installed on Bangkok's own relay 23:38Z (backup /root/backups/xd1853-20261011T2338Z, md5 4292dfd4 -> b675109e), service active, :443 listening; real canary wss://s13.pompesh.com from the main server: handshake PASS, held 15 s, 360 KB sent; relay journal 'xd-1853 TCP_USER_TIMEOUT on accepted sockets = 20000 ms'. Logs: main server /root/reports/devops1011j/ (control16.out patched16.out patched13.out control13_healthy16.out canary.jsonl); Bangkok /root/xd1853test/. QA please: (1) re-run /root/xd1853test/stall_test.sh on Bangkok (control vs patched, both variants); (2) a real phone on Bangkok with hidden mode: put the phone in a stall (airplane on/off or Wi-Fi->cellular) and confirm the app resumes (relay journal '#52=RESUME' or a fresh 'client connected' within ~25 s) instead of hanging; (3) confirm no new disconnects for a healthy phone over 10 min. NOT done on purpose: WebSocket pings stay OFF (env CC_WS_PING_INTERVAL unset) because on 2026-06-16 server pings broke obfs clients (task caspercloak-ws-ping-fix row 0).",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-10-11T23:43:46Z",
       "createdDate": "2026-10-11",
       "completedDate": null
     }
