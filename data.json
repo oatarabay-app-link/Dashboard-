@@ -53950,11 +53950,17 @@
       "to": "[CTO]",
       "title": "Handoff from QA: A new Iranian user tried hidden mode 17 times on 3 servers in 40 s and never connected (10 Oct 10:30Z)",
       "description": "[QA 2026-10-10 j] Found while checking xd-1607 (read-only, production). A brand-new account (signed up 10 Oct 10:30:37Z, free, login country IR; user id starts e46ccbc3) tried hidden mode 17 times in 40 s on Duesseldorf (9), Los Angeles (4) and Singapore (4); every config call answered 200 (api log 'Registered + VERIFIED peer on Duesseldorf'; NATIVE front -> s6-edge / s3-edge) and every try failed after ~1 s with FailureCategory 'unknown', build 'unknown(unknown)', region hint 'US'; the account has NO ConnectionLogs row (never connected). It is one of 3 new IR accounts in 48 h; 1 of the 3 ever connected. This is a lost new user in a censored country, not a Duesseldorf regression (same failure on 2 untouched servers). Check: which app/build sends build 'unknown' (4.2 store build?), why the client gives up after ~1 s, and whether the IR-hint routing should have offered another road. Read-only evidence on the brain: /opt/caspervpn/api-logs/caspervpn-20261010.log around 10:30:43-10:31:20Z; SQL ConnectFailureEvents where UserId=e46ccbc3-... . Blocker: none - work it now.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-10-10T11:59:13Z",
       "createdDate": "2026-10-10",
-      "completedDate": null
+      "completedDate": "2026-10-11",
+      "notes": "[CTO 2026-10-11 0434, read-only, main server /root/reports/cto1011-0434/] MEASURED: (1) 'build unknown' = an iPhone app older than 22 Sep: the version/build fields were added to the failure report in commit 0c25055fc (22 Sep, xd-954); the 4.2 store build was cut 21 Aug (f60625fd2) and does not contain it (git merge-base). Android and desktop send no failure report at all (grep 0). So the user is on the App Store 4.2 build - the only store build while 4.3 stays rejected (xd-1527). (2) The server gave this user the Cloudflare road every time: 16 config calls 10:30:43-10:31:18Z, all 'StealthTier country=IR tier=Fronted cfWiring=minted' (api log caspervpn-20261010.log); 17 ConnectFailureEvents, all caspercloak/unknown, 627-2050 ms, every new field (AppVersion, Stage, ErrorCode, FrontUsed, NetworkType) empty. Still 0 ConnectionLogs rows today; last try 10:31:19Z (never came back). (3) The only other IR user in the 8-11 Oct api logs (383354cc) shows the same: 4 configs all Fronted/minted, 3 caspercloak/unknown failures, 0 connections. IR = 2 users, 0 connected. CONTROL: in 7 days old-build clients (no AppVersion) DID make 33 CasperCloak sessions (6 users, 12 with >1 MB down) - so 4.2 hidden mode works elsewhere; the failure follows Iran + the Cloudflare road, not the old build alone. HYPOTHESIS (not proven): the Cloudflare-fronted road is blocked or reset in Iran within ~1 s, and the server never offers IR a non-Cloudflare road (Fronted is chosen for every IR request). Region hint 'US' = the phone's region setting, not location. Why the client stops after ~1 s cannot be read from the server (4.2 sends no stage). NEXT: [BACKEND] xd-1793 - give IR (and other Fronted countries) a second road after a fast Fronted failure; ties to xd-1421 (retire Cloudflare, CTO live chat). || ",
+      "updatedAt": "2026-10-11T04:39:55Z",
+      "completedAt": "2026-10-11",
+      "completedBy": "[CTO]",
+      "resolution": "measured: IR user on store 4.2, Cloudflare road only, 0/2 IR connected; control 33 old-build CC sessions elsewhere",
+      "resultingHandoff": "xd-1793 to [BACKEND] (second road for IR)"
     },
     {
       "id": "xd-1647",
@@ -56167,6 +56173,20 @@
       "completedDate": null,
       "taskRef": "xd-1783",
       "dueBy": "2026-10-18T00:00:00Z"
+    },
+    {
+      "id": "xd-1793",
+      "from": "[CTO]",
+      "to": "[BACKEND]",
+      "title": "Handoff from CTO: Iran users get only the Cloudflare road for hidden mode and 0 of 2 ever connected (8-11 Oct) - offer a second road",
+      "description": "[CTO 2026-10-11 0434, from xd-1646, read-only] Every IR config call 8-11 Oct = StealthTier tier=Fronted cfWiring=minted (2 users, 20 calls); both users failed caspercloak within 0.6-2 s on Duesseldorf/LA/Singapore and never connected (ConnectionLogs 0). Control: old-build clients made 33 CasperCloak sessions elsewhere in 7 d. DO: (1) read StealthTier selection for IR and say why only Fronted is offered; (2) after a fast caspercloak failure on Fronted, the next config for that user should offer a non-Cloudflare road (native/direct relay) - check with the CTO live chat owning xd-1421 (retire Cloudflare) so the two do not clash; (3) work on development, tested on dev, READY TO SHIP row. Verify: grep 'StealthTier:.*country=IR' /opt/caspervpn/api-logs/caspervpn-2026101*.log | grep -c 'tier=\"Fronted\"' vs other tiers. Evidence files: /root/reports/cto1011-0434/user.log on the main server.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-11T04:39:59Z",
+      "createdDate": "2026-10-11",
+      "completedDate": null,
+      "handoffTo": "[QA]",
+      "handoffNote": "QA: re-run the grep in Verify and one IR-like test (region IR probe account) on dev"
     }
   ],
   "importantNotes": [
