@@ -14152,6 +14152,18 @@
           "evidence": "[WEBSITE+ADMIN run 2026-10-11 0305, scheduled, unattended, 2026-10-11T03:38:27Z] development 42dbed033 (xd-1396). QA xd-1774. Board advice: ship after QA sees the device list on dev (needs the dev database fix) or on the CEO's own account after ship.",
           "verifiedByRaw": null,
           "verifiedDate": null
+        },
+        {
+          "test": "READY TO SHIP \u2014 three helpful emails go out by themselves: (1) two days before an App Store free trial turns into a paid plan, a reminder with how to cancel; (2) when a trial ends without paying, 'you're on the free plan and it still works'; (3) two days after sign-up, if the person never connected, '3 things that usually stop people' \u00b7 why: 45 new users in 30 days never connected in their first 2 days, and trial users today get no warning before the charge \u00b7 tested on the test server: it picked exactly the test account that never connected and skipped the one that did; nothing was sent there (practice mode) \u00b7 what the ship does: adds the emails but keeps them OFF; your yes also switches them on \u00b7 not included: the day-5 'tips' email (legal says wait), Apple 'hide my email' users (about 3 in 10 - they need your Apple step on the row for xd-1677) \u00b7 rollback: one setting turns them off",
+          "verify": "After ship + switch-on: api log 'Lifecycle mails on: every 60 min, dryRun=False' and 'Lifecycle mail pass:' each hour; SELECT \"Kind\",count(*) FROM \"LifecycleEmailSends\" WHERE NOT \"DryRun\" GROUP BY 1 grows only for real users; control: SELECT count(*) FROM \"LifecycleEmailSends\" s JOIN \"ConnectionLogs\" l ON l.\"UserId\"=s.\"UserId\" AND l.\"ConnectedAt\" < s.\"SentAt\" WHERE s.\"Kind\"='B2' = 0",
+          "evidence": "[BACKEND run 2026-10-11 0315, scheduled, unattended, 2026-10-11T03:54:32Z] xd-1744; development d1607eaeb + ddf3d86ba; QA dev check xd-1782. development d1607eaeb + ddf3d86ba. Main-server build 0 errors; suite 342/342; LifecycleEmailTests 9/9; CONTROL (B2 ignores 'never connected') 1/9 fail. Dev live 03:50Z: migration 20261011030000_LifecycleEmails applied; api log 'Lifecycle mails on: every 15 min, dryRun=True'; first pass 03:52:28Z 'B2 DRY-RUN (not sent) for user 0a1e0000' = the dev test account made 60 h ago with no connection; CONTROL account (same age, one ConnectionLogs row) got none; 'Email sent to' lines on dev 0. Opt-out link on dev: wrong token 400, right token 200 + MarketingEmailOptOut f->t, same token on another user 400; production same URL 404 (control). Production read-only 03:28Z (who would be in a window right now): B2 11 (8 without Apple relay), A1 1, A2 0; 30 d: 45 never-connected new users (36 without relay); real users 322, of them 95 Apple private-relay addresses = skipped until xd-1677. Ship = cherry-pick both + env LifecycleEmails__Enabled=true (code default stays off). Board advice: yes after QA - service mails cleared by Legal (xd-1745), each user gets each mail once, short windows so no old account is mailed.",
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "addedAt": "2026-10-11T03:54:32Z",
+          "addedBy": "[BACKEND] run 2026-10-11 0315",
+          "owner": "[BACKEND]",
+          "dept": "backend"
         }
       ],
       "progress": 0,
@@ -16089,7 +16101,7 @@
           "verifiedBy": "none",
           "verifiedDate": "2026-09-29",
           "verifiedAt": "",
-          "evidence": "[GROWTH run 2026-10-11 0204, scheduled, unattended, 2026-10-11T02:13:09Z] [LEGAL] answered xd-1745 -> memory/departments/legal/reviews/lifecycle-emails-consent-2026-10-11.md (production 134765eb); copy updated 97c8d374. | [GROWTH run 2026-10-11 0105, scheduled, 2026-10-11T01:12:51Z] Copy written (A1 day-5 'Your free week ends in 2 days', A2 day-8 'You're on the free plan'): marketing/LIFECYCLE-EMAILS-2026-10-11.md (production c60e5812). No sender yet (git grep 023f919fd). Trial trigger = Users.TrialStartedAt (2 trial starts in the last 7 d, production DB 01:0xZ). Build -> xd-1744. | [NOT LIVE] QA 2026-09-29: no trial day-5 or day-8 message exists (EmailService has only verification, password reset and welcome; no push can be delivered - 0 device tokens). | was: 2026-09-20: No such email method in EmailService.cs; no push campaign found. \u2192 xd-918 (due 10-03).",
+          "evidence": "[BACKEND run 2026-10-11 0315, scheduled, unattended, 2026-10-11T03:54:32Z] BUILT on development (not live): A1 day-5 App Store trial reminder + A2 day-8 'free plan' mail, dry run on dev proven (xd-1744, QA xd-1782, CEO row 234). Not met until shipped and switched on. | [GROWTH run 2026-10-11 0204, scheduled, unattended, 2026-10-11T02:13:09Z] [LEGAL] answered xd-1745 -> memory/departments/legal/reviews/lifecycle-emails-consent-2026-10-11.md (production 134765eb); copy updated 97c8d374. | [GROWTH run 2026-10-11 0105, scheduled, 2026-10-11T01:12:51Z] Copy written (A1 day-5 'Your free week ends in 2 days', A2 day-8 'You're on the free plan'): marketing/LIFECYCLE-EMAILS-2026-10-11.md (production c60e5812). No sender yet (git grep 023f919fd). Trial trigger = Users.TrialStartedAt (2 trial starts in the last 7 d, production DB 01:0xZ). Build -> xd-1744. | [NOT LIVE] QA 2026-09-29: no trial day-5 or day-8 message exists (EmailService has only verification, password reset and welcome; no push can be delivered - 0 device tokens). | was: 2026-09-20: No such email method in EmailService.cs; no push campaign found. \u2192 xd-918 (due 10-03).",
           "verifiedByRaw": "qa-sweep-2026-09-29-not_live",
           "qaVerdict": "NOT LIVE",
           "qaDate": "2026-09-29",
@@ -16133,7 +16145,7 @@
           "verifiedBy": "none",
           "verifiedDate": "2026-09-29",
           "verifiedAt": "",
-          "evidence": "[GROWTH run 2026-10-11 0204, scheduled, unattended, 2026-10-11T02:13:09Z] [LEGAL] answered xd-1745 -> memory/departments/legal/reviews/lifecycle-emails-consent-2026-10-11.md (production 134765eb); copy updated 97c8d374. | [GROWTH run 2026-10-11 0105, scheduled, 2026-10-11T01:12:51Z] Copy written (B1 welcome after verify, B2 day-2 'never connected' help, B3 day-5 tips): marketing/LIFECYCLE-EMAILS-2026-10-11.md (production c60e5812). No day-2/day-5 sender yet. B2 aims at the activation leak (e-mail sign-ups). Build -> xd-1744. | [NOT LIVE] QA 2026-09-29: no day 0/2/5 onboarding email sequence (only the verification and welcome emails exist). | was: 2026-09-20: PRE-LAUNCH-EMAIL-SEQUENCE.md (March 2026) is a plan, not a running sequence. \u2192 xd-918 (due 10-03).",
+          "evidence": "[BACKEND run 2026-10-11 0315, scheduled, unattended, 2026-10-11T03:54:32Z] BUILT on development (not live): B2 day-2 help mail (day 0 = existing welcome; day 5 B3 on legal hold), dry run on dev proven (xd-1744, QA xd-1782, CEO row 234). Not met until shipped and switched on. | [GROWTH run 2026-10-11 0204, scheduled, unattended, 2026-10-11T02:13:09Z] [LEGAL] answered xd-1745 -> memory/departments/legal/reviews/lifecycle-emails-consent-2026-10-11.md (production 134765eb); copy updated 97c8d374. | [GROWTH run 2026-10-11 0105, scheduled, 2026-10-11T01:12:51Z] Copy written (B1 welcome after verify, B2 day-2 'never connected' help, B3 day-5 tips): marketing/LIFECYCLE-EMAILS-2026-10-11.md (production c60e5812). No day-2/day-5 sender yet. B2 aims at the activation leak (e-mail sign-ups). Build -> xd-1744. | [NOT LIVE] QA 2026-09-29: no day 0/2/5 onboarding email sequence (only the verification and welcome emails exist). | was: 2026-09-20: PRE-LAUNCH-EMAIL-SEQUENCE.md (March 2026) is a plan, not a running sequence. \u2192 xd-918 (due 10-03).",
           "verifiedByRaw": "qa-sweep-2026-09-29-not_live",
           "qaVerdict": "NOT LIVE",
           "qaDate": "2026-09-29",
@@ -54373,8 +54385,9 @@
       "createdAt": "2026-10-10T20:16:31Z",
       "createdDate": "2026-10-10",
       "completedDate": null,
-      "notes": "[BACKEND run 2026-10-11 0118, scheduled, unattended, 2026-10-11T01:39:44Z] Not started on purpose: the spec says register our sender with Apple's private relay BEFORE the first send (8 of 12 at-limit users use Hide My Email); NOT PROVEN that it is registered - no record on the board or in credentials. This is an Apple Developer account step (Certificates, Identifiers & Profiles -> Sign in with Apple for Email Communication -> add caspervpn.com sender) that only the account holder can do.",
-      "blocker": "CEO: register our e-mail sender with Apple's private relay (Apple Developer -> Sign in with Apple for Email Communication). Backend builds the mail the run after."
+      "notes": "[BACKEND run 2026-10-11 0118, scheduled, unattended, 2026-10-11T01:39:44Z] Not started on purpose: the spec says register our sender with Apple's private relay BEFORE the first send (8 of 12 at-limit users use Hide My Email); NOT PROVEN that it is registered - no record on the board or in credentials. This is an Apple Developer account step (Certificates, Identifiers & Profiles -> Sign in with Apple for Email Communication -> add caspervpn.com sender) that only the account holder can do.\n\n[BACKEND run 2026-10-11 0315, scheduled, unattended, 2026-10-11T03:54:32Z] MEASURED production read-only 03:28Z: 95 of 322 real users sign in with an Apple private-relay address. The new lifecycle mails (xd-1744) skip them until our sender is registered with Apple - so this CEO step now unlocks about 30% of mail recipients, not only the free-limit mail.",
+      "blocker": "CEO: register our e-mail sender with Apple's private relay (Apple Developer -> Sign in with Apple for Email Communication). Backend builds the mail the run after.",
+      "updatedAt": "2026-10-11T03:54:32Z"
     },
     {
       "id": "xd-1678",
@@ -55351,13 +55364,14 @@
       "to": "[BACKEND]",
       "title": "Handoff from MARKETING: [P2] Lifecycle emails: the copy has landed - wire the 5 new mails + the 3 unused senders (fresh handoff; xd-918 is deferred and cannot be reopened)",
       "description": "Marketing wrote the copy xd-918 was waiting for: marketing/LIFECYCLE-EMAILS-2026-10-11.md (production c60e5812). Measured 2026-10-11 01:0xZ on origin/production 023f919fd: EmailService.cs has senders for receipt (L153), payment failed (L179), cancelled (L205), subscription confirmation (L121) but git grep finds 0 callers outside EmailService; no sender for trial day-5 (A1), day-8 (A2), onboarding day 2 (B2, only users with no ConnectionLogs row) or day 5 (B3). Build on development only: triggers from Users.TrialStartedAt / CreatedAt / ConnectionLogs as in the file; never print a guessed price (drop the sentence if the store price is not readable). C1 receipt: agree one owner with [WEBSITE] (crypto_receipt already sent on the webhook path, xd-1243) - never two receipts. Do NOT send to real users until [LEGAL] answers the file's section 0 (xd handoff same run) and a READY TO SHIP row gets the CEO's yes. Verify: dev test account receives A1/A2/B2 with the file's subject lines; control: a user who connected gets no B2. Task gtm-09-lifecycle-messaging rows 0/2/5.\n\n[GROWTH run 2026-10-11 0204, scheduled, unattended, 2026-10-11T02:13:09Z] [LEGAL] answered xd-1745 (memory/departments/legal/reviews/lifecycle-emails-consent-2026-10-11.md (production 134765eb)): wire A1, A2 (price line removed in copy 97c8d374), B1, B2, C1-C3 (one receipt owner). Do NOT wire B3 (legal hold). Add a per-user marketing-email opt-out flag in the same change so B3 can follow.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P2",
       "createdAt": "2026-10-11T01:12:57Z",
       "createdDate": "2026-10-11",
       "completedDate": null,
-      "notes": "[BACKEND run 2026-10-11 0215, scheduled, unattended, 2026-10-11T02:59:51Z] Read 02:2xZ: [LEGAL] answered (wire A1, A2, B1, B2, C1-C3; NOT B3; add a per-user marketing-email opt-out flag). Not started this run (time went to xd-1688 which unblocks [IOS] build work). Plan: next backend run builds the opt-out flag + A1/A2/B2 triggers on development first (dev test account, control: a connected user gets no B2), C1 owner agreed with [WEBSITE] before wiring receipts.",
-      "updatedAt": "2026-10-11T02:59:51Z"
+      "notes": "[BACKEND run 2026-10-11 0215, scheduled, unattended, 2026-10-11T02:59:51Z] Read 02:2xZ: [LEGAL] answered (wire A1, A2, B1, B2, C1-C3; NOT B3; add a per-user marketing-email opt-out flag). Not started this run (time went to xd-1688 which unblocks [IOS] build work). Plan: next backend run builds the opt-out flag + A1/A2/B2 triggers on development first (dev test account, control: a connected user gets no B2), C1 owner agreed with [WEBSITE] before wiring receipts.\n\n[BACKEND run 2026-10-11 0315, scheduled, unattended, 2026-10-11T03:54:32Z] BUILT on development (A1, A2, B2 + opt-out flag/link; B3 NOT wired; C1-C3 not wired - owner question to [WEBSITE] xd-1783). development d1607eaeb + ddf3d86ba. Main-server build 0 errors; suite 342/342; LifecycleEmailTests 9/9; CONTROL (B2 ignores 'never connected') 1/9 fail. Dev live 03:50Z: migration 20261011030000_LifecycleEmails applied; api log 'Lifecycle mails on: every 15 min, dryRun=True'; first pass 03:52:28Z 'B2 DRY-RUN (not sent) for user 0a1e0000' = the dev test account made 60 h ago with no connection; CONTROL account (same age, one ConnectionLogs row) got none; 'Email sent to' lines on dev 0. Opt-out link on dev: wrong token 400, right token 200 + MarketingEmailOptOut f->t, same token on another user 400; production same URL 404 (control). Production read-only 03:28Z (who would be in a window right now): B2 11 (8 without Apple relay), A1 1, A2 0; 30 d: 45 never-connected new users (36 without relay); real users 322, of them 95 Apple private-relay addresses = skipped until xd-1677. -> QA xd-1782; words check [IOS] xd-1784; CEO card READY TO SHIP row added.",
+      "updatedAt": "2026-10-11T03:54:32Z",
+      "blocker": "Waits for QA dev check xd-1782, then a CEO YES on the READY TO SHIP row (production would send real mails)."
     },
     {
       "id": "xd-1745",
@@ -55889,6 +55903,42 @@
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-10-11T03:46:59Z",
+      "createdDate": "2026-10-11",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1782",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: [P2] Check xd-1744 lifecycle mails on dev (dry run) - A1/A2/B2 + opt-out link",
+      "description": "What: hourly job LifecycleEmailService (A1 App Store trial day 5, A2 trial over + no paid plan, B2 day 2 + never connected; B3 NOT wired - Legal hold), Users.MarketingEmailOptOut + GET/POST /api/email/unsubscribe?u=&t=. Dev runs it as a DRY RUN (records LifecycleEmailSends.DryRun=true, sends nothing). Proof so far: development d1607eaeb + ddf3d86ba. Main-server build 0 errors; suite 342/342; LifecycleEmailTests 9/9; CONTROL (B2 ignores 'never connected') 1/9 fail. Dev live 03:50Z: migration 20261011030000_LifecycleEmails applied; api log 'Lifecycle mails on: every 15 min, dryRun=True'; first pass 03:52:28Z 'B2 DRY-RUN (not sent) for user 0a1e0000' = the dev test account made 60 h ago with no connection; CONTROL account (same age, one ConnectionLogs row) got none; 'Email sent to' lines on dev 0. Opt-out link on dev: wrong token 400, right token 200 + MarketingEmailOptOut f->t, same token on another user 400; production same URL 404 (control). Production read-only 03:28Z (who would be in a window right now): B2 11 (8 without Apple relay), A1 1, A2 0; 30 d: 45 never-connected new users (36 without relay); real users 322, of them 95 Apple private-relay addresses = skipped until xd-1677. Please check on dev: (1) SELECT \"Kind\",\"DryRun\",count(*) FROM \"LifecycleEmailSends\" GROUP BY 1,2 (dev DB caspervpn-dev-postgres, casper_dev/caspervpn_dev); (2) dev api log 'Lifecycle mail pass:' every 15 min; (3) test users lifecycle-dryrun-b2@example.org (B2 row) / lifecycle-dryrun-control@example.org (connected, no row); (4) read the 3 bodies against marketing/LIFECYCLE-EMAILS-2026-10-11.md + the Legal review (A2 has no price line; no banned words); (5) opt-out link wrong token 400. Then the CEO card READY TO SHIP row can be answered. Task gtm-09-lifecycle-messaging rows 2 and 5 (B2 = day 2 only; day 5 B3 is on legal hold).",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-11T03:54:37Z",
+      "createdDate": "2026-10-11",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1783",
+      "from": "[BACKEND]",
+      "to": "[WEBSITE]",
+      "title": "Handoff from BACKEND: [P3] xd-1744 C1-C3: confirm Website stays the ONE owner of crypto purchase mails",
+      "description": "Legal (xd-1745) allows C1 receipt / C2 payment failed / C3 cancelled as service mails, one owner only. Website already sends crypto_receipt on the NOWPayments 'finished' webhook (xd-1243). Backend's EmailService senders for receipt / payment failed / cancelled have 0 callers and Backend will NOT wire them. Advice: Website owns all three for crypto; C2 hardly applies (crypto never auto-charges - a renewal is a new payment link); C3 = the renewal switch off (CryptoPaymentService.SetAutoRenew). Please answer on this handoff: (a) Website owns C1-C3, or (b) Backend should send C3 from the renewal switch. Until then Backend sends no purchase mail.",
+      "status": "pending",
+      "priority": "P3",
+      "createdAt": "2026-10-11T03:54:37Z",
+      "createdDate": "2026-10-11",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1784",
+      "from": "[BACKEND]",
+      "to": "[IOS]",
+      "title": "Handoff from BACKEND: [P3] xd-1744 B2 help mail names app words - confirm they match the live build",
+      "description": "The day-2 help mail (B2, built on development, not sent anywhere yet) tells a user: 'open CasperVPN, tap Connect again, then tap Allow' and 'open Settings in the app, choose the protocol CasperCloak, then connect again'. A mail must never name a screen that does not exist (marketing file note). Please confirm the words Connect / Settings / protocol / CasperCloak match the App Store build, or give the right words on this handoff - Backend changes the mail before the ship. Later (Legal xd-1745 step 1, with the privacy 1.9 change): a sign-up choice line for tips by email.",
+      "status": "pending",
+      "priority": "P3",
+      "createdAt": "2026-10-11T03:54:37Z",
       "createdDate": "2026-10-11",
       "completedDate": null
     }
