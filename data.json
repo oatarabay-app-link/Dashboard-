@@ -14679,6 +14679,26 @@
           "verifiedBy": "none",
           "evidence": "[LEGAL growth run 2026-10-12 1803, scheduled, unattended, 2026-10-12T18:16:38Z] xd-1929 facts (DevOps 17:30-17:33Z + Legal probe 18:1xZ, counts/dates only): fleet relay log 644 on 11 nodes, created 7 Apr (AMS/DU/LA) / 16 Apr 2026 (8 OneProvider), never rotated; address lines before fix AMS 514,257 / DU 56,719 / LA 48,838 / others 70-217; non-root login accounts: only Amsterdam admin (last login 2026-08-20); (b) not shipped off, (c) no backup copies, (d) all 13 clean (QA xd-1919). Legal verdict unchanged (hypothesis, counsel to confirm): compliance incident, not notifiable. Register entry: development fc9df0fc docs/legal/BREACH_REGISTER.md BR-2026-002 (sign-off blank). Review: memory/departments/legal/reviews/no-log-page-and-relay-ip-log-2026-10-12.md \u00a74.",
           "addedBy": "[LEGAL]"
+        },
+        {
+          "test": "READY TO SHIP \u2014 stop alert e-mails from using up the daily e-mail allowance that sign-up codes also need \u00b7 why: today 82 e-mails left our mail service by 18:29Z, 72 of them alerts (16 repeats of one 'disk nearly full' alarm every 30 min, 27 'disk 93% / 94% / 96%...' notes each sent as new); when the daily allowance runs out, new users get no sign-up code and nobody gets a password reset until it resets; River Zen sign-in codes share the same allowance \u00b7 plan: urgent alarms keep coming to Telegram and the phone push every 30 min, but by e-mail only the first time, then every 6 h, plus the 'fixed' mail; the routine note mails only when the problem changes, not when a number moves \u00b7 tested on dev: development a613d7f6 + 810438a5; amtool check-config SUCCESS (3 receivers) and route test critical -> push-only,email-only, warning -> all-channels, run on the main server with the live alertmanager v0.27.0 image in a throwaway no-network container; signature test 93%==99% warn same, warn!=fail \u00b7 rollback: put back /opt/caspervpn/monitoring/alertmanager/alertmanager.yml.bak-<ts> + routine_alert.py.bak-<ts>, render + HUP (no container recreate) \u00b7 CEO: say yes or no",
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "addedAt": "2026-10-12T18:30:34Z",
+          "addedBy": "[DEVOPS] devops run 1012-1825",
+          "verify": "main server: amtool config routes test severity=critical -> push-only,email-only; next day Resend GET /emails: alerts@ count for the day < 30; routine-alert-state.json sig contains '#'",
+          "evidence": "[DEVOPS run 2026-10-12 1825, scheduled, unattended, 2026-10-12T18:30:34Z] Resend GET /emails (key read from file, never printed), 12 Oct by 18:29Z: 82 sent = alerts@ 72 + noreply@ 10; 11 Oct 72 (62+10); 10 Oct 48 (38+10). Top: DiskSpaceCritical FIRING x16 (critical route repeat_interval 30m to the e-mail bridge), routines-status Disk NN% x27 (routine_alert.py dedup signature includes the number). Live routine_alert.py md5 = git (cd7708fa); live alertmanager.yml = git template + rendered topic/chat id."
+        },
+        {
+          "test": "DECISION \u2014 our e-mail service plan \u00b7 today we are on the free plan, which allows about 100 e-mails a day (to confirm on the Resend pricing page; the warning came at 80%) and CasperVPN sign-up codes, password resets, alerts AND River Zen sign-in codes all share it \u00b7 options: (a) ship the row above only \u2014 cuts alert mail to about a third, enough for today's volume (10 user mails a day) \u2014 free; (b) also move to the paid plan (Pro, about $20 a month as last known \u2014 confirm the price on the page), which removes the daily cap; (c) give River Zen its own account so one business cannot block the other's codes \u00b7 advice: (a) now, (c) soon; (b) only when real user mail passes ~50 a day \u00b7 CEO: pick a, b, c (more than one is fine)",
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "addedAt": "2026-10-12T18:30:34Z",
+          "addedBy": "[DEVOPS] devops run 1012-1825",
+          "verify": "Resend dashboard: plan + daily usage; no quota warning mail for 48 h",
+          "evidence": "[DEVOPS run 2026-10-12 1825, scheduled, unattended, 2026-10-12T18:30:34Z] xd-1928. Nothing bought, nothing changed in production."
         }
       ],
       "progress": 0,
@@ -58261,7 +58281,7 @@
       "createdAt": "2026-10-11T22:32:38Z",
       "createdDate": "2026-10-11",
       "completedDate": null,
-      "blocker": "[DEVOPS run 2026-10-12 1725, scheduled, unattended, 2026-10-12T17:52:16Z] Row 238 step 2 (re-rotate the mail key; recreates api+website) NOT started: at 17:25-17:51Z the main-server runner ran CI jobs back to back (Runner.Worker running), website was recreated at 17:17Z. Disk gate met (7.2 GB). Needs a quiet window; next devops run. || [DEVOPS run 2026-10-12 1625, scheduled, unattended, 2026-10-12T16:36Z] disk gate now met (9.6 GB free after row 254). Row 238 step 2 (re-rotate the mail key; recreates api+website) not started in this run - it already did 2 production changes; next devops run in a quiet deploy window. || Row 238 step 2 (re-rotate the mail key; recreates api+website) not started this run: main server 93% full (3.5 GB) with the 1.6 GB orphan builder still up (row 254) - a recreate during a CI image build risks a second outage. Do it right after row 254 ships. 2026-10-12T15:33:06Z",
+      "blocker": "[DEVOPS run 2026-10-12 1825, scheduled, unattended, 2026-10-12T18:30:34Z] Row 238 step 2 (mail-key re-rotation, recreates api+website) NOT started: 18:20-18:29Z a CI job held the main-server runner again (Worker_20261012-182052), a CI build helper is up, disk 5,426 MB free and falling (9,639 at 16:28Z). Do it in the first run with the runner idle and > 6 GB free.",
       "category": "factory-ops",
       "ageDays": 1,
       "needsRelease": false,
@@ -59696,7 +59716,8 @@
       "createdDate": "2026-10-12",
       "completedDate": null,
       "blocker": "[DEVOPS run 2026-10-12 1725, scheduled, unattended, 2026-10-12T17:52:16Z] Fix on development b19bf5dab: ci.yml docker-build gets a last step 'Remove the scan image' (if: always(); docker image rm <image>:scan || true) after the Trivy scan. Not yet proven: no development CI run reached docker-build between 17:27Z and 17:51Z (other dev pushes keep cancelling the run - concurrency group). Production pushes still leave :scan copies until the same line ships to production = READY TO SHIP row on ceo-action-backlog (added this run). Measured 17:25Z: / 7,273 MB free; :scan 3 (website 361 MB, admin 53 MB, api 150 MB); website rollback tags 3 (new 202610121715 from the 17:17Z website ship - newest-2 rule exceeded by 1, not removed: delete = CEO YES). Old :scan copies become untagged at the next build and the row-189 untagged cleaner removes them.",
-      "notes": " || [DEVOPS run 2026-10-12 1725, scheduled, unattended, 2026-10-12T17:52:16Z] dev fix b19bf5dab; QA xd-1930; CEO card row 267."
+      "notes": " || [DEVOPS run 2026-10-12 1725, scheduled, unattended, 2026-10-12T17:52:16Z] dev fix b19bf5dab; QA xd-1930; CEO card row 267.",
+      "evidence": " || [DEVOPS run 2026-10-12 1825, scheduled, unattended, 2026-10-12T18:30:34Z] re-measure: / 5,426 MB free 18:29Z (7,273 at 17:25Z), :scan images 2, buildx builder 1 (CI job running). Row 267 (production ci.yml) still no CEO YES."
     },
     {
       "id": "xd-1922",
@@ -59785,11 +59806,13 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CEO: [CEO bot alert] Resend daily email quota at 80% - sign-up codes share it with alert mail",
       "description": "[CEO BOT run 2026-10-12 17:4xZ] MEASURED: Resend mail 17:37Z to applinks123@gmail.com: 'You have reached 80% of your daily quota of 80 emails for the team applinks123' (= ~64 sent today). MEASURED 17:4xZ on the brain: caspervpn-api env Email__SmtpHost=smtp.resend.com, i.e. user sign-up / verification / password-reset mail uses the SAME Resend team. Alert mail from alerts@caspervpn.com (routines-status WARN every 30 min, watchdog, Alertmanager) is the likely bulk of today's volume (HYPOTHESIS - count it in the Resend dashboard / logs before acting). RISK: at 100% new users cannot get their verification code until the quota resets (reset time unknown - check). ASK: (1) measure today's Resend send count by sender (alerts vs noreply) (2) stop non-critical alert mail spending the quota (e.g. routines-status WARN only on change, alerts to Telegram @Casperalertsbot) without touching the API's mail (3) if a paid plan is needed, put it to the CEO as a DECISION row with the price - do not buy. verify: no Resend 'quota' mail for 48 h AND a test sign-up code arrives. Inbox thread 1a131308794337a6.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P0",
       "createdAt": "2026-10-12T17:44:23Z",
       "createdDate": "2026-10-12",
-      "completedDate": null
+      "completedDate": null,
+      "blocker": "[DEVOPS run 2026-10-12 1825, scheduled, unattended, 2026-10-12T18:30:34Z] Measured + fix on development (a613d7f6, 810438a5); production ship waits CEO YES on ceo-action-backlog row 270; plan decision row 271.",
+      "evidence": " || [DEVOPS run 2026-10-12 1825, scheduled, unattended, 2026-10-12T18:30:34Z] 82 mails today = 72 alerts + 10 user/ops (no sign-up code mail today). Cause measured: critical repeat 30m by e-mail (16) + routine_alert signature carries the disk % (27). Risk: ~18 left before the daily reset (reset time not checked; HYPOTHESIS midnight UTC); disk 5.4 GB free and falling with a CI job running -> DiskSpaceLow/Critical may fire again tonight and use the rest."
     },
     {
       "id": "xd-1929",
@@ -59883,6 +59906,18 @@
       "status": "pending",
       "priority": "P2",
       "createdAt": "2026-10-12T18:23:25Z",
+      "createdDate": "2026-10-12",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1936",
+      "from": "[DEVOPS]",
+      "to": "[QA]",
+      "title": "Handoff from DEVOPS: Check xd-1928 dev fix: alert e-mail repeat 6 h + digit-free dedup (development a613d7f6, 810438a5)",
+      "description": "Read the two development commits. Run on the main server (throwaway, no network): docker run --rm --network none --entrypoint amtool -v <rendered copy>:/c/am.yml prom/alertmanager:v0.27.0 config routes test --config.file=/c/am.yml severity=critical alertname=X  -> expect push-only,email-only; severity=warning -> all-channels; check-config SUCCESS. Check routine_alert.py sig line. CEO card row 270. PASS -> row ready for the CEO yes.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-12T18:30:40Z",
       "createdDate": "2026-10-12",
       "completedDate": null
     }
