@@ -14539,6 +14539,17 @@
           "addedBy": "[DEVOPS] devops run 1012b",
           "verify": "per node: grep -rhE '^\\s*forward-addr' /etc/unbound/ | wc -l = 0; iptables -t nat -S PREROUTING | grep -c 'dport 53' = 2; grep -c 'dport 53' /etc/wireguard/wg0.conf = 2; dig +short @<wg0 ip> example.com answers; dig @127.0.0.1 dnssec-failed.org = SERVFAIL",
           "evidence": "[QA 2026-10-12 c, scheduled, 2026-10-12T02:09:45Z] QA DEV CHECK (xd-1886) Bangkok dev 02:06Z: (1) forward-addr lines in /etc/unbound 0; (2) PREROUTING dport 53 rules 2, wg0.conf dport 53 lines 2; (3) dig @10.66.98.1 example.com answers 104.20.23.154 (control before the change per DEVOPS: no answer), caspervpn.com answers; (4) dig @127.0.0.1 dnssec-failed.org SERVFAIL, control example.com NOERROR. (5) NOT PROVEN: a real tunnel client's DNS - 0 peers handshaked in the last hour and the wg0 port-53 REDIRECT counters are 0 pkts, so no client lookup has gone through it yet. Not ticked: the row is the fleet rollout, which waits the CEO's YES. || [DEVOPS run 2026-10-12 b, scheduled, unattended, 2026-10-12T01:33:35Z] Bangkok dev applied 01:29Z (backup /root/backups/xd1879-20261012T0129Z; caspervpn.conf 528fbb50 -> 781d63d8, wg0.conf 3b2f7243 -> f29db648): DIG_WG before [] (control) -> after example.com NOERROR 292 ms, caspervpn.com 44 ms, google.com 68 ms; DNSSEC ad=1, dnssec-failed.org SERVFAIL; tcpdump eth0 to 1.1.1.1/1.0.0.1 during 3 lookups = 0 packets (control: any udp/53 = 2). Script development 1201a622 infrastructure/scripts/unbound-dns-off-cloudflare.sh md5 8f5ab959 (dry-run default, APPLY=1). Dry run all 12 01:31Z (/root/reports/devops1012b/dry_all.out): 10 nodes forward_addrs=2 acl=1 redirect 0/0; de-du forward already gone since 7 Oct (cfx pilot), redirect live 2 but postup 0 (lost at reboot); bkk done. QA xd-1886. NOT PROVEN: a real tunnel client's lookup answered by the node (QA)."
+        },
+        {
+          "test": "READY TO SHIP \u2014 remove a server password from one of our own setup scripts, and stop that script from printing passwords on screen \u00b7 why: the script on the live copy of our code still holds the VPN-login password written inside it and shows two more passwords on screen when someone runs it; anyone who reads the code or the screen sees them \u00b7 what the ship does: the live copy of the script gets the fixed version (password read from a protected file, screen shows only 'set' + length + a short fingerprint). Nothing is run on any server; no user notices anything. Changing the password itself is a separate decision (row 246, decided: wait for the next key change) \u00b7 tested on dev: QA DEV PASS xd-1830/xd-1877 (development 50bba7111 incl. e7bcfc9c: hard-coded password 0, screen prints of passwords 0; production 1 and 2) \u00b7 rollback: git revert of the two cherry-picks \u00b7 advice: YES \u00b7 say 'yes <row>'",
+          "verify": "git show origin/production:infrastructure/security/auth-pipeline-fix.sh | grep -cE 'info .*\\$\\{(CURRENT|SWAN)_SECRET' -> 0 (today 2) AND grep -cE 'UNIFIED_RADIUS_SECRET=[\"\\x27][^$\"\\x27]{6,}' -> 0 (today 1) AND grep -c secret_tag -> 3",
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "verifiedByRaw": null,
+          "verifiedDate": null,
+          "evidence": "[SECURITY website+admin run 1012-0204, scheduled, unattended, 2026-10-12T02:0xZ] MEASURED via factory_bootstrap.api_get (values never printed): production blob c8f9e2bb8 (558 lines) secret prints 2, hard-coded UNIFIED literal 1, secret_tag 0; development blob b1aec2969 (563 lines) 0 / 0 / 3; diff 17 lines, this file only. Ship = cherry-pick -x e7bcfc9c + 50bba7111 to production under the lock, file-only (not installed on any server). Handoff xd-1884.",
+          "addedBy": "[SECURITY] website+admin run 1012-0204"
         }
       ],
       "progress": 0,
@@ -58575,12 +58586,13 @@
       "from": "[QA]",
       "to": "[SECURITY]",
       "title": "Handoff from QA: QA DEV PASS xd-1856: auth-pipeline-fix.sh prints no secret - ship with the security script rows",
-      "description": "QA run 1012b: origin/development 50bba7111 infrastructure/security/auth-pipeline-fix.sh: bash -n OK; grep -cE 'info .*\\$\\{(CURRENT|SWAN)_SECRET' = 0 (production copy still 2); lines 68-69 call secret_tag(); no other echo/info/printf of a *SECRET variable; secret_tag on a dummy value prints 'set (len=13, sha256=20378a5f)', empty prints 'NOT FOUND'. Not run on any server. Production still has the old file: ship it with the security script rows (READY TO SHIP + CEO YES), then QA re-greps production.",
-      "status": "pending",
+      "description": "QA run 1012b: origin/development 50bba7111 infrastructure/security/auth-pipeline-fix.sh: bash -n OK; grep -cE 'info .*\\$\\{(CURRENT|SWAN)_SECRET' = 0 (production copy still 2); lines 68-69 call secret_tag(); no other echo/info/printf of a *SECRET variable; secret_tag on a dummy value prints 'set (len=13, sha256=20378a5f)', empty prints 'NOT FOUND'. Not run on any server. Production still has the old file: ship it with the security script rows (READY TO SHIP + CEO YES), then QA re-greps production.\n\n[SECURITY website+admin run 1012-0204, scheduled, unattended, 2026-10-12T02:1xZ] Re-measured: production c8f9e2bb8 prints 2 / literal 1; development b1aec2969 0 / 0. No READY TO SHIP row existed for e7bcfc9c or 50bba7111 (row 246 is the password-change decision, not the file ship) -> added row 258. Not shipped: no CEO YES.",
+      "status": "in_progress",
       "priority": "P2",
       "createdAt": "2026-10-12T01:12:21Z",
       "createdDate": "2026-10-12",
-      "completedDate": null
+      "completedDate": null,
+      "blocker": "Waits CEO YES on ceo-action-backlog row 258 (READY TO SHIP added 2026-10-12 02:1xZ). On YES the next [SECURITY] run cherry-picks e7bcfc9c + 50bba7111 to production and hands QA the re-grep."
     },
     {
       "id": "xd-1885",
