@@ -2064,13 +2064,13 @@
           "passed": false,
           "verifiedBy": "none",
           "verifiedAt": "2026-03-01T14:10:41Z",
-          "evidence": "[QA 2026-10-11 c, scheduled, 2026-10-11T02:20:32Z] FAIL - un-ticked (was met=true by self). Measured 02:1xZ on production: UserDeviceTokens = 0 rows; the api container has no /app/keys mount (no APNs key), so no push can reach any user. The row promises a push to every user in a country; nothing can be delivered. Fix = CEO card row 223 / xd-1738 (push sender + key mount, on development e19e1de78). || QA 2026-09-24 BLOCKED (admin sign-in): UI behaviour needs a signed-in click-through (same gap as xd-971). Backend code for the feature exists; admin routes answer 401 unauthenticated.",
+          "evidence": "[BACKEND run 2026-10-12 2215, scheduled, unattended, 2026-10-12T22:49:20Z] MEASURED on origin/production: NotifyAffectedUsersAsync only logged 'Notification queued' and returned a placeholder count (GetAffectedUserCountAsync: totalUsers = 1000 // Placeholder) - no push code at all, so the QA FAIL holds even with the push key live. FIX on development b8fe8b699: pushes to active users with LastLoginCountry = country + an active device token, real counts; CensorshipPushTests 1/1, control (old service) fails, suite 390/390. -> QA xd-1985, CEO-card row 285. || [QA 2026-10-11 c, scheduled, 2026-10-11T02:20:32Z] FAIL - un-ticked (was met=true by self). Measured 02:1xZ on production: UserDeviceTokens = 0 rows; the api container has no /app/keys mount (no APNs key), so no push can reach any user. The row promises a push to every user in a country; nothing can be delivered. Fix = CEO card row 223 / xd-1738 (push sender + key mount, on development e19e1de78). || QA 2026-09-24 BLOCKED (admin sign-in): UI behaviour needs a signed-in click-through (same gap as xd-971). Backend code for the feature exists; admin routes answer 401 unauthenticated.",
           "met": false,
           "verifiedDate": "2026-03-31",
           "verifiedByRaw": "qa-untick-2026-10-11",
           "qaVerdict": "FAIL",
           "qaDate": "2026-10-11",
-          "blocker": "Waits on xd-1738 [BACKEND] (in_progress: APNs sender shipped 11 Oct 23:22Z; it waits the CEO's one test push from build 68, ceo-action-backlog row 223 - QA 19:11Z: active device tokens 2, 'APNs push sent successfully' 0). The country broadcast itself is not built on top of it yet."
+          "blocker": "QA dev check xd-1985, then the CEO YES on CEO-card row 285"
         },
         {
           "test": "Fallback domain management: maintain list of backup domains/IPs, auto-switch when primary is blocked",
@@ -2349,7 +2349,7 @@
           "passed": false,
           "verifiedBy": "none",
           "verifiedAt": "2026-03-11T19:22:11Z",
-          "evidence": "[ENGINEERING run 2026-10-10 2305, scheduled, 2026-10-10T23:3xZ] STILL NOT DONE (23:12Z): UserDeviceTokens = 0 on production, so no reply push can reach anyone. | [FAIL] QA 2026-09-29 sweep: No push can reach any user: 0 device tokens have ever been saved (UserDeviceTokens = 0) and the API container has no APNs settings. | was: Requires APNs setup. Not yet implemented.",
+          "evidence": "[BACKEND run 2026-10-12 2215, scheduled, unattended, 2026-10-12T22:49:20Z] STALE BLOCKER REPLACED: device tokens now exist (UserDeviceTokens active 2, read-only 22:1xZ) and the APNs key shipped 11 Oct 23:22Z (xd-1738). New measured cause: the agent-reply push ran in a background task with the request's push service (its database context is closed after the reply) - production api logs 10-12 Oct: 0 'APNs' lines; admin replies since 11 Oct 23:22Z: 0 (so not seen live yet). FIX on development 1c87d2d2f (Services/BackgroundPush, own scope), tests 3/3 incl. control, suite 390/390. -> QA xd-1985, CEO-card row 284. || [ENGINEERING run 2026-10-10 2305, scheduled, 2026-10-10T23:3xZ] STILL NOT DONE (23:12Z): UserDeviceTokens = 0 on production, so no reply push can reach anyone. | [FAIL] QA 2026-09-29 sweep: No push can reach any user: 0 device tokens have ever been saved (UserDeviceTokens = 0) and the API container has no APNs settings. | was: Requires APNs setup. Not yet implemented.",
           "met": false,
           "verifiedDate": "2026-09-29",
           "verifiedByRaw": "qa-sweep-2026-09-29-fail",
@@ -2357,7 +2357,7 @@
           "qaDate": "2026-09-29",
           "verify": "psql UserDeviceTokens + printenv names",
           "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored",
-          "blocker": "[iOS]/[ANDROID]: the apps never register a device token (xd-1158)"
+          "blocker": "QA dev check xd-1985, then the CEO YES on CEO-card row 284"
         }
       ],
       "xdId": [
@@ -3202,7 +3202,7 @@
           "passed": false,
           "verifiedBy": "none",
           "verifiedAt": "2026-09-24T21:05:00Z",
-          "evidence": "[CTO run 2026-10-12 2236, scheduled, unattended, 2026-10-12T22:4xZ] ALREADY LIVE (shipped 11 Oct 23:22Z, ceo-action-backlog row 222 QA PASS 12 Oct 00:08Z). Re-measured on production 22:37-22:38Z: POST /api/auth/register {} -> 400 {success:false, errorCode VALID_3001, message 'The Email field is required.', timestamp, errors}; POST /api/auth/login bad -> 401 {success,errorCode,message,timestamp}; POST /api/auth/refresh bogus -> 401 same shape. 3 of 3 error types standard. Not ticked - handed to QA. verify: curl -s -X POST https://api.caspervpn.com/api/auth/register -H 'Content-Type: application/json' -d '{}' || [BACKEND run 2026-10-11 0015, scheduled, unattended, 2026-10-11T00:59:41Z] FIXED on development 32981aec7 (InvalidModelStateResponseFactory, superset of ProblemDetails); live on dev 00:58Z: register {} -> success/errorCode VALID_3001/message/timestamp; production unchanged (control). -> QA xd-1741, then READY TO SHIP row. Not ticked. | [FAIL] QA 2026-09-30: 2 of 3 error types use the standard shape: bad login and bad refresh -> {success,errorCode,message,timestamp}; but a validation error (POST /api/auth/register with {}) -> 400 in the framework's default ProblemDetails shape (type,title,status,errors) - no errorCode, no timestamp. Program.cs:184 AddControllers(...) sets no InvalidModelStateResponseFactory. Handed to [BACKEND]. | prior: QA 2026-09-24 PASS: Error body on prod: {\"success\":false,\"errorCode\":\"VALID_3001\",\"message\":\"Invalid email or password\",\"timestamp\":\"2026-09-24T20:49:03Z\"}.",
+          "evidence": "[BACKEND run 2026-10-12 2215, scheduled, unattended, 2026-10-12T22:49:20Z] RE-MEASURED LIVE 22:17:41Z: register {} -> 400 success/errorCode VALID_3001/message/timestamp/errors; bad login -> 401 same shape; bad refresh -> 401 same shape; /health 200 (control). Matches QA PASS LIVE on CEO-card row 222 (12 Oct 00:10Z). Not ticked - QA ticks (xd-1984). || [CTO run 2026-10-12 2236, scheduled, unattended, 2026-10-12T22:4xZ] ALREADY LIVE (shipped 11 Oct 23:22Z, ceo-action-backlog row 222 QA PASS 12 Oct 00:08Z). Re-measured on production 22:37-22:38Z: POST /api/auth/register {} -> 400 {success:false, errorCode VALID_3001, message 'The Email field is required.', timestamp, errors}; POST /api/auth/login bad -> 401 {success,errorCode,message,timestamp}; POST /api/auth/refresh bogus -> 401 same shape. 3 of 3 error types standard. Not ticked - handed to QA. verify: curl -s -X POST https://api.caspervpn.com/api/auth/register -H 'Content-Type: application/json' -d '{}' || [BACKEND run 2026-10-11 0015, scheduled, unattended, 2026-10-11T00:59:41Z] FIXED on development 32981aec7 (InvalidModelStateResponseFactory, superset of ProblemDetails); live on dev 00:58Z: register {} -> success/errorCode VALID_3001/message/timestamp; production unchanged (control). -> QA xd-1741, then READY TO SHIP row. Not ticked. | [FAIL] QA 2026-09-30: 2 of 3 error types use the standard shape: bad login and bad refresh -> {success,errorCode,message,timestamp}; but a validation error (POST /api/auth/register with {}) -> 400 in the framework's default ProblemDetails shape (type,title,status,errors) - no errorCode, no timestamp. Program.cs:184 AddControllers(...) sets no InvalidModelStateResponseFactory. Handed to [BACKEND]. | prior: QA 2026-09-24 PASS: Error body on prod: {\"success\":false,\"errorCode\":\"VALID_3001\",\"message\":\"Invalid email or password\",\"timestamp\":\"2026-09-24T20:49:03Z\"}.",
           "met": false,
           "verifiedDate": "2026-09-30",
           "verifiedByRaw": "qa-sweep-2026-09-30-fail",
@@ -3211,7 +3211,7 @@
           "verify": "curl -s -X POST localhost:8080/api/auth/register -H 'Content-Type: application/json' -d '{}' -> must contain errorCode and timestamp",
           "verifiedByPrevious": "tested",
           "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored",
-          "blocker": "QA tick only (handoff from CTO run 2026-10-12 2236)."
+          "blocker": "QA: tick from the live re-measure + row 222 PASS (xd-1984)"
         },
         {
           "test": "API documentation (all endpoints, parameters, response schemas) is served on the development API at api.dev.caspervpn.com/api/docs; production /api/docs returns 200 with that pointer, no schema in production (CEO decision 2026-09-30, was: 'API documentation at /api/docs includes all endpoints, parameters, and response schemas')",
@@ -14904,6 +14904,26 @@
           "verifiedByRaw": null,
           "verifiedDate": null,
           "evidence": "[DEVOPS run 2026-10-12 2225, scheduled, unattended, 2026-10-12T22:38:13Z] added for ios-ondemand-halfopen-tunnel-freeze row 3 (xd-1115 rule, row 57 precedent). Dry run numbers on that row. Nothing removed."
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "addedAt": "2026-10-12T22:49:20Z",
+          "owner": "[BACKEND]",
+          "test": "READY TO SHIP \u2014 when our support team answers a ticket, the user's phone really gets the 'new reply' notification \u00b7 why: the notification was sent from a background step that used a connection already closed when the answer was saved, so it could never go out (0 sent in the live logs) \u00b7 what the ship does: the notification step opens its own connection; nothing else changes \u00b7 tested on dev: development 1c87d2d2f - 3 new checks pass and the old way fails them; 390/390 checks pass; dev server rebuilt 22:44Z and carries the change (dev 2 / live 0 for the new log line); QA xd-1985 \u00b7 risk: very low - only users with notifications on (2 phones today) get a push when an answer is sent \u00b7 rollback: redeploy the previous version \u00b7 advice: YES (live-support-chat#7)",
+          "verify": "After ship: git merge-base --is-ancestor 1c87d2d2f origin/production (as the cherry-pick); production DLL strings -el | grep -c 'support-push:' >= 1; next real admin reply to a user with an active device token -> api log 'support-push: admin reply ... handed to the sender' and 'APNs push sent successfully'",
+          "evidence": "[BACKEND run 2026-10-12 2215, scheduled, unattended, 2026-10-12T22:49:20Z] added for live-support-chat#7; dev proof above; waits QA xd-1985 then the CEO YES."
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "addedAt": "2026-10-12T22:49:20Z",
+          "owner": "[BACKEND]",
+          "test": "READY TO SHIP \u2014 the 'Notify users' button on the admin censorship page really sends the alert to users in that country \u00b7 why: it only wrote 'queued' in a log and showed a made-up number (1,000 users); nothing reached any phone \u00b7 what the ship does: it pushes to active users whose last sign-in was from that country and who have notifications on, and shows the real numbers \u00b7 tested on dev: development b8fe8b699 - the new check passes and the old code fails it; 390/390 checks pass; dev server rebuilt 22:44Z and carries the change (dev 2 / live 0 for the new log line); QA xd-1985 \u00b7 risk: low - after the ship, pressing the button sends real notifications (today very few phones have them on); nobody is pushed unless an admin presses it \u00b7 rollback: redeploy the previous version \u00b7 advice: YES (admin-censorship-response#3)",
+          "verify": "After ship: git merge-base --is-ancestor b8fe8b699 origin/production (as the cherry-pick); production DLL strings -el | grep -c 'censorship-push:' >= 1; one admin 'Notify users' press -> api log 'censorship-push: country=XX usersInCountry=N withPush=M pushed=M'",
+          "evidence": "[BACKEND run 2026-10-12 2215, scheduled, unattended, 2026-10-12T22:49:20Z] added for admin-censorship-response#3; dev proof above; waits QA xd-1985 then the CEO YES."
         }
       ],
       "progress": 0,
@@ -19369,14 +19389,16 @@
           "verify": "dev API: ConnectFailureEvents + ConnectionLogs rows from the test build carry stage + appVersion for 10 of 10 attempts",
           "met": false,
           "verifiedBy": "none",
-          "evidence": "[APPS run 2026-10-10 v 2026-10-10T23:31:32Z, unattended] NOT LIVE - code is in build 67 (on hold for xd-1690), not in any store build: DiagnosticsService.reportConnectSuccess L392 + reportConnectFailure L329 (stage/front/network via ConnectTelemetry, ConnectFailureReport.swift L453) on ios/431-67-merge-1656 d4de62edd. Blocker: CEO builds + uploads build 67; then QA runs the verify on dev."
+          "evidence": "[BACKEND run 2026-10-12 2215, scheduled, unattended, 2026-10-12T22:49:20Z] MEASURED 22:2xZ: the telemetry v2 code (d4de62edd) is in build 69 (git merge-base --is-ancestor d4de62edd origin/ios/69 2975ed12a = yes). Server ingest is live. Nothing for backend until the build is out. || [APPS run 2026-10-10 v 2026-10-10T23:31:32Z, unattended] NOT LIVE - code is in build 67 (on hold for xd-1690), not in any store build: DiagnosticsService.reportConnectSuccess L392 + reportConnectFailure L329 (stage/front/network via ConnectTelemetry, ConnectFailureReport.swift L453) on ios/431-67-merge-1656 d4de62edd. Blocker: CEO builds + uploads build 67; then QA runs the verify on dev.",
+          "blocker": "App Store: build 69 (ios/69, contains telemetry v2 - measured) needs the CEO's Xcode build + upload and Apple's review; then QA runs this row's verify"
         },
         {
           "test": "A pre-connect network probe runs once per network change: DNS of api + relay, TCP 443 to the relay, TLS handshake, WebSocket upgrade, one WireGuard UDP handshake \u2014 5 results with timings, sent to the API (new endpoint) so we learn WHAT a country blocks",
           "verify": "dev DB table NetworkProbes has rows per device/network with 5 booleans + ms",
           "met": false,
           "verifiedBy": "none",
-          "evidence": "[APPS run 2026-10-10 v 2026-10-10T23:31:32Z, unattended] NOT LIVE - code is in build 67 (on hold for xd-1690): DiagnosticsService.startNetworkProbes L421 (NetworkProbeGate L432: no tunnel, <=1/min, same network <=1 per 10 min), DNS/TCP 443/TLS steps L449-457, NetworkProbeReport ConnectFailureReport.swift L790; WS-upgrade + WG UDP steps not seen in L444-466 (measure on device). Blocker: build 67 release, then QA verify on dev DB NetworkProbes."
+          "evidence": "[BACKEND run 2026-10-12 2215, scheduled, unattended, 2026-10-12T22:49:20Z] MEASURED 22:2xZ: the telemetry v2 code (d4de62edd) is in build 69 (git merge-base --is-ancestor d4de62edd origin/ios/69 2975ed12a = yes). Server ingest is live. Nothing for backend until the build is out. || [APPS run 2026-10-10 v 2026-10-10T23:31:32Z, unattended] NOT LIVE - code is in build 67 (on hold for xd-1690): DiagnosticsService.startNetworkProbes L421 (NetworkProbeGate L432: no tunnel, <=1/min, same network <=1 per 10 min), DNS/TCP 443/TLS steps L449-457, NetworkProbeReport ConnectFailureReport.swift L790; WS-upgrade + WG UDP steps not seen in L444-466 (measure on device). Blocker: build 67 release, then QA verify on dev DB NetworkProbes.",
+          "blocker": "App Store: build 69 (ios/69, contains telemetry v2 - measured) needs the CEO's Xcode build + upload and Apple's review; then QA runs this row's verify"
         },
         {
           "test": "Backend accepts the new fields: migration adds AppVersion/BuildNumber/NetworkType/Stage columns to ConnectionLogs (xd-1175 item 2) and the probe endpoint; old apps keep working (fields optional)",
@@ -19397,30 +19419,34 @@
           "verify": "dev: one tap \u2192 Notification + report row with the log excerpt",
           "met": false,
           "verifiedBy": "none",
-          "evidence": "[APPS run 2026-10-10 v 2026-10-10T23:31:32Z, unattended] NOT LIVE - code is in build 67 (on hold for xd-1690): ConnectionViewModel.sendFailureReport L478 (uses the streak count L480). Blocker: build 67 release, then QA one-tap test on dev."
+          "evidence": "[BACKEND run 2026-10-12 2215, scheduled, unattended, 2026-10-12T22:49:20Z] MEASURED 22:2xZ: the telemetry v2 code (d4de62edd) is in build 69 (git merge-base --is-ancestor d4de62edd origin/ios/69 2975ed12a = yes). Server ingest is live. Nothing for backend until the build is out. || [APPS run 2026-10-10 v 2026-10-10T23:31:32Z, unattended] NOT LIVE - code is in build 67 (on hold for xd-1690): ConnectionViewModel.sendFailureReport L478 (uses the streak count L480). Blocker: build 67 release, then QA one-tap test on dev.",
+          "blocker": "App Store: build 69 (ios/69, contains telemetry v2 - measured) needs the CEO's Xcode build + upload and Apple's review; then QA runs this row's verify"
         },
         {
           "test": "After 3 failed attempts on one network the app shows an honest message ('trouble on this network \u2014 your report helps') and never spins forever",
           "verify": "simulator render + device log line within 3 attempts",
           "met": false,
           "verifiedBy": "none",
-          "evidence": "[APPS run 2026-10-10 v 2026-10-10T23:31:32Z, unattended] NOT LIVE - code is in build 67 (on hold for xd-1690): ConnectFailureStreak (ConnectFailureReport.swift L709-736; one count per tap ConnectionViewModel L219/L276; honest message L462 '[FAIL-STREAK]'; reset on success L628). Blocker: build 67 release, then QA simulator render + device log line."
+          "evidence": "[BACKEND run 2026-10-12 2215, scheduled, unattended, 2026-10-12T22:49:20Z] MEASURED 22:2xZ: the telemetry v2 code (d4de62edd) is in build 69 (git merge-base --is-ancestor d4de62edd origin/ios/69 2975ed12a = yes). Server ingest is live. Nothing for backend until the build is out. || [APPS run 2026-10-10 v 2026-10-10T23:31:32Z, unattended] NOT LIVE - code is in build 67 (on hold for xd-1690): ConnectFailureStreak (ConnectFailureReport.swift L709-736; one count per tap ConnectionViewModel L219/L276; honest message L462 '[FAIL-STREAK]'; reset on success L628). Blocker: build 67 release, then QA simulator render + device log line.",
+          "blocker": "App Store: build 69 (ios/69, contains telemetry v2 - measured) needs the CEO's Xcode build + upload and Apple's review; then QA runs this row's verify"
         },
         {
           "test": "Admin \u2192 Operations shows a per-country table: attempts, success %, top failure stage, probe results (what is blocked) for every country with \u2265 5 attempts",
           "verify": "admin.caspervpn.com \u2192 Operations \u2192 Connection by country renders from the new columns",
           "met": false,
           "verifiedBy": "none",
-          "evidence": "[QA 2026-10-12 b, scheduled, 2026-10-12T01:12:16Z] BLOCKED - route live (GET /api/admin/ops/connection-by-country 401 without a token, control /health 200); admin bundle main.ef5a1e71.js has 'Connection by country' 1. The table render needs a signed-in admin browser pass (unattended runs never enter passwords) - same pass as xd-1697. || [APPS run 2026-10-12 a 2026-10-12T00:13:29Z, unattended] MEASURED LIVE ON PRODUCTION, not ticked: GET https://api.caspervpn.com/api/admin/ops/connection-by-country = 401 without a token (route exists; dev 401 too); admin.caspervpn.com bundle main.ef5a1e71.js contains 'connection-by-country' 1x and 'Connection by country' 1x (xd-1297 completed 4 Oct). Needs an admin login to see the table render -> QA xd-1875. Note: the table fills only when real users run builds with telemetry v2 (23 rows in 7 days). || [ENGINEERING run 2026-10-04 b, 17:57 Beirut (fired 17:40Z; 17:40-18:4xZ)] backend read path GET /api/admin/ops/connection-by-country on development 4d31f9206; SPA page \u2192 xd-1297 [ADMIN-PANEL]. | ",
+          "evidence": "[BACKEND run 2026-10-12 2215, scheduled, unattended, 2026-10-12T22:49:20Z] No change since QA 12 Oct 01:12Z (route live 401 unauthenticated; admin bundle has 'Connection by country'). Only the signed-in render is left. || [QA 2026-10-12 b, scheduled, 2026-10-12T01:12:16Z] BLOCKED - route live (GET /api/admin/ops/connection-by-country 401 without a token, control /health 200); admin bundle main.ef5a1e71.js has 'Connection by country' 1. The table render needs a signed-in admin browser pass (unattended runs never enter passwords) - same pass as xd-1697. || [APPS run 2026-10-12 a 2026-10-12T00:13:29Z, unattended] MEASURED LIVE ON PRODUCTION, not ticked: GET https://api.caspervpn.com/api/admin/ops/connection-by-country = 401 without a token (route exists; dev 401 too); admin.caspervpn.com bundle main.ef5a1e71.js contains 'connection-by-country' 1x and 'Connection by country' 1x (xd-1297 completed 4 Oct). Needs an admin login to see the table render -> QA xd-1875. Note: the table fills only when real users run builds with telemetry v2 (23 rows in 7 days). || [ENGINEERING run 2026-10-04 b, 17:57 Beirut (fired 17:40Z; 17:40-18:4xZ)] backend read path GET /api/admin/ops/connection-by-country on development 4d31f9206; SPA page \u2192 xd-1297 [ADMIN-PANEL]. | ",
           "qaVerdict": "BLOCKED",
-          "qaDate": "2026-10-12"
+          "qaDate": "2026-10-12",
+          "blocker": "Waits DEVOPS: Playwright handover for the signed-in admin checks (xd-1697), then the QA signed-in pass"
         },
         {
           "test": "SUCCESS CRITERIA after release: \u2265 95% of failure events carry stage + version within 7 days; 'unknown' < 20% of failures; non-censored attempt success \u2265 90% (baseline 90%, 2 Oct) and \u2265 70% of new real sign-ups connect once; censored markets get a written cause per country",
           "verify": "north-star SQL + the per-country table, 7 and 14 days after release",
           "met": false,
           "verifiedBy": "none",
-          "evidence": "[APPS run 2026-10-10 v 2026-10-10T23:31:32Z, unattended] NOT LIVE - measured only after release (7 and 14 days); build 67 that carries telemetry v2 is on hold for xd-1690. Blocker: build 67 release; revisit 7 days after release."
+          "evidence": "[BACKEND run 2026-10-12 2215, scheduled, unattended, 2026-10-12T22:49:20Z] MEASURED 22:2xZ: telemetry v2 (d4de62edd) is in build 69 (merge-base yes). Outcome row: measurable only 7 and 14 days after that build is live. || [APPS run 2026-10-10 v 2026-10-10T23:31:32Z, unattended] NOT LIVE - measured only after release (7 and 14 days); build 67 that carries telemetry v2 is on hold for xd-1690. Blocker: build 67 release; revisit 7 days after release.",
+          "blocker": "App Store: build 69 live first (CEO upload + Apple review); revisit 7 days after release"
         }
       ],
       "progress": 0,
@@ -19736,7 +19762,8 @@
           "met": false,
           "passed": false,
           "verifiedBy": "none",
-          "evidence": "[BACKEND eng run 2026-10-07 f] Server code is correct: DataCycleResetService.cs:63-75 picks AutoReset users with end<now or NULL and calls UserService.ResetDataCyclesAsync (UserService.cs:1004-1045: used=0, start=now, end=now+1 month). Every gate (BandwidthMonitoringService.cs:31-85 GetUserBandwidthAsync, ServersController 402, VpnController 402, MultiHop 402, RADIUS, /opt/caspervpn/datacap_enforcement_sweep.sh line 52-53) reads the CYCLE counter, not the lifetime one. ROOT CAUSE (code-read, NOT yet device-proven) is in the iPhone app: ios-app-v2/CasperVPN/CasperVPN/Core/Services/SubscriptionManager.swift - (a) currentCycleStartDate (line 1226) is kept in memory only, never saved; after a relaunch line 884/888 has no previous start, so 'new cycle' is never detected; (b) the local usage cache (dataUsageKey, UserDefaults) still holds last month's > 512 MB and is restored on launch (restoreCachedState line 1053); (c) line 939 takes max(memory, backend, cache) so the server's fresh 0 is ignored; (d) the release valve at line 920 skips when the server says 0. Result: hasExceededBandwidth() (line 1246-1254) keeps showing the limit screen to a user the server already unblocked. Same code on production and on the build-65 branch ios/trial-at-signup (02331ec). Fix belongs to [iOS] (handoff below). Measured: 88 accounts are over 512 MB lifetime but under their monthly allowance - the population that can hit this."
+          "evidence": "[BACKEND run 2026-10-12 2215, scheduled, unattended, 2026-10-12T22:49:20Z] RE-CHECKED on origin/production: DataCycleResetService.cs L64-66 (AutoResetDataMonthly + end null/< now) -> UserService.ResetDataCyclesAsync L1019 (line moved from L1004); app fix (saved cycle start dataCycleStartKey L192/L907/L992) is in build 69 (merge-base --is-ancestor f4265a9b origin/ios/69 = yes). Code-read criterion -> QA xd-1984. || [BACKEND eng run 2026-10-07 f] Server code is correct: DataCycleResetService.cs:63-75 picks AutoReset users with end<now or NULL and calls UserService.ResetDataCyclesAsync (UserService.cs:1004-1045: used=0, start=now, end=now+1 month). Every gate (BandwidthMonitoringService.cs:31-85 GetUserBandwidthAsync, ServersController 402, VpnController 402, MultiHop 402, RADIUS, /opt/caspervpn/datacap_enforcement_sweep.sh line 52-53) reads the CYCLE counter, not the lifetime one. ROOT CAUSE (code-read, NOT yet device-proven) is in the iPhone app: ios-app-v2/CasperVPN/CasperVPN/Core/Services/SubscriptionManager.swift - (a) currentCycleStartDate (line 1226) is kept in memory only, never saved; after a relaunch line 884/888 has no previous start, so 'new cycle' is never detected; (b) the local usage cache (dataUsageKey, UserDefaults) still holds last month's > 512 MB and is restored on launch (restoreCachedState line 1053); (c) line 939 takes max(memory, backend, cache) so the server's fresh 0 is ignored; (d) the release valve at line 920 skips when the server says 0. Result: hasExceededBandwidth() (line 1246-1254) keeps showing the limit screen to a user the server already unblocked. Same code on production and on the build-65 branch ios/trial-at-signup (02331ec). Fix belongs to [iOS] (handoff below). Measured: 88 accounts are over 512 MB lifetime but under their monthly allowance - the population that can hit this.",
+          "blocker": "QA: tick the code-read criterion (xd-1984)"
         },
         {
           "test": "Fix on development + test: an account over the limit with a period older than a month can connect again",
@@ -19744,7 +19771,8 @@
           "met": false,
           "passed": false,
           "verifiedBy": "none",
-          "evidence": "[APPS run 2026-10-07 al 2026-10-07T21:11:58Z] [IOS, self-reported, NOT ticked - QA ticks] iPhone fix on ios/trial-at-signup f4265a9b (build 65, marker 26p): SubscriptionManager.swift syncFromBackend now compares against the cycle start SAVED per user (was memory-only -> nil after relaunch -> server reset never seen -> max() kept last month). Rules 8/8 on Linux swiftc, control 7/8. DEV device test still to do (xd-1488). [BACKEND 2026-10-07 f] No server fix needed (server resets measured). The fix is in the iPhone app - sent to [iOS]. Test for QA/iOS: account over 512 MB, set its cycle start/end into the past on DEV, wait for the hourly job, relaunch the app: it must show the fresh allowance and connect."
+          "evidence": "[BACKEND run 2026-10-12 2215, scheduled, unattended, 2026-10-12T22:49:20Z] MEASURED: the iPhone fix f4265a9b is in build 69 (ios/69 2975ed12a, merge-base yes); server needs no change (resets measured 7 Oct). || [APPS run 2026-10-07 al 2026-10-07T21:11:58Z] [IOS, self-reported, NOT ticked - QA ticks] iPhone fix on ios/trial-at-signup f4265a9b (build 65, marker 26p): SubscriptionManager.swift syncFromBackend now compares against the cycle start SAVED per user (was memory-only -> nil after relaunch -> server reset never seen -> max() kept last month). Rules 8/8 on Linux swiftc, control 7/8. DEV device test still to do (xd-1488). [BACKEND 2026-10-07 f] No server fix needed (server resets measured). The fix is in the iPhone app - sent to [iOS]. Test for QA/iOS: account over 512 MB, set its cycle start/end into the past on DEV, wait for the hourly job, relaunch the app: it must show the fresh allowance and connect.",
+          "blocker": "CEO device test of build 69 (account over the limit with a past cycle on DEV, relaunch -> fresh allowance), then QA; build 69 assembled 12 Oct (xd-1953)"
         },
         {
           "test": "Shipped to production after CEO YES; the users from row 1 are unblocked (same query = 0)",
@@ -20310,9 +20338,9 @@
           "passed": false,
           "addedAt": "2026-10-09T06:15:28Z",
           "addedBy": "ceo-office",
-          "evidence": "[GROWTH run 2026-10-12 2204, scheduled, unattended, 2026-10-12T22:15:40Z] MEASURED 22:2xZ: new real users 5-11 Oct who connected at least once = 17 of 40 (42.5 %); week 28 Sep-4 Oct 33 % (11 Oct run). Target 60 % two weeks in a row. || [GROWTH run 2026-10-11 0003, scheduled, 2026-10-11T00:14:32Z] MEASURED 00:1xZ: new real users 5-10 Oct who connected at least once = 14 of 33 (42 %); 28 Sep-4 Oct = 4 of 12 (33 %, control matches the 5 Oct KPI report). Target 60 % two weeks in a row; earliest possible after xd-1678 ships. || 43 % on 9 Oct",
+          "evidence": "[BACKEND run 2026-10-12 2215, scheduled, unattended, 2026-10-12T22:49:20Z] DEFERRED to 2026-10-26: outcome row (>= 60 % two weeks in a row) can only be measured over two full weeks after xd-1678 shipped (10 Oct); last measure 42 % (5-10 Oct, growth run 11 Oct). || [GROWTH run 2026-10-12 2204, scheduled, unattended, 2026-10-12T22:15:40Z] MEASURED 22:2xZ: new real users 5-11 Oct who connected at least once = 17 of 40 (42.5 %); week 28 Sep-4 Oct 33 % (11 Oct run). Target 60 % two weeks in a row. || [GROWTH run 2026-10-11 0003, scheduled, 2026-10-11T00:14:32Z] MEASURED 00:1xZ: new real users 5-10 Oct who connected at least once = 14 of 33 (42 %); 28 Sep-4 Oct = 4 of 12 (33 %, control matches the 5 Oct KPI report). Target 60 % two weeks in a row; earliest possible after xd-1678 ships. || 43 % on 9 Oct",
           "verifiedBy": "none",
-          "blocker": "DEFERRED to Oct 2026 (re-measure 26 Oct) - outcome row: two weeks at 60 % can only start after xd-1678 ships (e-mail accounts may connect in their first 24 h); 5-11 Oct = 42.5 %."
+          "blocker": "DEFERRED to 2026-10-26 - outcome needs two full weeks after xd-1678 (shipped 10 Oct); re-measure then"
         }
       ],
       "createdAt": "2026-10-09T06:15:28Z",
@@ -60931,6 +60959,30 @@
       "createdDate": "2026-10-12",
       "completedDate": null,
       "taskRef": "backend-api"
+    },
+    {
+      "id": "xd-1984",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: Tick 2 rows from evidence: backend-api#7 (standard error shape, live) + urgent-monthly-limit-reset#1 (root cause with file:line)",
+      "description": "[BACKEND run 2026-10-12 2215, scheduled, unattended, 2026-10-12T22:49:20Z] (1) backend-api#7: RE-MEASURED LIVE 22:17:41Z on api.caspervpn.com: POST /api/auth/register {} -> 400 {success:false, errorCode:VALID_3001, message, timestamp, errors}; POST /api/auth/login bad password -> 401 {success:false, errorCode, message, timestamp}; POST /api/auth/refresh made-up token -> 401 same shape; control /health 200. Same as your PASS LIVE on CEO-card row 222 (12 Oct 00:10Z) - all 3 error types now use the standard shape. verify: curl -s -X POST https://api.caspervpn.com/api/auth/register -H 'Content-Type: application/json' -d '{}' | grep -c '\"errorCode\".*\"timestamp\"' -> 1. (2) urgent-monthly-limit-reset#1 'Root cause in code with file:line': the row's evidence names it; re-checked 22:4xZ on origin/production: DataCycleResetService.cs L64-66 picks AutoResetDataMonthly users with no end or end < now -> UserService.ResetDataCyclesAsync (now L1019, was L1004 when written); app side SubscriptionManager.swift - the fix that saves the cycle start per user (dataCycleStartKey L192, read L907, saved L992) is IN build 69 (git merge-base --is-ancestor f4265a9b origin/ios/69 = yes). Tick #1 if you agree; #2 stays open for the build-69 device test.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-12T22:49:24Z",
+      "createdDate": "2026-10-12",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1985",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: Check on dev: support-reply push + censorship 'Notify users' push (development 1c87d2d2f + b8fe8b699)",
+      "description": "[BACKEND run 2026-10-12 2215, scheduled, unattended, 2026-10-12T22:49:20Z] Two fixes on development, one commit each. (A) live-support-chat#7, 1c87d2d2f: AdminSupportController sent the agent-reply and status-change pushes from a background task that used the request's push service; that service reads device tokens through the request's database context, which is closed as soon as the reply returns -> the push could not be sent (production api FILE logs 10-12 Oct: 0 lines with 'APNs'; 0 admin replies since the push key shipped 11 Oct 23:22Z, so not seen live). Now Services/BackgroundPush opens its own scope; log 'support-push: <what> push handed to the sender' or 'support-push: ... failed'. (B) admin-censorship-response#3, b8fe8b699: CensorshipResponseService 'Notify users' only logged 'Notification queued' and returned a made-up count (1000-user placeholder). Now it pushes to active users whose LastLoginCountry is the country and who have an active device token, and returns the real numbers; log 'censorship-push: country=.. usersInCountry=.. withPush=.. pushed=..'. PROVEN: build 0 errors; suite 390/390; BackgroundPushTests 3/3 (incl. CONTROL: the old pattern throws ObjectDisposedException); CensorshipPushTests 1/1; CONTROL old CensorshipResponseService -> 1/1 FAIL. Dev: dev api recreated 22:44:30Z (started 22:44:39Z), dev DLL strings -el: 'support-push:' 2, 'censorship-push:' 4; production control 0 / 0; dev /health 200; dev /api/admin/support/tickets 401 unauthenticated (route up); dev log 5 min after start: no exception lines. QA to do on dev: (1) re-run the DLL check: docker exec caspervpn-dev-api strings -el /app/CasperVPN.dll | grep -c 'support-push:' (>=1) and grep -c 'censorship-push:' (>=1), production control 0/0; (2) optional: on dev, reply to a ticket of a dev user with an active UserDeviceTokens row -> dev api log 'support-push: admin reply' (sandbox token needed; no real user is pushed from dev). Then READY TO SHIP rows wait the CEO YES.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-12T22:49:24Z",
+      "createdDate": "2026-10-12",
+      "completedDate": null
     }
   ],
   "importantNotes": [
