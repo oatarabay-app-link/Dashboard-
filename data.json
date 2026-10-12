@@ -14656,6 +14656,15 @@
           "verifiedBy": "none",
           "addedAt": "2026-10-12T17:52:16Z",
           "owner": "[DEVOPS]"
+        },
+        {
+          "test": "READY TO SHIP \u2014 put the 'never write the secret VPN key into the app's log' fix into the main code (production) \u00b7 why: the fix lives only in the iPhone build branches; any new iPhone build made from the main code would write each user's secret key into Export Logs and bug reports again (security finding F19) \u00b7 what the ship does: copies 2 already-tested code changes (iPhone app + its VPN part) to production; no server, no store, no user is touched \u00b7 tested on dev: development b53a85cf0, Linux tests 28/28 + 10/10 (before the fix 8/28), QA xd-1931 \u00b7 rollback: git revert the 2 commits on production \u00b7 advice: YES - it only removes secrets from logs and stops an old leak from coming back (xd-1926)",
+          "verify": "git merge-base --is-ancestor <shipped commit> origin/production && git show origin/production:ios-app-v2/CasperVPN/CasperVPNTunnel/PacketTunnelProvider.swift | grep -c redactKeys -> 5; git show origin/production:ios-app-v2/CasperVPN/CasperVPNTunnel/WireGuardKitAdapter.swift | grep -c 'privateKey.prefix(' -> 0",
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "addedAt": "2026-10-12T18:11:37Z",
+          "owner": "[IOS]"
         }
       ],
       "progress": 0,
@@ -59726,11 +59735,14 @@
       "to": "[IOS]",
       "title": "Handoff from SECURITY: F19: the WireGuard key-redaction fix (xd-1507, 6fa75c4e) is missing from development + production - merge it back",
       "description": "[WEBSITE+ADMIN run 2026-10-12 1704, scheduled, unattended, 2026-10-12T17:23:16Z] xd-1422 slice 10 (read-only). MEASURED: commit 6fa75c4e (xd-1507 redaction) is an ancestor of ios/68, ios/68-sec-1917, ios/431-68 (PacketTunnelProvider redactKeys 5, raw UAPI fileLog 0) but NOT of origin/production or origin/development (same PacketTunnelProvider blob 235371b5e: redactKeys 0; getDiagnostics line 1876 fileLog of the full UAPI runtime config incl. private_key; WireGuardKitAdapter.swift:43 logs privateKey.prefix(8), :56 logs the whole key on parse failure). BugReportService.readTunnelDebugLog uploads tunnel_debug.log unredacted on those branches. Shipped builds 65/67 are NOT affected (ios branches). Risk: any build cut from development/production brings the key leak back. ASK: merge the xd-1507 redaction (6fa75c4e + follow-ups) into development, then production via the normal ship row; add the export check (count of 'private_key=' and 'PrivateKey =' in an exported log = 0) to the build checklist. Also F22 INFO: CasperCloakTunnelProvider.swift, WireGuardStub.swift, WireGuardTunnelProvider.swift are in no Sources phase (dead) - delete when convenient. F20 LOW: Obfs4Transport.swift:601-607 skips TLS verification on the bare-IP path (no token sent there; WireGuard still authenticates) - remove once every relay has a domain. Report: memory/departments/security/audits/2026-10-11/REPORT-slice10-ios-tunnel-trust.md (production f8f30c5a). Hand to [QA] when merged.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-10-12T17:23:22Z",
       "createdDate": "2026-10-12",
-      "completedDate": null
+      "completedDate": null,
+      "note": " [IOS apps run 1012i 2026-10-12T18:11:37Z] DONE ON DEVELOPMENT: development b53a85cf0 = b19bf5dab + b72ccf533 (26q LOG-REDACT, cherry-pick -x e54087242) + b53a85cf0 (xd-1507 KEY-REDACT, cherry-pick -x 6fa75c4e); build marker + tunnel tag of development kept (no 26s claim); git ls-remote development = b53a85cf0; pushed blobs = tested blobs (PacketTunnelProvider a12a7c22, APIClient fbe8b05c). TESTS (swiftc 6.1.2 Linux, cloud box, on the exact pushed files): tools/ios-tests/keyredact/run-linux.sh 28/28 + 10/10 wiring PASS; CONTROL on development b19bf5dab (pre-fix) 8/28 + 0/10 wiring (20 + 10 FAIL); tools/ios-tests/logredact 12/12; swiftc -parse 0 errors on the 5 changed files. PacketTunnelProvider redactKeys count 0 -> 5; 'privateKey.prefix(' in tunnel 1 -> 0. The 5 files are identical on development and production before the change (git diff --stat empty), so the same 2 commits apply to production. NOT PROVEN: Xcode compile + exported-log check on a phone (needs a build cut from development/production). QA xd-1931; production waits CEO YES on CEO card row 268. Left on this task: export check added to the QA device step (xd-1931); F22 (3 dead tunnel files) + F20 (bare-IP TLS skip) not touched in this run.",
+      "blocker": "CEO: YES on CEO card row 268 (ship to production); QA xd-1931 checks development b53a85cf0",
+      "blockerSince": "2026-10-12T18:11:37Z"
     },
     {
       "id": "xd-1927",
@@ -59777,6 +59789,18 @@
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-10-12T17:52:21Z",
+      "createdDate": "2026-10-12",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1931",
+      "from": "[IOS]",
+      "to": "[QA]",
+      "title": "Handoff from IOS: Check the WireGuard key redaction now on development (xd-1926): diff + Linux tests now; exported-log check after the next build from development/production",
+      "description": "[APPS run 2026-10-12 i] development b53a85cf0 = b19bf5dab + b72ccf533 (26q LOG-REDACT, cherry-pick -x e54087242) + b53a85cf0 (xd-1507 KEY-REDACT, cherry-pick -x 6fa75c4e); build marker + tunnel tag of development kept (no 26s claim); git ls-remote development = b53a85cf0; pushed blobs = tested blobs (PacketTunnelProvider a12a7c22, APIClient fbe8b05c). TESTS (swiftc 6.1.2 Linux, cloud box, on the exact pushed files): tools/ios-tests/keyredact/run-linux.sh 28/28 + 10/10 wiring PASS; CONTROL on development b19bf5dab (pre-fix) 8/28 + 0/10 wiring (20 + 10 FAIL); tools/ios-tests/logredact 12/12; swiftc -parse 0 errors on the 5 changed files. PacketTunnelProvider redactKeys count 0 -> 5; 'privateKey.prefix(' in tunnel 1 -> 0. The 5 files are identical on development and production before the change (git diff --stat empty), so the same 2 commits apply to production. NOT PROVEN: Xcode compile + exported-log check on a phone (needs a build cut from development/production). QA NOW: (1) git diff b19bf5dab b53a85cf0 -- ios-app-v2 -> only APIClient/BugReportService/ConnectionLogger/PacketTunnelProvider/WireGuardKitAdapter; (2) re-run tools/ios-tests/keyredact/run-linux.sh (SWIFTC=<swiftc 6.x>) -> 28/28 + 10 wiring PASS. DEVICE (next build cut from development/production): Export Logs + Send report -> count of 'private_key=' followed by hex and 'PrivateKey = ' followed by a key = 0 (only '<redacted>'). Branch: development; files under ios-app-v2/CasperVPN/CasperVPNTunnel/ and ios-app-v2/CasperVPN/CasperVPN/Core/Services/.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-12T18:11:42Z",
       "createdDate": "2026-10-12",
       "completedDate": null
     }
