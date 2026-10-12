@@ -8481,11 +8481,11 @@
           "passed": false,
           "verifiedByRaw": "none",
           "verifiedBy": "none",
-          "evidence": "[BACKEND run 2026-10-10 2314, scheduled, unattended, 2026-10-10T23:54:44Z] The 'authenticated purchase/allocate' this row waited for no longer exists: rows 0+1 closed as superseded by the CEO ('2 close', 21:45Z today). What is left to validate is GET /api/dedicated-ip as a real holder after the 18:12Z ship of xd-1659 - that is QA's open handoff xd-1674. | QA 2026-09-24 Needs an authenticated purchase/allocate on a test account.",
+          "evidence": "[BACKEND run 2026-10-12 2315, scheduled, unattended, 2026-10-12T23:44:25Z] Re-measured production read-only 23:2xZ: DedicatedIps active holders 0 of 2 IPs; real (non-Sandbox) dedicated payments since 8 Oct 0 -> QA xd-1674 still has no holder to test with. Outside event; revisit 2026-10-17 (xd-1674 date). || [BACKEND run 2026-10-10 2314, scheduled, unattended, 2026-10-10T23:54:44Z] The 'authenticated purchase/allocate' this row waited for no longer exists: rows 0+1 closed as superseded by the CEO ('2 close', 21:45Z today). What is left to validate is GET /api/dedicated-ip as a real holder after the 18:12Z ship of xd-1659 - that is QA's open handoff xd-1674. | QA 2026-09-24 Needs an authenticated purchase/allocate on a test account.",
           "qaVerdict": "BLOCKED",
           "qaDate": "2026-09-24",
           "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored",
-          "blocker": "QA: close this row with xd-1674 (GET /api/dedicated-ip as a production holder); purchase/allocate superseded by the CEO 10 Oct."
+          "blocker": "QA xd-1674 needs the first real Dedicated IP holder (0 on 12 Oct 23:2xZ); revisit 2026-10-17. Purchase/allocate superseded by the CEO 10 Oct."
         }
       ],
       "name": "Dedicated IP \u2014 Backend Engineering",
@@ -14991,6 +14991,26 @@
           "verifiedByRaw": null,
           "verifiedDate": null,
           "evidence": "[DEVOPS run 2026-10-12 2325, scheduled, unattended, 2026-10-12T23:30:37Z] xd-1696 row 1. Row 0 (Playwright 1.56 + Chromium) measured ready 11 Oct, handed to QA."
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "addedAt": "2026-10-12T23:44:25Z",
+          "owner": "[BACKEND]",
+          "test": "READY TO SHIP \u2014 every time the server refuses a connection (e-mail not confirmed, or free data used up), the log gets one short line with the reason, the first 8 letters of the user's id and the phone type \u00b7 why: the weekly newcomer list must show who was refused and why; today's lines are scattered and one of them prints the person's e-mail address \u00b7 what the ship does: adds the line in the 5 places that refuse, removes the e-mail from the old line; nothing users see changes \u00b7 tested on dev: development 5c777a548 - build 0 errors, 400/400 checks pass, the new checks fail on the old code (control); dev api 23:42Z: DLL 'Connect refused' 2, 'one tap to connect' 1 vs production 0/0; QA xd-1994 \u00b7 risk: low \u00b7 rollback: redeploy the previous version (or env LifecycleEmails__Enabled=false for the mail job) \u00b7 advice: YES (xd-1978)",
+          "verify": "After ship: git merge-base --is-ancestor 5c777a548 origin/production (as the cherry-pick); production DLL strings -el | grep -c 'Connect refused' >= 1; next real refusal -> /opt/caspervpn/api-logs line 'Connect refused AUTH_1006|DATA_CAP_REACHED user xxxxxxxx platform ...' with no '@'",
+          "evidence": "[BACKEND run 2026-10-12 2315, scheduled, unattended, 2026-10-12T23:44:25Z] added for xd-1978; dev proof above; waits QA xd-1994 then the CEO YES."
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "addedAt": "2026-10-12T23:44:25Z",
+          "owner": "[BACKEND]",
+          "test": "READY TO SHIP \u2014 new customers get one 'Welcome to CasperVPN \u2014 one tap to connect' e-mail (the text Marketing wrote and Legal cleared as a service e-mail) \u00b7 why: today nobody gets a welcome at all (the old welcome is never sent) \u00b7 what the ship does: the hourly mail job adds this welcome for accounts made in the last 2 days whose address is confirmed (or Apple/Google sign-in), once per person; Apple 'hide my e-mail' addresses are skipped until our sender is registered with Apple \u00b7 NOTE: the mail job is switched ON in production, so real e-mails start within an hour of the ship \u00b7 tested on dev: development 5e0555faf - build 0 errors, 400/400 checks pass, the new checks fail on the old code (control); dev api 23:42Z: DLL 'Connect refused' 2, 'one tap to connect' 1 vs production 0/0; QA xd-1994 \u00b7 risk: low \u00b7 rollback: redeploy the previous version (or env LifecycleEmails__Enabled=false for the mail job) \u00b7 advice: YES (xd-1977)",
+          "verify": "After ship: git merge-base --is-ancestor 5e0555faf origin/production (as the cherry-pick); production DLL strings -el | grep -c 'Welcome to CasperVPN' >= 1; api log 'Lifecycle mail B1 sent to user xxxxxxxx' for the next new confirmed account; SELECT count(*) FROM \"LifecycleEmailSends\" WHERE \"Kind\"='B1' grows by at most 1 per account",
+          "evidence": "[BACKEND run 2026-10-12 2315, scheduled, unattended, 2026-10-12T23:44:25Z] added for xd-1977; dev proof above; waits QA xd-1994 then the CEO YES."
         }
       ],
       "progress": 0,
@@ -17978,16 +17998,18 @@
           "verify": "the weekly KPI report (marketing T24) carries an 'Activation by country' table with populations",
           "met": false,
           "verifiedBy": "none",
-          "evidence": "[QA 2026-10-10 u, scheduled, 2026-10-10T23:34:26Z] NOT DONE - re-measured 23:10Z: marketing/reports/KPI-WEEKLY-2026-W41.md has no 'Activation' line (grep -c 0), so no by-country table exists. || ",
-          "qaDate": "2026-10-10"
+          "evidence": "[BACKEND run 2026-10-12 2315, scheduled, unattended, 2026-10-12T23:44:25Z] DATA READY, report leg missing: activation_funnel.sql run read-only 23:2xZ (/root/reports/be1012-2315/funnel-2315.txt): top never-connected countries with >=5 real users IR 17/17, CA 5/5, LB 5/6 (RU 27/39); top reason is 'unknown' for most (store app 4.2 sends no stage). KPI-WEEKLY-2026-W42.md 'Activation' lines 0. The report is MARKETING's file -> handoff xd-1995 with both tables. || [QA 2026-10-10 u, scheduled, 2026-10-10T23:34:26Z] NOT DONE - re-measured 23:10Z: marketing/reports/KPI-WEEKLY-2026-W41.md has no 'Activation' line (grep -c 0), so no by-country table exists. || ",
+          "qaDate": "2026-10-10",
+          "blocker": "Waits MARKETING xd-1995: put the 'Activation' tables in the Monday KPI report; then QA re-runs."
         },
         {
           "test": "The funnel numbers appear in the Monday KPI report and on the admin Marketing page (both surfaces, T30)",
           "verify": "grep -c 'Activation' marketing/reports/KPI-WEEKLY-2026-W41.md; admin \u2192 Marketing shows the 4-step funnel",
           "met": false,
           "verifiedBy": "none",
-          "evidence": "[QA 2026-10-10 u, scheduled, 2026-10-10T23:34:26Z] NOT DONE - re-measured 23:10Z: grep -c 'Activation' marketing/reports/KPI-WEEKLY-2026-W41.md = 0 (report leg missing); admin page leg not checked (needs a signed-in admin, xd-1697). || ",
-          "qaDate": "2026-10-10"
+          "evidence": "[BACKEND run 2026-10-12 2315, scheduled, unattended, 2026-10-12T23:44:25Z] DATA READY, report leg missing: activation_funnel.sql run read-only 23:2xZ (/root/reports/be1012-2315/funnel-2315.txt): top never-connected countries with >=5 real users IR 17/17, CA 5/5, LB 5/6 (RU 27/39); top reason is 'unknown' for most (store app 4.2 sends no stage). KPI-WEEKLY-2026-W42.md 'Activation' lines 0. The report is MARKETING's file -> handoff xd-1995 with both tables. Admin Marketing page leg needs a signed-in admin check (DEVOPS Playwright xd-1697). || [QA 2026-10-10 u, scheduled, 2026-10-10T23:34:26Z] NOT DONE - re-measured 23:10Z: grep -c 'Activation' marketing/reports/KPI-WEEKLY-2026-W41.md = 0 (report leg missing); admin page leg not checked (needs a signed-in admin, xd-1697). || ",
+          "qaDate": "2026-10-10",
+          "blocker": "Waits MARKETING xd-1995: put the 'Activation' tables in the Monday KPI report; then QA re-runs. Admin page leg: DEVOPS xd-1697."
         }
       ],
       "progress": 0,
@@ -20383,11 +20405,11 @@
           "passed": false,
           "addedAt": "2026-10-09T06:15:28Z",
           "addedBy": "ceo-office",
-          "evidence": "[GROWTH run 2026-10-12 2204, scheduled, unattended, 2026-10-12T22:15:40Z] WEEK 2 WRITTEN: product-strategy/ACTIVATION-NEWCOMERS-2026-10-05_11.md (prod DB read-only 22:2xZ, real-user filter + staff list): 40 real newcomers 5-11 Oct, 17 connected (42.5 %); never connected 23 = e-mail unverified 8 of 8, Apple 9, Google 5, e-mail verified 1; 5 got WireGuard keys but no session (IR 2, RU 1, VN 1, AZ 1); app events for only 3 of 23 (FunnelEvents 54 rows / 4 users in the week). Per-person refusals NOT measurable (0 refusal lines in ~1.9 M API log lines 10-12 Oct) -> xd-1978 [BACKEND]. Last screen waits the next iPhone build. QA xd-1980. || [QA 2026-10-09 i ~08:2xZ, scheduled] PARTIAL - the e-mail/Apple/Google numbers re-measured and reproduce exactly (see xd-1596). NOT ticked: the row asks for the LAST SCREEN per newcomer (not measured: FunnelEvents has 8 rows/7 d on 4.2) and for EVERY WEEK (one week so far). || [PRODUCT growth run 2026-10-09 h 2026-10-09T07:14:02Z] MEASURED (prod read-only, staff excluded): 30 d real new users by sign-up: Apple 46 -> 31 connected, Google 25 -> 8, e-mail 15 -> 0 connected (13 never confirmed, 2 confirmed). Last 7 d: 27 newcomers, 16 never connected = 9 e-mail sign-ups (8 unconfirmed; 3 pressed Connect 9-35x and were refused, 403 AUTH_1006 email gate, GateVpnAccess=true in production appsettings.json) + 7 Apple/Google (5 made no server call after sign-in = left before Connect or at the iPhone VPN prompt, hypothesis; 1 Iran 26 failures; 1 key, no connection). Confirmation mails 2 Oct->now (Resend): 5 delivered, 3 BOUNCED (typo address - can never confirm). Live iPhone 4.2 APIClient L433 only matches 'email not verified' so the gate's 'Verify your email...' shows as a generic forbidden error (screen not seen = hypothesis); fixed on ios/trial-at-signup + b65-text-merge (xd-1506). Last screen: not measurable for 4.2 (FunnelEvents 8 rows/7 d). Spec + options: product-strategy/ACTIVATION-EMAIL-SIGNUPS-2026-10-09.md. Not ticked - QA re-runs (handoff). || baseline only (CEO office 2026-10-09): 16 never connected; 7 with no login country; 4 of those unverified.",
+          "evidence": "[BACKEND run 2026-10-12 2315, scheduled, unattended, 2026-10-12T23:44:25Z] BACKEND measured for the 'connect refusal' column: API FILE logs start 10 Oct; email-gate refusals 10-12 Oct 0 (control: 1 data-cap refusal on 10 and 12 Oct shows refusals ARE logged); the 8 unverified e-mail newcomers all signed up 7-9 Oct, before the file logs, so their refusals cannot be read back. From the next ship each refusal is one line 'Connect refused <code> user <8 chars> ...' (xd-1978, development 5c777a548, READY TO SHIP row 292). || [GROWTH run 2026-10-12 2204, scheduled, unattended, 2026-10-12T22:15:40Z] WEEK 2 WRITTEN: product-strategy/ACTIVATION-NEWCOMERS-2026-10-05_11.md (prod DB read-only 22:2xZ, real-user filter + staff list): 40 real newcomers 5-11 Oct, 17 connected (42.5 %); never connected 23 = e-mail unverified 8 of 8, Apple 9, Google 5, e-mail verified 1; 5 got WireGuard keys but no session (IR 2, RU 1, VN 1, AZ 1); app events for only 3 of 23 (FunnelEvents 54 rows / 4 users in the week). Per-person refusals NOT measurable (0 refusal lines in ~1.9 M API log lines 10-12 Oct) -> xd-1978 [BACKEND]. Last screen waits the next iPhone build. QA xd-1980. || [QA 2026-10-09 i ~08:2xZ, scheduled] PARTIAL - the e-mail/Apple/Google numbers re-measured and reproduce exactly (see xd-1596). NOT ticked: the row asks for the LAST SCREEN per newcomer (not measured: FunnelEvents has 8 rows/7 d on 4.2) and for EVERY WEEK (one week so far). || [PRODUCT growth run 2026-10-09 h 2026-10-09T07:14:02Z] MEASURED (prod read-only, staff excluded): 30 d real new users by sign-up: Apple 46 -> 31 connected, Google 25 -> 8, e-mail 15 -> 0 connected (13 never confirmed, 2 confirmed). Last 7 d: 27 newcomers, 16 never connected = 9 e-mail sign-ups (8 unconfirmed; 3 pressed Connect 9-35x and were refused, 403 AUTH_1006 email gate, GateVpnAccess=true in production appsettings.json) + 7 Apple/Google (5 made no server call after sign-in = left before Connect or at the iPhone VPN prompt, hypothesis; 1 Iran 26 failures; 1 key, no connection). Confirmation mails 2 Oct->now (Resend): 5 delivered, 3 BOUNCED (typo address - can never confirm). Live iPhone 4.2 APIClient L433 only matches 'email not verified' so the gate's 'Verify your email...' shows as a generic forbidden error (screen not seen = hypothesis); fixed on ios/trial-at-signup + b65-text-merge (xd-1506). Last screen: not measurable for 4.2 (FunnelEvents 8 rows/7 d). Spec + options: product-strategy/ACTIVATION-EMAIL-SIGNUPS-2026-10-09.md. Not ticked - QA re-runs (handoff). || baseline only (CEO office 2026-10-09): 16 never connected; 7 with no login country; 4 of those unverified.",
           "verifiedBy": "none",
           "qaVerdict": "PARTIAL",
           "qaDate": "2026-10-09",
-          "blocker": "Waits on xd-1978 [BACKEND] (log connect refusals per user) and the screen events in the next iPhone build (the CEO builds it)."
+          "blocker": "Waits the CEO YES on row 292 (xd-1978 refusal line, then one week of logs) and the screen events in the next iPhone build (the CEO builds it)."
         },
         {
           "test": "The share stopped by the email gate is measured; if it is the cause, a fix is on the CEO card as READY TO SHIP",
@@ -60958,12 +60980,16 @@
       "to": "[BACKEND]",
       "title": "Handoff from MARKETING: [P2] B1 welcome mail is not built: SendWelcomeEmailAsync has 0 callers on production (gtm-09 row 0)",
       "description": "MEASURED 2026-10-12 22:2xZ on origin/production 79b9e620e (git grep, main server): SendVerificationEmailAsync 2 callers (AuthService.cs:440, :1405); SendWelcomeEmailAsync 0 callers outside EmailService/IEmailService; LifecycleEmailService.cs has only A1/A2/B2 (xd-1744 built those). [LEGAL] approved B1 Welcome as a service mail (xd-1745, memory/departments/legal/reviews/lifecycle-emails-consent-2026-10-11.md). Copy: marketing/LIFECYCLE-EMAILS-2026-10-11.md section B1 (subject 'Welcome to CasperVPN - one tap to connect'; for e-mail+password sign-ups send AFTER the address is verified; Apple/Google sign-ups right after sign-up). Build on development only: add B1 to LifecycleEmailService (same once-per-user LifecycleEmailSends table, same staff/sub-domain skips) or call the existing sender from the verify + social sign-up paths - one welcome per account, never two. Verify on dev: a new dev test account gets B1 once; CONTROL: an existing account gets none; 'Email sent to' lines. Then a READY TO SHIP row (service mail, needs the CEO's yes). Task gtm-09-lifecycle-messaging row 0.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P2",
       "createdAt": "2026-10-12T22:15:45Z",
       "createdDate": "2026-10-12",
       "completedDate": null,
-      "taskRef": "gtm-09-lifecycle-messaging"
+      "taskRef": "gtm-09-lifecycle-messaging",
+      "blocker": "Built on dev 5e0555faf (dev api 23:42Z: DLL 'Connect refused' 2, 'one tap to connect' 1 vs production 0/0). Waits QA dev check xd-1994, then CEO YES on READY TO SHIP row 293 (B1 welcome mail); then BACKEND ships (cherry-pick 5e0555faf + deploy_api.sh).",
+      "notes": [
+        "[BACKEND run 2026-10-12 2315, scheduled, unattended, 2026-10-12T23:44:25Z] Production state measured 23:2xZ: LifecycleEmails__Enabled=true in the production container (DryRun false) -> shipping this commit would START real welcome mails within the hour (2-day window: new accounts with a proven address only; Apple relay addresses skipped until xd-1677). SendWelcomeEmailAsync still has 0 callers on development (no second welcome). BUILT 5e0555faf: tests 3 B1 facts + CONTROL. DEV PROOF 23:4xZ: dev api recreated 23:42:01Z (deploy-dev job 23:34:45Z); dev DLL strings -el 'Connect refused' 2 / 'one tap to connect' 1 / old gate line with {Email} 0; production control 0 / 0 / 1; dev /health 200; dev lifecycle job 'dryRun=True' (sends nothing)."
+      ]
     },
     {
       "id": "xd-1978",
@@ -60971,12 +60997,16 @@
       "to": "[BACKEND]",
       "title": "Handoff from PRODUCT: [P2] Log every connect refusal (403 AUTH_1006 / 402) with the 8-char user id and the code (activation-silent-newcomers row 0)",
       "description": "MEASURED 2026-10-12 22:2xZ: /opt/caspervpn/api-logs caspervpn-20261010/11/12.log (~1.9 M lines) hold 0 lines with AUTH_1006, 'verify your email' or a 403 status, while 8 of 8 unverified e-mail newcomers (5-11 Oct) never connected (gate GateVpnAccess=true refuses them by design). The weekly newcomer list (product-strategy/ACTIVATION-NEWCOMERS-2026-10-05_11.md) cannot show per-person refusals. Ask: one Information log line per refusal in the three config controllers + RADIUS path: 'Connect refused {code} user {first 8 chars of UserId} platform {x}' (no e-mail, no IP). Development first; verify on dev with an unverified dev account (line appears) and a verified one (CONTROL: no line). Low risk, logging only.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P2",
       "createdAt": "2026-10-12T22:15:45Z",
       "createdDate": "2026-10-12",
       "completedDate": null,
-      "taskRef": "activation-silent-newcomers"
+      "taskRef": "activation-silent-newcomers",
+      "blocker": "Built on dev 5c777a548 (dev api 23:42Z: DLL 'Connect refused' 2, 'one tap to connect' 1 vs production 0/0). Waits QA dev check xd-1994, then CEO YES on READY TO SHIP row 292 (connect-refusal log line); then BACKEND ships (cherry-pick 5c777a548 + deploy_api.sh).",
+      "notes": [
+        "[BACKEND run 2026-10-12 2315, scheduled, unattended, 2026-10-12T23:44:25Z] MEASURED FIRST (production read-only): the email gate ALREADY wrote one Warning per refusal ('[email-gate] Refusing VPN config to unverified account <id> (<e-mail> ...)'), and the 402 gates write '[FIX AY]/[FIX AZ] Bandwidth quota exceeded for user <id>'. API FILE logs exist only from 10 Oct (/opt/caspervpn/api-logs: 20261010-12, retention 10 files): email-gate refusals 0/0/0, sign-up grace 0/0/0, cap 1/0/1 (10/11/12 Oct). All 8 unverified e-mail newcomers signed up 7-9 Oct (prod Users, read-only /root/reports/be1012-2315/q1978.sql), i.e. BEFORE the file logs start, and none has signed up since 9 Oct 12:50Z - so the '0 lines' measured by PRODUCT cannot tell whether they were refused. BUILT 5c777a548 anyway: one grep-able 'Connect refused <code> user <8> platform <p> path <path>' line at all 5 refusal points (3 HTTP gates + 2 RADIUS), and the e-mail is removed from the gate warning (privacy). Tests 7/7 + CONTROL. DEV PROOF 23:4xZ: dev api recreated 23:42:01Z (deploy-dev job 23:34:45Z); dev DLL strings -el 'Connect refused' 2 / 'one tap to connect' 1 / old gate line with {Email} 0; production control 0 / 0 / 1; dev /health 200; dev lifecycle job 'dryRun=True' (sends nothing)."
+      ]
     },
     {
       "id": "xd-1979",
@@ -61201,6 +61231,30 @@
       "status": "pending",
       "priority": "P0",
       "createdAt": "2026-10-12T23:40:25Z",
+      "createdDate": "2026-10-12",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1994",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: Check on dev: connect-refusal log line (xd-1978) + B1 welcome mail (xd-1977) (development 5c777a548 + 5e0555faf)",
+      "description": "[BACKEND run 2026-10-12 2315, scheduled, unattended, 2026-10-12T23:44:25Z] Two fixes on development, one commit each. (A) xd-1978 5c777a548: every connect refusal (403 AUTH_1006 e-mail not verified, 402/403 DATA_CAP_REACHED) in ServersController/VpnController/MultiHopController CheckVpnAccessAsync and both RADIUS paths writes ONE Information line 'Connect refused <code> user <first 8 of id> platform <ios|android|web|radius|other|unknown> path <path>' (no e-mail, no IP); the email-gate warning no longer prints the e-mail. (B) xd-1977 5e0555faf: LifecycleEmailService B1 'Welcome to CasperVPN \u2014 one tap to connect' for accounts created in the last 2 days with a proven address (verified e-mail or Apple/Google), once per account (LifecycleEmailSends), same real-recipient filter + Apple-relay skip as A1/A2/B2; copy = marketing/LIFECYCLE-EMAILS-2026-10-11.md B1. PROVEN: build 0 errors; suite 400/400; ConnectRefusalLogTests 7/7 + LifecycleEmailTests 19/19 incl. 3 B1; CONTROLS: old EmailVerificationGate -> 'never contains the e-mail' FAIL; B1 window 7 days -> 'only for a new account' FAIL. DEV PROOF 23:4xZ: dev api recreated 23:42:01Z (deploy-dev job 23:34:45Z); dev DLL strings -el 'Connect refused' 2 / 'one tap to connect' 1 / old gate line with {Email} 0; production control 0 / 0 / 1; dev /health 200; dev lifecycle job 'dryRun=True' (sends nothing). TO CHECK ON DEV: (1) dev DLL strings -el: 'Connect refused' and 'Welcome to CasperVPN' present, production 0; (2) optional: an unverified dev account older than 24 h asks /api/vpn/config -> 403 + dev log 'Connect refused AUTH_1006 user xxxxxxxx platform ...' and no '@' in that line; a verified dev account -> no line (CONTROL); (3) dev has LifecycleEmails DryRun (sends nothing): after a dev sign-up with a verified address, LifecycleEmailSends gets one B1 row DryRun=true within the hour. Do not tick the CEO-card rows; they wait the CEO YES.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-12T23:44:34Z",
+      "createdDate": "2026-10-12",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1995",
+      "from": "[BACKEND]",
+      "to": "[MARKETING]",
+      "title": "Handoff from BACKEND: Put the 'Activation by country' table in the Monday KPI report (activation-first-connection-funnel rows 2+3)",
+      "description": "[BACKEND run 2026-10-12 2315, scheduled, unattended, 2026-10-12T23:44:25Z] Rows 2+3 of activation-first-connection-funnel are checked by QA as: the Monday KPI report carries an 'Activation' / 'Activation by country' section (grep -c 'Activation' marketing/reports/KPI-WEEKLY-*.md). Measured 23:2xZ: KPI-WEEKLY-2026-W42.md has 0 'Activation' lines. The data exists: /opt/caspervpn/activation_funnel.sql (QA PASS 9 Oct), read-only run 23:2xZ, output /root/reports/be1012-2315/funnel-2315.txt on the main server. Weekly (real / all): W35 10/61 signups -> 0/3 succeeded; W36 17/78 -> 2/8; W37 19/72 -> 4/5; W38 18/37 -> 2/2; W39 17/20 -> 7/7; W40 13/20 -> 2/4; W41 40/40 -> 12/12 (30.0 %); W42 5/5 -> 3/3 (so far). By country (real users of the last weeks, never-connected share, top failure reason): IR 17 real / 17 never (100 %, unknown 171); ?? 16/16; CA 5/5 (unknown 9); DE 3/3; AE 3/3; LB 6/5 (83 %, unknown 42, 40 failures with stage); NG 5/4; US 8/6; RU 39/27 (69 %, cc-wg-nohandshake-cf 115); CN 4/2; GB 4/2; AZ 4/2. Top 3 never-connected with >=5 real users: IR 17/17 (top reason 'unknown' 171 failure reports), CA 5/5, LB 5/6 (RU 27/39, top reason cc-wg-nohandshake-cf 115). '??' = 16 real users with no country recorded. Note: 'unknown' = the store app (4.2) sends no failure stage; telemetry v2 fills it from build 69. Ask: add a section headed 'Activation' with the weekly table + the by-country table (populations + the *_all control column) to the next Monday report (and back-fill W42 if you can), then hand to [QA] to re-run rows 2+3. The admin Marketing page leg of row 3 still needs a signed-in admin check (DEVOPS Playwright xd-1697).",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-12T23:44:34Z",
       "createdDate": "2026-10-12",
       "completedDate": null
     }
