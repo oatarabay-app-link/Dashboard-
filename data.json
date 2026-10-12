@@ -1,6 +1,6 @@
 {
-  "lastUpdated": "2026-10-12T03:06:42Z",
-  "updatedBy": "[GROWTH] run 1012-0303",
+  "lastUpdated": "2026-10-12T15:14:49Z",
+  "updatedBy": "[GROWTH] run 1012-1503",
   "overall": {
     "completion": 69,
     "phase": "Phase 2: Go-to-market \u2014 launch plan 30 Sep 2026",
@@ -14575,6 +14575,17 @@
           "verifiedDate": null,
           "evidence": "[QA 2026-10-12 e, scheduled, 2026-10-12T15:13:11Z] STILL NOT SHIPPED - production .github/workflows/ci.yml paths-ignore has no 'tools/.locks' (read 15:0xZ). Live corroboration: this QA run took its lock ~15:05Z; at 15:10:18Z the Mac auto-pull merge ea36571d4 landed on production and the main-server runner started 'Build Website' (Worker_20261012-151038-utc.log) - the same lock -> CI -> build-on-the-main-server chain as the outage. Disk 3,679 MB free before. || [CTO run 2026-10-12 0334, scheduled, unattended, 2026-10-12T03:38:25Z] ROOT CAUSE MEASURED (main server, read-only): the 02:51:50Z runner job that built the orphaned buildx builder was workflow 'CI', event push, branch production, sha c3f8106b7, job 'Build Docker Images (api ...)' (Worker_20261012-025150-utc.log). c3f8106b7 is the Mac auto-pull merge of 'auto: local sync' 0af202fcd, whose ONLY change is tools/.locks/qa.lock (QA run lock written/emptied by tools/collision_check.py; the Mac 5-min cron commits it with git add -A). ci.yml paths-ignore covers memory/** and **/*.md but NOT tools/.locks/**, so every QA lock flip starts the full CI (Docker image builds on the self-hosted runner = the main server). git log origin/production --since='72 hours ago' -- tools/.locks: 104 commits. Second trigger running now: CI on development sha 7439a0e1 (Build Website 03:15Z, Build Admin Panel 03:36Z). STATE 03:36:34Z: / 1,731 MB free (df -m 48527/46781), /api/health 200 Healthy, caspervpn-api + caspervpn-postgres + glitchtip-postgres healthy - recovered after the 03:30 cron 'docker image prune -af --filter until=24h' (journalctl); buildx_buildkit_builder-94467e92 still Up 44 min. Nothing deleted/restarted by this run. Fix = ceo-action-backlog READY TO SHIP row (CTO, ci.yml paths-ignore 'tools/.locks/**'). CEO push-notified 03:37Z.",
           "addedBy": "[CTO] run 1012-0334"
+        },
+        {
+          "test": "DECISION \u2014 two of our servers had no real users for 30 days: cut them? \u00b7 Mexico City and S\u00e3o Paulo: 0 real users in 30 days (last one in August); Tokyo 1, Sydney 0, Montreal 2 \u00b7 options: A (advised) cut Mexico City + S\u00e3o Paulo at their next bill, keep Montreal (Canada is an Apple Ads country) and Tokyo, review Sydney next time \u2014 saves about $24 a month \u00b7 B cut Mexico City, S\u00e3o Paulo, Tokyo and Sydney, keep Montreal \u2014 about $48 a month \u00b7 C keep all until the Apple Ads test ends on 20 Oct \u00b7 our website and store never name a server count, so no text breaks \u00b7 advice: A \u2014 say \"A\", \"B\" or \"C\" in any chat",
+          "verify": "cat memory/departments/product/server-demand-2026-10-12.md (measurement 04:06Z 12 Oct, read-only SQL ConnectionLogs x VpnServers, real-user filter); after the CEO answers: DevOps disables the nodes at the bill date and the API server list no longer shows them",
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "verifiedByRaw": null,
+          "verifiedDate": null,
+          "evidence": "[GROWTH run 2026-10-12 1503, scheduled, unattended, 2026-10-12T15:14:49Z] [PRODUCT] xd-1889. Real users 30 d (7 d / 90 d): Mexico City 0 (0/3), S\u00e3o Paulo 0 (0/5), Sydney 0 (0/5), Tokyo 1 (0/3), Montreal 2 (1/13); busiest D\u00fcsseldorf 30, Singapore 19, Los Angeles 13. Control: every server 79-678 sessions in 30 d from all accounts (probes), so the join works. Real users 30 d by LastLoginCountry: RU 12, GB 4, IR 3, IQ 3, CA 3, CN 3; none JP/MX/BR/AU. Cost \u2248 $12/month per OneCloud VPS (board research, as of 2 Oct - DevOps re-checks the invoice). Note: memory/departments/product/server-demand-2026-10-12.md.",
+          "addedBy": "[PRODUCT] growth run 1012-1503"
         }
       ],
       "progress": 0,
@@ -58689,13 +58700,13 @@
       "from": "[DEVOPS]",
       "to": "[PRODUCT]",
       "title": "Handoff from DEVOPS: Four servers work but nobody uses them in 7 days: Montreal, Mexico City, Sao Paulo, Tokyo - keep, promote or cut? (xd-1812)",
-      "description": "DEVOPS 1012c measured: real test tunnel handshake + ping 3/3 on all 4 (02:27Z 12 Oct), 0 user handshakes in 7 days on each. Demand question for PRODUCT/MARKETING + the hosting-cost question (Ben Harlow seat). Server cost per node is in the infra inventory.",
+      "description": "[GROWTH run 2026-10-12 1503, scheduled, unattended, 2026-10-12T15:14:49Z] MEASURED (as of 04:06:47Z 12 Oct, read-only production SQL, real-user filter = factory model + staff-accounts): real users 30 d Montreal 2, Tokyo 1, Mexico City 0, S\u00e3o Paulo 0 (Sydney 0 too); control all-account sessions 79-89 each. Advice A on CEO card row 261: cut Mexico City + S\u00e3o Paulo at next bill, keep Montreal (Canada ad country) + Tokyo. File memory/departments/product/server-demand-2026-10-12.md. || DEVOPS 1012c measured: real test tunnel handshake + ping 3/3 on all 4 (02:27Z 12 Oct), 0 user handshakes in 7 days on each. Demand question for PRODUCT/MARKETING + the hosting-cost question (Ben Harlow seat). Server cost per node is in the infra inventory.",
       "status": "in_progress",
       "priority": "P2",
       "createdAt": "2026-10-12T02:31:27Z",
       "createdDate": "2026-10-12",
       "completedDate": null,
-      "blocker": "[GROWTH 0303] Product measurement (30/90-day connections per server by real users, where our users are, ad countries) needs a read-only query on the production database; at 03:05Z the main server disk is full and the database cannot write (xd-1872 P0). Resume next growth run once / has free space. Known so far: DevOps 02:27Z real test tunnel works on all 4; 0 user handshakes 7 d; cost reference ~$12/month per OneCloud VPS (board research 2 Oct, as of 2 Oct)."
+      "blocker": "CEO: DECISION row 261 on the CEO card (A/B/C, advice A). Then [DEVOPS] disables the chosen nodes at their bill date."
     },
     {
       "id": "xd-1890",
@@ -58743,12 +58754,16 @@
       "from": "[SECURITY]",
       "to": "[LEGAL]",
       "title": "Handoff from SECURITY: FYI + advice: a server log kept client IP addresses for 7 days, against our No-Log Policy (xd-1422 slice 7 F10)",
-      "description": "[SECURITY website+admin run 1012-0304, scheduled, unattended, 2026-10-12T03:21:42Z] The CasperCloak TCP relay (port 4444) on the main server writes each connection's IP address and connect/disconnect time; 7 days kept (since at least ~25 Sep in today's files; 3 app connections in the oldest file, the rest scanners). Fix built (development 7439a0e1); ship + deleting the old log files wait the CEO YES on ceo-action-backlog row 259. Legal: say whether anything beyond stopping + deleting is needed (policy wording, Lebanese law 81/2018, GDPR record). No policy text change proposed by Security.",
-      "status": "pending",
+      "description": "[GROWTH run 2026-10-12 1503, scheduled, unattended, 2026-10-12T15:14:49Z] LEGAL ADVICE (memory/departments/legal/reviews/no-log-page-and-relay-ip-log-2026-10-12.md \u00a73): 1) stop + delete (row 259) is necessary and close to sufficient; also delete backup/forwarder copies -> xd-1898. 2) Not a reportable breach on current facts (no Art. 33/34 notice; hypothesis, counsel to confirm; re-assess if DevOps finds wider access/copies). 3) Record as a compliance incident in docs/legal/BREACH_REGISTER.md (draft entry in the review), with the deletion time when 259 ships. 4) Privacy Policy 1.8: no wording change (it already says no IP logging; true again after 259). 5) App Store privacy labels: no change. 6) BIGGER FINDING: the live /no-log-policy page contradicts policy 1.8 in 12 places -> xd-1897 [WEBSITE] P1, ships under the honesty rule after 259. || [SECURITY website+admin run 1012-0304, scheduled, unattended, 2026-10-12T03:21:42Z] The CasperCloak TCP relay (port 4444) on the main server writes each connection's IP address and connect/disconnect time; 7 days kept (since at least ~25 Sep in today's files; 3 app connections in the oldest file, the rest scanners). Fix built (development 7439a0e1); ship + deleting the old log files wait the CEO YES on ceo-action-backlog row 259. Legal: say whether anything beyond stopping + deleting is needed (policy wording, Lebanese law 81/2018, GDPR record). No policy text change proposed by Security.",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-10-12T03:21:46Z",
       "createdDate": "2026-10-12",
-      "completedDate": null
+      "completedDate": "2026-10-12",
+      "completedAt": "2026-10-12",
+      "completedBy": "[LEGAL]",
+      "resolution": "completed \u2014 legal advice given; see description",
+      "resultingHandoff": "xd-1897, xd-1898 ([WEBSITE] no-log page rewrite, [DEVOPS] backup copies)"
     },
     {
       "id": "xd-1894",
@@ -58786,6 +58801,32 @@
       "createdAt": "2026-10-12T15:13:16Z",
       "createdDate": "2026-10-12",
       "completedDate": null
+    },
+    {
+      "id": "xd-1897",
+      "from": "[LEGAL]",
+      "to": "[WEBSITE]",
+      "title": "Handoff from LEGAL: [P1] Rewrite the /no-log-policy page: it says 12 things we do not do (Verified No-Logs badge, Stripe, never store connection logs / which server, memory only, compelled by law -> no data)",
+      "description": "[GROWTH run 2026-10-12 1503, scheduled, unattended, 2026-10-12T15:14:49Z] MEASURED from the origin 15:09Z (curl -k https://127.0.0.1/no-log-policy -H Host:caspervpn.com, tags->space): \"Verified No-Logs\" 2, \"Stripe\" 2, \"memory only\" 2, \"compelled by law\" 2, \"never store connection logs\" 3. Control = docs/legal/PRIVACY_POLICY.md v1.8 (live /privacy) \u00a72.3/\u00a72.4/\u00a75: we keep 180-day connection records (time, server, protocol, bytes), no Stripe (Apple IAP + NOWPayments), no audit. Line-by-line table + full replacement copy (metadata, badge, intro, short version, neverCollect, doCollect, jurisdiction, technical list; banned-word check 0) in memory/departments/legal/reviews/no-log-page-and-relay-ip-log-2026-10-12.md \u00a71-\u00a72. Ship path: development -> QA on dev -> production under CEO STANDING YES 2026-10-06 (honesty/legal rule) + Legal advice (this handoff). ORDER: after CEO row 259 ships (relay stops writing IPs), because the new line \"connection records hold no IP address\" must be true on every server first. Main server disk 3,679 MB free at 15:09Z (CTO row 260: a push starts a CI build on that server - check df before pushing). Verify after ship: the five phrases above count 0 on the origin and on https://caspervpn.com/no-log-policy?cb=<epoch>.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-12T15:14:54Z",
+      "createdDate": "2026-10-12",
+      "completedDate": null,
+      "dueBy": "2026-10-19T15:14:49Z"
+    },
+    {
+      "id": "xd-1898",
+      "from": "[LEGAL]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from LEGAL: [P2] With CEO row 259: also find and delete copies of the relay IP log in backups, log forwarders and other nodes; tell Legal if the file was readable by anyone but root",
+      "description": "[GROWTH run 2026-10-12 1503, scheduled, unattended, 2026-10-12T15:14:49Z] Legal advice on xd-1893 (memory/departments/legal/reviews/no-log-page-and-relay-ip-log-2026-10-12.md \u00a73): stopping + deleting the 6 relay log files (row 259) is close to sufficient and, on current facts, this is NOT a reportable personal-data breach (GDPR Art. 4(12) needs unauthorised access/disclosure; hypothesis, counsel to confirm). That verdict holds only if: (a) the file was root-only, (b) it was not shipped off the server, (c) no copy sits in /root/backups or any backup sent to a third party, (d) no other node runs the same relay logging (xd-1892). Please measure a-d when row 259 ships (counts only, never print an address), write the result on xd-1893 and hand back to [LEGAL] - any yes on a-d = Legal re-assesses the same day. The BREACH_REGISTER entry (draft in the review \u00a73.3) lands in docs/legal with the deletion time.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-12T15:14:54Z",
+      "createdDate": "2026-10-12",
+      "completedDate": null,
+      "dueBy": "2026-10-19T15:14:49Z"
     }
   ],
   "importantNotes": [
