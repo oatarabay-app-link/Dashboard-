@@ -8019,63 +8019,22 @@
           "passed": false,
           "verifiedBy": "none",
           "verifiedAt": "",
-          "evidence": "[DEVOPS run 2026-10-11 b, scheduled, unattended, 2026-10-11T01:50Z] BLOCKED - still FAIL re-measured 01:3xZ on the main server: iptables -t nat -S POSTROUTING has 3 exact '-A POSTROUTING -o eth0 -j MASQUERADE' lines (15 MASQUERADE rules in all). Removing a NAT rule is a firewall change on a live server -> needs a CEO YES and Bangkok-first (devops skill \u00a70). Deferred to Nov 2026 unless the CEO says yes sooner. || QA 2026-09-24 FAIL: iptables nat still has '-A POSTROUTING -o eth0 -j MASQUERADE' (wildcard) and '-o wg1 -j MASQUERADE'. -> [DEVOPS]",
+          "evidence": "[DEVOPS run 2026-10-12 2125, scheduled, unattended, 2026-10-12T21:35:02Z] re-measured 21:27Z: wildcard '-o eth0 -j MASQUERADE' x3 still present; the first carries traffic (2,869,264 pkts), the 2 copies 0. Removing the live one can cut traffic -> CEO answer needed. || [DEVOPS run 2026-10-11 b, scheduled, unattended, 2026-10-11T01:50Z] BLOCKED - still FAIL re-measured 01:3xZ on the main server: iptables -t nat -S POSTROUTING has 3 exact '-A POSTROUTING -o eth0 -j MASQUERADE' lines (15 MASQUERADE rules in all). Removing a NAT rule is a firewall change on a live server -> needs a CEO YES and Bangkok-first (devops skill \u00a70). Deferred to Nov 2026 unless the CEO says yes sooner. || QA 2026-09-24 FAIL: iptables nat still has '-A POSTROUTING -o eth0 -j MASQUERADE' (wildcard) and '-o wg1 -j MASQUERADE'. -> [DEVOPS]",
           "met": false,
           "verifiedDate": "2026-09-24",
           "verifiedByRaw": "devops-session-exit",
           "qaVerdict": "FAIL",
           "qaDate": "2026-09-24",
           "verifiedByPrevious": "self",
-          "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored"
+          "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored",
+          "blocker": "CEO answer on ceo-action-backlog row 279 (DECISION: remove copies + re-word, or replace, or wait)"
         },
         {
           "test": "AC9: All test users removed from /etc/ipsec.secrets \u2014 no entries containing 'test_' or 'testuser_'. Only production users via FreeRADIUS EAP. Verify: grep -c test /etc/ipsec.secrets returns 0.",
           "passed": false,
           "verifiedBy": "none",
           "verifiedAt": "2026-03-11T01:11:17Z",
-          "evidence": "[DEVOPS run 2026-10-11 b, scheduled, unattended, 2026-10-11T01:50Z] BLOCKED - still FAIL re-measured 01:3xZ: /etc/ipsec.secrets has 3 lines matching test_/testuser_ (count only); strongSwan inactive on the main server (systemctl is-active: inactive), so nothing can use them. Removing them = deleting from a live server config -> needs CEO YES. Deferred to Nov 2026. || QA 2026-09-24 FAIL: /etc/ipsec.secrets still has 3 lines matching test_/testuser_ (count only read). strongSwan is inactive on the brain, so low risk. -> [DEVOPS]",
-          "met": false,
-          "verifiedDate": "2026-09-24",
-          "verifiedByRaw": "CEO-Cowork",
-          "qaVerdict": "FAIL",
-          "qaDate": "2026-09-24",
-          "verifiedByPrevious": "self",
-          "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored"
-        },
-        {
-          "test": "AC10: strongSwan DPD enabled \u2014 dpdaction set to 'clear' (not 'none'), dpddelay set to 30s in ipsec.conf. Dead peers cleaned up automatically. Verify: grep dpdaction /etc/ipsec.conf shows 'clear'.",
-          "passed": false,
-          "verifiedBy": "none",
-          "verifiedAt": "2026-03-11T01:11:17Z",
-          "evidence": "[DEVOPS run 2026-10-11 b, scheduled, unattended, 2026-10-11T01:50Z] BLOCKED - still FAIL re-measured 01:3xZ: /etc/ipsec.conf dpdaction=restart (row asks clear); strongSwan inactive on the main server. Either re-word the row to the VPN servers where IKEv2 runs, or change it - needs a CEO decision. Deferred to Nov 2026. || QA 2026-09-24 FAIL: ipsec.conf dpdaction=restart (criterion: clear). strongSwan inactive on the brain. -> [DEVOPS] re-word or change",
-          "met": false,
-          "verifiedDate": "2026-09-24",
-          "verifiedByRaw": "CEO-Cowork",
-          "qaVerdict": "FAIL",
-          "qaDate": "2026-09-24",
-          "verifiedByPrevious": "self",
-          "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored"
-        },
-        {
-          "test": "AC11: Logrotate configured for OpenVPN logs (/var/log/openvpn*.log) and CasperCloak relay (/var/log/caspercloak-relay.log). Daily rotation, 7-day retention, compress. Verify: logrotate -d /etc/logrotate.d/caspervpn shows valid config.",
-          "passed": false,
-          "verifiedBy": "none",
-          "verifiedAt": "2026-03-11T01:11:17Z",
-          "evidence": "[QA 2026-10-11 c, scheduled, 2026-10-11T02:20:32Z] FAIL - re-measured 02:1xZ on the main server: /etc/logrotate.d/casper-vpn-logs covers the 3 openvpn logs + caspercloak-relay.log, compress, rotated files exist (relay .1, .2-.4.gz; openvpn .2-.3.gz), logrotate -d 0 errors - BUT the row asks daily rotation with 7-day retention and the file says 'weekly / rotate 4 / maxsize 50M' = about 4 weeks kept. For a no-log VPN that is 3 weeks more connection log than the row allows. -> handback [DEVOPS]. || [DEVOPS run 2026-10-11 b, scheduled, unattended, 2026-10-11T01:50Z] PASS on the main server, re-measured 01:3xZ: /etc/logrotate.d/casper-vpn-logs covers /var/log/openvpn/openvpn-tcp.log, server.log, server-tcp.log and /var/log/caspercloak-relay.log; rotated files exist (caspercloak-relay.log.1, .2.gz-.4.gz). Not ticked (only QA ticks) -> QA. || QA 2026-09-24 FAIL: No logrotate entry for openvpn or caspercloak in /etc/logrotate.d. -> [DEVOPS]",
-          "met": false,
-          "verifiedDate": "2026-09-24",
-          "verifiedByRaw": "CEO-Cowork",
-          "qaVerdict": "FAIL",
-          "qaDate": "2026-10-11",
-          "verifiedByPrevious": "self",
-          "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored"
-        },
-        {
-          "test": "AC12: Disk usage below 70% after cleanup \u2014 old Docker images pruned, /var/log cleaned of stale logs. Verify: df -h / shows <70% used.",
-          "passed": false,
-          "verifiedBy": "none",
-          "verifiedAt": "2026-03-11T01:11:17Z",
-          "evidence": "[DEVOPS run 2026-10-11 a, scheduled, 2026-10-11T00:53:32Z] Measured 00:27Z: main server disk 85 % (41G of 48G, 7.3G free). Under 70 % needs about 7 GB more freed or a bigger disk. | QA 2026-09-24 FAIL: df -h / = 82% (39G of 48G). Target <70%. -> [DEVOPS]",
+          "evidence": "[DEVOPS run 2026-10-12 2125, scheduled, unattended, 2026-10-12T21:35:02Z] re-measured 21:27Z: 3 test lines in /etc/ipsec.secrets (count only); strongSwan inactive on the main server. || [DEVOPS run 2026-10-11 b, scheduled, unattended, 2026-10-11T01:50Z] BLOCKED - still FAIL re-measured 01:3xZ: /etc/ipsec.secrets has 3 lines matching test_/testuser_ (count only); strongSwan inactive on the main server (systemctl is-active: inactive), so nothing can use them. Removing them = deleting from a live server config -> needs CEO YES. Deferred to Nov 2026. || QA 2026-09-24 FAIL: /etc/ipsec.secrets still has 3 lines matching test_/testuser_ (count only read). strongSwan is inactive on the brain, so low risk. -> [DEVOPS]",
           "met": false,
           "verifiedDate": "2026-09-24",
           "verifiedByRaw": "CEO-Cowork",
@@ -8083,7 +8042,52 @@
           "qaDate": "2026-09-24",
           "verifiedByPrevious": "self",
           "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored",
-          "blocker": "Disk 85 % \u2014 needs ~7 GB freed or a bigger disk; rides xd-1589"
+          "blocker": "CEO answer on ceo-action-backlog row 279"
+        },
+        {
+          "test": "AC10: strongSwan DPD enabled \u2014 dpdaction set to 'clear' (not 'none'), dpddelay set to 30s in ipsec.conf. Dead peers cleaned up automatically. Verify: grep dpdaction /etc/ipsec.conf shows 'clear'.",
+          "passed": false,
+          "verifiedBy": "none",
+          "verifiedAt": "2026-03-11T01:11:17Z",
+          "evidence": "[DEVOPS run 2026-10-12 2125, scheduled, unattended, 2026-10-12T21:35:02Z] re-measured 21:27Z: dpdaction=restart, dpddelay=600s; strongSwan inactive on the main server -> the row needs re-wording to the VPN servers or a change. || [DEVOPS run 2026-10-11 b, scheduled, unattended, 2026-10-11T01:50Z] BLOCKED - still FAIL re-measured 01:3xZ: /etc/ipsec.conf dpdaction=restart (row asks clear); strongSwan inactive on the main server. Either re-word the row to the VPN servers where IKEv2 runs, or change it - needs a CEO decision. Deferred to Nov 2026. || QA 2026-09-24 FAIL: ipsec.conf dpdaction=restart (criterion: clear). strongSwan inactive on the brain. -> [DEVOPS] re-word or change",
+          "met": false,
+          "verifiedDate": "2026-09-24",
+          "verifiedByRaw": "CEO-Cowork",
+          "qaVerdict": "FAIL",
+          "qaDate": "2026-09-24",
+          "verifiedByPrevious": "self",
+          "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored",
+          "blocker": "CEO answer on ceo-action-backlog row 279"
+        },
+        {
+          "test": "AC11: Logrotate configured for OpenVPN logs (/var/log/openvpn*.log) and CasperCloak relay (/var/log/caspercloak-relay.log). Daily rotation, 7-day retention, compress. Verify: logrotate -d /etc/logrotate.d/caspervpn shows valid config.",
+          "passed": false,
+          "verifiedBy": "none",
+          "verifiedAt": "2026-03-11T01:11:17Z",
+          "evidence": "[DEVOPS run 2026-10-12 2125, scheduled, unattended, 2026-10-12T21:35:02Z] ALREADY DONE on the main server, re-measured 21:27Z: /etc/logrotate.d/casper-vpn-logs = daily, rotate 7, maxsize 50M, compress, delaycompress, copytruncate, su root syslog; covers 3 openvpn logs + caspercloak-relay.log; file changed 2026-10-11 23:11:46Z (after the QA FAIL of 11 Oct 02:20Z); logrotate -d error lines 0. Not ticked (only QA ticks) -> QA handoff. || [QA 2026-10-11 c, scheduled, 2026-10-11T02:20:32Z] FAIL - re-measured 02:1xZ on the main server: /etc/logrotate.d/casper-vpn-logs covers the 3 openvpn logs + caspercloak-relay.log, compress, rotated files exist (relay .1, .2-.4.gz; openvpn .2-.3.gz), logrotate -d 0 errors - BUT the row asks daily rotation with 7-day retention and the file says 'weekly / rotate 4 / maxsize 50M' = about 4 weeks kept. For a no-log VPN that is 3 weeks more connection log than the row allows. -> handback [DEVOPS]. || [DEVOPS run 2026-10-11 b, scheduled, unattended, 2026-10-11T01:50Z] PASS on the main server, re-measured 01:3xZ: /etc/logrotate.d/casper-vpn-logs covers /var/log/openvpn/openvpn-tcp.log, server.log, server-tcp.log and /var/log/caspercloak-relay.log; rotated files exist (caspercloak-relay.log.1, .2.gz-.4.gz). Not ticked (only QA ticks) -> QA. || QA 2026-09-24 FAIL: No logrotate entry for openvpn or caspercloak in /etc/logrotate.d. -> [DEVOPS]",
+          "met": false,
+          "verifiedDate": "2026-09-24",
+          "verifiedByRaw": "CEO-Cowork",
+          "qaVerdict": "FAIL",
+          "qaDate": "2026-10-11",
+          "verifiedByPrevious": "self",
+          "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored",
+          "blocker": "QA re-check (handoff from devops run 1012-2125)"
+        },
+        {
+          "test": "AC12: Disk usage below 70% after cleanup \u2014 old Docker images pruned, /var/log cleaned of stale logs. Verify: df -h / shows <70% used.",
+          "passed": false,
+          "verifiedBy": "none",
+          "verifiedAt": "2026-03-11T01:11:17Z",
+          "evidence": "[DEVOPS run 2026-10-12 2125, scheduled, unattended, 2026-10-12T21:35:02Z] re-measured 21:27Z: main server / 94 % used, 3,234 MB free (3,878 MB at 21:26Z, a production CI job started 21:25Z). Under 70 % needs ~11 GB freed or a bigger disk. The CI copies fix waits for the CEO's yes on row 267; the disk size is a cost decision. || [DEVOPS run 2026-10-11 a, scheduled, 2026-10-11T00:53:32Z] Measured 00:27Z: main server disk 85 % (41G of 48G, 7.3G free). Under 70 % needs about 7 GB more freed or a bigger disk. | QA 2026-09-24 FAIL: df -h / = 82% (39G of 48G). Target <70%. -> [DEVOPS]",
+          "met": false,
+          "verifiedDate": "2026-09-24",
+          "verifiedByRaw": "CEO-Cowork",
+          "qaVerdict": "FAIL",
+          "qaDate": "2026-09-24",
+          "verifiedByPrevious": "self",
+          "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored",
+          "blocker": "CEO YES on ceo-action-backlog row 267 (CI scan copies) + a CEO disk-size decision; re-check 19 Oct"
         },
         {
           "test": "AC13: Flask API rate limiting active \u2014 max 10 requests/min per IP on config generation endpoints. Returns 429 on excess. Verify: rapid curl loop to /openvpn/generate-client returns 429 after limit.",
@@ -14813,6 +14817,16 @@
           "evidence": "[GROWTH run 2026-10-12 2104, scheduled, unattended, 2026-10-12T21:28:31Z] [PRODUCT] for trial-screen-at-signup row 0 (xd-1192 needs '[CEO <date>] preselected plan = ...'). Measured: build 69 branch origin/ios/69 2975ed12a carries the screen; the app reads the plan from the server, default yearly (QA 10 Oct).",
           "addedBy": "[PRODUCT] growth run 2026-10-12 2104",
           "addedAt": "2026-10-12T21:28:31Z"
+        },
+        {
+          "test": "DECISION \u2014 three old leftovers on the main server from April's security list \u00b7 (1) an internet-sharing rule that applies to all traffic: it IS in use (2.87 million packets passed it), so removing it could cut someone off; two exact copies of it (and one copy of a second rule) carry 0 packets. (2) 3 old test logins in the file of a VPN service that is switched off on the main server. (3) a 'dead connection' setting for that same switched-off service (restart, the list asks clear). OPTIONS: A) remove the 3 zero-traffic copies + the 3 test logins, and change the list wording for (1) and (3) to match how the server really works (main server keeps the shared rule; the setting is checked on the VPN servers where that service runs) \u00b7 B) also replace the shared rule with exact per-network rules (needs a test window, could cut traffic if one network is missed) \u00b7 C) leave all until November. ADVICE: A \u2014 no user can notice it, each step is undone by putting the saved copy back. Rows security-lockdown-p1 #8/#9/#10 wait on this answer.",
+          "verify": "iptables -t nat -L POSTROUTING -v -n -x --line-numbers | grep MASQ (main server); grep -cE 'test_|testuser_' /etc/ipsec.secrets; grep dpdaction /etc/ipsec.conf",
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "verifiedByRaw": null,
+          "verifiedDate": null,
+          "evidence": "[DEVOPS run 2026-10-12 2125, scheduled, unattended, 2026-10-12T21:35:02Z] Measured read-only 21:27Z on the main server: POSTROUTING 15 MASQUERADE rules; '-o eth0 -j MASQUERADE' x3 = rule 11 2,869,264 pkts / rules 13,14 0 pkts; '-o wg1 -j MASQUERADE' x2 = rules 12,15 0 pkts; wg1 4 peers (3 handshakes < 10 min); /etc/ipsec.secrets test_/testuser_ lines 3 (count only); strongswan + strongswan-starter inactive; /etc/ipsec.conf dpdaction=restart dpddelay=600s. Nothing changed."
         }
       ],
       "progress": 0,
@@ -48563,8 +48577,8 @@
       "lifecycle": "active",
       "dueBy": "2026-10-13T23:59:00Z",
       "qaNote": "[QA 2026-10-08 ak ~22:18Z, scheduled] 7-day rule: past dueBy 2026-10-08 - close with evidence, hand back with a blocker, or defer with reason + revisit date (a P0 is never deferred silently).",
-      "notes": "[DEVOPS run 2026-10-12 c, scheduled, unattended, 2026-10-12T02:31:22Z] Two open facts measured: (1) Vultr reserved/extra IPv4 = USD 0.004/h = USD 3/month (docs.vultr.com 'Are reserved IPs free', updated 15 Apr 2026) - flat, no per-location price on that page; (2) OVHcloud US Terms of Service (effective 15 May 2025): no VPN or proxy clause either way, BUT s.2(b) use 'solely for its own benefit' and s.5(b)(i) no transfer/sublicense of the services - a VPN for paying users may be read as reselling; the Service Specific Terms were NOT read. Advice unchanged: primaries EDIS + Vultr, OVH only after a written yes from OVH support. Still NOT VERIFIED: Payoneer card acceptance, Lebanon as company country. || [ENGINEERING run 2026-10-10 1305, 2026-10-10T13:2xZ, [DEVOPS]] Next research step DONE (read-only web, nothing bought): EDIS extra IPv4 = 'EUR 5 per month, per address', up to 10 self-ordered, no location split or setup fee named (docs.edisglobal.com order-additional-ip-address, undated, read 10 Oct); Vultr reserved IP = '$0.004 per hour ($3/month)' (docs.vultr.com are-reserved-ips-free, updated 15 Apr 2026); OVH = RISKY: secondary quotes of OVH terms ban 'Anonymisation services (Proxy)' / 'Anonymization services or public proxy (including VPN, Tor, P2P, IRC)'; dedicated contract art 7.4 (2013) allows suspension of a public VPN on known illicit use -> OVH off the shortlist unless OVH says yes in writing; official current contract not read. Still open: Lebanon as company country (only a sign-up answers - CEO card row 177), Vultr per-instance extra IPv4, Payoneer card test. Table updated: memory/departments/devops/research/2026-10-09-hosting-providers-payoneer.md. Status stays in_progress (needs the CEO sign-up + card test). || [QA 2026-10-09 i ~08:2xZ, scheduled] QA re-run via xd-1597: provider quotes 4/4 PASS; masking IPs reachable 22/22 (443 21/22, Paris closed); 2 Hong Kong reserves listed on Spamhaus ZEN PBL -> xd-1599. || [ENGINEERING run 2026-10-09 h, 2026-10-09T07:20Z] TRIAGE (d) active, due 13 Oct. DONE: provider table written to vault memory/departments/devops/research/2026-10-09-hosting-providers-payoneer.md (Casper-Code production). PROVEN (quoted, read 9 Oct): EDIS Global FAQ \"EDIS Global welcomes commercial VPN providers\", crypto with \"no cryptocurrency-payment surcharge\"; Vultr AUP (mod. 31 Oct 2022) bans only open proxies/relays/resolvers + Tor exits, no VPN clause; Hetzner system-policies: no VPN clause either way, IPs: dedicated extra EUR 1.70/mo + 4.90 setup, /29 EUR 13.60, /28 EUR 27.20/mo (docs, last change 2023-04-13); OVH extra IPv4 EUR 2.39->2.87/mo from 1 Apr 2026 (next.ink 23 Feb 2026). NOT VERIFIED: Payoneer card acceptance at any provider, Lebanon as company country, EDIS/Vultr per-location IP prices, OVH VPN clause. Advice (hypothesis until the card test): primaries EDIS + Vultr, backup Hetzner after a written yes; spreads relays off OneProvider (7 of 11 on AS136258, DPI note 9 Oct). CEO checklist = new ceo-action-backlog row (EDIS/Vultr sign-up + card test + Hetzner question). Next DevOps step: per-location IP prices + OVH clause. Infra/CFO co-sign still owed by the CEO office board.",
-      "blocker": "",
+      "notes": "[DEVOPS run 2026-10-12 2125, scheduled, unattended, 2026-10-12T21:35:02Z] Research part done (9 Oct table, QA 4/4). Left: the CEO sign-up + Payoneer card test = ceo-action-backlog row 89 (row 177 merged into it 12 Oct), not met. OVH VPN clause: NOT VERIFIED - a search 21:3xZ found no official OVH clause naming VPN services either way; treat OVH as 'ask support in writing' before use. Status stays in_progress. || [DEVOPS run 2026-10-12 c, scheduled, unattended, 2026-10-12T02:31:22Z] Two open facts measured: (1) Vultr reserved/extra IPv4 = USD 0.004/h = USD 3/month (docs.vultr.com 'Are reserved IPs free', updated 15 Apr 2026) - flat, no per-location price on that page; (2) OVHcloud US Terms of Service (effective 15 May 2025): no VPN or proxy clause either way, BUT s.2(b) use 'solely for its own benefit' and s.5(b)(i) no transfer/sublicense of the services - a VPN for paying users may be read as reselling; the Service Specific Terms were NOT read. Advice unchanged: primaries EDIS + Vultr, OVH only after a written yes from OVH support. Still NOT VERIFIED: Payoneer card acceptance, Lebanon as company country. || [ENGINEERING run 2026-10-10 1305, 2026-10-10T13:2xZ, [DEVOPS]] Next research step DONE (read-only web, nothing bought): EDIS extra IPv4 = 'EUR 5 per month, per address', up to 10 self-ordered, no location split or setup fee named (docs.edisglobal.com order-additional-ip-address, undated, read 10 Oct); Vultr reserved IP = '$0.004 per hour ($3/month)' (docs.vultr.com are-reserved-ips-free, updated 15 Apr 2026); OVH = RISKY: secondary quotes of OVH terms ban 'Anonymisation services (Proxy)' / 'Anonymization services or public proxy (including VPN, Tor, P2P, IRC)'; dedicated contract art 7.4 (2013) allows suspension of a public VPN on known illicit use -> OVH off the shortlist unless OVH says yes in writing; official current contract not read. Still open: Lebanon as company country (only a sign-up answers - CEO card row 177), Vultr per-instance extra IPv4, Payoneer card test. Table updated: memory/departments/devops/research/2026-10-09-hosting-providers-payoneer.md. Status stays in_progress (needs the CEO sign-up + card test). || [QA 2026-10-09 i ~08:2xZ, scheduled] QA re-run via xd-1597: provider quotes 4/4 PASS; masking IPs reachable 22/22 (443 21/22, Paris closed); 2 Hong Kong reserves listed on Spamhaus ZEN PBL -> xd-1599. || [ENGINEERING run 2026-10-09 h, 2026-10-09T07:20Z] TRIAGE (d) active, due 13 Oct. DONE: provider table written to vault memory/departments/devops/research/2026-10-09-hosting-providers-payoneer.md (Casper-Code production). PROVEN (quoted, read 9 Oct): EDIS Global FAQ \"EDIS Global welcomes commercial VPN providers\", crypto with \"no cryptocurrency-payment surcharge\"; Vultr AUP (mod. 31 Oct 2022) bans only open proxies/relays/resolvers + Tor exits, no VPN clause; Hetzner system-policies: no VPN clause either way, IPs: dedicated extra EUR 1.70/mo + 4.90 setup, /29 EUR 13.60, /28 EUR 27.20/mo (docs, last change 2023-04-13); OVH extra IPv4 EUR 2.39->2.87/mo from 1 Apr 2026 (next.ink 23 Feb 2026). NOT VERIFIED: Payoneer card acceptance at any provider, Lebanon as company country, EDIS/Vultr per-location IP prices, OVH VPN clause. Advice (hypothesis until the card test): primaries EDIS + Vultr, backup Hetzner after a written yes; spreads relays off OneProvider (7 of 11 on AS136258, DPI note 9 Oct). CEO checklist = new ceo-action-backlog row (EDIS/Vultr sign-up + card test + Hetzner question). Next DevOps step: per-location IP prices + OVH clause. Infra/CFO co-sign still owed by the CEO office board.",
+      "blocker": "CEO: sign-up at EDIS/Vultr + Payoneer card test (ceo-action-backlog row 89); re-check 19 Oct",
       "updatedAt": "2026-10-10T13:25:00Z"
     },
     {
@@ -50238,8 +50252,9 @@
       "category": "infra-fleet",
       "ageDays": 6,
       "lifecycle": "active",
-      "notes": "[CTO live chat 2026-10-07T23:0xZ - owns cloudflare-exit-phase1 + urgent-cc-real-users from now; hourly cloudflare-exit task OFF per CEO] CEO 8 Oct: 'Criteria 2 to 4 (our own front on port 443, our own DNS resolver, the hidden-mode canary) go to the engineering run'. STATE: front (crit 1) - relay side measured + QA reproduced; MISSING only the dev API leg: prove the dev API hands an app wss://s6.pompesh.com/. NO-ACCOUNT RECIPE (cto skill 2026-10-05 a): mint a JWT from the dev API's own env (docker exec caspervpn-dev-api printenv Jwt__SecretKey/Jwt__Audience/Jwt__Issuer) for an EXISTING dev user id, call GET https://api.dev.caspervpn.com/api/servers/<Duesseldorf id>/caspercloak-config, quote cloudfrontUrl and the dev api log line 'CloudfrontFronting: NATIVE front for Duesseldorf' - read-only, no account created; then hand crit 1 to [QA]. canary (crit 2) - 6/6 on 3 direct fronts, QA xd-1512; keep the cron running. resolver (crit 3) - Duesseldorf done incl. resolv.conf (run 9), QA re-check in the CTO's new QA handoff. Everything after that (crit 5 = production relay by relay) needs a CEO YES per change - never change production without asking. ||  || [ENGINEERING run 1007i 23:08Z] crit 1 dev API leg DONE + measured (see crit 1 evidence): dev API hands wss://s6.pompesh.com/ via NATIVE front; QA handoff created. crit 2 = QA xd-1512, crit 3 = QA xd-1514. Next leg (production, relay by relay) needs a CEO YES per change.",
-      "needsRelease": false
+      "notes": "[DEVOPS run 2026-10-12 2125, scheduled, unattended, 2026-10-12T21:35:02Z] Rows 0-3 and 7 of cloudflare-exit-phase1 are QA-ticked. Left: row 4 = the CEO's phone test on the build; row 5 = production relays: the DNS part shipped 12 Oct (CEO card row 257, QA xd-1947), so the '7 days with 0 lookups at Cloudflare' window ends 19 Oct; row 6 = real hidden-mode users in 3 countries (1 of 3 so far). No DevOps step is open before 19 Oct. || [CTO live chat 2026-10-07T23:0xZ - owns cloudflare-exit-phase1 + urgent-cc-real-users from now; hourly cloudflare-exit task OFF per CEO] CEO 8 Oct: 'Criteria 2 to 4 (our own front on port 443, our own DNS resolver, the hidden-mode canary) go to the engineering run'. STATE: front (crit 1) - relay side measured + QA reproduced; MISSING only the dev API leg: prove the dev API hands an app wss://s6.pompesh.com/. NO-ACCOUNT RECIPE (cto skill 2026-10-05 a): mint a JWT from the dev API's own env (docker exec caspervpn-dev-api printenv Jwt__SecretKey/Jwt__Audience/Jwt__Issuer) for an EXISTING dev user id, call GET https://api.dev.caspervpn.com/api/servers/<Duesseldorf id>/caspercloak-config, quote cloudfrontUrl and the dev api log line 'CloudfrontFronting: NATIVE front for Duesseldorf' - read-only, no account created; then hand crit 1 to [QA]. canary (crit 2) - 6/6 on 3 direct fronts, QA xd-1512; keep the cron running. resolver (crit 3) - Duesseldorf done incl. resolv.conf (run 9), QA re-check in the CTO's new QA handoff. Everything after that (crit 5 = production relay by relay) needs a CEO YES per change - never change production without asking. ||  || [ENGINEERING run 1007i 23:08Z] crit 1 dev API leg DONE + measured (see crit 1 evidence): dev API hands wss://s6.pompesh.com/ via NATIVE front; QA handoff created. crit 2 = QA xd-1512, crit 3 = QA xd-1514. Next leg (production, relay by relay) needs a CEO YES per change.",
+      "needsRelease": false,
+      "blocker": "CEO phone test (row 4) + 7-day production window to 19 Oct (row 5) + a real user in 2 more countries (row 6)"
     },
     {
       "id": "xd-1426",
@@ -60608,6 +60623,18 @@
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-10-12T21:28:36Z",
+      "createdDate": "2026-10-12",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1971",
+      "from": "[DEVOPS]",
+      "to": "[QA]",
+      "title": "Handoff from DEVOPS: Re-check security-lockdown-p1 row 11 (log rotation daily, 7 days) on the main server",
+      "description": "DevOps run 1012-2125 re-measured row 11 as already done: /etc/logrotate.d/casper-vpn-logs = daily / rotate 7 / compress (changed 2026-10-11 23:11:46Z, after your 11 Oct FAIL). verify: ssh main server 'sudo grep -E \"daily|rotate\" /etc/logrotate.d/casper-vpn-logs; sudo logrotate -d /etc/logrotate.d/casper-vpn-logs 2>&1 | grep -ci error' -> expect daily, rotate 7, 0. Tick only on your own pass.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-12T21:35:06Z",
       "createdDate": "2026-10-12",
       "completedDate": null
     }
