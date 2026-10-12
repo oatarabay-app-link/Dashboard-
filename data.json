@@ -12838,7 +12838,7 @@
           "test": "SHIPPED 2026-10-11 23:32Z (awaiting QA xd-1863) \u00b7 production bfa27c5e9 \u00b7 CEO YES 2026-10-11 (live chat: 'yes to all') \u00b7 READY TO SHIP \u2014 two admin pages: (1) Operations \u2192 'Connection by country' (attempts, success %, the step where connections fail, what each country's network blocks \u2014 fills as the 4.4 app sends its reports); (2) Users \u2192 'Sign-up Health': every sign-up with whether its verification e-mail was delivered, opened, clicked or bounced (read from our mail provider), verified or not, first key, first connection, trial \u2014 with a warning list of the people whose mail bounced or never went out \u00b7 why: your 4 Oct ask ('can we determine if a user did not get a verification email? we need a tab for this') and the telemetry work \u00b7 tested on dev: dev redeployed 22:43:42Z from development (admin 0561706fe): admin JWT minted from the dev container; GET /api/admin/ops/connection-by-country?days=30 \u2192 200 envelope, countries [] with control sessionsAll 1 / failuresAll 2 / probesAll 20 (all test accounts, correctly excluded); GET /api/admin/signup-health?days=30&includeTest=true \u2192 200: 19 sign-ups (18 test), verified 36.8%, key 10.5%, connected 5.3%, trial 100%, mail column 'unknown' because dev's mail account is not Resend (status not-configured \u2014 the Resend path is provable only on production); admin.dev.caspervpn.com bundle main.f61ab815.js carries 'Sign-up Health' + 'Connection by country'. Proof log /root/reports/admin1004b-devproof.log \u00b7 rollback: git revert 0561706fe + redeploy \u00b7 ship = cherry-pick to production, /root/deploy_api.sh (one new read-only admin endpoint) + the admin-panel build on the main server. Advice: YES.",
           "met": false,
           "verifiedBy": "none",
-          "evidence": "[QA 2026-10-12 a, scheduled, 2026-10-12T00:10:42Z] PARTIAL - bundle main.ef5a1e71.js has 'Connection by country' 1 and 'signup-health' 4, /api/admin/ops/connection-by-country 401 (exists); BUT /api/admin/signup-health = 404 on production (backend not shipped - xd-1864 [BACKEND]), so the Sign-up Health page cannot work yet. || [WEBSITE+ADMIN run 2026-10-11 2304, scheduled, unattended] 2026-10-11T23:34:06Z SHIPPED production bfa27c5e9, admin bundle main.6594630c.js -> main.ef5a1e71.js (new strings 1/1), rollback caspervpn-admin-react:rollback-202610112320. GAP: Sign-up Health API 404 on production - backend part routed to [BACKEND] xd-1864. Not ticked. || [CEO YES 2026-10-11] 'go wwith your advisre and yes ti all' (Cowork CTO live chat ~22:3xZ / 01:3x Beirut 12 Oct, answering the list of 12 decisions + 27 ship rows). Ship by the owner's normal path (one change at a time, trap D8), then [QA] live check. || [CEO office 2026-10-05 06:5xZ (09:5x Beirut, daily run)] no answer yet (day 1). Board advice: YES once QA passes it on dev (xd-1337) \u2014 'Sign-up Health' answers the question you asked 4 Oct (do verification e-mails arrive?); 'Connection by country' fills only when the 4.4 app sends its reports. | [CTO live chat 2026-10-04 22:4xZ] added; development 0561706fe; QA xd-1337.",
+          "evidence": "[BACKEND run 2026-10-12 0015, scheduled, unattended, 2026-10-12T01:08:01Z] API part SHIPPED production 99a37e733 (cherry-pick -x d1dcf9643, xd-1864) via /root/deploy_api.sh 00:23-00:28Z, image 64a66e55f054 -> dce63fe1c6a7, rollback tag caspervpn-api:rollback-202610120023. Proof: GET /api/admin/signup-health without sign-in 404 -> 401; DLL AdminSignupHealthController 0 -> 3; /health 200; build 0 errors, tests 361/361. Not ticked - QA live check xd-1880. || [QA 2026-10-12 a, scheduled, 2026-10-12T00:10:42Z] PARTIAL - bundle main.ef5a1e71.js has 'Connection by country' 1 and 'signup-health' 4, /api/admin/ops/connection-by-country 401 (exists); BUT /api/admin/signup-health = 404 on production (backend not shipped - xd-1864 [BACKEND]), so the Sign-up Health page cannot work yet. || [WEBSITE+ADMIN run 2026-10-11 2304, scheduled, unattended] 2026-10-11T23:34:06Z SHIPPED production bfa27c5e9, admin bundle main.6594630c.js -> main.ef5a1e71.js (new strings 1/1), rollback caspervpn-admin-react:rollback-202610112320. GAP: Sign-up Health API 404 on production - backend part routed to [BACKEND] xd-1864. Not ticked. || [CEO YES 2026-10-11] 'go wwith your advisre and yes ti all' (Cowork CTO live chat ~22:3xZ / 01:3x Beirut 12 Oct, answering the list of 12 decisions + 27 ship rows). Ship by the owner's normal path (one change at a time, trap D8), then [QA] live check. || [CEO office 2026-10-05 06:5xZ (09:5x Beirut, daily run)] no answer yet (day 1). Board advice: YES once QA passes it on dev (xd-1337) \u2014 'Sign-up Health' answers the question you asked 4 Oct (do verification e-mails arrive?); 'Connection by country' fills only when the 4.4 app sends its reports. | [CTO live chat 2026-10-04 22:4xZ] added; development 0561706fe; QA xd-1337.",
           "verify": "admin.caspervpn.com \u2192 Users \u2192 Sign-up Health shows the last 14 days with Resend states; Operations shows the Connection by country card",
           "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored",
           "qaVerdict": "PARTIAL",
@@ -14505,6 +14505,15 @@
           "addedBy": "[DEVOPS] devops run 1012a",
           "verify": "each of 208.87.243.205 / 91.194.84.79 / 51.158.147.210: iptables -t nat -S POSTROUTING | grep -cxE -- '-A POSTROUTING -o (nic1|enp1s0f0|enp1s0) -j MASQUERADE' = 1; grep -c same /etc/iptables/rules.v4 = 0; egress test (skill 2026-10-11 h) passes",
           "evidence": "[DEVOPS run 2026-10-12 a, scheduled, unattended, 2026-10-12T00:32:03Z] development 31cdb6f8 infrastructure/scripts/vpn-conntrack-nat-tidy.sh (md5 2c866e24): uplink = default-route interface (UPLINK= override), also fixes SAVED='0\\n0' when rules.v4 has none (Bangkok printed 'integer expression expected'). DRY RUN 00:28Z: Bangkok uplink=eth0 live 1 saved 0 -> plans nothing (control); LA uplink=nic1 live 3 saved 3 -> 2 deletes + rules.v4 + PostUp -C||-A; D\u00fcsseldorf enp1s0f0 3/3 -> same; Amsterdam enp1s0 4/4 -> 3 deletes + same. Out of scope, noted: Amsterdam '-o wg1 -j MASQUERADE' x2, LA x1. Ship with the egress test per node (live traffic). xd-1855."
+        },
+        {
+          "test": "READY TO SHIP \u2014 give the server its own secret password for the VPN keys it makes, instead of the built-in one everyone could read in our code \u00b7 why: security check xd-1777 + your decision on row 241 (11 Oct). People whose phone makes its own key (almost everyone) see no change; the few with a server-made key get a new one on their next connect, and their old one keeps being recognised until then \u00b7 tested on dev: dev 01:06Z - old keys still recognised, new keys use the new secret, a random key is refused; 374/374 tests \u00b7 rollback: remove the WIREGUARD_SECRET line from the production settings file + one deploy (keys made in between get re-made on next connect)",
+          "verify": "After ship: production api log '[wg-secret] xd-1840: WireGuard:Secret configured=True, lookup secrets=2' = 1 per start; `docker exec caspervpn-api printenv | grep -c '^WireGuard__Secret=.'` = 1 (count only, never the value); [wg-sync] summary lines keep mapping peers (mapped count not lower than the hour before).",
+          "evidence": "[BACKEND run 2026-10-12 0015, scheduled, unattended, 2026-10-12T01:08:01Z] BUILT development 3c49f859e (xd-1840). Suite 374/374, new 5/5, control 2/5 fail. Ship = cherry-pick 3c49f859e + set WIREGUARD_SECRET (openssl rand -hex 32) in /opt production .env + /root/deploy_api.sh. QA dev check xd-1881.",
+          "met": false,
+          "verifiedBy": "none",
+          "createdBy": "[BACKEND] run 1012-0015",
+          "createdAt": "2026-10-12T01:08:01Z"
         }
       ],
       "progress": 0,
@@ -56801,7 +56810,7 @@
       "taskRef": "xd-1422",
       "dueBy": "2026-10-14T00:00:00Z",
       "needsRelease": false,
-      "blocker": "CEO decision on CEO-card row 241 (set a real key secret: every server-made key changes).",
+      "blocker": "Dev step built (development 3c49f859e, xd-1840); waits QA xd-1881 + CEO YES row #256.",
       "notes": "[BACKEND run 2026-10-11 0415, scheduled, unattended, 2026-10-11T04:41:49Z] MEASURED 04:3xZ (production, read-only, nothing printed): the fallback string is the same in OptimizedVpnServerService, VpnServerService, RadiusAuthController and WireGuardUsageSyncService (length 21); production has no WireGuard__Secret. WireGuardPeerUsages: 1,248 of 1,346 rows carry the server-made (deterministic) key, 198 users - mostly history; last 30 days 269 of 318 rows; last 7 days 3 of 28 rows = 1 user (account made 9 Oct, not a caspervpn.com address, platform not recorded, 6 connects, last 9 Oct 18:11Z). So almost every live peer today uses a key the app made itself, and setting a real secret would touch about 1 user a week. PLAN (after the CEO's yes): (1) dev first - set WireGuard__Secret on the dev API, prove a server-made config still connects on a dev node and that a client-made key is untouched; (2) production - set the secret in .env (via deploy_api.sh, never by hand), the few server-made peers get a new key on their next connect; (3) only then remove the fallback string (fail closed: refuse to make a server key without a secret), with a test. Never remove the fallback before the secret is set. Plan + DECISION row 241.",
       "category": "next-build-4.4",
       "ageDays": 0,
@@ -57878,8 +57887,8 @@
       "createdAt": "2026-10-11T22:32:38Z",
       "createdDate": "2026-10-11",
       "completedDate": null,
-      "blocker": "Next backend run builds the dev step (plan on the row). Not started this run (xd-1811 took it).",
-      "notes": "[BACKEND run 2026-10-11 2315, scheduled, unattended, 2026-10-11T23:53:01Z] PLAN for row 241 A (read-only today): the fallback 'built-in' secret is read in 4 places (VpnServerService L270, OptimizedVpnServerService L632, WireGuardUsageSyncService L115, RadiusAuthController L50). Changing it is not only 'new keys on next connect': WireGuardUsageSyncService and RadiusAuthController REVERSE-map peer public keys to users with the same secret, so peers already on the fleet with an old server-made key would stop mapping (usage + online lists) until they reconnect. Build: one WireGuardSecrets helper - Current = WireGuard:Secret (required outside Development; startup error log if missing), LookupSecrets = [Current, legacy] used ONLY for reverse mapping, so old peers keep mapping while every new key uses the real secret; then a later step drops the legacy lookup once 0 old-key peers remain (count with the be1011-0415 HMAC method). Dev: a random secret written straight into the dev env (never printed). Production: the secret has to be set in the production .env by the ship (READY TO SHIP row + DevOps note). || "
+      "blocker": "Waits QA dev check xd-1881, then CEO YES on CEO-card row #256 (production .env secret + ship).",
+      "notes": "[BACKEND run 2026-10-12 0015, scheduled, unattended, 2026-10-12T01:08:01Z] BUILT development 3c49f859e (+ dev-only 24f4c0be6): Infrastructure/WireGuardSecrets - new server-made keys use WireGuard:Secret; reverse mapping (wg-sync, RADIUS lookup) tries [new, old built-in] so old peers keep mapping; blank secret = unchanged. Build 0 errors, suite 374/374, new WireGuardSecretsTests 5/5, CONTROL (lookup = new only) 2/5 fail. Dev: random WIREGUARD_SECRET in dev .env (never printed); dev log '[wg-secret] configured=True, lookup secrets=2' 00:54:38Z. Dev live 01:06Z (/api/radius/wireguard/lookup on dev, proof.py): key made with the OLD built-in value -> success, source=deterministic, right user; key made with the NEW secret -> success, deterministic, right user; CONTROL random key -> 'Peer not found'. Dev 'Radius:ApiKey not configured' errors after restart 0 (dev had none before 24f4c0be6: every /api/radius call was 500). QA dev check xd-1881; production = READY TO SHIP row #256. || [BACKEND run 2026-10-11 2315, scheduled, unattended, 2026-10-11T23:53:01Z] PLAN for row 241 A (read-only today): the fallback 'built-in' secret is read in 4 places (VpnServerService L270, OptimizedVpnServerService L632, WireGuardUsageSyncService L115, RadiusAuthController L50). Changing it is not only 'new keys on next connect': WireGuardUsageSyncService and RadiusAuthController REVERSE-map peer public keys to users with the same secret, so peers already on the fleet with an old server-made key would stop mapping (usage + online lists) until they reconnect. Build: one WireGuardSecrets helper - Current = WireGuard:Secret (required outside Development; startup error log if missing), LookupSecrets = [Current, legacy] used ONLY for reverse mapping, so old peers keep mapping while every new key uses the real secret; then a later step drops the legacy lookup once 0 old-key peers remain (count with the be1011-0415 HMAC method). Dev: a random secret written straight into the dev env (never printed). Production: the secret has to be set in the production .env by the ship (READY TO SHIP row + DevOps note). || "
     },
     {
       "id": "xd-1841",
@@ -58229,11 +58238,13 @@
       "to": "[BACKEND]",
       "title": "Handoff from ADMIN-PANEL: Ship the Sign-up Health API to production (row 114 part 2, CEO YES 2026-10-11)",
       "description": "Row 114 (CEO YES 2026-10-11) = two admin pages. The admin screens are live since 23:32Z (main.ef5a1e71.js), but GET /api/admin/signup-health answers 404 on production: AdminSignupHealthController (development d1dcf9643, xd-1321, read-only) is only on development. Cherry-pick d1dcf9643 alone onto production and ship with /root/deploy_api.sh (the CEO YES on row 114 covers it), then hand to [QA] (xd for the admin check already open). Check: no token -> 401 instead of 404.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-10-11T23:34:06Z",
       "createdDate": "2026-10-11",
-      "completedDate": null
+      "completedDate": "2026-10-12",
+      "completedBy": "[BACKEND]",
+      "resolution": "[BACKEND run 2026-10-12 0015, scheduled, unattended, 2026-10-12T01:08:01Z] SHIPPED production 99a37e733 (d1dcf9643 alone). signup-health no token 404 -> 401, DLL type 0 -> 3. QA live check xd-1880."
     },
     {
       "id": "xd-1865",
@@ -58241,11 +58252,13 @@
       "to": "[BACKEND]",
       "title": "Handoff from SECURITY: Row 224 (a): retire the one leaked customer WireGuard key safely (CEO decided 2026-10-11)",
       "description": "CEO decision row 224 (a): change the one live leaked customer key. Part (b) DONE this run (2 stored bug reports blanked). Part (a) NOT done unattended: measured 23:2xZ read-only, user 2eecd0e6 has many client-made keys (PrivateKey column empty = the phone made the key), several IsActive. Turning the leaked key off on the server alone may cut a paying customer's VPN until the app makes a new key, and the fleet nodes keep the peer unless it is removed. Needs: (1) which active row is the leaked key (public key derived on the main server, never printed - /root/reports/webadmin-1011-0107/keycheck.py did it before the snippets were blanked; the public key may already be in its output log), (2) confirm the app re-registers a new key when its key is refused, (3) deactivate the row + remove the peer from every node (DEVOPS runbook), (4) [QA] check the user still connects. Advice: do it in one step with DEVOPS this week.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-10-11T23:34:06Z",
       "createdDate": "2026-10-11",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[BACKEND run 2026-10-12 0015, scheduled, unattended, 2026-10-12T01:08:01Z] STEP 1 DONE read-only: the live BugReports copies were blanked 11 Oct 23:15Z, so the key was read from the 11 Oct 03:00 backup (pg_restore -t BugReports, nothing printed, /root/reports/be1012-0015/leakfind.py): 2 leaked keys -> WireGuardKeys 1583 (inactive, 0 peer rows) and WireGuardKeys 1587 (ACTIVE, 1 peer row on Duesseldorf, last handshake 2026-10-11 22:58:12Z). Key 1587 belongs to the CEO's own Lifetime account (staff-accounts.md: 0016...@privaterelay) - NOT a customer, so no paying customer can be cut. Remaining: (2) DEVOPS removes the peer of key 1587 from Duesseldorf and BACKEND sets WireGuardKeys 1587 IsActive=false in the same step (xd-1882); (3) the CEO's phone makes a new key on its next connect - if it shows 'cannot connect', sign out and in once; (4) QA checks the CEO account connects with a new key.",
+      "blocker": "Waits DEVOPS xd-1882 (one joint step: remove the Duesseldorf peer + BACKEND deactivates key 1587). Key is on the CEO's own account."
     },
     {
       "id": "xd-1866",
@@ -58427,6 +58440,42 @@
       "createdDate": "2026-10-12",
       "completedDate": null,
       "taskRef": "xd-1739"
+    },
+    {
+      "id": "xd-1880",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: Check row 114 API live: Sign-up Health answers on production (xd-1864, production 99a37e733)",
+      "description": "SHIPPED 2026-10-12 00:28Z: GET /api/admin/signup-health (AdminSignupHealthController, read-only, Admin/SuperAdmin) is on production. Measured: no token 404 -> 401. QA: (1) no token = 401; (2) signed in as admin, /api/admin/signup-health?days=14 = 200 with rows + mailStatus; (3) admin.caspervpn.com Sign-up Health page shows the table (bundle main.ef5a1e71.js). Then tick row 114 if both admin pages pass.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-12T01:08:06Z",
+      "createdDate": "2026-10-12",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1881",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: Check xd-1840 on dev: WireGuard key secret, old keys still recognised (development 3c49f859e)",
+      "description": "BUILT development 3c49f859e (+ 24f4c0be6 dev-only Radius key). Dev has a random WIREGUARD_SECRET. Re-run on the dev host: /root/be1012-0015/proof.py (prints results only) -> old-value key success/deterministic, new-secret key success/deterministic, random key Peer not found; dev log [wg-secret] configured=True, lookup secrets=2. Optional: a fresh server-made config on dev (no client key) carries a key that matches HMAC(new secret). Pass -> CEO-card READY TO SHIP row for production.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-12T01:08:06Z",
+      "createdDate": "2026-10-12",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1882",
+      "from": "[BACKEND]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from BACKEND: Row 224 (a): remove the leaked WireGuard peer (key 1587) from Duesseldorf together with BACKEND (xd-1865)",
+      "description": "CEO decided row 224 (a) on 11 Oct: change the one live leaked key. Measured 12 Oct 00:3xZ read-only: the key is WireGuardKeys Id 1587 (active), 1 peer row on Duesseldorf (server 13f1a013), last handshake 2026-10-11 22:58Z, and it belongs to the CEO own Lifetime account (staff-accounts) - no customer. Joint step (quiet window, CEO told first): DEVOPS removes the peer whose PublicKey = WireGuardKeys 1587 PublicKey from wg on Duesseldorf (read it in SQL on the server, never print it to a log/board), BACKEND sets WireGuardKeys 1587 IsActive=false in the same minute; then the CEO phone reconnects with a new key (sign out/in once if it shows cannot connect); QA checks. Pick a slot on xd-1865.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-12T01:08:06Z",
+      "createdDate": "2026-10-12",
+      "completedDate": null
     }
   ],
   "importantNotes": [
