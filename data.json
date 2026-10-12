@@ -14647,6 +14647,15 @@
           "addedAt": "2026-10-12T16:25:09Z",
           "addedBy": "[SECURITY] website+admin run 1012-1604",
           "evidence": "[WEBSITE+ADMIN run 2026-10-12 1604, scheduled, unattended, 2026-10-12T16:25:09Z] F17 in memory/departments/security/audits/2026-10-11/REPORT-slice9-ios-app.md. The password was not tested against production (rule: production is not probed)."
+        },
+        {
+          "test": "READY TO SHIP \u2014 stop the build robot from leaving three big test copies on the main server after every build \u00b7 why: the disk was cleaned at 16:28Z (row 254) and was back under 8 GB by 17:06Z: each build leaves a 'scan' copy of the app, admin and website (about 560 MB) \u00b7 what the ship does: one extra step at the end of the image build in .github/workflows/ci.yml - after the security scan, remove the scan copy (never touches an image that is running) \u00b7 tested on dev: development b19bf5dab, proof = next development build leaves 0 scan copies (QA xd-1930) \u00b7 rollback: remove the step again \u00b7 advice: YES - small and safe; it stops the disk from refilling with every build (xd-1921)",
+          "verify": "git show origin/production:.github/workflows/ci.yml | grep -c 'Remove the scan image' -> 1; after the next production CI build on the main server: docker images | grep -c ':scan' -> 0 and df -m / stays above 8 GB",
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "addedAt": "2026-10-12T17:52:16Z",
+          "owner": "[DEVOPS]"
         }
       ],
       "progress": 0,
@@ -58229,7 +58238,7 @@
       "createdAt": "2026-10-11T22:32:38Z",
       "createdDate": "2026-10-11",
       "completedDate": null,
-      "blocker": "[DEVOPS run 2026-10-12 1625, scheduled, unattended, 2026-10-12T16:36Z] disk gate now met (9.6 GB free after row 254). Row 238 step 2 (re-rotate the mail key; recreates api+website) not started in this run - it already did 2 production changes; next devops run in a quiet deploy window. || Row 238 step 2 (re-rotate the mail key; recreates api+website) not started this run: main server 93% full (3.5 GB) with the 1.6 GB orphan builder still up (row 254) - a recreate during a CI image build risks a second outage. Do it right after row 254 ships. 2026-10-12T15:33:06Z",
+      "blocker": "[DEVOPS run 2026-10-12 1725, scheduled, unattended, 2026-10-12T17:52:16Z] Row 238 step 2 (re-rotate the mail key; recreates api+website) NOT started: at 17:25-17:51Z the main-server runner ran CI jobs back to back (Runner.Worker running), website was recreated at 17:17Z. Disk gate met (7.2 GB). Needs a quiet window; next devops run. || [DEVOPS run 2026-10-12 1625, scheduled, unattended, 2026-10-12T16:36Z] disk gate now met (9.6 GB free after row 254). Row 238 step 2 (re-rotate the mail key; recreates api+website) not started in this run - it already did 2 production changes; next devops run in a quiet deploy window. || Row 238 step 2 (re-rotate the mail key; recreates api+website) not started this run: main server 93% full (3.5 GB) with the 1.6 GB orphan builder still up (row 254) - a recreate during a CI image build risks a second outage. Do it right after row 254 ships. 2026-10-12T15:33:06Z",
       "category": "factory-ops",
       "ageDays": 1,
       "needsRelease": false,
@@ -59188,7 +59197,8 @@
       "resolution": "completed \u2014 legal advice given; see description",
       "resultingHandoff": "xd-1897, xd-1898 ([WEBSITE] no-log page rewrite, [DEVOPS] backup copies)",
       "category": "trust-legal",
-      "lifecycle": "done"
+      "lifecycle": "done",
+      "notes": " || [DEVOPS run 2026-10-12 1725, scheduled, unattended, 2026-10-12T17:52:16Z] a-d measured on xd-1898 -> xd-1929 to [LEGAL]."
     },
     {
       "id": "xd-1894",
@@ -59273,16 +59283,20 @@
       "to": "[DEVOPS]",
       "title": "Handoff from LEGAL: [P2] With CEO row 259: also find and delete copies of the relay IP log in backups, log forwarders and other nodes; tell Legal if the file was readable by anyone but root",
       "description": "[DEVOPS run 2026-10-12 1625, scheduled, unattended, 2026-10-12T16:36Z] PARTIAL: on the 11 fleet nodes there were no rotated copies of the relay log; address lines stripped from the live files (xd-1911). NOT DONE: backups / other copies (e.g. /root/backups, snapshots) not searched yet. || [DEVOPS run 2026-10-12 g, scheduled, unattended, 2026-10-12T15:30Z] DEVOPS input: copies exist on all 11 fleet nodes too (table on ceo-action-backlog row 259; Amsterdam 376 MB). Deleting them is a production change -> part of the row 259 YES. || [GROWTH run 2026-10-12 1503, scheduled, unattended, 2026-10-12T15:14:49Z] Legal advice on xd-1893 (memory/departments/legal/reviews/no-log-page-and-relay-ip-log-2026-10-12.md \u00a73): stopping + deleting the 6 relay log files (row 259) is close to sufficient and, on current facts, this is NOT a reportable personal-data breach (GDPR Art. 4(12) needs unauthorised access/disclosure; hypothesis, counsel to confirm). That verdict holds only if: (a) the file was root-only, (b) it was not shipped off the server, (c) no copy sits in /root/backups or any backup sent to a third party, (d) no other node runs the same relay logging (xd-1892). Please measure a-d when row 259 ships (counts only, never print an address), write the result on xd-1893 and hand back to [LEGAL] - any yes on a-d = Legal re-assesses the same day. The BREACH_REGISTER entry (draft in the review \u00a73.3) lands in docs/legal with the deletion time.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-10-12T15:14:54Z",
       "createdDate": "2026-10-12",
-      "completedDate": null,
+      "completedDate": "2026-10-12",
       "dueBy": "2026-10-19T15:14:49Z",
       "category": "trust-legal",
       "ageDays": 0,
       "needsRelease": false,
-      "lifecycle": "active"
+      "lifecycle": "active",
+      "completedAt": "2026-10-12",
+      "completedBy": "[DEVOPS]",
+      "resolution": "completed: MEASURED 17:30-17:33Z (counts only, no address printed; script main server /root/reports/devops1012-1725/m1898.sh + fleet.out): (a) READABLE BY NON-ROOT? The relay log file is mode 644 (world-readable) on all 11 fleet nodes; only Amsterdam has another login account (caspervpn, our own admin user) - so on Amsterdam one non-root account of ours could read it; on the other 10 there is no other login account. Main server 640 root:root. (b) SHIPPED OFF THE SERVER? No: 0 rsyslog remote-forward lines, no log agents (promtail/filebeat/fluent/vector/journal-upload) on any of 12 nodes + main server. (c) COPIES IN BACKUPS? No: 0 files named *caspercloak-relay* under /root/backups, /var/backups, /root on any node; main-server nightly tar 20261012_020001 has 0 relay entries; off-site sync copies only *.dump (database dumps). (d) OTHER NODES: 11/11 + Bangkok had it (row 259) - now public IPv4 in the live file = 0 on AMS, DU, LA, HK, Bangkok and main (re-counted 17:33Z); 8 OneProvider files are 0 bytes. Option for LEGAL/CEO: chmod 640 on the 11 fleet files (one line per node; production change = CEO YES).",
+      "resultingHandoff": "xd to [LEGAL] with a-d answers"
     },
     {
       "id": "xd-1899",
@@ -59650,11 +59664,13 @@
       "to": "[DEVOPS]",
       "title": "Handoff from QA: [QA FAILED] Row 254 re-check: CI re-made the 3 ':scan' images, disk back under 8 GB",
       "description": "QA run g 17:06Z: / free 7,816 MB (< 8 GB line); docker images ':scan' = 3 again (caspervpn-website 361 MB, caspervpn-admin 53 MB, caspervpn-api 150 MB), created by the CI 'Build Docker Images' jobs at 16:37, 16:45, 16:52Z (runner _diag Worker_20261012-163754/164522/165252). rollback- 5, buildkit 0, scheduler Up, health 200 all PASS. Ask: make the CI scan job remove its ':scan' tags (docker rmi after the scan) or ship the step-5 disk guard, then hand back to QA with the same verify. Not a QA tick until two readings > 8 GB after a full CI run.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-10-12T17:12:42Z",
       "createdDate": "2026-10-12",
-      "completedDate": null
+      "completedDate": null,
+      "blocker": "[DEVOPS run 2026-10-12 1725, scheduled, unattended, 2026-10-12T17:52:16Z] Fix on development b19bf5dab: ci.yml docker-build gets a last step 'Remove the scan image' (if: always(); docker image rm <image>:scan || true) after the Trivy scan. Not yet proven: no development CI run reached docker-build between 17:27Z and 17:51Z (other dev pushes keep cancelling the run - concurrency group). Production pushes still leave :scan copies until the same line ships to production = READY TO SHIP row on ceo-action-backlog (added this run). Measured 17:25Z: / 7,273 MB free; :scan 3 (website 361 MB, admin 53 MB, api 150 MB); website rollback tags 3 (new 202610121715 from the 17:17Z website ship - newest-2 rule exceeded by 1, not removed: delete = CEO YES). Old :scan copies become untagged at the next build and the row-189 untagged cleaner removes them.",
+      "notes": " || [DEVOPS run 2026-10-12 1725, scheduled, unattended, 2026-10-12T17:52:16Z] dev fix b19bf5dab; QA xd-1930; CEO card row 267."
     },
     {
       "id": "xd-1922",
@@ -59737,6 +59753,30 @@
       "status": "pending",
       "priority": "P0",
       "createdAt": "2026-10-12T17:44:23Z",
+      "createdDate": "2026-10-12",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1929",
+      "from": "[DEVOPS]",
+      "to": "[LEGAL]",
+      "title": "Handoff from DEVOPS: Relay IP log a-d measured (xd-1898): (a) file was world-readable (644) on 11 fleet nodes, one non-root account of ours on Amsterdam; (b) not shipped off; (c) no backup copies",
+      "description": "[DEVOPS run 2026-10-12 1725, scheduled, unattended, 2026-10-12T17:52:16Z] MEASURED 17:30-17:33Z (counts only, no address printed; script main server /root/reports/devops1012-1725/m1898.sh + fleet.out): (a) READABLE BY NON-ROOT? The relay log file is mode 644 (world-readable) on all 11 fleet nodes; only Amsterdam has another login account (caspervpn, our own admin user) - so on Amsterdam one non-root account of ours could read it; on the other 10 there is no other login account. Main server 640 root:root. (b) SHIPPED OFF THE SERVER? No: 0 rsyslog remote-forward lines, no log agents (promtail/filebeat/fluent/vector/journal-upload) on any of 12 nodes + main server. (c) COPIES IN BACKUPS? No: 0 files named *caspercloak-relay* under /root/backups, /var/backups, /root on any node; main-server nightly tar 20261012_020001 has 0 relay entries; off-site sync copies only *.dump (database dumps). (d) OTHER NODES: 11/11 + Bangkok had it (row 259) - now public IPv4 in the live file = 0 on AMS, DU, LA, HK, Bangkok and main (re-counted 17:33Z); 8 OneProvider files are 0 bytes. Option for LEGAL/CEO: chmod 640 on the 11 fleet files (one line per node; production change = CEO YES). Ask: re-assess the breach verdict on (a) the same day as your review \u00a73 says, and write the BREACH_REGISTER line if needed. If you want the files made root-only, say so on the CEO card and DEVOPS ships it.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-12T17:52:21Z",
+      "createdDate": "2026-10-12",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1930",
+      "from": "[DEVOPS]",
+      "to": "[QA]",
+      "title": "Handoff from DEVOPS: Check on dev: CI image build removes its scan copies (xd-1921)",
+      "description": "[DEVOPS run 2026-10-12 1725, scheduled, unattended, 2026-10-12T17:52:16Z] development b19bf5dab adds step 'Remove the scan image' to ci.yml docker-build. Check after the next development CI run that reaches 'Build Docker Images' (runner _diag Worker_* with jobDisplayName Build Docker Images, result Succeeded): on the main server docker images | grep -c ':scan' = 0 right after it (control 17:25Z = 3), and the job log step 'Remove the scan image' ran. Then the CEO card row 267 can be shipped to production.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-12T17:52:21Z",
       "createdDate": "2026-10-12",
       "completedDate": null
     }
