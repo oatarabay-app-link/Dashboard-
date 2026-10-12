@@ -60100,14 +60100,16 @@
       "to": "[DESKTOP]",
       "title": "Handoff from SECURITY: [xd-1422 slice 12] Desktop client: fake Connected state + WireGuard key on /tmp + 7 smaller fixes before any desktop beta",
       "description": "[WEBSITE+ADMIN run 2026-10-12 1904, scheduled, unattended, 2026-10-12T19:10:22Z] From [SECURITY] xd-1422 slice 12 (desktop/ on development d40e1ab26, read-only; report memory/departments/security/audits/2026-10-11/REPORT-slice12-desktop.md, production c5a720c5). Fix before ANY desktop beta: F28 HIGH connection.rs L145-156/L224-256: connect() sets Connected after stub connect_* that return Ok (Linux WG only logs; OpenVPN/IKEv2/CasperCloak empty; Windows calls missing wintun_driver) -> UI would say Connected with no tunnel. Fix: stubs return Err, test that connect() fails without a live tunnel. F29 MEDIUM protocols/wireguard.rs L120-138: PrivateKey written to fixed /tmp/caspervpn-wg0.conf (0644, follows symlink); teardown 'wg0' != 'caspervpn-wg0'. F30 LOW wireguard.rs L37 debug log prints PrivateKey. F31 LOW deb postinst setcap cap_net_admin on the GUI binary. F32 LOW extension proxy.js onAuthRequired listener never removed (creds answer any proxy after disconnect). F33 LOW auto_update.rs: unsanitised file name from URL + PowerShell quoting + no re-hash before elevated run (updates refused today: key None, fail closed). F34 LOW enterprise.json token in plain file (use keyring). F35 INFO CLI --password on argv. F36 INFO desktop takes a server-made WG private key (phones make it on device; ties to BACKEND xd-1777). Then hand to [QA]: grep proofs per finding + a unit test for F28.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-10-12T19:10:27Z",
       "createdDate": "2026-10-12",
       "completedDate": null,
       "taskRef": "xd-1422",
       "dueBy": "2026-10-19T19:10:27Z",
-      "handoffTo": "[QA]"
+      "handoffTo": "[QA]",
+      "blocker": "QA xd-1960: check development bb884b8dc (F28/F29/F30, 3 tests). F31-F36 still to do by [DESKTOP] (next apps run).",
+      "progressNote": "[APPS run 2026-10-12 k 2026-10-12T20:23:52Z] PARTIAL - F28/F29/F30 fixed on development bb884b8dc, cargo test 104/104 (control fails). F31 setcap, F32 extension proxy listener, F33 updater filename/quoting, F34 enterprise token keyring, F35 CLI password, F36 server-made key: open."
     },
     {
       "id": "xd-1942",
@@ -60234,11 +60236,14 @@
       "to": "[IOS]",
       "title": "Handoff from CEO: [P0] Build 69 (the test build before Apple): add 'Delete account' in Settings > Account (Apple 5.1.1(v)) \u2014 backend DELETE /api/users/me already exists",
       "description": "[CEO 2026-10-12 20:03Z] '1 yes' = YES, build the Delete-account row into build 69 (office chat, item 1). || Found by the office running the outside app-store-review skill on build 68 (3d5a40ec0): account creation exists, in-app deletion does not (git grep deleteAccount / 'Delete account' = 0 in ios-app-v2). Apple 5.1.1(v): apps that support account creation must let the user initiate deletion inside the app. Backend: UsersController.cs:101 [HttpDelete(\"me\")] 'Delete account'. Build: a red 'Delete Account' row under Settings > Account (iPhone + iPad), confirmation sheet (what is lost, 'Delete' / 'Cancel'), call DELETE /api/users/me, sign out, clear keychain + tunnel config; Apple sign-in users: also revoke the Sign in with Apple token if the backend supports it. No marketing words. Then QA on the CEO phone with a throwaway account (xd-1951). Ship in the same build the CEO tests before upload (row 207 \u2192 build 69).",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P0",
       "createdAt": "2026-10-12T19:57:48Z",
       "createdDate": "2026-10-12",
-      "completedDate": null
+      "completedDate": null,
+      "blocker": "Build owner (CEO live / build 69): include ios/69-delete-1950 0f48788f3 (on ios/68; merges clean with the sec/liveness/probe branches); then QA xd-1959 on the phone. Apple token revoke = BACKEND xd-1961 (not blocking the button).",
+      "handoffTo": "[QA]",
+      "progressNote": "[APPS run 2026-10-12 k 2026-10-12T20:23:52Z] Coded on ios/69-delete-1950 0f48788f3: red Delete Account row in Settings > Account (iPhone + iPad), confirmation alert (closed now, signed out, VPN off, data removed within 30 days per Privacy Policy, App Store billing is separate + where to stop it, cannot be undone), DELETE /api/users/me, local sign-out only after the server confirms. swiftc -parse 0 errors x4, harness 16/16, endpoint 401 prod+dev. NOT PROVEN: Xcode build, device."
     },
     {
       "id": "xd-1951",
@@ -60339,6 +60344,42 @@
       "completedDate": null,
       "dueBy": "2026-10-19T23:59:00Z",
       "taskRef": "xd-1422"
+    },
+    {
+      "id": "xd-1959",
+      "from": "[IOS]",
+      "to": "[QA]",
+      "title": "Handoff from IOS: [P0] Test 'Delete Account' (Apple 5.1.1(v)) on build 69 - iPhone + iPad, throwaway account",
+      "description": "[APPS run 2026-10-12 k, 2026-10-12T20:23:52Z] xd-1950 is on branch ios/69-delete-1950 0f48788f3 (parent ios/68 3d5a40ec0; merges clean onto ios/68-sec-1935, ios/68-liveness-1852, ios/68-probe-1824). Files: ios-app-v2/CasperVPN/CasperVPN/App/AppCoordinator.swift (deleteAccount()), App/Config.swift (Endpoints.deleteAccount = /users/me), Features/Settings/SettingsView.swift (DeleteAccountRow + AccountDeletionCopy/Rules), Features/Settings/SettingsView_iPad.swift (Account pane), tools/ios-tests/xd1950/run.sh. PROVEN off the Mac: swiftc 6.1.2 -parse 0 errors on all 4 files (control: one brace removed -> 4 errors); run.sh 16/16 (real AccountDeletionCopy/Rules lines; control = base tree has no rules -> rc 2); DELETE /api/users/me without a token = 401 on prod and dev (route exists). NOT PROVEN: Xcode compile, device run. DEVICE STEPS (build 69, physical iPhone + iPad): 1) sign up a NEW throwaway e-mail account, connect once; 2) Settings > Account shows red 'Delete Account' under 'Sign Out' (iPad: Settings > Account pane); 3) tap it -> alert 'Delete your account?' with the App Store billing sentence -> Cancel = nothing happens; 4) tap again -> Delete -> app returns to sign-in, VPN disconnected; 5) sign in again with the same e-mail/password -> must FAIL; 6) airplane mode + Delete -> 'Account not deleted' and still signed in; 7) Export Logs: 'Account deleted on the server' line, no token. DB check (read-only): Users row IsActive=false, Email deleted_<id>@deleted.local. Then xd-1951 includes it in the 4.3.1 resubmit check.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-10-12T20:23:58Z",
+      "createdDate": "2026-10-12",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1960",
+      "from": "[DESKTOP]",
+      "to": "[QA]",
+      "title": "Handoff from DESKTOP: [P1] Check desktop security fixes F28/F29/F30 on development bb884b8dc (xd-1941)",
+      "description": "[APPS run 2026-10-12 k, 2026-10-12T20:23:52Z] development bb884b8dc (pushed under lock casper-apps-1012k; parent 1235abf29). Files: desktop/caspervpn-core/src/connection.rs, desktop/caspervpn-core/src/protocols/wireguard.rs. F28: every connect_* stub returns Err before any API call (no wireguard-config peer side effect); connect() resets to Disconnected + sends Error, never Connected; missing wintun_driver calls removed. F29: config -> fresh 0700 dir, cvpn0.conf 0600 create_new, kept until teardown; wg-quick down uses the same file. F30: debug log redacts PrivateKey. PROOF (cloud box, Linux, rust stable): cargo test -p caspervpn-core --lib = 104 passed 0 failed (base 101 + 3 new: xd1941_connect_without_tunnel_fails_and_is_not_connected, xd1941_redacted_config_has_no_private_key, xd1941_private_config_file_is_owner_only); CONTROL: base connection.rs + new test -> FAILED. Pushed file sha256 = tested (51908d8a..., 7b5b3d61...). NOT PROVEN: Windows compile, Tauri app crate build, a real Linux tunnel. VERIFY: grep -c 'Ok(())' in connect_* bodies = 0; grep -n 'caspervpn-wg0\\|\"wg0\"' wireguard.rs = 0; cargo test -p caspervpn-core --lib xd1941. Still open for [DESKTOP]: F31-F36.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-12T20:23:58Z",
+      "createdDate": "2026-10-12",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1961",
+      "from": "[IOS]",
+      "to": "[BACKEND]",
+      "title": "Handoff from IOS: [P1] Account deletion for Sign in with Apple users: revoke the Apple token (Apple 5.1.1(v))",
+      "description": "[APPS run 2026-10-12 k, 2026-10-12T20:23:52Z] The app now calls DELETE /api/users/me (xd-1950). UserService.DeleteUserAsync (backend-dotnet-core/Services/UserService.cs ~L520-590) cancels Stripe, removes RADIUS + IKEv2 users and soft-deletes (IsActive=false, e-mail anonymised, refresh tokens cleared) but never revokes the Sign in with Apple token: codegraph query 'apple sign in token revoke' named no revoke code. Apple asks apps that offer Sign in with Apple to revoke the user's token on account deletion (POST https://appleid.apple.com/auth/revoke with the client secret; needs the refresh token from /auth/token at sign-in). Please: (1) check what /auth/apple stores today; (2) if no Apple refresh token is kept, store it at sign-in going forward; (3) call revoke inside DeleteUserAsync for Apple users, best effort + logged. Not a blocker for the app button (client cannot revoke - needs the server secret). -> [QA] after.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-12T20:23:58Z",
+      "createdDate": "2026-10-12",
+      "completedDate": null
     }
   ],
   "importantNotes": [
