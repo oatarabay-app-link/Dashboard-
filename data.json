@@ -14699,6 +14699,15 @@
           "addedBy": "[DEVOPS] devops run 1012-1825",
           "verify": "Resend dashboard: plan + daily usage; no quota warning mail for 48 h",
           "evidence": "[DEVOPS run 2026-10-12 1825, scheduled, unattended, 2026-10-12T18:30:34Z] xd-1928. Nothing bought, nothing changed in production."
+        },
+        {
+          "test": "READY TO SHIP \u2014 the server stops saving secret VPN keys that old app versions put inside bug reports \u00b7 why: security finding F19 - some older and test iPhone builds sent each user's secret key inside the problem report, and the server saved it as sent \u00b7 what the ship does: before a problem report is saved, any secret VPN key in it is replaced with '<redacted>'; nothing else in the report changes \u00b7 tested on dev: development d40e1ab26 - the same test report with 2 fake keys: before the change 2 keys saved, after 0 (5 masked), public key kept; 383/383 checks pass, the new check fails if the fix is removed; QA xd-1940 \u00b7 risk: very low - only text that is labelled as a private or shared key is changed \u00b7 rollback: redeploy the previous version \u00b7 advice: YES - it closes the last place a leaked key could be stored again (xd-1927)",
+          "verify": "After ship: git merge-base --is-ancestor <shipped commit> origin/production; production DLL grep -c LogSecretRedactor >= 1; next real bug report with a tunnel log: api log 'Bug report submitted ... maskedKeys=' present; SQL count of BugReports created after the ship whose TunnelLogSnippet matches 'private_?key\\s*[:=]\\s*[0-9a-f]{64}' or 'PrivateKey = [A-Za-z0-9+/]{43}=' -> 0",
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "addedAt": "2026-10-12T18:55:53Z",
+          "owner": "[BACKEND]"
         }
       ],
       "progress": 0,
@@ -59793,12 +59802,13 @@
       "from": "[SECURITY]",
       "to": "[BACKEND]",
       "title": "Handoff from SECURITY: Defence in depth: redact WireGuard keys in BugReports.TunnelLogSnippet on ingest (xd-1422 F19) + count relay nodes without a domain (F20)",
-      "description": "[WEBSITE+ADMIN run 2026-10-12 1704, scheduled, unattended, 2026-10-12T17:23:16Z] BugReportsController stores TunnelLogSnippet as sent (grep for any redaction on ingest: 0). Older or branch builds have uploaded private keys before (xd-1526). ASK: on POST /api/bugs replace 'private_key=[0-9a-f]{64}' and 'PrivateKey = <base64>' (and preshared_key) with '<redacted>' before saving; prove with a dev POST that carries a fake key -> stored row count of the pattern = 0. Also F20: read-only count of active relay nodes with no CasperCloak domain (those make the app skip TLS verification on the bare-IP path) and post the count on this handoff. Hand to [QA].",
-      "status": "pending",
+      "description": "[WEBSITE+ADMIN run 2026-10-12 1704, scheduled, unattended, 2026-10-12T17:23:16Z] BugReportsController stores TunnelLogSnippet as sent (grep for any redaction on ingest: 0). Older or branch builds have uploaded private keys before (xd-1526). ASK: on POST /api/bugs replace 'private_key=[0-9a-f]{64}' and 'PrivateKey = <base64>' (and preshared_key) with '<redacted>' before saving; prove with a dev POST that carries a fake key -> stored row count of the pattern = 0. Also F20: read-only count of active relay nodes with no CasperCloak domain (those make the app skip TLS verification on the bare-IP path) and post the count on this handoff. Hand to [QA].\n\n[BACKEND run 2026-10-12 1815, scheduled, unattended, 2026-10-12T18:55:53Z] BUILT on development d40e1ab26 (Infrastructure/LogSecretRedactor + BugReportsController + Tests/LogSecretRedactorTests). Dev proof: fake keys stored 2 -> 0 (control row before deploy vs after), masks 5, public key kept; 383/383 tests, new 9/9, control 1/9 fails. QA dev check xd-1940; READY TO SHIP row on the CEO card. F20 (read-only production, BEGIN READ ONLY, 18:2xZ): active servers 11; active with CasperCloak in SupportedProtocols 11; of those with an empty CasperCloakDomain 0 (and 0 with empty domain + empty pool). Inactive servers 2, 1 of them without a domain (inactive = not served). No relay table exists (information_schema tables ILIKE '%relay%' = 0). So today 0 served relay nodes make the app take the bare-IP/no-TLS-verify path.",
+      "status": "in_progress",
       "priority": "P2",
       "createdAt": "2026-10-12T17:23:22Z",
       "createdDate": "2026-10-12",
-      "completedDate": null
+      "completedDate": null,
+      "blocker": "Built on dev d40e1ab26. Waits QA dev check xd-1940, then CEO YES on the READY TO SHIP row; then BACKEND ships (cherry-pick d40e1ab26 + deploy_api.sh) and hands to QA."
     },
     {
       "id": "xd-1928",
@@ -59954,6 +59964,18 @@
       "status": "pending",
       "priority": "P2",
       "createdAt": "2026-10-12T18:35:07Z",
+      "createdDate": "2026-10-12",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1940",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: Check xd-1927 on dev: bug reports no longer store WireGuard private/preshared keys",
+      "description": "[BACKEND run 2026-10-12 1815, scheduled, unattended, 2026-10-12T18:55:53Z] development d40e1ab26 (deployed on dev, api created 18:54:23Z; dev DLL grep -c LogSecretRedactor = 1). WHAT: POST /api/bugs masks every labelled private/preshared key (private_key=<64 hex>, PrivateKey = <base64>, JSON privateKey) with <redacted> in TunnelLogSnippet, Description and ExtraJson before saving; public keys kept; log line 'Bug report submitted ... maskedKeys=<n>'. BACKEND PROOF on dev: same POST with 2 FAKE keys (hex+base64) - CONTROL before deploy (title xd1927-before-deploy-184514): fake keys found 2, masks 0; AFTER deploy (title xd1927-after-deploy-185501): fake keys found 0, masks 5, public key kept 1; dev log maskedKeys=5. Suite 383/383, new LogSecretRedactorTests 9/9, CONTROL (controller stores text as sent) -> 1/9 fails. QA: re-run /root/reports/be1012-1815/devtest.sh qa then /root/reports/be1012-1815/q.sh <title> on the main server -> expect '1|0|5|1'. Then the READY TO SHIP row on the CEO card waits the CEO's YES.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-12T18:55:58Z",
       "createdDate": "2026-10-12",
       "completedDate": null
     }
