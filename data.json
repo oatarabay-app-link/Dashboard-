@@ -59585,11 +59585,14 @@
       "to": "[IOS]",
       "title": "Handoff from SECURITY: Security slice 9: remove the staff test-account password from app source (F17) + drop the app-wide cleartext HTTP exception (F18)",
       "description": "[WEBSITE+ADMIN run 2026-10-12 1604, scheduled, unattended, 2026-10-12T16:25:09Z] F17 MEDIUM: ios-app-v2/CasperVPN/CasperVPN/App/AppCoordinator.swift:204 performDevLogin has a staff account email + password as string literals. Move them to a git-ignored debug config or the Xcode scheme environment under #if DEBUG; then run strings on the next archive and confirm the address count is 0. F18 LOW: CasperVPN/Info.plist:34 NSAllowsArbitraryLoads=true; app code has 0 http:// literals -> delete the key (test login, servers list, connect on dev). Work on development; next build. Report: memory/departments/security/audits/2026-10-11/REPORT-slice9-ios-app.md.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P2",
       "createdAt": "2026-10-12T16:25:13Z",
       "createdDate": "2026-10-12",
-      "completedDate": null
+      "completedDate": null,
+      "blocker": "Build owner (CEO live / next iPhone build): include ios/68-sec-1917 (39239ab5e, 2 commits on ios/68 3d5a40e) in the next build; then QA: strings on the archive = 0 staff addresses, and sign-in + servers list + connect on dev (F18).",
+      "note": "[IOS apps run 1012h 2026-10-12T17:15:07Z] DONE ON BRANCH, NOT COMPILED IN XCODE. ios/68-sec-1917 39239ab5e: f700e5629 F17 - the staff e-mail + password were in TWO files, not one: AppCoordinator.swift (performDevLogin + the mock user's e-mail) AND Features/Auth/AuthViewModel.swift (DEV_BYPASS_LOGIN path, not in the security report). Both now read CASPER_DEV_LOGIN_EMAIL / CASPER_DEV_LOGIN_PASSWORD from the Xcode scheme, Debug only (enum DevLoginCredentials in AppCoordinator.swift; release -> nil; missing -> AuthViewModel falls back to the mock user as before). git grep -F on the branch: staff address 0, password 0 (before: 3 + 2 lines). 39239ab5e F18 - NSAppTransportSecurity/NSAllowsArbitraryLoads removed from CasperVPN/Info.plist (plistlib OK; tunnel Info.plist untouched; app target has 0 http:// or ws:// URL literals - the one hit is a JWT claim name; the only AsyncImage uses an https URL). PROOF (cloud box, swiftc 6.1.2 Linux): swiftc -parse both files 0 errors (control with a broken line: 2 errors); harness compiled the REAL enum: DEBUG+env -> logs in, DEBUG no env / blank -> Missing -> mock fallback, RELEASE+env -> nil; release harness binary strings '@caspervpn' = 0. Pushed blobs sha256 = tested files (27bb3476 / 362127a0). NOT PROVEN: Xcode compile, the archive strings check, F18 on a device. The password stays in git history and in every build already shipped -> SECURITY handoff to decide on changing it.",
+      "handoffTo": "xd-1923 [QA], xd-1924 [SECURITY]"
     },
     {
       "id": "xd-1918",
@@ -59658,6 +59661,30 @@
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-10-12T17:12:42Z",
+      "createdDate": "2026-10-12",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1923",
+      "from": "[IOS]",
+      "to": "[QA]",
+      "title": "Handoff from IOS: xd-1917 F17/F18 on branch ios/68-sec-1917 - review the diff now, device + archive check after the next iPhone build",
+      "description": "Branch ios/68-sec-1917 39239ab5e (base ios/68 3d5a40e). Files: ios-app-v2/CasperVPN/CasperVPN/App/AppCoordinator.swift, ios-app-v2/CasperVPN/CasperVPN/Features/Auth/AuthViewModel.swift, ios-app-v2/CasperVPN/CasperVPN/Info.plist. Now (no device): git grep -c -F '<staff address from the security report>' 39239ab5e -- ios-app-v2 ':!*DerivedData*' = 0; git show 39239ab5e:ios-app-v2/CasperVPN/CasperVPN/Info.plist | grep -c NSAllowsArbitraryLoads = 0. After the build that includes it: strings on the archive's CasperVPN binary | grep -c '@caspervpn.com' (expect 0 staff address); sign in, open the servers list, connect once on the dev API (F18 = no cleartext exception). Never print the password.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-12T17:15:12Z",
+      "createdDate": "2026-10-12",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1924",
+      "from": "[IOS]",
+      "to": "[SECURITY]",
+      "title": "Handoff from IOS: xd-1917 F17: the staff test-account password is still in git history and in every shipped build - decide on changing it",
+      "description": "Removed from the source on ios/68-sec-1917 (apps run 1012h), but the literal stays in git history (all branches before 39239ab5e) and in the binaries of every iPhone build already in the App Store / TestFlight. Removing it from source does not make it secret again. Advice: change that account's password (and check it is not a privileged/staff role), then record it in credentials.md. Production account change = needs the CEO's yes. Never print the password.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-12T17:15:12Z",
       "createdDate": "2026-10-12",
       "completedDate": null
     }
