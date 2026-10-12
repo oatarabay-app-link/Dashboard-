@@ -14692,7 +14692,7 @@
           "verifiedBy": "none",
           "addedAt": "2026-10-12T17:52:16Z",
           "owner": "[DEVOPS]",
-          "evidence": "[DEVOPS run 2026-10-12 2025, scheduled, unattended, 2026-10-12T20:46:00Z] NEAR-OUTAGE 20:41:01Z: production CI (ci.yml on production: website, then api, then admin docker builds) took the main server / to 90 MB free (2,375 at 20:26Z). Removed under the row-254 rule only: api rollback-202610120023 (0 containers), website:scan + api:scan after their jobs ended (0 containers) -> 3,244 MB at 20:43Z; builder prune until=6h 30 MB. api /health 200 throughout; 0 'no space' lines in postgres/api logs 20:30-20:43Z; dockerd logged 2. This row (remove :scan in CI) plus moving image builds off the main server is now the main outage risk. CEO notified by push 20:28Z + 20:38Z. || "
+          "evidence": "[BACKEND run 2026-10-12 2017, scheduled, unattended, 2026-10-12T20:59:55Z] MEASURED (main server, df -m /): 278 MB free at ~20:37Z during a production ci.yml 'Build and push Docker image' step, back to 3,344 MB at 20:42Z when the job ended; 2,672 MB 20:50Z. Same pattern as the 19:24Z dip (2.3 GB). Not touched by backend; DevOps owns the fix. || [DEVOPS run 2026-10-12 2025, scheduled, unattended, 2026-10-12T20:46:00Z] NEAR-OUTAGE 20:41:01Z: production CI (ci.yml on production: website, then api, then admin docker builds) took the main server / to 90 MB free (2,375 at 20:26Z). Removed under the row-254 rule only: api rollback-202610120023 (0 containers), website:scan + api:scan after their jobs ended (0 containers) -> 3,244 MB at 20:43Z; builder prune until=6h 30 MB. api /health 200 throughout; 0 'no space' lines in postgres/api logs 20:30-20:43Z; dockerd logged 2. This row (remove :scan in CI) plus moving image builds off the main server is now the main outage risk. CEO notified by push 20:28Z + 20:38Z. || "
         },
         {
           "test": "READY TO SHIP \u2014 put the 'never write the secret VPN key into the app's log' fix into the main code (production) \u00b7 why: the fix lives only in the iPhone build branches; any new iPhone build made from the main code would write each user's secret key into Export Logs and bug reports again (security finding F19) \u00b7 what the ship does: copies 2 already-tested code changes (iPhone app + its VPN part) to production; no server, no store, no user is touched \u00b7 tested on dev: development b53a85cf0, Linux tests 28/28 + 10/10 (before the fix 8/28), QA xd-1931 \u00b7 rollback: git revert the 2 commits on production \u00b7 advice: YES - it only removes secrets from logs and stops an old leak from coming back (xd-1926)",
@@ -14777,6 +14777,16 @@
           "createdBy": "cto-run",
           "createdAt": "2026-10-12T20:42:49Z",
           "evidence": "[CTO run 2026-10-12 2035, scheduled] prepared: development 605a871d (1 new file, tools/dept_queue.py, 0 deleted). Runs use it already by fetching it read-only from development (routine 09 3c). Advice: YES after QA xd-1962 PASS. Ship = api_put of the same blob to production (one new path, xd-847 guard)."
+        },
+        {
+          "test": "READY TO SHIP \u2014 the password-reset e-mail stops putting the secret reset code inside an app-only link \u00b7 why: security finding F23 - the big button in the e-mail opened a 'caspervpn://' link; any other app on a phone can claim that kind of link and catch the code that lets someone set a new password \u00b7 what the ship does: the button opens our own website page instead (it resets the password and then opens the app); the code still works only once and only for 24 hours \u00b7 tested on dev: development ad220308a - the e-mail no longer contains any 'caspervpn://' link (dev server 0, live server still 1); 386/386 checks pass and the new checks fail if the old link is put back; QA xd-1964 \u00b7 risk: very low - people who tapped the old button now land on the web page first \u00b7 rollback: redeploy the previous version \u00b7 advice: YES (xd-1934)",
+          "verify": "After ship: git merge-base --is-ancestor <shipped commit> origin/production; production DLL strings -el | grep -c 'caspervpn://reset-password' -> 0 and grep -c 'works once' -> 1; next real reset mail (QA probe mailbox): only button href starts https://caspervpn.com/reset-password",
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "addedAt": "2026-10-12T20:59:55Z",
+          "owner": "[BACKEND]",
+          "evidence": "[BACKEND run 2026-10-12 2017, scheduled, unattended, 2026-10-12T20:59:55Z] added for xd-1934; dev proof: dev DLL 'caspervpn://reset-password' 0 / production 1; tests 386/386 + control 3/3 fail. Waits QA xd-1964 then the CEO YES."
         }
       ],
       "progress": 0,
@@ -59916,7 +59926,7 @@
       "createdAt": "2026-10-12T17:23:22Z",
       "createdDate": "2026-10-12",
       "completedDate": null,
-      "blocker": "Built on dev d40e1ab26. Waits QA dev check xd-1940, then CEO YES on the READY TO SHIP row; then BACKEND ships (cherry-pick d40e1ab26 + deploy_api.sh) and hands to QA."
+      "blocker": "QA DEV PASS (xd-1940 completed 12 Oct 19:11Z). Waits CEO YES on CEO-card row 272; then BACKEND ships (cherry-pick d40e1ab26 + deploy_api.sh)."
     },
     {
       "id": "xd-1928",
@@ -60019,14 +60029,18 @@
       "to": "[BACKEND]",
       "title": "Handoff from SECURITY: xd-1422 slice 11 F23: password-reset e-mail button uses caspervpn:// (any app can catch the token) - make it the https link",
       "description": "[WEBSITE+ADMIN run 2026-10-12 1805, scheduled, unattended, 2026-10-12T18:20:27Z] F23 LOW, measured on development b19bf5dab: backend-dotnet-core/Services/EmailService.cs ~L56-57 builds webResetUrl ({BaseUrl}/reset-password?token=..&email=..) and deepLinkUrl (caspervpn://reset-password?...), and the main button href is deepLinkUrl. A custom scheme is not owned: any installed app can register caspervpn:// and receive the reset token. Fix: button = webResetUrl (the website page already opens the app); confirm reset tokens are single-use with a short expiry (not checked). Android side = the [ANDROID] handoff of the same run; iOS = universal link path. Report: memory/departments/security/audits/2026-10-11/REPORT-slice11-android-app.md. Ship = READY TO SHIP row after dev test.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P2",
       "createdAt": "2026-10-12T18:20:31Z",
       "createdDate": "2026-10-12",
       "completedDate": null,
       "taskRef": "xd-1422",
       "dueBy": "2026-10-19T18:20:27Z",
-      "handoffTo": "[QA]"
+      "handoffTo": "[QA]",
+      "blocker": "Built on dev ad220308a (dev proof 20:58Z). Waits QA dev check xd-1964, then CEO YES on the READY TO SHIP row (password-reset e-mail); then BACKEND ships (cherry-pick ad220308a + deploy_api.sh).",
+      "notes": [
+        "[BACKEND run 2026-10-12 2017, scheduled, unattended, 2026-10-12T20:59:55Z] built + dev-deployed ad220308a; QA xd-1964; READY TO SHIP row added. Android/iOS halves are their own handoffs."
+      ]
     },
     {
       "id": "xd-1935",
@@ -60448,6 +60462,18 @@
       "status": "pending",
       "priority": "P0",
       "createdAt": "2026-10-12T20:46:05Z",
+      "createdDate": "2026-10-12",
+      "completedDate": null
+    },
+    {
+      "id": "xd-1964",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: Check xd-1934 on dev: password-reset e-mail button is the https link (no caspervpn:// token link)",
+      "description": "[BACKEND run 2026-10-12 2017, scheduled, unattended, 2026-10-12T20:59:55Z] development ad220308a (EmailService.BuildPasswordResetBody). Before: the button href was caspervpn://reset-password?token=..; any app can register that scheme and get the token. After: one button = {BaseUrl}/reset-password?token=<escaped>&email=<escaped>; the second web link is gone; footer says the link works once. PROVEN: build 0 errors; suite 386/386; PasswordResetEmailLinkTests 3/3; CONTROL (old caspervpn:// href put back) 3/3 FAIL; dev api recreated 20:57Z; dev DLL strings -el 'works once' 1, 'caspervpn://reset-password' 0, 'Reset Password in App' 0; production DLL control 'works once' 0, 'caspervpn://reset-password' 1. Token single-use + 24 h: AuthService.ResetPasswordAsync clears PasswordResetToken/Expiry (L1292-1293), expiry set AddHours(24) (L1257) - read from code, not exercised live. QA to do on dev: (1) re-run the DLL strings check; (2) optional real mail: forgot-password for a QA probe mailbox on api.dev.caspervpn.com -> the mail's only button starts https://caspervpn.com/reset-password (note: the website page posts to the PRODUCTION API, so finish the reset with POST https://api.dev.caspervpn.com/api/auth/reset-password, then the same token again -> 400 'Invalid or expired reset token'). PASS -> note on CEO-card row 'READY TO SHIP - the password-reset e-mail' and hand back to [BACKEND] after CEO YES. Never send to a real customer address.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-12T21:00:11Z",
       "createdDate": "2026-10-12",
       "completedDate": null
     }
