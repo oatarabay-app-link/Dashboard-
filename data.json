@@ -14949,6 +14949,46 @@
           "test": "READY TO SHIP \u2014 a new page caspervpn.com/dedicated-ip that explains the Dedicated IP add-on \u00b7 why: the add-on is sold in the iPhone app but the website has no page for it (404), so people searching for it find nothing \u00b7 what the ship does: adds the page (3 real features, 'from $7.99/month', bought in the iPhone app \u2014 no web checkout), one link from the pricing page and one line in the sitemap \u00b7 tested on dev: development 05a0103, dev page 200, 0 banned words, price = Apple's price; QA xd-1987 \u00b7 risk: low - a new page only, nothing else changes \u00b7 rollback: revert the commit and redeploy the website \u00b7 advice: YES (gtm-05 row 4, xd-1979)",
           "verify": "After ship: git merge-base --is-ancestor <cherry-pick of 05a0103> origin/production; curl -s https://caspervpn.com/dedicated-ip?cb=1 -> 200 and title 'Dedicated IP \u2014 your own fixed address | CasperVPN'; re-read ASC dedicated.monthly USA price the same day and compare with the page; /sitemap.xml lists /dedicated-ip.",
           "evidence": "[WEBSITE+ADMIN run 2026-10-12 2304, scheduled, unattended, 2026-10-12T23:26:04Z] added for xd-1979 / gtm-05 row 4; dev proof on xd-1979; waits QA xd-1987 then the CEO YES."
+        },
+        {
+          "test": "READY TO SHIP \u2014 the main server's automatic test run for the app's back-end works again on the live branch \u00b7 why: since 7 Oct it stops before testing, because it tries to download a helper that GitHub refuses (9 refusals today, last 15:56Z); so a broken back-end change is not caught \u00b7 what: one line in the test recipe uses the version of that helper that needs no download \u00b7 tested on dev: 2 green runs tonight (21:54Z and 22:56Z, 'Build & Test .NET Backend' Succeeded, test results published) \u00b7 rollback: put the one line back \u00b7 CEO: say yes or no",
+          "verify": "production .github/workflows/ci.yml line 115 = 'EnricoMi/publish-unit-test-result-action/linux@v2'; next production 'Build & Test .NET Backend' run Succeeded; journalctl -u docker | grep -c 'publish-unit-test-result-action.*denied' stays 0 after the ship",
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "verifiedByRaw": null,
+          "verifiedDate": null,
+          "evidence": "[DEVOPS run 2026-10-12 2325, scheduled, unattended, 2026-10-12T23:30:37Z] xd-1485. production ci.yml (md5 7e2403a4) L115 uses the docker variant; development (e70795a5) L115 uses /linux (dev fix 96aff2d25). Runner _diag Worker_20261012-215425 + -225609: Build & Test .NET Backend, refs/heads/development, 'Job result ... Succeeded'. Ship ONLY L115 (the xd-1921 scan-cleanup lines in the same diff are a separate row). dockerd 'denied' for v2.25.0: 9 lines in 10 h, last 15:56:47Z."
+        },
+        {
+          "test": "READY TO SHIP \u2014 the system can set up a new VPN server again \u00b7 why: the setting that tells it which of our keys to install on a new server is empty, so 'add a new server' stops with an error (measured tonight: 1 empty setting out of 81 in the running back-end) \u00b7 what: write our existing fleet key's public half (not a secret) into the main server's settings and restart the back-end with the safe update script \u00b7 tested on dev: not possible (the setting lives only on the main server) \u00b7 rollback: remove the line and run the same script again \u00b7 CEO: say yes or no",
+          "verify": "docker exec caspervpn-api printenv Activation__FleetSshPublicKey | wc -c > 50 and starts 'ssh-ed25519'; fingerprint = SHA256:sApNfitUS1DZBeZ4/6PI1T5STEcQz+YpKF2HbnB4TbM (casper_fleet_admin); /root/deploy_api.sh log 'DEPLOY DONE OK'",
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "verifiedByRaw": null,
+          "verifiedDate": null,
+          "evidence": "[DEVOPS run 2026-10-12 2325, scheduled, unattended, 2026-10-12T23:30:37Z] xd-1134. Measured 23:2xZ: running caspervpn-api 81 env vars, 1 empty = Activation__FleetSshPublicKey (len 0); /root/Casper/Casper-Code/.env has 0 ACTIVATION_FLEET_SSH_PUBLIC_KEY lines; docker-compose.yml:215 maps it; IServerActivationService.cs:570-586 throws when empty/malformed (codegraph query -> IServerActivationService.cs). /root/.ssh/casper_fleet_admin.pub does not exist; public half derived with ssh-keygen -y, fingerprint SHA256:sApNfit... (only the fingerprint was printed). deploy_api.sh already lists it in WARN_ENV."
+        },
+        {
+          "test": "DECISION \u2014 let go of 8 of our 10 spare server addresses (you said yes on 5 Oct after a test) \u00b7 the test is done: all 10 spares work and none is used by any server, app setting or web address \u00b7 problem: you asked to keep 1 in Europe + 1 in the US, but we have NO spare in Europe (they are in Hong Kong 2, Miami 1, Montreal 2, Sydney 1, S\u00e3o Paulo 2, Tokyo 2) \u00b7 advice A: keep Miami (US) + Tokyo (Asia), let go of the other 8, both Hong Kong ones first (they are on a spam list) - saves about $40 a month \u00b7 B: keep 2 different ones \u00b7 also: the Paris address is still marked as paid although Paris was shut down - please check it is cancelled with the provider \u00b7 how: done by you in the OneProvider customer panel (we have no tool for it)",
+          "verify": "MaskingIps Role=1 rows marked RetiredAt after the CEO's panel action; OneProvider invoice shows 8 fewer IPs",
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "verifiedByRaw": null,
+          "verifiedDate": null,
+          "evidence": "[DEVOPS run 2026-10-12 2325, scheduled, unattended, 2026-10-12T23:30:37Z] xd-1375. Read-only 23:3xZ: MaskingIps 22 rows (12 primary incl. Paris, 10 reserve, $5.00 each, all IsBilled=t, OneProvider). https GET / 10 s: 21/22 answer 200 701 bytes (the decoy page), Paris 163.172.62.64 = no answer (retired, still billed). Reserves in VpnServers rows: 0/10; in s1-s12.pompesh.com DNS: 0/10. Spamhaus PBL on 27.0.232.216/.217 (run j 9 Oct). The 'promotion dry-run on bkk-01' in the order is not possible: each reserve is a secondary IP of a OneProvider node and cannot move to another host."
+        },
+        {
+          "test": "ACTION (2 min) \u2014 pick one test log-in for the robot that checks the admin website \u00b7 why: the robot is installed and works; it needs an admin log-in on the TEST system only (never the live one), and unattended runs may not create log-ins \u00b7 what: reply 'make one' (a live session creates a test admin on the test system and keeps the password in our private credentials file) or name an existing test admin",
+          "verify": "credentials.md has a 'QA admin (dev)' entry; QA Playwright run logs in to admin.dev and screenshots the dashboard",
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "verifiedByRaw": null,
+          "verifiedDate": null,
+          "evidence": "[DEVOPS run 2026-10-12 2325, scheduled, unattended, 2026-10-12T23:30:37Z] xd-1696 row 1. Row 0 (Playwright 1.56 + Chromium) measured ready 11 Oct, handed to QA."
         }
       ],
       "progress": 0,
@@ -44041,7 +44081,8 @@
       "needsRelease": false,
       "qaNote": " | [QA 2026-10-06 d] OVERDUE since 5 Oct 22:xxZ (dueBy passed) and no named wait: [DEVOPS] close it, hand it back, or defer with reason + revisit date (7-day rule).",
       "updatedAt": "2026-10-09T01:2xZ",
-      "notes": "[QA 2026-10-09 b ~01:20Z, scheduled] deploy leg PASS via xd-1540: /root/deploy_api.sh = production git (md5 82398ceb7e2d) and both 9 Oct API deploys (00:29Z, 00:39Z) logged 'required secrets present: 12/12' before the rollback step. || [ENGINEERING run 2026-10-08 b, 2026-10-08T22:39:10Z] Deploy-path guard LIVE: /root/deploy_api.sh = git production 58e914e2b (md5 82398ceb7e2d), read-only run 12/12 present. Still not guarded: a container started by hand (docker restart / compose up outside the script). QA xd-1540. | [ENGINEERING run 2026-10-07 e, 2026-10-07T21:01:49Z] guard DONE on development adb9cbf7d (proof in QA xd-1487); READY TO SHIP row 149. Still open: set ACTIVATION_FLEET_SSH_PUBLIC_KEY in the brain .env (public key of casper_fleet_admin) - separate READY TO SHIP after the next run measures the key file. | [ENGINEERING run 2026-10-07 e, 2026-10-07T20:56:25Z] run e is writing the deploy guard (infrastructure/scripts/deploy_api.sh) on development now - another session leave this to run e. | [ENGINEERING run 2026-10-07 e, 2026-10-07T20:39:05Z, Opus 5.5, session cse_013HHnL3pX1tjGqiLaWKnkk9] triage (d) active again, due 14 Oct. MEASURED (names only, values never read): running caspervpn-api has 71 env vars, ONE empty = Activation__FleetSshPublicKey (the brain .env has no ACTIVATION_FLEET_SSH_PUBLIC_KEY line; IServerActivationService.cs:570-574 throws 'not configured' -> activating a new server through the API fails today; matters before the GCC canary xd-1310 / new providers xd-1347); website 20, admin 9, postgres 11, nginx 5 vars: 0 empty. NEXT STEP: (1) the guard in infrastructure/scripts/deploy_api.sh on development (after the health check, refuse + roll back when a REQUIRED name is empty; list from docker-compose.yml) -> READY TO SHIP; (2) a separate READY TO SHIP to set the activation public key from /root/.ssh/casper_fleet_admin.pub."
+      "notes": "[DEVOPS run 2026-10-12 2325, scheduled, unattended, 2026-10-12T23:30:37Z] Deploy guard is live (QA PASS 9 Oct). Left: the empty fleet key - READY TO SHIP row 289. Hand-started containers are still unguarded (next: an hourly blank-secret check, not started). || [QA 2026-10-09 b ~01:20Z, scheduled] deploy leg PASS via xd-1540: /root/deploy_api.sh = production git (md5 82398ceb7e2d) and both 9 Oct API deploys (00:29Z, 00:39Z) logged 'required secrets present: 12/12' before the rollback step. || [ENGINEERING run 2026-10-08 b, 2026-10-08T22:39:10Z] Deploy-path guard LIVE: /root/deploy_api.sh = git production 58e914e2b (md5 82398ceb7e2d), read-only run 12/12 present. Still not guarded: a container started by hand (docker restart / compose up outside the script). QA xd-1540. | [ENGINEERING run 2026-10-07 e, 2026-10-07T21:01:49Z] guard DONE on development adb9cbf7d (proof in QA xd-1487); READY TO SHIP row 149. Still open: set ACTIVATION_FLEET_SSH_PUBLIC_KEY in the brain .env (public key of casper_fleet_admin) - separate READY TO SHIP after the next run measures the key file. | [ENGINEERING run 2026-10-07 e, 2026-10-07T20:56:25Z] run e is writing the deploy guard (infrastructure/scripts/deploy_api.sh) on development now - another session leave this to run e. | [ENGINEERING run 2026-10-07 e, 2026-10-07T20:39:05Z, Opus 5.5, session cse_013HHnL3pX1tjGqiLaWKnkk9] triage (d) active again, due 14 Oct. MEASURED (names only, values never read): running caspervpn-api has 71 env vars, ONE empty = Activation__FleetSshPublicKey (the brain .env has no ACTIVATION_FLEET_SSH_PUBLIC_KEY line; IServerActivationService.cs:570-574 throws 'not configured' -> activating a new server through the API fails today; matters before the GCC canary xd-1310 / new providers xd-1347); website 20, admin 9, postgres 11, nginx 5 vars: 0 empty. NEXT STEP: (1) the guard in infrastructure/scripts/deploy_api.sh on development (after the health check, refuse + roll back when a REQUIRED name is empty; list from docker-compose.yml) -> READY TO SHIP; (2) a separate READY TO SHIP to set the activation public key from /root/.ssh/casper_fleet_admin.pub.",
+      "blocker": "CEO card row 289 (yes/no to set the fleet public key and redeploy the API)"
     },
     {
       "id": "xd-1135",
@@ -49299,8 +49340,8 @@
       "lifecycle": "active",
       "qaNote": "[QA 2026-10-08 ak ~22:18Z, scheduled] 7-day rule: past dueBy 2026-10-08 - close with evidence, hand back with a blocker, or defer with reason + revisit date (a P1 is never deferred silently).",
       "needsRelease": false,
-      "notes": "[QA 2026-10-09 i ~08:2xZ, scheduled] QA re-run via xd-1597: provider quotes 4/4 PASS; masking IPs reachable 22/22 (443 21/22, Paris closed); 2 Hong Kong reserves listed on Spamhaus ZEN PBL -> xd-1599. || [ENGINEERING run 2026-10-09 h, 2026-10-09T07:20Z] TRIAGE (d) active, due 14 Oct. Step (1) PART DONE, read-only from the main server 07:10Z: MaskingIps = 22 rows (Role 0 = 12 primaries incl. Paris; Role 1 = 10 reserves). CORRECTION to the 5 Oct reading: the 10 reserves are NOT unbound - each is a secondary IP on a live node (HK 2, Miami 1, Montreal 2, Sydney 1, Sao Paulo 2, Tokyo 2), all OneProvider, .00/mo, IsBilled=true. Reachability: 22/22 answer ping; 21/22 have TCP 443 open (Paris 163.172.62.64 closed = the retired server, expected - its row still billed=true, check). Reputation: 22/22 NOT listed on Spamhaus ZEN, SpamCop, Barracuda (control 127.0.0.2 returned listed on all three = lookups work); SORBS control failed -> not counted. ServerBlockEvents = 1 row ever (ClearedAt 2026-10-07 22:55Z) - the detector has written at least once; not 0 as on 5 Oct. LEFT: CC decoy + WG port check per Active IP, the reserve-promotion dry-run on bkk-01 (dev), then release 8 (CEO yes 5 Oct stands). NOTE for the CEO office: DPI note 9 Oct option C wants spare IPs on >= 3 OTHER providers; these reserves all sit on OneProvider (same network as 7 of 11 relays), so releasing them does not conflict with C. || [ENGINEERING run 2026-10-09 j, 2026-10-09T09:18:30Z] CORRECTION to run h's line '22/22 NOT listed on Spamhaus ZEN': WRONG - 2 of 22 (27.0.232.216 + .217, both Hong Kong reserves) are on ZEN through the PBL (127.0.0.10), measured 09:09Z; not on SBL/XBL. Run h tested only for the abuse codes. The 2 reserves to keep must come from the other 20 (xd-1599).",
-      "blocker": ""
+      "notes": "[DEVOPS run 2026-10-12 2325, scheduled, unattended, 2026-10-12T23:30:37Z] Test step done (decoy 21/22, spares used nowhere: DB 0, DNS 0). Release needs the CEO in the OneProvider panel + a choice (no EU spare exists) - DECISION row 290. || [QA 2026-10-09 i ~08:2xZ, scheduled] QA re-run via xd-1597: provider quotes 4/4 PASS; masking IPs reachable 22/22 (443 21/22, Paris closed); 2 Hong Kong reserves listed on Spamhaus ZEN PBL -> xd-1599. || [ENGINEERING run 2026-10-09 h, 2026-10-09T07:20Z] TRIAGE (d) active, due 14 Oct. Step (1) PART DONE, read-only from the main server 07:10Z: MaskingIps = 22 rows (Role 0 = 12 primaries incl. Paris; Role 1 = 10 reserves). CORRECTION to the 5 Oct reading: the 10 reserves are NOT unbound - each is a secondary IP on a live node (HK 2, Miami 1, Montreal 2, Sydney 1, Sao Paulo 2, Tokyo 2), all OneProvider, .00/mo, IsBilled=true. Reachability: 22/22 answer ping; 21/22 have TCP 443 open (Paris 163.172.62.64 closed = the retired server, expected - its row still billed=true, check). Reputation: 22/22 NOT listed on Spamhaus ZEN, SpamCop, Barracuda (control 127.0.0.2 returned listed on all three = lookups work); SORBS control failed -> not counted. ServerBlockEvents = 1 row ever (ClearedAt 2026-10-07 22:55Z) - the detector has written at least once; not 0 as on 5 Oct. LEFT: CC decoy + WG port check per Active IP, the reserve-promotion dry-run on bkk-01 (dev), then release 8 (CEO yes 5 Oct stands). NOTE for the CEO office: DPI note 9 Oct option C wants spare IPs on >= 3 OTHER providers; these reserves all sit on OneProvider (same network as 7 of 11 relays), so releasing them does not conflict with C. || [ENGINEERING run 2026-10-09 j, 2026-10-09T09:18:30Z] CORRECTION to run h's line '22/22 NOT listed on Spamhaus ZEN': WRONG - 2 of 22 (27.0.232.216 + .217, both Hong Kong reserves) are on ZEN through the PBL (127.0.0.10), measured 09:09Z; not on SBL/XBL. Run h tested only for the abuse codes. The 2 reserves to keep must come from the other 20 (xd-1599).",
+      "blocker": "CEO card row 290 (which 2 spares to keep; release is done in the OneProvider panel)"
     },
     {
       "id": "xd-1376",
@@ -51695,11 +51736,12 @@
       "createdAt": "2026-10-07T20:39:10Z",
       "createdDate": "2026-10-07",
       "completedDate": null,
-      "notes": "[ENGINEERING run 2026-10-09 i, 2026-10-09T08:16:34Z] SIDE FINDING (not worked): /var/log/docker-prune.log shows the 04:00Z 'docker system prune -af --filter until=24h' untagging ghcr.io/enricomi/publish-unit-test-result-action:v2.24.0 (twice) - the CI step's image is deleted by our own nightly clean-up. || [ENGINEERING run 2026-10-07 e, 2026-10-07T21:01:49Z] fix on development 96aff2d25; the development CI run had not reached the backend job by 21:01Z (runner queue). QA xd-1487 checks the next run; after a green run, cherry-pick to production (CI file only). | [ENGINEERING run 2026-10-07 e, 2026-10-07T20:56:25Z] fix on development 96aff2d25 (.github/workflows/ci.yml: composite /linux variant of the test-report action, no image pull); watching the development CI run - another session leave this to run e. | ",
+      "notes": "[DEVOPS run 2026-10-12 2325, scheduled, unattended, 2026-10-12T23:30:37Z] READY TO SHIP row 288 on the CEO card (one line, ci.yml L115). Dev proof: 2 green backend runs 21:54Z/22:56Z with the /linux variant. || [ENGINEERING run 2026-10-09 i, 2026-10-09T08:16:34Z] SIDE FINDING (not worked): /var/log/docker-prune.log shows the 04:00Z 'docker system prune -af --filter until=24h' untagging ghcr.io/enricomi/publish-unit-test-result-action:v2.24.0 (twice) - the CI step's image is deleted by our own nightly clean-up. || [ENGINEERING run 2026-10-07 e, 2026-10-07T21:01:49Z] fix on development 96aff2d25; the development CI run had not reached the backend job by 21:01Z (runner queue). QA xd-1487 checks the next run; after a green run, cherry-pick to production (CI file only). | [ENGINEERING run 2026-10-07 e, 2026-10-07T20:56:25Z] fix on development 96aff2d25 (.github/workflows/ci.yml: composite /linux variant of the test-report action, no image pull); watching the development CI run - another session leave this to run e. | ",
       "category": "infra-fleet",
       "ageDays": 5,
       "needsRelease": false,
-      "lifecycle": "active"
+      "lifecycle": "active",
+      "blocker": "CEO card row 288 (yes/no to ship the one-line CI fix to production)"
     },
     {
       "id": "xd-1486",
@@ -55991,11 +56033,12 @@
       "createdAt": "2026-10-10T21:56:45Z",
       "createdDate": "2026-10-10",
       "completedDate": null,
-      "notes": "[DEVOPS run 2026-10-11 d, scheduled, unattended, 2026-10-11T03:30Z] Row 0 measured ready (Playwright 1.56.0 + Chromium 141 preinstalled in every Cowork cloud workspace; screenshots of caspervpn.com and admin.dev 200) -> QA. Row 1 BLOCKED: unattended runs do not create log-in accounts or store passwords; dev DB has 3 staff admins, no QA test admin. CEO: name one dev admin for QA, or create one in a live session. || ",
+      "notes": "[DEVOPS run 2026-10-12 2325, scheduled, unattended, 2026-10-12T23:30:37Z] Row 1 needs a test admin log-in on dev; unattended runs may not create log-ins - ACTION row 291. || [DEVOPS run 2026-10-11 d, scheduled, unattended, 2026-10-11T03:30Z] Row 0 measured ready (Playwright 1.56.0 + Chromium 141 preinstalled in every Cowork cloud workspace; screenshots of caspervpn.com and admin.dev 200) -> QA. Row 1 BLOCKED: unattended runs do not create log-in accounts or store passwords; dev DB has 3 staff admins, no QA test admin. CEO: name one dev admin for QA, or create one in a live session. || ",
       "category": "money-admin",
       "ageDays": 2,
       "needsRelease": false,
-      "lifecycle": "active"
+      "lifecycle": "active",
+      "blocker": "CEO card row 291 (name or approve a dev test admin for QA)"
     },
     {
       "id": "xd-1697",
@@ -56247,11 +56290,12 @@
       "createdAt": "2026-10-10T23:29:50Z",
       "createdDate": "2026-10-10",
       "completedDate": null,
-      "notes": "[DEVOPS run 2026-10-11 e, scheduled, unattended, 2026-10-11T04:32:46Z] Follow-up: the NEW key is still a literal in 7 installed scripts on the main server (step 5 cleaned git only). Install + re-rotate proposed on CEO card row 238.",
+      "notes": "[DEVOPS run 2026-10-12 2325, scheduled, unattended, 2026-10-12T23:30:37Z] Step 2 (re-rotate the mail key) still not started: main server 3,782 MB free at 23:26Z with a CI job running (gate >= 8 GB per row 238). Unblocks when the disk is enlarged. || [DEVOPS run 2026-10-11 e, scheduled, unattended, 2026-10-11T04:32:46Z] Follow-up: the NEW key is still a literal in 7 installed scripts on the main server (step 5 cleaned git only). Install + re-rotate proposed on CEO card row 238.",
       "category": "infra-fleet",
       "ageDays": 2,
       "needsRelease": false,
-      "lifecycle": "active"
+      "lifecycle": "active",
+      "blocker": "CEO card row 267 (bigger main-server disk; the re-rotation recreates api+website and needs >= 8 GB free)"
     },
     {
       "id": "xd-1711",
@@ -61060,6 +61104,18 @@
       "createdDate": "2026-10-12",
       "completedDate": null,
       "taskRef": "gtm-05-pricing-offers"
+    },
+    {
+      "id": "xd-1988",
+      "from": "[DEVOPS]",
+      "to": "[QA]",
+      "title": "Handoff from DEVOPS: Check on development: backend CI test step runs without the refused image pull (xd-1485)",
+      "description": "[DEVOPS run 2026-10-12 2325, scheduled, unattended, 2026-10-12T23:30:37Z] development ci.yml L115 = publish-unit-test-result-action/linux@v2 (dev 96aff2d25). verify: runner /home/github-runner/actions-runner/_diag Worker_20261012-215425-utc.log and -225609: jobDisplayName 'Build & Test .NET Backend', refs/heads/development, 'Job result after all job steps finish: Succeeded'; 'Publish Test Results' step present. Production ship = CEO card row 288.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-12T23:30:41Z",
+      "createdDate": "2026-10-12",
+      "completedDate": null
     }
   ],
   "importantNotes": [
