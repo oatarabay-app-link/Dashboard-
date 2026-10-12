@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-12T22:19:31Z",
+  "lastUpdated": "2026-10-12T22:41:03Z",
   "updatedBy": "[CEO] office live 2026-10-12",
   "overall": {
     "completion": 69,
@@ -2069,7 +2069,8 @@
           "verifiedDate": "2026-03-31",
           "verifiedByRaw": "qa-untick-2026-10-11",
           "qaVerdict": "FAIL",
-          "qaDate": "2026-10-11"
+          "qaDate": "2026-10-11",
+          "blocker": "Waits on xd-1738 [BACKEND] (in_progress: APNs sender shipped 11 Oct 23:22Z; it waits the CEO's one test push from build 68, ceo-action-backlog row 223 - QA 19:11Z: active device tokens 2, 'APNs push sent successfully' 0). The country broadcast itself is not built on top of it yet."
         },
         {
           "test": "Fallback domain management: maintain list of backup domains/IPs, auto-switch when primary is blocked",
@@ -3201,7 +3202,7 @@
           "passed": false,
           "verifiedBy": "none",
           "verifiedAt": "2026-09-24T21:05:00Z",
-          "evidence": "[BACKEND run 2026-10-11 0015, scheduled, unattended, 2026-10-11T00:59:41Z] FIXED on development 32981aec7 (InvalidModelStateResponseFactory, superset of ProblemDetails); live on dev 00:58Z: register {} -> success/errorCode VALID_3001/message/timestamp; production unchanged (control). -> QA xd-1741, then READY TO SHIP row. Not ticked. | [FAIL] QA 2026-09-30: 2 of 3 error types use the standard shape: bad login and bad refresh -> {success,errorCode,message,timestamp}; but a validation error (POST /api/auth/register with {}) -> 400 in the framework's default ProblemDetails shape (type,title,status,errors) - no errorCode, no timestamp. Program.cs:184 AddControllers(...) sets no InvalidModelStateResponseFactory. Handed to [BACKEND]. | prior: QA 2026-09-24 PASS: Error body on prod: {\"success\":false,\"errorCode\":\"VALID_3001\",\"message\":\"Invalid email or password\",\"timestamp\":\"2026-09-24T20:49:03Z\"}.",
+          "evidence": "[CTO run 2026-10-12 2236, scheduled, unattended, 2026-10-12T22:4xZ] ALREADY LIVE (shipped 11 Oct 23:22Z, ceo-action-backlog row 222 QA PASS 12 Oct 00:08Z). Re-measured on production 22:37-22:38Z: POST /api/auth/register {} -> 400 {success:false, errorCode VALID_3001, message 'The Email field is required.', timestamp, errors}; POST /api/auth/login bad -> 401 {success,errorCode,message,timestamp}; POST /api/auth/refresh bogus -> 401 same shape. 3 of 3 error types standard. Not ticked - handed to QA. verify: curl -s -X POST https://api.caspervpn.com/api/auth/register -H 'Content-Type: application/json' -d '{}' || [BACKEND run 2026-10-11 0015, scheduled, unattended, 2026-10-11T00:59:41Z] FIXED on development 32981aec7 (InvalidModelStateResponseFactory, superset of ProblemDetails); live on dev 00:58Z: register {} -> success/errorCode VALID_3001/message/timestamp; production unchanged (control). -> QA xd-1741, then READY TO SHIP row. Not ticked. | [FAIL] QA 2026-09-30: 2 of 3 error types use the standard shape: bad login and bad refresh -> {success,errorCode,message,timestamp}; but a validation error (POST /api/auth/register with {}) -> 400 in the framework's default ProblemDetails shape (type,title,status,errors) - no errorCode, no timestamp. Program.cs:184 AddControllers(...) sets no InvalidModelStateResponseFactory. Handed to [BACKEND]. | prior: QA 2026-09-24 PASS: Error body on prod: {\"success\":false,\"errorCode\":\"VALID_3001\",\"message\":\"Invalid email or password\",\"timestamp\":\"2026-09-24T20:49:03Z\"}.",
           "met": false,
           "verifiedDate": "2026-09-30",
           "verifiedByRaw": "qa-sweep-2026-09-30-fail",
@@ -3209,7 +3210,8 @@
           "qaDate": "2026-09-30",
           "verify": "curl -s -X POST localhost:8080/api/auth/register -H 'Content-Type: application/json' -d '{}' -> must contain errorCode and timestamp",
           "verifiedByPrevious": "tested",
-          "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored"
+          "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored",
+          "blocker": "QA tick only (handoff from CTO run 2026-10-12 2236)."
         },
         {
           "test": "API documentation (all endpoints, parameters, response schemas) is served on the development API at api.dev.caspervpn.com/api/docs; production /api/docs returns 200 with that pointer, no schema in production (CEO decision 2026-09-30, was: 'API documentation at /api/docs includes all endpoints, parameters, and response schemas')",
@@ -19555,7 +19557,8 @@
           "met": false,
           "passed": false,
           "verifiedBy": "none",
-          "evidence": "[CTO live chat 2026-10-09 16:09-16:35Z (19:xx Beirut), owner of cloudflare-exit-phase1] CEO device test (build 65, Lebanon -> Duesseldorf, CasperCloak): connects on the direct front (API cfWiring=SUPPRESSED; relay peer not Cloudflare), held > 10 min (16:12-16:27Z+), slow on the CEO's line (rtt 126-407 ms, ~6-14% loss); relay itself 100 Mbit/s capable. Left: speed on a clean line, auto-fallback (QA xd-1220), TestFlight. Details: CEO card row 172. || [CTO live chat 2026-10-09 01:16-01:5xZ (04:xx Beirut), owner of cloudflare-exit-phase1] FINDING (code + prod DB, read-only): Lebanon is tier Advisory (restricted_countries LB=3); for Advisory/Throttle the API sends no Cloudflare wiring (ServersController.cs:1155-1167, log 'cfWiring=SUPPRESSED (direct grey relay)') and the app dials the server's CasperCloakDomain = s<N>.pompesh.com on all 11 relays (DNS-only A -> relay IP = the direct front). So the CEO's phone in Lebanon already uses the direct front in hidden mode: the build-65 test can run now with no production change - CHECKLIST CEO card row 172. Auto-fallback leg (AUTO door, xd-1309, coded c9a61100) still needs a network that blocks one door (QA xd-1220). Today Fronted (BY CN CU IR KP MM RU TJ TM UZ), DirectFirst (AE BH EG OM PK SA TR VN) and every unlisted country get the Cloudflare front. || "
+          "evidence": "[CTO live chat 2026-10-09 16:09-16:35Z (19:xx Beirut), owner of cloudflare-exit-phase1] CEO device test (build 65, Lebanon -> Duesseldorf, CasperCloak): connects on the direct front (API cfWiring=SUPPRESSED; relay peer not Cloudflare), held > 10 min (16:12-16:27Z+), slow on the CEO's line (rtt 126-407 ms, ~6-14% loss); relay itself 100 Mbit/s capable. Left: speed on a clean line, auto-fallback (QA xd-1220), TestFlight. Details: CEO card row 172. || [CTO live chat 2026-10-09 01:16-01:5xZ (04:xx Beirut), owner of cloudflare-exit-phase1] FINDING (code + prod DB, read-only): Lebanon is tier Advisory (restricted_countries LB=3); for Advisory/Throttle the API sends no Cloudflare wiring (ServersController.cs:1155-1167, log 'cfWiring=SUPPRESSED (direct grey relay)') and the app dials the server's CasperCloakDomain = s<N>.pompesh.com on all 11 relays (DNS-only A -> relay IP = the direct front). So the CEO's phone in Lebanon already uses the direct front in hidden mode: the build-65 test can run now with no production change - CHECKLIST CEO card row 172. Auto-fallback leg (AUTO door, xd-1309, coded c9a61100) still needs a network that blocks one door (QA xd-1220). Today Fronted (BY CN CU IR KP MM RU TJ TM UZ), DirectFirst (AE BH EG OM PK SA TR VN) and every unlisted country get the Cloudflare front. || ",
+          "blocker": "Waits for the CEO: a hidden-mode test on the current TestFlight build with a speed test on a clean line (build-65 test 9 Oct held >10 min but slow line). Owner: CTO live chat."
         },
         {
           "test": "Production: every relay switched one at a time; 0 VPN connections and 0 VPN DNS lookups reach Cloudflare for 7 days",
@@ -19563,7 +19566,8 @@
           "met": false,
           "passed": false,
           "verifiedBy": "none",
-          "evidence": "[QA 2026-10-10 j, scheduled, 11:4x-12:0xZ] relay 1 (Duesseldorf) 24 h after the switch (9 Oct 11:01:41Z -> 10 Oct 11:01:41Z): DNS 91.194.84.79 at Cloudflare's own name server and 8.8.8.8, no cf-ray, canary pass cf_ip=false, de-3 116 relay connections (16 with #52, 4 RESUME), API sends wss://s6-edge for Duesseldorf 21x. Criterion stays met=false: it needs every relay switched + 7 days with 0 VPN connections via Cloudflare (xd-1607). || [CTO live chat 2026-10-09 16:09-16:35Z (19:xx Beirut), owner of cloudflare-exit-phase1] relay 1 (Duesseldorf) real-user proof: REAL USER on the new road: 16:25:09/16:25:40/16:27:02Z API 'StealthTier: country=RU tier=Fronted server=Duesseldorf cfWiring=minted' (= wss://s6-edge.pompesh.com/, DNS-only since 11:01Z); de-3 relay #52=NEW at ~16:25:40Z, WG key SHPGnq.. (WireGuardKeys: a customer, last login RU); relay TCP to the phone direct (not Cloudflare), rtt 60 ms +/-1, 0 of 50 retransmits, TCP delivery rate ~158 Mbit/s; 22 -> 28 MiB to the phone in ~1.5 min. First real customer session through the non-Cloudflare front since the switch. || [QA 2026-10-09 l, scheduled] relay 1 (Duesseldorf) checked: s6-edge.pompesh.com = 91.194.84.79 at Cloudflare's own name server and 8.8.8.8, no cf-ray, canary pass cf_ip=false 11:27Z (xd-1607). Crit stays unmet: needs all 11 relays + 7 days. || [CTO live chat 2026-10-09 11:01-11:1xZ (14:0x Beirut), owner of cloudflare-exit-phase1] RELAY 1 of 11 DONE: Duesseldorf hidden mode straight to our relay since 11:01:41Z (row 171, QA xd-1607). Next relays one at a time with a CEO yes each - per the DPI note, after disguise A is live (xd-1608). || [CTO live chat 2026-10-09 01:16-01:5xZ (04:xx Beirut), owner of cloudflare-exit-phase1] RELAY 1 (Duesseldorf) PREPARED - READY TO SHIP CEO card row 171 ('yes door'), DEVOPS xd-1569 after the yes. Method per relay: Cloudflare DNS {entryId}-edge.pompesh.com proxied -> DNS-only (each record already points at its own relay; HostTemplate is global, so the API setting must NOT be used for one-at-a-time). ROLLOUT CHECKLIST FOR EVERY RELAY (learned on de-3): (a) own resolver + REDIRECT of udp/tcp 53 on every tunnel interface (de-3 has it on wg0 only) - needed because the iOS hidden-mode tunnel hard-codes 1.1.1.1 (CasperCloakTunnelProvider.swift:429) and the API's WireGuard configs default to 1.1.1.1/1.0.0.1/8.8.8.8/9.9.9.9 (VpnServerService.cs:341/366/1345/1413); (b) restart long-running services after the resolver switch (wg-radius-accounting kept 1.1.1.1 for months); (c) canary on the relay's direct name before the flip. Not fixable on relays: the app looks up relay addresses through Cloudflare DoH first (DoHResolver.swift:111) - iOS xd-1570 (P2). Exposure and proofs for Duesseldorf: row 171 evidence. || "
+          "evidence": "[QA 2026-10-10 j, scheduled, 11:4x-12:0xZ] relay 1 (Duesseldorf) 24 h after the switch (9 Oct 11:01:41Z -> 10 Oct 11:01:41Z): DNS 91.194.84.79 at Cloudflare's own name server and 8.8.8.8, no cf-ray, canary pass cf_ip=false, de-3 116 relay connections (16 with #52, 4 RESUME), API sends wss://s6-edge for Duesseldorf 21x. Criterion stays met=false: it needs every relay switched + 7 days with 0 VPN connections via Cloudflare (xd-1607). || [CTO live chat 2026-10-09 16:09-16:35Z (19:xx Beirut), owner of cloudflare-exit-phase1] relay 1 (Duesseldorf) real-user proof: REAL USER on the new road: 16:25:09/16:25:40/16:27:02Z API 'StealthTier: country=RU tier=Fronted server=Duesseldorf cfWiring=minted' (= wss://s6-edge.pompesh.com/, DNS-only since 11:01Z); de-3 relay #52=NEW at ~16:25:40Z, WG key SHPGnq.. (WireGuardKeys: a customer, last login RU); relay TCP to the phone direct (not Cloudflare), rtt 60 ms +/-1, 0 of 50 retransmits, TCP delivery rate ~158 Mbit/s; 22 -> 28 MiB to the phone in ~1.5 min. First real customer session through the non-Cloudflare front since the switch. || [QA 2026-10-09 l, scheduled] relay 1 (Duesseldorf) checked: s6-edge.pompesh.com = 91.194.84.79 at Cloudflare's own name server and 8.8.8.8, no cf-ray, canary pass cf_ip=false 11:27Z (xd-1607). Crit stays unmet: needs all 11 relays + 7 days. || [CTO live chat 2026-10-09 11:01-11:1xZ (14:0x Beirut), owner of cloudflare-exit-phase1] RELAY 1 of 11 DONE: Duesseldorf hidden mode straight to our relay since 11:01:41Z (row 171, QA xd-1607). Next relays one at a time with a CEO yes each - per the DPI note, after disguise A is live (xd-1608). || [CTO live chat 2026-10-09 01:16-01:5xZ (04:xx Beirut), owner of cloudflare-exit-phase1] RELAY 1 (Duesseldorf) PREPARED - READY TO SHIP CEO card row 171 ('yes door'), DEVOPS xd-1569 after the yes. Method per relay: Cloudflare DNS {entryId}-edge.pompesh.com proxied -> DNS-only (each record already points at its own relay; HostTemplate is global, so the API setting must NOT be used for one-at-a-time). ROLLOUT CHECKLIST FOR EVERY RELAY (learned on de-3): (a) own resolver + REDIRECT of udp/tcp 53 on every tunnel interface (de-3 has it on wg0 only) - needed because the iOS hidden-mode tunnel hard-codes 1.1.1.1 (CasperCloakTunnelProvider.swift:429) and the API's WireGuard configs default to 1.1.1.1/1.0.0.1/8.8.8.8/9.9.9.9 (VpnServerService.cs:341/366/1345/1413); (b) restart long-running services after the resolver switch (wg-radius-accounting kept 1.1.1.1 for months); (c) canary on the relay's direct name before the flip. Not fixable on relays: the app looks up relay addresses through Cloudflare DoH first (DoHResolver.swift:111) - iOS xd-1570 (P2). Exposure and proofs for Duesseldorf: row 171 evidence. || ",
+          "blocker": "Waits on xd-1608 [DEVOPS] (disguise A, pending) and xd-1609 [DEVOPS] (disguise B, pending) before the next relay leaves Cloudflare; then the CEO's yes per relay. Owner: CTO live chat."
         },
         {
           "test": "Real users: hidden-mode sessions carry data in at least 3 countries (control: WireGuard sessions in the same countries)",
@@ -19571,7 +19575,8 @@
           "met": false,
           "passed": false,
           "verifiedBy": "none",
-          "evidence": "[CTO live chat 2026-10-09 16:09-16:35Z (19:xx Beirut), owner of cloudflare-exit-phase1] COUNTRY 1 of 3 (RU) on the non-Cloudflare road: REAL USER on the new road: 16:25:09/16:25:40/16:27:02Z API 'StealthTier: country=RU tier=Fronted server=Duesseldorf cfWiring=minted' (= wss://s6-edge.pompesh.com/, DNS-only since 11:01Z); de-3 relay #52=NEW at ~16:25:40Z, WG key SHPGnq.. (WireGuardKeys: a customer, last login RU); relay TCP to the phone direct (not Cloudflare), rtt 60 ms +/-1, 0 of 50 retransmits, TCP delivery rate ~158 Mbit/s; 22 -> 28 MiB to the phone in ~1.5 min. First real customer session through the non-Cloudflare front since the switch. Control (WireGuard in RU) not yet measured. || "
+          "evidence": "[CTO live chat 2026-10-09 16:09-16:35Z (19:xx Beirut), owner of cloudflare-exit-phase1] COUNTRY 1 of 3 (RU) on the non-Cloudflare road: REAL USER on the new road: 16:25:09/16:25:40/16:27:02Z API 'StealthTier: country=RU tier=Fronted server=Duesseldorf cfWiring=minted' (= wss://s6-edge.pompesh.com/, DNS-only since 11:01Z); de-3 relay #52=NEW at ~16:25:40Z, WG key SHPGnq.. (WireGuardKeys: a customer, last login RU); relay TCP to the phone direct (not Cloudflare), rtt 60 ms +/-1, 0 of 50 retransmits, TCP delivery rate ~158 Mbit/s; 22 -> 28 MiB to the phone in ~1.5 min. First real customer session through the non-Cloudflare front since the switch. Control (WireGuard in RU) not yet measured. || ",
+          "blocker": "Waits on xd-1608 [DEVOPS] (disguise A, pending) and xd-1609 [DEVOPS] (disguise B, pending) before the next relay leaves Cloudflare; then the CEO's yes per relay. Owner: CTO live chat."
         },
         {
           "test": "DPI note on file: what a censor sees on the new front (SNI, certificate, TLS fingerprint, IP owner) + the replacement cover (domains, rotating IP pool) and its cost",
@@ -19899,9 +19904,10 @@
           "met": false,
           "passed": false,
           "verifiedBy": "none",
-          "evidence": "[QA 2026-10-12 f, scheduled, 2026-10-12T16:17:14Z] FAIL - open handoffs per department 16:0xZ: QA 83, IOS 33, DEVOPS 25, BACKEND 20, MARKETING 8, WEBSITE 6, CTO 6, CEO 6, ADMIN-PANEL 5, SECURITY 5, PRODUCT 4, ANDROID 4, LEGAL 3 - 4 departments over 10 (9 Oct: QA 32, IOS 21, DEVOPS 16). xd-1476 consolidated here. || [QA 2026-10-09 i ~08:2xZ, scheduled] NOT MET. Open per department 08:0xZ: QA 32, IOS 21, DEVOPS 16, BACKEND 8, MARKETING 6, CTO 5, SECURITY 5, PRODUCT 4, WEBSITE 4, ADMIN-PANEL 4, ANDROID 4, LEGAL 3, ADMIN 2, CEO 2; total 116 (82 at 22:18Z 8 Oct). Over 10: QA, IOS, DEVOPS. verify: count crossDeptTasks with status in pending/in_progress/open/blocked by 'to'. || [QA 2026-10-08 ak ~22:18Z, scheduled] NOT MET. Open handoffs (pending + in_progress) per department at 22:18Z: IOS 16, QA 10, DEVOPS 9, BACKEND 8, CTO 7, WEBSITE 5, ANDROID 5, MARKETING 4, SECURITY 4, CEO 3, PRODUCT 3, ADMIN-PANEL 3, LEGAL 3, ADMIN 2. At or above 10: IOS, QA. Context: no department could work 00:20Z-21:51Z on 8 Oct (see xd-1476). | [QA 2026-10-07 ah ~22:15Z, scheduled] NOT MET at 22:15Z on board acce86300: open (pending+in_progress) handoffs BACKEND 7, DEVOPS 9, IOS 9, QA 12 (11 after this run closes xd-1489) \u2014 QA is above the < 10 target because 10 new P0/P1 checks arrived 21:40-21:53Z; 8 of them need the phone, the emulator, a signed-in browser or a real payment. | [CTO live chat 2026-10-07T21:40:42Z - CEO URGENT 6 (xd-1475/xd-1476): close with proof, merge, or plan a month] Burn-down pushed in this session. Open rows per department (pending + in_progress) BEFORE -> AFTER: ADMIN 2->2, ADMIN-PANEL 4->3, ANDROID 4->4, BACKEND 26->7, CEO 3->3, CTO 19->6, DEVOPS 29->9, IOS 28->6, LEGAL 4->4, MARKETING 12->5, PRODUCT 3->3, QA 58->9, SECURITY 1->1, WEBSITE 6->6. Every department is under 10. Each closed row quotes its measurement; merged rows point at one umbrella per real trigger; planned rows carry deferredUntil + the plan.",
+          "evidence": "[CTO run 2026-10-12 2236, scheduled, unattended, 2026-10-12T22:4xZ] FAIL (re-measured on board lastUpdated 22:19:31Z, crossDeptTasks status pending/in_progress/open/blocked by 'to'): total 216 = QA 92, IOS 35, DEVOPS 23, BACKEND 19, MARKETING 7, CTO 7, WEBSITE 6, SECURITY 5, CEO 5, ADMIN-PANEL 4, PRODUCT 3, LEGAL 3, ANDROID 3, DESIGN 1, DESKTOP 1, ADMIN 1 (+1 mis-tagged '[[QA]]' xd-1661, fixed this push). 4 departments over 10 (QA, IOS, DEVOPS, BACKEND); at 16:0xZ QA counted QA 83 / IOS 33 / DEVOPS 25 / BACKEND 20. Control: dept_queue.py handoff totals use the same statuses. || [QA 2026-10-12 f, scheduled, 2026-10-12T16:17:14Z] FAIL - open handoffs per department 16:0xZ: QA 83, IOS 33, DEVOPS 25, BACKEND 20, MARKETING 8, WEBSITE 6, CTO 6, CEO 6, ADMIN-PANEL 5, SECURITY 5, PRODUCT 4, ANDROID 4, LEGAL 3 - 4 departments over 10 (9 Oct: QA 32, IOS 21, DEVOPS 16). xd-1476 consolidated here. || [QA 2026-10-09 i ~08:2xZ, scheduled] NOT MET. Open per department 08:0xZ: QA 32, IOS 21, DEVOPS 16, BACKEND 8, MARKETING 6, CTO 5, SECURITY 5, PRODUCT 4, WEBSITE 4, ADMIN-PANEL 4, ANDROID 4, LEGAL 3, ADMIN 2, CEO 2; total 116 (82 at 22:18Z 8 Oct). Over 10: QA, IOS, DEVOPS. verify: count crossDeptTasks with status in pending/in_progress/open/blocked by 'to'. || [QA 2026-10-08 ak ~22:18Z, scheduled] NOT MET. Open handoffs (pending + in_progress) per department at 22:18Z: IOS 16, QA 10, DEVOPS 9, BACKEND 8, CTO 7, WEBSITE 5, ANDROID 5, MARKETING 4, SECURITY 4, CEO 3, PRODUCT 3, ADMIN-PANEL 3, LEGAL 3, ADMIN 2. At or above 10: IOS, QA. Context: no department could work 00:20Z-21:51Z on 8 Oct (see xd-1476). | [QA 2026-10-07 ah ~22:15Z, scheduled] NOT MET at 22:15Z on board acce86300: open (pending+in_progress) handoffs BACKEND 7, DEVOPS 9, IOS 9, QA 12 (11 after this run closes xd-1489) \u2014 QA is above the < 10 target because 10 new P0/P1 checks arrived 21:40-21:53Z; 8 of them need the phone, the emulator, a signed-in browser or a real payment. | [CTO live chat 2026-10-07T21:40:42Z - CEO URGENT 6 (xd-1475/xd-1476): close with proof, merge, or plan a month] Burn-down pushed in this session. Open rows per department (pending + in_progress) BEFORE -> AFTER: ADMIN 2->2, ADMIN-PANEL 4->3, ANDROID 4->4, BACKEND 26->7, CEO 3->3, CTO 19->6, DEVOPS 29->9, IOS 28->6, LEGAL 4->4, MARKETING 12->5, PRODUCT 3->3, QA 58->9, SECURITY 1->1, WEBSITE 6->6. Every department is under 10. Each closed row quotes its measurement; merged rows point at one umbrella per real trigger; planned rows carry deferredUntil + the plan.",
           "qaVerdict": "FAIL",
-          "qaDate": "2026-10-12"
+          "qaDate": "2026-10-12",
+          "blocker": "Waits on IOS (35), DEVOPS (23), BACKEND (19) and the QA run (92) to close their own handoffs via dept_queue step 3c; CTO may not close another department's work (CLAUDE.md section 4)."
         },
         {
           "test": "Daily office report shows open-row count per department falling 3 days in a row",
@@ -19909,9 +19915,10 @@
           "met": false,
           "passed": false,
           "verifiedBy": "none",
-          "evidence": "[QA 2026-10-09 i ~08:2xZ, scheduled] NOT MET: 2 of 3 office reports (8 Oct 22:5xZ, 9 Oct 06:0xZ in memory/departments/ceo/session-log.md); open count rose 82 -> 116, not falling. Re-read after the 10 Oct report. || [QA 2026-10-08 ak ~22:18Z, scheduled] NOT MET: 0 of 3 office reports - the 8 Oct office firing (06:03:30Z) reached the Mac only at 21:52Z and had not pushed at 22:18Z.",
+          "evidence": "[CTO run 2026-10-12 2236, scheduled, unattended, 2026-10-12T22:4xZ] FAIL - measured trend from the board (open = created before T and not closed before T, closed = completedAt/completedDate/deferredAt): 9 Oct 22:20Z 121 -> 10 Oct 144 -> 11 Oct 184 -> 12 Oct 22:19Z 216. Rising 3 days in a row, not falling. 23 closed rows carry no close date (not counted as open). verify: same rule over crossDeptTasks. || [QA 2026-10-09 i ~08:2xZ, scheduled] NOT MET: 2 of 3 office reports (8 Oct 22:5xZ, 9 Oct 06:0xZ in memory/departments/ceo/session-log.md); open count rose 82 -> 116, not falling. Re-read after the 10 Oct report. || [QA 2026-10-08 ak ~22:18Z, scheduled] NOT MET: 0 of 3 office reports - the 8 Oct office firing (06:03:30Z) reached the Mac only at 21:52Z and had not pushed at 22:18Z.",
           "qaVerdict": "FAIL",
-          "qaDate": "2026-10-09"
+          "qaDate": "2026-10-09",
+          "blocker": "Waits on IOS (35), DEVOPS (23), BACKEND (19) and the QA run (92) to close their own handoffs via dept_queue step 3c; CTO may not close another department's work (CLAUDE.md section 4)."
         }
       ],
       "dueBy": "2026-10-08T20:03:23Z",
@@ -20035,7 +20042,8 @@
           "verify": "today's CEO office report section \"factory\" with per-routine counts",
           "evidence": "[QA 2026-10-11 c, scheduled, 2026-10-11T02:20:32Z] NOT DONE - re-measured 02:1xZ: CEO office minutes 2026-10-10 have one 'Factory' sentence (runs started every hour except 9 Oct 12:05-14:31Z) but no per-routine count of session starts for the last 24 h. Handoff xd-1568 [CEO] still pending. || ",
           "qaVerdict": "NOT",
-          "qaDate": "2026-10-11"
+          "qaDate": "2026-10-11",
+          "blocker": "Waits on xd-1568 [CEO] (pending since 8 Oct: the CEO office report adds one line per scheduled routine - did it start in the last 24 h)."
         }
       ],
       "progress": 0,
@@ -55240,8 +55248,8 @@
     },
     {
       "id": "xd-1661",
-      "from": "[[IOS]]",
-      "to": "[[QA]]",
+      "from": "[IOS]",
+      "to": "[QA]",
       "title": "Handoff from [IOS]: Check build 67 (4.3.1, marker 27b) - the one merged build: the CEO's simulator pictures now, then his device test",
       "description": "UPDATE [APPS run 2026-10-10 n 2026-10-10T14:11:44Z, unattended]: build 67 is now marker 2026-10-10-27b, branch tip 53b86ed42 (adds xd-1658, see xd-1664). Read every '27a' below as '27b' and 'a199638b1' as '53b86ed42'; files=559 still holds. Extra device check: Dedicated IP shows no Port Forwarding / Server Access / 24/7 Dedicated Support cards. || From apps run 2026-10-10 m (xd-1656). Branch ios/431-67-merge-1656 a199638b1. When the CEO has run _ios/build431-67.command: (1) _ios/b431-67.log shows files=559 differing=0, 8x build 67, 8x 4.3.1, marker 27a, simulator build rc=0 errors=0; (2) _ios/render-b431-67/ipad + /iphone: 00 = the 'Your privacy' screen (before any price), 01 = Home (iPad: wide two-column layout, sidebar visible), 03 = start-up page 1 on a fresh install; no 'Admin' anywhere; (3) after his upload, the device test: sign up a NEW account -> privacy screen -> then the trial offer (never before the privacy screen); Dedicated IP shows no DDoS / Priority Bandwidth / Port Forwarding cards; Double VPN route shows 'Latency not measured yet' when not measured; onboarding says 'Ready in one tap'; View Logs shows BUILD MARKER 2026-10-10-27a. verify (code): git grep -c 'BUILD MARKER 2026-10-10-27a' a199638b1 -- ios-app-v2 = 1; git grep -c 'CURRENT_PROJECT_VERSION = 67;' a199638b1 -- '*.pbxproj' = 8. Then -> [MARKETING] new store pictures incl. the trial screen (xd-1657).",
       "status": "pending",
@@ -55801,7 +55809,7 @@
       "ageDays": 2,
       "needsRelease": false,
       "lifecycle": "active",
-      "blocker": "app half = xd-1981 (path flap pause + redial + resume) for build 70; server half rows 251/257 shipping (xd-1937); 1852 liveness proven 30 min misses 0",
+      "blocker": "Waits on xd-1981 [IOS] (pending, P0: pause + redial after a cellular path flap, for build 70) and xd-1852 [IOS] (in_progress: liveness proven 10 min, 60-min pass still owed). Server half shipped: xd-1937 [DEVOPS] completed 12 Oct 20:46Z (rows 251 stall cut on 11 relays, 257 DNS off Cloudflare). Measured 22:3xZ on board 22:19:31Z.",
       "notes": "[CTO run 2026-10-11 2335, 2026-10-11T23:44:50Z, unattended] status: measured by the CTO live chat 23:00-23:10Z (2 bug reports, build 68 Duesseldorf): stall with rx +17 KB/min, handshake 119->172 s, relay socket lastrcv 105 s / 231 unacked; the app's 15 s idle ping never fires because cover frames + retransmits count as inbound. Fix split to xd-1852 + xd-1853; xd-1652 folded in here. No production change by this run. | "
     },
     {
@@ -60496,7 +60504,7 @@
       "createdAt": "2026-10-12T20:08:36Z",
       "createdDate": "2026-10-12",
       "completedDate": null,
-      "blocker": "Not blocked for CTO - parts 1-3 + 5 delivered; QA xd-1965 fix on development f534d836 (12 Oct 21:4xZ). Waits: QA xd-1975 (classes + next 3 hourly runs) and the CEO's yes on ceo-action-backlog row 275; part 4 = xd-1953 (apps).",
+      "blocker": "Waits for the CEO's yes on ceo-action-backlog row 275 (READY TO SHIP tools/dept_queue.py at development f534d836). CTO parts 1-3 + 5 delivered; QA xd-1975 checks classes over 3 hourly runs in parallel (QA 22:19Z: 1 of 3 runs); part 4 = xd-1953 (apps).",
       "lastUpdated": "2026-10-12T20:42:49Z",
       "updatedAt": "2026-10-12T20:42:49Z"
     },
@@ -60910,6 +60918,19 @@
       "createdAt": "2026-10-12T22:38:17Z",
       "createdDate": "2026-10-12",
       "completedDate": null
+    },
+    {
+      "id": "xd-1983",
+      "from": "[CTO]",
+      "to": "[QA]",
+      "title": "Handoff from CTO: Tick backend-api row 7 (standard error shape) - already live, re-measured 22:37Z",
+      "description": "backend-api row 7 (errors carry errorCode, message, timestamp) shipped 11 Oct 23:22Z (ceo-action-backlog row 222, QA PASS 00:08Z 12 Oct). CTO re-measured on production 22:37-22:38Z: register {} 400, bad login 401, bogus refresh 401 - all {success:false, errorCode, message, timestamp}. Please re-run the verify on the row and tick if PASS. Also check: xd-1661 'from/to' were '[[IOS]]'/'[[QA]]' (double-wrapped, invisible to the [QA] queue) - fixed to '[IOS]'/'[QA]' in this push; it is now in your queue.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-12T22:41:03Z",
+      "createdDate": "2026-10-12",
+      "completedDate": null,
+      "taskRef": "backend-api"
     }
   ],
   "importantNotes": [
