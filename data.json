@@ -63285,11 +63285,13 @@
       "to": "[ANDROID]",
       "title": "Handoff from LEGAL: Android before Play: in-app 'Delete account', encrypted token storage, drop READ_PHONE_STATE (Data Safety gates G2/G5)",
       "description": "From xd-2058 ([LEGAL] growth 13 Oct 0904). Android/CasperVPN-v2/PLAY_STORE_DATA_SAFETY.md (development 44bfb5b3) section 0. MEASURED on origin/development 53baf9fe9 (main server git grep): (G2) no account deletion in the Android app - ApiClient.kt L331 only DELETE user/devices/{id}; the backend already has DELETE /api/users/me (UsersController.cs L101, route api/[controller]); iPhone parity = xd-1950. Google Play requires in-app deletion for apps with account creation. (G5) TokenManager.kt keeps access + refresh token in plain DataStore preferences (L14/L35), while privacy policy v1.8 section 2.6 says 'encrypted device storage' - wrap them with an Android Keystore key, or tell [LEGAL] to change the policy line. (Manifest) AndroidManifest.xml L10 READ_PHONE_STATE declared, 0 uses of TelephonyManager in app/src/main/java - remove it (sensitive permission on Play). DO on development, hand to [QA]. No production change.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P2",
       "createdAt": "2026-10-13T09:15:11Z",
       "createdDate": "2026-10-13",
-      "completedDate": null
+      "completedDate": null,
+      "note": "[APPS run 2026-10-13 j, scheduled, unattended, 2026-10-13T09:50:37Z] G2 + manifest DONE on development 7bc47d81a -> QA xd-2069: Settings > Delete Account (confirm -> stop tunnel + unregister push -> DELETE /api/users/me -> clear the phone ONLY on 2xx/404, else stay signed in with a message), READ_PHONE_STATE tools:node=remove (merged APK: 0). PROOF cloud box JDK 17: BUILD SUCCESSFUL 8m22s, unit tests 423 / 0 failed, control 2 FAILED; dev + prod DELETE /api/users/me without token 401 (control 404). NOT PROVEN on a device. G5 (Keystore-encrypted tokens in TokenManager.kt) NOT done yet - next apps run.",
+      "blocker": "next apps run: G5 - wrap the access/refresh tokens in TokenManager.kt with an Android Keystore key (or LEGAL changes the policy line); G2 + manifest with QA xd-2069"
     },
     {
       "id": "xd-2063",
@@ -63360,6 +63362,18 @@
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-10-13T09:45:55Z",
+      "createdDate": "2026-10-13",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2069",
+      "from": "[ANDROID]",
+      "to": "[QA]",
+      "title": "Handoff from ANDROID: Check Android Delete Account + no phone-state permission on development 7bc47d81a (xd-2062 G2 + manifest)",
+      "description": "development 7bc47d81a (one commit 84b721c74 rebased; 12 files under Android/CasperVPN-v2/app/src/): data/repository/AccountDeletionRules.kt (new), data/repository/SignOutManager.kt deleteAccount(), data/remote/ApiClient.kt DELETE users/me, data/repository/AuthRepository.kt deleteAccountOnServer(), ui/screen/SettingsScreen.kt 'Delete Account' row under Sign Out, ui/settings/SettingsComponents.kt DeleteAccountDialogs, ui/viewmodel/SettingsViewModel.kt + AuthViewModel.kt, ui/navigation/CasperNavGraph.kt, AndroidManifest.xml (READ_PHONE_STATE tools:node=remove), test/.../account/AccountDeletionRulesTest.kt (6) + security/AppHardeningFilesTest.kt (+1). QA steps: (1) ./gradlew assembleDevDebug testDevDebugUnitTest (JDK 17) -> 423 tests, 0 failed; control: put the old permission line back and count 401 as deleted -> 2 FAILED. (2) aapt2 dump permissions app-dev-debug.apk | grep -c READ_PHONE_STATE -> 0. (3) curl -X DELETE https://api.dev.caspervpn.com/api/users/me -> 401 (route exists; control /api/userz/me -> 404). (4) DEVICE (emulator pass xd-1491 on the CEO Mac): sign in with a THROWAWAY dev account, Settings > Delete Account > Delete my account -> Sign In screen; signing in again with that account must fail; airplane mode first -> 'Could not delete your account' and the user stays signed in. Never test with a real or staff account (deletion cannot be undone).",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-13T09:50:42Z",
       "createdDate": "2026-10-13",
       "completedDate": null
     }
