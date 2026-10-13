@@ -13578,15 +13578,16 @@
         },
         {
           "test": "CEO YES 2026-10-10 (row 200, live chat '200 yes') \u00b7 READY TO SHIP \u2014 a phone that taps Connect no longer shows up as two sessions \u00b7 why: the app sends two connect calls a few thousandths of a second apart and both were saved; now the server lets one finish before the other, so the second re-uses the first (29 doubles in the last 7 days) \u00b7 tested on dev: same 2-at-once test, 18 of 20 doubled before -> 0 of 20 after; 212/212 tests; dev server running it, healthy \u00b7 rollback: redeploy the previous API image (deploy_api.sh rolls back by itself if health fails); no data change",
-          "met": false,
-          "passed": false,
-          "verifiedBy": "none",
-          "verify": "production DB read-only: select count(*) from \"ConnectionLogs\" a join \"ConnectionLogs\" b on a.\"UserId\"=b.\"UserId\" and a.\"ServerId\"=b.\"ServerId\" and a.\"Id\"<>b.\"Id\" and b.\"ConnectedAt\">=a.\"ConnectedAt\" and b.\"ConnectedAt\"-a.\"ConnectedAt\"<interval '1 second' where a.\"ConnectedAt\">now()-interval '24 hours' -> 0 after 24 h (was 5)",
-          "evidence": "[QA 2026-10-11 a, scheduled, 2026-10-11T00:11:15Z] PENDING - 24 h window not over (ship 23:41Z 10 Oct, check after 11 Oct 23:41Z). Since the ship: 0 duplicate pairs on 2 new connections (too few to judge); last 24 h incl. before the ship: 2 pairs. | [BACKEND run 2026-10-10 2308, scheduled, unattended] SHIPPED 2026-10-10 (API only) under CEO YES row 200: production 1d4f264e5 (8 cherry-picks -x of development 4e53185c9 a4c971447 219a66b3f 0a219a7e5 4d7d476ae 27c86b3b0 576401a85 74ac1c9ec; 219a66b3f needed a union merge in AdminService.cs + Payments.tsx imports - production already had xd-1338 revenue code there; every shipped file = development except lines from dev-only unapproved commits a7bcdd898/137328a08/b319f7a16/0561706fe). Ship tree: dotnet build 0 errors, dotnet test 270/270. /root/deploy_api.sh DEPLOY DONE OK 23:41:02Z, image 9f535c507765 -> 65615a32ec2c, rollback tag caspervpn-api:rollback-202610102337; D8 exactly 8 code commits brought in. MEASURED live DLL before -> after: ConnectSerializer 0->2, TrialMetrics 0->4, AdminUserPlanView 0->2, SupportTicketTimestamps 0->2; /health 200; GET /api/admin/metrics/trials no token 404 -> 401. Evidence /root/reports/be1010-2308 (pick.sh, build.out, push.out, deploy.out). Shipped WITHOUT dev-only xd-1196 (137328a08, not approved) - QA's dev pass ran with it; the 24 h verify query is the proof (was 5). Not ticked: waits [QA] production check (handoff below). | [CEO 2026-10-10 23:03Z live chat] '200 yes' via row 200 \u2014 shippable now by the engineering run (routine 09 step 5). | [QA 2026-10-09 e] QA re-tested on dev: PASS 10 of 10 - ready for your YES. [QA 2026-10-09 e, scheduled] DEV LEG PASS, independent re-run: dev api created 03:28:47Z (healthy, /app/CasperVPN.dll has ConnectSerializer); throwaway dev account qa-probe-1579-* (email flag set in caspervpn_dev only); single connect -> 1 open row, disconnect 200 -> 0; 10 rounds of 2 simultaneous POST /api/servers/e955bfb3/connect, same DeviceId: 20/20 http 200, open rows 1 in 10/10 rounds (2+ rows: 0 of 10), 11 rows total = 1 per connect attempt pair, 0 left open; 0 connect errors in the dev api log (only register-side SMTP/RADIUS noise). Control (bug still present where the fix is not live): production api image 00:40:38Z = not shipped, same-user+server pairs < 1 s in last 24 h = 5, open duplicate pairs now 0. Evidence /root/reports/qa1009e-m1.txt + m2.txt. Production leg waits for the ship (CEO YES on ceo-action-backlog row 173) + 24 h, then the verify query must read 0. || [ENGINEERING run 2026-10-09 d, 2026-10-09T03:31:11Z] added; development a4c971447; xd-1546; QA xd-1579. Board advice: yes - small, proven with a control; ship together with row 172 in the next backend deploy.",
+          "met": true,
+          "passed": true,
+          "verifiedBy": "tested",
+          "verify": "production DB read-only: select count(*) from \"ConnectionLogs\" a join \"ConnectionLogs\" b on a.\"UserId\"=b.\"UserId\" and a.\"ServerId\"=b.\"ServerId\" and a.\"Id\"<>b.\"Id\" and b.\"ConnectedAt\">=a.\"ConnectedAt\" and b.\"ConnectedAt\"-a.\"ConnectedAt\"<interval '1 second' where a.\"ConnectedAt\">now()-interval '24 hours' -> 0 after 24 h (was 5) || app-path only (QA 13 Oct): add AND a.\"SessionId\" IS NULL AND b.\"SessionId\" IS NULL -> 0",
+          "evidence": "[QA 2026-10-13 d, scheduled, 2026-10-13T03:2xZ] PASS (app path) - production DLL 'ConnectSerializer' 2 (shipped 10 Oct 23:41Z). Same user+server pairs < 1 s apart: 7 days BEFORE the ship 15 pairs, all app-path (SessionId NULL on both) in 648 rows; SINCE the ship (2 d 3 h) 0 app-path pairs in 49 app-path rows. One pair since the ship is a different writer: 12 Oct 16:29:17.000, both rows carry a SessionId, no UserAgent, both closed (the server-side accounting path, not /connect) -> new handoff to [BACKEND] P3. Open duplicate pairs now 0. Sample is small (49 app rows) - say so if doubles return. verify updated to app-path rows only. || [QA 2026-10-11 a, scheduled, 2026-10-11T00:11:15Z] PENDING - 24 h window not over (ship 23:41Z 10 Oct, check after 11 Oct 23:41Z). Since the ship: 0 duplicate pairs on 2 new connections (too few to judge); last 24 h incl. before the ship: 2 pairs. | [BACKEND run 2026-10-10 2308, scheduled, unattended] SHIPPED 2026-10-10 (API only) under CEO YES row 200: production 1d4f264e5 (8 cherry-picks -x of development 4e53185c9 a4c971447 219a66b3f 0a219a7e5 4d7d476ae 27c86b3b0 576401a85 74ac1c9ec; 219a66b3f needed a union merge in AdminService.cs + Payments.tsx imports - production already had xd-1338 revenue code there; every shipped file = development except lines from dev-only unapproved commits a7bcdd898/137328a08/b319f7a16/0561706fe). Ship tree: dotnet build 0 errors, dotnet test 270/270. /root/deploy_api.sh DEPLOY DONE OK 23:41:02Z, image 9f535c507765 -> 65615a32ec2c, rollback tag caspervpn-api:rollback-202610102337; D8 exactly 8 code commits brought in. MEASURED live DLL before -> after: ConnectSerializer 0->2, TrialMetrics 0->4, AdminUserPlanView 0->2, SupportTicketTimestamps 0->2; /health 200; GET /api/admin/metrics/trials no token 404 -> 401. Evidence /root/reports/be1010-2308 (pick.sh, build.out, push.out, deploy.out). Shipped WITHOUT dev-only xd-1196 (137328a08, not approved) - QA's dev pass ran with it; the 24 h verify query is the proof (was 5). Not ticked: waits [QA] production check (handoff below). | [CEO 2026-10-10 23:03Z live chat] '200 yes' via row 200 \u2014 shippable now by the engineering run (routine 09 step 5). | [QA 2026-10-09 e] QA re-tested on dev: PASS 10 of 10 - ready for your YES. [QA 2026-10-09 e, scheduled] DEV LEG PASS, independent re-run: dev api created 03:28:47Z (healthy, /app/CasperVPN.dll has ConnectSerializer); throwaway dev account qa-probe-1579-* (email flag set in caspervpn_dev only); single connect -> 1 open row, disconnect 200 -> 0; 10 rounds of 2 simultaneous POST /api/servers/e955bfb3/connect, same DeviceId: 20/20 http 200, open rows 1 in 10/10 rounds (2+ rows: 0 of 10), 11 rows total = 1 per connect attempt pair, 0 left open; 0 connect errors in the dev api log (only register-side SMTP/RADIUS noise). Control (bug still present where the fix is not live): production api image 00:40:38Z = not shipped, same-user+server pairs < 1 s in last 24 h = 5, open duplicate pairs now 0. Evidence /root/reports/qa1009e-m1.txt + m2.txt. Production leg waits for the ship (CEO YES on ceo-action-backlog row 173) + 24 h, then the verify query must read 0. || [ENGINEERING run 2026-10-09 d, 2026-10-09T03:31:11Z] added; development a4c971447; xd-1546; QA xd-1579. Board advice: yes - small, proven with a control; ship together with row 172 in the next backend deploy.",
           "shippedAt": "2026-10-10T23:41:02Z",
           "shipStatus": "SHIPPED 2026-10-10 (awaiting QA)",
-          "qaVerdict": "PENDING",
-          "qaDate": "2026-10-11"
+          "qaVerdict": "PASS",
+          "qaDate": "2026-10-13",
+          "verifiedDate": "2026-10-13"
         },
         {
           "test": "SHIPPED 2026-10-11 23:32Z (awaiting QA xd-1863) \u00b7 production 8a2803b95 \u00b7 CEO YES 2026-10-11 (live chat: 'yes to all') \u00b7 READY TO SHIP \u2014 admin Operations page shows 'Where people leave': the last screen people were on before they closed the app, per screen, real users only, with a control line \u00b7 why: you asked to see where people drop off; the server already collects it (on production since 9 Oct) but no page showed it \u00b7 tested on dev: dev admin rebuilt with it (new bundle carries the card), type check 0 errors \u00b7 rollback: rebuild the admin from the previous commit; no server or data change",
@@ -20321,7 +20322,7 @@
       "category": "infra-fleet",
       "description": "Added by the CEO office 2026-10-09 (routine 08 step 6, source: the main server crontab). Live operator jobs that warn us before a censor or a provider blocks a server. No task covered them.",
       "dueBy": "2026-10-16",
-      "status": "PARTIAL \u2014 2 of 3 met (CEO office 2026-10-09): the weekly reality probes have never run from the schedule",
+      "status": "DONE \u2014 3 of 3 met; row 2 QA-tested 2026-10-13 (first scheduled weekly run Mon 12 Oct 00:00Z, 8/8 probes passed); rows 0-1 carry CEO-office verification",
       "acceptanceCriteria": [
         {
           "test": "Every day the certificate-log watch checks our domains for new certificate names nobody asked for",
@@ -20350,15 +20351,16 @@
         {
           "test": "Every week the reality probes run from the schedule and write a result",
           "verify": "brain: ls -l /root/Casper/Casper-Code/scripts/reality-probes-weekly.sh (must be executable) && tail -3 /var/log/reality-probes-weekly.log (a result line, not \"Permission denied\")",
-          "met": false,
-          "passed": false,
+          "met": true,
+          "passed": true,
           "addedAt": "2026-10-09T06:15:28Z",
           "addedBy": "ceo-office",
-          "evidence": "[DEVOPS run 2026-10-13 0225, scheduled, unattended, 2026-10-13T02:29:54Z] READY FOR QA (xd-2013): first SCHEDULED weekly run Mon 12 Oct 00:00:01Z finished \"done (exit_code=0)\", 8 passed / 0 failed in the log block; script executable; cron line present. Not ticked (DEVOPS never ticks). || [QA 2026-10-11 a, scheduled, 2026-10-11T00:11:15Z] PENDING - the schedule now calls an executable script (hand run 8/8 passed 00:07Z), but this row is the SCHEDULED weekly result: first run Mon 12 Oct 00:00Z. Re-check /var/log/reality-probes-weekly.log after it. | [DEVOPS 2026-10-11 00:0xZ] installed on the main server (CEO card row 178, xd-1587): cron now calls /opt/caspervpn/reality-probes-weekly.sh; hand run 8/8 passed exit 0; first scheduled run Mon 12 Oct 00:00Z - QA checks /var/log/reality-probes-weekly.log after it. | FAIL CEO office 2026-10-09 06:1xZ: every weekly run (Mondays 00:00Z, last 5 Oct) ends \"/bin/sh: 1: \u2026/reality-probes-weekly.sh: Permission denied\" (6 of 6 log lines); file mode -rw-r--r-- since 17 May. The weekly probe has never run from cron. \u2192 handoff [DEVOPS].",
-          "verifiedBy": "none",
-          "qaVerdict": "PENDING",
-          "qaDate": "2026-10-11",
-          "blocker": "QA check xd-2013"
+          "evidence": "[QA 2026-10-13 d, scheduled, 2026-10-13T03:2xZ] PASS - main server: crontab '0 0 * * 1 /opt/caspervpn/reality-probes-weekly.sh >> /var/log/reality-probes-weekly.log 2>&1'; both script copies -rwxr-xr-x (opt 3363 B, repo copy 3363 B); log block L22 '=== 2026-10-12T00:00:01Z reality probes' -> L82 'done (exit_code=0)', 8 \"passed\": true / 0 false; log mtime 2026-10-12 00:00:28Z; the 21 'Permission denied' lines are L1-L21 = before the first scheduled run (control). || [DEVOPS run 2026-10-13 0225, scheduled, unattended, 2026-10-13T02:29:54Z] READY FOR QA (xd-2013): first SCHEDULED weekly run Mon 12 Oct 00:00:01Z finished \"done (exit_code=0)\", 8 passed / 0 failed in the log block; script executable; cron line present. Not ticked (DEVOPS never ticks). || [QA 2026-10-11 a, scheduled, 2026-10-11T00:11:15Z] PENDING - the schedule now calls an executable script (hand run 8/8 passed 00:07Z), but this row is the SCHEDULED weekly result: first run Mon 12 Oct 00:00Z. Re-check /var/log/reality-probes-weekly.log after it. | [DEVOPS 2026-10-11 00:0xZ] installed on the main server (CEO card row 178, xd-1587): cron now calls /opt/caspervpn/reality-probes-weekly.sh; hand run 8/8 passed exit 0; first scheduled run Mon 12 Oct 00:00Z - QA checks /var/log/reality-probes-weekly.log after it. | FAIL CEO office 2026-10-09 06:1xZ: every weekly run (Mondays 00:00Z, last 5 Oct) ends \"/bin/sh: 1: \u2026/reality-probes-weekly.sh: Permission denied\" (6 of 6 log lines); file mode -rw-r--r-- since 17 May. The weekly probe has never run from cron. \u2192 handoff [DEVOPS].",
+          "verifiedBy": "tested",
+          "qaVerdict": "PASS",
+          "qaDate": "2026-10-13",
+          "blocker": "",
+          "verifiedDate": "2026-10-13"
         }
       ],
       "createdAt": "2026-10-09T06:15:28Z",
@@ -21242,13 +21244,13 @@
       "name": "QA & Testing",
       "status": "red",
       "lead": "QA Lead (AI)",
-      "currentTask": "2026-10-13 [QA] run c (scheduled, 02:05Z): 4 handoffs closed (RADIUS log, censorship dev, activation SQL, vault re-org), 1 row ticked, 2 measured",
+      "currentTask": "2026-10-13 [QA] run d (scheduled, 03:05Z): 2 rows ticked (weekly probes, double-session fix), 2 handoffs closed, 6 measured, 1 new to Backend",
       "blockers": "19",
       "completion": "26",
-      "lastActivity": "2026-10-13T02:25:00Z",
+      "lastActivity": "2026-10-13T03:25:00Z",
       "launchCompletion": "0",
       "lastTriggered": "2026-10-10T17:05:00Z",
-      "notes": "2026-10-13 [QA] re-based at exit (run c): 5 QA-owned tasks 5/19 met; open P0 handoffs to QA 19; open to QA 96 (pending + in_progress). || 2026-10-13 [QA] re-based at exit (run b): 5 QA-owned tasks 5/19 met; open P0 handoffs to QA 20; open to QA 94 (pending + in_progress). || 2026-10-13 [QA] re-based at exit (run a): 5 QA-owned tasks 5/19 met; open P0 handoffs to QA 19; open to QA 97 (pending + in_progress). || 2026-10-12 [QA] re-based at exit (run m): 5 QA-owned tasks 5/19 met; open P0 handoffs to QA 18; open to QA 93 (pending + in_progress). || 2026-10-12 [QA] re-based at exit (run l): 5 QA-owned tasks 5/19 met; open P0 handoffs to QA 18; open to QA 91 (pending + in_progress). || 2026-10-12 [QA] re-based at exit (run k): 5 QA-owned tasks 5/19 met; open P0 handoffs to QA 18; open to QA 88 (pending + in_progress; consolidated excluded). || 2026-10-12 [QA] re-based at exit (run j): 5 QA-owned tasks 5/19 met; open P0 handoffs to QA 15; open to QA 84 (pending + in_progress; consolidated excluded). || 2026-10-12 [QA] re-based at exit (run i): 5 QA-owned tasks 5/19 met; open P0 handoffs to QA 13; open to QA 79 (pending + in_progress; consolidated excluded). || 2026-10-12 [QA] re-based at exit (run h): 5 QA-owned tasks 5/19 met; open P0 handoffs to QA 12; open to QA 79 (pending + in_progress; consolidated excluded). || 2026-10-12 [QA] re-based at exit (run g): 5 QA-owned tasks 5/19 met; open P0 handoffs to QA 13; open to QA 77. || 2026-10-12 [QA] re-based at exit (run f): 5 QA-owned tasks 5/19 met; open P0 handoffs to QA 12; open to QA 76. || 2026-10-12 [QA] re-based at exit (run e): blockers = open P0 handoffs to QA (xd-1476, xd-1490, xd-1492, xd-1493, xd-1547, xd-1555, xd-1573, xd-1575, xd-1648, xd-1686, xd-1711, xd-1726, xd-1867, xd-1869); completion = criteria met / total on QA-owned tasks (5/19); open to QA 78"
+      "notes": "2026-10-13 [QA] re-based at exit (run d): 5 QA-owned tasks 5/19 met; open P0 handoffs to QA 19; open to QA 96 (pending + in_progress). || 2026-10-13 [QA] re-based at exit (run c): 5 QA-owned tasks 5/19 met; open P0 handoffs to QA 19; open to QA 96 (pending + in_progress). || 2026-10-13 [QA] re-based at exit (run b): 5 QA-owned tasks 5/19 met; open P0 handoffs to QA 20; open to QA 94 (pending + in_progress). || 2026-10-13 [QA] re-based at exit (run a): 5 QA-owned tasks 5/19 met; open P0 handoffs to QA 19; open to QA 97 (pending + in_progress). || 2026-10-12 [QA] re-based at exit (run m): 5 QA-owned tasks 5/19 met; open P0 handoffs to QA 18; open to QA 93 (pending + in_progress). || 2026-10-12 [QA] re-based at exit (run l): 5 QA-owned tasks 5/19 met; open P0 handoffs to QA 18; open to QA 91 (pending + in_progress). || 2026-10-12 [QA] re-based at exit (run k): 5 QA-owned tasks 5/19 met; open P0 handoffs to QA 18; open to QA 88 (pending + in_progress; consolidated excluded). || 2026-10-12 [QA] re-based at exit (run j): 5 QA-owned tasks 5/19 met; open P0 handoffs to QA 15; open to QA 84 (pending + in_progress; consolidated excluded). || 2026-10-12 [QA] re-based at exit (run i): 5 QA-owned tasks 5/19 met; open P0 handoffs to QA 13; open to QA 79 (pending + in_progress; consolidated excluded). || 2026-10-12 [QA] re-based at exit (run h): 5 QA-owned tasks 5/19 met; open P0 handoffs to QA 12; open to QA 79 (pending + in_progress; consolidated excluded). || 2026-10-12 [QA] re-based at exit (run g): 5 QA-owned tasks 5/19 met; open P0 handoffs to QA 13; open to QA 77. || 2026-10-12 [QA] re-based at exit (run f): 5 QA-owned tasks 5/19 met; open P0 handoffs to QA 12; open to QA 76. || 2026-10-12 [QA] re-based at exit (run e): blockers = open P0 handoffs to QA (xd-1476, xd-1490, xd-1492, xd-1493, xd-1547, xd-1555, xd-1573, xd-1575, xd-1648, xd-1686, xd-1711, xd-1726, xd-1867, xd-1869); completion = criteria met / total on QA-owned tasks (5/19); open to QA 78"
     },
     "legal": {
       "name": "Legal & Compliance",
@@ -52818,7 +52820,7 @@
       "createdAt": "2026-10-08T22:24:30Z",
       "createdDate": "2026-10-08",
       "completedDate": null,
-      "notes": "[QA 2026-10-08 ak ~22:30Z, scheduled] PARTIAL - 3 of 4 checks PASS on production (API image 8f9dff921e46, created 22:02:50Z), measured 22:28:29Z: (1) MRR equal on all three endpoints - /api/admin/revenue summary.mrr 40.08, /api/admin/subscriptions/recurring-summary monthlyRecurringRevenueUsd 40.08, /api/admin/revenue-intelligence/metrics mrr 40.08 (ARR 480.96 and total 323.89 also equal) - re-run of /root/reports/eng1008b-money-probe.sh (token minted from the container env, numbers only); (2) CasperVPN.dll 'RealCustomerSubscription' count 1; (3) Payments with DID_RENEW and no Environment = 0 of 60. NOT RUN: (4) the Revenue page and the revenue-intelligence box in a signed-in admin browser (sessions may not sign in) -> joins the browser pass xd-1494. Not ticked until (4).",
+      "notes": "[QA 2026-10-13 d, scheduled, 2026-10-13T03:2xZ] re-measured legs 1-3 PASS on production (api created 12 Oct 19:31Z): MRR equal on all three endpoints 22.95 / 22.95 / 22.95 (ARR 275.40, total 317.44 equal; was 40.08 on 8 Oct - the number moved, equality held); DLL 'RealCustomerSubscription' 1; DID_RENEW payments without Environment 0. Leg 4 (Revenue page in a signed-in admin browser) still waits xd-1494 / xd-1697 (Playwright set-up from [DEVOPS]). Row 121 not ticked. | [QA 2026-10-08 ak ~22:30Z, scheduled] PARTIAL - 3 of 4 checks PASS on production (API image 8f9dff921e46, created 22:02:50Z), measured 22:28:29Z: (1) MRR equal on all three endpoints - /api/admin/revenue summary.mrr 40.08, /api/admin/subscriptions/recurring-summary monthlyRecurringRevenueUsd 40.08, /api/admin/revenue-intelligence/metrics mrr 40.08 (ARR 480.96 and total 323.89 also equal) - re-run of /root/reports/eng1008b-money-probe.sh (token minted from the container env, numbers only); (2) CasperVPN.dll 'RealCustomerSubscription' count 1; (3) Payments with DID_RENEW and no Environment = 0 of 60. NOT RUN: (4) the Revenue page and the revenue-intelligence box in a signed-in admin browser (sessions may not sign in) -> joins the browser pass xd-1494. Not ticked until (4).",
       "waitingOn": "CEO",
       "waitingStep": "Signed-in admin browser (the xd-1494 pass): Revenue page MRR = revenue-intelligence box MRR = 40.08-ish",
       "waitingSince": "2026-10-08T22:30:34Z",
@@ -52839,7 +52841,7 @@
       "createdAt": "2026-10-08T22:24:30Z",
       "createdDate": "2026-10-08",
       "completedDate": null,
-      "notes": "[QA 2026-10-08 ak ~22:30Z, scheduled] PARTIAL - code legs PASS on production (website created 22:16:50Z): server bundle files with 'PartnerTokenTableMissing' = 5 (>= 1), with 'CREATE TABLE IF NOT EXISTS partner_login_tokens' = 0 (was 5); website log '[partners] login-link FAILED' = 0 - but only 6 log lines and 0 partner_login e-mails since the deploy, so that zero proves nothing yet. Behaviour leg (a real partner sign-in -> partner_login e-mail 'sent' -> dashboard opens) waits for the next real sign-in; QA does not send that e-mail itself.",
+      "notes": "[QA 2026-10-13 d, scheduled, 2026-10-13T03:2xZ] still waits a real partner sign-in: caspervpn_website.transactional_emails kind partner* since 8 Oct = 0 rows; website log 'login-link FAILED' 0 of 171 lines. QA does not send the e-mail itself. | [QA 2026-10-08 ak ~22:30Z, scheduled] PARTIAL - code legs PASS on production (website created 22:16:50Z): server bundle files with 'PartnerTokenTableMissing' = 5 (>= 1), with 'CREATE TABLE IF NOT EXISTS partner_login_tokens' = 0 (was 5); website log '[partners] login-link FAILED' = 0 - but only 6 log lines and 0 partner_login e-mails since the deploy, so that zero proves nothing yet. Behaviour leg (a real partner sign-in -> partner_login e-mail 'sent' -> dashboard opens) waits for the next real sign-in; QA does not send that e-mail itself.",
       "waitingOn": "next real partner sign-in",
       "waitingStep": "CEO test partner signs in at caspervpn.com/partners (or a run allowed to send that one e-mail); QA reads transactional_emails kind partner_login + the website log",
       "waitingSince": "2026-10-08T22:30:34Z",
@@ -53450,7 +53452,7 @@
       "createdAt": "2026-10-09T00:48:49Z",
       "createdDate": "2026-10-09",
       "completedDate": null,
-      "notes": "[QA 2026-10-09 b ~01:20Z, scheduled] PARTIAL. Server leg seen in the live api log (container started 00:40:38Z): 4 'support-alert' lines - 00:41:37 'telegram sent (200)', 00:41:39 'already has an unread alert ... no repeat', 00:41:40 '1 alert(s) marked read' - all for the engineering probe ticket fb554853 (staff/probe, not a real user). 1 ticket created since 00:40Z (that probe). OPEN: a real user's next support message (one unread row + one Telegram line) and the admin bell in a signed-in browser (xd-1494). /root/reports/qa1009b-m1.txt",
+      "notes": "[QA 2026-10-13 d, scheduled, 2026-10-13T03:2xZ] still waits a real event: SupportTickets since 9 Oct = 1 (the 00:41Z probe, staff); 0 real user tickets in 4 days; api docker log 'support-alert' 0 since the 12 Oct 19:31Z recreate. Row 149 not ticked; admin bell leg waits xd-1494. | [QA 2026-10-09 b ~01:20Z, scheduled] PARTIAL. Server leg seen in the live api log (container started 00:40:38Z): 4 'support-alert' lines - 00:41:37 'telegram sent (200)', 00:41:39 'already has an unread alert ... no repeat', 00:41:40 '1 alert(s) marked read' - all for the engineering probe ticket fb554853 (staff/probe, not a real user). 1 ticket created since 00:40Z (that probe). OPEN: a real user's next support message (one unread row + one Telegram line) and the admin bell in a signed-in browser (xd-1494). /root/reports/qa1009b-m1.txt",
       "updatedAt": "2026-10-09T01:2xZ",
       "waitingOn": "the next real user's support message + admin sign-in (xd-1494)",
       "category": "money-admin",
@@ -53469,7 +53471,7 @@
       "createdAt": "2026-10-09T00:48:49Z",
       "createdDate": "2026-10-09",
       "completedDate": null,
-      "notes": "[QA 2026-10-10 t, scheduled, 2026-10-10T22:23:16Z] re-measured: still 0 real resolves/closes (ResolvedAt 0, ClosedAt 1 = probe); 0 real 42703 since 18:14Z. Waits for the signed-in pass. | [QA 2026-10-09 b ~01:20Z, scheduled] PARTIAL. Columns: SupportTickets has ResolvedAt + ClosedAt (2/2, information_schema). Log leg PASS: every '42703' line in docker logs caspervpn-api is BEFORE the fix (00:41:44Z, 00:42:18Z x2, all 'column \"ResolvedAt\" does not exist'); 0 after 00:47Z through 01:06Z. Test ticket fb554853 = closed, ClosedAt set. OPEN: an admin setting a ticket to 'resolved' -> 200 + ResolvedAt set (QA does not change production tickets; folded into xd-1494 signed-in pass). Git migration for the 2 columns stays with [BACKEND]. /root/reports/qa1009b-m2.txt",
+      "notes": "[QA 2026-10-13 d, scheduled, 2026-10-13T03:2xZ] still waits: 0 '42703' lines in docker logs caspervpn-api since the 19:31Z recreate; no real admin resolve/close (needs a signed-in admin, xd-1494). Row 169 not ticked. | [QA 2026-10-10 t, scheduled, 2026-10-10T22:23:16Z] re-measured: still 0 real resolves/closes (ResolvedAt 0, ClosedAt 1 = probe); 0 real 42703 since 18:14Z. Waits for the signed-in pass. | [QA 2026-10-09 b ~01:20Z, scheduled] PARTIAL. Columns: SupportTickets has ResolvedAt + ClosedAt (2/2, information_schema). Log leg PASS: every '42703' line in docker logs caspervpn-api is BEFORE the fix (00:41:44Z, 00:42:18Z x2, all 'column \"ResolvedAt\" does not exist'); 0 after 00:47Z through 01:06Z. Test ticket fb554853 = closed, ClosedAt set. OPEN: an admin setting a ticket to 'resolved' -> 200 + ResolvedAt set (QA does not change production tickets; folded into xd-1494 signed-in pass). Git migration for the 2 columns stays with [BACKEND]. /root/reports/qa1009b-m2.txt",
       "updatedAt": "2026-10-09T01:2xZ",
       "waitingOn": "admin sign-in (xd-1494) for the resolve click",
       "category": "money-admin",
@@ -53834,11 +53836,11 @@
       "to": "[QA]",
       "title": "Handoff from BACKEND: Check xd-1546 on dev: two simultaneous /connect from one phone leave ONE open session row (development a4c971447)",
       "description": "What to check on dev (api.dev): with a dev test account, send 2 POST /api/servers/<id>/connect at the same moment (same body, same DeviceId) -> exactly 1 ConnectionLogs row with Status=0 for that user+server (dev DB caspervpn-dev-postgres, -U casper_dev -d caspervpn_dev). Control: the same pair before the fix gave 2 rows (throwaway postgres: 18/20 rounds). Also: a normal single connect + disconnect still works. Re-run on production after the ship (24 h window): pairs of rows same user+server < 1 s apart, last 24 h -> 0 (was 5 in 24 h, 29 in 7 d). Re-runnable test: CASPER_TEST_PG=<throwaway db> dotnet test --filter ConnectSerializerTests. development a4c971447 (1 commit, 4 files: Services/ConnectSerializer.cs new; OptimizedVpnServerService + VpnServerService (\u00a79.6 twin) take pg_advisory_xact_lock(1546, <user key>) first inside the connect transaction; Tests/ConnectSerializerTests.cs). MEASURED production read-only 03:06Z: 29 of 584 ConnectionLogs rows in 7 d were a 2nd row for the same user+server opened 0-33 ms after the first (27/29 < 35 ms, 27/29 same DeviceId, 29/29 first row still open); control same user + DIFFERENT server < 1 s = 2; open duplicate pairs right now = 0. PROOF throwaway postgres:16 on the brain, 20 rounds of 2 simultaneous connects from one phone: unpatched services 18/20 rounds left 2 open rows -> patched 0/20. Full suite 212/212, main project 0 errors. Dev: caspervpn-dev-api recreated 03:28:48Z, healthy; dev DLL class ConnectSerializer 0 -> 1, SQL literal pg_advisory_xact_lock 0 -> 1.",
-      "status": "in_progress",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-10-09T03:31:16Z",
       "createdDate": "2026-10-09",
-      "completedDate": null,
+      "completedDate": "2026-10-13",
       "waitingOn": "CEO YES on ceo-action-backlog row 173 (ship) + 24 h on production",
       "notes": "[QA 2026-10-10 t, scheduled, 2026-10-10T22:23:16Z] observation from production 22:1xZ: 1 user/server pair with 2 open ConnectionLogs rows (staff account, WireGuard 21:22Z + CasperCloak 22:06Z from /connect, not adopt) - same family as xd-1546; use as a live example when xd-1546 ships. | [QA 2026-10-09 e, scheduled] DEV LEG PASS, independent re-run: dev api created 03:28:47Z (healthy, /app/CasperVPN.dll has ConnectSerializer); throwaway dev account qa-probe-1579-* (email flag set in caspervpn_dev only); single connect -> 1 open row, disconnect 200 -> 0; 10 rounds of 2 simultaneous POST /api/servers/e955bfb3/connect, same DeviceId: 20/20 http 200, open rows 1 in 10/10 rounds (2+ rows: 0 of 10), 11 rows total = 1 per connect attempt pair, 0 left open; 0 connect errors in the dev api log (only register-side SMTP/RADIUS noise). Control (bug still present where the fix is not live): production api image 00:40:38Z = not shipped, same-user+server pairs < 1 s in last 24 h = 5, open duplicate pairs now 0. Evidence /root/reports/qa1009e-m1.txt + m2.txt. Production leg waits for the ship (CEO YES on ceo-action-backlog row 173) + 24 h, then the verify query must read 0.",
       "qaVerdict": "PARTIAL - dev PASS, production pending ship",
@@ -53846,7 +53848,11 @@
       "category": "infra-fleet",
       "ageDays": 3,
       "needsRelease": false,
-      "lifecycle": "active"
+      "lifecycle": "active",
+      "completedAt": "2026-10-13",
+      "completedBy": "[QA]",
+      "resolution": "PASS - dev leg PASS 9 Oct (run e); production leg PASS 13 Oct: 0 app-path doubles since ship vs 15 in 7 d before; row 173 ticked. Resulting: xd-2015 [BACKEND] P3 accounting-path pair.",
+      "resultingHandoff": "xd-2015 to [BACKEND] P3"
     },
     {
       "id": "xd-1580",
@@ -57036,7 +57042,7 @@
       "to": "[QA]",
       "title": "Handoff from BACKEND: Test on dev: OS version on failure reports (xd-1714 item 2) + standard shape for invalid-body errors (backend-api row 7), development 32981aec7",
       "description": "[QA 2026-10-11 b 01:09Z] leg 1 PASS: dev POST /api/auth/register {} -> success:false, errorCode VALID_3001, message 'The Email field is required.', timestamp, errors kept; production control still the old ProblemDetails body. Legs 2 (connect-failure osVersion rows on dev) and 3 (phone) not run this hour.\n\n[BACKEND run 2026-10-11 0015, scheduled, unattended, 2026-10-11T00:59:41Z] development 3a26132ae (xd-1714 item 2: ConnectFailureEvents.OsVersion varchar(30), body osVersion else header X-Device-OS, cleared after 30 d by DataPurgeService; migration 20261011000000_ConnectFailureOsVersion ADD COLUMN IF NOT EXISTS) + 32981aec7 (backend-api row 7: InvalidModelStateResponseFactory -> success=false, errorCode VALID_3001, message = first field error, timestamp; superset - errors/type/title/status/traceId kept). Main-server build 0 errors, suite 312/312; ConnectFailureOsVersionTests 5/5, ValidationErrorResponseTests 3/3, ConnectTelemetryV2 still green; CONTROL: with the OsVersion assignment removed 4/5 fail. Dev deploy (deploy-dev-backend 00:50Z) live 00:58Z: POST https://api.dev.caspervpn.com/api/auth/register {} -> {success:false,errorCode:VALID_3001,message:'The Email field is required.',timestamp,...}; production control still the old ProblemDetails body. Dev DB: __EFMigrationsHistory row 1, column OsVersion 1, dev api log migration line 1. CHECK: (1) the register curl on dev; (2) POST /api/diagnostics/connect-failure on dev with osVersion 'iOS 18.1.0' and a second with only header X-Device-OS: Android 14 -> rows carry them; (3) the iPhone app still shows a sentence (not raw JSON) on a bad sign-up form. Then the two READY TO SHIP rows on the CEO card.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P2",
       "createdAt": "2026-10-11T00:59:45Z",
       "createdDate": "2026-10-11",
@@ -57044,7 +57050,8 @@
       "category": "factory-ops",
       "ageDays": 1,
       "needsRelease": false,
-      "lifecycle": "active"
+      "lifecycle": "active",
+      "notes": "[QA 2026-10-13 d, scheduled, 2026-10-13T03:2xZ] SHIPPED to production already: migration 20261011000000_ConnectFailureOsVersion present; POST https://api.caspervpn.com/api/auth/register {} -> success:false, errorCode VALID_3001, 'The Email field is required.' (leg 1 PASS on production too). Leg 2: POST /api/diagnostics/connect-failure is JWT-only (DiagnosticsController L15/L51) - not run unattended; production ConnectFailureEvents last 3 days 51 rows, OsVersion NULL on all 51 (live apps do not send it yet - waits an app build with xd-1743/iOS 431-68). Leg 3 = phone."
     },
     {
       "id": "xd-1742",
@@ -59420,7 +59427,7 @@
       "to": "[QA]",
       "title": "Handoff from BACKEND: Check xd-1811 on dev: 2FA sign-in step has an attempt limit (development 0a6e9e87c)",
       "description": "BUILT on development 0a6e9e87c (dev live 23:50Z). What changed: wrong 2FA codes / recovery codes are written to FailedLoginAttempts (Reason 2fa_invalid_code / 2fa_invalid_recovery_code); 5 within 15 min lock the 2FA step for that account (429, the code is not even checked); /api/twofactor/verify-login now uses the auth rate policy. Files: Controllers/TwoFactorController.cs, Services/TwoFactorAttemptGuard.cs, Middleware/RateLimitingMiddleware.cs, Tests/TwoFactorAttemptLimitTests.cs. Proof already measured: main-server suite 369/369, new 4/4, control (lock + record removed) 2/4 fail; dev live test (2 copied users with a random TOTP secret, never printed): lock user 5 wrong -> 401 x5, 6th with the RIGHT code -> 429; control user 4 wrong -> 401 x4, right code -> 200; dev FailedLoginAttempts 5 + 4 rows 2fa_invalid_code; dev log xd-1811 locked 1; dev DLL strings -el 1 / production 0. Recipe: /root/reports/be1011-2315/devtest.sh on the main server (makes 2 new dev users each run). QA: re-run it or read the rows, then tick on the CEO-card row and hand back.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P2",
       "createdAt": "2026-10-11T23:53:07Z",
       "createdDate": "2026-10-11",
@@ -59431,7 +59438,8 @@
       "category": "growth",
       "ageDays": 1,
       "needsRelease": false,
-      "lifecycle": "active"
+      "lifecycle": "active",
+      "notes": "[QA 2026-10-13 d, scheduled, 2026-10-13T03:2xZ] code is LIVE on dev AND production: DLL strings -el 'xd-1811' 2 / 'TwoFactorAttemptGuard' 2 on both (production api 12 Oct 19:31Z). Dev FailedLoginAttempts with Reason 2fa* now 0 rows (backend's 5+4 rows are gone - dev DB re-synced, hypothesis). Production: 0 users with TwoFactorEnabled, 0 2fa rows - no real user can hit it yet. Behaviour leg (5 wrong codes -> 429) needs new test accounts + sign-ins; an unattended QA run does not create accounts or sign in. Left open for a live session or the xd-1697 Playwright pass."
     },
     {
       "id": "xd-1872",
@@ -61752,11 +61760,14 @@
       "to": "[QA]",
       "title": "Handoff from DEVOPS: ops-censorship-early-warning row 2: the weekly reality probes ran from the schedule (Mon 12 Oct 00:00Z, 8/8 passed) - please check and tick",
       "description": "Measured 13 Oct 02:2xZ on the main server (read-only): crontab line \"0 0 * * 1 /opt/caspervpn/reality-probes-weekly.sh >> /var/log/reality-probes-weekly.log\" ; script -rwxr-xr-x; log block \"=== 2026-10-12T00:00:01Z reality probes\" ... \"=== 2026-10-12T00:00:01Z done (exit_code=0) ===\" with 8 \"passed\": true, 0 \"passed\": false (website-homepage, api-health, sitemap-serving, blog-serving, dashboard-live, uk-lon-ssh, website-container, api-container); log mtime 2026-10-12 00:00:28Z. Control: the 21 older \"Permission denied\" lines are from before the 11 Oct fix. verify = the row verify. Task ops-censorship-early-warning row 2. Not ticked by DEVOPS.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-10-13T02:29:58Z",
       "createdDate": "2026-10-13",
-      "completedDate": null
+      "completedDate": "2026-10-13",
+      "completedAt": "2026-10-13",
+      "completedBy": "[QA]",
+      "resolution": "PASS - ops-censorship-early-warning row 2 ticked (tested): scheduled run 12 Oct 00:00:01Z exit 0, 8/8 passed, Permission denied only L1-21 before it."
     },
     {
       "id": "xd-2014",
@@ -61769,9 +61780,30 @@
       "createdAt": "2026-10-13T02:29:58Z",
       "createdDate": "2026-10-13",
       "completedDate": null
+    },
+    {
+      "id": "xd-2015",
+      "from": "[QA]",
+      "to": "[BACKEND]",
+      "title": "Handoff from QA: [P3] Two closed session rows in the same second from the accounting path (SessionId on both)",
+      "description": "[QA 2026-10-13 d, scheduled, 2026-10-13T03:2xZ] Found while checking ceo-action-backlog row 173 (xd-1546). Production ConnectionLogs, since the 10 Oct 23:41Z ship: 1 pair same user (79675a02) + server (1a8394db, Amsterdam), ConnectedAt 2026-10-12 16:29:17.000 on BOTH, Protocol 0 on both, same DeviceId, both carry a SessionId, UserAgent empty, both closed. The app /connect path shows 0 such pairs since the ship (15 in the 7 days before). Hypothesis (not measured): a repeated accounting Start for one session makes a 2nd row (RadiusAuthController.Accounting L239 / AdoptAppRowOrCloseRapidAsync L856 per codegraph run c). Check: does the accounting path dedupe on SessionId? verify = SELECT count(*) of pairs with SessionId on both, last 7 d -> 0 after a fix. Low impact (both rows closed).",
+      "status": "pending",
+      "priority": "P3",
+      "createdAt": "2026-10-13T03:10:07Z",
+      "createdDate": "2026-10-13",
+      "completedDate": null
     }
   ],
   "importantNotes": [
+    {
+      "id": "note-qa-20261013d",
+      "date": "2026-10-13",
+      "createdAt": "2026-10-13T03:25:00Z",
+      "dept": "[QA]",
+      "priority": "P2",
+      "title": "QA check: weekly safety probes and the double-session fix pass",
+      "text": "Nothing broken this hour. Passed: the weekly website and server safety checks now run on their own (first run Monday, 8 of 8 passed). Passed: tapping Connect no longer saves two sessions (0 doubles since the fix, 15 the week before). One small new oddity sent to Backend: a server-side record was saved twice in the same second. Still waiting: many admin-screen checks need the signed-in browser robot from DevOps."
+    },
     {
       "id": "note-qa-20261013c",
       "date": "2026-10-13",
