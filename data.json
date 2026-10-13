@@ -15258,6 +15258,11 @@
           "test": "READY TO SHIP \u2014 a new public page caspervpn.com/delete-account that tells people how to delete their CasperVPN account and what we keep \u00b7 why: Google Play asks for a web link explaining account deletion before the Android app can be listed (Data Safety), and Apple users ask too; today the address is a 404 \u00b7 what the ship does: adds the page (delete in the app or by email to privacy@caspervpn.com, store subscriptions are cancelled separately, a table of what is kept and for how long - the same periods as our Privacy Policy), one 'Delete Account' link in the site footer and one line in the sitemap \u00b7 tested on dev: development 2b66232, dev page 200, build 111/111 pages; waits [QA] xd-2074 and [LEGAL] xd-2075 (text OK) before your yes \u00b7 risk: low - a new page only \u00b7 rollback: revert the commit and redeploy the website \u00b7 advice: YES once Legal says 'text OK'",
           "verify": "After ship: git merge-base --is-ancestor <cherry-pick of 2b66232> origin/production; curl -s 'https://caspervpn.com/delete-account?cb=1' -> 200 and title 'Delete Your Account | CasperVPN'; /sitemap.xml lists /delete-account; /privacy footer has href=\"/delete-account\"; smoke / /pricing /privacy 200.",
           "evidence": "[WEBSITE+ADMIN run 2026-10-13 1005, scheduled, unattended, 2026-10-13T10:29:20Z] [WEBSITE] dev proof 10:28:12Z: https://dev.caspervpn.com/delete-account 200 44,663 B; production 404. Not shipped - no CEO YES; waits QA + LEGAL first."
+        },
+        {
+          "test": "SHIPPED on CEO YES ('fix dns', office chat 13 Oct 13:5x Beirut) [CTO] \u2014 phones on WireGuard connected but no site opened, on 10 of our 11 servers, since 11 Oct 22:36Z: the server firewall dropped the phone's DNS questions \u00b7 why: every WireGuard phone's name lookups go to the server's own resolver; the 11-12 Oct firewall lock-down kept the VPN ports open but lost the 2 lines that let those lookups in \u2014 only D\u00fcsseldorf kept them (hence your 178 MB D\u00fcsseldorf session vs nothing on Amsterdam/Singapore) \u00b7 measured live 13 Oct 13:38 Beirut with your phone on Amsterdam (build 70plus, MTU 1280): 40 DNS questions in, 0 answers out \u00b7 fix: the same 2 lines on the other 10 servers, saved, backups kept, nothing restarted, nobody cut (13:55-13:56 Beirut) \u00b7 PROOF 13:57 Beirut: your phone on Amsterdam received 14.9 MB in 40 s, 97 DNS answers, 612 packets in / 1,132 out in 6 s \u00b7 QA checks the other 9 with a real client (xd below); DevOps audits why the lock-down lost the rule and adds a nightly 'DNS answered through the tunnel' check.",
+          "met": false,
+          "evidence": "[CEO office live 13 Oct 10:38-10:58Z] BEFORE (AMS): INPUT -P DROP, 0 rules wg0/dport 53, nat REDIRECT :53 x2, unbound active; tcpdump wg0 host 10.66.69.78: 40 queries in / 0 out (8 s), in=12 out=0 (6 s). Fleet 10:42Z: DU 2 rules, other 10 nodes 0; rules.v4 11 Oct 22:36-22:38Z (8 nodes), 12 Oct (LA/AMS/DU). APPLIED 10:55:22-10:56:28Z on AMS LA SGP HK MX MIA MTL SYD SAO TYO: 'iptables -I INPUT 1 -i wg0 -p udp/tcp -m udp/tcp --dport 53 -j ACCEPT' + iptables-save; backups /root/backups/dnsfix-<ts>/ per node; each node reports input-dport53=2 saved=2. AFTER (AMS 10:57:32Z, CEO phone 10.66.69.78 hs=38s): rx 775 KB tx 14.93 MB, DNS answers 1.1.1.1.53 -> client visible, INPUT udp 53 counter 97 pkts, 6 s in=612 out=1132. Live proof on 1 node; the other 9 wait QA. Project note: claude/ceo-live-2026-10-13-wireguard-no-traffic-root-cause-dns-input-drop.md"
         }
       ],
       "progress": 0,
@@ -62075,7 +62080,7 @@
       "createdDate": "2026-10-12",
       "completedDate": null,
       "taskRef": "ios-connect-telemetry-v2",
-      "blocker": "UNBLOCKED: CEO YES 2026-10-13 10:3xZ (office chat, live: 'yes' to rows 296 + 297) on row 296 -> BACKEND ships now: cherry-pick b1938f598 to production + deploy_api.sh + proof line (/connect answers mtu 1280) + the WireGuardKeys UPDATE to 1280 (3,101 rows; log the count) -> QA. Before: Waits the CEO YES on READY TO SHIP row 296 (not given at 2026-10-13T05:2xZ, raw board read by BACKEND run 0515). Before: QA DEV PASS xd-2000 (01:48Z). Waits only the CEO YES on READY TO SHIP row 296 (WireGuard MTU 1280); then BACKEND ships (cherry-pick b1938f598 + deploy_api.sh).",
+      "blocker": "NOTE 13 Oct 10:5xZ: primary cause of 'no traffic' was the firewall DNS drop (row 314, fixed 10:55Z); MTU 1280 stays a fail-safe - ship 296 as decided. UNBLOCKED: CEO YES 2026-10-13 10:3xZ (office chat, live: 'yes' to rows 296 + 297) on row 296 -> BACKEND ships now: cherry-pick b1938f598 to production + deploy_api.sh + proof line (/connect answers mtu 1280) + the WireGuardKeys UPDATE to 1280 (3,101 rows; log the count) -> QA. Before: Waits the CEO YES on READY TO SHIP row 296 (not given at 2026-10-13T05:2xZ, raw board read by BACKEND run 0515). Before: QA DEV PASS xd-2000 (01:48Z). Waits only the CEO YES on READY TO SHIP row 296 (WireGuard MTU 1280); then BACKEND ships (cherry-pick b1938f598 + deploy_api.sh).",
       "notes": [
         "[BACKEND run 2026-10-13 0215, scheduled, unattended, 2026-10-13T02:3xZ] blocker re-based: the named QA dev check is completed - QA DEV PASS xd-2000 (01:48Z). Waits only the CEO YES on READY TO SHIP row 296 (WireGuard MTU 1280); then BACKEND ships (cherry-pick b1938f598 + deploy_api.sh).",
         "[BACKEND run 2026-10-13 0015, scheduled, unattended, 2026-10-13T00:48:54Z] MEASURED first: every VpnConfigResponse is built in VpnServerService L375 / OptimizedVpnServerService L886 and neither sets Mtu, so the DTO default (1420) was the answer for every WireGuard connect; WireGuardKeys.Mtu is read only by WireGuardConfigGenerator (config text). FIX on development b1938f598: DTO + model defaults 1280, 4 INSERT literals 1280, config text clamped -> step (3) 'UPDATE WireGuardKeys SET Mtu=1280' is NOT needed (no reader of the stored value is left unclamped) - advice: no data change. Tests 8/8 + control FAIL; suite 415/415. dev api recreated 00:45:07Z (push 00:36:50Z, development 787410606..820fe480b); dev DLL vs production: IL 'ldc.i4 1420' 0 vs 3, 'ldc.i4 1280' 5 vs 0; SQL key-row INSERT ', 1280, 25' 3+1 vs 0, ', 1420, 25' 0 vs 3+1; 'From-country: ' 1 vs 0, 'Small sample - not judged' 1 vs 0; dev /health 200; dev log 'from-country inference failed' 0. Not shipped: unattended runs need a CEO YES. DevOps optional clamp: xd-2001. -> QA xd-2000."
@@ -62100,7 +62105,7 @@
       "ageDays": 1,
       "needsRelease": false,
       "lifecycle": "active",
-      "blocker": "Build 70plus (70b) install on the CEO phone FAILED 13 Oct 00:48Z (CoreDevice 4016: phone locked/not trusted when seen); retried 10:27Z by the office (install70plus.command waiting for the phone). Build 70 (70a) never reached the phone either (install loop stopped 23:55Z to make way for 70plus). Until install70plus.log shows 'App installed', the CEO phone still runs build 69."
+      "blocker": "UPDATE 13 Oct 10:5xZ: build 70plus (70b) INSTALLED on the CEO phone 10:35Z; WireGuard AMS cellular log 'mtu: 1280' (client clamp PROVEN); traffic flowed after the server DNS fix (row 314) 10:57Z: 14.9 MB in 40 s. Remaining: hidden-mode airplane test (xd-1981), Delete Account. Build 70plus (70b) install on the CEO phone FAILED 13 Oct 00:48Z (CoreDevice 4016: phone locked/not trusted when seen); retried 10:27Z by the office (install70plus.command waiting for the phone). Build 70 (70a) never reached the phone either (install loop stopped 23:55Z to make way for 70plus). Until install70plus.log shows 'App installed', the CEO phone still runs build 69."
     },
     {
       "id": "xd-1994",
@@ -62251,7 +62256,7 @@
       "createdAt": "2026-10-13T00:48:58Z",
       "createdDate": "2026-10-13",
       "completedDate": null,
-      "blocker": "UNBLOCKED: CEO YES 2026-10-13 10:3xZ (office chat, live: '296/297 yes for all' - covers row 299) -> DEVOPS ships --set-mss 1240 (FORWARD, wg0 in and out, SYN only) Bangkok first with a real-client check, then the 11 others, backup + rollback per node, log the before/after; then QA. Before: CEO card row 299 (DECISION: fixed MSS 1240 on 12 nodes, Bangkok first)",
+      "blocker": "RE-BASED 13 Oct 10:5xZ to P2: the MSS clamp is not the cause (row 314 DNS drop was); ship after QA's proof, Bangkok first. UNBLOCKED: CEO YES 2026-10-13 10:3xZ (office chat, live: '296/297 yes for all' - covers row 299) -> DEVOPS ships --set-mss 1240 (FORWARD, wg0 in and out, SYN only) Bangkok first with a real-client check, then the 11 others, backup + rollback per node, log the before/after; then QA. Before: CEO card row 299 (DECISION: fixed MSS 1240 on 12 nodes, Bangkok first)",
       "notes": "[DEVOPS run 2026-10-13 0125, scheduled, unattended, 2026-10-13T01:31:52Z] Measured read-only 12/12 nodes: TCPMSS rules 0 everywhere; wg0 MTU 65456 on Sydney/Singapore/Sao Paulo/Montreal/Bangkok (no MTU line in wg0.conf), 1420 on 7 -> --clamp-mss-to-pmtu would clamp to ~65416 there = no effect; use --set-mss 1240. Control: Singapore 23/24 WG sessions moved data in 7 d (no measured harm). Files: main server /root/reports/devops1013-0125/n-*.txt. DECISION row 299.",
       "category": "infra-fleet",
       "ageDays": 0,
@@ -63517,7 +63522,8 @@
       "priority": "P0",
       "createdAt": "2026-10-13T10:32:13Z",
       "createdDate": "2026-10-13",
-      "completedDate": null
+      "completedDate": null,
+      "blocker": "UPDATE 13 Oct 10:5xZ: cause found and fixed (row 314). Run this test AFTER the fix, include 'dig through the tunnel' per node; the AMS before/after rules diff is in /root/backups/dnsfix-*/ (the row-255 NAT change did not touch FORWARD/NAT for wg0; the INPUT policy did). "
     },
     {
       "id": "xd-2077",
@@ -63552,6 +63558,30 @@
       "status": "pending",
       "priority": "P2",
       "createdAt": "2026-10-13T10:38:01Z",
+      "createdDate": "2026-10-13",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2080",
+      "from": "[CEO]",
+      "to": "[QA]",
+      "title": "Handoff from CEO: [P0] Prove the DNS fix on the other 9 servers with a real WireGuard client: connect, 'dig' through the tunnel answers, a site opens, >= 1 MB down - per node PASS/FAIL (Amsterdam proven live 13 Oct 10:57Z)",
+      "description": "[CEO office live 2026-10-13 10:5xZ] CEO card row 314. The office added 'INPUT -i wg0 -p udp/tcp --dport 53 ACCEPT' on AMS LA SGP HK MX MIA MTL SYD SAO TYO at 10:55-10:56Z (backups /root/backups/dnsfix-<ts>/). Proof so far: AMS only (CEO phone: 14.9 MB in 40 s, DNS answers on wg0, INPUT udp53 counter 97). DO per node (throwaway account, Bangkok dev first if you need a dry run, then the 9): real WireGuard client -> dig @1.1.1.1 through the tunnel answers; curl a site; >= 1 MB download; node side: iptables -L INPUT -v -n | grep dpt:53 counter grows, tcpdump -ni wg0 shows '1.1.1.1.53 > <client>' answers. Table on this handoff. Also re-run the production no-traffic rate (ConnectionLogs 7 d, sessions >= 60 s with < 100 KB down; was 251/315 = 80 %) daily for 3 days - it must fall. Any node FAIL -> [DEVOPS] P0.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-10-13T10:59:15Z",
+      "createdDate": "2026-10-13",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2081",
+      "from": "[CEO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CEO: [P0] Audit: the 11-12 Oct firewall lock-down (security-lockdown-p1 / rules.v4 rewrites) lost 'INPUT -i wg0 --dport 53 ACCEPT' on 10/11 nodes = 36 h WireGuard DNS outage; find why, check OpenVPN (tun+) and IKEv2 clients' DNS for the same gap, add 'DNS answered through wg0' to the nightly server check (row 304)",
+      "description": "[CEO office live 2026-10-13 10:5xZ] See CEO card row 314. FACTS: rules.v4 written 11 Oct 22:36-22:38Z on SGP HK MX MIA MTL SYD SAO TYO, 12 Oct 12:31 on LA, 12 Oct 21:31-21:32 local on DU/AMS; after those writes INPUT policy DROP with no wg0 rule on 10 nodes; DU alone kept '-A INPUT -i wg0 -p tcp/udp --dport 53 -j ACCEPT' (rule 2-3). Office fix 10:55-10:56Z (CEO 'fix dns'): '-I INPUT 1 -i wg0 -p udp/tcp -m udp/tcp --dport 53 -j ACCEPT' + iptables-save on the 10; backups /root/backups/dnsfix-<ts>/rules.before + rules.v4.before. DO: (1) diff each node's rules.v4.before against the lock-down script/runbook and name the step that dropped the rule; (2) OpenVPN clients (tun+): their DNS path (push dhcp-option? redirect?) - is INPUT open for it; IKEv2 (xfrm): same; test on Bangkok dev with real clients; (3) nightly check (row 304 script): per node 'dig through a wg peer' or at least 'iptables -C INPUT -i wg0 -p udp --dport 53 -j ACCEPT' + unbound active + REDIRECT present, alert on any miss; (4) make the lock-down script idempotent with the wg0 DNS rules included; (5) note in the devops skill: never apply an INPUT DROP policy without the per-tunnel DNS ACCEPT lines. The office did not touch anything else. xd-2001 (MSS 1240) is re-based to P2 - not the cause.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-10-13T10:59:15Z",
       "createdDate": "2026-10-13",
       "completedDate": null
     }
