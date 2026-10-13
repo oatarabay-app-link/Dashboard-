@@ -64371,12 +64371,12 @@
       "to": "[IOS]",
       "title": "Handoff from CTO: [P1] Hidden mode: after 'network-up obfs-abort -> clean restart' the tunnel stops and the app never reconnects (CEO report 3ed2e5e6, build 72)",
       "description": "CEO report 3ed2e5e6 21:58Z (build 72, iPhone, cellular, Sydney relay 103.75.119.122): hidden-mode session b3e992bb held 103 min (383 MB rx). 21:56:08Z ping #13/#14 unanswered -> '27d WS is a silent zombie' -> [CC-RESUME] 70a storm (ws-pong-timeout); warm-get to the relay ERR timed out 2x (2.5 s), [CC-DIAL] POSIX 60 timed out 2x (11 s) -> 'obfs4 transport error in active CC session - tearing down: network-up obfs-abort -> clean restart' 21:56:53Z. The current-session tunnel log is EMPTY after that: no new startTunnel, the app stayed disconnected ('No reconnect'). Sydney was healthy at 22:04Z from the brain (HTTPS 200 0.8 s, caspercloak-ws active, no errors 21:56); the stall was the phone->Sydney path. Expected: after a clean restart tear-down the app (or the extension via on-demand) retries the connect with backoff (same server, then the next relay), and shows an honest 'reconnecting' line; ships in build 73 / 4.3.2 (CEO: resubmit 4.3.1 first, fix after). Prove with a forced relay stall (iptables DROP on a dev relay for 60 s) on the phone: reconnect within 30 s after the relay returns.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P0",
       "createdAt": "2026-10-13T22:09:55Z",
       "createdDate": "2026-10-13",
       "completedDate": null,
-      "blocker": "ROOT CAUSE (code, 22:2xZ): Obfs4Transport.surfaceUnrecoverableFailure -> PacketTunnelProvider.teardownCasperCloakAndCancel -> cancelTunnelWithError; the design comment says 'on-demand brings up a FRESH process' - but on-demand rules are [] when the kill switch is off (VPNConnectionManager: onDemandRules = killSwitch strict/soft only), and the app-side autoReconnectTask (VPNConnectionManager:670-709) cannot run while the app is suspended in the background. So a CC relay stall with kill switch OFF + app in background = permanent disconnect until the user opens the app. Fix options for iOS: (a) arm a 'reconnect' on-demand rule for every user-started session (not only kill switch) and disarm on user disconnect (the xd-685 disarm path exists), or (b) restart in-process inside the extension (new transport + bridge + WG adapter; needs the peer re-registration the app does on /connect). CEO 13 Oct 22:2xZ: wants this in a new build BEFORE users get it (build 73). "
+      "blocker": "FIX SHIPPED AS BUILD 73 by [CTO] 22:3xZ (CEO: 'finalize the iOS task with the required skill and run a new build, we test and submit'): ios/73 421e751c4 = ios/72 + VPNConnectionManager: connectCasperCloak Layer-1 branch now arms the soft on-demand rule for EVERY user-started CC session (not only restricted regions; manual-disconnect gate + Background Auto-Connect opt-out unchanged), ensureOnDemandRespectsSetting preserves the arm on any live CC session (protocol read from providerConfiguration); marker 73a, version 73. Mac: manifest differing=0, device BUILD SUCCEEDED 22:35:18Z, marker 73a=1, xd-2123 lines 1/1, Info 4.3.1 (73); signed sim build OK; render + phone install running. CEO test: CC on cellular, lock the phone 10+ min; after a drop the tunnel must come back by itself (log 'CasperCloak on-demand ARMED (any region, xd-2123)'). Then archive73 -> ASC -> attach to 4.3.1 -> submit. ROOT CAUSE (code, 22:2xZ): Obfs4Transport.surfaceUnrecoverableFailure -> PacketTunnelProvider.teardownCasperCloakAndCancel -> cancelTunnelWithError; the design comment says 'on-demand brings up a FRESH process' - but on-demand rules are [] when the kill switch is off (VPNConnectionManager: onDemandRules = killSwitch strict/soft only), and the app-side autoReconnectTask (VPNConnectionManager:670-709) cannot run while the app is suspended in the background. So a CC relay stall with kill switch OFF + app in background = permanent disconnect until the user opens the app. Fix options for iOS: (a) arm a 'reconnect' on-demand rule for every user-started session (not only kill switch) and disarm on user disconnect (the xd-685 disarm path exists), or (b) restart in-process inside the extension (new transport + bridge + WG adapter; needs the peer re-registration the app does on /connect). CEO 13 Oct 22:2xZ: wants this in a new build BEFORE users get it (build 73). "
     },
     {
       "id": "xd-2124",
@@ -64387,6 +64387,18 @@
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-10-13T22:09:55Z",
+      "createdDate": "2026-10-13",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2125",
+      "from": "[CTO]",
+      "to": "[QA]",
+      "title": "Handoff from CTO: Build 73 (ios/73 421e751c4): prove the hidden-mode self-reconnect (xd-2123) before it replaces 72 in App Store Connect",
+      "description": "Build 73 = 72 + on-demand armed for every user-started CasperCloak session. Test on a phone: (1) sign in, kill switch OFF, Background Auto-Connect default, connect CasperCloak on cellular; app log must show 'CasperCloak on-demand ARMED (any region, xd-2123)'. (2) Lock the phone, force a relay stall (iptables -I INPUT -p tcp --dport 443 -j DROP on a dev relay for 90 s, or airplane mode 60 s) -> the tunnel must come back by itself within ~30 s after the path returns, with NO app foreground. (3) Manual Disconnect -> the tunnel must STAY down (no auto-reconnect) and Settings > VPN shows On Demand off. (4) Settings > Background Auto-Connect OFF -> connect CC -> no arm. (5) Plain WireGuard connect -> no on-demand (unchanged). (6) Regression: build-72 gate items (Dedicated IP 3 cards, Double VPN full width on iPad). PASS -> CTO archives + uploads 73 and it replaces 72 on 4.3.1.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-10-13T22:37:11Z",
       "createdDate": "2026-10-13",
       "completedDate": null
     }
