@@ -15283,17 +15283,17 @@
         {
           "test": "SHIPPED on CEO YES ('fix crl', office chat 13 Oct 16:12 Beirut) [CTO] \u2014 OpenVPN (UDP and TCP) refuses every phone on 8 of our 11 servers since 12 Oct 21:03 UTC: the servers' certificate revocation list expired \u00b7 why: the OpenVPN setup of 15 Apr issued its revocation list with the tool's 180-day default; it ran out last night and OpenVPN rejects every certificate it cannot check against a valid list (your Sydney try 13 Oct 15:15 Beirut: 'VERIFY ERROR: CRL has expired') \u00b7 servers: Singapore, Hong Kong, Mexico, Miami, Montreal, Sydney, S\u00e3o Paulo, Tokyo (Amsterdam, D\u00fcsseldorf, LA do not use a revocation list - unaffected) \u00b7 what ships: a new revocation list valid 10 years on the 8 servers, dropped in place (OpenVPN re-reads it per connection, no restart, nobody cut), backups kept \u00b7 cost none \u00b7 your YES here or 'fix crl' in the office chat \u00b7 follow-up to DevOps: a nightly check of every certificate/CRL expiry date on the fleet.",
           "met": false,
-          "evidence": "[DEVOPS run 2026-10-13 1225, scheduled, unattended, 2026-10-13T12:45:29Z] RE-MEASURED 12:37Z, still broken: crl.pem nextUpdate Oct 12 21:03 on all 8 (HK MX MIA MTL SGP SYD SAO TYO), file mtime 2026-04-15, no /root/backups/crlfix-* on any node = not fixed yet; no CEO YES on this row. CEO notified by push 12:3xZ. Nightly warning for the future = new row 318. || [CEO office live 13 Oct 12:2xZ] CEO bug report f41e0e76 12:16Z (build 70, openvpn-udp, SAO then SYD): client TLS reaches VERIFY OK depth 0/1 then 29 s silence then 'OpenVPN fatal error'. SYD /var/log/openvpn/server.log: '185.76.178.236:35331 VERIFY ERROR: depth=0, error=CRL has expired: CN=ChangeMe ... TLS handshake failed'. Fleet 12:20Z: openssl crl -nextupdate = Oct 12 21:03:25-21:03:50 2026 GMT on SGP HK MX MIA MTL SYD SAO TYO (easy-rsa pki created 2026-04-15 21:03); AMS/DU/LA: no crl-verify line in server.conf. Script ready: $HOME/run-ceo-1013/fixcrl.py (EASYRSA_CRL_DAYS=3650 ./easyrsa gen-crl; install -m 644 pki/crl.pem /etc/openvpn/server/crl.pem; backup /root/backups/crlfix-<ts>). | APPLIED 13:12:42-13:13:12Z on SGP HK MX MIA MTL SYD SAO TYO: EASYRSA_BATCH=1 EASYRSA_CRL_DAYS=3650 ./easyrsa gen-crl; install -m 644 pki/crl.pem /etc/openvpn/server/crl.pem; each node: nextUpdate=Oct 10 2036, mode 644, backup /root/backups/crlfix-<ts>/. No restart (OpenVPN re-reads the CRL per handshake). Proof: CEO retry on SYD/SAO + QA xd real client (pending)."
+          "evidence": "[CEO 2026-10-13] 'yes for both' (CTO run chat, ~13:15Z; YES already given as 'fix crl' 13:12Z). [CTO live 2026-10-13T13:19:23Z] read-only check from the Mac: openssl crl -nextupdate = Oct 10 2036 on all 8 (SGP SYD SAO TYO HK MX MIA MTL) - fix is live. NEW FINDING: the main server 178.62.101.221 also runs OpenVPN (udp 1194 / tcp 1195 listening) with a CRL that expired Oct 1 2026 - not fixed, no YES; handed to [DEVOPS]. Real-phone OpenVPN connect still to prove (QA). | [DEVOPS run 2026-10-13 1225, scheduled, unattended, 2026-10-13T12:45:29Z] RE-MEASURED 12:37Z, still broken: crl.pem nextUpdate Oct 12 21:03 on all 8 (HK MX MIA MTL SGP SYD SAO TYO), file mtime 2026-04-15, no /root/backups/crlfix-* on any node = not fixed yet; no CEO YES on this row. CEO notified by push 12:3xZ. Nightly warning for the future = new row 318. || [CEO office live 13 Oct 12:2xZ] CEO bug report f41e0e76 12:16Z (build 70, openvpn-udp, SAO then SYD): client TLS reaches VERIFY OK depth 0/1 then 29 s silence then 'OpenVPN fatal error'. SYD /var/log/openvpn/server.log: '185.76.178.236:35331 VERIFY ERROR: depth=0, error=CRL has expired: CN=ChangeMe ... TLS handshake failed'. Fleet 12:20Z: openssl crl -nextupdate = Oct 12 21:03:25-21:03:50 2026 GMT on SGP HK MX MIA MTL SYD SAO TYO (easy-rsa pki created 2026-04-15 21:03); AMS/DU/LA: no crl-verify line in server.conf. Script ready: $HOME/run-ceo-1013/fixcrl.py (EASYRSA_CRL_DAYS=3650 ./easyrsa gen-crl; install -m 644 pki/crl.pem /etc/openvpn/server/crl.pem; backup /root/backups/crlfix-<ts>). | APPLIED 13:12:42-13:13:12Z on SGP HK MX MIA MTL SYD SAO TYO: EASYRSA_BATCH=1 EASYRSA_CRL_DAYS=3650 ./easyrsa gen-crl; install -m 644 pki/crl.pem /etc/openvpn/server/crl.pem; each node: nextUpdate=Oct 10 2036, mode 644, backup /root/backups/crlfix-<ts>/. No restart (OpenVPN re-reads the CRL per handshake). Proof: CEO retry on SYD/SAO + QA xd real client (pending)."
         },
         {
           "test": "DECISION \u2014 what counts as 'the VPN works' (xd-2082). We now have a written standard with 14 checks, from public sources. The targets below are my proposal; you decide. \u00b7 1) connects in under 5 seconds \u00b7 2) websites load through the VPN on every server, every hour (this is the check that would have caught yesterday's outage) \u00b7 3) a 1 MB file in under 10 seconds \u00b7 4) after switching Wi-Fi to mobile, back online in under 15 seconds \u00b7 5) zero leaks of your real address \u00b7 6) each server part up 99.9% of the month \u00b7 7) a measured 'how many users per server before it slows' \u00b7 options: A) accept these targets \u00b7 B) stricter (e.g. 3 s / 5 s) \u00b7 C) change specific lines \u00b7 advice: A now, tighten after the first 2 weeks of real numbers. Reply 'A' (or your change) in any chat.",
           "verify": "memory/skills/vpn-connectivity-standard.md on production has a dated CEO decision line under 'Status'",
-          "met": false,
-          "passed": false,
-          "verifiedBy": "none",
-          "verifiedByRaw": null,
-          "verifiedDate": null,
-          "evidence": "[CTO run 2026-10-13 1235, 2026-10-13T12:42:47Z] standard v0.1 pushed production db9edc8f; handoffs xd-2093 [DEVOPS] prober, xd-2094 [QA] check + phone pass."
+          "met": true,
+          "passed": true,
+          "verifiedBy": "verified",
+          "verifiedByRaw": "ceo",
+          "verifiedDate": "2026-10-13",
+          "evidence": "[CEO 2026-10-13] 'yes for both' (CTO run chat, ~13:15Z) = option A: accept the proposed targets (connect <5 s; websites through every server hourly; 1 MB <10 s; Wi-Fi->mobile <15 s; 0 leaks; 99.9 %/month per service; users-per-server measured). Recorded by [CTO] 2026-10-13T13:19:23Z; vault Status line updated. | [CTO run 2026-10-13 1235, 2026-10-13T12:42:47Z] standard v0.1 pushed production db9edc8f; handoffs xd-2093 [DEVOPS] prober, xd-2094 [QA] check + phone pass."
         },
         {
           "test": "READY TO SHIP \u2014 a nightly check that warns 30 days before any VPN server certificate or OpenVPN revocation list runs out \u00b7 why: the list that expired on 12 Oct 21:03 UTC broke OpenVPN on 8 servers and nothing warned us; the nightly server check only looked at the website certificates \u00b7 what changes: the nightly check on the main server also reads, on every server, the files OpenVPN and IKEv2 actually load (certificate, authority, revocation list) and the live Let's Encrypt certificates; red under 14 days, amber under 30 days, shown in admin Operations and mailed when red \u00b7 tested on dev: development ee7cc20d infrastructure/scripts/infra_inventory_check.py md5 cd67ce3c - check_node_pki run alone on the main server 12:4xZ (no report, no mail): 75 items, red 8 = exactly the 8 expired lists, 67 green \u00b7 rollback: copy back the installed file (md5 7edf9cd6 = git before this change) \u00b7 advice: YES, together with row 316 (the fix itself)",
@@ -63684,7 +63684,7 @@
       "createdAt": "2026-10-13T11:02:57Z",
       "createdDate": "2026-10-13",
       "completedDate": null,
-      "blocker": "[CTO 12:5xZ] note: dept_queue prints this P0 as OUTSIDE (blocker text starts with the CEO's 'ADD' line), so a CTO run reading only WORK would skip it; CTO works it as WORK. | [CTO run 2026-10-13 1235, 2026-10-13T12:42:47Z] Slice 1 done: standard v0.1 in the vault (memory/skills/vpn-connectivity-standard.md production db9edc8f, 14 lines incl. the CEO's 12:2xZ load line L14; SKILLS.md row 3068323b). Sources re-checked 12:4xZ: RFC 8899 s5.1.2, wg-quick(8), mullvad.net/check (correction to the 11:35Z draft: RFC 8899's 1200-byte BASE_PLPMTU default is for IPv4). NOT READ yet: OWASP MASVS-NETWORK, VTI 2.0, IVPN/Proton/ipleak. Next: DEVOPS xd-2093 builds the prober on dev (L2-L6, L14); QA xd-2094 checks the file + weekly phone pass L7-L11; CEO decides targets (CEO card DECISION row). Scoreboard: none yet (no instrument). | ADD 13 Oct 12:2xZ (CEO: 'does our infra actually handle load?'): include a per-node load line - iperf3/parallel curl through real WireGuard tunnels from the Bangkok prober until throughput or latency degrades; publish 'users per node before degradation' and the fleet total; today's facts: 25 users/7 d, peak 18 sessions/h, 100 Mbit/s per node, never load-tested. "
+      "blocker": "[CTO 2026-10-13T13:19:23Z] CEO accepted the proposed targets (option A, row 317 met by CEO). | [CTO 12:5xZ] note: dept_queue prints this P0 as OUTSIDE (blocker text starts with the CEO's 'ADD' line), so a CTO run reading only WORK would skip it; CTO works it as WORK. | [CTO run 2026-10-13 1235, 2026-10-13T12:42:47Z] Slice 1 done: standard v0.1 in the vault (memory/skills/vpn-connectivity-standard.md production db9edc8f, 14 lines incl. the CEO's 12:2xZ load line L14; SKILLS.md row 3068323b). Sources re-checked 12:4xZ: RFC 8899 s5.1.2, wg-quick(8), mullvad.net/check (correction to the 11:35Z draft: RFC 8899's 1200-byte BASE_PLPMTU default is for IPv4). NOT READ yet: OWASP MASVS-NETWORK, VTI 2.0, IVPN/Proton/ipleak. Next: DEVOPS xd-2093 builds the prober on dev (L2-L6, L14); QA xd-2094 checks the file + weekly phone pass L7-L11; CEO decides targets (CEO card DECISION row). Scoreboard: none yet (no instrument). | ADD 13 Oct 12:2xZ (CEO: 'does our infra actually handle load?'): include a per-node load line - iperf3/parallel curl through real WireGuard tunnels from the Bangkok prober until throughput or latency degrades; publish 'users per node before degradation' and the fleet total; today's facts: 25 users/7 d, peak 18 sessions/h, 100 Mbit/s per node, never load-tested. "
     },
     {
       "id": "xd-2083",
@@ -63850,6 +63850,30 @@
       "status": "pending",
       "priority": "P0",
       "createdAt": "2026-10-13T12:45:41Z",
+      "createdDate": "2026-10-13",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2096",
+      "from": "[CTO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CTO: [P1] Main server 178.62.101.221 runs OpenVPN (1194/udp, 1195/tcp) with an EXPIRED CRL (nextUpdate Oct 1 2026): decide retire vs renew; add it to the nightly cert/CRL expiry check (row 318)",
+      "description": "[CTO live 2026-10-13T13:19:23Z] Found while checking row 316 live: all 8 fleet CRLs now Oct 10 2036; the main server's own OpenVPN CRL expired 1 Oct 2026, so any client using it is refused. Measure first whether any app config/server list points users at it (backend VpnServers / app bundles). If unused: READY TO SHIP row to stop it (closes 2 open ports). If used: same 10-year CRL fix as row 316 under a CEO YES. Include it in the row 318 nightly expiry check.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-13T13:19:32Z",
+      "createdDate": "2026-10-13",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2097",
+      "from": "[CTO]",
+      "to": "[QA]",
+      "title": "Handoff from CTO: [P0] Prove OpenVPN works again on a real phone (row 316 shipped 13:12Z): UDP and TCP on 2+ of the 8 fixed servers",
+      "description": "[CTO live 2026-10-13T13:19:23Z] Server side proven: CRL nextUpdate Oct 10 2036 on SGP SYD SAO TYO HK MX MIA MTL. Still to prove: a real phone (build 70) connects with openvpn-udp and openvpn-tcp to e.g. SYD and SAO, a website loads (standard L2+L3), and server.log shows no 'CRL has expired' after 13:12Z. Then tick row 316.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-10-13T13:19:32Z",
       "createdDate": "2026-10-13",
       "completedDate": null
     }
