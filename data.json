@@ -3359,7 +3359,7 @@
           "passed": false,
           "verifiedBy": "none",
           "verifiedAt": "2026-03-01T13:25:00Z",
-          "evidence": "[CTO run 2026-10-11 0134, scheduled, unattended, 2026-10-11T01:43:15Z] RE-MEASURED FAIL: production DB (read-only) radacct = 0 rows in total, 0 in 7 days, max(acctstarttime) empty. CONTROL: ConnectionLogs has 657 rows with ConnectedAt in the last 7 days - users connect, RADIUS accounting never lands in this table. | QA 2026-09-24 FAIL: radacct has 0 rows with acctstarttime in the last 7 days \u2014 accounting is NOT reaching the DB (IKEv2 also has ~0 sessions, so partly expected). -> [DEVOPS]",
+          "evidence": "[DEVOPS run 2026-10-13 0125, scheduled, unattended, 2026-10-13T01:31:52Z] ALREADY DONE - proof for QA (not ticked): FreeRADIUS on the main server forwards every accounting record to the backend: sites-enabled/default accounting{} runs acct_forward (exec /usr/local/bin/radius-acct-forward.py -> POST http://127.0.0.1:8080/api/radius/accounting). /var/log/freeradius/acct-forward.log since 2026-09-25T22:46Z: 1,737 lines, 1,737 http=200, 779 Start / 780 Stop / 178 Interim-Update, last 2026-10-13T00:23:51Z, nodes = all fleet IPs. radacct stays 0 rows because the SQL write (-sql after acct_forward) is not where accounting is stored - the row asks for 'to backend', which this meets. Control: 183 lines are not the claude-dev probe account. QA: check where /api/radius/accounting stores it before ticking. || [CTO run 2026-10-11 0134, scheduled, unattended, 2026-10-11T01:43:15Z] RE-MEASURED FAIL: production DB (read-only) radacct = 0 rows in total, 0 in 7 days, max(acctstarttime) empty. CONTROL: ConnectionLogs has 657 rows with ConnectedAt in the last 7 days - users connect, RADIUS accounting never lands in this table. | QA 2026-09-24 FAIL: radacct has 0 rows with acctstarttime in the last 7 days \u2014 accounting is NOT reaching the DB (IKEv2 also has ~0 sessions, so partly expected). -> [DEVOPS]",
           "met": false,
           "verifiedDate": "2026-09-24",
           "verifiedByRaw": "ceo-cowork",
@@ -3375,7 +3375,7 @@
           "passed": false,
           "verifiedBy": "none",
           "verifiedAt": "2026-03-04T19:05:59Z",
-          "evidence": "[CTO run 2026-10-12 2335, scheduled, unattended, 2026-10-12T23:38:37Z] No [DEVOPS] handoff existed for the 29 Sep / 11 Oct QA FAIL; created xd-1989 [CTO]->[DEVOPS] P2 (decide second RADIUS or accept + reword). Not re-measured this run (QA 11 Oct is the newest measurement). || [QA 2026-10-11 d, scheduled, 2026-10-11T03:13:11Z] FAIL (unchanged) - re-measured 03:09Z on 11 of 11 active VPN servers: /etc/strongswan.d/charon/eap-radius.conf has exactly ONE address (178.62.101.221, the main server) on every node - no failover; a main-server outage stops IKEv2 sign-in fleet-wide. Waits the [DEVOPS] decision (second RADIUS or accept + reword). || [FAIL] QA 2026-09-29 22:0xZ fleet probe (12 of 12 active nodes, from the brain): no RADIUS failover - every node's eap-radius has one server, 'uklon' 178.62.101.221 (checked Singapore); a brain outage stops IKEv2 logins on all nodes. -> [DEVOPS] P3 (decide: second RADIUS or accept). | was: QA TESTED (conditional): Literal \"RADIUS failover/retry\" is NOT configured. Architecture decision: NL-PRI uses FreeRADIUS\u2192Backend; 4 new servers use static EAP. Each server handles auth independently = no single point of failure. Multi-server auth is functional. IKEv2 port 500 listening on all 5 servers (verified via Flask API). RADIUS centralization deferred to Phase 2. Intent of criterion (reliable multi-server auth) is MET. Tested 2026-03-04.",
+          "evidence": "[DEVOPS run 2026-10-13 0125, scheduled, unattended, 2026-10-13T01:31:52Z] DEVOPS DECISION (xd-1989, option b): keep ONE RADIUS server for now and reword this row. Reasons measured 01:2xZ: (1) IKEv2 is barely used - ConnectionLogs 7 d: Protocol 2 (IKEv2) 306 rows from 1 account vs WireGuard 369 rows / 23 accounts, CasperCloak 51 / 6; acct-forward.log Start/Stop lines are almost all the claude-dev probe account. (2) RADIUS lives on the main server, and the app cannot sign in or fetch a server config at all when the main server is down - a second RADIUS would not keep IKEv2 users connected-in during a main-server outage. (3) Bangkok (dev) already points at its own RADIUS (188.166.174.132), 11/11 production nodes at 178.62.101.221 (eap-radius.conf, survey 01:2xZ). Revisit when IKEv2 has >= 50 real accounts/week or the API gets a second server. Not ticked (DEVOPS never ticks); CEO office asked to reword. || [CTO run 2026-10-12 2335, scheduled, unattended, 2026-10-12T23:38:37Z] No [DEVOPS] handoff existed for the 29 Sep / 11 Oct QA FAIL; created xd-1989 [CTO]->[DEVOPS] P2 (decide second RADIUS or accept + reword). Not re-measured this run (QA 11 Oct is the newest measurement). || [QA 2026-10-11 d, scheduled, 2026-10-11T03:13:11Z] FAIL (unchanged) - re-measured 03:09Z on 11 of 11 active VPN servers: /etc/strongswan.d/charon/eap-radius.conf has exactly ONE address (178.62.101.221, the main server) on every node - no failover; a main-server outage stops IKEv2 sign-in fleet-wide. Waits the [DEVOPS] decision (second RADIUS or accept + reword). || [FAIL] QA 2026-09-29 22:0xZ fleet probe (12 of 12 active nodes, from the brain): no RADIUS failover - every node's eap-radius has one server, 'uklon' 178.62.101.221 (checked Singapore); a brain outage stops IKEv2 logins on all nodes. -> [DEVOPS] P3 (decide: second RADIUS or accept). | was: QA TESTED (conditional): Literal \"RADIUS failover/retry\" is NOT configured. Architecture decision: NL-PRI uses FreeRADIUS\u2192Backend; 4 new servers use static EAP. Each server handles auth independently = no single point of failure. Multi-server auth is functional. IKEv2 port 500 listening on all 5 servers (verified via Flask API). RADIUS centralization deferred to Phase 2. Intent of criterion (reliable multi-server auth) is MET. Tested 2026-03-04.",
           "met": false,
           "verifiedDate": "2026-09-29",
           "verifiedByRaw": "qa-sweep-2026-09-29-fail",
@@ -15070,6 +15070,36 @@
           "test": "READY TO SHIP \u2014 the weekly 'who managed to connect' report stops counting your own and staff accounts as customers \u00b7 why: one of our own accounts was counted as a Lebanese newcomer, so Lebanon looked better than it is \u00b7 what the ship does: copies the corrected report recipe to the live branch; it only READS data, nothing users see changes \u00b7 tested: read-only on live data 13 Oct 01:2xZ - only that one account drops out, everything else identical \u00b7 risk: none \u00b7 rollback: copy back the old recipe \u00b7 advice: YES (activation-first-connection-funnel row 2, xd-2003)",
           "verify": "git show origin/production:infrastructure/scripts/activation_funnel.sql | grep -c 'staff-accounts.md' -> 2 (was 0); /opt/caspervpn/activation_funnel.sql md5 = ebffc315... after the install line in the file header",
           "evidence": "[BACKEND run 2026-10-13 0115, scheduled, unattended, 2026-10-13T01:22:58Z] added; development 7c9314f93; QA handoff xd-2007; ship = cherry-pick 7c9314f93 to production + reinstall /opt/caspervpn copy from git (header line)."
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "addedAt": "2026-10-13T01:31:52Z",
+          "owner": "[DEVOPS]",
+          "test": "DECISION \u2014 add one small safety setting on all VPN servers so big downloads do not stall on phone networks \u00b7 why: some phones on mobile data connect but pages never load (xd-1992); the app-side fix from backend is the main cure, this is the server half \u00b7 measured 13 Oct 01:3xZ: 0 of 12 servers have it; 5 servers (Sydney, Singapore, S\u00e3o Paulo, Montreal, Bangkok test) run the tunnel at an unusual size (65456 instead of 1420), so the 'automatic' form of the setting would do nothing there - use a fixed value \u00b7 no measured harm today: Singapore moved data in 23 of 24 sessions in 7 days \u00b7 plan: Bangkok test server first, check a real connection, then the 11 \u00b7 risk: low \u00b7 rollback: remove the one rule \u00b7 advice: YES, after the app-side fix ships; not urgent (xd-2001)",
+          "verify": "per node: iptables -t mangle -S FORWARD | grep -c TCPMSS -> 2 (was 0 on 12/12, main server /root/reports/devops1013-0125/n-*.txt)",
+          "evidence": "[DEVOPS run 2026-10-13 0125, scheduled, unattended, 2026-10-13T01:31:52Z] added. Read-only survey 12 nodes (survey.sh): mss_fwd=0 x12; wg0 mtu 65456 on 103.75.119.122, 167.150.100.166, 185.192.124.245, 45.154.204.206, 46.16.129.246 (no MTU line in wg0.conf; default route eth0 1500), 1420 on the other 7. Proposed rule: iptables -t mangle -A FORWARD -o wg0 -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --set-mss 1240 (and -i wg0), netfilter-persistent save. Control: Singapore (65456) 23/24 WG sessions with BytesDownloaded>0 in 7 d; Sydney 2/3."
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "addedAt": "2026-10-13T01:31:52Z",
+          "owner": "[DEVOPS]",
+          "test": "DECISION \u2014 two small server lock-downs \u00b7 (1) seven internal tools on the main server (API, admin, charts, error tracker, monitoring) listen on the open internet and are hidden only by one firewall rule - if that rule is ever lost they are exposed; tie them to the inside only, and give the charts tool its own secret key (it has none) \u00b7 cost: the admin site and the app's server restart once, about 1 minute, in a quiet hour \u00b7 (2) the Amsterdam server has an old account allowed to run admin commands without a password; measured used once in 30 days (our own audit check) - remove the two permission files \u00b7 risk: low \u00b7 rollback: (1) re-create from the old setup file, (2) put the files back from the backup \u00b7 advice: YES to both; if YES the next devops run prepares (1) on the test copy first and ships (2) with a backup (xd-1831, xd-1958)",
+          "verify": "main server: docker ps --format '{{.Names}} {{.Ports}}' | grep -cE '0.0.0.0:(8080|3000|5010|3100|8090|9090|9115)' -> 0 (was 7); Amsterdam: ls /etc/sudoers.d/ -> README only (was caspervpn-cc-deploy, caspervpn-deploy)",
+          "evidence": "[DEVOPS run 2026-10-13 0125, scheduled, unattended, 2026-10-13T01:31:52Z] added. Measured 01:3xZ: 7/7 ports on 0.0.0.0 (api 8080, admin-react 3000, prometheus 9090, probe-eu 5010, blackbox 9115, grafana 3100, glitchtip 8090); DOCKER-USER 32 rules; grafana GF_SECURITY_SECRET_KEY not set in the container env. Amsterdam: /etc/sudoers.d/caspervpn-cc-deploy (10 lines) + caspervpn-deploy (6 lines), both mtime 16 May; journalctl _COMM=sudo 30 d: 1 use by caspervpn (12 Oct 21:32 'journalctl --version' = security audit probe); caspervpn logs in 202x/30 d from the main server (parity_monitor.sh, ip_reputation_monitor.py) without sudo. Bangkok-first: Bangkok has no such files (README only), so (2) has no dev twin - it only removes unused rights."
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "addedAt": "2026-10-13T01:31:52Z",
+          "owner": "[DEVOPS]",
+          "test": "DECISION \u2014 change 3 keys older than 90 days: the servers' control key, the hidden-mode edge key, and the Cloudflare key \u00b7 plan per key is written on xd-1968 (order, who, how to undo, how to prove it worked without showing the key) \u00b7 the Cloudflare key needs you in the Cloudflare dashboard for about 5 minutes; the other two are done by a live session in a quiet hour, one per day \u00b7 risk: medium for the edge key (phones in hidden mode reconnect once) \u00b7 advice: YES; start with the servers' control key, and not on 18 Oct (database password change day)",
+          "verify": "secret-rotation-register.md rows 17-19: rotated date = change day, 'plan' column -> CEO card row; per key the proof line in xd-1968",
+          "evidence": "[DEVOPS run 2026-10-13 0125, scheduled, unattended, 2026-10-13T01:31:52Z] added. Plan written on xd-1968 notes this run. Register (production 1e34a987): control key 191 d, Cloudflare token 148 d (own policy due 17 Nov), ws-edge secret 149 d."
         }
       ],
       "progress": 0,
@@ -57189,8 +57219,8 @@
       "createdAt": "2026-10-11T01:43:19Z",
       "createdDate": "2026-10-11",
       "completedDate": null,
-      "blocker": "Monitoring rows 1,3,5,7 shipped (QA xd-1858); left: radius-finalize row 5 (radacct) - not worked",
-      "notes": "[DEVOPS run 2026-10-11 f, scheduled, unattended, 2026-10-11T05:31:53Z] prepared development 72eeecf8b (prometheus.yml: admin probe + blackbox-internal-services; grafana/dashboards/caspervpn-overview.json). Tests in the row-242 evidence. QA dev check handed off. | ",
+      "blocker": "waits on xd-2008 [QA] (radius-finalize row 5 proof handed over: accounting reaches the backend, 1,737/1,737 http=200)",
+      "notes": "[DEVOPS run 2026-10-13 0125, scheduled, unattended, 2026-10-13T01:31:52Z] last open part (radius-finalize row 5) measured: accounting reaches the backend via acct-forward, not radacct. Proof on the row; QA xd-2008. || [DEVOPS run 2026-10-11 f, scheduled, unattended, 2026-10-11T05:31:53Z] prepared development 72eeecf8b (prometheus.yml: admin probe + blackbox-internal-services; grafana/dashboards/caspervpn-overview.json). Tests in the row-242 evidence. QA dev check handed off.",
       "category": "money-admin",
       "ageDays": 1,
       "needsRelease": false,
@@ -58644,7 +58674,7 @@
       "to": "[DEVOPS]",
       "title": "Handoff from SECURITY: [P3] Bind internal containers to 127.0.0.1 + give Grafana a secret key (xd-1422 slice 6 F8/F9)",
       "description": "Main server read-only 22:0xZ: api 0.0.0.0:8080, admin-react 0.0.0.0:3000, probe-eu 0.0.0.0:5010, grafana 0.0.0.0:3100, glitchtip 0.0.0.0:8090, prometheus 0.0.0.0:9090, blackbox 0.0.0.0:9115 - today each is dropped for outside traffic by a DOCKER-USER rule saved in /etc/iptables/rules.v4 (netfilter-persistent enabled), so NOT reachable; but one lost rule exposes them. Monitoring compose already says 127.0.0.1 for prometheus/blackbox/grafana - the live containers do not match it (drift). Ask: bind to 127.0.0.1 in docker-compose.yml (api, admin-react) and probe compose (5010), re-create from compose in a quiet window (needs a CEO YES row - live server change). F9: grafana GF_SECURITY_SECRET_KEY length 0 (built-in public key encrypts data-source passwords); set a random key at the next re-create. Report: memory/departments/security/audits/2026-10-11/REPORT-slice6-infra.md. verify: docker ps --format '{{.Names}} {{.Ports}}' | grep -c '0.0.0.0:(8080|3000|5010|3100|8090|9090|9115)' -> 0.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P3",
       "createdAt": "2026-10-11T22:20:28Z",
       "createdDate": "2026-10-11",
@@ -58652,7 +58682,9 @@
       "category": "money-admin",
       "ageDays": 1,
       "needsRelease": false,
-      "lifecycle": "active"
+      "lifecycle": "active",
+      "blocker": "CEO card row 300 (DECISION: bind 7 ports to 127.0.0.1 + Grafana key)",
+      "notes": "[DEVOPS run 2026-10-13 0125, scheduled, unattended, 2026-10-13T01:31:52Z] Re-measured 01:3xZ: 7/7 still on 0.0.0.0 (8080, 3000, 9090, 5010, 9115, 3100, 8090); DOCKER-USER 32 rules; GF_SECURITY_SECRET_KEY absent from grafana env. Plan if YES: edit docker-compose.yml (api, admin-react), probe compose (5010) and monitoring compose (match the file, which already says 127.0.0.1) on development; ship api through /root/deploy_api.sh, others compose up -d per service; random grafana key from /opt/caspervpn/secrets (never printed). DECISION row 300."
     },
     {
       "id": "xd-1832",
@@ -60808,13 +60840,15 @@
       "to": "[DEVOPS]",
       "title": "Handoff from SECURITY: [P3] xd-1422 F12: narrow the caspervpn deploy sudo rule on Amsterdam (cp/mv/chmod/systemctl/journalctl with any argument = root)",
       "description": "Audit slice 7 (memory/departments/security/audits/2026-10-11/REPORT-slice7-caspercloak.md, F12): the sudoers file for the deploy user allows NOPASSWD cp, mv, chmod, systemctl and journalctl with ANY arguments - each of these gives a root shell (cp over /etc/sudoers.d, chmod u+s, the pager). Your own fleet table (xd-1892, 12 Oct 15:30Z) found the file caspervpn-deploy on Amsterdam only and caspercloak-deploy on 0/11. Fix (no rush, P3): one root-owned wrapper (e.g. /usr/local/sbin/cc-deploy <file>) that only swaps the relay file and restarts caspercloak-ws, sudoers allowing only that wrapper, SYSTEMD_PAGER= / --no-pager; or delete the file if nothing uses it (check who deploys to Amsterdam first). Live server change = READY TO SHIP row + CEO YES first. Then [QA]: sudo -l -U caspervpn on Amsterdam shows only the wrapper.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P3",
       "createdAt": "2026-10-12T20:15:51Z",
       "createdDate": "2026-10-12",
       "completedDate": null,
       "dueBy": "2026-10-19T23:59:00Z",
-      "taskRef": "xd-1422"
+      "taskRef": "xd-1422",
+      "blocker": "CEO card row 300 (DECISION: remove the 2 unused sudo files on Amsterdam)",
+      "notes": "[DEVOPS run 2026-10-13 0125, scheduled, unattended, 2026-10-13T01:31:52Z] Measured Amsterdam: caspervpn-cc-deploy (10 lines) + caspervpn-deploy (6 lines), mtime 16 May; sudo used by caspervpn 1x in 30 d (12 Oct 21:32 'journalctl --version' = audit probe); 202 logins/30 d from the main server by parity_monitor.sh + ip_reputation_monitor.py, which do not use sudo. 0/11 other nodes + Bangkok have no such file. Plan if YES: copy both to /root/backups/sudoers-1013/, remove, visudo -c, re-run parity_monitor once (expect 13/13). DECISION row 300."
     },
     {
       "id": "xd-1959",
@@ -60951,12 +60985,14 @@
       "to": "[DEVOPS]",
       "title": "Handoff from SECURITY: Plan the change of 3 secrets older than 90 days with no plan: node control API key (all nodes), Cloudflare ws-edge secret (Worker + API together), Cloudflare API token (CEO in the dashboard)",
       "description": "[WEBSITE+ADMIN run 2026-10-12 2110, scheduled, unattended, 2026-10-12T21:19:53Z] From the rotation register (memory/departments/security/context/secret-rotation-register.md, production 1e34a987): these 3 have no rotation plan. Ask: a written step plan per secret (order, who, rollback, how to prove it worked without printing the value), then a READY TO SHIP row each for a CEO YES. Never run unattended; never print a value. Do NOT combine with xd-1024 (database password, 18 Oct) unless the plan says why it is safe.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P2",
       "createdAt": "2026-10-12T21:19:58Z",
       "createdDate": "2026-10-12",
       "completedDate": null,
-      "taskRef": "ops-secret-rotation"
+      "taskRef": "ops-secret-rotation",
+      "blocker": "CEO card row 301 (DECISION: rotate 3 keys, one per day)",
+      "notes": "[DEVOPS run 2026-10-13 0125, scheduled, unattended, 2026-10-13T01:31:52Z] PLAN (never run unattended, never print a value). (1) NODE CONTROL KEY (port 5002, all nodes + main server): step 0 read the node control scripts to see if they accept two keys at once (NOT measured yet - if not, add a 2-key window on Bangkok first); generate new key on the main server into /opt/caspervpn/secrets (mode 600); Bangkok first: set new key, restart the control service, check /health + one signed call from the dev API; then the 11 nodes one by one (keys casper_fleet_admin / vpn_nodes for LA+DU); then the API .env and /root/deploy_api.sh; proof = protocol_health run all nodes 'ok' with the new key and a call with the OLD key -> 401 on each node; rollback = old key kept in /root/backups/control-key-1013 until proof passes. (2) WS-EDGE SECRET (Cloudflare Worker + API env together): check if the Worker can accept two secrets for 1 h (not measured); if not, change in a quiet minute: Worker secret first (wrangler secret put, CEO-held Cloudflare login or the token on the main server), API .env + deploy_api.sh within 1 minute; proof = a hidden-mode connect from Bangkok to one relay gets 101 + bytes, a token signed with the old secret is refused; phones in hidden mode reconnect once; rollback = put the old secret back in both. (3) CLOUDFLARE API TOKEN: CEO creates a new token with the same scopes in the Cloudflare dashboard (~5 min) and pastes it in a live session, which writes it to the main server file used by the wildcard renewal (never echoed); proof = certbot renew --dry-run for the wildcard passes; then the CEO deletes the old token; rollback = keep the old token until the dry run passes. Order: control key, then ws-edge, then Cloudflare; one per day; not on 18 Oct (xd-1024). DECISION row 301."
     },
     {
       "id": "xd-1969",
@@ -61260,18 +61296,21 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: [P2] Decide RADIUS failover (radius-finalize row 6): add a second RADIUS server, or accept one and reword the row",
       "description": "QA measured 11 Oct 03:09Z (radius-finalize row 6 evidence): on 11 of 11 active VPN servers /etc/strongswan.d/charon/eap-radius.conf lists ONE server (the main server). If the main server is down, IKEv2 sign-in stops fleet-wide. QA asked [DEVOPS] to decide on 29 Sep but no handoff was ever created (checked 12 Oct 23:4xZ: no open DEVOPS handoff mentions RADIUS failover). DEVOPS: (a) propose a second RADIUS (e.g. on a fleet node) as a READY TO SHIP row - fleet config needs the CEO YES, or (b) write the accept-the-risk reason on the row and ask the CEO office to reword it. Skill: devops + qa \u00b7 skills/fleet-onboarding.md.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-10-12T23:38:42Z",
       "createdDate": "2026-10-12",
-      "completedDate": null,
+      "completedDate": "2026-10-13T01:31:52Z",
       "taskRef": "radius-finalize",
       "criteriaIdx": [
         6
       ],
       "dueBy": "2026-10-15T23:38:37Z",
       "handoffTo": "[QA]",
-      "handoffNote": "QA re-measures eap-radius.conf on every node after the change, or checks the reworded row."
+      "handoffNote": "QA re-measures eap-radius.conf on every node after the change, or checks the reworded row.",
+      "completedBy": "[DEVOPS]",
+      "resolution": "[DEVOPS run 2026-10-13 0125, scheduled, unattended, 2026-10-13T01:31:52Z] Decided option (b): keep one RADIUS, reasons measured (radius-finalize row 6 evidence). Handoffs: xd-2009 [CEO] reword row 6; xd-2008 [QA] row 5.",
+      "notes": "[DEVOPS run 2026-10-13 0125, scheduled, unattended, 2026-10-13T01:31:52Z] Decided option (b): keep one RADIUS, reasons measured (radius-finalize row 6 evidence). Handoffs: xd-2009 [CEO] reword row 6; xd-2008 [QA] row 5."
     },
     {
       "id": "xd-1990",
@@ -61466,11 +61505,13 @@
       "to": "[DEVOPS]",
       "title": "Handoff from BACKEND: [P2] Optional, from xd-1992: TCPMSS --clamp-mss-to-pmtu on FORWARD for wg0 on the fleet (none today) - the server half of the cellular 'handshake OK, no traffic' black hole",
       "description": "[BACKEND run 2026-10-13 0015, scheduled, unattended, 2026-10-13T00:48:54Z] The CEO's xd-1992 (12 Oct 23:40Z) measured AMS 51.158.147.210 read-only: forwarding, NAT and egress fine, NO TCPMSS clamp in mangle. Backend fixed the API side on development b1938f598 (every connect answer says mtu 1280; old builds 64/69 on phones take it from the API) - READY TO SHIP row on the CEO card. A fleet-wide 'iptables -t mangle -A FORWARD -o wg0 -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu' (and -i wg0) would also protect any client that still runs 1420. Fleet change = DevOps runbook + CEO YES. Not urgent once the API ships.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P2",
       "createdAt": "2026-10-13T00:48:58Z",
       "createdDate": "2026-10-13",
-      "completedDate": null
+      "completedDate": null,
+      "blocker": "CEO card row 299 (DECISION: fixed MSS 1240 on 12 nodes, Bangkok first)",
+      "notes": "[DEVOPS run 2026-10-13 0125, scheduled, unattended, 2026-10-13T01:31:52Z] Measured read-only 12/12 nodes: TCPMSS rules 0 everywhere; wg0 MTU 65456 on Sydney/Singapore/Sao Paulo/Montreal/Bangkok (no MTU line in wg0.conf), 1420 on 7 -> --clamp-mss-to-pmtu would clamp to ~65416 there = no effect; use --set-mss 1240. Control: Singapore 23/24 WG sessions moved data in 7 d (no measured harm). Files: main server /root/reports/devops1013-0125/n-*.txt. DECISION row 299."
     },
     {
       "id": "xd-2002",
@@ -61551,6 +61592,30 @@
       "taskRef": "activation-first-connection-funnel",
       "dueBy": "2026-10-16T01:23:03Z",
       "handoffTo": "[MARKETING]"
+    },
+    {
+      "id": "xd-2008",
+      "from": "[[DEVOPS]]",
+      "to": "[[QA]]",
+      "title": "Handoff from [DEVOPS]: Check radius-finalize row 5: RADIUS accounting reaches the backend (acct-forward, 1,737/1,737 http=200)",
+      "description": "[DEVOPS run 2026-10-13 0125, scheduled, unattended, 2026-10-13T01:31:52Z] Row 5 asks 'RADIUS accounting logs session start/stop to backend'. Measured on the main server: accounting{} -> acct_forward -> POST 127.0.0.1:8080/api/radius/accounting; acct-forward.log 1,737 lines since 25 Sep, all http=200 (779 Start/780 Stop/178 Interim), last 00:23:51Z. radacct=0 is the unused SQL path. verify: ssh root@main 'grep -c http=200 /var/log/freeradius/acct-forward.log; grep -vc http=200 /var/log/freeradius/acct-forward.log' -> N / 0; plus find what the API endpoint writes (codegraph query 'RadiusAccounting' / grep api/radius/accounting) and that rows exist. Tick only if the backend keeps the record.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-13T01:31:57Z",
+      "createdDate": "2026-10-13",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2009",
+      "from": "[[DEVOPS]]",
+      "to": "[[CEO]]",
+      "title": "Handoff from [DEVOPS]: Reword radius-finalize row 6 (RADIUS failover) - DEVOPS chose: keep one RADIUS for now (xd-1989)",
+      "description": "[DEVOPS run 2026-10-13 0125, scheduled, unattended, 2026-10-13T01:31:52Z] DEVOPS decision on xd-1989 = option (b). Reasons and numbers are on radius-finalize row 6 evidence (IKEv2 306 sessions/7 d from 1 account; RADIUS shares the main server with the API so a second RADIUS would not help in an outage). Ask: CEO office rewords row 6 to 'one RADIUS server on the main server, accepted until IKEv2 has >= 50 real accounts a week or the API gets a second server' and has QA check the wording against eap-radius.conf on 11/11 nodes.",
+      "status": "pending",
+      "priority": "P3",
+      "createdAt": "2026-10-13T01:31:57Z",
+      "createdDate": "2026-10-13",
+      "completedDate": null
     }
   ],
   "importantNotes": [
