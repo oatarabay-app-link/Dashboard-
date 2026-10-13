@@ -15248,6 +15248,16 @@
           "test": "DECISION \u2014 a Windows computer to test the Windows app \u00b7 the Windows app now builds, opens its window and makes an installer, but every remaining check needs a real Windows 10 (version 2004 or newer) or Windows 11 computer where we are administrator: connect, the kill switch, the installer, start-with-the-computer and the taskbar menu. Our test machines cannot run Windows, so these checks are stuck until there is one \u00b7 options: (A) a spare Windows laptop or PC we may use for tests, (B) a rented Windows computer in the cloud (a monthly cost), (C) Windows 11 inside a virtual machine on your Mac (your Mac's chip runs the ARM edition of Windows, so it tests the less common version), (D) wait - the Windows checks stay open until there is one (Windows beta target 31 Dec) \u00b7 advice: A or B; say which, and the next apps run writes the exact steps for QA",
           "verify": "this row names the Windows test machine; QA xd-1998 / xd-2024 / xd-2057 then report a run on it",
           "evidence": "[APPS run 2026-10-13 j, scheduled, unattended, 2026-10-13T09:24:43Z] Raised because windows-app rows 0/3/7 have nothing left but a real Windows PC (QA xd-1998 in_progress, xd-2050 PASS on code 13 Oct) and board search found no CEO row or handoff for Windows hardware; the GitHub Windows runner cannot be started from unattended runs (no Actions token, desktop skill T12/F7)."
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "addedAt": "2026-10-13T10:29:20Z",
+          "owner": "[WEBSITE]",
+          "test": "READY TO SHIP \u2014 a new public page caspervpn.com/delete-account that tells people how to delete their CasperVPN account and what we keep \u00b7 why: Google Play asks for a web link explaining account deletion before the Android app can be listed (Data Safety), and Apple users ask too; today the address is a 404 \u00b7 what the ship does: adds the page (delete in the app or by email to privacy@caspervpn.com, store subscriptions are cancelled separately, a table of what is kept and for how long - the same periods as our Privacy Policy), one 'Delete Account' link in the site footer and one line in the sitemap \u00b7 tested on dev: development 2b66232, dev page 200, build 111/111 pages; waits [QA] xd-2074 and [LEGAL] xd-2075 (text OK) before your yes \u00b7 risk: low - a new page only \u00b7 rollback: revert the commit and redeploy the website \u00b7 advice: YES once Legal says 'text OK'",
+          "verify": "After ship: git merge-base --is-ancestor <cherry-pick of 2b66232> origin/production; curl -s 'https://caspervpn.com/delete-account?cb=1' -> 200 and title 'Delete Your Account | CasperVPN'; /sitemap.xml lists /delete-account; /privacy footer has href=\"/delete-account\"; smoke / /pricing /privacy 200.",
+          "evidence": "[WEBSITE+ADMIN run 2026-10-13 1005, scheduled, unattended, 2026-10-13T10:29:20Z] [WEBSITE] dev proof 10:28:12Z: https://dev.caspervpn.com/delete-account 200 44,663 B; production 404. Not shipped - no CEO YES; waits QA + LEGAL first."
         }
       ],
       "progress": 0,
@@ -19549,7 +19559,7 @@
           "verify": "from bkk-dev: curl -sv https://s<N>.pompesh.com/ -o /tmp/b --max-time 10; record status + content-length for all active relays",
           "met": false,
           "verifiedBy": "none",
-          "evidence": "[WEBSITE+ADMIN run 2026-10-13 0905, scheduled, unattended, 2026-10-13T09:11:07Z] [SECURITY] re-measured xd-2060 read-only from the main server 09:08-09:10Z, script /root/reports/webadmin-1013-0905/probe.sh, control nginx.org in the same script, SNI s5.pompesh.com on bkk-01 46.16.129.246 (relay 844c2cc6) and Duesseldorf de-3 91.194.84.79 (relay dae1101d). Both: GET / 200 text/html 701 B 'Server: nginx'; random path 404 146 B stock page; WS upgrade on a random path 404 (control 404). FIXED since 06:07Z: the 404 no longer carries Cache-Control / X-Content-Type-Options (both nodes; control has neither). STILL TELLS: (a) 'Connection: close' on every reply, two requests in one call = 1 + 1 new connections on both nodes (control keep-alive 1 + 0) - devops: not fixable in the relay; (c) NEW: header order - the relay sends Server LAST (after Content-Length); stock nginx sends Server first, then Date (control); 404 also carries Strict-Transport-Security, which stock nginx add_header does not put on error pages without 'always'; (d) NEW REGRESSION on bkk-01 only: POST / -> empty reply, curl rc 52, 3/3 tries (06:07Z it was 405); Duesseldorf POST / 405 151 B 3/3. Handed to [DEVOPS] (xd-2061). Not met: tells remain; 2 of 12 relays carry Disguise A. || [WEBSITE+ADMIN run 2026-10-13 0605, scheduled, unattended, 2026-10-13T06:13Z] [SECURITY] MEASURED on bkk-01 46.16.129.246 only (dev node, Disguise A slice 3 live 05:29Z; production relays unchanged), read-only from the main server 06:07-06:09Z: GET / 200 text/html 701 B 'Server: nginx' (no version); random path, /favicon.ico, /robots.txt 404 146 B stock nginx 404 page (md5 8eec510e); POST / 405; HTTP/1.0 no-Host 200. TELLS vs control nginx.org (same script): (a) relay closes the connection after every reply - 'Connection: close', 2 requests = 2 new connections (control: keep-alive, 2nd request 0 new connections); (b) 404 pages carry 'Cache-Control: public, max-age=300' + 'X-Content-Type-Options: nosniff' (control 404: neither). Handed to [DEVOPS] (new handoff). Not met: one dev node, two tells open. || [ENGINEERING run 2026-10-10 2305, scheduled, 2026-10-10T23:3xZ] FAIL \u2014 Measured 23:10Z from the main server: s1-s6, s8-s12.pompesh.com (11 relays) ALL answer https GET / with the SAME 200, 701 bytes, 'Server: nginx/1.24.0', title 'Service Endpoint'; /robots.txt, /favicon.ico and a random path ALSO answer 200 701 bytes (s1, s6). s7 no longer resolves. A real site 404s unknown paths and differs per host: one identical placeholder on 11 IPs is a fingerprint. Fix belongs to xd-1608 (Disguise A, CEO YES 9 Oct). | [CEO office 2026-10-02 07:0xZ (10:0x Beirut, CEO live in chat)] never measured",
+          "evidence": "[WEBSITE+ADMIN run 2026-10-13 1005, scheduled, unattended, 2026-10-13T10:29:20Z] [SECURITY] xd-2067 read-only from the main server 10:08:30-10:08:41Z, /root/reports/webadmin-1013-1005/probe.sh, control nginx.org in the same script, SNI s5.pompesh.com. bkk-01 46.16.129.246 (relay 2f4a8c81): POST a=1 -> 405 'Not Allowed' 150 B 3/3 (was empty reply rc 52 3/3 at 09:08Z); POST 1 KB body -> 405 150 B; header order HTTP, Server, Date, Content-Type, Content-Length, Connection (control: Server, Date, ... same order); 404 = 146 B with Server/Date/Content-Type/Content-Length/Connection and NO Strict-Transport-Security (was HSTS on 404); random WS path 404. STILL A TELL on bkk-01: 'Connection: close' on every reply - two URLs in one curl = connects 1 and 1 (control 1 and 0), and 2 pipelined GETs on one socket get 1 answer (control 2) - same root as no keep-alive (nginx-in-front design, xd-2030). Duesseldorf de-3 91.194.84.79 (relay dae1101d) still has the OLD tells: Server header LAST, HSTS on 404, 405 says 'Method Not Allowed' with an Allow header (stock nginx: '405 Not Allowed', no Allow) - it did not get the bkk-01 fix. JA3S/JA4S NOT PROVEN (no tool on the main server). Not met (keep-alive tell; JA3S not proven). || [WEBSITE+ADMIN run 2026-10-13 0905, scheduled, unattended, 2026-10-13T09:11:07Z] [SECURITY] re-measured xd-2060 read-only from the main server 09:08-09:10Z, script /root/reports/webadmin-1013-0905/probe.sh, control nginx.org in the same script, SNI s5.pompesh.com on bkk-01 46.16.129.246 (relay 844c2cc6) and Duesseldorf de-3 91.194.84.79 (relay dae1101d). Both: GET / 200 text/html 701 B 'Server: nginx'; random path 404 146 B stock page; WS upgrade on a random path 404 (control 404). FIXED since 06:07Z: the 404 no longer carries Cache-Control / X-Content-Type-Options (both nodes; control has neither). STILL TELLS: (a) 'Connection: close' on every reply, two requests in one call = 1 + 1 new connections on both nodes (control keep-alive 1 + 0) - devops: not fixable in the relay; (c) NEW: header order - the relay sends Server LAST (after Content-Length); stock nginx sends Server first, then Date (control); 404 also carries Strict-Transport-Security, which stock nginx add_header does not put on error pages without 'always'; (d) NEW REGRESSION on bkk-01 only: POST / -> empty reply, curl rc 52, 3/3 tries (06:07Z it was 405); Duesseldorf POST / 405 151 B 3/3. Handed to [DEVOPS] (xd-2061). Not met: tells remain; 2 of 12 relays carry Disguise A. || [WEBSITE+ADMIN run 2026-10-13 0605, scheduled, unattended, 2026-10-13T06:13Z] [SECURITY] MEASURED on bkk-01 46.16.129.246 only (dev node, Disguise A slice 3 live 05:29Z; production relays unchanged), read-only from the main server 06:07-06:09Z: GET / 200 text/html 701 B 'Server: nginx' (no version); random path, /favicon.ico, /robots.txt 404 146 B stock nginx 404 page (md5 8eec510e); POST / 405; HTTP/1.0 no-Host 200. TELLS vs control nginx.org (same script): (a) relay closes the connection after every reply - 'Connection: close', 2 requests = 2 new connections (control: keep-alive, 2nd request 0 new connections); (b) 404 pages carry 'Cache-Control: public, max-age=300' + 'X-Content-Type-Options: nosniff' (control 404: neither). Handed to [DEVOPS] (new handoff). Not met: one dev node, two tells open. || [ENGINEERING run 2026-10-10 2305, scheduled, 2026-10-10T23:3xZ] FAIL \u2014 Measured 23:10Z from the main server: s1-s6, s8-s12.pompesh.com (11 relays) ALL answer https GET / with the SAME 200, 701 bytes, 'Server: nginx/1.24.0', title 'Service Endpoint'; /robots.txt, /favicon.ico and a random path ALSO answer 200 701 bytes (s1, s6). s7 no longer resolves. A real site 404s unknown paths and differs per host: one identical placeholder on 11 IPs is a fingerprint. Fix belongs to xd-1608 (Disguise A, CEO YES 9 Oct). | [CEO office 2026-10-02 07:0xZ (10:0x Beirut, CEO live in chat)] never measured",
           "blocker": "xd-1608 [DEVOPS] Disguise A"
         },
         {
@@ -62803,9 +62813,9 @@
       "ageDays": 0,
       "needsRelease": false,
       "lifecycle": "active",
-      "updatedAt": "2026-10-13T09:11:07Z",
+      "updatedAt": "2026-10-13T10:29:20Z",
       "blocker": "Waits DEVOPS: xd-2061 (bkk-01 POST empty reply, header order); (a) keep-alive needs the nginx-in-front design",
-      "notes": "[WEBSITE+ADMIN run 2026-10-13 0905, scheduled, unattended, 2026-10-13T09:11:07Z] [SECURITY] re-measured (xd-2060): (b) PASS on bkk-01 + DU (404 without Cache-Control/nosniff); (a) still Connection: close (known). New items in xd-2061. || [DEVOPS run 2026-10-13 0625, scheduled, unattended, 2026-10-13T06:36:14Z] (b) FIXED on development 7391fcd0: the decoy 404 drops Cache-Control and X-Content-Type-Options (v16 output 844c2cc6; 13.x DU dae1101d / AMS d0fae39e compile). Side port 18445 on bkk-01: 404 headers = HSTS, Connection, Content-Length, Server only; control live :443 still shows both tells. (a) NOT FIXABLE IN THE RELAY: the websockets library closes the TCP connection after every non-101 answer (measured: 2 GETs = 2 connections on the patched and the live relay). Real keep-alive needs a real web server in front (infrastructure/caspercloak/nginx-in-front-runbook.md) - a fleet design decision, not a patch. Next: Bangkok live swap with the auto-rollback gate, then [SECURITY] re-runs its probe.  || [DEVOPS run 2026-10-13 0825, scheduled, unattended, 2026-10-13T08:45:21Z] (b) LIVE on Bangkok: Bangkok (bkk-01, dev node) live swap d092e439 -> 844c2cc6 at 08:29:47Z (gate bkk-01 /root/xd1608/bkk2030_live.sh, auto-rollback, drop-in kept): GET /x9 404 146 B, 404 tells (Cache-Control / X-Content-Type-Options) 0; / 200; WS /cc + / 101 with PSK; random WS 404; 'GATE PASS - kept live'; new pid 2248910 error lines 0 (the 80 traceback lines in the window are all from the OLD pid 2235850 at 08:28:0xZ - the known scanner EOF type). Backup bkk-01 /root/backups/xd1608-20261013T0829Z. Also live on Duesseldorf (dae1101d carries the same 404 fix). (a) stays: not fixable in the relay (see 0625 note). Handed to [SECURITY] xd-2060 to re-measure."
+      "notes": "[WEBSITE+ADMIN run 2026-10-13 1005, scheduled, unattended, 2026-10-13T10:29:20Z] [SECURITY] xd-2067 re-probe: bkk-01 (2f4a8c81) POST/405 + header order + 404 without HSTS now PASS; left on bkk-01: 'Connection: close' (connects 1/1 vs control 1/0; 2 pipelined GETs -> 1 answer vs control 2). Duesseldorf (dae1101d) still: Server last, HSTS on 404, 405 'Method Not Allowed' + Allow header - port the bkk-01 fix there when you next touch it. || [WEBSITE+ADMIN run 2026-10-13 0905, scheduled, unattended, 2026-10-13T09:11:07Z] [SECURITY] re-measured (xd-2060): (b) PASS on bkk-01 + DU (404 without Cache-Control/nosniff); (a) still Connection: close (known). New items in xd-2061. || [DEVOPS run 2026-10-13 0625, scheduled, unattended, 2026-10-13T06:36:14Z] (b) FIXED on development 7391fcd0: the decoy 404 drops Cache-Control and X-Content-Type-Options (v16 output 844c2cc6; 13.x DU dae1101d / AMS d0fae39e compile). Side port 18445 on bkk-01: 404 headers = HSTS, Connection, Content-Length, Server only; control live :443 still shows both tells. (a) NOT FIXABLE IN THE RELAY: the websockets library closes the TCP connection after every non-101 answer (measured: 2 GETs = 2 connections on the patched and the live relay). Real keep-alive needs a real web server in front (infrastructure/caspercloak/nginx-in-front-runbook.md) - a fleet design decision, not a patch. Next: Bangkok live swap with the auto-rollback gate, then [SECURITY] re-runs its probe.  || [DEVOPS run 2026-10-13 0825, scheduled, unattended, 2026-10-13T08:45:21Z] (b) LIVE on Bangkok: Bangkok (bkk-01, dev node) live swap d092e439 -> 844c2cc6 at 08:29:47Z (gate bkk-01 /root/xd1608/bkk2030_live.sh, auto-rollback, drop-in kept): GET /x9 404 146 B, 404 tells (Cache-Control / X-Content-Type-Options) 0; / 200; WS /cc + / 101 with PSK; random WS 404; 'GATE PASS - kept live'; new pid 2248910 error lines 0 (the 80 traceback lines in the window are all from the OLD pid 2235850 at 08:28:0xZ - the known scanner EOF type). Backup bkk-01 /root/backups/xd1608-20261013T0829Z. Also live on Duesseldorf (dae1101d carries the same 404 fix). (a) stays: not fixable in the relay (see 0625 note). Handed to [SECURITY] xd-2060 to re-measure."
     },
     {
       "id": "xd-2031",
@@ -63305,11 +63315,13 @@
       "to": "[WEBSITE]",
       "title": "Handoff from LEGAL: Public 'delete your account' page for the Play Console Delete-account URL (Data Safety gate G3)",
       "description": "From xd-2058 ([LEGAL] growth 13 Oct 0904). Android/CasperVPN-v2/PLAY_STORE_DATA_SAFETY.md (development 44bfb5b3) section 0 G3. MEASURED 13 Oct ~09:1xZ from the main server: curl -k https://127.0.0.1/delete-account -H 'Host: caspervpn.com' -> 404. Google Play needs a web link that explains how to delete a CasperVPN account and what is kept/for how long. Content: (1) in the app: Settings > Account > Delete account (iPhone build 69 xd-1950; Android after the [ANDROID] handoff); (2) or e-mail privacy@caspervpn.com from the account address; (3) what is deleted and the retention lines from privacy policy v1.8 section 5 (account data 30 days after deletion; connection metadata 180 days rolling; support tickets 2 years). [LEGAL] reads the text before it ships. Build on development, QA on dev, then a READY TO SHIP row (new public page).",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P2",
       "createdAt": "2026-10-13T09:15:11Z",
       "createdDate": "2026-10-13",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[WEBSITE+ADMIN run 2026-10-13 1005, scheduled, unattended, 2026-10-13T10:29:20Z] [WEBSITE] BUILT ON DEVELOPMENT 2b66232, dev 200 at 10:28:12Z (production 404 = control). Next: [QA] xd-2074 on dev + [LEGAL] xd-2075 reads the text -> then CEO card READY TO SHIP row (added now, waits both).",
+      "updatedAt": "2026-10-13T10:29:20Z"
     },
     {
       "id": "xd-2064",
@@ -63317,11 +63329,15 @@
       "to": "[SECURITY]",
       "title": "Handoff from LEGAL: Hidden mode on a bare-IP relay sends the account Bearer token over TLS with no certificate check (Android, and iPhone per code comment)",
       "description": "From xd-2058 ([LEGAL] growth 13 Oct 0904), found while checking the Data Safety 'encrypted in transit' answer. origin/development 53baf9fe9 Android/CasperVPN-v2/app/src/main/java/com/caspervpn/app/vpn/cloak/CasperCloakBridge.kt ~L208-216: when the relay has no TLS name, a trust-all X509TrustManager + hostnameVerifier{true} is used, and ~L227 the request still carries 'Authorization: Bearer <access token>'. Comment says 'iPhone does the same'. Traffic stays encrypted (WireGuard inside authenticates the server), so the Data Safety answer stays Yes - but anyone who can intercept the bare-IP path could read the access token. Decide: drop the Bearer header on the unchecked path, pin the relay certificate, or accept with a written reason. Measure first (which share of hidden-mode connects use the bare-IP path). No change asked of Legal.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P3",
       "createdAt": "2026-10-13T09:15:11Z",
       "createdDate": "2026-10-13",
-      "completedDate": null
+      "completedDate": "2026-10-13",
+      "completedAt": "2026-10-13",
+      "completedBy": "[SECURITY]",
+      "resolution": "[WEBSITE+ADMIN run 2026-10-13 1005, scheduled, unattended, 2026-10-13T10:29:20Z] CLAIM NOT REPRODUCED: no Bearer header on the unchecked bare-IP path in either app (Android bearer set only in the Fronted branch; iPhone bearerToken = nil on the direct target). Residual: X-CC-Session id + relay path visible to an interceptor on bare-IP; data protected by WireGuard. No code change needed; pinning the relay certificate stays an option for the anti-censorship roadmap, not a token fix.",
+      "resultingHandoff": "xd-2073 to [LEGAL] (answer + Data Safety note)"
     },
     {
       "id": "xd-2065",
@@ -63361,11 +63377,15 @@
       "to": "[SECURITY]",
       "title": "Handoff from DEVOPS: Re-probe Bangkok (46.16.129.246, relay 2f4a8c81): POST with a body, header order, 404/405 shape",
       "description": "[DEVOPS run 2026-10-13 0925, scheduled, unattended, 2026-10-13T09:45:49Z] From xd-2061. Bangkok now answers POST a=1 with 405 'Not Allowed' (stock nginx page, 150 B, no Allow), Server/Date first, 404 without HSTS, pipelined requests answered. Please re-run your 09:08Z probe (main server /root/reports/webadmin-1013-0905/probe.sh) on 46.16.129.246 with nginx.org as control and record the cc-probe-resistance rows. Production v16 relays (e.g. 23.95.79.249) still show the old POST tell on purpose - they get this fix only with the one-by-one disguise rollout (CEO card row 183).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-10-13T09:45:55Z",
       "createdDate": "2026-10-13",
-      "completedDate": null
+      "completedDate": "2026-10-13",
+      "completedAt": "2026-10-13",
+      "completedBy": "[SECURITY]",
+      "resolution": "[WEBSITE+ADMIN run 2026-10-13 1005, scheduled, unattended, 2026-10-13T10:29:20Z] DONE (measured): bkk-01 POST/405, header order and 404 shape now match stock nginx; keep-alive tell remains (xd-2030); Duesseldorf still has the old tells. read-only from the main server 10:08:30-10:08:41Z, /root/reports/webadmin-1013-1005/probe.sh, control nginx.org in the same script, SNI s5.pompesh.com. bkk-01 46.16.129.246 (relay 2f4a8c81): POST a=1 -> 405 'Not Allowed' 150 B 3/3 (was empty reply rc 52 3/3 at 09:08Z); POST 1 KB body -> 405 150 B; header order HTTP, Server, Date, Content-Type, Content-Length, Connection (control: Server, Date, ... same order); 404 = 146 B with Server/Date/Content-Type/Content-Length/Connection and NO Strict-Transport-Security (was HSTS on 404); random WS path 404. STILL A TELL on bkk-01: 'Connection: close' on every reply - two URLs in one curl = connects 1 and 1 (control 1 and 0), and 2 pipelined GETs on one socket get 1 answer (control 2) - same root as no keep-alive (nginx-in-front design, xd-2030). Duesseldorf de-3 91.194.84.79 (relay dae1101d) still has the OLD tells: Server header LAST, HSTS on 404, 405 says 'Method Not Allowed' with an Allow header (stock nginx: '405 Not Allowed', no Allow) - it did not get the bkk-01 fix. JA3S/JA4S NOT PROVEN (no tool on the main server).",
+      "resultingHandoff": "xd-2072 to [QA] (judge row 0 legs on bkk-01)"
     },
     {
       "id": "xd-2068",
@@ -63422,6 +63442,63 @@
       "createdAt": "2026-10-13T10:12:59Z",
       "createdDate": "2026-10-13",
       "completedDate": null
+    },
+    {
+      "id": "xd-2072",
+      "from": "[SECURITY]",
+      "to": "[QA]",
+      "title": "Handoff from SECURITY: Re-check bkk-01 Disguise A after relay 2f4a8c81 (xd-2067): POST with body, header order, 404 shape",
+      "description": "[WEBSITE+ADMIN run 2026-10-13 1005, scheduled, unattended, 2026-10-13T10:29:20Z] [SECURITY] read-only from the main server 10:08:30-10:08:41Z, /root/reports/webadmin-1013-1005/probe.sh, control nginx.org in the same script, SNI s5.pompesh.com. bkk-01 46.16.129.246 (relay 2f4a8c81): POST a=1 -> 405 'Not Allowed' 150 B 3/3 (was empty reply rc 52 3/3 at 09:08Z); POST 1 KB body -> 405 150 B; header order HTTP, Server, Date, Content-Type, Content-Length, Connection (control: Server, Date, ... same order); 404 = 146 B with Server/Date/Content-Type/Content-Length/Connection and NO Strict-Transport-Security (was HSTS on 404); random WS path 404. STILL A TELL on bkk-01: 'Connection: close' on every reply - two URLs in one curl = connects 1 and 1 (control 1 and 0), and 2 pipelined GETs on one socket get 1 answer (control 2) - same root as no keep-alive (nginx-in-front design, xd-2030). Duesseldorf de-3 91.194.84.79 (relay dae1101d) still has the OLD tells: Server header LAST, HSTS on 404, 405 says 'Method Not Allowed' with an Allow header (stock nginx: '405 Not Allowed', no Allow) - it did not get the bkk-01 fix. JA3S/JA4S NOT PROVEN (no tool on the main server). Ask: re-run /root/reports/webadmin-1013-1005/probe.sh on the main server and judge cc-probe-resistance row 0 legs (POST/405, header order, 404 without HSTS) for bkk-01; keep-alive leg stays with xd-2030. Do not tick row 0 while 'Connection: close' remains.",
+      "status": "pending",
+      "priority": "P3",
+      "createdAt": "2026-10-13T10:29:25Z",
+      "createdDate": "2026-10-13",
+      "completedDate": null,
+      "dueBy": "2026-10-16T10:29:20Z",
+      "taskRef": "xd-2067"
+    },
+    {
+      "id": "xd-2073",
+      "from": "[SECURITY]",
+      "to": "[LEGAL]",
+      "title": "Handoff from SECURITY: xd-2064 answer: hidden mode does NOT send the account token on the unchecked bare-IP path (both apps)",
+      "description": "[WEBSITE+ADMIN run 2026-10-13 1005, scheduled, unattended, 2026-10-13T10:29:20Z] [SECURITY] MEASURED on origin/development 7bc47d81a (main server clone /home/caspervpn/Casper-Code, git show): Android CasperCloakBridge.kt L187 'var bearer: String? = null', L193 'bearer = target.token' only in the CloakTarget.Fronted branch (CDN front, default OkHttp TLS with a real certificate check); the bare-IP Direct branch (trust-all + hostnameVerifier true, ~L208-216) never sets it, so L227 'bearer?.let { ... Authorization ... }' adds nothing there. iPhone ios-app-v2/.../Obfs4Transport.swift L553 'bearerToken = nil' for the direct relay target; Bearer only on the .cloudfront target (L522-528, 'TLS=default, Bearer attached'); same on production. The Android file is not on production yet. Residual on the bare-IP path: someone who intercepts it can see the X-CC-Session id and the relay path; the tunnel data stays protected by WireGuard's server key. Data Safety 'encrypted in transit' = Yes stands; no change needed in PLAY_STORE_DATA_SAFETY.md for this point. Ask: note this in the Data Safety file's notes if useful, then hand to [QA] to confirm the two grep lines.",
+      "status": "pending",
+      "priority": "P3",
+      "createdAt": "2026-10-13T10:29:25Z",
+      "createdDate": "2026-10-13",
+      "completedDate": null,
+      "dueBy": "2026-10-16T10:29:20Z",
+      "taskRef": "xd-2064"
+    },
+    {
+      "id": "xd-2074",
+      "from": "[WEBSITE]",
+      "to": "[QA]",
+      "title": "Handoff from WEBSITE: Check the new /delete-account page on dev (xd-2063) before the CEO yes",
+      "description": "[WEBSITE+ADMIN run 2026-10-13 1005, scheduled, unattended, 2026-10-13T10:29:20Z] [WEBSITE] development 2b66232 (website/app/delete-account/page.tsx new, sitemap.ts +1 line, site-footer.tsx +1 link 'Delete Account' under Company). Built in the Cowork VM: tsc 0 errors (planted error -> rc 2, removed), next build 111/111 pages. Dev live 10:28:12Z: curl https://dev.caspervpn.com/delete-account -> 200, 44,663 B, title 'Delete Your Account | CasperVPN', privacy@caspervpn.com 1, sitemap.xml lists it 1, /privacy page footer link 1; smoke / /pricing /privacy 200; production control /delete-account 404. Content: (1) in the app Settings > Delete Account (Android development 7bc47d81a SettingsScreen.kt L220; iPhone only in build 69 / branch ios/69, not on development - the page says 'update the app, or use email'); (2) email privacy@caspervpn.com, act within 30 days; (3) store subscriptions are not cancelled by deleting; (4) retention table = Privacy Policy section 5 rows (account +30 d, device ids 30 d, connection records 180 d, bandwidth 180 d, push tokens on deletion, crash reports 90 d, support 2 y, payments/crypto 7 y). Ask: check it on dev at 390 px and desktop (links, mailto, table) and that every retention line matches /privacy section 5 word for word in meaning.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-13T10:29:25Z",
+      "createdDate": "2026-10-13",
+      "completedDate": null,
+      "dueBy": "2026-10-16T10:29:20Z",
+      "taskRef": "xd-2063",
+      "handoffTo": "[LEGAL]"
+    },
+    {
+      "id": "xd-2075",
+      "from": "[WEBSITE]",
+      "to": "[LEGAL]",
+      "title": "Handoff from WEBSITE: Read the /delete-account text on dev before it ships (xd-2063, you asked to read it)",
+      "description": "[WEBSITE+ADMIN run 2026-10-13 1005, scheduled, unattended, 2026-10-13T10:29:20Z] [WEBSITE] https://dev.caspervpn.com/delete-account (development 2b66232). Built from your xd-2063 brief, with two changes you should judge: (a) iPhone 'Delete Account' is only in build 69 (not in the App Store yet), so the page says 'Don't see the button? Update the app, or use the email option'; (b) added a 'Subscriptions' section: deleting the account does not cancel an App Store / Google Play subscription. Retention lines copied in meaning from /privacy section 5 (payments and crypto orders 7 years included - Google asks what is kept). Removed any no-log wording on purpose (the no-log page rewrite is still waiting, row 265). Reply on xd-2063 with 'text OK' or the exact changes; the READY TO SHIP row on the CEO card waits for your OK and QA.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-13T10:29:25Z",
+      "createdDate": "2026-10-13",
+      "completedDate": null,
+      "dueBy": "2026-10-16T10:29:20Z",
+      "taskRef": "xd-2063"
     }
   ],
   "importantNotes": [
