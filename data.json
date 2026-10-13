@@ -5538,21 +5538,22 @@
           "passed": false,
           "verifiedBy": "none",
           "verifiedAt": null,
-          "evidence": "[APPS run 2026-10-13 f, scheduled, unattended, 2026-10-13T05:51:13Z] PARTIAL on development fbd760ac9: tray = ONE icon built in tray.rs with the app icon + menu Connect/Show/Quit (the config trayIcon made a second, menu-less icon; test one_tray_icon_only). NOT DONE: 'launches on startup' - tauri-plugin-autostart is registered but nothing calls enable() and there is no setting for it; the tray Connect only emits to the window. Tray not visible in the cloud box (no D-Bus session) - NOT PROVEN. \u00b7 EARLIER: [APPS run 2026-10-10 u 2026-10-10T22:18:30Z, unattended] Re-measured: caspervpn.com/apps/windows and /apps/linux both say \"Coming Soon\"; Firefox Add-ons search caspervpn = 0; snapcraft.io/caspervpn 404 (control /firefox 200); AUR resultcount 0. Code: desktop/ last change f031c3997 (5 Oct, Rust core 101/101 tests on Linux; 2 Windows modules never written). NOT LIVE. PLANNED Dec 2026 (Windows beta 31 Dec, roadmap; build order Android -> Mac -> Windows). || QA 2026-09-29 NOT LIVE: caspervpn.com/apps/windows says 'Coming Soon \u2014 Windows desktop client is in development'. Code not built by QA. verify: curl -s https://www.caspervpn.com/apps/windows | grep -c 'Coming Soon'",
+          "evidence": "[APPS run 2026-10-13 g, scheduled, unattended, 2026-10-13T06:33:36Z] PARTIAL on development d097049ef: 'launches on startup' now WORKS on Linux - startup.rs autostart_change() + starts_hidden(); main.rs now READS the saved settings at start (before: never read back, every start used defaults), syncs the OS login entry with launch_on_startup and hides the window when started with --minimized; update_settings applies it at once; home screen checkbox 'Start CasperVPN when my computer starts'. PROOF cloud box (Xvfb, scratch HOME): run 1 -> ~/.config/autostart/CasperVPN.desktop created (Exec=... --minimized; log 'login entry added (wanted=true, was=Some(false))'); settings.json launch_on_startup=false -> run 2 removed it ('login entry removed'); --minimized -> 0 visible windows, control without the flag -> 1 (screenshot .factory-transfer/apps-1013g/). cargo test -p caspervpn-desktop 5 -> 11 passed; mutation control (removal branch -> None) -> 1 FAILED. NOT PROVEN: the Windows Run-key entry on a real PC, the checkbox flow (needs a signed-in account), tray toggle on screen (no D-Bus in the cloud box). verify: cd desktop && cargo test -p caspervpn-desktop startup \u00b7 EARLIER: [APPS run 2026-10-13 f, scheduled, unattended, 2026-10-13T05:51:13Z] PARTIAL on development fbd760ac9: tray = ONE icon built in tray.rs with the app icon + menu Connect/Show/Quit (the config trayIcon made a second, menu-less icon; test one_tray_icon_only). NOT DONE: 'launches on startup' - tauri-plugin-autostart is registered but nothing calls enable() and there is no setting for it; the tray Connect only emits to the window. Tray not visible in the cloud box (no D-Bus session) - NOT PROVEN. \u00b7 EARLIER: [APPS run 2026-10-10 u 2026-10-10T22:18:30Z, unattended] Re-measured: caspervpn.com/apps/windows and /apps/linux both say \"Coming Soon\"; Firefox Add-ons search caspervpn = 0; snapcraft.io/caspervpn 404 (control /firefox 200); AUR resultcount 0. Code: desktop/ last change f031c3997 (5 Oct, Rust core 101/101 tests on Linux; 2 Windows modules never written). NOT LIVE. PLANNED Dec 2026 (Windows beta 31 Dec, roadmap; build order Android -> Mac -> Windows). || QA 2026-09-29 NOT LIVE: caspervpn.com/apps/windows says 'Coming Soon \u2014 Windows desktop client is in development'. Code not built by QA. verify: curl -s https://www.caspervpn.com/apps/windows | grep -c 'Coming Soon'",
           "verifiedDate": "2026-03-11",
           "notes": "tray.rs: Full system tray with Status, Toggle Connect/Disconnect, Show Window, Quit menu items. main.rs: tauri-plugin-autostart configured. on_window_event minimizes to tray on close. Needs Windows runtime validation.",
           "verifiedByPrevious": "self",
           "met": false,
           "qaVerdict": "NOT LIVE",
           "qaDate": "2026-09-29",
-          "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored"
+          "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored",
+          "blocker": "QA xd-2042: re-run the autostart proof on Linux, then a real Windows 10/11 PC (Run key + reboot)"
         },
         {
           "test": "MSI installer builds and successfully installs app with admin privileges",
           "passed": false,
           "verifiedBy": "none",
           "verifiedAt": null,
-          "evidence": "[APPS run 2026-10-13 f, scheduled, unattended, 2026-10-13T05:51:13Z] MEASURED: tauri.conf.json bundle targets msi+nsis are now in the crate root with real icons (icon.ico), so `cargo tauri build` can find them (development fbd760ac9); the installer itself is built only by ci-desktop.yml windows-build, which runs on production pushes only (ref: production) - never run for this code. Next: an NSIS cross-build from Linux, or the Windows runner after a CEO YES. \u00b7 EARLIER: [APPS run 2026-10-10 u 2026-10-10T22:18:30Z, unattended] Re-measured: caspervpn.com/apps/windows and /apps/linux both say \"Coming Soon\"; Firefox Add-ons search caspervpn = 0; snapcraft.io/caspervpn 404 (control /firefox 200); AUR resultcount 0. Code: desktop/ last change f031c3997 (5 Oct, Rust core 101/101 tests on Linux; 2 Windows modules never written). NOT LIVE. PLANNED Dec 2026 (Windows beta 31 Dec, roadmap; build order Android -> Mac -> Windows). || QA 2026-09-29 NOT LIVE: caspervpn.com/apps/windows says 'Coming Soon \u2014 Windows desktop client is in development'. Code not built by QA. verify: curl -s https://www.caspervpn.com/apps/windows | grep -c 'Coming Soon'",
+          "evidence": "[APPS run 2026-10-13 g, scheduled, unattended, 2026-10-13T06:33:36Z] BUILT (not installed): NSIS installer cross-built from Linux with tauri-cli 2.12.2 + makensis 3.09: `tauri build --bundles nsis --target x86_64-pc-windows-gnu` -> CasperVPN_1.0.0_x64-setup.exe 6.6 MB (sha256 0c65dc73), PE32 Nullsoft installer; contents: caspervpn-desktop.exe 35 MB + WebView2Loader.dll + NSISdl (WebView2 bootstrapper download) + uninstall.exe. UNSIGNED (no certificate, trap C2). MISSING: wintun.dll is not bundled yet (the tunnel loads it from the exe folder) - next slice: bundle.resources or the CI download step. MSI (WiX) needs a Windows host -> ci-desktop.yml. NOT PROVEN: install with admin rights on a real Windows PC. verify: cd desktop/caspervpn-desktop && tauri build --bundles nsis --target x86_64-pc-windows-gnu \u00b7 EARLIER: [APPS run 2026-10-13 f, scheduled, unattended, 2026-10-13T05:51:13Z] MEASURED: tauri.conf.json bundle targets msi+nsis are now in the crate root with real icons (icon.ico), so `cargo tauri build` can find them (development fbd760ac9); the installer itself is built only by ci-desktop.yml windows-build, which runs on production pushes only (ref: production) - never run for this code. Next: an NSIS cross-build from Linux, or the Windows runner after a CEO YES. \u00b7 EARLIER: [APPS run 2026-10-10 u 2026-10-10T22:18:30Z, unattended] Re-measured: caspervpn.com/apps/windows and /apps/linux both say \"Coming Soon\"; Firefox Add-ons search caspervpn = 0; snapcraft.io/caspervpn 404 (control /firefox 200); AUR resultcount 0. Code: desktop/ last change f031c3997 (5 Oct, Rust core 101/101 tests on Linux; 2 Windows modules never written). NOT LIVE. PLANNED Dec 2026 (Windows beta 31 Dec, roadmap; build order Android -> Mac -> Windows). || QA 2026-09-29 NOT LIVE: caspervpn.com/apps/windows says 'Coming Soon \u2014 Windows desktop client is in development'. Code not built by QA. verify: curl -s https://www.caspervpn.com/apps/windows | grep -c 'Coming Soon'",
           "notes": "CREATED: NSIS installer script (caspervpn.nsi) with Wintun driver bundling, WebView2 runtime auto-install, Start Menu/Desktop shortcuts, auto-start registry, kill switch firewall cleanup on uninstall. CI/CD pipeline (ci-desktop.yml) automates MSI+NSIS builds via cargo tauri build. Needs Windows CI runner + EV code signing cert.",
           "verifiedDate": "2026-03-11",
           "verifiedByPrevious": "self",
@@ -5560,7 +5561,8 @@
           "met": false,
           "qaVerdict": "NOT LIVE",
           "qaDate": "2026-09-29",
-          "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored"
+          "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored",
+          "blocker": "QA xd-2042: re-build the NSIS installer; then DESKTOP bundles wintun.dll; real install needs a Windows PC"
         },
         {
           "test": "Microsoft Store package created and passes store submission requirements",
@@ -5594,7 +5596,7 @@
           "blocker": "waits xd-2028 [PRODUCT]: one Windows floor (advice 2004 / 19041), then DESKTOP sets it in 3 places"
         }
       ],
-      "lastUpdated": "2026-03-16",
+      "lastUpdated": "2026-10-13T06:33:36Z",
       "xdId": [
         "xd-283",
         "xd-171b"
@@ -62877,6 +62879,18 @@
       "status": "pending",
       "priority": "P2",
       "createdAt": "2026-10-13T06:19:54Z",
+      "createdDate": "2026-10-13",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2042",
+      "from": "[DESKTOP]",
+      "to": "[QA]",
+      "title": "Handoff from DESKTOP: Test: Windows app starts with the computer (autostart) + NSIS installer build",
+      "description": "Desktop (Windows app) on development d097049ef. Please check: (1) on Linux: cd desktop && cargo test -p caspervpn-desktop -> 11 passed; build with --features custom-protocol, run under Xvfb with a scratch HOME: ~/.config/autostart/CasperVPN.desktop appears; set launch_on_startup=false in ~/.config/CasperVPN/settings.json and run again: it is removed; run with --minimized: no visible window. (2) installer: tauri build --bundles nsis --target x86_64-pc-windows-gnu builds CasperVPN_1.0.0_x64-setup.exe (unsigned, no wintun.dll yet). (3) when a real Windows 10/11 PC exists: install, tick/untick 'Start CasperVPN when my computer starts', check HKCU Run key, reboot -> app starts in the tray. Rows: windows-app#4, #5. Files: desktop/caspervpn-desktop/src-tauri/src/startup.rs, main.rs, commands.rs, dist/app.js, dist/index.html.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-13T06:33:42Z",
       "createdDate": "2026-10-13",
       "completedDate": null
     }
