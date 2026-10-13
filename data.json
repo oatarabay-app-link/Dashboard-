@@ -15107,9 +15107,9 @@
           "verifiedBy": "none",
           "addedAt": "2026-10-13T01:31:52Z",
           "owner": "[DEVOPS]",
-          "test": "DECISION \u2014 add one small safety setting on all VPN servers so big downloads do not stall on phone networks \u00b7 why: some phones on mobile data connect but pages never load (xd-1992); the app-side fix from backend is the main cure, this is the server half \u00b7 measured 13 Oct 01:3xZ: 0 of 12 servers have it; 5 servers (Sydney, Singapore, S\u00e3o Paulo, Montreal, Bangkok test) run the tunnel at an unusual size (65456 instead of 1420), so the 'automatic' form of the setting would do nothing there - use a fixed value \u00b7 no measured harm today: Singapore moved data in 23 of 24 sessions in 7 days \u00b7 plan: Bangkok test server first, check a real connection, then the 11 \u00b7 risk: low \u00b7 rollback: remove the one rule \u00b7 advice: YES, after the app-side fix ships; not urgent (xd-2001)",
+          "test": "CEO YES 2026-10-13 10:3xZ (office chat, live: '296/297 yes for all' - covers row 299) \u00b7 DECISION \u2014 add one small safety setting on all VPN servers so big downloads do not stall on phone networks \u00b7 why: some phones on mobile data connect but pages never load (xd-1992); the app-side fix from backend is the main cure, this is the server half \u00b7 measured 13 Oct 01:3xZ: 0 of 12 servers have it; 5 servers (Sydney, Singapore, S\u00e3o Paulo, Montreal, Bangkok test) run the tunnel at an unusual size (65456 instead of 1420), so the 'automatic' form of the setting would do nothing there - use a fixed value \u00b7 no measured harm today: Singapore moved data in 23 of 24 sessions in 7 days \u00b7 plan: Bangkok test server first, check a real connection, then the 11 \u00b7 risk: low \u00b7 rollback: remove the one rule \u00b7 advice: YES, after the app-side fix ships; not urgent (xd-2001)",
           "verify": "per node: iptables -t mangle -S FORWARD | grep -c TCPMSS -> 2 (was 0 on 12/12, main server /root/reports/devops1013-0125/n-*.txt)",
-          "evidence": "[DEVOPS run 2026-10-13 0125, scheduled, unattended, 2026-10-13T01:31:52Z] added. Read-only survey 12 nodes (survey.sh): mss_fwd=0 x12; wg0 mtu 65456 on 103.75.119.122, 167.150.100.166, 185.192.124.245, 45.154.204.206, 46.16.129.246 (no MTU line in wg0.conf; default route eth0 1500), 1420 on the other 7. Proposed rule: iptables -t mangle -A FORWARD -o wg0 -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --set-mss 1240 (and -i wg0), netfilter-persistent save. Control: Singapore (65456) 23/24 WG sessions with BytesDownloaded>0 in 7 d; Sydney 2/3."
+          "evidence": "[DEVOPS run 2026-10-13 0125, scheduled, unattended, 2026-10-13T01:31:52Z] added. Read-only survey 12 nodes (survey.sh): mss_fwd=0 x12; wg0 mtu 65456 on 103.75.119.122, 167.150.100.166, 185.192.124.245, 45.154.204.206, 46.16.129.246 (no MTU line in wg0.conf; default route eth0 1500), 1420 on the other 7. Proposed rule: iptables -t mangle -A FORWARD -o wg0 -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --set-mss 1240 (and -i wg0), netfilter-persistent save. Control: Singapore (65456) 23/24 WG sessions with BytesDownloaded>0 in 7 d; Sydney 2/3. | CEO YES 2026-10-13 10:3xZ (office chat, live: '296/297 yes for all' - covers row 299)"
         },
         {
           "met": false,
@@ -62251,7 +62251,7 @@
       "createdAt": "2026-10-13T00:48:58Z",
       "createdDate": "2026-10-13",
       "completedDate": null,
-      "blocker": "CEO card row 299 (DECISION: fixed MSS 1240 on 12 nodes, Bangkok first)",
+      "blocker": "UNBLOCKED: CEO YES 2026-10-13 10:3xZ (office chat, live: '296/297 yes for all' - covers row 299) -> DEVOPS ships --set-mss 1240 (FORWARD, wg0 in and out, SYN only) Bangkok first with a real-client check, then the 11 others, backup + rollback per node, log the before/after; then QA. Before: CEO card row 299 (DECISION: fixed MSS 1240 on 12 nodes, Bangkok first)",
       "notes": "[DEVOPS run 2026-10-13 0125, scheduled, unattended, 2026-10-13T01:31:52Z] Measured read-only 12/12 nodes: TCPMSS rules 0 everywhere; wg0 MTU 65456 on Sydney/Singapore/Sao Paulo/Montreal/Bangkok (no MTU line in wg0.conf), 1420 on 7 -> --clamp-mss-to-pmtu would clamp to ~65416 there = no effect; use --set-mss 1240. Control: Singapore 23/24 WG sessions moved data in 7 d (no measured harm). Files: main server /root/reports/devops1013-0125/n-*.txt. DECISION row 299.",
       "category": "infra-fleet",
       "ageDays": 0,
@@ -63500,6 +63500,30 @@
       "completedDate": null,
       "dueBy": "2026-10-16T10:29:20Z",
       "taskRef": "xd-2063"
+    },
+    {
+      "id": "xd-2076",
+      "from": "[CEO]",
+      "to": "[QA]",
+      "title": "Handoff from CEO: [P0] Prove WireGuard moves real traffic through EVERY server with a real client (not a handshake): per-node rx > 1 MB at MTU 1280 and at 1420, Wi-Fi and cellular - and say whether Amsterdam's 12 Oct 19:32Z NAT change (row 255) broke anything",
+      "description": "[CEO office live 2026-10-13 10:3xZ] CEO asked 'how did our infra break - WG was working before?'. FACTS: (a) every QA 'connected' proof so far is a handshake + the zombie probe, and the probe's teardown is overruled whenever the handshake is recent (xd-1137) - so 'connected, no traffic' has been green for months; (b) production ConnectionLogs 6-12 Oct: 251 of 315 WireGuard sessions >= 60 s (80 %) ended with < 100 KB down, 14 of 23 users; hidden mode 26/38; the byte counter under-counts (CEO 12 Oct 22:27Z: phone 44 KB down, backend 92 B) so the exact rate is unknown - but 2eecd0e6 61/75 and 2a2153cb 48/49 are real users; (c) the live app (4.2 build 57) DID move 1.3 MB/min on Singapore at MTU 1420 at 23:36Z, so 1420 works on some paths and not on others (PMTU per carrier path; AMS 22:18Z moved nothing); (d) DevOps edited AMS iptables (rules.v4 21:32 local = 19:32Z, row 255 'bare MASQUERADE') 3 h before the CEO's failed AMS session; office read-only check at 22:33Z: ip_forward 1, FORWARD wg0 ACCEPT counters growing, MASQUERADE present, egress 200 from the wg0 address - looks fine, NOT proven with a real WG client. DO (Bangkok-dev first, then production nodes, with a throwaway account): connect a real WireGuard client (the iOS build 70plus on Wi-Fi and cellular, or wg-quick on a Linux box) to each of the 12 nodes; download >= 1 MB; record rx on the client and the node's wg peer counter; at MTU 1420 and 1280; write a per-node PASS/FAIL table on this handoff; any FAIL -> [DEVOPS] P0 with the node and the counters. Also compare AMS rules.v4 before/after 19:32Z (backup in /root/backups or git) and state in one line whether the row-255 change touched FORWARD/NAT for wg0.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-10-13T10:32:13Z",
+      "createdDate": "2026-10-13",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2077",
+      "from": "[CEO]",
+      "to": "[IOS]",
+      "title": "Handoff from CEO: [P1] Traffic-proof telemetry: the app reports 'connected but no traffic' as a failure event (rx bytes at 30 s and 2 min after connect), so the board can count real connections instead of handshakes - iOS first, then Android; backend stores it",
+      "description": "[CEO office live 2026-10-13 10:3xZ] Why the no-traffic bug went unnoticed for weeks: nothing in the app or the backend tells a session with a handshake and no data from a working one. iOS: after connect, read the adapter rx counter at +30 s and +120 s; if rx < 50 KB while tx > 20 KB, send a ConnectFailureEvent-style report (stage 'no-traffic', protocol, server, mtu in use, networkType, app build) and show the user 'Connected but no data is flowing - trying a smaller packet size' then re-dial with MTU 1280 (if not already) or switch protocol. Backend: accept + store the event (xd for [BACKEND] follows from this one), expose per-server/per-build no-traffic rate; the CEO office reads it as the north-star 'real connections' metric. Reuse the ZOMBIE-PROBE code paths; do not tear down a tunnel on the probe alone (xd-1137 stays).",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-13T10:32:13Z",
+      "createdDate": "2026-10-13",
+      "completedDate": null
     }
   ],
   "importantNotes": [
