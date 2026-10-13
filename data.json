@@ -15113,7 +15113,7 @@
           "owner": "[DEVOPS]",
           "test": "CEO YES 2026-10-13 10:3xZ (office chat, live: '296/297 yes for all' - covers row 299) \u00b7 DECISION \u2014 add one small safety setting on all VPN servers so big downloads do not stall on phone networks \u00b7 why: some phones on mobile data connect but pages never load (xd-1992); the app-side fix from backend is the main cure, this is the server half \u00b7 measured 13 Oct 01:3xZ: 0 of 12 servers have it; 5 servers (Sydney, Singapore, S\u00e3o Paulo, Montreal, Bangkok test) run the tunnel at an unusual size (65456 instead of 1420), so the 'automatic' form of the setting would do nothing there - use a fixed value \u00b7 no measured harm today: Singapore moved data in 23 of 24 sessions in 7 days \u00b7 plan: Bangkok test server first, check a real connection, then the 11 \u00b7 risk: low \u00b7 rollback: remove the one rule \u00b7 advice: YES, after the app-side fix ships; not urgent (xd-2001)",
           "verify": "per node: iptables -t mangle -S FORWARD | grep -c TCPMSS -> 2 (was 0 on 12/12, main server /root/reports/devops1013-0125/n-*.txt)",
-          "evidence": "[DEVOPS run 2026-10-13 0125, scheduled, unattended, 2026-10-13T01:31:52Z] added. Read-only survey 12 nodes (survey.sh): mss_fwd=0 x12; wg0 mtu 65456 on 103.75.119.122, 167.150.100.166, 185.192.124.245, 45.154.204.206, 46.16.129.246 (no MTU line in wg0.conf; default route eth0 1500), 1420 on the other 7. Proposed rule: iptables -t mangle -A FORWARD -o wg0 -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --set-mss 1240 (and -i wg0), netfilter-persistent save. Control: Singapore (65456) 23/24 WG sessions with BytesDownloaded>0 in 7 d; Sydney 2/3. | CEO YES 2026-10-13 10:3xZ (office chat, live: '296/297 yes for all' - covers row 299)"
+          "evidence": "[DEVOPS run 2026-10-13 1225, scheduled, unattended, 2026-10-13T12:45:29Z] SHIP STEP 1 (Bangkok first, skill \u00a70): development 4aa6428e infrastructure/scripts/wg-mss-clamp.sh (md5 c90bef21): adds -o/-i wg0 TCPMSS 1240 live (idempotent) + a targeted *mangle section in rules.v4 (no full iptables-save, so ufw/PostUp lines are not duplicated), iptables-restore --test gate, ROLLBACK=1. bkk-dev 12:43Z: live 2 / file 2, GATE PASS, re-run idempotent, rollback -> 0/0 -> re-apply 2/2, restore test OK, wg-quick + unbound active, 1 MB download 200. First try caught a script bug (grep -c exit code) - the gate refused, fixed before commit. NEXT: the next devops run rolls it to the 12 production nodes after Bangkok has run >= 5 min, then per-node counters + QA real-client check. Not on production yet. || [DEVOPS run 2026-10-13 0125, scheduled, unattended, 2026-10-13T01:31:52Z] added. Read-only survey 12 nodes (survey.sh): mss_fwd=0 x12; wg0 mtu 65456 on 103.75.119.122, 167.150.100.166, 185.192.124.245, 45.154.204.206, 46.16.129.246 (no MTU line in wg0.conf; default route eth0 1500), 1420 on the other 7. Proposed rule: iptables -t mangle -A FORWARD -o wg0 -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --set-mss 1240 (and -i wg0), netfilter-persistent save. Control: Singapore (65456) 23/24 WG sessions with BytesDownloaded>0 in 7 d; Sydney 2/3. | CEO YES 2026-10-13 10:3xZ (office chat, live: '296/297 yes for all' - covers row 299)"
         },
         {
           "met": false,
@@ -15283,7 +15283,7 @@
         {
           "test": "READY TO SHIP (P0, outage) \u2014 OpenVPN (UDP and TCP) refuses every phone on 8 of our 11 servers since 12 Oct 21:03 UTC: the servers' certificate revocation list expired \u00b7 why: the OpenVPN setup of 15 Apr issued its revocation list with the tool's 180-day default; it ran out last night and OpenVPN rejects every certificate it cannot check against a valid list (your Sydney try 13 Oct 15:15 Beirut: 'VERIFY ERROR: CRL has expired') \u00b7 servers: Singapore, Hong Kong, Mexico, Miami, Montreal, Sydney, S\u00e3o Paulo, Tokyo (Amsterdam, D\u00fcsseldorf, LA do not use a revocation list - unaffected) \u00b7 what ships: a new revocation list valid 10 years on the 8 servers, dropped in place (OpenVPN re-reads it per connection, no restart, nobody cut), backups kept \u00b7 cost none \u00b7 your YES here or 'fix crl' in the office chat \u00b7 follow-up to DevOps: a nightly check of every certificate/CRL expiry date on the fleet.",
           "met": false,
-          "evidence": "[CEO office live 13 Oct 12:2xZ] CEO bug report f41e0e76 12:16Z (build 70, openvpn-udp, SAO then SYD): client TLS reaches VERIFY OK depth 0/1 then 29 s silence then 'OpenVPN fatal error'. SYD /var/log/openvpn/server.log: '185.76.178.236:35331 VERIFY ERROR: depth=0, error=CRL has expired: CN=ChangeMe ... TLS handshake failed'. Fleet 12:20Z: openssl crl -nextupdate = Oct 12 21:03:25-21:03:50 2026 GMT on SGP HK MX MIA MTL SYD SAO TYO (easy-rsa pki created 2026-04-15 21:03); AMS/DU/LA: no crl-verify line in server.conf. Script ready: $HOME/run-ceo-1013/fixcrl.py (EASYRSA_CRL_DAYS=3650 ./easyrsa gen-crl; install -m 644 pki/crl.pem /etc/openvpn/server/crl.pem; backup /root/backups/crlfix-<ts>)."
+          "evidence": "[DEVOPS run 2026-10-13 1225, scheduled, unattended, 2026-10-13T12:45:29Z] RE-MEASURED 12:37Z, still broken: crl.pem nextUpdate Oct 12 21:03 on all 8 (HK MX MIA MTL SGP SYD SAO TYO), file mtime 2026-04-15, no /root/backups/crlfix-* on any node = not fixed yet; no CEO YES on this row. CEO notified by push 12:3xZ. Nightly warning for the future = new row 318. || [CEO office live 13 Oct 12:2xZ] CEO bug report f41e0e76 12:16Z (build 70, openvpn-udp, SAO then SYD): client TLS reaches VERIFY OK depth 0/1 then 29 s silence then 'OpenVPN fatal error'. SYD /var/log/openvpn/server.log: '185.76.178.236:35331 VERIFY ERROR: depth=0, error=CRL has expired: CN=ChangeMe ... TLS handshake failed'. Fleet 12:20Z: openssl crl -nextupdate = Oct 12 21:03:25-21:03:50 2026 GMT on SGP HK MX MIA MTL SYD SAO TYO (easy-rsa pki created 2026-04-15 21:03); AMS/DU/LA: no crl-verify line in server.conf. Script ready: $HOME/run-ceo-1013/fixcrl.py (EASYRSA_CRL_DAYS=3650 ./easyrsa gen-crl; install -m 644 pki/crl.pem /etc/openvpn/server/crl.pem; backup /root/backups/crlfix-<ts>)."
         },
         {
           "test": "DECISION \u2014 what counts as 'the VPN works' (xd-2082). We now have a written standard with 14 checks, from public sources. The targets below are my proposal; you decide. \u00b7 1) connects in under 5 seconds \u00b7 2) websites load through the VPN on every server, every hour (this is the check that would have caught yesterday's outage) \u00b7 3) a 1 MB file in under 10 seconds \u00b7 4) after switching Wi-Fi to mobile, back online in under 15 seconds \u00b7 5) zero leaks of your real address \u00b7 6) each server part up 99.9% of the month \u00b7 7) a measured 'how many users per server before it slows' \u00b7 options: A) accept these targets \u00b7 B) stricter (e.g. 3 s / 5 s) \u00b7 C) change specific lines \u00b7 advice: A now, tighten after the first 2 weeks of real numbers. Reply 'A' (or your change) in any chat.",
@@ -15294,6 +15294,16 @@
           "verifiedByRaw": null,
           "verifiedDate": null,
           "evidence": "[CTO run 2026-10-13 1235, 2026-10-13T12:42:47Z] standard v0.1 pushed production db9edc8f; handoffs xd-2093 [DEVOPS] prober, xd-2094 [QA] check + phone pass."
+        },
+        {
+          "test": "READY TO SHIP \u2014 a nightly check that warns 30 days before any VPN server certificate or OpenVPN revocation list runs out \u00b7 why: the list that expired on 12 Oct 21:03 UTC broke OpenVPN on 8 servers and nothing warned us; the nightly server check only looked at the website certificates \u00b7 what changes: the nightly check on the main server also reads, on every server, the files OpenVPN and IKEv2 actually load (certificate, authority, revocation list) and the live Let's Encrypt certificates; red under 14 days, amber under 30 days, shown in admin Operations and mailed when red \u00b7 tested on dev: development ee7cc20d infrastructure/scripts/infra_inventory_check.py md5 cd67ce3c - check_node_pki run alone on the main server 12:4xZ (no report, no mail): 75 items, red 8 = exactly the 8 expired lists, 67 green \u00b7 rollback: copy back the installed file (md5 7edf9cd6 = git before this change) \u00b7 advice: YES, together with row 317 (the fix itself)",
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "owner": "[DEVOPS]",
+          "addedAt": "2026-10-13T12:45:29Z",
+          "verify": "on the main server: md5sum /opt/caspervpn/infra_inventory_check.py = cd67ce3cd77c6cf2569260a908446b77 AND next 04:20Z run: grep -c 'node-pki' /root/reports/infra-inventory-latest.txt >= 60",
+          "evidence": "[DEVOPS run 2026-10-13 1225, scheduled, unattended, 2026-10-13T12:45:29Z] xd-2092 part 3. Installed /opt copy md5 7edf9cd6 = development before the change (no drift). Test: /root/reports/devops1013-1225/iic.py, python3 -c 'import iic; iic.check_node_pki(iic.vpn_servers())' -> nodes 12 (11 active) + Bangkok; Counter ok 67 / crit 8; crit = openvpn-crl-verify /etc/openvpn/server/crl.pem on HK MX MIA MTL SGP SYD SAO TYO, daysLeft -1. Control: AMS/DU/LA (no crl-verify) and every CA/server/IKEv2/LE cert ok (soonest LE 60 d, renews itself)."
         }
       ],
       "progress": 0,
@@ -62288,7 +62298,7 @@
       "createdDate": "2026-10-13",
       "completedDate": null,
       "blocker": "RE-PRIORITISED 13 Oct 12:2xZ to P1: CEO measured IKEv2 at 2.7 Mbps on first connect (cellular, build 70); the MSS clamp (row 299 YES) matters most for IKEv2/OpenVPN. Bangkok first, then fleet; QA measures IKEv2 speed before/after. RE-BASED 13 Oct 10:5xZ to P2: the MSS clamp is not the cause (row 314 DNS drop was); ship after QA's proof, Bangkok first. UNBLOCKED: CEO YES 2026-10-13 10:3xZ (office chat, live: '296/297 yes for all' - covers row 299) -> DEVOPS ships --set-mss 1240 (FORWARD, wg0 in and out, SYN only) Bangkok first with a real-client check, then the 11 others, backup + rollback per node, log the before/after; then QA. Before: CEO card row 299 (DECISION: fixed MSS 1240 on 12 nodes, Bangkok first)",
-      "notes": "[DEVOPS run 2026-10-13 1125, scheduled, unattended, 2026-10-13T11:40:30Z] Not worked this run (xd-2081 P0 first); MSS 1240 ship under the CEO YES stays next for DEVOPS, Bangkok first with a real client. || [DEVOPS run 2026-10-13 0125, scheduled, unattended, 2026-10-13T01:31:52Z] Measured read-only 12/12 nodes: TCPMSS rules 0 everywhere; wg0 MTU 65456 on Sydney/Singapore/Sao Paulo/Montreal/Bangkok (no MTU line in wg0.conf), 1420 on 7 -> --clamp-mss-to-pmtu would clamp to ~65416 there = no effect; use --set-mss 1240. Control: Singapore 23/24 WG sessions moved data in 7 d (no measured harm). Files: main server /root/reports/devops1013-0125/n-*.txt. DECISION row 299.",
+      "notes": "[DEVOPS run 2026-10-13 1125, scheduled, unattended, 2026-10-13T11:40:30Z] Not worked this run (xd-2081 P0 first); MSS 1240 ship under the CEO YES stays next for DEVOPS, Bangkok first with a real client. || [DEVOPS run 2026-10-13 0125, scheduled, unattended, 2026-10-13T01:31:52Z] Measured read-only 12/12 nodes: TCPMSS rules 0 everywhere; wg0 MTU 65456 on Sydney/Singapore/Sao Paulo/Montreal/Bangkok (no MTU line in wg0.conf), 1420 on 7 -> --clamp-mss-to-pmtu would clamp to ~65416 there = no effect; use --set-mss 1240. Control: Singapore 23/24 WG sessions moved data in 7 d (no measured harm). Files: main server /root/reports/devops1013-0125/n-*.txt. DECISION row 299. [DEVOPS run 2026-10-13 1225, scheduled, unattended, 2026-10-13T12:45:29Z] row 299 (CEO YES) ship step 1 done on Bangkok (wg-mss-clamp.sh, development 4aa6428e); production rollout next devops run.",
       "category": "infra-fleet",
       "ageDays": 0,
       "needsRelease": false,
@@ -63799,11 +63809,13 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CEO: [P0 OUTAGE] OpenVPN CRL expired 12 Oct 21:03Z on the 8 OneProvider nodes (easy-rsa 180-day default) - regenerate (EASYRSA_CRL_DAYS=3650) if the office has not on CEO 'fix crl'; then a nightly fleet check of every cert/CRL expiry (OpenVPN CA/server/CRL, IKEv2 certs, Let's Encrypt, WireGuard none) with a 30-day warning on the CEO card",
       "description": "[CEO office live 2026-10-13 12:2xZ] CEO card row 316. Proof on SYD: server.log 'VERIFY ERROR: depth=0, error=CRL has expired: CN=ChangeMe' for the CEO phone 185.76.178.236 at 12:15Z; CRL nextUpdate Oct 12 21:03:41 2026 on SYD and the same minute on the other 7 (pki built 2026-04-15 21:03). Also seen in the same log: 'Client wants tls-crypt-v2, but no server key present' from 39.37.186.180 and many 'cannot locate HMAC' scans - note, not the cause. DO: (1) if row 316 is not yet SHIPPED by the office: on each of the 8 nodes `cd /etc/openvpn/easy-rsa && EASYRSA_BATCH=1 EASYRSA_CRL_DAYS=3650 ./easyrsa gen-crl && install -m 644 pki/crl.pem /etc/openvpn/server/crl.pem` (backup first; OpenVPN re-reads the CRL per handshake); (2) prove with a real OpenVPN client (QA throwaway account) on 2 nodes UDP + TCP; (3) nightly check: openssl x509/crl -enddate/-nextupdate on every OpenVPN CA/server cert + CRL, strongSwan certs, LE certs on all 12 nodes + brain; warn at 30 days on the CEO card; add to the connectivity standard (xd-2082) as a line; (4) trap in the devops skill: easy-rsa gen-crl defaults to 180 days - always set EASYRSA_CRL_DAYS. IKEv2 note (CEO 12:2xZ: 2.7 Mbps on first connect, cellular): IPsec/ESP overhead with no MSS clamp (row 299 YES, xd-2001) - prioritise the clamp for IKEv2/OpenVPN; QA measures IKEv2 speed before/after.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P0",
       "createdAt": "2026-10-13T12:21:49Z",
       "createdDate": "2026-10-13",
-      "completedDate": null
+      "completedDate": null,
+      "blocker": "Waits CEO YES on ceo-action-backlog row 316 (CRL fix on 8 nodes) and row 318 (nightly expiry check install); then DEVOPS ships and QA tests with a real OpenVPN client",
+      "notes": "[DEVOPS run 2026-10-13 1225, scheduled, unattended, 2026-10-13T12:45:29Z] (a) re-measured 12:37Z: CRL still expired on 8/8, not fixed, no CEO YES -> push sent to the CEO. (b) nightly check: development ee7cc20d infra_inventory_check.py check_node_pki (md5 cd67ce3c) - test 75 items, crit 8 = the 8 CRLs, 67 ok; READY TO SHIP row 318. (c) other expiries measured: OpenVPN CA 2036, server certs 2028-2029, IKEv2 CA 2036 / server 2031, LE live 12 Dec 2026 (auto-renew) - nothing else close. (d) trap written: caspervpn-devops 2026-10-13 1225 (production c7f1131a). (e) MSS clamp row 299: Bangkok done 12:43Z, production next run. IKEv2/OpenVPN clamp is NOT in row 299 (wg0 only) - needs its own row after QA measures IKEv2 speed."
     },
     {
       "id": "xd-2093",
@@ -63828,9 +63840,27 @@
       "createdAt": "2026-10-13T12:42:47Z",
       "createdDate": "2026-10-13",
       "completedDate": null
+    },
+    {
+      "id": "xd-2095",
+      "from": "[DEVOPS]",
+      "to": "[QA]",
+      "title": "Handoff from DEVOPS: [P0] Check xd-2092 prep: (1) node-pki nightly check finds the 8 expired OpenVPN CRLs and nothing else red; (2) Bangkok MSS clamp 1240 (row 299)",
+      "description": "[DEVOPS run 2026-10-13 1225, scheduled, unattended, 2026-10-13T12:45:29Z] DO: (1) on the main server: cd /root/reports/devops1013-1225 && python3 -c 'import iic,collections; it=iic.check_node_pki(iic.vpn_servers()); print(collections.Counter(i[\"status\"] for i in it))' -> crit = only the openvpn-crl-verify rows of HK MX MIA MTL SGP SYD SAO TYO while row 316 is unshipped (after the CRL fix: crit 0); md5 iic.py = cd67ce3c = development ee7cc20d. (2) bkk-dev: iptables -t mangle -S FORWARD | grep -c 'set-mss 1240' = 2; grep -c 'set-mss 1240' /etc/iptables/rules.v4 = 2; iptables-restore --test < /etc/iptables/rules.v4 rc 0; a real WireGuard client on Bangkok loads a page + 1 MB. (3) after row 316 ships: a real OpenVPN UDP + TCP client on 2 of the 8 nodes (CEO YES throwaway account 12:14Z). Any FAIL -> [DEVOPS] P0.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-10-13T12:45:41Z",
+      "createdDate": "2026-10-13",
+      "completedDate": null
     }
   ],
   "importantNotes": [
+    {
+      "id": "note-devops-20261013-1225",
+      "date": "2026-10-13",
+      "dept": "[DEVOPS]",
+      "text": "[DEVOPS 12:4xZ] OpenVPN still down on 8 servers (revocation list expired 12 Oct 21:03Z) - fix ready, waits CEO YES on card row 316. Nightly check that would have warned is ready (new card row). Row 299 speed setting: Bangkok done, servers next run."
+    },
     {
       "id": "note-qa-20261013m",
       "date": "2026-10-13",
