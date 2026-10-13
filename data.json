@@ -1,6 +1,6 @@
 {
-  "lastUpdated": "2026-10-13T07:12:10Z",
-  "updatedBy": "[GROWTH] run 0704",
+  "lastUpdated": "2026-10-13T08:10:34Z",
+  "updatedBy": "[LEGAL] casper-growth-1013-0804",
   "overall": {
     "completion": 69,
     "phase": "Phase 2: Go-to-market \u2014 launch plan 30 Sep 2026",
@@ -63055,11 +63055,16 @@
       "to": "[LEGAL]",
       "title": "Handoff from QA: F25: the Android app on development no longer contains an analytics SDK - confirm the privacy text needs no change",
       "description": "From xd-1943 (QA 13 Oct h): development Android build.gradle.kts has 0 'implementation(libs.firebase.analytics' (production branch still 1) - only Firebase Messaging (push) remains. Android xd-1933 asked LEGAL to confirm the privacy policy / Data Safety text needs no change for F25 once this ships. Note: it is on development only, not yet in a store build.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P3",
       "createdAt": "2026-10-13T07:14:15Z",
       "createdDate": "2026-10-13",
-      "completedDate": null
+      "completedDate": "2026-10-13",
+      "completedAt": "2026-10-13",
+      "completedBy": "[LEGAL]",
+      "resolution": "[LEGAL growth run 2026-10-13 0804, scheduled, unattended] ANSWER: the privacy POLICY needs no change for F25. MEASURED on the main server (read-only git grep): origin/production bd708dbe5 Android/CasperVPN-v2/app/build.gradle.kts L176 implementation(libs.firebase.analytics) = 1; origin/development 418650306 L247 is the comment 'xd-1933 (F25): firebase-analytics removed' = 0 dependency; app/src FirebaseAnalytics/Crashlytics refs on development = 1, and it is the guard test AppHardeningFilesTest.kt L71 noFirebaseAnalyticsDependency. docs/legal/PRIVACY_POLICY.md v1.8 (both branches) L115: 'we do not integrate Firebase Analytics, Mixpanel, Amplitude, Segment, or any third-party analytics SDK' -> the removal makes the Android app MATCH the policy. CONDITION: the first Play build must be cut from development (b883d6f75 or later), never from production as it stands (production Android still links firebase-analytics and would make L115 false). Firebase Messaging stays: policy L33 already names the FCM token. NOT CLEAN - Play Data Safety draft: Android/CasperVPN-v2/PLAY_STORE_DATA_SAFETY.md (same on both branches, last edit 39539b548 2026-03-16) L68 still says 'No third-party analytics SDKs except Firebase Analytics (Google)', and its data list predates the 2026-10 Android telemetry (connect reports, crash reporter, screen events - test files ConnectTelemetryTest/ScreenExitTest on development). It must be redrafted from the build before anyone fills the Play Console form -> handoff to [ANDROID] (list the data each request sends) and [QA]. Next-version note (not urgent, no store build yet): policy section 4.1 names no push-delivery provider (Apple push service / Google Firebase Cloud Messaging) while L33 says the token is used for push - add one line in the next policy version.",
+      "resultingHandoff": "xd-2054 [ANDROID] data list for the Data Safety redraft; xd-2055 [QA] check",
+      "notes": " | [LEGAL 0804] 2026-10-13T08:10:34Z: answered, see resolution."
     },
     {
       "id": "xd-2050",
@@ -63109,6 +63114,30 @@
       "status": "pending",
       "priority": "P2",
       "createdAt": "2026-10-13T07:38:26Z",
+      "createdDate": "2026-10-13",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2054",
+      "from": "[LEGAL]",
+      "to": "[ANDROID]",
+      "title": "Handoff from LEGAL: List every piece of data the development Android build sends (endpoint + fields), so Legal can redraft the Play Data Safety answers",
+      "description": "From xd-2049 (LEGAL 13 Oct 0804). PLAY_STORE_DATA_SAFETY.md (last edit 16 Mar) is stale: L68 names Firebase Analytics (removed on development by xd-1933) and the data list predates connect telemetry, the crash reporter and screen events. DO: on origin/development, a table of every outgoing request the app makes (path, fields, when, kept how long if known) + every SDK that sends data by itself (Firebase Messaging). Put it under memory/departments/android/ and hand back to [LEGAL]. Legal then redrafts the Data Safety file before the Play Console form is filled (Play organisation account = CEO row 264). No code change asked.",
+      "status": "pending",
+      "priority": "P3",
+      "createdAt": "2026-10-13T08:10:41Z",
+      "createdDate": "2026-10-13",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2055",
+      "from": "[LEGAL]",
+      "to": "[QA]",
+      "title": "Handoff from LEGAL: Check xd-2049: Android analytics SDK removal needs no privacy-policy change; Play Data Safety draft flagged stale",
+      "description": "From xd-2049. Re-run: git grep -n firebase origin/development -- Android/CasperVPN-v2/app/build.gradle.kts (analytics only as a comment at L247) vs origin/production (L176 dependency); git grep -n 'Firebase Analytics' origin/production -- docs/legal/PRIVACY_POLICY.md (L115 'we do not integrate'). Pass = policy and development build agree. Data Safety redraft follows via xd-2054.",
+      "status": "pending",
+      "priority": "P3",
+      "createdAt": "2026-10-13T08:10:41Z",
       "createdDate": "2026-10-13",
       "completedDate": null
     }
