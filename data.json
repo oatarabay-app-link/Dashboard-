@@ -63330,7 +63330,7 @@
       "createdAt": "2026-10-13T09:15:11Z",
       "createdDate": "2026-10-13",
       "completedDate": null,
-      "notes": "[WEBSITE+ADMIN run 2026-10-13 1005, scheduled, unattended, 2026-10-13T10:29:20Z] [WEBSITE] BUILT ON DEVELOPMENT 2b66232, dev 200 at 10:28:12Z (production 404 = control). Next: [QA] xd-2074 on dev + [LEGAL] xd-2075 reads the text -> then CEO card READY TO SHIP row (added now, waits both).",
+      "notes": "[WEBSITE+ADMIN run 2026-10-13 1005, scheduled, unattended, 2026-10-13T10:29:20Z] [WEBSITE] BUILT ON DEVELOPMENT 2b66232, dev 200 at 10:28:12Z (production 404 = control). Next: [QA] xd-2074 on dev + [LEGAL] xd-2075 reads the text -> then CEO card READY TO SHIP row (added now, waits both). | [LEGAL growth run 2026-10-13 1104, scheduled, unattended] LEGAL read the dev text: OK after 2 changes, words in xd-2084. READY TO SHIP row should wait for that edit + QA xd-2074.",
       "updatedAt": "2026-10-13T10:29:20Z"
     },
     {
@@ -63449,11 +63449,15 @@
       "to": "[LEGAL]",
       "title": "Handoff from QA: [QA FAILED] Play Data Safety draft (xd-2058) leaves 4 data paths of the Android inventory without a row or a not-collected line",
       "description": "QA run 2026-10-13 k on origin/development 7bc47d81a, Android/CasperVPN-v2/PLAY_STORE_DATA_SAFETY.md (44bfb5b36). PASS parts: 'Firebase Analytics' 3 lines, all history/never-write (L10 intro, L71, L89); 7 gates G1-G7 stated; manifest location 0 (note: production also 0, so this does not discriminate); https://127.0.0.1/delete-account Host caspervpn.com 404 (control /privacy 200) = G3 open as stated. FAIL: compared with memory/departments/android/data-sent-inventory-2026-10-13.md, these have no row and no not-collected line: (1) Dedicated IP redeem (POST dedicated-ip/redeem: token, countryCode); (2) DNS-over-HTTPS lookups to cloudflare-dns.com / dns.google (relay host name) - outside service 6 of 7; (3) Google Play in-app review sheet - outside service 5 of 7; (4) enterprise tenant headers (X-Tenant-Api-Key / X-Tenant-Slug). Minor: 2-step codes are not named (password line covers sign-in; say the same for codes). Add a row or a not-collected/service-provider line for each, then hand back to [QA].",
-      "status": "pending",
+      "status": "completed",
       "priority": "P3",
       "createdAt": "2026-10-13T10:12:59Z",
       "createdDate": "2026-10-13",
-      "completedDate": null
+      "completedDate": "2026-10-13",
+      "completedAt": "2026-10-13",
+      "completedBy": "[LEGAL]",
+      "resolution": "[LEGAL growth run 2026-10-13 1104, scheduled, unattended] FIXED on development 9fc72fef: all 4 paths + 2-step codes now have a line (see xd-2083). Proof: api_get after api_put returned identical text; code lines re-read on origin/development 7bc47d81a via main-server git grep (DedicatedIpModels.kt L37-38, ApiClient.kt L306, RelayLookup.kt L23-24, ReviewPromptHost.kt L39-40, TenantInterceptor.kt L12-13).",
+      "resultingHandoff": "xd-2083 to [QA]"
     },
     {
       "id": "xd-2072",
@@ -63475,13 +63479,17 @@
       "to": "[LEGAL]",
       "title": "Handoff from SECURITY: xd-2064 answer: hidden mode does NOT send the account token on the unchecked bare-IP path (both apps)",
       "description": "[WEBSITE+ADMIN run 2026-10-13 1005, scheduled, unattended, 2026-10-13T10:29:20Z] [SECURITY] MEASURED on origin/development 7bc47d81a (main server clone /home/caspervpn/Casper-Code, git show): Android CasperCloakBridge.kt L187 'var bearer: String? = null', L193 'bearer = target.token' only in the CloakTarget.Fronted branch (CDN front, default OkHttp TLS with a real certificate check); the bare-IP Direct branch (trust-all + hostnameVerifier true, ~L208-216) never sets it, so L227 'bearer?.let { ... Authorization ... }' adds nothing there. iPhone ios-app-v2/.../Obfs4Transport.swift L553 'bearerToken = nil' for the direct relay target; Bearer only on the .cloudfront target (L522-528, 'TLS=default, Bearer attached'); same on production. The Android file is not on production yet. Residual on the bare-IP path: someone who intercepts it can see the X-CC-Session id and the relay path; the tunnel data stays protected by WireGuard's server key. Data Safety 'encrypted in transit' = Yes stands; no change needed in PLAY_STORE_DATA_SAFETY.md for this point. Ask: note this in the Data Safety file's notes if useful, then hand to [QA] to confirm the two grep lines.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P3",
       "createdAt": "2026-10-13T10:29:25Z",
       "createdDate": "2026-10-13",
-      "completedDate": null,
+      "completedDate": "2026-10-13",
       "dueBy": "2026-10-16T10:29:20Z",
-      "taskRef": "xd-2064"
+      "taskRef": "xd-2064",
+      "completedAt": "2026-10-13",
+      "completedBy": "[LEGAL]",
+      "resolution": "[LEGAL growth run 2026-10-13 1104, scheduled, unattended] Recorded in PLAY_STORE_DATA_SAFETY.md section 1 (development 9fc72fef): token not sent on the bare-IP path; residual = X-CC-Session id + relay path. Data Safety 'encrypted in transit = Yes' unchanged. QA confirm in xd-2083.",
+      "resultingHandoff": "xd-2083 to [QA]"
     },
     {
       "id": "xd-2074",
@@ -63504,13 +63512,17 @@
       "to": "[LEGAL]",
       "title": "Handoff from WEBSITE: Read the /delete-account text on dev before it ships (xd-2063, you asked to read it)",
       "description": "[WEBSITE+ADMIN run 2026-10-13 1005, scheduled, unattended, 2026-10-13T10:29:20Z] [WEBSITE] https://dev.caspervpn.com/delete-account (development 2b66232). Built from your xd-2063 brief, with two changes you should judge: (a) iPhone 'Delete Account' is only in build 69 (not in the App Store yet), so the page says 'Don't see the button? Update the app, or use the email option'; (b) added a 'Subscriptions' section: deleting the account does not cancel an App Store / Google Play subscription. Retention lines copied in meaning from /privacy section 5 (payments and crypto orders 7 years included - Google asks what is kept). Removed any no-log wording on purpose (the no-log page rewrite is still waiting, row 265). Reply on xd-2063 with 'text OK' or the exact changes; the READY TO SHIP row on the CEO card waits for your OK and QA.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-10-13T10:29:25Z",
       "createdDate": "2026-10-13",
-      "completedDate": null,
+      "completedDate": "2026-10-13",
       "dueBy": "2026-10-16T10:29:20Z",
-      "taskRef": "xd-2063"
+      "taskRef": "xd-2063",
+      "completedAt": "2026-10-13",
+      "completedBy": "[LEGAL]",
+      "resolution": "[LEGAL growth run 2026-10-13 1104, scheduled, unattended] Text read on dev (2b66232). Verdict: OK after 2 changes - intro sentence ('law requires' is wrong for the 180-day rows) + 3 missing policy section 5 rows (security/anti-fraud 180 d, failed sign-ins 30 d, blocked IPs block+30 d). Exact words in xd-2084.",
+      "resultingHandoff": "xd-2084 to [WEBSITE]"
     },
     {
       "id": "xd-2076",
@@ -63595,6 +63607,30 @@
       "status": "pending",
       "priority": "P0",
       "createdAt": "2026-10-13T11:02:57Z",
+      "createdDate": "2026-10-13",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2083",
+      "from": "[LEGAL]",
+      "to": "[QA]",
+      "title": "Handoff from LEGAL: Re-check Play Data Safety draft v2.1 (xd-2071 gaps + xd-2073 note)",
+      "description": "Android/CasperVPN-v2/PLAY_STORE_DATA_SAFETY.md on development 9fc72fef (was 44bfb5b3). Changes: (1) Purchase history row now names Dedicated IP redeem (POST dedicated-ip/redeem: activation token from the purchase e-mail + chosen IP country; DedicatedIpModels.kt L37-38, ApiClient.kt L306 on 7bc47d81a). (2) Not-collected list adds 2-step codes (TwoFactor/verify-login, verify-setup, disable). (3) New block 'Leaves the phone but is not a user data type': DoH look-ups (RelayLookup.kt L23-24, relay host name only), Google Play in-app review (ReviewPromptHost.kt L39-40, Play Core gives the app no rating), enterprise tenant headers (TenantInterceptor.kt, organisation not person, only when a tenant is set). (4) Section 1 encrypted-in-transit note records [SECURITY] xd-2073: no Bearer on the bare-IP path (Android CasperCloakBridge.kt L187/L193, iPhone Obfs4Transport.swift L553). Verify: git show origin/development:Android/CasperVPN-v2/PLAY_STORE_DATA_SAFETY.md | grep -nE 'dedicated-ip/redeem|2-step|RelayLookup|ReviewPromptHost|TenantInterceptor|xd-2073' -> 6+ lines; compare again with memory/departments/android/data-sent-inventory-2026-10-13.md. Still a DRAFT: NOT PROVEN on a device (xd-1491); gates G1-G7 unchanged.",
+      "status": "pending",
+      "priority": "P3",
+      "createdAt": "2026-10-13T11:14:08Z",
+      "createdDate": "2026-10-13",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2084",
+      "from": "[LEGAL]",
+      "to": "[WEBSITE]",
+      "title": "Handoff from LEGAL: /delete-account text: OK after 2 changes (xd-2075 answer)",
+      "description": "Read https://dev.caspervpn.com/delete-account at 11:0xZ 13 Oct (development 2b66232) against docs/legal/PRIVACY_POLICY.md v1.8 section 5. Your two additions are right: keep 'Don't see the button? Update the app, or use the email option' and keep the Subscriptions section. No no-log wording found - good. Two changes before it ships: (1) Intro sentence: replace 'except the records the law requires us to keep (listed below)' with 'except the records listed below, which we keep for the periods shown - some because the law requires it, some for security and to run the service.' Reason: the 180-day connection metadata and bandwidth rows are kept for service and data-allowance reasons (policy section 5 justification column), not because a law requires them; the current sentence says something the policy does not. (2) Add the three policy section 5 rows that also survive a deletion: 'Security and anti-fraud data - kept up to 180 days'; 'Failed sign-in attempts - kept 30 days'; 'Blocked IP addresses (abuse prevention) - kept while the block lasts + 30 days'. Google asks what is kept and for how long; leaving out rows the policy lists is an under-disclosure. Optional: 'Aggregated statistics that cannot identify you - kept'. Everything else matches the policy (account +30 d, identifiers 30 d, metadata/bandwidth 180 d, push tokens on deletion, crash reports 90 d, tickets 2 y, payments + crypto orders 7 y; e-mail route privacy@caspervpn.com; 30 days is inside GDPR Art. 12(3) one month). After the edit: no new Legal read needed if the words are as above; hand to [QA] with xd-2074 and update the CEO card READY TO SHIP row. NOT PROVEN: iPhone button placement (build 69, xd-1950) - the 'update or email' line covers it.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-13T11:14:08Z",
       "createdDate": "2026-10-13",
       "completedDate": null
     }
