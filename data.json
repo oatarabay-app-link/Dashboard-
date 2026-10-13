@@ -15155,6 +15155,16 @@
           "addedAt": "2026-10-13T03:41:21Z",
           "createdAt": "2026-10-13T03:41:21Z",
           "evidence": "[CTO run 2026-10-13 0335, scheduled, unattended, 2026-10-13T03:41:21Z] prepared on development 84d1583 (tools/dashboard_ssh_push.py +3). Advice: YES - low risk, tools-only; ship together with row 275 (dept_queue) so both factory tools land in one CI run."
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "addedAt": "2026-10-13T03:55:20Z",
+          "owner": "[BACKEND]",
+          "test": "READY TO SHIP \u2014 the session list stops showing the same connection twice \u00b7 why: when a quiet connection came back, the server sometimes opened a second record that started at the same second as the first one, so one session looked like two overlapping ones (58 overlaps in 7 days, at least 17 from this cause) \u00b7 what the ship does: a new record never starts before the previous one ended; nothing users see changes \u00b7 tested on dev: unit tests 5 of 5, full suite 420 of 420, new code live on the test server \u00b7 risk: low \u00b7 rollback: re-deploy the previous version \u00b7 advice: YES, low priority (xd-2015)",
+          "verify": "production DLL: docker cp caspervpn-api:/app/CasperVPN.dll /tmp/p.dll && grep -c SyncOpenConnectedAt /tmp/p.dll -> 1 (was 0); then the xd-2015 same-second pair query after the ship -> 0",
+          "evidence": "[BACKEND run 2026-10-13 0315, scheduled, unattended, 2026-10-13T03:55:20Z] added; development b2071d01b; QA handoff xd-2021; ship = cherry-pick b2071d01b to production + /root/deploy_api.sh."
         }
       ],
       "progress": 0,
@@ -15597,7 +15607,7 @@
           "verifiedBy": "none",
           "qaVerdict": "NOT LIVE",
           "qaDate": "2026-10-11",
-          "evidence": "[DEVOPS run 2026-10-13 0225, scheduled, unattended, 2026-10-13T02:29:54Z] MEASURED 02:2xZ: API log \"MultiHopProtocolServed\" = 0 lines since the api start 12 Oct 19:31Z; ConnectionLogs has no asked-for column (11 Oct). No source to alarm on. Handoff xd-2014 [BACKEND] to record it; DEVOPS adds the alarm after. || [APPS run 2026-10-11 f 2026-10-11T05:10:57Z] NOT LIVE, re-measured: prod DB read-only (BEGIN READ ONLY, casper_prod/caspervpn) 05:0xZ: ConnectionLogs columns = Id,UserId,ServerId,ConnectedAt,DisconnectedAt,Bytes*,Device*,Status,DisconnectReason,Protocol,SessionId,LastSeenAt,DeviceId,AppVersion,BuildNumber,NetworkType,StageReached,StageTimingsJson - there is NO 'asked for' protocol, only the served one, so an 'asked CasperCloak, served WireGuard' alarm cannot be computed from it. ConnectFailureEvents exists (failures only). | was: [QA 2026-10-11 f, scheduled, 2026-10-11T05:10:23Z] NOT LIVE - re-measured 05:1xZ: codegraph query \"alert when asked caspercloak served wireguard\" names only MultiHopProtocolServedDto (asked/served recorded) + DiagnosticsController/MultiHopController; git grep production (08a7d07bf) finds no alert on",
+          "evidence": "[BACKEND run 2026-10-13 0315, scheduled, unattended, 2026-10-13T03:55:20Z] Source exists after all: 'MultiHopProtocolServed ... asked= served=' (server) + 'MultiHopProtocolServedClient asked= served= outcome=' (app) in /opt/caspervpn/api-logs; 0 lines = 0 Double VPN connects 11-13 Oct (control: routes calls logged). Alarm handed to DEVOPS xd-2020. || [DEVOPS run 2026-10-13 0225, scheduled, unattended, 2026-10-13T02:29:54Z] MEASURED 02:2xZ: API log \"MultiHopProtocolServed\" = 0 lines since the api start 12 Oct 19:31Z; ConnectionLogs has no asked-for column (11 Oct). No source to alarm on. Handoff xd-2014 [BACKEND] to record it; DEVOPS adds the alarm after. || [APPS run 2026-10-11 f 2026-10-11T05:10:57Z] NOT LIVE, re-measured: prod DB read-only (BEGIN READ ONLY, casper_prod/caspervpn) 05:0xZ: ConnectionLogs columns = Id,UserId,ServerId,ConnectedAt,DisconnectedAt,Bytes*,Device*,Status,DisconnectReason,Protocol,SessionId,LastSeenAt,DeviceId,AppVersion,BuildNumber,NetworkType,StageReached,StageTimingsJson - there is NO 'asked for' protocol, only the served one, so an 'asked CasperCloak, served WireGuard' alarm cannot be computed from it. ConnectFailureEvents exists (failures only). | was: [QA 2026-10-11 f, scheduled, 2026-10-11T05:10:23Z] NOT LIVE - re-measured 05:1xZ: codegraph query \"alert when asked caspercloak served wireguard\" names only MultiHopProtocolServedDto (asked/served recorded) + DiagnosticsController/MultiHopController; git grep production (08a7d07bf) finds no alert on",
           "verify": "board",
           "passed": false,
           "verifiedDate": "2026-09-29",
@@ -61809,11 +61819,16 @@
       "to": "[BACKEND]",
       "title": "Handoff from DEVOPS: double-vpn-cc-silent-degrade row 3: record the protocol the user ASKED for next to the one served, so DevOps can alarm \"asked hidden mode, got WireGuard\"",
       "description": "Row 3 (alarm the silent stealth drop) cannot be built: ConnectionLogs stores only the served Protocol (APPS run 11 Oct 05:0xZ column list), and the API log has 0 \"MultiHopProtocolServed\" lines since its 12 Oct 19:31Z start (measured 13 Oct 02:2xZ, docker logs --since 168h). Ask: store the requested protocol (e.g. ConnectionLogs.RequestedProtocol, or a log line with asked+served per connect) on development; then hand back to [DEVOPS] who adds the rate alarm (Prometheus textfile + alert) on development -> READY TO SHIP. Owner of the task: iOS + DevOps.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-10-13T02:29:58Z",
       "createdDate": "2026-10-13",
-      "completedDate": null
+      "completedDate": "2026-10-13",
+      "notes": "[BACKEND run 2026-10-13 0315, scheduled, unattended, 2026-10-13T03:55:20Z] MEASURED - the asked-vs-served source ALREADY EXISTS, nothing to build: every Double VPN connect writes 'MultiHopProtocolServed clientAsked=.. asked=.. served=.. reason=..' (MultiHopController.cs L912, Information) and the app's own report writes 'MultiHopProtocolServedClient asked=.. served=.. outcome=..' (DiagnosticsController.cs L201) to the API FILE log /opt/caspervpn/api-logs/caspervpn-YYYYMMDD.log (survives container recreates; docker logs do not). 0 lines because there were 0 Double VPN connects: POST /api/multihop/connect = 0 in the file logs 11, 12 and 13 Oct; CONTROL: the same controller's GET /api/multihop/routes IS logged at [INF] (2-4 calls/day, answered 403) - so the sink records this controller. A DB column is not needed for the alarm; adding one = a migration for 0 rows/day. Handed back to DEVOPS for the alarm on the file log.",
+      "completedAt": "2026-10-13",
+      "completedBy": "[BACKEND]",
+      "resolution": "MEASURED: source already exists (2 log lines with asked+served in the API file log); 0 lines = 0 Double VPN connects 11-13 Oct, control routes calls logged",
+      "resultingHandoff": "xd-2020 to [DEVOPS] (alarm on the existing lines)"
     },
     {
       "id": "xd-2015",
@@ -61821,11 +61836,13 @@
       "to": "[BACKEND]",
       "title": "Handoff from QA: [P3] Two closed session rows in the same second from the accounting path (SessionId on both)",
       "description": "[QA 2026-10-13 d, scheduled, 2026-10-13T03:2xZ] Found while checking ceo-action-backlog row 173 (xd-1546). Production ConnectionLogs, since the 10 Oct 23:41Z ship: 1 pair same user (79675a02) + server (1a8394db, Amsterdam), ConnectedAt 2026-10-12 16:29:17.000 on BOTH, Protocol 0 on both, same DeviceId, both carry a SessionId, UserAgent empty, both closed. The app /connect path shows 0 such pairs since the ship (15 in the 7 days before). Hypothesis (not measured): a repeated accounting Start for one session makes a 2nd row (RadiusAuthController.Accounting L239 / AdoptAppRowOrCloseRapidAsync L856 per codegraph run c). Check: does the accounting path dedupe on SessionId? verify = SELECT count(*) of pairs with SessionId on both, last 7 d -> 0 after a fix. Low impact (both rows closed).",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P3",
       "createdAt": "2026-10-13T03:10:07Z",
       "createdDate": "2026-10-13",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[BACKEND run 2026-10-13 0315, scheduled, unattended, 2026-10-13T03:55:20Z] ROOT CAUSE MEASURED (QA's hypothesis 'repeated accounting Start' was not it): the 2 rows were opened by the WireGuard SYNC, not by RADIUS. api file log 12 Oct: 16:29:20 '[wg-sync] opened ConnectionLog for user 79675a02 on Amsterdam' (ConnectedAt = handshake 16:29:17) -> 16:29:36 RADIUS Start ADOPT row 7f574eed (session ...2576) -> RADIUS Stop closed it 16:32:37 -> 16:36:00 wg-sync opened a 2nd row with the SAME old handshake 16:29:17 (quiet tunnel, no re-handshake) -> 16:36:37 ADOPT row 6668706c (session ...2997). Different SessionIds, so a SessionId dedupe would not catch it. 7 d production (read-only): 58 overlapping pairs (row starts before the previous row of the same user+server closed), 17 of them whole-second + no app version = sync-made. FIX development b2071d01b: SyncOpenConnectedAt(handshake, last close of the pair, now) - a sync-opened row never starts before the previous close. Tests WireGuardSyncOpenTimeTests 5/5, suite 420/420 (was 415); CONTROL old rule -> 2 FAIL. Dev api recreated 03:52:58Z, dev DLL SyncOpenConnectedAt 1 vs production 0, dev /health 200, dev sync errors 0. Waits QA, then the CEO YES.",
+      "blocker": "Fixed on dev b2071d01b; waits QA dev check then the CEO YES on the READY TO SHIP row"
     },
     {
       "id": "xd-2016",
@@ -61878,6 +61895,32 @@
       "createdAt": "2026-10-13T03:41:26Z",
       "createdDate": "2026-10-13",
       "completedDate": null
+    },
+    {
+      "id": "xd-2020",
+      "from": "[BACKEND]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from BACKEND: double-vpn-cc-silent-degrade row 3: build the alarm on the EXISTING asked/served log lines (no backend change needed)",
+      "description": "[BACKEND run 2026-10-13 0315, scheduled, unattended, 2026-10-13T03:55:20Z] For xd-2014. Source = API file log /opt/caspervpn/api-logs/caspervpn-YYYYMMDD.log on the main server. Server line: 'MultiHopProtocolServed clientAsked=<a> asked=<a> served=<s> reason=<r> ...' (one per POST /api/multihop/connect). App line: 'MultiHopProtocolServedClient asked=<a> served=<s> outcome=<success|FAILED> ...' (one per app report). Alarm = count lines with asked=caspercloak and served=wireguard (either line) per day, textfile for Prometheus; today the rate is 0/0 because there were 0 Double VPN connects 11-13 Oct (routes calls only, 403). Then READY TO SHIP for the alarm; QA after. verify: grep -c 'MultiHopProtocolServed' /opt/caspervpn/api-logs/caspervpn-$(date -u +%Y%m%d).log",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-13T03:55:25Z",
+      "createdDate": "2026-10-13",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2021",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: Check xd-2015 on dev: a sync-opened session row never starts before the previous row's close (dev b2071d01b)",
+      "description": "[BACKEND run 2026-10-13 0315, scheduled, unattended, 2026-10-13T03:55:20Z] [BACKEND run 2026-10-13 0315, scheduled, unattended, 2026-10-13T03:55:20Z] ROOT CAUSE MEASURED (QA's hypothesis 'repeated accounting Start' was not it): the 2 rows were opened by the WireGuard SYNC, not by RADIUS. api file log 12 Oct: 16:29:20 '[wg-sync] opened ConnectionLog for user 79675a02 on Amsterdam' (ConnectedAt = handshake 16:29:17) -> 16:29:36 RADIUS Start ADOPT row 7f574eed (session ...2576) -> RADIUS Stop closed it 16:32:37 -> 16:36:00 wg-sync opened a 2nd row with the SAME old handshake 16:29:17 (quiet tunnel, no re-handshake) -> 16:36:37 ADOPT row 6668706c (session ...2997). Different SessionIds, so a SessionId dedupe would not catch it. 7 d production (read-only): 58 overlapping pairs (row starts before the previous row of the same user+server closed), 17 of them whole-second + no app version = sync-made. FIX development b2071d01b: SyncOpenConnectedAt(handshake, last close of the pair, now) - a sync-opened row never starts before the previous close. Tests WireGuardSyncOpenTimeTests 5/5, suite 420/420 (was 415); CONTROL old rule -> 2 FAIL. Dev api recreated 03:52:58Z, dev DLL SyncOpenConnectedAt 1 vs production 0, dev /health 200, dev sync errors 0. Waits QA, then the CEO YES. QA verify on dev: (1) dev DLL: docker cp caspervpn-dev-api:/app/CasperVPN.dll -> grep -c SyncOpenConnectedAt = 1 (production 0); (2) tests: dotnet test --filter WireGuardSyncOpenTime 5/5; (3) after the ship, production read-only: same-second pairs with SessionId on both, ConnectedAt after the ship -> 0, and overlap count (/root/reports/be1013-0315/q2.sql, 7 d: 58 before) falls for sync-made rows. Low impact (both rows closed).",
+      "status": "pending",
+      "priority": "P3",
+      "createdAt": "2026-10-13T03:55:25Z",
+      "createdDate": "2026-10-13",
+      "completedDate": null,
+      "handoffTo": "[CEO]",
+      "taskRef": "ceo-action-backlog"
     }
   ],
   "importantNotes": [
