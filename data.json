@@ -63543,11 +63543,19 @@
       "to": "[IOS]",
       "title": "Handoff from CEO: [P1] Traffic-proof telemetry: the app reports 'connected but no traffic' as a failure event (rx bytes at 30 s and 2 min after connect), so the board can count real connections instead of handshakes - iOS first, then Android; backend stores it",
       "description": "[CEO office live 2026-10-13 10:3xZ] Why the no-traffic bug went unnoticed for weeks: nothing in the app or the backend tells a session with a handshake and no data from a working one. iOS: after connect, read the adapter rx counter at +30 s and +120 s; if rx < 50 KB while tx > 20 KB, send a ConnectFailureEvent-style report (stage 'no-traffic', protocol, server, mtu in use, networkType, app build) and show the user 'Connected but no data is flowing - trying a smaller packet size' then re-dial with MTU 1280 (if not already) or switch protocol. Backend: accept + store the event (xd for [BACKEND] follows from this one), expose per-server/per-build no-traffic rate; the CEO office reads it as the north-star 'real connections' metric. Reuse the ZOMBIE-PROBE code paths; do not tear down a tunnel on the probe alone (xd-1137 stays).",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-10-13T10:32:13Z",
       "createdDate": "2026-10-13",
-      "completedDate": null
+      "completedDate": null,
+      "blocker": "CEO's Xcode: iOS part BUILT on ios/70-traffic-2077 d5a17a2e7 (from ios/70-plus 188b51276) (Linux swiftc test 22/22 + control); left = the next iPhone build with this branch merged + a phone check (xd-2085), and the Android port (xd-2086). Backend: no change needed (columns exist). MEASURED 13 Oct 11:15Z: the existing 20 s check wrote 9 rows ever, all CEO phone, bytes NULL; it missed the 12 Oct 21:08Z 0-byte WireGuard session.",
+      "notes": [
+        {
+          "date": "2026-10-13T11:25:00Z",
+          "by": "[IOS] apps run 1013l",
+          "text": "Built on ios/70-traffic-2077 d5a17a2e7 (from ios/70-plus 188b51276); handoffs xd-2085 (QA) and xd-2086 (ANDROID). Not compiled in Xcode; the MTU re-dial the handoff asks for is not added: WireGuard is already capped at 1280 since build 70a (PacketTunnelProvider min(json mtu,1280)), so a re-dial at 1280 would change nothing; a protocol switch stays AUTO-only by policy (failure-patterns Pattern 2)."
+        }
+      ]
     },
     {
       "id": "xd-2078",
@@ -63631,6 +63639,30 @@
       "status": "pending",
       "priority": "P2",
       "createdAt": "2026-10-13T11:14:08Z",
+      "createdDate": "2026-10-13",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2085",
+      "from": "[IOS]",
+      "to": "[QA]",
+      "title": "Handoff from IOS: Check iPhone traffic proof (xd-2077) on ios/70-traffic-2077 d5a17a2e7 (from ios/70-plus 188b51276)",
+      "description": "Branch ios/70-traffic-2077 d5a17a2e7 (from ios/70-plus 188b51276), 3 files under ios-app-v2/CasperVPN/CasperVPN/Core/: Models/ConnectFailureReport.swift (NoTrafficRule + optional rxBytes/txBytes), Services/DiagnosticsService.swift (reportConnectedNoTraffic sends bytes, errorCode 'NoTraffic:<reason>-<N>s', stageTimingsMs checkS/mtuMax), Services/VPNConnectionManager.swift (scheduleNoTrafficCheck: 20 s check unchanged + new +30 s/+120 s checkpoints; one report per session; message 'Connected, but no data is coming through. Try another server, or turn on Hidden mode.'; no teardown, no protocol switch for a hand-picked protocol). Patch: CasperVPN/.factory-transfer/apps-1013l/ios-2077.patch. QA steps: (1) off-device, any Swift 5.9+: swiftc Stubs.swift (scripts/telemetry-v2-harness) + ConnectFailureReport.swift + the xd2077 test -> 22/22 (run 1013l, Linux swiftc 6.0.3); control: set starvedRx = 1_024 -> 6 FAILED; telemetry-v2 harness with the new files -> FAILS 0. (2) after the CEO's Xcode build with this branch merged (NOT built yet - no Xcode in unattended runs): connect WireGuard on a node with traffic -> log '[NO-TRAFFIC] +30s ... verdict=flowing', no report; connect where data cannot flow (e.g. Bangkok-dev with DNS blocked, or airplane mode right after Connected) -> within 30-120 s one ConnectFailureEvents row FailureCategory='connected-no-traffic', ErrorCode 'NoTraffic:...', RxBytes/TxBytes NOT NULL, and the banner on the phone. (3) production read-only: SELECT \"BuildNumber\", count(*), count(\"RxBytes\") FROM \"ConnectFailureEvents\" WHERE \"FailureCategory\"='connected-no-traffic' GROUP BY 1 -> the new build has count(RxBytes)=count(*). Baseline measured 13 Oct 11:15Z: 9 rows ever (builds 62-70, CEO phone only), RxBytes NULL on all 9; 12 Oct 21:08Z build 69 WireGuard session 68 s / 0 B down produced NO row.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-13T11:22:59Z",
+      "createdDate": "2026-10-13",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2086",
+      "from": "[IOS]",
+      "to": "[ANDROID]",
+      "title": "Handoff from IOS: Port the traffic proof (xd-2077) to Android",
+      "description": "Parity of xd-2077 (iOS ios/70-traffic-2077 d5a17a2e7 (from ios/70-plus 188b51276)). Port NoTrafficRule (ConnectFailureReport.swift, same thresholds: rx < 1024 B = handshake-only; rx < 51200 B while tx > 20480 B = rx-starved; rx >= 51200 = flowing; else idle -> look again) to the Android connect path: read the WireGuard tunnel rx/tx at +30 s and +120 s after Connected, send ONE POST /api/diagnostics/connect-failure per session with failureCategory 'connected-no-traffic', rxBytes/txBytes, errorCode 'NoTraffic:<reason>-<N>s', stageTimingsMs {total, checkS, mtuMax}, and show the same one-line message. Never tear down the tunnel on this alone; never switch a hand-picked protocol. Backend needs no change (RxBytes/TxBytes/ErrorCode/StageTimingsMs stored since xd-1120/xd-1255; production DiagnosticsController L114-120). Unit test the rule with the same cases as the iOS xd2077 test (incl. the measured 13 Oct sessions: 0/0 -> no traffic; 120943040/27045672 -> flowing; 2412/6084 -> idle).",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-13T11:22:59Z",
       "createdDate": "2026-10-13",
       "completedDate": null
     }
