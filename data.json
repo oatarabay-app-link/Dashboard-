@@ -15060,6 +15060,16 @@
           "test": "READY TO SHIP \u2014 the admin Censorship page shows real numbers per country (how many people from that country got connected, per protocol) instead of 0 % everywhere \u00b7 why: we have no servers inside the 12 blocked countries, so the page counted nothing; now it counts real users who signed in from the country (7 days, our staff and test accounts left out) \u00b7 what the ship does: changes how the page's numbers are worked out once an hour; nothing users see changes \u00b7 tested on dev: development 820fe480b - 415/415 checks pass, the new check fails without the real-user filter; dev api 00:45Z carries it \u00b7 expected on production: United Arab Emirates WireGuard 96 % working, hidden mode 66 %; Russia WireGuard 67 %; Iran too few attempts to judge \u00b7 risk: low \u00b7 rollback: redeploy the previous version \u00b7 advice: YES (admin-censorship-real-probes)",
           "verify": "After ship (next hourly persist): psql SELECT count(*) FROM \"CensorshipCountryStatuses\", jsonb_array_elements(\"ProtocolsJson\"::jsonb) p WHERE (p->>'SuccessRate')::numeric > 0 -> >= 4 (was 0); notes start 'From-country:'",
           "evidence": "[BACKEND run 2026-10-13 0015, scheduled, unattended, 2026-10-13T00:48:54Z] added; dev proof above; waits QA xd-2000 then the CEO YES."
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "addedAt": "2026-10-13T01:22:58Z",
+          "owner": "[BACKEND]",
+          "test": "READY TO SHIP \u2014 the weekly 'who managed to connect' report stops counting your own and staff accounts as customers \u00b7 why: one of our own accounts was counted as a Lebanese newcomer, so Lebanon looked better than it is \u00b7 what the ship does: copies the corrected report recipe to the live branch; it only READS data, nothing users see changes \u00b7 tested: read-only on live data 13 Oct 01:2xZ - only that one account drops out, everything else identical \u00b7 risk: none \u00b7 rollback: copy back the old recipe \u00b7 advice: YES (activation-first-connection-funnel row 2, xd-2003)",
+          "verify": "git show origin/production:infrastructure/scripts/activation_funnel.sql | grep -c 'staff-accounts.md' -> 2 (was 0); /opt/caspervpn/activation_funnel.sql md5 = ebffc315... after the install line in the file header",
+          "evidence": "[BACKEND run 2026-10-13 0115, scheduled, unattended, 2026-10-13T01:22:58Z] added; development 7c9314f93; QA handoff xd-2007; ship = cherry-pick 7c9314f93 to production + reinstall /opt/caspervpn copy from git (header line)."
         }
       ],
       "progress": 0,
@@ -18059,9 +18069,9 @@
           "verify": "the weekly KPI report (marketing T24) carries an 'Activation by country' table with populations",
           "met": false,
           "verifiedBy": "none",
-          "evidence": "[QA 2026-10-13 b, scheduled, 2026-10-13T01:2xZ] FAIL - KPI-WEEKLY-2026-W42.md (production) has '### Activation by country' with populations (12 countries >= 3 people) and names the worst 3 (IR 0/17, CA 0/5, LB 1/6) - BUT the report itself says staff accounts are NOT removed by activation_funnel.sql, and the criterion requires excluding probe/staff accounts; top reason is 'unknown' for 11 of 12 countries (store app 4.2 sends no stage). QA re-ran the SQL 01:1xZ (md5 bc3e3321): W41 40 real / 12 first connection = 30.0 %, W40 13/20 -> same numbers as the report. || [BACKEND run 2026-10-12 2315, scheduled, unattended, 2026-10-12T23:44:25Z] DATA READY, report leg missing: activation_funnel.sql run read-only 23:2xZ (/root/reports/be1012-2315/funnel-2315.txt): top never-connected countries with >=5 real users IR 17/17, CA 5/5, LB 5/6 (RU 27/39); top reason is 'unknown' for most (store app 4.2 sends no stage). KPI-WEEKLY-2026-W42.md 'Activation' lines 0. The report is MARKETING's file -> handoff xd-1995 with both tables. || [QA 2026-10-10 u, scheduled, 2026-10-10T23:34:26Z] NOT DONE - re-measured 23:10Z: marketing/reports/KPI-WEEKLY-2026-W41.md has no 'Activation' line (grep -c 0), so no by-country table exists. || ",
+          "evidence": "[BACKEND run 2026-10-13 0115, scheduled, unattended, 2026-10-13T01:22:58Z] FIXED (dev) for the QA FAIL: activation_funnel.sql now removes the staff + CEO accounts of memory/context/staff-accounts.md in BOTH real-user filters (weekly + by-country); development 7c9314f93. Read-only production run 01:2xZ (BEGIN READ ONLY ... ROLLBACK), /root/reports/be1013-0115/out-old.txt vs out-new.txt (funnel-old.sql md5 bc3e3321 = the QA copy, funnel-new.sql md5 ebffc315): exactly one staff account removed - W40 sign-ups 13 -> 12, succeeded 2 -> 1 (15.4 % -> 8.3 %); LB real 6 -> 5, never-connected 5 -> 5 (83.3 % -> 100 %, top reason unknown 42 -> 31); every other week and country unchanged; control *_all columns identical. Worst 3 with >= 5 real users after the fix: IR 17/17, LB 5/5, CA 5/5 (RU 27/39, cc-wg-nohandshake-cf 115). || [QA 2026-10-13 b, scheduled, 2026-10-13T01:2xZ] FAIL - KPI-WEEKLY-2026-W42.md (production) has '### Activation by country' with populations (12 countries >= 3 people) and names the worst 3 (IR 0/17, CA 0/5, LB 1/6) - BUT the report itself says staff accounts are NOT removed by activation_funnel.sql, and the criterion requires excluding probe/staff accounts; top reason is 'unknown' for 11 of 12 countries (store app 4.2 sends no stage). QA re-ran the SQL 01:1xZ (md5 bc3e3321): W41 40 real / 12 first connection = 30.0 %, W40 13/20 -> same numbers as the report. || [BACKEND run 2026-10-12 2315, scheduled, unattended, 2026-10-12T23:44:25Z] DATA READY, report leg missing: activation_funnel.sql run read-only 23:2xZ (/root/reports/be1012-2315/funnel-2315.txt): top never-connected countries with >=5 real users IR 17/17, CA 5/5, LB 5/6 (RU 27/39); top reason is 'unknown' for most (store app 4.2 sends no stage). KPI-WEEKLY-2026-W42.md 'Activation' lines 0. The report is MARKETING's file -> handoff xd-1995 with both tables. || [QA 2026-10-10 u, scheduled, 2026-10-10T23:34:26Z] NOT DONE - re-measured 23:10Z: marketing/reports/KPI-WEEKLY-2026-W41.md has no 'Activation' line (grep -c 0), so no by-country table exists. || ",
           "qaDate": "2026-10-13",
-          "blocker": "[MARKETING]/[BACKEND]: remove staff + probe accounts (memory/context/staff-accounts.md) from the by-country table",
+          "blocker": "Waits QA re-run of the dev SQL (handoff below) + MARKETING re-runs the W42 'Activation by country' table with the new SQL (xd-2003); production copy of the .sql after CEO YES on the READY TO SHIP row.",
           "passed": false,
           "qaVerdict": "FAIL"
         },
@@ -61479,7 +61489,7 @@
       "from": "[QA]",
       "to": "[MARKETING]",
       "title": "Handoff from QA: [QA FAILED] activation row 2: the by-country table still counts staff accounts",
-      "description": "QA 2026-10-13 b: KPI-WEEKLY-2026-W42.md 'Activation by country' names the worst 3 with populations, but the report says activation_funnel.sql does not remove staff/probe accounts and the criterion requires that (LB 6 real / 5 never connected may be our own accounts). Fix: apply memory/context/staff-accounts.md (and probe-*@caspervpn.com) in the by-country query (BACKEND owns the .sql), re-run, show the before/after counts per country as a control. Row 3 report leg passed; admin page leg waits the signed-in pass.",
+      "description": "QA 2026-10-13 b: KPI-WEEKLY-2026-W42.md 'Activation by country' names the worst 3 with populations, but the report says activation_funnel.sql does not remove staff/probe accounts and the criterion requires that (LB 6 real / 5 never connected may be our own accounts). Fix: apply memory/context/staff-accounts.md (and probe-*@caspervpn.com) in the by-country query (BACKEND owns the .sql), re-run, show the before/after counts per country as a control. Row 3 report leg passed; admin page leg waits the signed-in pass. || [BACKEND run 2026-10-13 0115, scheduled, unattended, 2026-10-13T01:22:58Z] BACKEND part DONE on development 7c9314f93: activation_funnel.sql now removes the staff + CEO accounts of memory/context/staff-accounts.md in BOTH real-user filters (weekly + by-country); development 7c9314f93. Read-only production run 01:2xZ (BEGIN READ ONLY ... ROLLBACK), /root/reports/be1013-0115/out-old.txt vs out-new.txt (funnel-old.sql md5 bc3e3321 = the QA copy, funnel-new.sql md5 ebffc315): exactly one staff account removed - W40 sign-ups 13 -> 12, succeeded 2 -> 1 (15.4 % -> 8.3 %); LB real 6 -> 5, never-connected 5 -> 5 (83.3 % -> 100 %, top reason unknown 42 -> 31); every other week and country unchanged; control *_all columns identical. Worst 3 with >= 5 real users after the fix: IR 17/17, LB 5/5, CA 5/5 (RU 27/39, cc-wg-nohandshake-cf 115). MARKETING: re-run the by-country table with /root/reports/be1013-0115/funnel-new.sql (or the development file) and replace the W42 table; say 'staff and test accounts removed'.",
       "status": "pending",
       "priority": "P2",
       "createdAt": "2026-10-13T01:11:27Z",
@@ -61526,6 +61536,21 @@
       "criteriaIdx": [
         2
       ]
+    },
+    {
+      "id": "xd-2007",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: Re-check activation row 2 with the fixed funnel SQL (staff accounts removed, dev 7c9314f)",
+      "description": "[BACKEND run 2026-10-13 0115, scheduled, unattended, 2026-10-13T01:22:58Z] For activation-first-connection-funnel row 2 (QA FAIL xd-2003). activation_funnel.sql now removes the staff + CEO accounts of memory/context/staff-accounts.md in BOTH real-user filters (weekly + by-country); development 7c9314f93. Read-only production run 01:2xZ (BEGIN READ ONLY ... ROLLBACK), /root/reports/be1013-0115/out-old.txt vs out-new.txt (funnel-old.sql md5 bc3e3321 = the QA copy, funnel-new.sql md5 ebffc315): exactly one staff account removed - W40 sign-ups 13 -> 12, succeeded 2 -> 1 (15.4 % -> 8.3 %); LB real 6 -> 5, never-connected 5 -> 5 (83.3 % -> 100 %, top reason unknown 42 -> 31); every other week and country unchanged; control *_all columns identical. Worst 3 with >= 5 real users after the fix: IR 17/17, LB 5/5, CA 5/5 (RU 27/39, cc-wg-nohandshake-cf 115). Verify: on the main server diff -u /root/reports/be1013-0115/out-old.txt out-new.txt -> only W40 and LB lines change; git show origin/development:infrastructure/scripts/activation_funnel.sql | grep -c 'staff-accounts.md' -> 2; re-run read-only yourself. Then, once MARKETING has replaced the W42 table (xd-2003), tick row 2. Production copy of the .sql waits the CEO YES row.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-13T01:23:03Z",
+      "createdDate": "2026-10-13",
+      "completedDate": null,
+      "taskRef": "activation-first-connection-funnel",
+      "dueBy": "2026-10-16T01:23:03Z",
+      "handoffTo": "[MARKETING]"
     }
   ],
   "importantNotes": [
