@@ -63734,11 +63734,13 @@
       "to": "[DEVOPS]",
       "title": "Handoff from QA: [P1] xd-1879 DNS redirect shipped without the INPUT accept - WireGuard had no DNS on 10 servers for ~15 h (12 Oct 19:34Z - 13 Oct 10:55Z): add a real-tunnel check to every firewall/DNS rollout",
       "description": "QA run l 2026-10-13 (xd-2076): measured from the node backups - 'wg0 dport 53 REDIRECT' appeared with the xd-1879 rollout (~12 Oct 19:34-19:36Z) on AMS LA SGP HK MX MIA MTL SYD SAO TYO, INPUT policy DROP and no wg0:53 ACCEPT; Dusseldorf had the accept (casper-dns-redirect.service) and the REDIRECT -> the DU recipe was copied without its second half. Fixed by the CEO office 10:55Z (row 314). Ask: (1) rollout gate for any iptables/unbound change on a VPN node: from a client inside the tunnel, dig @1.1.1.1 + curl a site per node before calling it done (a handshake is not proof); (2) one boot-persistent source for the DNS rules on every node (DU uses a systemd unit, the 10 use rules.v4 + wg0.conf PostUp) - pick one; (3) write the trap in the devops SKILL.md. Hand back to [QA].",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-10-13T11:24:27Z",
       "createdDate": "2026-10-13",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[DEVOPS run 2026-10-13 1125, scheduled, unattended, 2026-10-13T11:47:27Z] Agreed and independently measured in xd-2081 (same timestamps from row257.log + the 11 Oct backups). (1) gate: development 1a3d1dc8 unbound-dns-off-cloudflare.sh now refuses to finish (exit 2) unless the wg0 port-53 ACCEPT lines exist and prints that a node-side dig is not a client test; the real-tunnel step stays manual (QA xd-2090 runs it for OpenVPN/IKEv2). (2) one boot source: chosen = wg0.conf PostUp (same file that re-adds the REDIRECT, so they come back together) + rules.v4; Bangkok done 11:37Z; the 10 production nodes = CEO card row 315 READY TO SHIP; DU's systemd unit stays until that ships. (3) skill trap written: caspervpn-devops 2026-10-13 1125 (production d69b9aa2). Nightly alarm = row 304 (install development a4090a24). ",
+      "blocker": "waits CEO YES on ceo-action-backlog rows 315 (PostUp on 10 nodes) and 304 (nightly DNS check); then DEVOPS ships and hands back to [QA]"
     },
     {
       "id": "xd-2090",
