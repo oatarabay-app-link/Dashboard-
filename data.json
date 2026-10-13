@@ -63302,13 +63302,17 @@
       "to": "[ANDROID]",
       "title": "Handoff from LEGAL: Android before Play: in-app 'Delete account', encrypted token storage, drop READ_PHONE_STATE (Data Safety gates G2/G5)",
       "description": "From xd-2058 ([LEGAL] growth 13 Oct 0904). Android/CasperVPN-v2/PLAY_STORE_DATA_SAFETY.md (development 44bfb5b3) section 0. MEASURED on origin/development 53baf9fe9 (main server git grep): (G2) no account deletion in the Android app - ApiClient.kt L331 only DELETE user/devices/{id}; the backend already has DELETE /api/users/me (UsersController.cs L101, route api/[controller]); iPhone parity = xd-1950. Google Play requires in-app deletion for apps with account creation. (G5) TokenManager.kt keeps access + refresh token in plain DataStore preferences (L14/L35), while privacy policy v1.8 section 2.6 says 'encrypted device storage' - wrap them with an Android Keystore key, or tell [LEGAL] to change the policy line. (Manifest) AndroidManifest.xml L10 READ_PHONE_STATE declared, 0 uses of TelephonyManager in app/src/main/java - remove it (sensitive permission on Play). DO on development, hand to [QA]. No production change.",
-      "status": "in_progress",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-10-13T09:15:11Z",
       "createdDate": "2026-10-13",
-      "completedDate": null,
+      "completedDate": "2026-10-13",
       "note": "[APPS run 2026-10-13 j, scheduled, unattended, 2026-10-13T09:50:37Z] G2 + manifest DONE on development 7bc47d81a -> QA xd-2069: Settings > Delete Account (confirm -> stop tunnel + unregister push -> DELETE /api/users/me -> clear the phone ONLY on 2xx/404, else stay signed in with a message), READ_PHONE_STATE tools:node=remove (merged APK: 0). PROOF cloud box JDK 17: BUILD SUCCESSFUL 8m22s, unit tests 423 / 0 failed, control 2 FAILED; dev + prod DELETE /api/users/me without token 401 (control 404). NOT PROVEN on a device. G5 (Keystore-encrypted tokens in TokenManager.kt) NOT done yet - next apps run.",
-      "blocker": "next apps run: G5 - wrap the access/refresh tokens in TokenManager.kt with an Android Keystore key (or LEGAL changes the policy line); G2 + manifest with QA xd-2069"
+      "blocker": null,
+      "completedAt": "2026-10-13",
+      "completedBy": "[ANDROID]",
+      "resolution": "[APPS run 2026-10-13 k, 10:30Z] All 3 parts done on development: G2 Delete Account + READ_PHONE_STATE removal (run j, 7bc47d81a, QA xd-2069) and G5 encrypted tokens (run k, 04c4e9c6e: Android Keystore AES-256-GCM, plain-text migration, 10 tests; cloud box JDK 17 BUILD SUCCESSFUL 433 tests 0 failed; control plain-text write -> 3 FAILED). NOT PROVEN on a device (emulator pass xd-1491). Policy line unchanged - the code now matches it.",
+      "resultingHandoff": "xd-2079 to [QA] (G5 on development 04c4e9c6e); xd-2069 to [QA] (G2 + manifest)"
     },
     {
       "id": "xd-2063",
@@ -63536,6 +63540,18 @@
       "status": "pending",
       "priority": "P2",
       "createdAt": "2026-10-13T10:35:51Z",
+      "createdDate": "2026-10-13",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2079",
+      "from": "[ANDROID]",
+      "to": "[QA]",
+      "title": "Handoff from ANDROID: Check Android encrypted sign-in tokens on development 04c4e9c6e (xd-2062 G5)",
+      "description": "development 04c4e9c6e (one commit; 5 files under Android/CasperVPN-v2/app/src/): data/remote/TokenCipher.kt (new: AesGcmTokenCipher AES-256-GCM, random 12-byte IV, stored 'v1:'+Base64(IV+ct+tag); AndroidKeystoreTokenKey alias caspervpn_token_key_v1, non-exportable), data/remote/TokenStorageRules.kt (new: writes only access_token_enc/refresh_token_enc, removes plain keys, never falls back to plain text; old plain tokens encrypted once and removed, or removed if the Keystore fails = sign in again; undecryptable = signed out), data/remote/TokenManager.kt (uses the rules, migrates once per process), di/AppModule.kt (wires the Keystore cipher), test/.../security/TokenStorageRulesTest.kt (10). QA steps: (1) ./gradlew assembleDevDebug testDevDebugUnitTest (JDK 17) -> 433 tests, 0 failed (run k cloud box, 6m49s); control: make TokenStorageRules.write() store the plain keys -> 3 FAILED (run k). (2) DEVICE (emulator pass xd-1491 on the CEO Mac): sign in with a dev test account, then `adb shell run-as com.caspervpn.app.dev cat files/datastore/caspervpn_prefs.preferences_pb | strings | grep -c eyJ` -> 0 (no readable JWT) and the keys access_token_enc/refresh_token_enc present; kill + reopen the app -> still signed in; Sign Out -> both keys gone. (3) Upgrade path: install the 7bc47d81a build, sign in, install this build over it -> still signed in and the plain keys access_token/refresh_token gone. NOT PROVEN: Keystore behaviour on a real phone/emulator (no /dev/kvm in unattended runs). After QA passes, [LEGAL]: privacy policy v1.8 s2.6 'encrypted device storage' now matches the Android code - Data Safety gate G5 can be closed.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-13T10:38:01Z",
       "createdDate": "2026-10-13",
       "completedDate": null
     }
