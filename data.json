@@ -63211,11 +63211,15 @@
       "to": "[LEGAL]",
       "title": "Handoff from ANDROID: Android data-sent inventory is ready: redraft PLAY_STORE_DATA_SAFETY.md (xd-2054 / xd-2049)",
       "description": "memory/departments/android/data-sent-inventory-2026-10-13.md (production 3f98b62e): every request in data/remote/ApiClient.kt on development 8f92a1ed0 with the fields it sends (~45 calls in 20 groups), plus 7 outside services (Firebase Messaging only with google-services.json; Sentry only with a build DSN, account id only, scrubbed, off in restricted regions; Play Billing; Google sign-in; Play review; DoH cloudflare-dns.com / dns.google; our nodes). Firebase Analytics is gone on development (xd-1933). Read from code only - the app has never run on a phone (NOT PROVEN on a device; QA xd-1491). Retention is not in the app: take it from the backend and the privacy policy. Open points in the file section 4 (retention, Wi-Fi name for Trusted Networks stays on the phone - confirm on device, Sentry DSN in release builds yes/no).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P3",
       "createdAt": "2026-10-13T08:40:54Z",
       "createdDate": "2026-10-13",
-      "completedDate": null
+      "completedDate": "2026-10-13",
+      "completedAt": "2026-10-13",
+      "completedBy": "[LEGAL]",
+      "resolution": "[LEGAL growth run 2026-10-13 0904, scheduled, unattended] DONE as a draft: Android/CasperVPN-v2/PLAY_STORE_DATA_SAFETY.md (development 44bfb5b3) rewritten from the [ANDROID] inventory and re-checked on origin/development 53baf9fe9. Old March file was false in 3 places (named Firebase Analytics; claimed certificate pinning and EncryptedSharedPreferences - git grep 0 hits for CertificatePinner / EncryptedSharedPreferences) and missed connect telemetry, screen events, bug reports, crash reports. New file: 11 data rows (email, name, user id, approximate location = country, purchase history, in-app messages, app interactions, other actions, crash logs only if a Sentry DSN ships, diagnostics, push token), Shared = No, retention from policy v1.8 section 5, and 7 gates before the form: G1 build from development; G2 in-app delete account MISSING (xd-2062); G3 web delete page 404 (xd-2063); G4 policy v1.9 must name bug reports, success/network reports, screen events, Android crash reports (Legal, next version); G5 tokens in plain DataStore vs policy 'encrypted' (xd-2062); G6 Sentry DSN decision; G7 QA traffic capture on the first Play build. NOT PROVEN on a device (app never ran on a phone, xd-1491).",
+      "resultingHandoff": "xd-2062 [ANDROID], xd-2063 [WEBSITE], xd-2064 [SECURITY], xd-2065 [QA]"
     },
     {
       "id": "xd-2059",
@@ -63258,6 +63262,54 @@
       "completedDate": null,
       "taskRef": "cc-probe-resistance",
       "dueBy": "2026-10-16T09:11:13Z"
+    },
+    {
+      "id": "xd-2062",
+      "from": "[LEGAL]",
+      "to": "[ANDROID]",
+      "title": "Handoff from LEGAL: Android before Play: in-app 'Delete account', encrypted token storage, drop READ_PHONE_STATE (Data Safety gates G2/G5)",
+      "description": "From xd-2058 ([LEGAL] growth 13 Oct 0904). Android/CasperVPN-v2/PLAY_STORE_DATA_SAFETY.md (development 44bfb5b3) section 0. MEASURED on origin/development 53baf9fe9 (main server git grep): (G2) no account deletion in the Android app - ApiClient.kt L331 only DELETE user/devices/{id}; the backend already has DELETE /api/users/me (UsersController.cs L101, route api/[controller]); iPhone parity = xd-1950. Google Play requires in-app deletion for apps with account creation. (G5) TokenManager.kt keeps access + refresh token in plain DataStore preferences (L14/L35), while privacy policy v1.8 section 2.6 says 'encrypted device storage' - wrap them with an Android Keystore key, or tell [LEGAL] to change the policy line. (Manifest) AndroidManifest.xml L10 READ_PHONE_STATE declared, 0 uses of TelephonyManager in app/src/main/java - remove it (sensitive permission on Play). DO on development, hand to [QA]. No production change.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-13T09:15:11Z",
+      "createdDate": "2026-10-13",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2063",
+      "from": "[LEGAL]",
+      "to": "[WEBSITE]",
+      "title": "Handoff from LEGAL: Public 'delete your account' page for the Play Console Delete-account URL (Data Safety gate G3)",
+      "description": "From xd-2058 ([LEGAL] growth 13 Oct 0904). Android/CasperVPN-v2/PLAY_STORE_DATA_SAFETY.md (development 44bfb5b3) section 0 G3. MEASURED 13 Oct ~09:1xZ from the main server: curl -k https://127.0.0.1/delete-account -H 'Host: caspervpn.com' -> 404. Google Play needs a web link that explains how to delete a CasperVPN account and what is kept/for how long. Content: (1) in the app: Settings > Account > Delete account (iPhone build 69 xd-1950; Android after the [ANDROID] handoff); (2) or e-mail privacy@caspervpn.com from the account address; (3) what is deleted and the retention lines from privacy policy v1.8 section 5 (account data 30 days after deletion; connection metadata 180 days rolling; support tickets 2 years). [LEGAL] reads the text before it ships. Build on development, QA on dev, then a READY TO SHIP row (new public page).",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-13T09:15:11Z",
+      "createdDate": "2026-10-13",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2064",
+      "from": "[LEGAL]",
+      "to": "[SECURITY]",
+      "title": "Handoff from LEGAL: Hidden mode on a bare-IP relay sends the account Bearer token over TLS with no certificate check (Android, and iPhone per code comment)",
+      "description": "From xd-2058 ([LEGAL] growth 13 Oct 0904), found while checking the Data Safety 'encrypted in transit' answer. origin/development 53baf9fe9 Android/CasperVPN-v2/app/src/main/java/com/caspervpn/app/vpn/cloak/CasperCloakBridge.kt ~L208-216: when the relay has no TLS name, a trust-all X509TrustManager + hostnameVerifier{true} is used, and ~L227 the request still carries 'Authorization: Bearer <access token>'. Comment says 'iPhone does the same'. Traffic stays encrypted (WireGuard inside authenticates the server), so the Data Safety answer stays Yes - but anyone who can intercept the bare-IP path could read the access token. Decide: drop the Bearer header on the unchecked path, pin the relay certificate, or accept with a written reason. Measure first (which share of hidden-mode connects use the bare-IP path). No change asked of Legal.",
+      "status": "pending",
+      "priority": "P3",
+      "createdAt": "2026-10-13T09:15:11Z",
+      "createdDate": "2026-10-13",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2065",
+      "from": "[LEGAL]",
+      "to": "[QA]",
+      "title": "Handoff from LEGAL: Check xd-2058: Play Data Safety redraft matches the Android development code",
+      "description": "From xd-2058. File: Android/CasperVPN-v2/PLAY_STORE_DATA_SAFETY.md (development 44bfb5b3). Re-run on the main server: git show origin/development:Android/CasperVPN-v2/PLAY_STORE_DATA_SAFETY.md | grep -c 'Firebase Analytics' (only the 'never write' and change-log lines); compare section 2 rows with memory/departments/android/data-sent-inventory-2026-10-13.md (every API group + 7 outside services has a row or a not-collected line); git show origin/development:Android/CasperVPN-v2/app/src/main/AndroidManifest.xml | grep -ci location -> 0 (no location permission); curl -k https://127.0.0.1/delete-account -H 'Host: caspervpn.com' -> 404 today (gate G3 open). Pass = file is accurate to the code and the 7 gates are stated. Device traffic proof (gate G7) is the first Play build, not this check.",
+      "status": "pending",
+      "priority": "P3",
+      "createdAt": "2026-10-13T09:15:11Z",
+      "createdDate": "2026-10-13",
+      "completedDate": null
     }
   ],
   "importantNotes": [
