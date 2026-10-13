@@ -15222,6 +15222,16 @@
           "addedAt": "2026-10-13T06:13:01Z",
           "addedBy": "ceo-office",
           "evidence": "[CEO office 2026-10-13 06:xxZ, daily run, unattended] ceo skill trap 10 Oct: the same ask twice is a blocked ask - ask what blocks it. Board 13 Oct D2."
+        },
+        {
+          "test": "READY TO SHIP \u2014 make the data-cap guard write a line every 3 minutes again \u00b7 why: since 12 Oct 05:00 its diary has been empty, so nobody could tell if it was working; the cause is a small bug: when NO user is over the limit through the old-style connection, the script stops before writing anything (nobody was cut wrongly, and nobody escaped: there was nobody to cut) \u00b7 what the ship does: replaces one script on the main server with the fixed copy from our code store; it now writes 'OK - nobody to cut' or the cuts it made, writes an error line if the database cannot be read, and no longer keeps the database password inside the file; no restart, users notice nothing \u00b7 tested: on the main server with copies that cannot cut anyone - real data -> 'OK - no over-cap users'; one planted test user -> it found the peer and logged a (fake) cut; a broken database login -> it logged an error; the old script in the same state writes nothing \u00b7 rollback: put back the backup copy taken during the ship \u00b7 advice: YES",
+          "verify": "ssh root@178.62.101.221 'md5sum /opt/caspervpn/datacap_enforcement_sweep.sh; tail -1 /var/log/datacap-enforcer.log; grep -c PGPW /opt/caspervpn/datacap_enforcement_sweep.sh' -> c56af2a2, a line < 4 min old, 0",
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "verifiedByRaw": null,
+          "verifiedDate": null,
+          "evidence": "[DEVOPS run 2026-10-13 0625, scheduled, unattended, 2026-10-13T06:36:14Z] xd-2032. Root cause measured: bash -x of a no-cut copy of the live /opt/caspervpn/datacap_enforcement_sweep.sh -> over-cap query returns 0 rows (11 over-cap users, 0 with a wg- session) -> 'declare -A OVER' never assigned -> './dry.sh: line 61: OVER: unbound variable' (set -u, bash 5.2.21) -> final printf also aborts -> no log line. Last good line 12 Oct 00:24Z 'DONE \u2014 over-cap client-keyed users=2'. Fix = development f488591b infrastructure/scripts/datacap_enforcement_sweep.sh md5 c56af2a2 (the script was never in git before): declare -A OVER=(), psql rc checked, EXIT trap logs any early exit, PGPASSWORD removed (psql in the container needs none - proven by the real-data run). Tests on the main server, remove-client call replaced by DRYRUN, log to /root/reports/devops1013-0625: real 06:30:12Z 'OK \u2014 no over-cap client-keyed users to enforce.'; planted md5 of one live Johannesburg-list peer 06:30:31Z 'CUT planted@test ... -> HTTP DRYRUN' + 'DONE \u2014 users=1, peers cut this run=1'; bad role 06:30:35Z 'ERROR \u2014 over-cap query failed (psql rc=2)'. Install: cp /opt/caspervpn/datacap_enforcement_sweep.sh /root/backups/datacap_sweep.pre-c56af2a2; install -m 755 the git copy; wait 3 min; tail -1 the log."
         }
       ],
       "progress": 0,
@@ -21236,7 +21246,7 @@
       "createdBy": "ceo-office",
       "dueBy": "2026-10-20",
       "description": "Added by the CEO office 2026-10-13 (routine 08 step 6, source: the main server crontab, 48 lines, each checked by its LOG not its schedule - ceo skill trap 9 Oct).",
-      "status": "PARTIAL \u2014 2 of 4 rows verified live; data-cap sweep log silent 25 h and throughput log 26 days old -> [DEVOPS]",
+      "status": "PARTIAL \u2014 2 of 4 rows verified live; row 3 fix waits CEO YES row 311; row 4 is by design (verify needs a reword)",
       "progress": 0,
       "blocked": false,
       "blocker": "",
@@ -21274,7 +21284,8 @@
           "addedAt": "2026-10-13T06:13:01Z",
           "addedBy": "ceo-office",
           "verifiedBy": "none",
-          "evidence": "[CEO office 2026-10-13 06:xxZ, daily run, unattended] FAIL: datacap-enforcer.log last written 12 Oct 05:00Z, last line \"ERROR \u2014 no control API token\" (the line before: \"no space left on device\" 03:30Z, the disk outage) - nothing for 25 h although cron runs it every 3 min. Control: datacap-enforcement-monitor.log 06:00Z \"EnforceDataCap=true, over-cap users=11, none gaining data\" - so the main cap still holds; the interim sweep looks silent. Hypothesis: it exits before writing. -> [DEVOPS] handoff."
+          "evidence": "[DEVOPS run 2026-10-13 0625, scheduled, unattended, 2026-10-13T06:36:14Z] CAUSE FOUND + FIX BUILT: the sweep runs every 3 min (syslog CRON lines 06:21/06:24/06:27Z) but exits before logging when the over-cap list is empty (bash 'OVER: unbound variable'). Fixed copy on development f488591b; READY TO SHIP = CEO card row 311; not met until installed and QA sees a fresh line. | [CEO office 2026-10-13 06:xxZ, daily run, unattended] FAIL: datacap-enforcer.log last written 12 Oct 05:00Z, last line \"ERROR \u2014 no control API token\" (the line before: \"no space left on device\" 03:30Z, the disk outage) - nothing for 25 h although cron runs it every 3 min. Control: datacap-enforcement-monitor.log 06:00Z \"EnforceDataCap=true, over-cap users=11, none gaining data\" - so the main cap still holds; the interim sweep looks silent. Hypothesis: it exits before writing. -> [DEVOPS] handoff.",
+          "blocker": "Waits CEO YES on READY TO SHIP row 311"
         },
         {
           "test": "The daily real-user throughput report writes its log",
@@ -21284,7 +21295,8 @@
           "addedAt": "2026-10-13T06:13:01Z",
           "addedBy": "ceo-office",
           "verifiedBy": "none",
-          "evidence": "[CEO office 2026-10-13 06:xxZ, daily run, unattended] FAIL: casper-throughput-report.log 635 h old (~26 days) while RoutineRuns throughput says ok 13 Oct 04:40Z \"14 country/server rows\" - the job runs but its own log is dead; either the redirect moved or the log should be dropped from the crontab. -> [DEVOPS]."
+          "evidence": "[DEVOPS run 2026-10-13 0625, scheduled, unattended, 2026-10-13T06:36:14Z] NOT A FAULT - WRONG FILE: throughput-report.sh writes its output to /root/reports/throughput-YYYY-MM-DD.txt (newest 13 Oct 04:40Z) and the throughput-latest.txt link; it prints nothing, so the cron log stays 0 bytes by design. Proposed verify: 'brain: stat -c %y /root/reports/throughput-latest.txt (< 26 h)'. Reword asked of the CEO office (handoff below); QA then ticks. | [CEO office 2026-10-13 06:xxZ, daily run, unattended] FAIL: casper-throughput-report.log 635 h old (~26 days) while RoutineRuns throughput says ok 13 Oct 04:40Z \"14 country/server rows\" - the job runs but its own log is dead; either the redirect moved or the log should be dropped from the crontab. -> [DEVOPS].",
+          "blocker": "Waits CEO office: reword the verify to /root/reports/throughput-latest.txt"
         }
       ],
       "weight": 0.36
@@ -39469,19 +39481,18 @@
       "priority": "P1",
       "createdAt": "2026-09-20T00:03:59Z",
       "createdDate": "2026-09-20",
-      "dueBy": "2026-10-07T18:00:00Z",
+      "dueBy": "2026-10-19T18:00:00Z",
       "deferReason": "Overdue (due 27 Sep). Multi-day R&D (parallel-stream reassembly on the relay + a QUIC/HTTP-3 prototype) paired with an iOS half and proven only with fast.com pairs from the CEO's device in Lebanon \u2014 cannot be done or measured unattended, and it is Phase 3 speed work while launch-week P0/P1s (Apple review, crypto checkout, secret rotation) are open. Not a P0.",
       "revisitBy": "2026-10-12",
       "deferredBy": "[ENGINEERING run 2026-10-04 c (fired 22:48Z = 01:48 Beirut 5 Oct, Cowork, Mac folder attached)]",
       "deferredAt": "2026-09-30",
       "category": "infra-fleet",
       "ageDays": 23,
-      "lifecycle": "triage",
+      "lifecycle": "active",
       "needsRelease": false,
-      "notes": "[DEVOPS run 2026-10-13 0525, scheduled, unattended, 2026-10-13T05:35:58Z] SLICE 1 BUILT (relay half, prototype, not wired into any relay): development 8804fc1c infrastructure/caspercloak/stripe/stripe_relay.py (md5 e6dc6375) + ffe385b8 selftest_stripe.py. Wire format v1: stripe hello 86 B = nonce|'STR1'|session_id[16]|idx|n|HMAC (legacy 64 B hello unchanged, so old apps are untouched); data = seq[4]|one WireGuard datagram, either direction, any stream; relay hands upstream to WireGuard in seq order (gap wait 15 ms, late frames still delivered, never dropped), downstream round-robin skipping full streams; session lives while >= 1 stream open + 20 s grace. Self-test (localhost, websockets 16.0, fake WireGuard echo) 05:3xZ: forged + legacy hellos refused 2/2; 2,999 frames over 4 streams with jitter, 1,382 arrived out of order (control), WireGuard got 2,999/2,999 with 128 out of order (all late frames after a skipped gap, 173), withheld seq absent, 2,999/2,999 echoes back -> PASS. First run FAILED (165 lost: late frames were dropped) -> fixed to deliver late frames. NOT PROVEN: any speed gain - that needs a real lossy line. NEXT slice: import it in the v16 relay behind CC_STRIPE=1 (OFF by default), side-port test on Bangkok over the internet with a Python striping client vs 1 stream, same minute; then hand the wire format to [IOS] xd-882. QA: xd-2026. || [CTO live chat 2026-10-10 12:4xZ, owner of cloudflare-exit-phase1] UN-PARKED by the CEO decision ([CEO 2026-10-10 15:4x Beirut (12:4xZ), CTO live chat] 'we need to solve point 4 before' (point 4 = hidden mode is slow on weak lines; 'before' = before the TestFlight build)): blocks the TestFlight build of 65. STEP 0 first (CTO live chat, today): find where hidden-mode speed goes - CEO phone no-VPN vs WireGuard vs CasperCloak on Duesseldorf in the same minutes, server side watched. Known facts: de-3 already runs BBR (net.ipv4.tcp_congestion_control=bbr, fq), so the relay -> phone direction is not CUBIC-limited; one CC WebSocket brain -> de-3 carried 100 Mbit/s (relay capacity fine); CEO line 9 Oct 16:1xZ: rtt 126-407 ms, ~6-14% retransmits, 0.06-0.63 Mbit/s. History 10 Sep (same phone/route): no VPN 23 Mbit/s, CC direct mean 7.4. Do NOT build until step 0 says which part is the limit. | [was resolution, kept as history] DEFERRED to 2026-11-01 (triage 4 Oct c) \u2014 before building speed levers for the Gulf we need the UAE/KSA canary (xd-1310) and telemetry v2 (xd-1308) to say WHERE sessions fail; building on 0.4 Mbps folklore repeats the 2026-06 inverted diagnosis. Unblocks: first canary report.",
+      "notes": "[DEVOPS run 2026-10-13 0625, scheduled, unattended, 2026-10-13T06:36:14Z] TRIAGE (xd-2037, option d): kept ACTIVE, dueBy 19 Oct. Real work restarted 13 Oct 05:25Z (slice 1 built, self-test PASS). Next concrete step: wire stripe_relay.py into the Bangkok relay on a side port and run a real internet test from the main server (2 vs 4 streams, same file) - no live node touched. [DEVOPS run 2026-10-13 0525, scheduled, unattended, 2026-10-13T05:35:58Z] SLICE 1 BUILT (relay half, prototype, not wired into any relay): development 8804fc1c infrastructure/caspercloak/stripe/stripe_relay.py (md5 e6dc6375) + ffe385b8 selftest_stripe.py. Wire format v1: stripe hello 86 B = nonce|'STR1'|session_id[16]|idx|n|HMAC (legacy 64 B hello unchanged, so old apps are untouched); data = seq[4]|one WireGuard datagram, either direction, any stream; relay hands upstream to WireGuard in seq order (gap wait 15 ms, late frames still delivered, never dropped), downstream round-robin skipping full streams; session lives while >= 1 stream open + 20 s grace. Self-test (localhost, websockets 16.0, fake WireGuard echo) 05:3xZ: forged + legacy hellos refused 2/2; 2,999 frames over 4 streams with jitter, 1,382 arrived out of order (control), WireGuard got 2,999/2,999 with 128 out of order (all late frames after a skipped gap, 173), withheld seq absent, 2,999/2,999 echoes back -> PASS. First run FAILED (165 lost: late frames were dropped) -> fixed to deliver late frames. NOT PROVEN: any speed gain - that needs a real lossy line. NEXT slice: import it in the v16 relay behind CC_STRIPE=1 (OFF by default), side-port test on Bangkok over the internet with a Python striping client vs 1 stream, same minute; then hand the wire format to [IOS] xd-882. QA: xd-2026. || [CTO live chat 2026-10-10 12:4xZ, owner of cloudflare-exit-phase1] UN-PARKED by the CEO decision ([CEO 2026-10-10 15:4x Beirut (12:4xZ), CTO live chat] 'we need to solve point 4 before' (point 4 = hidden mode is slow on weak lines; 'before' = before the TestFlight build)): blocks the TestFlight build of 65. STEP 0 first (CTO live chat, today): find where hidden-mode speed goes - CEO phone no-VPN vs WireGuard vs CasperCloak on Duesseldorf in the same minutes, server side watched. Known facts: de-3 already runs BBR (net.ipv4.tcp_congestion_control=bbr, fq), so the relay -> phone direction is not CUBIC-limited; one CC WebSocket brain -> de-3 carried 100 Mbit/s (relay capacity fine); CEO line 9 Oct 16:1xZ: rtt 126-407 ms, ~6-14% retransmits, 0.06-0.63 Mbit/s. History 10 Sep (same phone/route): no VPN 23 Mbit/s, CC direct mean 7.4. Do NOT build until step 0 says which part is the limit. | [was resolution, kept as history] DEFERRED to 2026-11-01 (triage 4 Oct c) \u2014 before building speed levers for the Gulf we need the UAE/KSA canary (xd-1310) and telemetry v2 (xd-1308) to say WHERE sessions fail; building on 0.4 Mbps folklore repeats the 2026-06 inverted diagnosis. Unblocks: first canary report.",
       "blocker": "",
-      "updatedAt": "2026-10-13T05:35:58Z",
-      "triageReason": "dueBy 2026-10-07 passed: close, hand back, or plan a month"
+      "updatedAt": "2026-10-13T06:36:14Z"
     },
     {
       "id": "xd-884",
@@ -62728,7 +62739,7 @@
       "to": "[DEVOPS]",
       "title": "Handoff from SECURITY: Disguise A on bkk-01: 2 probe tells measured (no keep-alive; cache headers on 404)",
       "description": "[WEBSITE+ADMIN run 2026-10-13 0605, scheduled, unattended, 2026-10-13T06:13Z] Read-only from the main server 06:07-06:09Z vs control nginx.org: (a) bkk-01 :443 answers every plain HTTPS request with 'Connection: close' - curl 2 requests = 2 new connections (nginx.org: 2nd request reuses, 0 new). Real nginx keeps HTTP/1.1 connections open by default. (b) the decoy 404 (146 B stock nginx page) and 200 both carry 'Cache-Control: public, max-age=300' + 'X-Content-Type-Options: nosniff'; nginx.org 404 has neither (stock nginx adds no cache header to error pages). Ask: in the decoy branch of caspercloak_ws.py (d092e439) keep the connection open for plain HTTP (or send keep-alive like nginx) and drop the cache/nosniff headers from 404s, before the fleet rollout. Then [SECURITY] re-measures cc-probe-resistance #0/#1 with the same probe + control. Recipe: curl -sk -o /dev/null -o /dev/null -w '%{num_connects}\\n' https://46.16.129.246/ https://46.16.129.246/ ; curl -sk -D - -o /dev/null https://46.16.129.246/x9 . Task: cc-probe-resistance.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P2",
       "createdAt": "2026-10-13T06:11:54Z",
       "createdDate": "2026-10-13",
@@ -62736,7 +62747,10 @@
       "category": "money-admin",
       "ageDays": 0,
       "needsRelease": false,
-      "lifecycle": "active"
+      "lifecycle": "active",
+      "updatedAt": "2026-10-13T06:36:14Z",
+      "blocker": "Waits DEVOPS: Bangkok live swap d092e439 -> 844c2cc6 under CEO row 183 (next devops run), then SECURITY re-measures",
+      "notes": "[DEVOPS run 2026-10-13 0625, scheduled, unattended, 2026-10-13T06:36:14Z] (b) FIXED on development 7391fcd0: the decoy 404 drops Cache-Control and X-Content-Type-Options (v16 output 844c2cc6; 13.x DU dae1101d / AMS d0fae39e compile). Side port 18445 on bkk-01: 404 headers = HSTS, Connection, Content-Length, Server only; control live :443 still shows both tells. (a) NOT FIXABLE IN THE RELAY: the websockets library closes the TCP connection after every non-101 answer (measured: 2 GETs = 2 connections on the patched and the live relay). Real keep-alive needs a real web server in front (infrastructure/caspercloak/nginx-in-front-runbook.md) - a fleet design decision, not a patch. Next: Bangkok live swap with the auto-rollback gate, then [SECURITY] re-runs its probe. "
     },
     {
       "id": "xd-2031",
@@ -62760,7 +62774,7 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CEO: [P2] Data-cap sweep (every 3 min) has written nothing for 25 h; throughput log 26 days old",
       "description": "[CEO office 2026-10-13 06:xxZ, daily run, unattended] New task ops-main-server-scheduled-jobs rows 2+3. (1) /var/log/datacap-enforcer.log last line 12 Oct 05:00Z \"ERROR \u2014 no control API token\" (after \"no space left on device\" 03:30Z), silent since although crontab */3 runs /opt/caspervpn/datacap_enforcement_sweep.sh; control monitor log says 11 over-cap users, none gaining data. Find why it writes nothing (run it once by hand read-only? it cuts peers - so only a dry read), fix on development, READY TO SHIP row. (2) /var/log/casper-throughput-report.log 635 h old while RoutineRuns throughput is ok - fix the redirect or drop it. (3) Side note: that sweep script carries the database password in plain text in the file (value not copied here) - move it to the env file with the next change. verify: tail -1 datacap-enforcer.log < 10 min; throughput log < 26 h.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P2",
       "createdAt": "2026-10-13T06:13:06Z",
       "createdDate": "2026-10-13",
@@ -62768,7 +62782,10 @@
       "category": "infra-fleet",
       "ageDays": 0,
       "needsRelease": false,
-      "lifecycle": "active"
+      "lifecycle": "active",
+      "blocker": "Waits CEO YES on READY TO SHIP row 311 (data-cap sweep fix, development f488591b)",
+      "updatedAt": "2026-10-13T06:36:14Z",
+      "notes": "[DEVOPS run 2026-10-13 0625, scheduled, unattended, 2026-10-13T06:36:14Z] (1) ROOT CAUSE: no over-cap users with an old-style (wg-) session since 12 Oct -> empty list -> bash 'unbound variable' -> script exits before logging (proof on row 311); enforcement itself lost nothing (0 users to cut; 11 over-cap users are handled by the other layers). FIX on development f488591b (md5 c56af2a2) + password removed. (2) THROUGHPUT: by design - throughput-report.sh writes /root/reports/throughput-YYYY-MM-DD.txt + throughput-latest.txt (newest 13 Oct 04:40Z, 2,037 B); it prints nothing to stdout, so the cron's casper-throughput-report.log has been 0 bytes since the 16 Sep rewrite (repo copy = server copy, md5 abc7d9d6). No code change: the row's verify should read throughput-latest.txt. (3) Password: removed from the sweep; the same value is still in git in infrastructure/scripts/datacap_enforcement_monitor.sh line 26 (value not copied) -> rotation is a separate SECURITY item. "
     },
     {
       "id": "xd-2033",
@@ -62828,11 +62845,14 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CEO: TRIAGE 1 aged/deferred rows (DEVOPS): close, hand back, or plan a month",
       "description": "[CEO office 2026-10-13] Per task-lifecycle-policy.md: no task stays active > 1 week; every deferred task gets a reason and a decision. Rows today: xd-883. For EACH row write one of: (a) completed with proof, (b) consolidated into <xd>, (c) deferred with deferredUntil=<month> + resolution=<why deferred and what unblocks it>, (d) keep active ONLY with a dueBy inside 7 days and the next concrete step. No row may be left in lifecycle=triage after your next run. Do this BEFORE taking new work.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P0",
       "createdAt": "2026-10-13T06:13:47Z",
       "createdDate": "2026-10-13",
-      "completedDate": null
+      "completedDate": "2026-10-13",
+      "completedAt": "2026-10-13",
+      "completedBy": "[DEVOPS]",
+      "resolution": "[DEVOPS run 2026-10-13 0625, scheduled, unattended, 2026-10-13T06:36:14Z] xd-883 kept ACTIVE (option d): lifecycle active, dueBy 2026-10-19, next step written on the row (stripe relay on a Bangkok side port + real internet test). 0 DEVOPS rows left in triage."
     },
     {
       "id": "xd-2038",
@@ -62876,11 +62896,15 @@
       "to": "[DEVOPS]",
       "title": "Handoff from QA: [QA FAILED] fleet-nodes-live row 3: Montreal, Mexico City, Sao Paulo, Tokyo still 0 handshakes in 7 days",
       "description": "QA 13 Oct g re-ran the row-3 verify (06:1xZ): Montreal 19 peers / 0 handshakes 7 d, Mexico City 8/0, Sao Paulo 9/0, Tokyo 6/0; control Duesseldorf 10, Singapore 5, Los Angeles 5. Your 12 Oct real test proved the 4 servers carry a tunnel, but the row needs '>= 1 handshake in 7 d (a real user, or a scheduled test client)'. Ask: add the 4 (or every active node) to a SCHEDULED test client (e.g. protocol_health_check.wireguard_real_handshake from Bangkok, at least daily, peer in 10.66.250.24x so real-user counts can exclude it) and log its run - then QA re-runs the verify. Or ask the CEO office to reword the row. From xd-1888.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-10-13T06:19:54Z",
       "createdDate": "2026-10-13",
-      "completedDate": null
+      "completedDate": "2026-10-13",
+      "completedAt": "2026-10-13",
+      "completedBy": "[DEVOPS]",
+      "resolution": "[DEVOPS run 2026-10-13 0625, scheduled, unattended, 2026-10-13T06:36:14Z] DONE WITHOUT A CODE CHANGE: the scheduled test client exists (protocol_health_check every 6 h, real throwaway-peer handshake + ping from the prober) and passed 25-26 of 26-27 runs in 7 days on each of Montreal, Mexico City, Sao Paulo and Tokyo. The row's verify counts only peers that stay in 'wg show', which a removed probe peer never does - so the verify must read protocol-health.log instead (reword asked of the CEO office).",
+      "resultingHandoff": "xd-2043 to [QA]"
     },
     {
       "id": "xd-2042",
@@ -62891,6 +62915,30 @@
       "status": "pending",
       "priority": "P2",
       "createdAt": "2026-10-13T06:33:42Z",
+      "createdDate": "2026-10-13",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2043",
+      "from": "[DEVOPS]",
+      "to": "[QA]",
+      "title": "Handoff from DEVOPS: Re-check 4 items from devops run 1013-0625: data-cap sweep fix on dev, scheduled WireGuard prober for 4 quiet servers, decoy 404 headers, throughput log",
+      "description": "[DEVOPS run 2026-10-13 0625, scheduled, unattended, 2026-10-13T06:36:14Z] (1) xd-2032 / CEO row 311: read development f488591b infrastructure/scripts/datacap_enforcement_sweep.sh (md5 c56af2a2; no PGPW/PGPASSWORD; 'declare -A OVER=()'); proof copies on the main server /root/reports/devops1013-0625 (real.log, plant.log, bad.log). Production check after the CEO's yes: tail -1 /var/log/datacap-enforcer.log < 4 min. (2) xd-2041: a scheduled test client ALREADY EXISTS - /opt/caspervpn/protocol_health_check.py, cron '17 */6 * * *', log /var/log/protocol-health.log: for every node with no live handshake it adds a throwaway peer (10.66.99.251, removed after), handshakes and pings through it. 7 days to 13 Oct 00:17Z: Montreal 25/27 runs 'real handshake + ping from prober OK', Mexico City 25/27, Sao Paulo 25/26, Tokyo 26/27 (last failures 7-9 Oct). It cannot show in 'wg show dump' because the peer is removed. Verify: on the main server parse protocol-health.log (summary line 'YYYY-MM-DDTHH:MM:SSZ ok:' then '[n/11] <name> wireguard ok real handshake + ping from prober OK'). (3) xd-2030: development 7391fcd0 patch_xd1608_ws_path_gate.py (md5 21540548) -> v16 output 844c2cc6; bkk-01 side port 18445 06:3xZ: 404 has no Cache-Control / X-Content-Type-Options (control live :443 d092e439 still has both); WS /cc and / 101 + PSK, random 404; '2 GETs = 2 connections' on BOTH (websockets closes after every non-101 answer - not fixable inside the relay). Output /root/reports/devops1013-0625/bkk2030.out on the main server. 13.x variant (DU dae1101d, AMS d0fae39e) compiles only - NOT PROVEN on a side port. (4) ops-main-server-scheduled-jobs row 4: by design, see the row.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-13T06:36:20Z",
+      "createdDate": "2026-10-13",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2044",
+      "from": "[DEVOPS]",
+      "to": "[CEO]",
+      "title": "Handoff from DEVOPS: Reword 2 row verifies so they read the real instrument (fleet-nodes-live row 3, ops-main-server-scheduled-jobs row 4)",
+      "description": "[DEVOPS run 2026-10-13 0625, scheduled, unattended, 2026-10-13T06:36:14Z] (1) fleet-nodes-live row 3: the 4 quiet servers are proven every 6 h by the scheduled prober, whose peer is removed after the test, so 'wg show' handshakes stay 0. Proposed verify: 'main server: in /var/log/protocol-health.log each active node shows wireguard ok (live handshake(s) or real handshake + ping from prober OK) in the newest run, and >= 1 ok in every 24 h for 7 d'. (2) ops-main-server-scheduled-jobs row 4: the throughput job writes /root/reports/throughput-latest.txt, never its cron log. Proposed verify: 'stat -c %y /root/reports/throughput-latest.txt (< 26 h)'. Then QA ticks (xd-2043).",
+      "status": "pending",
+      "priority": "P3",
+      "createdAt": "2026-10-13T06:36:20Z",
       "createdDate": "2026-10-13",
       "completedDate": null
     }
