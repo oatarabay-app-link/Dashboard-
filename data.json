@@ -15413,6 +15413,18 @@
           "evidence": "[DEVOPS run 2026-10-13 2325, scheduled, unattended, 2026-10-13T23:27Z] added from xd-2128 (LEGAL YES WITH CONDITIONS) + xd-2129 (QA DEV PASS). Measured read-only 23:26Z via ssh_exec_node: HK pid 3455175 + MIA pid 2303571, both /usr/local/bin/caspercloak_ws.py md5 b675109e, websockets 16.0, 'opening handshake failed' in 24 h HK 419 / MIA 292, peer_net lines 0 in syslog and journal on both (control).",
           "verifiedByRaw": null,
           "verifiedDate": null
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "owner": "[DEVOPS]",
+          "addedAt": "2026-10-14T01:33Z",
+          "test": "READY TO SHIP \u2014 stop 8 servers from writing our users' full internet addresses into the firewall log, and delete the ones already written \u00b7 why: on Hong Kong, Mexico, Miami, Montreal, Singapore, Sydney, Sao Paulo and Tokyo the firewall logs late packets of closed VPN connections with the full address (LEGAL counted 6,843 lines since 19-20 Sep, kept ~4-5 weeks); our no-log promise says we do not keep these; LEGAL said YES WITH CONDITIONS L1-L6 (xd-2135 -> xd-2137) \u00b7 what the ship does, one server at a time (Montreal first): (1) `ufw_nolog_userports.sh apply-rule` (development 2d7ff60d infrastructure/scripts/ufw_nolog_userports.sh, md5 683ed3fa): adds one rule before ufw's log rule in /etc/ufw/before.rules + before6.rules that silently drops broken late packets to the user ports (every ufw-allowed TCP port except 22; Montreal: 80,443,1195,4443,4444,5002,9100), backup .bak-xd2137-nolog-<ts>, ufw reload, rolls itself back if the rule is not live; (2) `purge-logs`: deletes only the user-port firewall lines from kern.log*, ufw.log*, syslog* (all rotations, .gz too, same file), HUP rsyslog; (3) `journal-cap 7`: journald keeps 7 days from now on - NOTE journald cannot delete single lines, so this DELETES the whole stored system journal on that server (Montreal 296 MB) \u00b7 Bangkok first: Bangkok has no firewall program, so the rule was tested on Bangkok inside a throwaway network space with Montreal's real rule files: without the rule 10 of 60 late packets were logged, with it 0 of 120, the control port 22 still logs, real connections 3 of 3 work, nothing left behind \u00b7 rollback: `cat /etc/ufw/before.rules.bak-xd2137-nolog-<ts> > /etc/ufw/before.rules` (same for before6), `ufw reload`; deleted log lines and the vacuumed journal cannot be brought back (that is the point) \u00b7 needs: CEO YES (fleet change + deletion).",
+          "verify": "per node after ship: `bash ufw_nolog_userports.sh check` -> rule_live v4=1 v6=1 (L1) AND userport_lines_files=0 AND userport_lines_journal=0 (L2) AND journald MaxRetentionSec=7day (L3); after 24 h: grep -E '\\[UFW ' /var/log/kern.log | grep -cE 'DPT=(443|1195) ' = 0 while the ufw-before-input xd2137-nolog DROP counter (iptables -L ufw-before-input -v -x -n) > 0 (control: packets still arrive, just not logged) AND '[UFW BLOCK]' lines for other ports still > 0 (scan visibility kept); fleet onboarding has the check (L5, memory/skills/fleet-onboarding.md, production 6dbc18ac); nobody reads or copies the old lines - check and purge print counts only (L6). Baseline 14 Oct 01:1xZ (LEGAL): 6,843 DPT=443 lines in kern.log on the 8 nodes; Montreal rule counters 01:3xZ: INVALID->ufw-logging-deny 205,157, LOG 23,363.",
+          "evidence": "[DEVOPS run 2026-10-14 0125, scheduled, unattended, 2026-10-14T01:33Z] Bangkok netns test bkk-01 /root/xd2137/t.sh (md5 14b8d31f) 01:29:07Z: A today's rules LOG=10 of 60; B with rule LOG=0, NOLOGDROP=120 (443 + 1195); C control port 22 LOG=10; D real connects ok=3/3; kern.log/journal test lines 0; netns + veth removed. t2.sh: apply-rule on copies of Montreal's before.rules (md5 554ea694) / before6.rules (601f530a) inserts exactly 1 line each before the INVALID log line, second apply idempotent, both lines load in iptables/ip6tables; purge-logs on synthetic TEST-NET files 10 -> 0, other lines kept, same inode; check on Bangkok = 'ufw not active - nothing to do'. Production servers: read-only (rule counters, counts only), nothing changed.",
+          "verifiedByRaw": null,
+          "verifiedDate": null
         }
       ],
       "progress": 0,
@@ -64630,11 +64642,13 @@
       "to": "[DEVOPS]",
       "title": "Handoff from LEGAL: xd-2135 ufw log of client IPs: Legal says (b) YES WITH CONDITIONS L1-L6 - Bangkok first, then READY TO SHIP row for the 8 nodes",
       "description": "[LEGAL growth run 2026-10-14 0104, scheduled, unattended, 2026-10-14T01:13:06Z] Answer to xd-2135. Do (b) (or (a)) under L1-L6: L1 every user port (443, 1195, + any other user port that logs) gets the no-log drop; L2 at switch-on delete the user-port lines from kern.log*, ufw.log*, syslog* (filter, 5 generations) AND the persistent journal, counts = 0 in all 4 places; L3 journal time limit or volatile; L4 Bangkok first then a READY TO SHIP row for HK/MX/MIA/MTL/SGP/SYD/SAO/TYO with L1-L3 proofs as verify lines (CEO YES needed, fleet change + deletion); L5 add the check to fleet onboarding; L6 no reading/copying of the existing lines. Counts measured 01:1xZ on xd-2135. Review memory/departments/legal/reviews/ufw-443-client-ip-log-2026-10-14.md (vault); register BR-2026-003 (development b50288f8).",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-10-14T01:13:10Z",
       "createdDate": "2026-10-14",
-      "completedDate": null
+      "completedDate": null,
+      "blocker": "waits CEO YES on ceo-action-backlog index 326 (READY TO SHIP - ufw no-log for user ports, 8 nodes) + QA check of the Bangkok kit",
+      "notes": "\n[DEVOPS run 2026-10-14 0125, scheduled, unattended, 2026-10-14T01:33Z] Bangkok-first done (netns, Bangkok has no ufw): LOG 10/60 -> 0/120, control 22 still logs, real connects 3/3. Script development 2d7ff60d (md5 683ed3fa). READY TO SHIP row = ceo-action-backlog index 326. QA handoff created."
     },
     {
       "id": "xd-2138",
@@ -64647,9 +64661,27 @@
       "createdAt": "2026-10-14T01:13:10Z",
       "createdDate": "2026-10-14",
       "completedDate": null
+    },
+    {
+      "id": "xd-2139",
+      "from": "[DEVOPS]",
+      "to": "[QA]",
+      "title": "Handoff from DEVOPS: Check on Bangkok: ufw no-log rule for user ports (xd-2137) before the CEO ships it",
+      "description": "[DEVOPS run 2026-10-14 0125, scheduled, unattended, 2026-10-14T01:33Z] Re-run read-only/throwaway: bkk-01 `bash /root/xd2137/t.sh` (netns, cleans itself) -> expect A LOG=10, B LOG=0 NOLOGDROP=120, C LOG=10, D ok=3/3; `bash /root/xd2137/t2.sh` -> 1 inserted line per file, idempotent, v4/v6 load ok, purge 10 -> 0, same inode. Script = development 2d7ff60d infrastructure/scripts/ufw_nolog_userports.sh md5 683ed3fa (compare with /root/xd2137/ufw_nolog_userports.sh). Check the CEO card row index 326 carries LEGAL L1-L6 in test+verify. Do not touch the 8 production nodes.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-14T01:33:37Z",
+      "createdDate": "2026-10-14",
+      "completedDate": null
     }
   ],
   "importantNotes": [
+    {
+      "id": "note-devops-20261014-0125",
+      "date": "2026-10-14",
+      "dept": "[DEVOPS]",
+      "text": "[DEVOPS run 2026-10-14 0125, scheduled, unattended, 2026-10-14T01:33Z] xd-2137: firewall no-log fix for users' addresses tested Bangkok-first (0 of 120 logged, was 10 of 60); READY TO SHIP row index 326 waits CEO YES; QA xd-2139."
+    },
     {
       "id": "note-qa-20261014b",
       "priority": "P2",
