@@ -15597,6 +15597,16 @@
           "test": "READY TO SHIP \u2014 a paying customer whose card fails keeps full service during Apple's 16-day grace period \u00b7 why: you switched the grace period on (13 Oct), but our server still treated the first failed payment as 'past due': the customer lost the premium servers at once and was moved to free after 7 days, while Apple was still retrying and counting them as paying \u00b7 what the ship does: when Apple says 'grace period', the plan stays active until Apple's grace end date; when the grace ends without payment, the plan ends as before \u00b7 tested on dev: development 95039cb3f - 431/431 checks pass, the new checks fail on the old code; dev server carries it; QA xd-2178 \u00b7 today: 0 customers in grace (1 trial that failed before grace existed) \u00b7 risk: very low \u00b7 rollback: redeploy the previous version \u00b7 advice: YES (xd-2118)",
           "verify": "After ship: production DLL grep -c ApplyBillingFailure >= 1; next real DID_FAIL_TO_RENEW GRACE_PERIOD -> api log 'xd-2118: billing grace period for user ... access kept until' and that Subscriptions row Status 0 with CurrentPeriodEnd = grace end",
           "evidence": "[BACKEND live 2026-10-17 (CEO: 'START FINALIZING BACK END TASKS EARLIEST DATE FIRST'), 2026-10-17T18:50:52Z] added for xd-2118; dev proof in xd-2178."
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "addedAt": "2026-10-17T19:02:06Z",
+          "owner": "[BACKEND]",
+          "test": "READY TO SHIP \u2014 the app's recommended servers stop showing '0 ms' \u00b7 why: nothing measures server ping, so the stored value is 0, and the recommendation answer passed that 0 to the app (versions up to build 74 show it as '0ms'); the full server list already shows a distance estimate \u00b7 what the ship does: the recommendation answer uses the same distance estimate as the list (e.g. about 96 ms Amsterdam from the UAE); the order of servers does not change - it was already nearest-first (checked on 34 real requests this week, all with the user's country known) \u00b7 tested on dev: development 9d69ca543 - 435/435 checks pass, the new check fails on the old code; QA xd-2181 \u00b7 risk: very low - a number on screen changes, nothing else \u00b7 rollback: redeploy the previous version \u00b7 advice: YES (xd-2144)",
+          "verify": "After ship: production DLL grep -c AnswerPingMs >= 1; POST /api/servers/smart-recommend (any signed-in test account, clientCountryCode AE) -> every servers[].server.ping > 0",
+          "evidence": "[BACKEND live 2026-10-17 (finalize pass), 2026-10-17T19:02:06Z] added for xd-2144; QA xd-2181."
         }
       ],
       "progress": 0,
@@ -65367,14 +65377,16 @@
       "to": "[BACKEND]",
       "title": "Handoff from CTO: Server list: rank by region/latency server-side and stop recommending far relays (Sydney/Sao Paulo) to Middle-East users; set VpnServers.Ping to a real value or null",
       "description": "Production VpnServers: Ping=0, Load=0 for all 11 active servers (14 Oct). The app (until build 74) showed that 0 as '0ms'. Backend: (a) order /api/servers by distance from the request country (GeoIP) and keep 'recommended' only for relays < ~150 ms from the user's region; (b) either fill Ping from the prober (xd-2082 L1) or send null, never 0; (c) Load from CurrentConnections/MaxConnections. This helps every app version on the store today (4.2) without a release.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-10-14T11:12:06Z",
       "createdDate": "2026-10-14",
       "completedDate": null,
       "notes": [
+        "[BACKEND live 2026-10-17 (finalize pass), 2026-10-17T19:02:06Z] (a) nearest-first ordering and (c) load were already live (measured, see xd-2181); (b) fixed on development 9d69ca543 - recommendations answer the distance estimate instead of 0. READY TO SHIP row 335.",
         "[BACKEND run 2026-10-17 1445, scheduled, unattended, 2026-10-17T15:34:21Z] MEASURED read-only 14:5xZ: all 11 active VpnServers still Ping=0, Load=0; CurrentConnections 0-2 of MaxConnections 500-1500, so Load = Current/Max*100 = 0 is the correct value today (not a bug), Ping is filled by nothing. CAUTION for (b): VpnServerDto.Ping is a non-optional int (DTOs/ServerDTOs.cs:26); sending null may break decoding in app versions already on phones - fill Ping from the prober (xd-2082 L1) or check the 4.2/4.3.1 decoders with [IOS] first. Not built this run (the run shipped 8 CEO YES rows)."
-      ]
+      ],
+      "blocker": "Waits QA xd-2181 (dev) and the CEO YES on CEO-card row 335."
     },
     {
       "id": "xd-2145",
@@ -65713,6 +65725,18 @@
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-10-17T18:51:22Z",
+      "createdDate": "2026-10-17",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2181",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: [P2] xd-2144 dev check: smart-recommend answers a distance-based ping instead of 0",
+      "description": "[BACKEND live 2026-10-17 (finalize pass), 2026-10-17T19:02:06Z] development 9d69ca543. MEASURED first (production, read-only): (a) ordering nearest-first already live - GET /api/servers sorts by proximity (xd-671) and POST /api/servers/smart-recommend scores by distance; 34 smart-recommend calls 11-17 Oct, country resolved in 34/34 (US 19, DE 7, AE 5, GB 2, LB 1); for AE the scoring ranks Amsterdam first, Sydney/Sao Paulo last. GET /recommended: 0 calls in 3 days. (b) the '0ms' came from smart-recommend + /recommended copying VpnServers.Ping (0 on 11/11). (c) Load = CurrentConnections/MaxConnections is already computed; 0 is the true value at 0-2 connections. FIX: ClientGeoExtensions.AnswerPingMs (stored > 0 wins, else km/60+10 - the list's formula, else 0); Ping stays an int (no null - safe for app versions on phones). Tests ServerPingAnswerTests 4/4, suite 435/435, control 1 FAIL. Verify on dev: POST https://api.dev.caspervpn.com/api/servers/smart-recommend with a test token + clientCountryCode AE -> servers[].server.ping > 0 (Amsterdam ~96); production today answers 0.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-17T19:02:11Z",
       "createdDate": "2026-10-17",
       "completedDate": null
     }
