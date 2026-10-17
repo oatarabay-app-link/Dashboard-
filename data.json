@@ -52704,7 +52704,7 @@
       "to": "[QA]",
       "title": "Handoff from CTO: [P1] ONE Android emulator pass on the CEO's Mac - replaces 8 separate emulator checks",
       "description": "[absorbed xd-1451 2026-10-07T21:40Z] Handoff from CTO: Handoff from CTO: CEO chose B - Trusted Networks stays OFF Android for the beta; confirm no location permission and no Trusted Networks row || [absorbed xd-1417 2026-10-07T21:40Z] Handoff from ANDROID: Check Android Settings, Profile, Choose Your Plan and Help & Support against the iPhone (xd-1405 slices 2c-2f) || [absorbed xd-1414 2026-10-07T21:40Z] Handoff from ANDROID: Check the Android About pages against the iPhone (xd-1405 slice 2b) || [absorbed xd-1413 2026-10-07T21:40Z] Handoff from ANDROID: Check the Android first-run tour against the iPhone (xd-1405 slice 2a) || [absorbed xd-1411 2026-10-07T21:40Z] Handoff from ANDROID: Verify 16 KB page size fix on the emulator (xd-1408) || [absorbed xd-1410 2026-10-07T21:40Z] Handoff from ANDROID: Verify first Android connect (emulator, Dusseldorf) + crash fix || [absorbed xd-1406 2026-10-07T21:40Z] Handoff from ANDROID: Verify Android slice 1a on the emulator (look + login renewal + 10-char rule) || [absorbed xd-1260 2026-10-07T21:40Z] Handoff from ANDROID: [P1] Android: check the API-contract commit 4a3c75e6 and the first emulator run || ONE emulator session on the CEO's Mac (Android Studio, _android/CasperVPN-v2-dev, Pixel 8 emulator, latest development). Verdict per line: (1) xd-1260: API-contract commit + first emulator run (register / login / connect, logcat); (2) xd-1406: slice 1a look + login renewal after > 60 min + 10-character rule; (3) xd-1410: first connect (Dusseldorf) + the WorkManager crash fix; (4) xd-1411: 16 KB page size - no compatibility notice on Sync or launch; (5) xd-1413: first-run tour vs the iPhone (6 pages); (6) xd-1414: FAQ / About / Privacy / Terms / Licenses vs the iPhone; (7) xd-1417: Settings, Profile, Choose Your Plan, Help & Support (38 checks listed in xd-1417); (8) xd-1451: no LOCATION permission in AndroidManifest and no 'Trusted Networks' row in Settings (CEO chose B, 7 Oct). The connect legs need an active dev server first (xd-1407). || [APPS run 2026-10-08 am] xd-1417 check 39 (slice 3h, development bcaf249e): connect to any server, open the Servers tab -> a card at the top: green dot, 'Connected', the server name, and two speeds (down arrow green, up arrow orange) that change every ~2 s while a page loads; connect a Double VPN -> the card says 'Double VPN' and 'Country -> Country'; disconnect -> the card disappears; type in search while connected -> the card stays. Screenshot next to the iPhone Servers tab while connected. Files: ui/servers/ServerListBanner.kt, ui/viewmodel/ServerListViewModel.kt, ui/screen/ServerListScreen.kt, test servers/ServerListBannerRulesTest.kt. || (40) xd-1524 email gate (development 0a6e5ba6): sign in on DEV with an account whose email is NOT confirmed, tap Connect -> a CasperVPN sheet 'Confirm your email to connect' (logo, the server's sentence with the address, Open mail app, Resend email -> 'Sent to <address>. Check your inbox and spam folder.', 'I confirmed - try again', Not now); no red error line on Home; logcat [EMAIL-GATE] lines; no connect-failure row on dev for that tap. || (41) xd-1405 slice 3j Home speed from tunnel counters (development d0acb3b5): connect on WireGuard, open a video -> Home download speed climbs; pause it -> within 2 s the speed reads 0 bps (before: stuck on the last value); the Home totals match Profile > Bandwidth Monitor / Servers banner numbers, not Android Settings > Network data usage for the whole phone; switch the protocol to IKEv2 (if offered) -> speed and totals hidden, no '0 bps'. Files: vpn/BandwidthMonitor.kt (TunnelStatsRules), vpn/VpnConnectionManager.kt monitorCounters, ui/screen/HomeScreen.kt, ui/viewmodel/ReportBugViewModel.kt, data/model/ServerModels.kt; test bandwidth/TunnelStatsRulesTest.kt. | CHECK 42 (slice 3k, development 022b00bf, 2026-10-09T01:22:09Z): Servers tab - every server row whose server sends a ping shows a dot + 'NNms' before the load bars (green under 50 ms, amber 50-99, red 100+); tap a row -> the Latency box shows the same number in the same colour; a server with no ping shows no dot and '--' (never '0ms'). Compare with the same server on the iPhone (the iPhone number may differ: it is its own UDP timing, see xd-1405). Files: ui/servers/ServerLatency.kt, ui/screen/ServerListScreen.kt, ui/screen/ServerDetailScreen.kt, ui/viewmodel/ServerListViewModel.kt; test servers/ServerLatencyRulesTest.kt. | CHECK 43 (slice 3l, development b1d12b8f, 2026-10-09T03:24:12Z): Protocol = Auto. Pick a server that cannot be reached from the emulator (or block it, e.g. a firewall rule on the dev box) and tap Connect. Expect: after the normal retries Home shows 'Couldn't connect to your server. Trying <place> (2 of N)...', then either Connected with 'Couldn't reach <chosen place>. Connected to <other place> instead.' or, if all fail, the ORIGINAL server's error. logcat: '[ALTERNATES] chosen=... got=... viable=... door=...'. Controls: Protocol = WireGuard picked by hand -> no alternates; a dedicated-IP connect -> no alternates; an account over its data cap -> paywall, no alternates. Files: vpn/AlternateServers.kt, vpn/VpnConnectionManager.kt (tryAlternates), data/remote/ApiClient.kt (getAlternateServers), ui/viewmodel/HomeViewModel.kt; test connect/AlternateServerRulesTest.kt. || CHECK 44 (slice 3m, development 0abdbfcb, added by apps run 1009g): Double VPN with the first hop hidden. Needs a build WITH the relay key (local.properties casperCloakRelayKey) and either a restricted network or an admin protocol override on the test account. Do: Double VPN -> Recommended Route -> Connect. Expect logcat '[DOUBLE-VPN] served=caspercloak', '[DOUBLE-VPN] relay lookup=...', '[DOUBLE-VPN] masked: entry -> 127.0.0.1:<port> (CasperCloak), exit -> <exit ip>:51820', then '[DOUBLE-VPN] up'; whatismyip = the EXIT country; Disconnect closes it. Controls: same account on a normal network -> 'served=wireguard' and no 'masked' line; a build WITHOUT the key on a restricted route -> the line 'Double VPN with masking is not in this test build yet.' and no tunnel. Files: vpn/multihop/MultiHop.kt, vpn/VpnConnectionManager.kt (connectDoubleVpn, openDoubleVpnCloakBridge), data/model/MultiHopModels.kt; test multihop/MultiHopTest.kt. || CHECK 45 (slice 3n, added by apps run 1009h): session heartbeat. Connect to one server (any protocol except Double VPN). Expect logcat '[HEARTBEAT] #1 <id> <protocol> ok' about 3 s after Connected, then one every 30 s; Disconnect -> no more lines. Server side (read-only): the session's ConnectionLogs.LastSeenAt moves every 30 s and the row is still Active after 70 min connected. Controls: a Double VPN -> no [HEARTBEAT] lines; airplane mode for a minute -> '[HEARTBEAT] ... failed (-1) - not fatal' and the tunnel stays up. Files: vpn/SessionHeartbeat.kt, vpn/VpnConnectionManager.kt (startSessionHeartbeat), data/remote/ApiClient.kt (sendHeartbeat), data/model/ServerModels.kt; test connect/SessionHeartbeatRulesTest.kt. || CHECK 46 (slice 3o, added by apps run 1009i): sign-out. (a) Connect to any server, then Profile > Logout (and again from Settings > Sign Out). Expect: the VPN key icon goes away (tunnel stopped), logcat '[SIGN-OUT] POST auth/logout -> 200' then '[SIGN-OUT] ran=[DISCONNECT, UNREGISTER_PUSH, SERVER_LOGOUT, CLEAR_LOCAL] failed=[...]' (UNREGISTER_PUSH may fail on the dev build - no Firebase, F5), Sign In screen; reopening the app stays signed out. Server side (read-only): the session's ConnectionLogs row is closed at the sign-out time and the refresh session for that sid is revoked. (b) Control: signed in with no tunnel -> no DISCONNECT step. (c) Control: airplane mode -> sign-out still finishes within ~10 s, SERVER_LOGOUT in failed, tokens cleared. (d) Sign out and sign in again at once -> the new session stays signed in. Files: data/repository/SignOutRules.kt, SignOutManager.kt, AuthRepository.kt (sessionLock, unregisterPush/serverLogout/clearLocalSession), data/remote/ApiClient.kt (logout), ui/viewmodel/AuthViewModel.kt + ProfileViewModel.kt (logout); test auth/SignOutRulesTest.kt; branch development d21e1290. || CHECK 47 (slice 3p, added by apps run 1009j): auto-reconnect. (a) Settings > Auto-reconnect ON. Turn Wi-Fi + mobile data off, tap Connect -> it fails (error). Turn Wi-Fi back on. Expect within ~2-5 s logcat '[AUTO-RECONNECT] NONE -> WIFI: reconnect', '[AUTO-RECONNECT] try 1 of 3', then Connected with no tap. (b) Control: connected, switch Wi-Fi -> mobile -> logcat 'skip (tunnel is up ...)' and the tunnel is NOT rebuilt (timer keeps running). (c) Control: tap Disconnect, toggle Wi-Fi off/on -> 'skip (nothing to reconnect ...)', stays disconnected. (d) Auto-reconnect OFF -> 'skip (auto-reconnect is off)'. (e) Control: connect never loops - with the network down for minutes there are at most 3 'try N of 3' lines. Files: vpn/AutoReconnect.kt, vpn/NetworkMonitor.kt, vpn/VpnConnectionManager.kt (ReconnectTarget, autoReconnect, disconnect(userInitiated)), CasperApp.kt, data/repository/SignOutManager.kt; test connect/AutoReconnectRulesTest.kt; branch development 905697e1. || CHECK 48 (slice 3q, added by apps run 1009k): blocked-network memory. (a) Settings > VPN Protocol = Auto, on a Wi-Fi that blocks WireGuard UDP 51820 (e.g. a router/firewall rule, or an admin protocol override that refuses WireGuard), test build WITH the relay key: tap Connect -> WireGuard fails twice -> CasperCloak connects; ~20 s later logcat '[BLOCKED-NETWORK] remembered network=wifi for=24h'. (b) Force-stop the app, open it, Connect again -> logcat '[AUTO-DOOR] start door=caspercloak ... network=wifi blocked24h=true' and no WireGuard try. (c) Control: switch to mobile data, Connect -> 'network=cellular blocked24h=false', starts on WireGuard. (d) Control: a normal network where WireGuard works -> no '[BLOCKED-NETWORK] remembered' line ever. (e) Control: a hand-picked protocol (WireGuard) never writes the mark. Files: vpn/cloak/BlockedNetworkMemory.kt, vpn/cloak/AutoDoor.kt (startDoor networkBlocked), vpn/VpnConnectionManager.kt (attemptNetworkKind, wireGuardFailedThisTap, armAutoVerdict fromOtherServers); test cloak/BlockedNetworkMemoryTest.kt; branch development a02694a21. || CHECK 49 (slice 3r, added by apps run 1009l): connect-failure report queue. (a) Emulator/phone, signed in, Settings > VPN Protocol = WireGuard, block the API (airplane mode on Wi-Fi with no internet, or a firewall rule for api.caspervpn.com) and tap Connect on any server -> logcat '[TELEMETRY-V2] failure category=...' then '[REPORT-QUEUE] flush sent=0 waiting=1'. (b) Force-stop the app, restore the network, open the app -> within ~2 s '[REPORT-QUEUE] flush sent=1 waiting=0' and a new ConnectFailureEvents row for that user with appVersion 'android <version>' (server read-only SQL). (c) Control: a normal failed connect with the API reachable -> sent=1 at once, no row left waiting. (d) Auto on a network that passes the handshake but no data (or a server with traffic blocked) -> logcat '[NO-TRAFFIC] ... -> report category=connected-no-traffic' and a row with that category. (e) Control: an email-unconfirmed account refusal sends no report ('[EMAIL-GATE] ... no failure report'). Files: vpn/ConnectReportQueue.kt, vpn/ConnectTelemetry.kt (noTrafficReport), vpn/VpnConnectionManager.kt (queueFailureReport, scheduleReportFlush, sendConnectedNoTraffic); test telemetry/ConnectReportQueueTest.kt; branch development 64def61c3. || CHECK 50 (slice 3s, added by apps run 1009m): hidden-connection drop recovery. Needs the CasperCloak relay key in local.properties. (a) Emulator/phone, Settings > VPN Protocol = CasperCloak, connect, open a page. (b) Break the relay link while connected (e.g. block the relay/CDN host with a firewall rule, or restart the relay on a dev node) -> logcat '[CASPERCLOAK] tunnel transport down (...)' then '[CLOAK-RECOVERY] transport down (...): start', Home leaves 'Connected' and shows 'Connection lost. Reconnecting (1 of 12)...'. (c) Unblock -> '[CLOAK-RECOVERY] restored on try N' and pages load again. (d) Control: tap Disconnect during a wait -> '[CLOAK-RECOVERY] stop ...' and nothing reconnects. (e) Control: a normal Disconnect of a working CasperCloak connection logs no 'transport down'. (f) Keep it blocked -> after the 12th try (several minutes) Home shows 'Connection lost and could not be restored. Tap Connect to try again.' Files: vpn/cloak/CloakReconnect.kt, vpn/cloak/CasperCloakBridge.kt (onDropped), vpn/cloak/CasperCloakWire.kt (selectDomain rotation), vpn/VpnConnectionManager.kt (onCloakTransportDown, startCloakRecovery); test cloak/CloakReconnectRulesTest.kt; branch development 377e1f6e5. || CHECK 51 (slice 3t, added by apps run 1009n): crash reporting. Needs a line casperSentryDsn=https://... in local.properties (from the CTO; never commit it); without it the app logs '[CRASH] reporting off: no DSN in this build' and the rest of this check is skipped. (a) Launch with the DSN -> logcat '[CRASH] reporting on (development)'. (b) Sign in -> an event on sentry.caspervpn.com carries the account id and NO e-mail. (c) Turn Wi-Fi off and tap Connect -> a 'connect' error event with tags flow=connect, vpn_protocol, no IP address in its text. (d) Control: set the emulator's region to Iran (Settings > System > Languages & input > Languages > add Persian (Iran)) and relaunch -> '[CRASH] reporting off: restricted region ...' and nothing new on the crash server; set it back. (e) Control: no DSN -> no sentry.caspervpn.com traffic at all. Files: crash/CrashReporter.kt, crash/RegionSignal.kt, data/model/SubscriptionModels.kt (ApiResponse.regionRestricted), CasperApp.kt, data/repository/AuthRepository.kt + ServerRepository.kt + SignOutManager.kt, vpn/VpnConnectionManager.kt, app/build.gradle.kts (SENTRY_DSN), gradle/libs.versions.toml (sentry 7.14.0), AndroidManifest.xml (io.sentry.auto-init=false); test crash/CrashReporterRulesTest.kt; branch development eafe26024. || CHECK 52 (slice 3u, added by apps run 1009o): Sign in with Google. (a) Control first: with NO casperGoogleWebClientId in local.properties, Sign In shows no 'or' and no Google button. (b) Add casperGoogleWebClientId=<the server's Google web client id, from the CTO/CEO> to local.properties, Sync, run -> 'or' + 'Sign in with Google' under 'Create Account'. (c) Tap it, close Google's sheet -> nothing is shown (no error), the screen is usable. (d) Emulator with no Google account -> 'No Google account on this phone...'. (e) Needs the CEO row (Android OAuth client for com.caspervpn.app.dev.debug + the Mac debug SHA-1 in the same Google Cloud project): pick an account -> Home + banner 'Signed in with Google!'; on dev the Users row has GoogleId set; sign out and in again -> same account, no second row. Without the CEO row, (e) ends in logcat '[GOOGLE] Google refused: type=... 28444 ...' and the sentence 'Google Sign-In failed...' - that is the expected failure, not a bug. Files: ui/auth/GoogleSignIn.kt, ui/screen/LoginScreen.kt, ui/viewmodel/AuthViewModel.kt, data/repository/AuthRepository.kt, data/remote/ApiClient.kt (POST auth/google), data/model/AuthModels.kt (GoogleSignInRequest), app/build.gradle.kts (GOOGLE_WEB_CLIENT_ID), gradle/libs.versions.toml (credentials 1.3.0, googleid 1.1.1); test auth/GoogleSignInRulesTest.kt; branch development 1cbade137. verify: git show origin/development:Android/CasperVPN-v2/app/src/main/java/com/caspervpn/app/data/remote/ApiClient.kt | grep -n 'auth/google' || CHECK 53 (slice 3v, added by apps run 1009p, development fdab94daf): launch order. (a) Signed in, cold start -> a plain black screen with a small grey spinner for at most a blink, then Home (no 'CasperVPN' purple splash, no 2 s wait). (b) Sign out, swipe the app away, open it again -> Sign In at once. BEFORE this fix the app showed the purple 'CasperVPN' splash for 2 s and then HOME while signed out. (c) Fresh install -> the tour first, then Sign In (unchanged). (d) logcat: no '[LAUNCH] saved sign-in not read' line on a normal start. verify (code): grep -c 'collectAsStateWithLifecycle(false)' Android/CasperVPN-v2/app/src/main/java/com/caspervpn/app/MainActivity.kt = 0 and LaunchGateTest 5/5. || CHECK 54 (slice 2f, added by apps run 1009r, development 7f33774a2): Settings > Help & Support. (a) Empty account -> headset circle, 'No support tickets yet', 'New Ticket' button; '+' top right opens the New Ticket box (Subject, Category with 6 choices, Describe the problem, Send/Cancel). (b) After sending: the ticket row shows the subject, 'General \u00b7 <time in the phone's zone>' and a blue 'Open' chip. (c) Open it -> dark thread, your text in an indigo bubble on the right, 'Ticket #xxxxxxxx' under the title; reply -> it appears; turn Wi-Fi off and reply -> 'Your message was not sent...' and the text STAYS in the box (before: wiped). (d) Admin answers from the admin panel -> within 10 s a card bubble 'CasperVPN Support' on the left. (e) Admin sets the ticket Resolved -> grey 'Resolved' chip + note 'This ticket is closed. Sending a message opens it again.'; reply -> chip 'Open' (before: no reply box at all). (f) Phone Back on a ticket -> the list (before: left Help & Support). verify (code): SupportTicketsRulesTest 9/9; git show origin/development:Android/CasperVPN-v2/app/src/main/java/com/caspervpn/app/ui/screen/SupportTicketScreen.kt | grep -c 'BackHandler(enabled = detail != null)' = 1.",
-      "status": "pending",
+      "status": "deferred",
       "priority": "P1",
       "createdAt": "2026-10-07T21:40:46Z",
       "createdDate": "2026-10-07",
@@ -52715,12 +52715,14 @@
       "needsRelease": false,
       "updatedAt": "2026-10-09T10:36:05Z",
       "taskRef": "xd-1405",
-      "blocker": "CEO: Android Studio Run on _android/CasperVPN-v2-dev (Pixel 8 emulator); connect legs need a dev server (xd-1407)",
+      "blocker": "CEO decision 17 Oct - revisit 2026-10-31 (Android emulator on the CEO Mac)",
       "lastUpdated": "2026-10-09T18:32:00Z",
-      "waitingOn": "CEO",
+      "waitingOn": "CEO decision 17 Oct - revisit 2026-10-31 (Android emulator on the CEO Mac)",
       "waitingStep": "Android Studio Run on _android/CasperVPN-v2-dev (Pixel 8 emulator) during a live chat",
       "waitingSince": "2026-10-07T21:40:42Z",
-      "notes": "[QA 2026-10-17 e, CEO live 'close what u can and keep going', 2026-10-17T18:45:42Z] Add (from xd-1748, closed): after one failed connect on the emulator, production ConnectFailureEvents shows OsVersion 'Android 14' on that row. || [APPS run 2026-10-09 m 2026-10-09T10:36:05Z, unattended] Check 50 added (slice 3s, 377e1f6e5). || [APPS run 2026-10-09 k 2026-10-09T08:27:21Z, unattended] Check 48 added (slice 3q, a02694a21). || [APPS run 2026-10-09 j 2026-10-09T07:26:29Z, unattended] Check 47 added (slice 3p, 905697e1). || [APPS run 2026-10-09 i 2026-10-09T06:25:06Z, unattended] Check 46 added (slice 3o, d21e1290). || [APPS run 2026-10-09 h 2026-10-09T05:30:52Z, unattended] Check 45 added (slice 3n, 45942252). || [ANDROID apps run 2026-10-09 g 2026-10-09T04:28:28Z, unattended] Check 44 added (slice 3m, 0abdbfcb). || "
+      "notes": "[CEO 2026-10-17] (live chat, QA run f, 2026-10-17T21:23:42Z: 'do the 21 your self and defe desktop and android for end of month') DEFERRED to 2026-10-31 by the CEO (needs the Android emulator on the CEO Mac). || [QA 2026-10-17 e, CEO live 'close what u can and keep going', 2026-10-17T18:45:42Z] Add (from xd-1748, closed): after one failed connect on the emulator, production ConnectFailureEvents shows OsVersion 'Android 14' on that row. || [APPS run 2026-10-09 m 2026-10-09T10:36:05Z, unattended] Check 50 added (slice 3s, 377e1f6e5). || [APPS run 2026-10-09 k 2026-10-09T08:27:21Z, unattended] Check 48 added (slice 3q, a02694a21). || [APPS run 2026-10-09 j 2026-10-09T07:26:29Z, unattended] Check 47 added (slice 3p, 905697e1). || [APPS run 2026-10-09 i 2026-10-09T06:25:06Z, unattended] Check 46 added (slice 3o, d21e1290). || [APPS run 2026-10-09 h 2026-10-09T05:30:52Z, unattended] Check 45 added (slice 3n, 45942252). || [ANDROID apps run 2026-10-09 g 2026-10-09T04:28:28Z, unattended] Check 44 added (slice 3m, 0abdbfcb). || ",
+      "revisitDate": "2026-10-31",
+      "deferReason": "CEO 17 Oct: desktop + Android checks wait until end of month"
     },
     {
       "id": "xd-1492",
@@ -60345,7 +60347,7 @@
       "to": "[QA]",
       "title": "Handoff from ANDROID: Check Android slice 146a (no IKEv2/OpenVPN promises) on the emulator",
       "description": "development fb0a5543d. Unit: ./gradlew :app:testDevDebugUnitTest (OnboardingFlowTest + SettingsRulesTest green). Emulator (CEO Mac, with xd-1491): onboarding page 4 shows '2 Protocols' and 'Plus WireGuard.'; Settings > Protocol lists Automatic, WireGuard, CasperCloak and the footer ends 'IKEv2 and OpenVPN are not in the Android app.'. Files under Android/CasperVPN-v2/app/src/main/java/com/caspervpn/app/: ui/onboarding/Onboarding.kt, ui/screen/SettingsPickerScreens.kt, ui/settings/SettingsRules.kt, vpn/protocol/OpenVpnHandler.kt.",
-      "status": "pending",
+      "status": "deferred",
       "priority": "P2",
       "createdAt": "2026-10-11T23:37:51Z",
       "createdDate": "2026-10-11",
@@ -60353,7 +60355,12 @@
       "category": "infra-fleet",
       "ageDays": 2,
       "needsRelease": false,
-      "lifecycle": "active"
+      "lifecycle": "active",
+      "notes": "[CEO 2026-10-17] (live chat, QA run f, 2026-10-17T21:23:42Z: 'do the 21 your self and defe desktop and android for end of month') DEFERRED to 2026-10-31 by the CEO (needs the Android emulator on the CEO Mac).",
+      "revisitDate": "2026-10-31",
+      "deferReason": "CEO 17 Oct: desktop + Android checks wait until end of month",
+      "blocker": "CEO decision 17 Oct - revisit 2026-10-31 (Android emulator on the CEO Mac)",
+      "waitingOn": "CEO decision 17 Oct - revisit 2026-10-31 (Android emulator on the CEO Mac)"
     },
     {
       "id": "xd-1869",
@@ -61820,7 +61827,7 @@
       "to": "[QA]",
       "title": "Handoff from ANDROID: Check xd-1933 on development b883d6f75: Android backup rules, no analytics SDK, boot receiver, https reset link",
       "description": "[APPS run 2026-10-12 j, unattended] development b883d6f75 (Android/CasperVPN-v2/app/...). Files: src/main/res/xml/data_extraction_rules.xml (cloud-backup + device-transfer exclude root/file/datastore//database/sharedpref), src/main/res/xml/backup_rules.xml (no include), src/main/AndroidManifest.xml (BootReceiver BOOT_COMPLETED only; https caspervpn.com /reset-password App Link), service/BootReceiver.kt, build.gradle.kts (firebase-analytics removed), test/.../security/AppHardeningFilesTest.kt + auth/AccountLinksTest.kt. PROOF (cloud box JDK 17, Gradle 8.11.1): assembleDevDebug testDevDebugUnitTest BUILD SUCCESSFUL, 416 tests 0 failed 3 skipped; CONTROL old tree: AppHardeningFilesTest 5 of 6 fail; APK aapt2: QUICKBOOT 0, /reset-password pathPrefix present, data_extraction_rules compiled with both sections; unzip: no firebase-analytics / play-services-measurement (only firebase-measurement-connector.properties from messaging). QA verify: (1) aapt2 dump xmltree --file AndroidManifest.xml <apk> | grep -c QUICKBOOT = 0; (2) aapt2 dump xmltree --file res/xml/data_extraction_rules.xml shows cloud-backup + device-transfer; (3) gradle testDevDebugUnitTest --tests '*AppHardeningFilesTest' 6/6; (4) on an Android 12+ emulator: adb shell bmgr backupnow com.caspervpn.app -> datastore not in the backup (optional, device-bound). Then LEGAL: F25 - no analytics SDK in the app now; confirm the privacy text needs no change.",
-      "status": "in_progress",
+      "status": "deferred",
       "priority": "P2",
       "createdAt": "2026-10-12T19:25:06Z",
       "createdDate": "2026-10-12",
@@ -61833,8 +61840,11 @@
       "ageDays": 1,
       "needsRelease": false,
       "lifecycle": "active",
-      "notes": "[QA 2026-10-13 h, scheduled, 2026-10-13T07:2xZ] PARTIAL - CODE LEG PASS on development tip (files of b883d6f75): data_extraction_rules.xml cloud-backup + device-transfer each exclude root/file/file datastore//database/sharedpref; backup_rules.xml include 0; manifest allowBackup=false + dataExtractionRules + fullBackupContent; QUICKBOOT 0, BootReceiver intent-filter BOOT_COMPLETED only; https caspervpn.com pathPrefix /reset-password present; build.gradle.kts 'implementation(libs.firebase.analytics' 0 (only messaging). CONTROL production branch: QUICKBOOT 2, cloud-backup excludes 0 (domain-config 2), firebase.analytics impl 1 - so the checks discriminate. NOT RUN: verify (3) gradle AppHardeningFilesTest + the aapt2 APK checks (no Android SDK on the Mac VM) and (4) emulator bmgr backup - both go with the Android emulator pass xd-1491. Legal F25 told (new handoff).",
-      "blocker": "APK/unit-test legs need an Android build (no SDK on the unattended VM); emulator leg in the Android emulator pass xd-1491"
+      "notes": "[CEO 2026-10-17] (live chat, QA run f, 2026-10-17T21:23:42Z: 'do the 21 your self and defe desktop and android for end of month') DEFERRED to 2026-10-31 by the CEO (needs the Android emulator on the CEO Mac). || [QA 2026-10-13 h, scheduled, 2026-10-13T07:2xZ] PARTIAL - CODE LEG PASS on development tip (files of b883d6f75): data_extraction_rules.xml cloud-backup + device-transfer each exclude root/file/file datastore//database/sharedpref; backup_rules.xml include 0; manifest allowBackup=false + dataExtractionRules + fullBackupContent; QUICKBOOT 0, BootReceiver intent-filter BOOT_COMPLETED only; https caspervpn.com pathPrefix /reset-password present; build.gradle.kts 'implementation(libs.firebase.analytics' 0 (only messaging). CONTROL production branch: QUICKBOOT 2, cloud-backup excludes 0 (domain-config 2), firebase.analytics impl 1 - so the checks discriminate. NOT RUN: verify (3) gradle AppHardeningFilesTest + the aapt2 APK checks (no Android SDK on the Mac VM) and (4) emulator bmgr backup - both go with the Android emulator pass xd-1491. Legal F25 told (new handoff).",
+      "blocker": "CEO decision 17 Oct - revisit 2026-10-31 (Android emulator on the CEO Mac)",
+      "revisitDate": "2026-10-31",
+      "deferReason": "CEO 17 Oct: desktop + Android checks wait until end of month",
+      "waitingOn": "CEO decision 17 Oct - revisit 2026-10-31 (Android emulator on the CEO Mac)"
     },
     {
       "id": "xd-1944",
@@ -62167,7 +62177,7 @@
       "to": "[QA]",
       "title": "Handoff from DESKTOP: [P1] Check desktop security fixes F28/F29/F30 on development bb884b8dc (xd-1941)",
       "description": "[QA 2026-10-12 k, scheduled, 2026-10-12T21:25:00Z] DIFF PASS on development bb884b8dc (sparse checkout): file sha256 connection.rs 51908d8a / wireguard.rs 7b5b3d61 = the tested ones; connect_wireguard/openvpn/ikev2/caspercloak bodies: Ok(()) 0, Err 1 each, no API call; set_state(Connected) only after a protocol connect returns Ok (connection.rs:165) - unreachable while all 4 stubs Err; 'wintun_driver' 2 hits, both comments; 'caspervpn-wg0'/'\"wg0\"' 1 hit, a comment (wireguard.rs:11); IFACE_NAME cvpn0; config dir 0700 + file 0600 create_new (wireguard.rs:202-215); debug log uses redact_private_key (wireguard.rs:47, :178). NOT RUN here: cargo test (no Rust on the Mac VM or main server), Windows compile, Tauri build, a real Linux tunnel - left in_progress for those.\n\n[APPS run 2026-10-12 k, 2026-10-12T20:23:52Z] development bb884b8dc (pushed under lock casper-apps-1012k; parent 1235abf29). Files: desktop/caspervpn-core/src/connection.rs, desktop/caspervpn-core/src/protocols/wireguard.rs. F28: every connect_* stub returns Err before any API call (no wireguard-config peer side effect); connect() resets to Disconnected + sends Error, never Connected; missing wintun_driver calls removed. F29: config -> fresh 0700 dir, cvpn0.conf 0600 create_new, kept until teardown; wg-quick down uses the same file. F30: debug log redacts PrivateKey. PROOF (cloud box, Linux, rust stable): cargo test -p caspervpn-core --lib = 104 passed 0 failed (base 101 + 3 new: xd1941_connect_without_tunnel_fails_and_is_not_connected, xd1941_redacted_config_has_no_private_key, xd1941_private_config_file_is_owner_only); CONTROL: base connection.rs + new test -> FAILED. Pushed file sha256 = tested (51908d8a..., 7b5b3d61...). NOT PROVEN: Windows compile, Tauri app crate build, a real Linux tunnel. VERIFY: grep -c 'Ok(())' in connect_* bodies = 0; grep -n 'caspervpn-wg0\\|\"wg0\"' wireguard.rs = 0; cargo test -p caspervpn-core --lib xd1941. Still open for [DESKTOP]: F31-F36.",
-      "status": "in_progress",
+      "status": "deferred",
       "priority": "P1",
       "createdAt": "2026-10-12T20:23:58Z",
       "createdDate": "2026-10-12",
@@ -62175,7 +62185,12 @@
       "category": "infra-fleet",
       "ageDays": 1,
       "needsRelease": false,
-      "lifecycle": "active"
+      "lifecycle": "active",
+      "notes": "[CEO 2026-10-17] (live chat, QA run f, 2026-10-17T21:23:42Z: 'do the 21 your self and defe desktop and android for end of month') DEFERRED to 2026-10-31 by the CEO (needs the Windows/desktop machine).",
+      "revisitDate": "2026-10-31",
+      "deferReason": "CEO 17 Oct: desktop + Android checks wait until end of month",
+      "blocker": "CEO decision 17 Oct - revisit 2026-10-31 (Windows/desktop machine)",
+      "waitingOn": "CEO decision 17 Oct - revisit 2026-10-31 (Windows/desktop machine)"
     },
     {
       "id": "xd-1961",
@@ -62385,7 +62400,7 @@
       "to": "[QA]",
       "title": "Handoff from DESKTOP: [P1] Check desktop security fixes F31-F35 + Chrome extension load on development 7eee21e49 (xd-1941)",
       "description": "[QA 2026-10-13 j, scheduled, 2026-10-13T09:20:00Z] PARTIAL - legs 1+2 PASS with controls; legs 3+4 blocked. (1) git show 7eee21e49 (in origin/development): 'setcap cap_net' postinst 0, caspervpn.spec 0; CONTROL parent 605a871d0: 1 and 1. (2) node 18.19.1 on the main server, desktop/browser-extensions from git archive 7eee21e49 (/root/reports/qa1013j/x7): xd1941_proxy_auth.test.js 7 passed 0 failed; CONTROL same test against parent 605a871d0 proxy.js: 3 passed 4 failed (another proxy, reconnect, listener + credentials after disconnect). (3) cargo test xd1941: not re-run - no Rust toolchain on the QA VM or main server. (4) extension load: needs Chrome 'Load unpacked' on a real desktop (the CEO's Mac) - device leg, not unattended.\n\n[APPS run 2026-10-12 l, scheduled, unattended, 2026-10-12T21:36:06Z] development 36a7e20cb + 7eee21e49 (parent 605a871d0). Files: desktop/caspervpn-desktop/packaging/deb/DEBIAN/postinst, desktop/caspervpn-desktop/packaging/rpm/caspervpn.spec, desktop/browser-extensions/shared/proxy.js, desktop/browser-extensions/build.sh, desktop/browser-extensions/chrome/manifest.json, desktop/browser-extensions/tests/xd1941_proxy_auth.test.js, desktop/caspervpn-core/src/auto_update.rs, desktop/caspervpn-core/src/cli.rs, desktop/caspervpn-core/src/config_enterprise.rs. VERIFY: (1) grep -c \"setcap cap_net\" postinst caspervpn.spec = 0; (2) node desktop/browser-extensions/tests/xd1941_proxy_auth.test.js = 7 passed; (3) cargo test -p caspervpn-core --lib xd1941 = 9 passed (workspace members trimmed to caspervpn-core, desktop skill recipe); full lib 110 passed; (4) bash desktop/browser-extensions/build.sh chrome, then load dist/chrome unpacked: before this fix Chrome refused it (manifest names PNG icons the build never wrote; and type=module + importScripts left CasperAPI/ProxyManager/WebRTCProtection undefined). Measured in Chromium 1194 headless via Playwright: control extension loads; ours now loads, service worker defines all three, popup opens with 0 console errors. Please repeat in Chrome on a real desktop (Load unpacked) and tick browser-extensions row 0 only then. NOT PROVEN: Windows, Tauri app crate, real keychain/installer runs.",
-      "status": "in_progress",
+      "status": "deferred",
       "priority": "P1",
       "createdAt": "2026-10-12T21:36:10Z",
       "createdDate": "2026-10-12",
@@ -62393,7 +62408,12 @@
       "category": "platform",
       "ageDays": 1,
       "needsRelease": false,
-      "lifecycle": "active"
+      "lifecycle": "active",
+      "notes": "[CEO 2026-10-17] (live chat, QA run f, 2026-10-17T21:23:42Z: 'do the 21 your self and defe desktop and android for end of month') DEFERRED to 2026-10-31 by the CEO (needs the Windows/desktop machine).",
+      "revisitDate": "2026-10-31",
+      "deferReason": "CEO 17 Oct: desktop + Android checks wait until end of month",
+      "blocker": "CEO decision 17 Oct - revisit 2026-10-31 (Windows/desktop machine)",
+      "waitingOn": "CEO decision 17 Oct - revisit 2026-10-31 (Windows/desktop machine)"
     },
     {
       "id": "xd-1973",
@@ -62895,7 +62915,7 @@
       "to": "[QA]",
       "title": "Handoff from DESKTOP: Check the Windows core build + WFP kill switch + Wintun driver on development 787410606 (windows-app rows 0/2/3)",
       "description": "development 787410606 (desktop/caspervpn-core): NEW killswitch_rules.rs + wintun_params.rs (all OS, 13 tests), killswitch.rs (Windows WFP, persistent filters in sublayer 3f0b6a51-..., fixed filter keys, one transaction) and wintun_driver.rs (Windows: wintun.dll from the exe folder only, adapter CasperVPN, address/netmask/MTU 1280-1420, 4 MiB session, LUID). protocols/wireguard.rs setup_wintun now returns Err (it returned Ok with no tunnel = fake Connected). Measured in the cloud box (cargo 1.97, workspace members trimmed to caspervpn-core): cargo check -p caspervpn-core --target x86_64-pc-windows-gnu before 2x E0583 (row 0 run n) -> after 0 errors; cargo test --lib --no-run --target x86_64-pc-windows-gnu links the .exe; Linux cargo test --lib 123 passed 0 failed; mutation control (permit weight 0 / port-0 check off / MTU clamp off) -> 3 FAILED. QA please: (1) re-run the two cargo commands on a fresh development checkout (recipe: desktop skill 'apps run n'); (2) windows-app row 0 needs msvc + ARM64: run ci-desktop.yml (workflow_dispatch, Windows runner) on development and read the rust-core job; (3) rows 2/3 need a real Windows 10/11 machine as admin: enable kill switch with a server IP:port -> browser fails, ping server port passes, kill the app -> still blocked, disable -> traffic back (netsh wfp show filters lists CasperVPN filters, then none). NOT PROVEN: any Windows run; the WireGuard packet engine on Windows is not written, so no connect is possible yet.",
-      "status": "in_progress",
+      "status": "deferred",
       "priority": "P2",
       "createdAt": "2026-10-13T00:30:14Z",
       "createdDate": "2026-10-13",
@@ -62907,12 +62927,16 @@
         3
       ],
       "dueBy": "2026-10-20T00:30:14Z",
-      "notes": "[QA 2026-10-13 e, scheduled, 2026-10-13T04:19:48Z] LINUX LEG PASS, re-run by QA on the CEO's Mac VM (aarch64, cargo 1.99 installed for the run): desktop/ archived at development a5df6c4 (contains 7874106, d454fc1, a5acc10), workspace members = ['caspervpn-core']; cargo test -p caspervpn-core --lib -> 147 passed, 0 failed (route_rules 11, wg_loop 7, wg_engine 6, killswitch_rules 7, wintun_params 6). Mutation controls (reverted after): route_rules 'if server_inside && false' -> 3 FAILED (the 3 named); wg_engine drain loop 0..0 -> wg_engine_queued_packet_is_flushed_after_handshake FAILED; wg_loop ToTunnel never calls device.send -> wg_loop_round_trip_over_udp FAILED. NOT re-run: the x86_64-pc-windows-gnu build + wine run (QA box is arm64, no wine) and anything on real Windows. LEFT: a real Windows 10/11 PC as admin (connect, kill switch, routes/DNS).",
+      "notes": "[CEO 2026-10-17] (live chat, QA run f, 2026-10-17T21:23:42Z: 'do the 21 your self and defe desktop and android for end of month') DEFERRED to 2026-10-31 by the CEO (needs the Windows/desktop machine). || [QA 2026-10-13 e, scheduled, 2026-10-13T04:19:48Z] LINUX LEG PASS, re-run by QA on the CEO's Mac VM (aarch64, cargo 1.99 installed for the run): desktop/ archived at development a5df6c4 (contains 7874106, d454fc1, a5acc10), workspace members = ['caspervpn-core']; cargo test -p caspervpn-core --lib -> 147 passed, 0 failed (route_rules 11, wg_loop 7, wg_engine 6, killswitch_rules 7, wintun_params 6). Mutation controls (reverted after): route_rules 'if server_inside && false' -> 3 FAILED (the 3 named); wg_engine drain loop 0..0 -> wg_engine_queued_packet_is_flushed_after_handshake FAILED; wg_loop ToTunnel never calls device.send -> wg_loop_round_trip_over_udp FAILED. NOT re-run: the x86_64-pc-windows-gnu build + wine run (QA box is arm64, no wine) and anything on real Windows. LEFT: a real Windows 10/11 PC as admin (connect, kill switch, routes/DNS).",
       "updatedAt": "2026-10-13T04:19:48Z",
       "category": "next-build-4.4",
       "ageDays": 0,
       "needsRelease": false,
-      "lifecycle": "active"
+      "lifecycle": "active",
+      "revisitDate": "2026-10-31",
+      "deferReason": "CEO 17 Oct: desktop + Android checks wait until end of month",
+      "blocker": "CEO decision 17 Oct - revisit 2026-10-31 (Windows/desktop machine)",
+      "waitingOn": "CEO decision 17 Oct - revisit 2026-10-31 (Windows/desktop machine)"
     },
     {
       "id": "xd-1999",
@@ -63054,7 +63078,7 @@
       "to": "[QA]",
       "title": "Handoff from DESKTOP: Check windows-app row 2 part: WireGuard packet engine (development d454fc112)",
       "description": "[APPS run 2026-10-13 b, scheduled, unattended, 2026-10-13T01:18:07Z] File desktop/caspervpn-core/src/wg_engine.rs + Cargo.toml (boringtun 0.7) + lib.rs. Re-run: archive desktop/ at d454fc112, set workspace members = [\"caspervpn-core\"], cargo test -p caspervpn-core --lib (expect 129 passed); cargo test --lib --no-run --target x86_64-pc-windows-gnu then wine64 the exe (expect 138 passed). Mutation control: delete the drain loop in from_network -> wg_engine_queued_packet_is_flushed_after_handshake must FAIL. Not a connect on Windows yet.",
-      "status": "in_progress",
+      "status": "deferred",
       "priority": "P2",
       "createdAt": "2026-10-13T01:18:12Z",
       "createdDate": "2026-10-13",
@@ -63063,12 +63087,16 @@
       "criteriaIdx": [
         2
       ],
-      "notes": "[QA 2026-10-13 e, scheduled, 2026-10-13T04:19:48Z] LINUX LEG PASS, re-run by QA on the CEO's Mac VM (aarch64, cargo 1.99 installed for the run): desktop/ archived at development a5df6c4 (contains 7874106, d454fc1, a5acc10), workspace members = ['caspervpn-core']; cargo test -p caspervpn-core --lib -> 147 passed, 0 failed (route_rules 11, wg_loop 7, wg_engine 6, killswitch_rules 7, wintun_params 6). Mutation controls (reverted after): route_rules 'if server_inside && false' -> 3 FAILED (the 3 named); wg_engine drain loop 0..0 -> wg_engine_queued_packet_is_flushed_after_handshake FAILED; wg_loop ToTunnel never calls device.send -> wg_loop_round_trip_over_udp FAILED. NOT re-run: the x86_64-pc-windows-gnu build + wine run (QA box is arm64, no wine) and anything on real Windows. LEFT: a real Windows 10/11 PC as admin (connect, kill switch, routes/DNS).",
+      "notes": "[CEO 2026-10-17] (live chat, QA run f, 2026-10-17T21:23:42Z: 'do the 21 your self and defe desktop and android for end of month') DEFERRED to 2026-10-31 by the CEO (needs the Windows/desktop machine). || [QA 2026-10-13 e, scheduled, 2026-10-13T04:19:48Z] LINUX LEG PASS, re-run by QA on the CEO's Mac VM (aarch64, cargo 1.99 installed for the run): desktop/ archived at development a5df6c4 (contains 7874106, d454fc1, a5acc10), workspace members = ['caspervpn-core']; cargo test -p caspervpn-core --lib -> 147 passed, 0 failed (route_rules 11, wg_loop 7, wg_engine 6, killswitch_rules 7, wintun_params 6). Mutation controls (reverted after): route_rules 'if server_inside && false' -> 3 FAILED (the 3 named); wg_engine drain loop 0..0 -> wg_engine_queued_packet_is_flushed_after_handshake FAILED; wg_loop ToTunnel never calls device.send -> wg_loop_round_trip_over_udp FAILED. NOT re-run: the x86_64-pc-windows-gnu build + wine run (QA box is arm64, no wine) and anything on real Windows. LEFT: a real Windows 10/11 PC as admin (connect, kill switch, routes/DNS).",
       "updatedAt": "2026-10-13T04:19:48Z",
       "category": "infra-fleet",
       "ageDays": 0,
       "needsRelease": false,
-      "lifecycle": "active"
+      "lifecycle": "active",
+      "revisitDate": "2026-10-31",
+      "deferReason": "CEO 17 Oct: desktop + Android checks wait until end of month",
+      "blocker": "CEO decision 17 Oct - revisit 2026-10-31 (Windows/desktop machine)",
+      "waitingOn": "CEO decision 17 Oct - revisit 2026-10-31 (Windows/desktop machine)"
     },
     {
       "id": "xd-2007",
@@ -63176,7 +63204,7 @@
       "to": "[QA]",
       "title": "Handoff from DESKTOP: Check windows-app row 2 part: WireGuard I/O loop + Wintun device (development a5acc10d4)",
       "description": "[APPS run 2026-10-13 c, scheduled, unattended, 2026-10-13T02:19:31Z] Files: desktop/caspervpn-core/src/wg_loop.rs (NEW, all OS: PacketDevice trait, one UDP socket connected to the server, threads device->server / server->device / 250 ms timers, wait_for_handshake, stop), wintun_driver.rs (Windows: WintunDevice + start_tunnel), lib.rs, protocols/wireguard.rs (setup_wintun still refuses: routes + DNS not built). Re-run: archive desktop/ at a5acc10d4, workspace members = [\"caspervpn-core\"], cargo test -p caspervpn-core --lib (expect 136 passed, wg_loop 7/7); cargo test --lib --no-run --target x86_64-pc-windows-gnu then /usr/lib/wine/wine64 the exe with WINEDEBUG=-all (expect 145 passed). Mutation control: in send_all make Out::ToTunnel never call device.send -> wg_loop_round_trip_over_udp must FAIL. NOT a Windows connect: needs routes + DNS (next apps run) and a real Windows PC as admin.",
-      "status": "in_progress",
+      "status": "deferred",
       "priority": "P2",
       "createdAt": "2026-10-13T02:19:35Z",
       "createdDate": "2026-10-13",
@@ -63185,12 +63213,16 @@
       "criteriaIdx": [
         2
       ],
-      "notes": "[QA 2026-10-13 e, scheduled, 2026-10-13T04:19:48Z] LINUX LEG PASS, re-run by QA on the CEO's Mac VM (aarch64, cargo 1.99 installed for the run): desktop/ archived at development a5df6c4 (contains 7874106, d454fc1, a5acc10), workspace members = ['caspervpn-core']; cargo test -p caspervpn-core --lib -> 147 passed, 0 failed (route_rules 11, wg_loop 7, wg_engine 6, killswitch_rules 7, wintun_params 6). Mutation controls (reverted after): route_rules 'if server_inside && false' -> 3 FAILED (the 3 named); wg_engine drain loop 0..0 -> wg_engine_queued_packet_is_flushed_after_handshake FAILED; wg_loop ToTunnel never calls device.send -> wg_loop_round_trip_over_udp FAILED. NOT re-run: the x86_64-pc-windows-gnu build + wine run (QA box is arm64, no wine) and anything on real Windows. LEFT: a real Windows 10/11 PC as admin (connect, kill switch, routes/DNS).",
+      "notes": "[CEO 2026-10-17] (live chat, QA run f, 2026-10-17T21:23:42Z: 'do the 21 your self and defe desktop and android for end of month') DEFERRED to 2026-10-31 by the CEO (needs the Windows/desktop machine). || [QA 2026-10-13 e, scheduled, 2026-10-13T04:19:48Z] LINUX LEG PASS, re-run by QA on the CEO's Mac VM (aarch64, cargo 1.99 installed for the run): desktop/ archived at development a5df6c4 (contains 7874106, d454fc1, a5acc10), workspace members = ['caspervpn-core']; cargo test -p caspervpn-core --lib -> 147 passed, 0 failed (route_rules 11, wg_loop 7, wg_engine 6, killswitch_rules 7, wintun_params 6). Mutation controls (reverted after): route_rules 'if server_inside && false' -> 3 FAILED (the 3 named); wg_engine drain loop 0..0 -> wg_engine_queued_packet_is_flushed_after_handshake FAILED; wg_loop ToTunnel never calls device.send -> wg_loop_round_trip_over_udp FAILED. NOT re-run: the x86_64-pc-windows-gnu build + wine run (QA box is arm64, no wine) and anything on real Windows. LEFT: a real Windows 10/11 PC as admin (connect, kill switch, routes/DNS).",
       "updatedAt": "2026-10-13T04:19:48Z",
       "category": "infra-fleet",
       "ageDays": 0,
       "needsRelease": false,
-      "lifecycle": "active"
+      "lifecycle": "active",
+      "revisitDate": "2026-10-31",
+      "deferReason": "CEO 17 Oct: desktop + Android checks wait until end of month",
+      "blocker": "CEO decision 17 Oct - revisit 2026-10-31 (Windows/desktop machine)",
+      "waitingOn": "CEO decision 17 Oct - revisit 2026-10-31 (Windows/desktop machine)"
     },
     {
       "id": "xd-2013",
@@ -63261,7 +63293,7 @@
       "to": "[QA]",
       "title": "Handoff from DESKTOP: Check windows-app row 2 part: route + DNS plan + IP Helper apply (development a5df6c493)",
       "description": "[APPS run 2026-10-13 d, scheduled, unattended, 2026-10-13T03:21:55Z] Files: desktop/caspervpn-core/src/route_rules.rs (NEW, all OS: full tunnel = 0.0.0.0/1 + 128.0.0.0/1 on the adapter, server /32 via the real gateway FIRST, IPv6 ::/1 + 8000::/1 into the adapter = blocked not leaked, endpoint must be a normal IPv4, DNS IPv4-only + routed through the tunnel + deduped + max 3, none = refuse, teardown reverse), route_apply.rs (NEW, Windows: GetBestRoute2 underlay, CreateIpForwardEntry2 with rollback, DeleteIpForwardEntry2, SetInterfaceDnsSettings), Cargo.toml (windows features IpHelper/Ndis/WinSock), lib.rs, protocols/wireguard.rs (setup_wintun still refuses: not wired, not tested on Windows). Re-run: archive desktop/ at a5df6c493, workspace members = [\"caspervpn-core\"], cargo test -p caspervpn-core --lib (expect 147 passed, route_rules 11/11); cargo test --lib --no-run --target x86_64-pc-windows-gnu then /usr/lib/wine/wine64 the exe with WINEDEBUG=-all (expect 159 passed, route_apply 3/3). Mutation control: in route_rules::plan change `if server_inside {` to `if server_inside && false {` -> 3 route_rules tests must FAIL. NOT a Windows connect: Wine has no routing table (InitializeIpForwardEntry is unimplemented there); needs wiring into setup_wintun with the kill switch and a real Windows PC as admin.",
-      "status": "in_progress",
+      "status": "deferred",
       "priority": "P2",
       "createdAt": "2026-10-13T03:21:59Z",
       "createdDate": "2026-10-13",
@@ -63270,12 +63302,16 @@
       "criteriaIdx": [
         2
       ],
-      "notes": "[QA 2026-10-13 e, scheduled, 2026-10-13T04:19:48Z] LINUX LEG PASS, re-run by QA on the CEO's Mac VM (aarch64, cargo 1.99 installed for the run): desktop/ archived at development a5df6c4 (contains 7874106, d454fc1, a5acc10), workspace members = ['caspervpn-core']; cargo test -p caspervpn-core --lib -> 147 passed, 0 failed (route_rules 11, wg_loop 7, wg_engine 6, killswitch_rules 7, wintun_params 6). Mutation controls (reverted after): route_rules 'if server_inside && false' -> 3 FAILED (the 3 named); wg_engine drain loop 0..0 -> wg_engine_queued_packet_is_flushed_after_handshake FAILED; wg_loop ToTunnel never calls device.send -> wg_loop_round_trip_over_udp FAILED. NOT re-run: the x86_64-pc-windows-gnu build + wine run (QA box is arm64, no wine) and anything on real Windows. LEFT: a real Windows 10/11 PC as admin (connect, kill switch, routes/DNS).",
+      "notes": "[CEO 2026-10-17] (live chat, QA run f, 2026-10-17T21:23:42Z: 'do the 21 your self and defe desktop and android for end of month') DEFERRED to 2026-10-31 by the CEO (needs the Windows/desktop machine). || [QA 2026-10-13 e, scheduled, 2026-10-13T04:19:48Z] LINUX LEG PASS, re-run by QA on the CEO's Mac VM (aarch64, cargo 1.99 installed for the run): desktop/ archived at development a5df6c4 (contains 7874106, d454fc1, a5acc10), workspace members = ['caspervpn-core']; cargo test -p caspervpn-core --lib -> 147 passed, 0 failed (route_rules 11, wg_loop 7, wg_engine 6, killswitch_rules 7, wintun_params 6). Mutation controls (reverted after): route_rules 'if server_inside && false' -> 3 FAILED (the 3 named); wg_engine drain loop 0..0 -> wg_engine_queued_packet_is_flushed_after_handshake FAILED; wg_loop ToTunnel never calls device.send -> wg_loop_round_trip_over_udp FAILED. NOT re-run: the x86_64-pc-windows-gnu build + wine run (QA box is arm64, no wine) and anything on real Windows. LEFT: a real Windows 10/11 PC as admin (connect, kill switch, routes/DNS).",
       "updatedAt": "2026-10-13T04:19:48Z",
       "category": "infra-fleet",
       "ageDays": 0,
       "needsRelease": false,
-      "lifecycle": "active"
+      "lifecycle": "active",
+      "revisitDate": "2026-10-31",
+      "deferReason": "CEO 17 Oct: desktop + Android checks wait until end of month",
+      "blocker": "CEO decision 17 Oct - revisit 2026-10-31 (Windows/desktop machine)",
+      "waitingOn": "CEO decision 17 Oct - revisit 2026-10-31 (Windows/desktop machine)"
     },
     {
       "id": "xd-2017",
@@ -63427,7 +63463,7 @@
       "to": "[QA]",
       "title": "Handoff from DESKTOP: Check the Windows connect sequence (kill switch -> tunnel -> routes + DNS, rollback) on development cea2dfcbd",
       "description": "WHAT: desktop/caspervpn-core/src/connect_plan.rs (order + rollback, no OS calls, 8 tests cp_*) + connect_windows.rs (cfg windows; one existing call per step) + wintun_driver.rs start_tunnel_to (no second DNS lookup once the kill switch is on) + protocols/wireguard.rs setup_wintun/teardown_wintun wired, used ONLY when CASPERVPN_WINDOWS_TUNNEL_TEST=1 (else it still refuses). Branch development cea2dfcbd (parent b2071d01b). PROOF (cloud box rustc 1.97): Linux `cargo test -p caspervpn-core --lib` 147 -> 155 passed 0 failed; `cargo check -p caspervpn-core --target x86_64-pc-windows-gnu` 0 errors; Windows test exe under Wine 159 -> 167 passed; mutation control (rollback call removed) -> cp_every_failure_undoes_exactly_what_was_done + cp_zero_luid_is_refused_and_undone FAILED. Patch sha256 2660875c (.factory-transfer/apps-1013e/connect-plan.patch). ASK: (1) re-run the 3 commands (workspace members trimmed to caspervpn-core; Wine recipe in the desktop skill 13 Oct b) and read connect_plan.rs against its module doc; (2) when a Windows 10 2004+ PC (admin, wintun.dll next to the exe) exists: set CASPERVPN_WINDOWS_TUNNEL_TEST=1, connect to a fleet node, then check `route print` (0.0.0.0/1 + 128.0.0.0/1 on the CasperVPN adapter, server /32 via the real gateway), `Get-DnsClientServerAddress`, a DNS-leak site, and after disconnect that routes, DNS and WFP filters are gone. NOT PROVEN: anything on real Windows; msvc/ARM64.",
-      "status": "pending",
+      "status": "deferred",
       "priority": "P2",
       "createdAt": "2026-10-13T04:26:26Z",
       "createdDate": "2026-10-13",
@@ -63440,7 +63476,12 @@
       "category": "next-build-4.4",
       "ageDays": 0,
       "needsRelease": false,
-      "lifecycle": "active"
+      "lifecycle": "active",
+      "notes": "[CEO 2026-10-17] (live chat, QA run f, 2026-10-17T21:23:42Z: 'do the 21 your self and defe desktop and android for end of month') DEFERRED to 2026-10-31 by the CEO (needs the Windows/desktop machine).",
+      "revisitDate": "2026-10-31",
+      "deferReason": "CEO 17 Oct: desktop + Android checks wait until end of month",
+      "blocker": "CEO decision 17 Oct - revisit 2026-10-31 (Windows/desktop machine)",
+      "waitingOn": "CEO decision 17 Oct - revisit 2026-10-31 (Windows/desktop machine)"
     },
     {
       "id": "xd-2025",
@@ -63486,7 +63527,7 @@
       "to": "[QA]",
       "title": "Handoff from DESKTOP: Check the desktop app build on development fbd760ac9: Linux build + window, Windows exe links, 4 config tests",
       "description": "development fbd760ac9 (desktop/caspervpn-desktop/...: tauri.conf.json moved to the crate root, dist/index.html+app.js+style.css, icons/*.png+icon.ico, src-tauri/src/tray.rs, src-tauri/src/config_tests.rs, src-tauri/src/main.rs; desktop/caspervpn-core/Cargo.toml crate-type lib, caspervpn-core/src/lib.rs). PROOF (cloud box rustc 1.97, Ubuntu 24.04): cargo build -p caspervpn-desktop --features custom-protocol OK; the window renders the sign-in screen under Xvfb (screenshot .factory-transfer/apps-1013f/desktop-signin-linux.png); before the fix: panic 'Error deserializing plugins.autostart ... expected unit', and without custom-protocol a blank 'Could not connect to localhost'. cargo build --target x86_64-pc-windows-gnu -> caspervpn-desktop.exe PE32+ + WebView2Loader.dll (imports fwpuclnt, iphlpapi). cargo test -p caspervpn-desktop 5/5; CONTROL old config -> autostart_plugin_has_no_config_block + one_tray_icon_only FAILED. Core: Linux --lib 155/155, Windows test exe under Wine 167/167 (unchanged). Under Wine the exe starts, the compat check logs 'WebView2 Runtime ... not installed' and Tauri panics 'Could not find the webview runtime' (Wine has no WebView2). QA verify: (1) apt libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev; cd desktop && cargo test -p caspervpn-desktop --features custom-protocol -> 5 passed; (2) cargo check -p caspervpn-desktop --target x86_64-pc-windows-gnu -> 0 errors; (3) real Windows 10/11 PC with WebView2: run the exe, sign-in screen shows, tray icon has Connect/Show/Quit. NOT PROVEN: real Windows, MSI/NSIS installer, autostart (plugin registered, never enabled).",
-      "status": "pending",
+      "status": "deferred",
       "priority": "P2",
       "createdAt": "2026-10-13T05:51:19Z",
       "createdDate": "2026-10-13",
@@ -63495,7 +63536,12 @@
       "category": "platform",
       "ageDays": 0,
       "needsRelease": false,
-      "lifecycle": "active"
+      "lifecycle": "active",
+      "notes": "[CEO 2026-10-17] (live chat, QA run f, 2026-10-17T21:23:42Z: 'do the 21 your self and defe desktop and android for end of month') DEFERRED to 2026-10-31 by the CEO (needs the Windows/desktop machine).",
+      "revisitDate": "2026-10-31",
+      "deferReason": "CEO 17 Oct: desktop + Android checks wait until end of month",
+      "blocker": "CEO decision 17 Oct - revisit 2026-10-31 (Windows/desktop machine)",
+      "waitingOn": "CEO decision 17 Oct - revisit 2026-10-31 (Windows/desktop machine)"
     },
     {
       "id": "xd-2028",
@@ -63746,11 +63792,16 @@
       "to": "[QA]",
       "title": "Handoff from DESKTOP: Test: Windows app starts with the computer (autostart) + NSIS installer build",
       "description": "Desktop (Windows app) on development d097049ef. Please check: (1) on Linux: cd desktop && cargo test -p caspervpn-desktop -> 11 passed; build with --features custom-protocol, run under Xvfb with a scratch HOME: ~/.config/autostart/CasperVPN.desktop appears; set launch_on_startup=false in ~/.config/CasperVPN/settings.json and run again: it is removed; run with --minimized: no visible window. (2) installer: tauri build --bundles nsis --target x86_64-pc-windows-gnu builds CasperVPN_1.0.0_x64-setup.exe (unsigned, no wintun.dll yet). (3) when a real Windows 10/11 PC exists: install, tick/untick 'Start CasperVPN when my computer starts', check HKCU Run key, reboot -> app starts in the tray. Rows: windows-app#4, #5. Files: desktop/caspervpn-desktop/src-tauri/src/startup.rs, main.rs, commands.rs, dist/app.js, dist/index.html.",
-      "status": "pending",
+      "status": "deferred",
       "priority": "P2",
       "createdAt": "2026-10-13T06:33:42Z",
       "createdDate": "2026-10-13",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[CEO 2026-10-17] (live chat, QA run f, 2026-10-17T21:23:42Z: 'do the 21 your self and defe desktop and android for end of month') DEFERRED to 2026-10-31 by the CEO (needs the Windows/desktop machine).",
+      "revisitDate": "2026-10-31",
+      "deferReason": "CEO 17 Oct: desktop + Android checks wait until end of month",
+      "blocker": "CEO decision 17 Oct - revisit 2026-10-31 (Windows/desktop machine)",
+      "waitingOn": "CEO decision 17 Oct - revisit 2026-10-31 (Windows/desktop machine)"
     },
     {
       "id": "xd-2043",
@@ -63982,11 +64033,16 @@
       "to": "[QA]",
       "title": "Handoff from DESKTOP: Check the Windows installer now carries wintun.dll next to the exe (windows-app row 5, development 8f92a1ed0)",
       "description": "[QA 2026-10-13 j, scheduled, 2026-10-13T09:20:00Z] PARTIAL - fetch/pin leg PASS; cargo + real-Windows legs blocked. 8f92a1ed0 is in origin/development; tauri.windows.conf.json bundle.resources maps wintun/wintun.dll -> wintun.dll + wintun-LICENSE.txt; ci-desktop.yml calls fetch_wintun.py at L89 and L136; windows_compat.rs L282 uses wintun_driver::dll_path(). fetch_wintun.py (git show 8f92a1ed0) run on the main server 09:10Z in /root/reports/qa1013j/wt: real download rc 0, wintun.dll 427,552 B sha256 e5da8447 (= DevOps/Desktop claim) + LICENSE 5,431 B; CONTROL the same zip with 1 byte flipped -> 'REFUSED: wintun zip sha256 ... != pinned' rc 1. NOT re-run: cargo test -p caspervpn-desktop / Wine core test / tauri NSIS build (no Rust toolchain here); real Windows 10 2004+/11 install + uninstall needs a PC.\n\nWHAT: development 8f92a1ed0 (418650306..8f92a1ed0). tauri.windows.conf.json bundle.resources puts wintun/wintun.dll -> wintun.dll and wintun/wintun-LICENSE.txt at the install root; desktop/caspervpn-desktop/packaging/windows/fetch_wintun.py downloads wintun 0.14.1 and REFUSES a zip whose sha256 is not 07c25618...ef51; ci-desktop.yml both Windows jobs call it (MSIX job before its build); windows_compat.rs: wintun_available = wintun_driver::dll_path() (next to the exe) instead of cwd / Program Files / System32. PROOF (cloud box, rustc 1.97, tauri-cli 2.x, makensis): cargo test -p caspervpn-desktop 12 -> 13 passed (mutation: drop the DLL mapping -> FAILED); core Windows test exe under Wine 167 -> 168 passed (test_wintun_check_uses_the_driver_path; mutation: old path list -> FAILED); CONTROL: cargo check --target x86_64-pc-windows-gnu WITHOUT the fetched files -> 'resource path wintun/wintun-LICENSE.txt doesn't exist' rc 101 (an installer can no longer be built without the driver); fetch with a 1-byte-changed zip -> REFUSED rc 1. tauri build --bundles nsis --target x86_64-pc-windows-gnu -> CasperVPN_1.0.0_x64-setup.exe 6.77 MiB sha256 c19f4216; 7z l: caspervpn-desktop.exe, WebView2Loader.dll, wintun.dll 427552 B (sha256 e5da8447, = the release DLL, unmodified), wintun-LICENSE.txt, uninstall.exe. Before (run g installer 0c65dc73): no wintun.dll. CHECK: (1) re-run the two tests + the control on development 8f92a1ed0; (2) on a real Windows 10 2004+/11 PC as admin: install, confirm C:\\...\\CasperVPN\\wintun.dll next to the exe, compat check reports wintun available, uninstall removes it. UNSIGNED installer (no certificate). LICENSE: WireGuard LLC prebuilt-binaries license allows redistribution only unmodified and alongside software that uses wintun.h only - we load it via the wintun crate (API only); license file ships next to it.",
-      "status": "in_progress",
+      "status": "deferred",
       "priority": "P2",
       "createdAt": "2026-10-13T08:29:31Z",
       "createdDate": "2026-10-13",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[CEO 2026-10-17] (live chat, QA run f, 2026-10-17T21:23:42Z: 'do the 21 your self and defe desktop and android for end of month') DEFERRED to 2026-10-31 by the CEO (needs the Windows/desktop machine).",
+      "revisitDate": "2026-10-31",
+      "deferReason": "CEO 17 Oct: desktop + Android checks wait until end of month",
+      "blocker": "CEO decision 17 Oct - revisit 2026-10-31 (Windows/desktop machine)",
+      "waitingOn": "CEO decision 17 Oct - revisit 2026-10-31 (Windows/desktop machine)"
     },
     {
       "id": "xd-2058",
@@ -64131,15 +64187,17 @@
       "to": "[QA]",
       "title": "Handoff from DESKTOP: Check the Windows tray now follows the connection state (windows-app row 4, development 8a18972d5)",
       "description": "development 8a18972d5, file desktop/caspervpn-desktop/src-tauri/src/tray.rs (only file changed). Before: the tray menu was built once ('Connect' / 'Status: Disconnected' / tooltip 'Disconnected') and never changed. Now it follows ConnectionManager state events: Connected -> 'Disconnect' + 'Status: Connected'; Connecting/Disconnecting -> toggle locked; Error -> 'Connect' + 'Not connected (last attempt failed)'; never 'Connected' unless Connected. QA steps: (1) cd desktop && cargo test -p caspervpn-desktop tray -> 7 passed (whole crate 19); control: freeze tray_labels at Disconnected -> 4 FAILED. (2) cargo check -p caspervpn-desktop --target x86_64-pc-windows-gnu (run packaging/windows/fetch_wintun.py first) -> 0 errors. (3) LATER on a real Windows 10 2004+/11 PC (CEO card row 312): connect from the tray, the menu must change to 'Disconnect' and the tooltip to 'Connected'. Do not tick row 4 before step 3 (start-with-the-computer also waits xd-2042).",
-      "status": "in_progress",
+      "status": "deferred",
       "priority": "P2",
       "createdAt": "2026-10-13T09:24:48Z",
       "createdDate": "2026-10-13",
       "completedDate": null,
-      "notes": "[QA 2026-10-13 k, scheduled, 2026-10-13T10:1xZ] PARTIAL - leg 1 ported: tray.rs at 8a18972d5 (only file changed, on development) read from git show; tray_labels table parsed and the 4 pure tests + the label order of follows_every_state_change_in_order ported to Python: real 5/5 PASS; CONTROL frozen at Disconnected 4 FAILED / 1 passed (matches the handoff). setup_tray wires state.connection.subscribe() -> follow_states -> set_text/set_enabled/set_tooltip. Note: tray.rs has 6 tests (4 sync + 2 tokio), the handoff says 7 - the 7th may match the 'tray' filter elsewhere. cargo not re-run here (no Rust on the QA VM); Windows cross-check (step 2) and the real PC leg (step 3, CEO row 312) not run.",
-      "blocker": "cargo test/check need a Rust toolchain; step 3 needs a real Windows 10 2004+/11 PC (CEO row 312)",
-      "waitingOn": "Rust build host + real Windows PC (CEO row 312)",
-      "updatedAt": "2026-10-13T10:15:00Z"
+      "notes": "[CEO 2026-10-17] (live chat, QA run f, 2026-10-17T21:23:42Z: 'do the 21 your self and defe desktop and android for end of month') DEFERRED to 2026-10-31 by the CEO (needs the Windows/desktop machine). || [QA 2026-10-13 k, scheduled, 2026-10-13T10:1xZ] PARTIAL - leg 1 ported: tray.rs at 8a18972d5 (only file changed, on development) read from git show; tray_labels table parsed and the 4 pure tests + the label order of follows_every_state_change_in_order ported to Python: real 5/5 PASS; CONTROL frozen at Disconnected 4 FAILED / 1 passed (matches the handoff). setup_tray wires state.connection.subscribe() -> follow_states -> set_text/set_enabled/set_tooltip. Note: tray.rs has 6 tests (4 sync + 2 tokio), the handoff says 7 - the 7th may match the 'tray' filter elsewhere. cargo not re-run here (no Rust on the QA VM); Windows cross-check (step 2) and the real PC leg (step 3, CEO row 312) not run.",
+      "blocker": "CEO decision 17 Oct - revisit 2026-10-31 (Windows/desktop machine)",
+      "waitingOn": "CEO decision 17 Oct - revisit 2026-10-31 (Windows/desktop machine)",
+      "updatedAt": "2026-10-13T10:15:00Z",
+      "revisitDate": "2026-10-31",
+      "deferReason": "CEO 17 Oct: desktop + Android checks wait until end of month"
     },
     {
       "id": "xd-2067",
@@ -64179,15 +64237,17 @@
       "to": "[QA]",
       "title": "Handoff from ANDROID: Check Android Delete Account + no phone-state permission on development 7bc47d81a (xd-2062 G2 + manifest)",
       "description": "development 7bc47d81a (one commit 84b721c74 rebased; 12 files under Android/CasperVPN-v2/app/src/): data/repository/AccountDeletionRules.kt (new), data/repository/SignOutManager.kt deleteAccount(), data/remote/ApiClient.kt DELETE users/me, data/repository/AuthRepository.kt deleteAccountOnServer(), ui/screen/SettingsScreen.kt 'Delete Account' row under Sign Out, ui/settings/SettingsComponents.kt DeleteAccountDialogs, ui/viewmodel/SettingsViewModel.kt + AuthViewModel.kt, ui/navigation/CasperNavGraph.kt, AndroidManifest.xml (READ_PHONE_STATE tools:node=remove), test/.../account/AccountDeletionRulesTest.kt (6) + security/AppHardeningFilesTest.kt (+1). QA steps: (1) ./gradlew assembleDevDebug testDevDebugUnitTest (JDK 17) -> 423 tests, 0 failed; control: put the old permission line back and count 401 as deleted -> 2 FAILED. (2) aapt2 dump permissions app-dev-debug.apk | grep -c READ_PHONE_STATE -> 0. (3) curl -X DELETE https://api.dev.caspervpn.com/api/users/me -> 401 (route exists; control /api/userz/me -> 404). (4) DEVICE (emulator pass xd-1491 on the CEO Mac): sign in with a THROWAWAY dev account, Settings > Delete Account > Delete my account -> Sign In screen; signing in again with that account must fail; airplane mode first -> 'Could not delete your account' and the user stays signed in. Never test with a real or staff account (deletion cannot be undone).",
-      "status": "in_progress",
+      "status": "deferred",
       "priority": "P2",
       "createdAt": "2026-10-13T09:50:42Z",
       "createdDate": "2026-10-13",
       "completedDate": null,
-      "notes": "[QA 2026-10-13 k, scheduled, 2026-10-13T10:1xZ] PARTIAL - code leg PASS at 7bc47d81a (ancestor of origin/development): 12 files +271/-11 as listed; manifest READ_PHONE_STATE tools:node=\"remove\" (parent: plain uses-permission = control); ApiClient @DELETE(\"users/me\") L338; AccountDeletionRules plan DISCONNECT->UNREGISTER_PUSH->DELETE_ON_SERVER, local data cleared only when the server says 2xx/404; AccountDeletionRulesTest.kt + AppHardeningFilesTest.kt present. Route leg PASS: DELETE https://api.dev.caspervpn.com/api/users/me 401, control /api/userz/me 404. Observation for [ANDROID] (not a fail): push is unregistered and the VPN disconnected before the server call, so a failed delete leaves the user signed in but disconnected and without push until next start. NOT RUN: gradle tests (423) + aapt2 permission dump (no Android SDK on the QA VM) and the emulator device leg.",
-      "blocker": "gradle test + APK permission dump need an Android build (no SDK on QA VM); device leg = emulator pass xd-1491 on the CEO Mac",
-      "waitingOn": "Android build + emulator (xd-1491)",
-      "updatedAt": "2026-10-13T10:15:00Z"
+      "notes": "[CEO 2026-10-17] (live chat, QA run f, 2026-10-17T21:23:42Z: 'do the 21 your self and defe desktop and android for end of month') DEFERRED to 2026-10-31 by the CEO (needs the Android emulator on the CEO Mac). || [QA 2026-10-13 k, scheduled, 2026-10-13T10:1xZ] PARTIAL - code leg PASS at 7bc47d81a (ancestor of origin/development): 12 files +271/-11 as listed; manifest READ_PHONE_STATE tools:node=\"remove\" (parent: plain uses-permission = control); ApiClient @DELETE(\"users/me\") L338; AccountDeletionRules plan DISCONNECT->UNREGISTER_PUSH->DELETE_ON_SERVER, local data cleared only when the server says 2xx/404; AccountDeletionRulesTest.kt + AppHardeningFilesTest.kt present. Route leg PASS: DELETE https://api.dev.caspervpn.com/api/users/me 401, control /api/userz/me 404. Observation for [ANDROID] (not a fail): push is unregistered and the VPN disconnected before the server call, so a failed delete leaves the user signed in but disconnected and without push until next start. NOT RUN: gradle tests (423) + aapt2 permission dump (no Android SDK on the QA VM) and the emulator device leg.",
+      "blocker": "CEO decision 17 Oct - revisit 2026-10-31 (Android emulator on the CEO Mac)",
+      "waitingOn": "CEO decision 17 Oct - revisit 2026-10-31 (Android emulator on the CEO Mac)",
+      "updatedAt": "2026-10-13T10:15:00Z",
+      "revisitDate": "2026-10-31",
+      "deferReason": "CEO 17 Oct: desktop + Android checks wait until end of month"
     },
     {
       "id": "xd-2070",
@@ -64354,15 +64414,17 @@
       "to": "[QA]",
       "title": "Handoff from ANDROID: Check Android encrypted sign-in tokens on development 04c4e9c6e (xd-2062 G5)",
       "description": "development 04c4e9c6e (one commit; 5 files under Android/CasperVPN-v2/app/src/): data/remote/TokenCipher.kt (new: AesGcmTokenCipher AES-256-GCM, random 12-byte IV, stored 'v1:'+Base64(IV+ct+tag); AndroidKeystoreTokenKey alias caspervpn_token_key_v1, non-exportable), data/remote/TokenStorageRules.kt (new: writes only access_token_enc/refresh_token_enc, removes plain keys, never falls back to plain text; old plain tokens encrypted once and removed, or removed if the Keystore fails = sign in again; undecryptable = signed out), data/remote/TokenManager.kt (uses the rules, migrates once per process), di/AppModule.kt (wires the Keystore cipher), test/.../security/TokenStorageRulesTest.kt (10). QA steps: (1) ./gradlew assembleDevDebug testDevDebugUnitTest (JDK 17) -> 433 tests, 0 failed (run k cloud box, 6m49s); control: make TokenStorageRules.write() store the plain keys -> 3 FAILED (run k). (2) DEVICE (emulator pass xd-1491 on the CEO Mac): sign in with a dev test account, then `adb shell run-as com.caspervpn.app.dev cat files/datastore/caspervpn_prefs.preferences_pb | strings | grep -c eyJ` -> 0 (no readable JWT) and the keys access_token_enc/refresh_token_enc present; kill + reopen the app -> still signed in; Sign Out -> both keys gone. (3) Upgrade path: install the 7bc47d81a build, sign in, install this build over it -> still signed in and the plain keys access_token/refresh_token gone. NOT PROVEN: Keystore behaviour on a real phone/emulator (no /dev/kvm in unattended runs). After QA passes, [LEGAL]: privacy policy v1.8 s2.6 'encrypted device storage' now matches the Android code - Data Safety gate G5 can be closed.",
-      "status": "in_progress",
+      "status": "deferred",
       "priority": "P2",
       "createdAt": "2026-10-13T10:38:01Z",
       "createdDate": "2026-10-13",
       "completedDate": null,
-      "notes": "[QA 2026-10-13 l, scheduled, 2026-10-13T11:3xZ] PARTIAL - code leg PASS at 04c4e9c6e (on origin/development; 5 files +312/-26 as listed): TokenStorageRules.write() stores only access_token_enc/refresh_token_enc and removes the plain keys; migrate() removes the plain copy first and, if the Keystore throws, drops the encrypted keys too (sign in again) - no plain-text fallback on write; read() falls back to a plain key only before migration runs; TokenCipher AES/GCM/NoPadding, 12-byte IV, 'v1:' prefix, Keystore key AES-256 PURPOSE_ENCRYPT|DECRYPT. gradle (433 tests + the plain-write control) NOT re-run here: no Android SDK on the QA VM. Device legs 2-3 = emulator pass xd-1491.",
+      "notes": "[CEO 2026-10-17] (live chat, QA run f, 2026-10-17T21:23:42Z: 'do the 21 your self and defe desktop and android for end of month') DEFERRED to 2026-10-31 by the CEO (needs the Android emulator on the CEO Mac). || [QA 2026-10-13 l, scheduled, 2026-10-13T11:3xZ] PARTIAL - code leg PASS at 04c4e9c6e (on origin/development; 5 files +312/-26 as listed): TokenStorageRules.write() stores only access_token_enc/refresh_token_enc and removes the plain keys; migrate() removes the plain copy first and, if the Keystore throws, drops the encrypted keys too (sign in again) - no plain-text fallback on write; read() falls back to a plain key only before migration runs; TokenCipher AES/GCM/NoPadding, 12-byte IV, 'v1:' prefix, Keystore key AES-256 PURPOSE_ENCRYPT|DECRYPT. gradle (433 tests + the plain-write control) NOT re-run here: no Android SDK on the QA VM. Device legs 2-3 = emulator pass xd-1491.",
       "updatedAt": "2026-10-13T11:35:00Z",
-      "blocker": "gradle test needs an Android build (no SDK on the unattended QA VM); device + upgrade legs = emulator pass xd-1491 on the CEO Mac",
-      "waitingOn": "Android build + emulator (xd-1491)"
+      "blocker": "CEO decision 17 Oct - revisit 2026-10-31 (Android emulator on the CEO Mac)",
+      "waitingOn": "CEO decision 17 Oct - revisit 2026-10-31 (Android emulator on the CEO Mac)",
+      "revisitDate": "2026-10-31",
+      "deferReason": "CEO 17 Oct: desktop + Android checks wait until end of month"
     },
     {
       "id": "xd-2080",
@@ -65515,11 +65577,16 @@
       "to": "[QA]",
       "title": "Handoff from ANDROID: Check Android traffic proof (xd-2086) on development 2e108b30f",
       "description": "[APPS run 2026-10-17, scheduled, unattended, 2026-10-17T15:01Z] [ANDROID] xd-2086 is on development 2e108b30f (run 13 Oct m; one commit, 3 files: ConnectTelemetry.kt NoTrafficRule + trafficProofReport, VpnConnectionManager.kt armTrafficProof, NoTrafficRuleTest.kt 9 tests). git merge-base --is-ancestor 2e108b30f origin/development = yes (checked 17 Oct). Proof 13 Oct cloud JDK 17: assembleDevDebug testDevDebugUnitTest BUILD OK, 442 tests 0 failed (NoTrafficRuleTest 9/9); control STARVED_RX=1_024 -> 3 of 9 FAILED. QA: (1) re-run ./gradlew testDevDebugUnitTest --tests '*NoTrafficRuleTest*' on development; (2) code read: one report per session, no teardown, no protocol switch, user line text; (3) device: in the emulator pass xd-1491, connect WireGuard, wait 2 min, then production read-only: SELECT \"AppVersion\", count(*), count(\"RxBytes\") FROM \"ConnectFailureEvents\" WHERE \"FailureCategory\"='connected-no-traffic' GROUP BY 1 (an Android row only if the session moved < 50 KB). NOT PROVEN on a device.",
-      "status": "pending",
+      "status": "deferred",
       "priority": "P1",
       "createdAt": "2026-10-17T15:01:47Z",
       "createdDate": "2026-10-17",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[CEO 2026-10-17] (live chat, QA run f, 2026-10-17T21:23:42Z: 'do the 21 your self and defe desktop and android for end of month') DEFERRED to 2026-10-31 by the CEO (needs the Android emulator on the CEO Mac).",
+      "revisitDate": "2026-10-31",
+      "deferReason": "CEO 17 Oct: desktop + Android checks wait until end of month",
+      "blocker": "CEO decision 17 Oct - revisit 2026-10-31 (Android emulator on the CEO Mac)",
+      "waitingOn": "CEO decision 17 Oct - revisit 2026-10-31 (Android emulator on the CEO Mac)"
     },
     {
       "id": "xd-2166",
