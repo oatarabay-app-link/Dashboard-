@@ -64016,11 +64016,15 @@
       "to": "[ANDROID]",
       "title": "Handoff from IOS: Port the traffic proof (xd-2077) to Android",
       "description": "Parity of xd-2077 (iOS ios/70-traffic-2077 d5a17a2e7 (from ios/70-plus 188b51276)). Port NoTrafficRule (ConnectFailureReport.swift, same thresholds: rx < 1024 B = handshake-only; rx < 51200 B while tx > 20480 B = rx-starved; rx >= 51200 = flowing; else idle -> look again) to the Android connect path: read the WireGuard tunnel rx/tx at +30 s and +120 s after Connected, send ONE POST /api/diagnostics/connect-failure per session with failureCategory 'connected-no-traffic', rxBytes/txBytes, errorCode 'NoTraffic:<reason>-<N>s', stageTimingsMs {total, checkS, mtuMax}, and show the same one-line message. Never tear down the tunnel on this alone; never switch a hand-picked protocol. Backend needs no change (RxBytes/TxBytes/ErrorCode/StageTimingsMs stored since xd-1120/xd-1255; production DiagnosticsController L114-120). Unit test the rule with the same cases as the iOS xd2077 test (incl. the measured 13 Oct sessions: 0/0 -> no traffic; 120943040/27045672 -> flowing; 2412/6084 -> idle).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-10-13T11:22:59Z",
       "createdDate": "2026-10-13",
-      "completedDate": null
+      "completedDate": "2026-10-17",
+      "completedAt": "2026-10-17",
+      "completedBy": "[ANDROID]",
+      "resolution": "[APPS run 2026-10-17, scheduled, unattended, 2026-10-17T15:01Z] BUILT on development 2e108b30f (13 Oct run m; board write was lost when the Mac link dropped - recorded now). Gradle 442 tests / 0 failed, control 3 FAILED. NOT PROVEN on a device (xd-1491).",
+      "resultingHandoff": "xd-2165 to [QA] (P1) check on development + emulator pass"
     },
     {
       "id": "xd-2087",
@@ -64692,7 +64696,8 @@
       "createdAt": "2026-10-14T00:09:22Z",
       "createdDate": "2026-10-14",
       "completedDate": null,
-      "notes": "[QA 2026-10-14 b, scheduled, 2026-10-14T01:2xZ] QA re-checked xd-2132 (xd-2134 PASS): TCP 443 answers 33/33 on all 11 active servers, 80 and 1194 0/33, no ban, no log line at the probe seconds - 443 is safe for the latency probe. | [DEVOPS run 2026-10-14 0025, scheduled, unattended, 2026-10-14T00:34Z] DEVOPS answer for D1 (xd-2132): probe TCP 443 (open on 11/11 from London + Bangkok, 66/66; 80/1194 closed everywhere). No rate limit or ban on 443; a bare connect+close leaves no relay log line. Do not send any bytes on the bare probe (no TLS hello needed to time the connect)."
+      "notes": "[QA 2026-10-14 b, scheduled, 2026-10-14T01:2xZ] QA re-checked xd-2132 (xd-2134 PASS): TCP 443 answers 33/33 on all 11 active servers, 80 and 1194 0/33, no ban, no log line at the probe seconds - 443 is safe for the latency probe. | [DEVOPS run 2026-10-14 0025, scheduled, unattended, 2026-10-14T00:34Z] DEVOPS answer for D1 (xd-2132): probe TCP 443 (open on 11/11 from London + Bangkok, 66/66; 80/1194 closed everywhere). No rate limit or ban on 443; a bare connect+close leaves no relay log line. Do not send any bytes on the bare probe (no TLS hello needed to time the connect).",
+      "note": "[APPS run 2026-10-17, scheduled, unattended, 2026-10-17T15:01Z] MEASURED on ios/75 80d579230 (code read): DONE in build 74 (xd-2125): TCP handshake to port 443 = real RTT (LatencyService.swift:177-181), API 0 = unknown, default sort fastest. NOT DONE: best of 3 probes, 'Far from you - may be slow' label, no reading <5 ms outside the user's city, distance fallback from latitude/longitude, Quick connect = nearest (ServerService.getRecommendedServer L343-359 still sorts by load only). Next apps run builds these on a branch from ios/75."
     },
     {
       "id": "xd-2132",
@@ -64891,11 +64896,15 @@
       "to": "[IOS]",
       "title": "Handoff from CTO: Build 75: background self-reconnect for WireGuard / IKEv2 / OpenVPN (same rule as CasperCloak since build 73)",
       "description": "CEO 14 Oct 11:40Z: 'WireGuard/IKEv2/OpenVPN do not self-reconnect after a long drop - we need to fix this as well'. CODE FACT (ios/74): connectWireGuard arms on-demand only when kill switch or Auto-Connect is on, else sets isOnDemandEnabled=false; connectIKEv2 passes onDemand:false to IKEv2Manager (NEVPNManager); OpenVPNManager never arms. So a WG/IKEv2/OpenVPN tunnel that iOS tears down in the background (long drop, network change while suspended) stays down until the user opens the app - only CasperCloak comes back (xd-2123). FIX (build 75, CTO live): one gate shouldArmBackgroundRecovery(dpiDetectable:) = !wasManualDisconnect && !autoConnectOptOut && (not a DPI-detectable protocol in a restricted region - FIX 4 leak-safety stays). WG/OpenVPN/IKEv2 arm the soft on-demand rule under that gate; manual Disconnect disarms NEVPNManager too (IKEv2); launch sweep preserves on-demand on any live session outside restricted regions; cascade attempts disarm the other profile before arming theirs. Marker 75a. QA: on the phone with WireGuard connected, Settings > VPN > CasperVPN (i) Connect On Demand = ON; Disconnect -> OFF; same for IKEv2 (its own profile) and OpenVPN; airplane mode 2 min then off while the app is closed -> tunnel comes back by itself.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P0",
       "createdAt": "2026-10-14T11:43:26Z",
       "createdDate": "2026-10-14",
-      "completedDate": null
+      "completedDate": "2026-10-17",
+      "completedAt": "2026-10-17",
+      "completedBy": "[IOS]",
+      "resolution": "[APPS run 2026-10-17, scheduled, unattended, 2026-10-17T15:01Z] In build 75 (ios/75 80d579230 contains a407d0445 + 0b18048af). Code done by CTO live 14 Oct; iOS hands to QA for the phone test.",
+      "resultingHandoff": "xd-2166 to [QA] (P0) phone test per protocol"
     },
     {
       "id": "xd-2146",
@@ -64909,7 +64918,8 @@
       "createdDate": "2026-10-14",
       "completedDate": null,
       "blocker": "ROOT CAUSE FOUND 14 Oct 14:0xZ (CTO live): build 70 reinstalled on the CEO phone -> OpenVPN Miami connected 13:46-13:47Z (58 s) = not the server. DerivedData package checkouts identical 70..75 (ddcheck.log). OpenVPNAdapter 0.8.0 OpenVPNConfiguration.mm setFileContent: std::string((const char*)fileContent.bytes) - a C string with no length; OpenVPNHandler passed configToParse.data(using:.utf8) which has no trailing zero -> OpenVPN3 parsed heap bytes after the config as directives; build 70 happened to hit a zero, the build-71+ extension (xd-1752 bridge meter) changed the heap layout. FIX ios/75 80d579230: configData.append(0) before fileContent. Verify on the phone: OpenVPN Miami + Tokyo connect (build 75, third build, compiling 14:04Z). Still open from this task: redact ovpn_password / <key> / <tls-auth> from logs and reports. | ",
-      "notes": "[QA 2026-10-17 a, scheduled, 2026-10-17T15:0xZ] QA evidence for the tick: build 75 OpenVPN UDP to Miami CONNECTED 14 Oct 14:10:46Z (report b0fb8c03, 'via /UDPv4', 14.7 MB down / 3.2 MB up in ~65 s); the 12:16/12:26Z failures were earlier the same day. QA verdict PASS - [IOS] may close; row 316 ticked tested. ||  || [CEO office 2026-10-16 ~21:3xZ] Build 75 was uploaded + submitted 14 Oct 14:18Z/16:42Z without a recorded OpenVPN phone proof. Proof owed on build 75; fail = cancel + build 76. || [CEO live 2026-10-16 ~22:0xZ] CEO reports OpenVPN works on build 75. Hand to [QA] for the tick with the session evidence."
+      "notes": "[QA 2026-10-17 a, scheduled, 2026-10-17T15:0xZ] QA evidence for the tick: build 75 OpenVPN UDP to Miami CONNECTED 14 Oct 14:10:46Z (report b0fb8c03, 'via /UDPv4', 14.7 MB down / 3.2 MB up in ~65 s); the 12:16/12:26Z failures were earlier the same day. QA verdict PASS - [IOS] may close; row 316 ticked tested. ||  || [CEO office 2026-10-16 ~21:3xZ] Build 75 was uploaded + submitted 14 Oct 14:18Z/16:42Z without a recorded OpenVPN phone proof. Proof owed on build 75; fail = cancel + build 76. || [CEO live 2026-10-16 ~22:0xZ] CEO reports OpenVPN works on build 75. Hand to [QA] for the tick with the session evidence.",
+      "note": "[APPS run 2026-10-17, scheduled, unattended, 2026-10-17T15:01Z] Part 2 (redact OpenVPN key material from logs / Send report) BUILT on ios/75-sec-2146 6bb04e99c -> QA xd-2167. Part 1 (NUL fix 80d579230) is in build 75; still waits the CEO phone OpenVPN test (Miami + Tokyo). Next build (76) must include ios/75-sec-2146."
     },
     {
       "id": "xd-2147",
@@ -64986,6 +64996,42 @@
       "status": "pending",
       "priority": "P2",
       "createdAt": "2026-10-17T15:00:08Z",
+      "createdDate": "2026-10-17",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2165",
+      "from": "[ANDROID]",
+      "to": "[QA]",
+      "title": "Handoff from ANDROID: Check Android traffic proof (xd-2086) on development 2e108b30f",
+      "description": "[APPS run 2026-10-17, scheduled, unattended, 2026-10-17T15:01Z] [ANDROID] xd-2086 is on development 2e108b30f (run 13 Oct m; one commit, 3 files: ConnectTelemetry.kt NoTrafficRule + trafficProofReport, VpnConnectionManager.kt armTrafficProof, NoTrafficRuleTest.kt 9 tests). git merge-base --is-ancestor 2e108b30f origin/development = yes (checked 17 Oct). Proof 13 Oct cloud JDK 17: assembleDevDebug testDevDebugUnitTest BUILD OK, 442 tests 0 failed (NoTrafficRuleTest 9/9); control STARVED_RX=1_024 -> 3 of 9 FAILED. QA: (1) re-run ./gradlew testDevDebugUnitTest --tests '*NoTrafficRuleTest*' on development; (2) code read: one report per session, no teardown, no protocol switch, user line text; (3) device: in the emulator pass xd-1491, connect WireGuard, wait 2 min, then production read-only: SELECT \"AppVersion\", count(*), count(\"RxBytes\") FROM \"ConnectFailureEvents\" WHERE \"FailureCategory\"='connected-no-traffic' GROUP BY 1 (an Android row only if the session moved < 50 KB). NOT PROVEN on a device.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-17T15:01:47Z",
+      "createdDate": "2026-10-17",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2166",
+      "from": "[IOS]",
+      "to": "[QA]",
+      "title": "Handoff from IOS: Build 75: check background self-reconnect for WireGuard / IKEv2 / OpenVPN (xd-2145) on the phone",
+      "description": "[APPS run 2026-10-17, scheduled, unattended, 2026-10-17T15:01Z] [IOS] xd-2145 is in build 75: commits a407d0445 (shouldArmBackgroundRecovery gate + arming) and 0b18048af (WireGuard start gate) are ancestors of ios/75 80d579230 (git merge-base --is-ancestor, checked 17 Oct). Phone test on build 75 (CEO phone or TestFlight): for EACH of WireGuard, IKEv2, OpenVPN: (1) connect, Settings > VPN > CasperVPN (i): Connect On Demand ON; (2) lock the phone, airplane mode 60 s, back -> tunnel returns by itself within ~30 s with no app foreground; (3) Disconnect in the app -> stays down and Connect On Demand OFF; (4) Background Auto-Connect OFF -> connect -> no arm. Also WireGuard start gate: a server that never handshakes -> tunnel cancels at ~15 s (log 'handshakeGateTimeout'). PASS = all 3 protocols. NOT PROVEN on a device yet.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-10-17T15:01:47Z",
+      "createdDate": "2026-10-17",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2167",
+      "from": "[IOS]",
+      "to": "[QA]",
+      "title": "Handoff from IOS: Check OpenVPN key redaction (xd-2146 part 2) on branch ios/75-sec-2146 6bb04e99c",
+      "description": "[APPS run 2026-10-17, scheduled, unattended, 2026-10-17T15:01Z] [IOS] xd-2146 part 2 (the 14 Oct reports f46fcdd3 / 6c26edaa carried OpenVPN key material: OpenVPN3's option_error quoted 32 hex of the tls-auth key). Branch ios/75-sec-2146 6bb04e99c (one commit on ios/75 80d579230; 3 files): PacketTunnelProvider.redactKeys + APIClient.redactSecrets remove inline <key>/<tls-auth>/<tls-crypt>/<tls-crypt-v2>/<secret> blocks, PEM private keys + OpenVPN static keys (to END or end of a cut log), the text quoted in an option_error, ObjC-dump 'password = value'. Certificates stay. PROOF 17 Oct (cloud box, Linux swiftc 6.0.3): bash tools/ios-tests/keyredact/run-linux.sh -> 44/44 + wiring 10/10, exit 0; CONTROL = the build-75 functions with the new corpus -> 34/44, the 10 new OpenVPN cases FAIL; tools/ios-tests/logredact/run-linux.sh 12 passed 0 failed. Tested file sha256 = committed (a0cc5610 / ef6bf2f4 / cd18c69b). QA: re-run both scripts on the branch; read the diff. NOT PROVEN: Xcode build, device. Must be merged into build 76 (iOS assembles).",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-17T15:01:47Z",
       "createdDate": "2026-10-17",
       "completedDate": null
     }
