@@ -14875,7 +14875,7 @@
           "verifiedBy": "none",
           "createdBy": "cto-run",
           "createdAt": "2026-10-12T20:42:49Z",
-          "evidence": "[CTO run 2026-10-12 2134, scheduled, unattended, 2026-10-12T21:43:40Z] the file on development is now f534d836 (QA xd-1965 fix: device/CEO-only handoffs no longer counted as work). Ship that commit, not 605a871d. Advice unchanged: YES after QA xd-1975 PASS. || [CTO run 2026-10-12 2035, scheduled] prepared: development 605a871d (1 new file, tools/dept_queue.py, 0 deleted). Runs use it already by fetching it read-only from development (routine 09 3c). Advice: YES after QA xd-1962 PASS. Ship = api_put of the same blob to production (one new path, xd-847 guard)."
+          "evidence": "[CTO run 2026-10-17 1445, scheduled, unattended, 2026-10-17T14:49:31Z] bundled into row 332 (one ship for all factory-tool fixes). Answer row 332. || [CTO run 2026-10-12 2134, scheduled, unattended, 2026-10-12T21:43:40Z] the file on development is now f534d836 (QA xd-1965 fix: device/CEO-only handoffs no longer counted as work). Ship that commit, not 605a871d. Advice unchanged: YES after QA xd-1975 PASS. || [CTO run 2026-10-12 2035, scheduled] prepared: development 605a871d (1 new file, tools/dept_queue.py, 0 deleted). Runs use it already by fetching it read-only from development (routine 09 3c). Advice: YES after QA xd-1962 PASS. Ship = api_put of the same blob to production (one new path, xd-847 guard)."
         },
         {
           "test": "CEO YES 2026-10-16 (live chat, CEO office: 'go with your advice') \u00b7 READY TO SHIP approved - ship by the normal path, then [QA] | READY TO SHIP \u2014 the password-reset e-mail stops putting the secret reset code inside an app-only link \u00b7 why: security finding F23 - the big button in the e-mail opened a 'caspervpn://' link; any other app on a phone can claim that kind of link and catch the code that lets someone set a new password \u00b7 what the ship does: the button opens our own website page instead (it resets the password and then opens the app); the code still works only once and only for 24 hours \u00b7 tested on dev: development ad220308a - the e-mail no longer contains any 'caspervpn://' link (dev server 0, live server still 1); 386/386 checks pass and the new checks fail if the old link is put back; QA xd-1964 \u00b7 risk: very low - people who tapped the old button now land on the web page first \u00b7 rollback: redeploy the previous version \u00b7 advice: YES (xd-1934)",
@@ -15194,7 +15194,7 @@
           "addedBy": "[CTO]",
           "addedAt": "2026-10-13T03:41:21Z",
           "createdAt": "2026-10-13T03:41:21Z",
-          "evidence": "[CTO run 2026-10-13 0335, scheduled, unattended, 2026-10-13T03:41:21Z] prepared on development 84d1583 (tools/dashboard_ssh_push.py +3). Advice: YES - low risk, tools-only; ship together with row 275 (dept_queue) so both factory tools land in one CI run."
+          "evidence": "[CTO run 2026-10-17 1445, scheduled, unattended, 2026-10-17T14:49:31Z] bundled into row 332 (one ship for all factory-tool fixes). Answer row 332. || [CTO run 2026-10-13 0335, scheduled, unattended, 2026-10-13T03:41:21Z] prepared on development 84d1583 (tools/dashboard_ssh_push.py +3). Advice: YES - low risk, tools-only; ship together with row 275 (dept_queue) so both factory tools land in one CI run."
         },
         {
           "met": false,
@@ -15496,6 +15496,19 @@
           "addedAt": "2026-10-16T23:20:00Z",
           "verify": "ASC appAvailabilityV2 territoryAvailabilities RUS",
           "evidence": ""
+        },
+        {
+          "test": "READY TO SHIP \u2014 factory tools bundle (3 fixes, tools only, no app/server/database change) \u00b7 why: (1) dept_queue.py = the run queue every run already fetches from development (row 275, xd-1952; QA xd-1975 PASS 3/3 runs); (2) the board write stamps its last-updated time (row 305; was stuck 12 Oct); (3) two guards so one bad call can no longer blow the board up from 10 MB to 41 MB (xd-2136, happened 13 + 14 Oct) \u00b7 tested on dev: offline tests 4/4 + 2/2 (17 Oct), QA xd-2161 re-checks \u00b7 rollback: put the previous production copy of the 3 files back (one commit) \u00b7 advice: YES \u2014 low risk, helps every run. Replaces rows 275 + 305 (ship them all at once).",
+          "verify": "git show origin/production:tools/dept_queue.py exists; grep -c xd-2136 tools/factory_bootstrap.py tools/dashboard_ssh_push.py on production = 1 each; grep -c lastUpdated tools/dashboard_ssh_push.py >= 1",
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "owner": "[CEO]",
+          "createdBy": "[CTO]",
+          "addedBy": "[CTO]",
+          "addedAt": "2026-10-17T14:49:31Z",
+          "createdAt": "2026-10-17T14:49:31Z",
+          "evidence": "[CTO run 2026-10-17 1445, scheduled, unattended, 2026-10-17T14:49:31Z] development tips: 17a733228 (dashboard_ssh_push.py, includes 84d1583 lastUpdated), 44c3d8ffc (factory_bootstrap.py), f534d836 (dept_queue.py). Ship = api_put the 3 development blobs to production under the session lock (xd-847 guard), one concern per commit."
         }
       ],
       "progress": 0,
@@ -64725,11 +64738,19 @@
       "to": "[CTO]",
       "title": "Handoff from DEVOPS: Guard: complete_handoff/dashboard_session let a 30 MB string onto the board (xd-2130, 00:09Z)",
       "description": "Growth run 1014-0004 passed create_handoff's return (it returns (board, id)) into complete_handoff(resulting_handoff=...); xd-2130.resultingHandoff became a 29,903,986-char str of the board: board 10.5 -> 41.0 MB (commit 6d4919243). Same trap as 13 Oct 19:xxZ (DevOps + LEGAL, importantNote). DevOps removed the string in this push. Ask: in factory_bootstrap.complete_handoff refuse a non-str or >5,000-char resulting_handoff, and in dashboard_session refuse a push that grows data.json by >2 MB. Also importantNotes[400] note-legacy-3c94f2fac6 text is 1.44 MB (older).",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-10-14T00:34:45Z",
       "createdDate": "2026-10-14",
-      "completedDate": null
+      "completedDate": null,
+      "blocker": "Waits CEO YES on ceo-action-backlog row 332 (READY TO SHIP factory tools bundle) and QA xd-2161 on development.",
+      "notes": [
+        {
+          "at": "2026-10-17T14:49:31Z",
+          "by": "[CTO]",
+          "text": "[CTO run 2026-10-17 1445, scheduled, unattended, 2026-10-17T14:49:31Z] FIXED on development: 44c3d8ffc complete_handoff refuses non-str / >5,000-char resulting_handoff; 17a733228 dashboard_session refuses a write that grows data.json > 2 MB. Offline tests 4/4 + 2/2. QA xd-2161. Not done here: importantNotes note-legacy-3c94f2fac6 is still 1,466,773 bytes (measured on board 448cac70b) - trimming it is a board-data change for the CEO office."
+        }
+      ]
     },
     {
       "id": "xd-2137",
@@ -64887,9 +64908,27 @@
       "createdDate": "2026-10-16",
       "category": "ops",
       "notes": ""
+    },
+    {
+      "id": "xd-2161",
+      "from": "[CTO]",
+      "to": "[QA]",
+      "title": "Handoff from CTO: Check xd-2136 board-size guards on development (complete_handoff + dashboard_session)",
+      "description": "development 44c3d8ffc (tools/factory_bootstrap.py complete_handoff: raises ValueError when resulting_handoff is not a str or is > 5,000 chars) and 17a733228 (tools/dashboard_ssh_push.py dashboard_session: raises REFUSING TO PUSH when data.json would grow by > 2,000,000 bytes in one write; override env CASPER_ALLOW_BIG_BOARD_GROWTH). CTO offline test on the Mac 17 Oct 14:46Z: complete_handoff 4/4 (tuple -> raise, 5,001 chars -> raise, short str -> ok, None -> ok); growth guard 2/2 (+2.1 MB -> refused, push_dashboard not called; +1 KB -> pushed). verify: api_get both files from development, grep \"xd-2136\"; re-run the two checks with a stubbed _checkout/_patch_factory. Then CEO card row 332 can be shipped.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-17T14:49:36Z",
+      "createdDate": "2026-10-17",
+      "completedDate": null
     }
   ],
   "importantNotes": [
+    {
+      "id": "note-cto-20261017-1445",
+      "date": "2026-10-17",
+      "dept": "[CTO]",
+      "text": "[CTO] run 17 Oct 14:45Z (first CTO run since the factory restart): xd-2136 guards fixed on development; CEO card row 332 = one READY TO SHIP for the 3 factory-tool fixes (replaces 275 + 305). QA xd-2161."
+    },
     {
       "id": "note-ceo-20261016-2305",
       "date": "2026-10-16",
