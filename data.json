@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-18T00:03:42Z",
+  "lastUpdated": "2026-10-18T17:46:17Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 69,
@@ -15630,6 +15630,16 @@
           "verify": "ssh main server: docker ps -a --format '{{.Names}} {{.CreatedAt}}' | grep buildkit (none older than 2 h); df -m /",
           "met": false,
           "evidence": "[CTO live 2026-10-17, 2026-10-17T21:31Z] Hypothesis (not measured): setup-buildx-action's post-job cleanup did not run for these jobs (cut-off or failed runs). Measured: 5 builders alive 21:28Z, oldest 15:47Z."
+        },
+        {
+          "test": "ACTION \u2014 OneProvider: 5 servers stopped answering at 10:45Z today (Mexico City, Miami, Montreal, Singapore, Sao Paulo). Please log in to the OneProvider panel and look at those 5 (suspended? unpaid? down?). Tell any chat what it says. Until then they are hidden in the app; 6 countries still work.",
+          "verify": "the 5 nodes answer ping/WireGuard again and are re-activated (DEVOPS) - QA checks traffic",
+          "met": false,
+          "passed": "False",
+          "verifiedBy": "none",
+          "createdBy": "ceo-office",
+          "createdAt": "2026-10-18T17:50:00Z",
+          "owner": "[CEO]"
         }
       ],
       "progress": 0,
@@ -66031,9 +66041,40 @@
       "createdAt": "2026-10-17T22:44:03Z",
       "createdDate": "2026-10-17",
       "completedDate": null
+    },
+    {
+      "id": "xd-2187",
+      "from": "[CEO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CEO: [P0] 5 OneProvider nodes down since 18 Oct 10:45Z (MX, MIA, MTL, SGP, SAO) - find why, bring back, re-activate",
+      "description": "[P0 OUTAGE 18 Oct, CEO live 'casper fleet is not working ... server page not opening ... fix now'] (1) Site, admin and API down from 00:05Z to 17:37Z: the main server rebooted 00:05Z (kernel 6.8.0-147); the caspervpn-nginx container was stopped after the boot and the 04:00 root-cron 'docker system prune -af --filter until=24h' deleted the stopped container and its image (log: 'Deleted Containers: 4ef09e...'). Cloudflare answered 521 on api/caspervpn.com/admin; apps could not sign in or fetch servers. FIX 17:37Z: recreated nginx from /root/Casper/Casper-Code compose (up -d --no-deps nginx); api /health 200, caspervpn.com 200, admin 200. PREVENT: root cron 04:00 changed to 'docker image prune' (images only - never deletes containers; backup /root/backups/root-crontab-before-20261018.txt); new /etc/cron.d/casper-nginx-watchdog restarts nginx within 5 min if missing/stopped. (2) 5 OneProvider nodes dead since 10:45Z (Mexico City 147.78.1.27, Miami 23.95.79.249, Montreal 45.154.204.206, Singapore 167.150.100.166, Sao Paulo 185.192.124.245): no ping, no 22/443, from the brain AND from la-2 (control). Set IsActive=false on those 5 so apps stop offering them (backup /root/backups/vpnservers-before-outage-20261018.csv; undo = set IsActive=true). Live: Amsterdam, Dusseldorf, Hong Kong, Los Angeles, Sydney, Tokyo. (3) No bug report reached the server today (last BugReports row 17 Oct 22:16Z) - the CEO's reports were sent while the API was down. Ask: read the OneProvider panel/status (suspension? billing? network?) - the CEO may need to log in; when a node answers again, prove WireGuard traffic end to end, then set IsActive=true. Also: why did caspervpn-nginx not restart after the 00:05Z boot (restart: unless-stopped) - find the boot log reason. skill: devops SKILL.md + fleet-onboarding.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-10-18T17:46:17Z",
+      "createdDate": "2026-10-18",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2188",
+      "from": "[CEO]",
+      "to": "[QA]",
+      "title": "Handoff from CEO: [P0] Verify 18 Oct outage fix: site/admin/API up, nginx watchdog, prune now images-only, 5 nodes hidden",
+      "description": "[P0 OUTAGE 18 Oct, CEO live 'casper fleet is not working ... server page not opening ... fix now'] (1) Site, admin and API down from 00:05Z to 17:37Z: the main server rebooted 00:05Z (kernel 6.8.0-147); the caspervpn-nginx container was stopped after the boot and the 04:00 root-cron 'docker system prune -af --filter until=24h' deleted the stopped container and its image (log: 'Deleted Containers: 4ef09e...'). Cloudflare answered 521 on api/caspervpn.com/admin; apps could not sign in or fetch servers. FIX 17:37Z: recreated nginx from /root/Casper/Casper-Code compose (up -d --no-deps nginx); api /health 200, caspervpn.com 200, admin 200. PREVENT: root cron 04:00 changed to 'docker image prune' (images only - never deletes containers; backup /root/backups/root-crontab-before-20261018.txt); new /etc/cron.d/casper-nginx-watchdog restarts nginx within 5 min if missing/stopped. (2) 5 OneProvider nodes dead since 10:45Z (Mexico City 147.78.1.27, Miami 23.95.79.249, Montreal 45.154.204.206, Singapore 167.150.100.166, Sao Paulo 185.192.124.245): no ping, no 22/443, from the brain AND from la-2 (control). Set IsActive=false on those 5 so apps stop offering them (backup /root/backups/vpnservers-before-outage-20261018.csv; undo = set IsActive=true). Live: Amsterdam, Dusseldorf, Hong Kong, Los Angeles, Sydney, Tokyo. (3) No bug report reached the server today (last BugReports row 17 Oct 22:16Z) - the CEO's reports were sent while the API was down. QA: (a) curl the 3 sites = 200; (b) docker stop caspervpn-nginx on a quiet minute is NOT allowed - instead read /etc/cron.d/casper-nginx-watchdog and run its test part; (c) crontab -l has no 'system prune'; (d) app server list shows 6 countries and every one connects with traffic.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-10-18T17:46:17Z",
+      "createdDate": "2026-10-18",
+      "completedDate": null
     }
   ],
   "importantNotes": [
+    {
+      "date": "2026-10-18",
+      "dept": "[CEO]",
+      "text": "[P0 OUTAGE 18 Oct, CEO live 'casper fleet is not working ... server page not opening ... fix now'] (1) Site, admin and API down from 00:05Z to 17:37Z: the main server rebooted 00:05Z (kernel 6.8.0-147); the caspervpn-nginx container was stopped after the boot and the 04:00 root-cron 'docker system prune -af --filter until=24h' deleted the stopped container and its image (log: 'Deleted Containers: 4ef09e...'). Cloudflare answered 521 on api/caspervpn.com/admin; apps could not sign in or fetch servers. FIX 17:37Z: recreated nginx from /root/Casper/Casper-Code compose (up -d --no-deps nginx); api /health 200, caspervpn.com 200, admin 200. PREVENT: root cron 04:00 changed to 'docker image prune' (images only - never deletes containers; backup /root/backups/root-crontab-before-20261018.txt); new /etc/cron.d/casper-nginx-watchdog restarts nginx within 5 min if missing/stopped. (2) 5 OneProvider nodes dead since 10:45Z (Mexico City 147.78.1.27, Miami 23.95.79.249, Montreal 45.154.204.206, Singapore 167.150.100.166, Sao Paulo 185.192.124.245): no ping, no 22/443, from the brain AND from la-2 (control). Set IsActive=false on those 5 so apps stop offering them (backup /root/backups/vpnservers-before-outage-20261018.csv; undo = set IsActive=true). Live: Amsterdam, Dusseldorf, Hong Kong, Los Angeles, Sydney, Tokyo. (3) No bug report reached the server today (last BugReports row 17 Oct 22:16Z) - the CEO's reports were sent while the API was down.",
+      "note": "[P0 OUTAGE 18 Oct, CEO live 'casper fleet is not working ... server page not opening ... fix now'] (1) Site, admin and API down from 00:05Z to 17:37Z: the main server rebooted 00:05Z (kernel 6.8.0-147); the caspervpn-nginx container was stopped after the boot and the 04:00 root-cron 'docker system prune -af --filter until=24h' deleted the stopped container and its image (log: 'Deleted Containers: 4ef09e...'). Cloudflare answered 521 on api/caspervpn.com/admin; apps could not sign in or fetch servers. FIX 17:37Z: recreated nginx from /root/Casper/Casper-Code compose (up -d --no-deps nginx); api /health 200, caspervpn.com 200, admin 200. PREVENT: root cron 04:00 changed to 'docker image prune' (images only - never deletes containers; backup /root/backups/root-crontab-before-20261018.txt); new /etc/cron.d/casper-nginx-watchdog restarts nginx within 5 min if missing/stopped. (2) 5 OneProvider nodes dead since 10:45Z (Mexico City 147.78.1.27, Miami 23.95.79.249, Montreal 45.154.204.206, Singapore 167.150.100.166, Sao Paulo 185.192.124.245): no ping, no 22/443, from the brain AND from la-2 (control). Set IsActive=false on those 5 so apps stop offering them (backup /root/backups/vpnservers-before-outage-20261018.csv; undo = set IsActive=true). Live: Amsterdam, Dusseldorf, Hong Kong, Los Angeles, Sydney, Tokyo. (3) No bug report reached the server today (last BugReports row 17 Oct 22:16Z) - the CEO's reports were sent while the API was down.",
+      "id": "note-legacy-9feb646b52"
+    },
     {
       "date": "2026-10-18",
       "dept": "[CEO]",
