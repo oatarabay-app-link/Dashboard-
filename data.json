@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-20T07:38:19Z",
+  "lastUpdated": "2026-10-20T08:47:55Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 69,
@@ -15849,6 +15849,16 @@
           "test": "READY TO SHIP (after QA xd-2237 passes) \u2014 the nightly backup of the server's code and settings has not run since 18 Oct \u00b7 why: a settings line added on 17 Oct has spaces in it and the backup script stops on it; the database backup is fine (made every night) \u00b7 what the ship does: put the fixed backup script on the main server (one file, scripts/backup.sh in /root/Casper/Casper-Code) \u00b7 tested on dev: development a3f947984, old script stops on a test file with the same kind of line, new one reads it \u00b7 rollback: put the old file back (md5 7dc56f0c) \u00b7 advice: YES (xd-1996)",
           "verify": "md5 /root/Casper/Casper-Code/scripts/backup.sh = 5617ce41; after 02:00Z: ls /root/Casper/Casper-Code/backups/*.tar.gz = 1 file of today; RoutineRuns backups 04:30Z = ok 'Backups OK'",
           "evidence": "[DEVOPS run 2026-10-20 0726, scheduled 'Casper devops', unattended, 2026-10-20T07:4xZ] added."
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "addedAt": "2026-10-20T08:47:45Z",
+          "owner": "[ADMIN-PANEL]",
+          "test": "READY TO SHIP (after QA xd-2218 and the new QA check pass) \u2014 admin panel: 4 pages showed wrong or broken numbers (QA 17 Oct) \u00b7 what is fixed: Connection logs (no more 'NaN', real durations), Revenue page (no fake '$0.0K' or made-up churn number), Blocked IPs (server bans counted as automatic, an admin ban can be lifted), Operations (the daily report opens instead of an error) \u00b7 why: you look at these pages to judge the business; today they show wrong numbers \u00b7 what the ship does: admin website + one small change in the API (only the Operations report reader) \u00b7 tested on dev: development ba37199fb + fa5c6ee + bcb7966, dev admin bundle main.596afcdb.js, dev API report link 200 \u00b7 rollback: redeploy the previous admin image and API image (git revert of the 3 commits) \u00b7 advice: yes after QA passes, low risk, admin-only.",
+          "evidence": "",
+          "verify": "curl -s https://admin.caspervpn.com/ | grep -o 'main\\.[a-z0-9]*\\.js' ; then grep -c 'Auto-banned (fail2ban + brute force)' in that bundle = 1; admin-token GET /api/admin/ops/report/connectivity-latest.txt = 200"
         }
       ],
       "progress": 0,
@@ -66225,12 +66235,13 @@
       "to": "[ADMIN-PANEL]",
       "title": "Handoff from QA: [QA FAILED] Admin pages: Connection logs blank/NaN, Revenue Intelligence $0.0K, Blocked IPs labels, Operations 401 + usage rows 0",
       "description": "[QA 2026-10-17 c, CEO live: signed-in admin pass in the CEO's Chrome (his session, read-only clicks), 2026-10-17T18:1xZ] Signed-in admin, 17 Oct 18:0xZ. (1) /connection-logs: 'Data Transferred NaN undefined'; every row's User, Server, Client IP, VPN IP empty; Duration '-'; 'Unique Users 1' for 896 sessions (DB: 2,287 sessions in 30 d) - the page does not map the API fields. (2) /revenue-intelligence: 'MRR $0.0K +undefined%', 'ARR $0K', 'LTV:CAC :1 $ / $', 'No revenue data' although all 6 /api/admin/revenue-intelligence/* calls answer 200 and metrics.mrr = 22.95 (14 Oct) - hypothesis: thousands formatting of a 22.95 value + missing fields. (3) /blocked-ips: header 'Admin-blocked 50 / Auto-banned 0' while every reason is fail2ban:sshd. (4) /operations: 'could not load connectivity-latest.txt: Request failed with status code 401'; DATABASE card '0 usage rows' while SELECT count(*) FROM BandwidthUsageLogs = 528,298 (pg_stat n_live_tup is 0 - the card reads a stale estimate); 'Data-cap enforcer ... 6 days ago' while /var/log/datacap-enforcement-monitor.log 17:45Z says 'OK - EnforceDataCap=true, over-cap users=15, none gaining data'. Fix, then hand back to [QA] for the signed-in re-check (rows admin-operator-pages-live 3, ceo 121 leg 4, admin-blocked-ips-live 3).",
-      "status": "in_progress",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-10-17T17:58:58Z",
       "createdDate": "2026-10-17",
-      "completedDate": null,
-      "notes": "[WEBSITE+ADMIN run 2026-10-19 1442, 15:33Z] DEV CHECK: admin.dev.caspervpn.com redeployed 15:30:29Z (last-modified), bundle main.b09c3de2.js contains the fix: 'Not measured yet' 1, bytesDownloaded mapping 1, 'userId||userEmail' unique-user count, hard-coded '-0.5%' 0, 'mrr/1e3' 0 (was main.ef5a1e71.js, 17 Oct). Signed-in page check = QA xd-2218. dev API /health 502 for ~1 min during the redeploy, 200 from 15:31:45Z. || [WEBSITE+ADMIN run 2026-10-19 1442, scheduled, unattended, 2026-10-19T15:2xZ] items (1) and (2) FIXED on development ba37199fb. MEASURED by code first: GET /api/admin/connection-logs returns raw ConnectionLog rows (bytesUploaded/bytesDownloaded, userId/serverId only, no IP fields - never stored) while the page read bytesReceived/bytesSent/userEmail/serverName/clientIP -> NaN + empty columns + 'Unique Users 1' (Set of undefined). revenue-intelligence/metrics returns mrr/arr/churnRate/totalRevenue/averageRevenuePerUser only; page divided mrr by 1000 and read mrrGrowth/avgLtv/avgCac/ltvCacRatio/recoveredRevenue that do not exist; the churn chip '-0.5%' was a hard-coded number (removed). Fix: field mapping + duration from connectedAt..disconnectedAt/lastSeenAt + short-id fallback for user/server names (real names -> [BACKEND] handoff) + dash where the API has no number. tsc 5.4.5 on admin-panel-react: patched 0 src errors, baseline 0, planted 1. NOT done this run: (3) /blocked-ips labels, (4) /operations 401 + DB card + data-cap line. Dev check needs a signed-in admin on admin.dev (QA)."
+      "completedDate": "2026-10-20",
+      "notes": "[WEBSITE+ADMIN run 2026-10-20 0801, scheduled, unattended] 2026-10-20T08:47:45Z: items (3) and (4) FIXED on development and checked on dev. (3) MEASURED in code: fail2ban bans are synced into the admin BlockedIPs table with Reason 'fail2ban:<jail>@<server>' (RadiusAuthController.SyncBlockedIps), so the page counted them as admin bans. Fix fa5c6ee: reason fail2ban:* = auto, active=false rows hidden, admin rows unban by id. (4a) MEASURED on production with an admin token 08:11Z: ops/status 200, ops/reports 200, report/connectivity-latest.txt 401 + throughput-latest.txt 401, farm-guard.log 200; API log: UnauthorizedAccessException on /app/reports/connectivity-latest.txt (absolute symlink to /root/reports/..., missing inside the container) -> 401 AUTH_1004. Fix bcb7966: follow the link by file name inside the reports dir; unreadable = 404, never 401. Dev proof 08:47Z (test files made then removed): absolute link 200 with text, dangling 404. (4b) DB card: the estimate today is 528,459 (status JSON 08:00Z) - QA's 0 was a stale pg_stat; label now says estimate, 0 shows 'not measured yet'. (4c) data-cap 'last run' = DevOps script, handed off. Bundle main.596afcdb.js on dev contains all new strings (grep 1 each), old hint string 0. NOT PROVEN: TypeScript type-check (npm install not possible on the Mac this run); react-scripts build on dev succeeded. Handed to QA for the signed-in dev check. || [WEBSITE+ADMIN run 2026-10-19 1442, 15:33Z] DEV CHECK: admin.dev.caspervpn.com redeployed 15:30:29Z (last-modified), bundle main.b09c3de2.js contains the fix: 'Not measured yet' 1, bytesDownloaded mapping 1, 'userId||userEmail' unique-user count, hard-coded '-0.5%' 0, 'mrr/1e3' 0 (was main.ef5a1e71.js, 17 Oct). Signed-in page check = QA xd-2218. dev API /health 502 for ~1 min during the redeploy, 200 from 15:31:45Z. || [WEBSITE+ADMIN run 2026-10-19 1442, scheduled, unattended, 2026-10-19T15:2xZ] items (1) and (2) FIXED on development ba37199fb. MEASURED by code first: GET /api/admin/connection-logs returns raw ConnectionLog rows (bytesUploaded/bytesDownloaded, userId/serverId only, no IP fields - never stored) while the page read bytesReceived/bytesSent/userEmail/serverName/clientIP -> NaN + empty columns + 'Unique Users 1' (Set of undefined). revenue-intelligence/metrics returns mrr/arr/churnRate/totalRevenue/averageRevenuePerUser only; page divided mrr by 1000 and read mrrGrowth/avgLtv/avgCac/ltvCacRatio/recoveredRevenue that do not exist; the churn chip '-0.5%' was a hard-coded number (removed). Fix: field mapping + duration from connectedAt..disconnectedAt/lastSeenAt + short-id fallback for user/server names (real names -> [BACKEND] handoff) + dash where the API has no number. tsc 5.4.5 on admin-panel-react: patched 0 src errors, baseline 0, planted 1. NOT done this run: (3) /blocked-ips labels, (4) /operations 401 + DB card + data-cap line. Dev check needs a signed-in admin on admin.dev (QA).",
+      "resolution": "fixed on development (ba37199fb, fa5c6ee, bcb7966); waits QA signed-in dev check, then CEO YES to ship"
     },
     {
       "id": "xd-2175",
@@ -67044,6 +67055,30 @@
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-10-20T07:38:19Z",
+      "createdDate": "2026-10-20",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2239",
+      "from": "[ADMIN-PANEL]",
+      "to": "[QA]",
+      "title": "Handoff from ADMIN-PANEL: [ADMIN-PANEL] xd-2174 (3)(4) re-check signed in on dev: Blocked IPs split + Operations report loads",
+      "description": "Signed in on admin.dev.caspervpn.com (bundle main.596afcdb.js, deployed 08:44Z 20 Oct, development fa5c6ee + bcb7966). (3) /blocked-ips: fail2ban bans count under 'Auto-banned (fail2ban + brute force)', not 'Admin-blocked'; the unban button on a fail2ban row explains it ends on the server by itself; an admin-made ban is lifted by its row id and disappears after refresh. (4) /operations: the report viewer opens connectivity-latest.txt without the 401 line; the DATABASE card says 'about N usage rows (Postgres estimate...)'. Re-runnable API check already done by [ADMIN-PANEL]: on the dev API, an absolute '-latest' symlink returned 200 with the file text and a missing target 404 OPS_NOT_FOUND (production today: 401). Data-cap line = DevOps handoff, not this check. Then pass/fail on xd-2174 and the READY TO SHIP row.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-20T08:47:55Z",
+      "createdDate": "2026-10-20",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2240",
+      "from": "[ADMIN-PANEL]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from ADMIN-PANEL: [DEVOPS] routines_status.sh: Data-cap enforcer 'last run' stuck on 12 Oct (looks for DONE, enforcer now writes OK)",
+      "description": "Measured 20 Oct 08:1xZ on the brain: /opt/caspervpn/routines_status.sh line 41 sets datacapSweep_every3m.lastRun = last line of /var/log/datacap-enforcer.log matching 'DONE'. The newest DONE line is 2026-10-12T00:24:08Z; the enforcer has written 'OK - no over-cap client-keyed users to enforce' every 3 min since (last 08:12:02Z), and 17 Oct had 'SKIP - EnforceDataCap=OCI runtime exec failed ... no space left on device'. So the admin Operations page shows '6 days ago' while the job runs. Fix: match DONE|OK|SKIP (and show SKIP as a warning). Server script change = DevOps path + CEO YES for production. From QA xd-2174 item (4).",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-20T08:47:55Z",
       "createdDate": "2026-10-20",
       "completedDate": null
     }
