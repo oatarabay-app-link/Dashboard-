@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-22T23:39:48Z",
+  "lastUpdated": "2026-10-22T23:48:56Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 69,
@@ -16254,6 +16254,17 @@
           "createdAt": "2026-10-22T23:40:00Z",
           "test": "READY TO SHIP \u2014 remove one of two identical traffic rules on the Amsterdam server (xd-2303) \u00b7 why: the same rule is written twice; harmless today, but if someone removes it once the copy stays and confuses the next fix \u00b7 what the ship does: deletes one copy and saves the firewall, the other copy keeps working, users notice nothing \u00b7 tested: measured 22 Oct 23:2xZ the rule count is 2 (Los Angeles and D\u00fcsseldorf have 1); Bangkok has no such rule, so there is nothing to test there first \u00b7 risk: very low \u00b7 rollback: add the rule back with one command \u00b7 advice: YES, low priority",
           "verify": "ssh_exec_node('node-nl-am2', \"iptables -t nat -S POSTROUTING | grep -c -- '-o wg1 -j MASQUERADE'\") -> 1, and the same in /etc/iptables/rules.v4"
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "addedAt": "2026-10-22T23:48:52Z",
+          "addedBy": "[ADMIN-PANEL] website+admin run 1022-2344",
+          "owner": "[ADMIN-PANEL]",
+          "test": "READY TO SHIP \u2014 fix the labels on the admin Censorship page (xd-2300) \u00b7 why: QA saw every country marked 'Unknown' and the protocol hints read 'undefined', so the page looked broken even though its numbers are right \u00b7 what the ship does: the page now understands the words the server sends (None / Partial / WireGuard / Working) and shows the 'from real users in that country' note \u00b7 tested on dev: type check clean (0 errors before and after), small logic test passes; the server's real answer was read first \u00b7 rollback: put back the previous admin image (a rollback tag is made at ship time) \u00b7 advice: YES - display-only, one page, no data change",
+          "verify": "after ship: admin bundle main.<new>.js contains 'from-country'; QA signed-in look at /censorship shows AE = Partial and no 'undefined' tooltip",
+          "evidence": "[WEBSITE+ADMIN run 2026-10-22 2344, scheduled, unattended, 2026-10-22T23:48:52Z] development d24d3c4dd; tsc 5.4.5 src 0 -> 0 with planted-error control; API read on production shows enum names (BY blockLevel 'None', protocol 'WireGuard', status 'Unknown')."
         }
       ],
       "progress": 0,
@@ -68644,11 +68655,15 @@
       "to": "[ADMIN-PANEL]",
       "title": "Handoff from QA: [P2] Censorship page (production): Block Level 'Unknown' everywhere, protocol labels 'undefined', from-country note missing",
       "description": "QA 22 Oct 23:0xZ signed in on admin.caspervpn.com/censorship: numbers match the DB (AE WireGuard 93%), but (a) Block Level column = 'Unknown' for all 12 countries while CensorshipCountryStatuses.BlockLevel is 1 (AE) / 0 (RU) - numeric enum not mapped?; (b) protocol icon aria-label/tooltip = 'undefined: 93% success' (Protocol is a number 0-3 in ProtocolsJson); (c) the LastTestNote 'From-country: 13 of 14 attempts...' is not shown. Fix on development, then READY TO SHIP; QA checks on production admin (CEO 22 Oct).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-10-22T23:02:28Z",
       "createdDate": "2026-10-22",
-      "completedDate": null
+      "completedDate": "2026-10-22",
+      "completedAt": "2026-10-22",
+      "completedBy": "[ADMIN-PANEL]",
+      "resolution": "[WEBSITE+ADMIN run 2026-10-22 2344, scheduled, unattended, 2026-10-22T23:48:52Z] MEASURED first: production GET /api/admin/censorship/matrix (admin token, control /users 200) returns enum NAMES, e.g. BY blockLevel 'None', protocol 'WireGuard', status 'Unknown'; the page indexed arrays with them (BLOCK_LEVELS['None'] -> undefined -> 'Unknown'; PROTOCOL_STATUSES['Unknown'] -> 'undefined'). FIX on development d24d3c4dd (admin-panel-react/src/pages/CensorshipResponse.tsx only, +60/-8): enumIndex() accepts number or name for BlockLevel, ProtocolStatus, VPNProtocol, EventType, DomainPurpose (CDNFronting), DomainCheckResult; protocol cells matched by protocol (was array position); tooltip shows protocol, status, success and LastTestNote; caption 'from-country N/M' under the icon when the note starts 'From-country'. Proof: tsc 5.4.5 --noEmit src errors 0 before (stash) and 0 after; planted error caught (control); node unit check enumIndex('Partial')=1, ('IKEv2')=1, ('CDNFronting')=3, 'From-country: 13 of 14 attempts' -> 13/14. NOT PROVEN: render on admin.dev (redeploy ~20 min after push 23:5xZ). Production differs from development only in adminService.ts (+5), so the cherry-pick applies to this page cleanly.",
+      "resultingHandoff": "QA live check after ship + READY TO SHIP row on ceo-action-backlog"
     },
     {
       "id": "xd-2301",
@@ -68791,6 +68806,18 @@
       "status": "pending",
       "priority": "P2",
       "createdAt": "2026-10-22T23:39:48Z",
+      "createdDate": "2026-10-22",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2312",
+      "from": "[ADMIN-PANEL]",
+      "to": "[QA]",
+      "title": "Handoff from ADMIN-PANEL: [P2] Check the Censorship page labels after xd-2300 ships (production admin, CEO signed in)",
+      "description": "Fix on development d24d3c4dd. After the CEO YES and the ship: on admin.caspervpn.com/censorship (1) Block Level column shows None/Partial/... (AE = Partial, matches CensorshipCountryStatuses.BlockLevel 1), not 'Unknown' for all; (2) hovering a protocol icon reads e.g. 'WireGuard \u2014 Working: 93% success \u00b7 From-country: ...', never 'undefined'; (3) AE WireGuard shows the caption 'from-country 13/14' (or the current N/M from LastTestNote). Optional early look: admin.dev.caspervpn.com/censorship after the dev redeploy.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-22T23:48:56Z",
       "createdDate": "2026-10-22",
       "completedDate": null
     }
