@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-22T19:44:29Z",
+  "lastUpdated": "2026-10-22T19:47:56Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 69,
@@ -15996,6 +15996,39 @@
           "addedBy": "[ANDROID] apps run 1022 19:3x",
           "owner": "[CEO]",
           "evidence": "[APPS run 2026-10-22 19:3x, scheduled 'Casper apps', unattended, 2026-10-22T19:43:26Z] measured on the Mac: _android/logcat-dump.txt and casper-prod-debug.apk last changed 6 Oct / 2 Oct; nothing newer under _android (find -newermt 2026-10-15 = 0 files) -> the app has not been run since 6 Oct. CEO order row 365: Android work that needs no Google Play and no device; this is the one step left that only the CEO's Mac can do (unattended runs have no emulator, no /dev/kvm)."
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "createdBy": "ceo-office",
+          "createdAt": "2026-10-22T19:47:37Z",
+          "owner": "[CEO]",
+          "test": "ACTION \u2014 build 76 from branch ios/76 (tip 8131c409b, pushed 22 Oct 19:5xZ) and install it on your iPhone \u00b7 why: it now holds the 3 Paperclip fixes you were told were in build 75 but were not (xd-2194 connect from the saved WireGuard config when our server is unreachable; xd-2142 no second dial on the same road; xd-2131 'far from you' tag + Quick Connect latency gate) plus xd-2213 funnel step and the Home 'offline list' banner \u00b7 then QA re-tests the 3 items on build 76 (xd-2212) \u00b7 if nothing: the fixes stay unshipped and the next App Store update ships without them.",
+          "verify": "Xcode archive from ios/76 at or after 8131c409b; phone shows build 76; QA xd-2212 PASS on the 3 items",
+          "evidence": "[CEO live 2026-10-22 2026-10-22T19:47:37Z] CEO YES 'yes merge 1-3'. Merge: dev/paperclip-agents-2026-10-19 -> development ec0a487ed (clean, no conflicts); ios/76-cas86's 3 commits replayed on origin/ios/76 (it had moved to fec91ee37 at 19:42Z) -> ios/76 = 8131c409b, no conflicts. Nothing on production."
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "createdBy": "ceo-office",
+          "createdAt": "2026-10-22T19:47:37Z",
+          "owner": "[DEVOPS]",
+          "test": "READY TO SHIP \u2014 key handling patch from the Paperclip CTO (CAS-91, commit 231d52515 now on development): the server key lives at ~/.ssh/casper_automation (never the Mac's personal id_ed25519), every ssh/git call uses IdentitiesOnly, setup_ssh prints which source gave the key \u00b7 why: today's outage happened because setup_ssh wrote the server key over the personal key path and skipped the loader when a file already existed \u00b7 tested on dev: Paperclip QA code review PASS (CAS-92); live proof pending \u00b7 rollback: revert the commit on production \u00b7 advice: YES after one hourly run on development proves a board write + server connect with it.",
+          "verify": "a scheduled run's log shows '[ssh] key source: casper-secrets' and ends with '[memory] dept log updated'",
+          "evidence": "[CEO live 2026-10-22 2026-10-22T19:47:37Z] on development since merge ec0a487ed. Production currently runs the office's simpler patch (reads ~/mnt/casper-secrets/brain_key.b64), proven: this chat + GitHub + main server OK."
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "createdBy": "ceo-office",
+          "createdAt": "2026-10-22T19:47:37Z",
+          "owner": "[CTO]",
+          "test": "READY TO SHIP \u2014 scrub secrets from the public dashboard before every push (Paperclip CAS-66, tools/scrub_public_board.py on development): removes the RADIUS secret and server IPs from data.json/index.html before dashboard_session pushes \u00b7 why: the dashboard is a public GitHub Pages site \u00b7 tested: Paperclip QA; live proof pending \u00b7 rollback: revert \u00b7 advice: YES.",
+          "verify": "curl the live dashboard: grep -c for the RADIUS secret value = 0 and for raw node IPs = 0 (control: the same grep on the previous data.json > 0)",
+          "evidence": "[CEO live 2026-10-22 2026-10-22T19:47:37Z] on development since merge ec0a487ed; not wired into dashboard_session on production yet."
         }
       ],
       "progress": 0,
@@ -67703,6 +67736,30 @@
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-10-22T19:43:39Z",
+      "createdDate": "2026-10-22",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2265",
+      "from": "[CEO]",
+      "to": "[QA]",
+      "title": "Handoff from CEO: [P1] Re-test the 3 Paperclip iOS fixes on BUILD 76 only (xd-2194 cached-config connect, xd-2142 one dial, xd-2131 far-from-you + Quick Connect gate)",
+      "description": "ios/76 = 8131c409b holds the 3 commits (b31c689ae, 13938560a, 8131c409b). Rule (Paperclip iOS skill, 22 Oct): a pass is void unless the build contains the commit - check 'git merge-base --is-ancestor 8131c409b origin/ios/76' and the phone's build number first. Waits for the CEO to build + install 76 (CEO card ACTION row). Earlier 'passed on build 75' verdicts were withdrawn (CAS-86/88).",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-22T19:47:56Z",
+      "createdDate": "2026-10-22",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2266",
+      "from": "[CEO]",
+      "to": "[CTO]",
+      "title": "Handoff from CEO: [P1] Paperclip helpers are now in the factory: dedupe + adopt (merge ec0a487ed on development)",
+      "description": "CEO YES 22 Oct: the helper branch dev/paperclip-agents-2026-10-19 (Board/CTO/QA/iOS helpers on the CEO Mac, ~/paperclip-workspaces/Casper-Code) is merged into development. Do: (1) read memory/sessions/2026-10-22-cto-cas91.md + the CAS-nn vault notes now on development and mirror each CAS ticket that is still open onto the board as a handoff to the owning department, so hourly runs and helpers never work the same item twice (helpers still cannot write the board until CAS-72 is answered); (2) decide which of the two key loaders stays (office patch on production vs CAS-91 patch on development) and put it in one READY TO SHIP row; (3) wire tools/scrub_public_board.py into dashboard_session on development and hand to QA; (4) from now on the CTO hourly run fetches dev/paperclip-agents-2026-10-19 from the Mac clone and merges it when it is ahead. Verify: board shows one row per open CAS ticket; no duplicate work in the next 24 h of DEPARTMENT_LOG.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-22T19:47:56Z",
       "createdDate": "2026-10-22",
       "completedDate": null
     }
