@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-22T21:39:52Z",
+  "lastUpdated": "2026-10-22T21:49:45Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 69,
@@ -16129,6 +16129,16 @@
           "test": "READY TO SHIP (after QA xd-2274 dev PASS) \u2014 see where new installs stop before sign-up (xd-2264 / xd-2213) \u00b7 why: about 78% of people who download never make an account and today we cannot see where they stop; build 76 sends a new 'saw intro' step our server refuses \u00b7 what the ship does: the server accepts that step and the admin gets a daily count per step (opened, saw intro, saw sign-up, started, failed + why, finished) \u00b7 tested on dev: development 3fff78fc7, 454/454 tests, control fails; live dev call accepted \u00b7 risk: very low - anonymous counts only, nothing for app users changes \u00b7 rollback: redeploy the previous version \u00b7 advice: YES",
           "verify": "curl -X POST https://api.caspervpn.com/api/funnel/install-events -d '{\"event\":\"intro_viewed\",\"installId\":\"<test id>\"}' -> success:true (control: a made-up event -> 'Unknown event')",
           "evidence": "[BACKEND run 2026-10-22 2005, scheduled, unattended, 2026-10-22T21:19:15Z] BUILT on development 3fff78fc7 (pushed 21:05Z, dev API live 21:13Z): (1) intro_viewed added to the install-event allow-list; (2) new GET /api/admin/ops/install-funnel?days=30 (Admin only): per day and per step (app_opened, intro_viewed, signup_screen_viewed, signup_started, signup_failed, signup_completed) rows + distinct installs, signup_failed split by error code, window totals; anonymous only. Proof: full suite 454/454; InstallFunnelDailyTests 3/3 + InstallAttributionTests 12/12; CONTROL without the allow-list change 2 of 3 new tests FAIL. Live dev: POST /api/funnel/install-events intro_viewed -> {success:true} (before: 'Unknown event', IOS measured), app_opened -> true (control), intro_viewed_x -> 'Unknown event' (control); dev DB rows intro_viewed + app_opened for install xd2264-qa-1792703599, UserId null, build 76. GET install-funnel unauthenticated -> 401 (was 404 before the deploy). NOT PROVEN: the signed-in admin answer on dev (needs a dev admin = xd-2199). skill: backend SKILL.md (FunnelEvents trap xd-1688: UserId nullable, InstallId kept on linked rows) -> counts all rows with an install id, linked or not."
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "owner": "[ADMIN-PANEL]",
+          "addedAt": "2026-10-22T21:49:40Z",
+          "addedBy": "[ADMIN-PANEL] website+admin run 1022-2143",
+          "test": "READY TO SHIP (after row 378 backend ships and QA xd-2280 dev PASS) \u2014 show the 'before sign-up' install funnel on the admin Marketing page (xd-2275 / xd-2213) \u00b7 why: you asked to see where new installs stop before making an account, next to Apple's downloads \u00b7 what the ship does: one new card on admin -> Marketing: how many installs opened the app, saw the intro, saw sign-up, started, got an error (and which), finished; plus a box where you type Apple's download number to see the share that opened the app (not saved) \u00b7 tested on dev: development bb1f14af3, type check clean in our code \u00b7 risk: very low - admin screen only, read-only \u00b7 rollback: redeploy the previous admin build \u00b7 advice: YES, together with row 378",
+          "verify": "H=$(curl -s https://admin.caspervpn.com/ | grep -oE 'main\\.[a-f0-9]+\\.js' | head -1); curl -s https://admin.caspervpn.com/static/js/$H | grep -c 'where new installs stop'  -> >=1 after ship"
         }
       ],
       "progress": 0,
@@ -20090,8 +20100,8 @@
           "met": false,
           "verifiedBy": "none",
           "autoTickReverted": "2026-10-07 growth x: auto-ticked by session_exit at 23:54Z 6 Oct (board 2c61c1337), restored",
-          "evidence": "[QA 2026-10-22 d, scheduled 'Casper qa', unattended, 2026-10-22T21:2xZ] NOT TICKED: the row asks the review notes to STATE the fleet count; MARKETING xd-2269 (ASC API 20:05Z) found NO count in the 4.3.1 notes. 'No number' does not meet the row as written. It does follow the CEO's 3 Oct no-number rule for the website, so the row text needs rewording by its owner, not a QA pass -> [PRODUCT] handoff. || [GROWTH run 2026-10-22 1953, scheduled, unattended, 2026-10-22T20:05:41Z] MEASURED ASC API appStoreReviewDetail of 4.3.1 build 75: the notes give NO server count ('We operate our own servers worldwide; the current list is in the app's Servers tab') - no number to go stale, in line with the CEO's 3 Oct 'Global wording'. Row text asks for a number measured that day: QA to decide pass (no number = nothing stale) or reword the row. || [WEBSITE+ADMIN run 2026-10-22 1943, scheduled, unattended, 2026-10-22T19:49:21Z] Blocker 'Build 67 on HOLD' was stale (build 75 submitted 22 Oct). Handed to [MARKETING] xd-2269 for a read-only check of the review notes. || [GROWTH run 2026-10-10 2204, scheduled, 2026-10-10T22:10:19Z] Next submission (build 67) is on HOLD (row 207); 4.3.1 not live (itunes lookup 22:1xZ = 4.2). Under the CEO's 3 Oct no-number rule the count may still go in App Review notes (not public) - measured on submission day. ||  || [WEBSITE run 1022-2049, 2026-10-22T20:51:40Z] New input since 19:52: MARKETING xd-2269 COMPLETED 20:05:41Z (ASC API read-only): the 4.3.1 App Review notes contain NO server count (only 'servers worldwide ... Servers tab') - so row 4 (review notes state the fleet count measured on the day) holds by having no number. Evidence handed to QA xd-2271 to tick or reword. Side finding (not this row): notes say free '5 GB/month' vs live 512 MiB -> CEO card row 373.",
-          "blocker": "Waits [QA] xd-2271 (pass on 'no number' or reword)",
+          "evidence": "[WEBSITE+ADMIN run 1022-2143, scheduled, unattended, 2026-10-22T21:49:40Z] QA closed xd-2271 21:2xZ without a tick (row text asks for a count; notes have none) and opened xd-2277 [PRODUCT] to reword. Blocker rewritten from 'waits QA xd-2271' (closed) to PRODUCT xd-2277. || [QA 2026-10-22 d, scheduled 'Casper qa', unattended, 2026-10-22T21:2xZ] NOT TICKED: the row asks the review notes to STATE the fleet count; MARKETING xd-2269 (ASC API 20:05Z) found NO count in the 4.3.1 notes. 'No number' does not meet the row as written. It does follow the CEO's 3 Oct no-number rule for the website, so the row text needs rewording by its owner, not a QA pass -> [PRODUCT] handoff. || [GROWTH run 2026-10-22 1953, scheduled, unattended, 2026-10-22T20:05:41Z] MEASURED ASC API appStoreReviewDetail of 4.3.1 build 75: the notes give NO server count ('We operate our own servers worldwide; the current list is in the app's Servers tab') - no number to go stale, in line with the CEO's 3 Oct 'Global wording'. Row text asks for a number measured that day: QA to decide pass (no number = nothing stale) or reword the row. || [WEBSITE+ADMIN run 2026-10-22 1943, scheduled, unattended, 2026-10-22T19:49:21Z] Blocker 'Build 67 on HOLD' was stale (build 75 submitted 22 Oct). Handed to [MARKETING] xd-2269 for a read-only check of the review notes. || [GROWTH run 2026-10-10 2204, scheduled, 2026-10-10T22:10:19Z] Next submission (build 67) is on HOLD (row 207); 4.3.1 not live (itunes lookup 22:1xZ = 4.2). Under the CEO's 3 Oct no-number rule the count may still go in App Review notes (not public) - measured on submission day. ||  || [WEBSITE run 1022-2049, 2026-10-22T20:51:40Z] New input since 19:52: MARKETING xd-2269 COMPLETED 20:05:41Z (ASC API read-only): the 4.3.1 App Review notes contain NO server count (only 'servers worldwide ... Servers tab') - so row 4 (review notes state the fleet count measured on the day) holds by having no number. Evidence handed to QA xd-2271 to tick or reword. Side finding (not this row): notes say free '5 GB/month' vs live 512 MiB -> CEO card row 373.",
+          "blocker": "waits [PRODUCT] xd-2277 (reword the row to the CEO's 3 Oct no-number rule), then [QA] ticks on the xd-2269 evidence",
           "notes": " || [2026-10-22T20:05:41Z] old blocker: waits [MARKETING] xd-2269 (read the submitted build's App Review notes)"
         }
       ],
@@ -21500,9 +21510,9 @@
           "passed": false,
           "addedAt": "2026-10-09T06:15:28Z",
           "addedBy": "ceo-office",
-          "evidence": "[WEBSITE+ADMIN run 2026-10-22 1943, scheduled, unattended, 2026-10-22T19:49:21Z] xd-1024/xd-1021/xd-896 are all past their deferral dates (18 Oct, 8 Oct, 8 Oct). Handed to [DEVOPS] xd-2270. || [QA 2026-10-12 l, scheduled, 2026-10-12T22:20:00Z] FAIL (register PASS) - register memory/departments/security/context/secret-rotation-register.md read: 23 lines, names + dates only, key-shape grep 0; result 4 of 13 inside 90 days -> the row is NOT met today, as the register itself says; plans: xd-1024 18 Oct, xd-1021 21 Oct, xd-896 7 Nov, row 266, DEVOPS plan for 3. || [WEBSITE+ADMIN run 2026-10-12 2110, scheduled, unattended, 2026-10-12T21:19:53Z] MEASURED (names + dates only): register written memory/departments/security/context/secret-rotation-register.md (production 1e34a987). Result 12 Oct: 4 of 13 named secrets inside 90 days (node passwords 5 Oct, website admin 23 Sep, mail key 11 Oct, WireGuard secret 12 Oct); 7 older or never rotated (database password -> xd-1024 18 Oct; relay key -> xd-896 7 Nov; dev test account -> xd-1021 21 Oct; staff test account -> row 266; node control API key Apr; Cloudflare API token May; Cloudflare ws-edge secret May); 2 n/a/exempt. FAIL as of today; the 3 with no plan handed to [DEVOPS] this run. || not measured \u2014 no rotation record exists (CEO office 2026-10-09).",
+          "evidence": "[WEBSITE+ADMIN run 1022-2143, scheduled, unattended, 2026-10-22T21:49:40Z] xd-2270 moved (DEVOPS 21:3x-21:4xZ, in_progress): all 3 un-deferred with plans; correction by DEVOPS - xd-1021 and xd-896 have outside blockers, only xd-1024 is DevOps' own. NOT PROVEN: none rotated yet. || [WEBSITE+ADMIN run 2026-10-22 1943, scheduled, unattended, 2026-10-22T19:49:21Z] xd-1024/xd-1021/xd-896 are all past their deferral dates (18 Oct, 8 Oct, 8 Oct). Handed to [DEVOPS] xd-2270. || [QA 2026-10-12 l, scheduled, 2026-10-12T22:20:00Z] FAIL (register PASS) - register memory/departments/security/context/secret-rotation-register.md read: 23 lines, names + dates only, key-shape grep 0; result 4 of 13 inside 90 days -> the row is NOT met today, as the register itself says; plans: xd-1024 18 Oct, xd-1021 21 Oct, xd-896 7 Nov, row 266, DEVOPS plan for 3. || [WEBSITE+ADMIN run 2026-10-12 2110, scheduled, unattended, 2026-10-12T21:19:53Z] MEASURED (names + dates only): register written memory/departments/security/context/secret-rotation-register.md (production 1e34a987). Result 12 Oct: 4 of 13 named secrets inside 90 days (node passwords 5 Oct, website admin 23 Sep, mail key 11 Oct, WireGuard secret 12 Oct); 7 older or never rotated (database password -> xd-1024 18 Oct; relay key -> xd-896 7 Nov; dev test account -> xd-1021 21 Oct; staff test account -> row 266; node control API key Apr; Cloudflare API token May; Cloudflare ws-edge secret May); 2 n/a/exempt. FAIL as of today; the 3 with no plan handed to [DEVOPS] this run. || not measured \u2014 no rotation record exists (CEO office 2026-10-09).",
           "verifiedBy": "none",
-          "blocker": "waits [DEVOPS] xd-2270 (re-date or do the 3 expired rotations)",
+          "blocker": "waits [DEVOPS] xd-2270: xd-1024 (prod DB password) in the 02-04Z quiet window under CEO YES row 118; xd-1021 waits Apple review demo account; xd-896 waits an app build with the new relay key",
           "qaVerdict": "FAIL (register PASS)",
           "qaDate": "2026-10-12",
           "notes": "[WEBSITE+ADMIN run 2026-10-19 1442, scheduled, unattended, 2026-10-19T15:2xZ] blocker rewritten from 'answered yes ... acts now': row 266 covers 1 of the 7 old secrets only. ||  || [CEO office 17 Oct ~22:3xZ blocker sweep: the CEO answered; old blocker kept in notes] old blocker: planned rotations: xd-1024 (18 Oct), xd-1021 (21 Oct), xd-896 (7 Nov), row 266 (CEO) + the new DEVOPS plan for 3 secrets"
@@ -68126,11 +68136,16 @@
       "to": "[ADMIN-PANEL]",
       "title": "Handoff from BACKEND: [P2] xd-2213/xd-2264: show the install funnel (before sign-up) on the admin Marketing page",
       "description": "API on dev: GET /api/admin/ops/install-funnel?days=30 (Admin/SuperAdmin). Answer: {days, since, installs, totals:[{event, events, installs}], daily:[{day, steps:[{event, events, installs}], signupFailedBy:[{errorCode, events}]}], note}. CEO ask (xd-2213): see where new installs stop before an account, next to Apple's first-time downloads (Apple numbers are not stored here - show a note or a manual field). Production after the CEO YES on the READY TO SHIP row for xd-2264.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-10-22T21:19:26Z",
       "createdDate": "2026-10-22",
-      "completedDate": null
+      "completedDate": "2026-10-22",
+      "completedAt": "2026-10-22",
+      "completedBy": "[ADMIN-PANEL]",
+      "resolution": "[WEBSITE+ADMIN run 1022-2143, scheduled, unattended, 2026-10-22T21:49:40Z] BUILT on development bb1f14af3 (pushed 21:4xZ, fast-forward on 3fff78fc7): components/InstallFunnelPanel.tsx + Marketing.tsx + adminService.getOpsInstallFunnel. Apple downloads = manual field, not stored (as asked). Type check: tsc --noEmit 11 errors before = 11 after, all node_modules/react-hook-form (control run on the stashed tree), 0 in src. NOT PROVEN: admin.dev render (dev redeploy ~20 min) -> QA.",
+      "resultingHandoff": "xd-2280 to [QA] (dev check) + READY TO SHIP row on ceo-action-backlog",
+      "notes": ""
     },
     {
       "id": "xd-2276",
@@ -68177,6 +68192,18 @@
       "status": "pending",
       "priority": "P2",
       "createdAt": "2026-10-22T21:39:23Z",
+      "createdDate": "2026-10-22",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2280",
+      "from": "[ADMIN-PANEL]",
+      "to": "[QA]",
+      "title": "Handoff from ADMIN-PANEL: [P2] Check on admin.dev: Marketing page 'Before sign-up: where new installs stop' (xd-2275)",
+      "description": "development bb1f14af3 (on top of BACKEND 3fff78fc7). Admin -> Marketing, new card at the bottom: per-step installs / share of opened / events for 7/30/90 days, sign-up errors by code, per-day table, manual 'Apple first-time downloads' field (not saved) -> 'N of M downloads opened the app'. Check: (1) admin.dev bundle contains 'where new installs stop' (bundle grep); (2) signed in on admin.dev the card's 30 d 'Opened the app' installs = GET https://api.dev.caspervpn.com/api/admin/ops/install-funnel?days=30 totals[app_opened].installs; (3) no console error when the API answers 404 (production before row 378 ships). tsc --noEmit: 11 errors before and after, all inside node_modules/react-hook-form, 0 in src. Production only after CEO YES on the READY TO SHIP row (after row 378 backend).",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-22T21:49:45Z",
       "createdDate": "2026-10-22",
       "completedDate": null
     }
