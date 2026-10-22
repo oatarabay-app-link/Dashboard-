@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-22T08:17:20Z",
+  "lastUpdated": "2026-10-22T09:12:24Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 69,
@@ -14826,7 +14826,7 @@
           "qaDate": "2026-10-20"
         },
         {
-          "test": "CEO YES 2026-10-16 (live chat, CEO office: 'go with your advice') \u00b7 READY TO SHIP approved - ship by the normal path, then [QA] | READY TO SHIP \u2014 put the 'never write the secret VPN key into the app's log' fix into the main code (production) \u00b7 why: the fix lives only in the iPhone build branches; any new iPhone build made from the main code would write each user's secret key into Export Logs and bug reports again (security finding F19) \u00b7 what the ship does: copies 2 already-tested code changes (iPhone app + its VPN part) to production; no server, no store, no user is touched \u00b7 tested on dev: development b53a85cf0, Linux tests 28/28 + 10/10 (before the fix 8/28), QA xd-1931 \u00b7 rollback: git revert the 2 commits on production \u00b7 advice: YES - it only removes secrets from logs and stops an old leak from coming back (xd-1926)",
+          "test": "SHIPPED 2026-10-22 (apps run): production f5cd9e402 - CEO YES 2026-10-16 (live chat, CEO office: 'go with your advice') \u00b7 READY TO SHIP approved - ship by the normal path, then [QA] | READY TO SHIP \u2014 put the 'never write the secret VPN key into the app's log' fix into the main code (production) \u00b7 why: the fix lives only in the iPhone build branches; any new iPhone build made from the main code would write each user's secret key into Export Logs and bug reports again (security finding F19) \u00b7 what the ship does: copies 2 already-tested code changes (iPhone app + its VPN part) to production; no server, no store, no user is touched \u00b7 tested on dev: development b53a85cf0, Linux tests 28/28 + 10/10 (before the fix 8/28), QA xd-1931 \u00b7 rollback: git revert the 2 commits on production \u00b7 advice: YES - it only removes secrets from logs and stops an old leak from coming back (xd-1926)",
           "verify": "git merge-base --is-ancestor <shipped commit> origin/production && git show origin/production:ios-app-v2/CasperVPN/CasperVPNTunnel/PacketTunnelProvider.swift | grep -c redactKeys -> 5; git show origin/production:ios-app-v2/CasperVPN/CasperVPNTunnel/WireGuardKitAdapter.swift | grep -c 'privateKey.prefix(' -> 0",
           "met": false,
           "passed": false,
@@ -61954,19 +61954,23 @@
       "to": "[IOS]",
       "title": "Handoff from SECURITY: F19: the WireGuard key-redaction fix (xd-1507, 6fa75c4e) is missing from development + production - merge it back",
       "description": "[WEBSITE+ADMIN run 2026-10-12 1704, scheduled, unattended, 2026-10-12T17:23:16Z] xd-1422 slice 10 (read-only). MEASURED: commit 6fa75c4e (xd-1507 redaction) is an ancestor of ios/68, ios/68-sec-1917, ios/431-68 (PacketTunnelProvider redactKeys 5, raw UAPI fileLog 0) but NOT of origin/production or origin/development (same PacketTunnelProvider blob 235371b5e: redactKeys 0; getDiagnostics line 1876 fileLog of the full UAPI runtime config incl. private_key; WireGuardKitAdapter.swift:43 logs privateKey.prefix(8), :56 logs the whole key on parse failure). BugReportService.readTunnelDebugLog uploads tunnel_debug.log unredacted on those branches. Shipped builds 65/67 are NOT affected (ios branches). Risk: any build cut from development/production brings the key leak back. ASK: merge the xd-1507 redaction (6fa75c4e + follow-ups) into development, then production via the normal ship row; add the export check (count of 'private_key=' and 'PrivateKey =' in an exported log = 0) to the build checklist. Also F22 INFO: CasperCloakTunnelProvider.swift, WireGuardStub.swift, WireGuardTunnelProvider.swift are in no Sources phase (dead) - delete when convenient. F20 LOW: Obfs4Transport.swift:601-607 skips TLS verification on the bare-IP path (no token sent there; WireGuard still authenticates) - remove once every relay has a domain. Report: memory/departments/security/audits/2026-10-11/REPORT-slice10-ios-tunnel-trust.md (production f8f30c5a). Hand to [QA] when merged.",
-      "status": "in_progress",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-10-12T17:23:22Z",
       "createdDate": "2026-10-12",
-      "completedDate": null,
+      "completedDate": "2026-10-22",
       "note": " [IOS apps run 1012i 2026-10-12T18:11:37Z] DONE ON DEVELOPMENT: development b53a85cf0 = b19bf5dab + b72ccf533 (26q LOG-REDACT, cherry-pick -x e54087242) + b53a85cf0 (xd-1507 KEY-REDACT, cherry-pick -x 6fa75c4e); build marker + tunnel tag of development kept (no 26s claim); git ls-remote development = b53a85cf0; pushed blobs = tested blobs (PacketTunnelProvider a12a7c22, APIClient fbe8b05c). TESTS (swiftc 6.1.2 Linux, cloud box, on the exact pushed files): tools/ios-tests/keyredact/run-linux.sh 28/28 + 10/10 wiring PASS; CONTROL on development b19bf5dab (pre-fix) 8/28 + 0/10 wiring (20 + 10 FAIL); tools/ios-tests/logredact 12/12; swiftc -parse 0 errors on the 5 changed files. PacketTunnelProvider redactKeys count 0 -> 5; 'privateKey.prefix(' in tunnel 1 -> 0. The 5 files are identical on development and production before the change (git diff --stat empty), so the same 2 commits apply to production. NOT PROVEN: Xcode compile + exported-log check on a phone (needs a build cut from development/production). QA xd-1931; production waits CEO YES on CEO card row 268. Left on this task: export check added to the QA device step (xd-1931); F22 (3 dead tunnel files) + F20 (bare-IP TLS skip) not touched in this run.",
-      "blocker": "answered yes 16-17 Oct on row 268 (live chat) - [IOS] acts now (ship by the normal path / do the step), then QA",
+      "blocker": "",
       "blockerSince": "2026-10-12T18:11:37Z",
       "category": "money-admin",
       "ageDays": 1,
       "needsRelease": false,
       "lifecycle": "active",
-      "notes": " || [CEO office 17 Oct ~22:3xZ blocker sweep: the CEO answered; old blocker kept in notes] old blocker: CEO: YES on CEO card row 268 (ship to production); QA xd-1931 checks development b53a85cf0"
+      "notes": "[APPS run 2026-10-22, scheduled 'Casper apps', unattended, 2026-10-22T09:2xZ] SHIPPED 2026-10-22 under CEO YES row 268: cherry-picked b72ccf533 + b53a85cf0 onto production as d837f440d + f5cd9e402 (push b5598c981..f5cd9e402, no force). Verify: git merge-base --is-ancestor f5cd9e402 origin/production -> yes; origin/production PacketTunnelProvider.swift grep -c redactKeys = 5 (was 0); WireGuardKitAdapter.swift grep -c 'privateKey.prefix(' = 0. All 9 changed files are byte-identical (same git blob) to development's tested copies (QA xd-1931). Only ios-ci runs on this path; no server, store or user touched. ||  || [CEO office 17 Oct ~22:3xZ blocker sweep: the CEO answered; old blocker kept in notes] old blocker: CEO: YES on CEO card row 268 (ship to production); QA xd-1931 checks development b53a85cf0",
+      "completedAt": "2026-10-22",
+      "completedBy": "[IOS]",
+      "resolution": "shipped to production f5cd9e402 under CEO YES row 268",
+      "resultingHandoff": "QA handoff created to check row 268 on production"
     },
     {
       "id": "xd-1927",
@@ -65505,7 +65509,9 @@
       "priority": "P2",
       "createdAt": "2026-10-13T17:13:27Z",
       "createdDate": "2026-10-13",
-      "completedDate": null
+      "completedDate": null,
+      "blocker": "waits for a live CEO Mac session (Xcode + simulator): scheduled apps runs run in the Linux VM with no simulator. Measured 22 Oct: the build-75 render reaches only the onboarding screen (render-b75/ipad/01-home.png) because the simulator is not signed in, so sidebar/store screens need a sign-in step on the sim with the review account (password stays on the Mac). Plan: add it to the build-76 render, which runs when the CEO builds 76 (after Apple decides 4.3.1).",
+      "notes": "[APPS run 2026-10-22, scheduled 'Casper apps', unattended, 2026-10-22T09:2xZ] blocker written: waits for a live CEO Mac session (Xcode + simulator): scheduled apps runs run in the Linux VM with no simulator. Measured 22 Oct: the build-75 render reaches only the onboarding screen (render-b75/ipad/01-home.png) because the simulator is not signed in, so sidebar/store screens need a sign-in step on the sim with the review account (password stays on the Mac). Plan: add it to the build-76 render, which runs when the CEO builds 76 (after Apple decides 4.3.1)."
     },
     {
       "id": "xd-2110",
@@ -65560,11 +65566,16 @@
       "to": "[IOS]",
       "title": "Handoff from CTO: Simulator build crashes at launch: caspercrypto.framework missing when the sim build runs with CODE_SIGNING_ALLOWED=NO (every render since 70plus showed only the home screen)",
       "description": "CEO 13 Oct 18:1xZ: 'iPad not launching new build'. simcheck72.command on the Mac (_ios/sim-check-72/): installed app = 4.3.1 (72) but marker 72a in the binary = 0 (the debug dylib holds it) and launch aborts with dyld 'Library not loaded: @rpath/caspercrypto.framework/caspercrypto', crash .ips files 20:14 + 21:08 local, SIGABRT at launch. The build-phase script renames openssl.framework -> caspercrypto.framework and updates install_names; in the device build the log then shows 'Signed caspercrypto.framework', in the simulator build (build<N>.command passes CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO) that step is skipped and the framework is not in CasperVPN.app/Frameworks. Same for 70plus and 71 renders (iPad 01-home.png shows the springboard, not the app). Fix: make the rename/embed step independent of code signing (copy + install_name_tool always, codesign only when allowed) OR drop the two CODE_SIGNING flags from the simulator xcodebuild in build<N>.command (sim builds sign ad hoc). Prove: xcrun simctl launch on the iPad sim, process alive after 10 s, screenshot of the app, then xd-2107's per-screen iPad pass. CTO is running sim72.command (signed sim build of the prepared 72 tree) tonight as the quick path.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-10-13T18:22:34Z",
       "createdDate": "2026-10-13",
-      "completedDate": null
+      "completedDate": "2026-10-22",
+      "notes": "[APPS run 2026-10-22, scheduled 'Casper apps', unattended, 2026-10-22T09:2xZ] ALREADY FIXED since build 73: _ios/build73-75.command build the simulator copy WITHOUT CODE_SIGNING_ALLOWED=NO (grep -l 'CODE_SIGNING_ALLOWED=NO' _ios/build7*.command -> only build70/70plus/71/72). CTO sim72.command (signed sim build) 13 Oct 18:25Z: caspercrypto embedded 1, iPad + iPhone alive after 10 s = 1. Build 75 render 14 Oct: _ios/render-b75/ipad/01-home.png shows the CasperVPN onboarding screen (app logo, 'Get Started', notification prompt) - the app runs on the iPad simulator, not the springboard. Note for xd-2109/xd-2209: the render stops at onboarding because the simulator is not signed in.",
+      "completedAt": "2026-10-22",
+      "completedBy": "[IOS]",
+      "resolution": "already fixed from build 73 (signed simulator build); proof in notes",
+      "resultingHandoff": "QA handoff created"
     },
     {
       "id": "xd-2114",
@@ -66671,7 +66682,7 @@
       "createdAt": "2026-10-18T18:24:59Z",
       "createdDate": "2026-10-18",
       "completedDate": null,
-      "notes": "[APPS run 2026-10-20, scheduled 'Casper apps', unattended, 2026-10-20T09:3xZ] [IOS] PARTS 1c + 2 DONE on ios/76 (pushed, remote tip 15226e3; not built - CEO freeze until Apple decides 4.3.1): 6bdc989 = (2) a server that failed while another server connected right after it is shown 'offline' for 15 min (greyed in the list, Connect disabled, skipped by quick connect and by the alternates loop); nothing is marked when every server fails (= the user's own network); when /servers/alternates cannot be reached the next best is picked on the phone from the saved list (same country first, then lowest load, no premium for a free server); the user sees 'X didn't answer, so we connected you to Y instead.'; (1c) server list shows one plain line 'Some features are offline - showing your last saved server list' while the saved list is on screen. 15226e3 = marker 76b. PROOF (cloud box, swiftc 6.1.2 Linux): swiftc -parse 0 errors on all 5 changed app files (control: one broken line -> 133 errors); harness tools/ios-tests/outbox2194 24/24 on the REAL code blocks (control: same-country + mark rules removed -> 21/24); pushed blobs sha256 = tested files (ServerService 4bb6e109, VPNConnectionManager 799a1f1b, ServerListView 3bc910d9). NOT PROVEN: Xcode compile, iPhone. STILL OPEN: part 1b connect from a cached config when the API is down (same gap as xd-1071) and the same banner on the Home screen - next apps run. QA xd-2212 updated. || [APPS run 2026-10-19, scheduled 'Casper apps', unattended, 2026-10-19T15:0xZ] [IOS] MEASURED on build 75 code: ServerService.fetchServers has no cache ('Skipping cache, forcing fresh API call'; clearCache is a no-op) and BugReportService.submit made one POST then gave up - explains the empty list/error screen and the lost CEO reports on 18 Oct. DONE on branch ios/76 (not built, not shipped): part 3 = 81f1918b4 (reports saved on the phone and re-sent), part 1a = 2c65a329e (last good server list shown when /servers fails). Linux proof: harness 15/15, swiftc -parse 0 errors, control fails. STILL TO DO (next apps run): 1b connect from a cached config when the API is down (same gap as xd-1071), the plain 'Some features are offline' banner (flag ServerListCache.isShowingSavedList is ready), part 2 mark a server offline after a failed connect + offer the next best. QA xd-2212. || "
+      "notes": "[APPS run 2026-10-22, scheduled 'Casper apps', unattended, 2026-10-22T09:2xZ] [IOS] Home banner DONE on ios/76 318a5673e: Home shows 'Some features are offline - Showing your last saved server list.' while the saved list is in use; ServerListCache posts a notice when that flag changes so Home updates. PROOF (cloud box, swiftc 6.1.2): swiftc -parse 0 errors on ServerService/ConnectionView/ConnectionViewModel (control with one broken line: 2 errors); harness tools/ios-tests/outbox2194 27/27 (3 new checks), control without the notice 24/27; pushed blobs sha256 = tested (ServerService d42d677a, ConnectionView acef5759, ConnectionViewModel 9b3568d5). NOT PROVEN: Xcode compile, iPhone. STILL OPEN: part 1b connect from a cached config while the API is down (bigger change: the tunnel config is fetched per connect) - next apps run. || [APPS run 2026-10-20, scheduled 'Casper apps', unattended, 2026-10-20T09:3xZ] [IOS] PARTS 1c + 2 DONE on ios/76 (pushed, remote tip 15226e3; not built - CEO freeze until Apple decides 4.3.1): 6bdc989 = (2) a server that failed while another server connected right after it is shown 'offline' for 15 min (greyed in the list, Connect disabled, skipped by quick connect and by the alternates loop); nothing is marked when every server fails (= the user's own network); when /servers/alternates cannot be reached the next best is picked on the phone from the saved list (same country first, then lowest load, no premium for a free server); the user sees 'X didn't answer, so we connected you to Y instead.'; (1c) server list shows one plain line 'Some features are offline - showing your last saved server list' while the saved list is on screen. 15226e3 = marker 76b. PROOF (cloud box, swiftc 6.1.2 Linux): swiftc -parse 0 errors on all 5 changed app files (control: one broken line -> 133 errors); harness tools/ios-tests/outbox2194 24/24 on the REAL code blocks (control: same-country + mark rules removed -> 21/24); pushed blobs sha256 = tested files (ServerService 4bb6e109, VPNConnectionManager 799a1f1b, ServerListView 3bc910d9). NOT PROVEN: Xcode compile, iPhone. STILL OPEN: part 1b connect from a cached config when the API is down (same gap as xd-1071) and the same banner on the Home screen - next apps run. QA xd-2212 updated. || [APPS run 2026-10-19, scheduled 'Casper apps', unattended, 2026-10-19T15:0xZ] [IOS] MEASURED on build 75 code: ServerService.fetchServers has no cache ('Skipping cache, forcing fresh API call'; clearCache is a no-op) and BugReportService.submit made one POST then gave up - explains the empty list/error screen and the lost CEO reports on 18 Oct. DONE on branch ios/76 (not built, not shipped): part 3 = 81f1918b4 (reports saved on the phone and re-sent), part 1a = 2c65a329e (last good server list shown when /servers fails). Linux proof: harness 15/15, swiftc -parse 0 errors, control fails. STILL TO DO (next apps run): 1b connect from a cached config when the API is down (same gap as xd-1071), the plain 'Some features are offline' banner (flag ServerListCache.isShowingSavedList is ready), part 2 mark a server offline after a failed connect + offer the next best. QA xd-2212."
     },
     {
       "id": "xd-2195",
@@ -66902,7 +66913,9 @@
       "priority": "P2",
       "createdAt": "2026-10-19T14:53:00Z",
       "createdDate": "2026-10-19",
-      "completedDate": null
+      "completedDate": null,
+      "blocker": "waits for a live CEO Mac session (Xcode + simulator): scheduled apps runs run in the Linux VM with no simulator. Measured 22 Oct: the build-75 render reaches only the onboarding screen (render-b75/ipad/01-home.png) because the simulator is not signed in, so sidebar/store screens need a sign-in step on the sim with the review account (password stays on the Mac). Plan: add it to the build-76 render, which runs when the CEO builds 76 (after Apple decides 4.3.1).",
+      "notes": "[APPS run 2026-10-22, scheduled 'Casper apps', unattended, 2026-10-22T09:2xZ] blocker written: waits for a live CEO Mac session (Xcode + simulator): scheduled apps runs run in the Linux VM with no simulator. Measured 22 Oct: the build-75 render reaches only the onboarding screen (render-b75/ipad/01-home.png) because the simulator is not signed in, so sidebar/store screens need a sign-in step on the sim with the review account (password stays on the Mac). Plan: add it to the build-76 render, which runs when the CEO builds 76 (after Apple decides 4.3.1)."
     },
     {
       "id": "xd-2210",
@@ -67412,11 +67425,16 @@
       "to": "[IOS]",
       "title": "Handoff from LEGAL: [IOS] App copy of the Privacy Policy still says 'App Link s.a.l' (xd-2244)",
       "description": "ios-app-v2/CasperVPN/CasperVPN/Features/Settings/PrivacyPolicyView.swift on development: 1 hit 'is operated by App Link s.a.l, registered in Lebanon'. Change to 'App-Link Offshore S.A.L. (Single Partner), registered in Lebanon (Beirut Commercial Register no. 1808496), Metlisco Building, Beirut, Lebanon' to match the website (development c8e10ff9). TermsOfUseView.swift: 0 hits. Ships with the next iPhone build; no App Store Connect change.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-10-21T12:12:35Z",
       "createdDate": "2026-10-21",
-      "completedDate": null
+      "completedDate": "2026-10-22",
+      "notes": "[APPS run 2026-10-22, scheduled 'Casper apps', unattended, 2026-10-22T09:2xZ] FIXED: development 569dd1028 + ios/76 6036add46 (cherry-pick). PrivacyPolicyView.swift now says 'operated by App-Link Offshore S.A.L. (Single Partner), registered in Lebanon (Beirut Commercial Register no. 1808496), Metlisco Building, Beirut, Lebanon.' Verify: git show origin/development:ios-app-v2/CasperVPN/CasperVPN/Features/Settings/PrivacyPolicyView.swift | grep -c 'App Link s.a.l' -> 0 (was 1); grep -c 'App-Link Offshore S.A.L. (Single Partner)' -> 1; same on origin/ios/76. Ships in build 76 (built after Apple decides 4.3.1). Production branch gets it with the next iPhone ship row.",
+      "completedAt": "2026-10-22",
+      "completedBy": "[IOS]",
+      "resolution": "privacy text fixed on development + ios/76",
+      "resultingHandoff": "QA handoff created for the build-76 text check"
     },
     {
       "id": "xd-2252",
@@ -67504,6 +67522,42 @@
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-10-22T08:17:20Z",
+      "createdDate": "2026-10-22",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2259",
+      "from": "[IOS]",
+      "to": "[QA]",
+      "title": "Handoff from IOS: [QA] xd-1926 shipped: check the key-redaction fix on production (row 268)",
+      "description": "[APPS run 2026-10-22, scheduled 'Casper apps', unattended, 2026-10-22T09:2xZ] SHIPPED 2026-10-22 under CEO YES row 268: cherry-picked b72ccf533 + b53a85cf0 onto production as d837f440d + f5cd9e402 (push b5598c981..f5cd9e402, no force). Verify: git merge-base --is-ancestor f5cd9e402 origin/production -> yes; origin/production PacketTunnelProvider.swift grep -c redactKeys = 5 (was 0); WireGuardKitAdapter.swift grep -c 'privateKey.prefix(' = 0. All 9 changed files are byte-identical (same git blob) to development's tested copies (QA xd-1931). Only ios-ci runs on this path; no server, store or user touched. Please run row 268 verify on origin/production and tick row 268 + close xd-1926.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-22T09:12:24Z",
+      "createdDate": "2026-10-22",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2260",
+      "from": "[IOS]",
+      "to": "[QA]",
+      "title": "Handoff from IOS: [QA] xd-2251: in-app Privacy Policy operator name fixed (development + ios/76)",
+      "description": "[APPS run 2026-10-22, scheduled 'Casper apps', unattended, 2026-10-22T09:2xZ] FIXED: development 569dd1028 + ios/76 6036add46 (cherry-pick). PrivacyPolicyView.swift now says 'operated by App-Link Offshore S.A.L. (Single Partner), registered in Lebanon (Beirut Commercial Register no. 1808496), Metlisco Building, Beirut, Lebanon.' Verify: git show origin/development:ios-app-v2/CasperVPN/CasperVPN/Features/Settings/PrivacyPolicyView.swift | grep -c 'App Link s.a.l' -> 0 (was 1); grep -c 'App-Link Offshore S.A.L. (Single Partner)' -> 1; same on origin/ios/76. Ships in build 76 (built after Apple decides 4.3.1). Production branch gets it with the next iPhone ship row. Check on the build-76 phone pass: Settings > Privacy Policy (in-app copy) shows the new name.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-22T09:12:24Z",
+      "createdDate": "2026-10-22",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2261",
+      "from": "[IOS]",
+      "to": "[QA]",
+      "title": "Handoff from IOS: [QA] xd-2113: simulator launch fixed since build 73 - confirm from render-b75",
+      "description": "[APPS run 2026-10-22, scheduled 'Casper apps', unattended, 2026-10-22T09:2xZ] ALREADY FIXED since build 73: _ios/build73-75.command build the simulator copy WITHOUT CODE_SIGNING_ALLOWED=NO (grep -l 'CODE_SIGNING_ALLOWED=NO' _ios/build7*.command -> only build70/70plus/71/72). CTO sim72.command (signed sim build) 13 Oct 18:25Z: caspercrypto embedded 1, iPad + iPhone alive after 10 s = 1. Build 75 render 14 Oct: _ios/render-b75/ipad/01-home.png shows the CasperVPN onboarding screen (app logo, 'Get Started', notification prompt) - the app runs on the iPad simulator, not the springboard. Note for xd-2109/xd-2209: the render stops at onboarding because the simulator is not signed in.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-22T09:12:24Z",
       "createdDate": "2026-10-22",
       "completedDate": null
     }
