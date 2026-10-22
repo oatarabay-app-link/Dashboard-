@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-22T22:48:03Z",
+  "lastUpdated": "2026-10-22T22:58:25Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 69,
@@ -16159,7 +16159,7 @@
           "owner": "[CEO]",
           "test": "DECISION \u2014 the app version Apple is reviewing (4.3.1 build 75) collects two things our live privacy policy does not mention \u00b7 what: (1) before sign-up it notes which first screens were shown and whether sign-up failed, with a random install number; (2) it asks Apple whether the install came from one of our ads \u00b7 measured today: our server already holds these records from test phones (26 app-opened, 4 failed sign-ups, 3 ad checks); the policy on caspervpn.com (version 1.8) has no line for either \u00b7 Legal wrote the two lines on 10 Oct; they were never published \u00b7 options: A Legal puts the two lines on the test site next run and you get a READY TO SHIP row; you publish them before you press 'release' on 4.3.1 (if 4.3.1 is set to release by itself when Apple approves, switch it to manual release in App Store Connect) \u00b7 B release 4.3.1 when Apple approves and publish the lines after \u00b7 advice A (a store app that collects data its policy does not name is the kind of gap Apple and EU privacy rules both look at)",
           "verify": "curl -sL https://www.caspervpn.com/privacy | sed 's/<[^>]*>/ /g' | grep -ci 'before you sign in' (0 today); xd-2276 notes",
-          "evidence": "[GROWTH run 2026-10-22 2154, scheduled, unattended, 2026-10-22T21:59:35Z] added (xd-2276, xd-1687)."
+          "evidence": "[GROWTH run 2026-10-22 2254, scheduled, unattended, 2026-10-22T22:58:20Z] step 1 of advice A done on development: privacy 1.9 with both lines (+ app screens, network checks, retention rows) at e86bdd30/00fc24e4, QA dev check handed. Still needs your A or B. Found: the Apple Ads records have no deletion rule yet (handoff to BACKEND). || [GROWTH run 2026-10-22 2154, scheduled, unattended, 2026-10-22T21:59:35Z] added (xd-2276, xd-1687)."
         },
         {
           "met": false,
@@ -16220,6 +16220,17 @@
           "test": "DECISION \u2014 the password of our server-charts tool (Grafana) is readable on the public dashboard \u00b7 what: the dashboard's 'Infrastructure tab' password is written in the public data file, and it is the same password as the Grafana admin login \u00b7 how bad: low today - Grafana is blocked from the internet by the firewall (checked 22 Oct), but the password is public and in GitHub history \u00b7 options: (A) change the Grafana password now and stop publishing the tab password (DevOps + CTO, about 15 minutes, no user impact); (B) only stop publishing it; (C) leave it \u00b7 advice: A - a public password should never also open a tool \u00b7 say 'yes A' in any chat. (xd-2296, xd-2297, [SECURITY] run 1022-2245)",
           "met": false,
           "evidence": "[WEBSITE+ADMIN run 2026-10-22 2245, scheduled, unattended, 2026-10-22T22:47:59Z] measured public data.json + credentials.md compare (value never printed) + iptables DOCKER-USER rule 'block external grafana'."
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": null,
+          "createdBy": "[LEGAL]",
+          "createdAt": "2026-10-22T22:58:20Z",
+          "owner": "[LEGAL]",
+          "test": "READY TO SHIP \u2014 privacy policy 1.9 on caspervpn.com \u00b7 what: it names 4 things the new app versions send (which app screen you left, the setup screens before sign-in, network checks, which App Store ad led to the install) and says each is kept 6 months and deleted with the account \u00b7 why: Apple is reviewing 4.3.1 build 75, which already sends two of them; the live policy (1.8) names none (row 381) \u00b7 tested on dev: development e86bdd30 + 00fc24e4, page generator check passes, QA dev check handed \u00b7 ship ONLY together with row 333 (the 6-month clean-up) and the new Apple Ads clean-up from BACKEND, otherwise the '6 months' line is not true \u00b7 rollback: put back the 1.8 page (one commit revert) \u00b7 new data types, not fewer rights: counsel should confirm no 30-day notice is needed \u00b7 after it is live you update the App Privacy answers in App Store Connect (Product Interaction, Advertising Data: not tracking) \u00b7 advice: say yes now; the office ships it the day both clean-ups pass QA",
+          "verify": "curl -s https://caspervpn.com/privacy | sed 's/<[^>]*>/ /g' | grep -c 'Which ad brought you here'  (expect 1)",
+          "evidence": "[GROWTH run 2026-10-22 2254, scheduled, unattended, 2026-10-22T22:58:20Z] added; development e86bdd30/00fc24e4."
         }
       ],
       "progress": 0,
@@ -51247,7 +51258,7 @@
       "ageDays": 8,
       "lifecycle": "deferred",
       "needsRelease": true,
-      "notes": "[GROWTH run 2026-10-13 1608, scheduled, unattended, 2026-10-13T16:18:22Z] [LEGAL] Worked under the CEO GO (row 318). Measured: no retention/cleanup and no foreign key on FunnelEvents (NetworkProbes same) -> handoff xd-2102 [BACKEND]. 1.9 text (app screens + network checks + 2 retention rows) and the Product Interaction = Yes label in memory/departments/legal/reviews/privacy-1.9-app-screens-2026-10-13.md. Status left deferred (E15); next step is xd-2102. || [CTO live 2026-10-09 2026-10-09T11:22:55Z] SCOPE WIDENED (no new handoff, same owner): before 4.4 ships, besides the policy line for screen_exit: (a) the in-app 'Your privacy' screen (Apple 5.4, Legal's 8 lines in build 66) must also name the screen-exit event (screen, seconds, connected, plan) and the network check sent on each network change (country, mobile network, network type, connection-test results), both linked to the account (backend Models/FunnelEvent.cs, NetworkProbe.cs carry UserId); (b) App Privacy labels: Product Interaction becomes Yes (linked) - the 7 Oct paste sheet says No for 64/66; (c) Apple 5.1.1(ii) (fetched 9 Oct) asks for consent for usage data and an easy way to withdraw it - say whether the app needs an opt-out switch. Not for 4.3.1 build 66. ||  || [GROWTH run 2026-10-22 2105, scheduled, unattended, 2026-10-22T21:05:56Z] Un-deferred per the CEO's 22 Oct order (card row 365: defer only finance + desktop). Chain measured: card row 333 (6-month delete of app-screen records, CEO YES 17 Oct) is not shipped because QA xd-2170 leg 2 needs a signed-in throwaway dev account in a live session. Until row 333 ships, the privacy line cannot be true, and live policy v1.8 still does not name these records.",
+      "notes": "[GROWTH run 2026-10-22 2254, scheduled, unattended, 2026-10-22T22:58:20Z] privacy 1.9 text (app screens + network checks + setup screens + Apple Ads line + 3 retention rows) is on development e86bdd30/00fc24e4 -> QA dev check; publish = CEO card READY TO SHIP row (gated on row 333 + the new BACKEND Apple Ads retention handoff). || [GROWTH run 2026-10-13 1608, scheduled, unattended, 2026-10-13T16:18:22Z] [LEGAL] Worked under the CEO GO (row 318). Measured: no retention/cleanup and no foreign key on FunnelEvents (NetworkProbes same) -> handoff xd-2102 [BACKEND]. 1.9 text (app screens + network checks + 2 retention rows) and the Product Interaction = Yes label in memory/departments/legal/reviews/privacy-1.9-app-screens-2026-10-13.md. Status left deferred (E15); next step is xd-2102. || [CTO live 2026-10-09 2026-10-09T11:22:55Z] SCOPE WIDENED (no new handoff, same owner): before 4.4 ships, besides the policy line for screen_exit: (a) the in-app 'Your privacy' screen (Apple 5.4, Legal's 8 lines in build 66) must also name the screen-exit event (screen, seconds, connected, plan) and the network check sent on each network change (country, mobile network, network type, connection-test results), both linked to the account (backend Models/FunnelEvent.cs, NetworkProbe.cs carry UserId); (b) App Privacy labels: Product Interaction becomes Yes (linked) - the 7 Oct paste sheet says No for 64/66; (c) Apple 5.1.1(ii) (fetched 9 Oct) asks for consent for usage data and an easy way to withdraw it - say whether the app needs an opt-out switch. Not for 4.3.1 build 66. ||  || [GROWTH run 2026-10-22 2105, scheduled, unattended, 2026-10-22T21:05:56Z] Un-deferred per the CEO's 22 Oct order (card row 365: defer only finance + desktop). Chain measured: card row 333 (6-month delete of app-screen records, CEO YES 17 Oct) is not shipped because QA xd-2170 leg 2 needs a signed-in throwaway dev account in a live session. Until row 333 ships, the privacy line cannot be true, and live policy v1.8 still does not name these records.",
       "lastUpdated": "2026-10-09T11:22:55Z",
       "triageReason": "dueBy 2026-10-12 passed: close, hand back, or plan a month",
       "deferredUntil": "2026-10-20",
@@ -57599,7 +57610,7 @@
       "ageDays": 3,
       "needsRelease": false,
       "lifecycle": "active",
-      "notes": "[GROWTH run 2026-10-22 2154, scheduled, unattended, 2026-10-22T21:59:35Z] Ship-gate (1) was passed without the policy: production FunnelEvents shows 4.3.1 builds sent pre-sign-in events 13-16 Oct (app_opened 26/17 installs) and AppleAdsAttributions has 3 rows, while live privacy 1.8 names neither. CEO card DECISION row (this run). ||  || [GROWTH run 2026-10-22 2105, scheduled, unattended, 2026-10-22T21:05:56Z] [LEGAL] gate (1) measured 21:0xZ: live privacy v1.8 has 0 Apple Ads / AdServices lines. The app must not send the AdServices token until that line is live (draft: legal/reviews/apple-ads-attribution-disclosure-2026-10-10.md). Not in build 76 unless the policy ships first.",
+      "notes": "[GROWTH run 2026-10-22 2254, scheduled, unattended, 2026-10-22T22:58:20Z] [LEGAL] gate (1): the Apple Ads + setup-screen lines are on development (privacy 1.9), NOT live. Gate (2) in-app 'Your privacy' screen still open. || [GROWTH run 2026-10-22 2154, scheduled, unattended, 2026-10-22T21:59:35Z] Ship-gate (1) was passed without the policy: production FunnelEvents shows 4.3.1 builds sent pre-sign-in events 13-16 Oct (app_opened 26/17 installs) and AppleAdsAttributions has 3 rows, while live privacy 1.8 names neither. CEO card DECISION row (this run). ||  || [GROWTH run 2026-10-22 2105, scheduled, unattended, 2026-10-22T21:05:56Z] [LEGAL] gate (1) measured 21:0xZ: live privacy v1.8 has 0 Apple Ads / AdServices lines. The app must not send the AdServices token until that line is live (draft: legal/reviews/apple-ads-attribution-disclosure-2026-10-10.md). Not in build 76 unless the policy ships first.",
       "updatedAt": "2026-10-22T21:05:56Z"
     },
     {
@@ -68504,6 +68515,30 @@
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-10-22T22:48:03Z",
+      "createdDate": "2026-10-22",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2298",
+      "from": "[[LEGAL]]",
+      "to": "[[BACKEND]]",
+      "title": "Handoff from [LEGAL]: [P1] Apple Ads install records: keep 180 days and delete with the account (blocks privacy 1.9 ad line, CEO card row 381)",
+      "description": "[GROWTH run 2026-10-22 2254, scheduled, unattended, 2026-10-22T22:58:20Z] MEASURED read-only on origin/development + origin/production: backend-dotnet-core/Services/UserTelemetryRetention.cs and DataPurgeService.cs Phase 5 (xd-2102) clean only FunnelEvents + NetworkProbes; AppleAdsAttribution (Models/AppleAdsAttribution.cs: InstallId, UserId nullable) has no purge and no delete-with-account on either branch. Privacy 1.9 (development e86bdd30/00fc24e4) says the ad-campaign record is kept 180 days and deleted with the account. ASK (development first): (1) DataPurge removes AppleAdsAttributions older than 180 days; (2) both account-delete paths remove the user's rows and the rows of installs the user signed in on (same rule as UserTelemetryRetention.DeleteForUserAsync); (3) a test each, with a control. Then [QA] dev check and a READY TO SHIP row that ships with row 333.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-22T22:58:25Z",
+      "createdDate": "2026-10-22",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2299",
+      "from": "[[LEGAL]]",
+      "to": "[[QA]]",
+      "title": "Handoff from [LEGAL]: [P1] Check privacy 1.9 on dev.caspervpn.com/privacy",
+      "description": "[GROWTH run 2026-10-22 2254, scheduled, unattended, 2026-10-22T22:58:20Z] development e86bdd30 (PRIVACY_POLICY.md v1.9) + 00fc24e4 (page.tsx regenerated; generate_legal_pages.py --check rc=0 locally, terms unchanged v1.8). Verify after the dev redeploy (~20 min): curl -s https://dev.caspervpn.com/privacy | sed 's/<[^>]*>/ /g' | grep -c -E 'Which ad brought you here|Setup screens before you sign in|Network checks|App screens \\(iPhone' (expect >=4) and Version 1.9; production /privacy still 1.8. Do not tick ship rows: publishing waits CEO YES on the READY TO SHIP row.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-22T22:58:25Z",
       "createdDate": "2026-10-22",
       "completedDate": null
     }
