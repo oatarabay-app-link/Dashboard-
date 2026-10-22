@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-22T22:13:46Z",
+  "lastUpdated": "2026-10-22T22:15:33Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 69,
@@ -16171,6 +16171,28 @@
           "test": "READY TO SHIP (after QA xd-2285 dev PASS) \u2014 the weekly 'where new users get stuck' table names a real reason per country \u00b7 why: today it says 'unknown' for Iran, Canada and Nigeria, because old app versions never sent a reason; the new column shows the most common real reason when one exists (Iran: hidden-mode no handshake) and says 'none named' when the app sent nothing \u00b7 what the ship does: copies one report file (activation_funnel.sql) to the main server; read-only, nothing for app users changes \u00b7 tested: development 35c189c59, read-only run on production data, old columns identical (control) \u00b7 rollback: copy the old file back (md5 ebffc315) \u00b7 advice: YES",
           "verify": "md5sum /opt/caspervpn/activation_funnel.sql = git show origin/production:infrastructure/scripts/activation_funnel.sql | md5sum; run it read-only -> column top_named_reason present",
           "evidence": "[BACKEND run 2026-10-22 2205, scheduled, unattended, 2026-10-22T22:11:05Z] built development 35c189c59; server scratch copy /root/reports/be1022b/funnel-new.sql md5 b9dfac09; old vs new outputs on activation-first-connection-funnel row 2."
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "createdBy": "cto-run",
+          "createdAt": "2026-10-22T22:15:27Z",
+          "owner": "[CEO]",
+          "test": "READY TO SHIP \u2014 factory key loader to production (tools/factory_bootstrap.py + tools/dashboard_ssh_push.py from development: CAS-91 + d9575b2) \u00b7 why: production writes the robot key over ~/.ssh/id_ed25519, which on your Mac is your own GitHub key (CAS-91 root cause), and an empty key file left by a failed load blocks later runs; development uses its own key file and reads the casper-secrets folder where the scheduled runs see it \u00b7 tested on dev: fresh test home loads the key from the connected folder, GitHub login OK; with no key it stops cleanly and leaves no file \u00b7 rollback: revert the one commit on production \u00b7 advice: YES, ship together with the scrub row",
+          "verify": "production tools/factory_bootstrap.py contains CASPER_SSH_KEY_PATH and '~/mnt/casper-secrets'; the next scheduled run prints '[ssh-key] source: attached-folder file' and writes its session log",
+          "evidence": "[CTO run 2214Z applying the 2015Z run's write, re-checked 22:2xZ: d9575b2 is in development (tip 35c189c59); production dashboard_ssh_push.py 0 scrub lines and no CASPER_SSH_KEY_PATH; bkk-01 22+443 open, port 9 refused; radius fields still on the public board, 2026-10-22T22:15:27Z] xd-2266 (2). development d9575b2 pushed 22 Oct ~21:00Z (ec0a487..d9575b2)."
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "createdBy": "cto-run",
+          "createdAt": "2026-10-22T22:15:27Z",
+          "owner": "[CEO]",
+          "test": "READY TO SHIP \u2014 hide secrets on the public dashboard (tools/scrub_public_board.py + the dashboard_session hook, CAS-66, from development to production) \u00b7 why: anyone can read the public board, and today it still shows the RADIUS secret note, the RADIUS database note and the 5 server addresses \u00b7 tested on dev: scrub on the 22 Oct board removes 1,759 bytes, 0 sensitive fields left \u00b7 rollback: revert the commit \u00b7 advice: YES now; then YES to rotating the RADIUS secret (DevOps handoff), because old copies stay in GitHub history",
+          "verify": "after the next board push: public data.json has no devopsNotes.radiusSecretFixed / freeRadiusPostgresFixed and no ip/hostname under infrastructure.servers",
+          "evidence": "[CTO run 2214Z applying the 2015Z run's write, re-checked 22:2xZ: d9575b2 is in development (tip 35c189c59); production dashboard_ssh_push.py 0 scrub lines and no CASPER_SSH_KEY_PATH; bkk-01 22+443 open, port 9 refused; radius fields still on the public board, 2026-10-22T22:15:27Z] xd-2266 (3). Measured on the live board 22 Oct 20:5xZ: both fields present (115 / 135 chars, values not printed), 5 of 5 servers carry ip. Production dashboard_ssh_push.py has 0 'scrub' lines."
         }
       ],
       "progress": 0,
@@ -16847,7 +16869,7 @@
           "verify": "board",
           "verifiedDate": "2026-09-29",
           "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored",
-          "blocker": "Bangkok dev bkk-01 (46.16.129.246) dead AGAIN since 19 Oct between 09:27Z and 10:17Z (hourly prober rc 0 -> 3 'CONTROL FAILED' from 20261019T101747Z; ping + port 22 closed from the main server 14:44Z). OneProvider API reboot of vm 818194 at 14:47Z answered code 42 (hypervisor cannot reach the VM); panel status says Active (billing OK). Needs a OneProvider support ticket 'Instance unreachable' (CEO ACTION row on the CEO card). Fleet changes wait Bangkok-first (devops SKILL \u00a70). Re-check 26 Oct.",
+          "blocker": "waits [DEVOPS] handoff 'bkk-01 is back' (xd-2289): bkk-01 answers again 22 Oct 21:0xZ (22 + 443 open, control port 9 closed) - re-run the dev measurement",
           "notes": "[DEVOPS run 2026-10-19 1442, scheduled 'Casper devops', unattended, 2026-10-19T14:5xZ] old blocker: Batching/buffers/padding change every live relay: do it in the same fleet rollout as Disguise A (xd-1608, DevOps, approved 9 Oct) after a dev-relay test, then a READY TO SHIP row - not a separate rollout."
         },
         {
@@ -16876,7 +16898,8 @@
           "verify": "board",
           "verifiedDate": "2026-09-29",
           "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored",
-          "blocker": "Needs prices collected (CTO/DevOps next run with web access) and then a CEO money DECISION row; nothing is bought without the CEO."
+          "blocker": "DEFERRED to 2026-11: Gulf server prices not collected; a money decision for the CEO after the Cloudflare exit (cloudflare-exit-phase1 crit 5) frees DevOps time",
+          "deferredUntil": "2026-11"
         },
         {
           "test": "OUTCOME TARGET: a stealth connection reaches at least 60% of the line on a real device in the target country, proven by 3 paired runs with mean and spread. Today the same measurement reads 17-40% on the Cloudflare road.",
@@ -16999,7 +17022,7 @@
           "verify": "board",
           "verifiedDate": "2026-09-29",
           "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored",
-          "blocker": "Bangkok dev bkk-01 (46.16.129.246) dead AGAIN since 19 Oct between 09:27Z and 10:17Z (hourly prober rc 0 -> 3 'CONTROL FAILED' from 20261019T101747Z; ping + port 22 closed from the main server 14:44Z). OneProvider API reboot of vm 818194 at 14:47Z answered code 42 (hypervisor cannot reach the VM); panel status says Active (billing OK). Needs a OneProvider support ticket 'Instance unreachable' (CEO ACTION row on the CEO card). Fleet changes wait Bangkok-first (devops SKILL \u00a70). Re-check 26 Oct.",
+          "blocker": "waits [DEVOPS] handoff 'bkk-01 is back' (xd-2289): bkk-01 answers again 22 Oct 21:0xZ (22 + 443 open, control port 9 closed) - re-run the dev measurement",
           "notes": "[DEVOPS run 2026-10-19 1442, scheduled 'Casper devops', unattended, 2026-10-19T14:5xZ] old blocker: Fixed by Disguise A (xd-1608, DevOps, approved 9 Oct): answer unknown paths like a real site and accept the upgrade only on the client's path."
         },
         {
@@ -17029,7 +17052,7 @@
           "verify": "board",
           "verifiedDate": "2026-09-29",
           "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored",
-          "blocker": "Bangkok dev bkk-01 (46.16.129.246) dead AGAIN since 19 Oct between 09:27Z and 10:17Z (hourly prober rc 0 -> 3 'CONTROL FAILED' from 20261019T101747Z; ping + port 22 closed from the main server 14:44Z). OneProvider API reboot of vm 818194 at 14:47Z answered code 42 (hypervisor cannot reach the VM); panel status says Active (billing OK). Needs a OneProvider support ticket 'Instance unreachable' (CEO ACTION row on the CEO card). Fleet changes wait Bangkok-first (devops SKILL \u00a70). Re-check 26 Oct.",
+          "blocker": "waits [DEVOPS] handoff 'bkk-01 is back' (xd-2289): bkk-01 answers again 22 Oct 21:0xZ (22 + 443 open, control port 9 closed) - re-run the dev measurement",
           "notes": "[DEVOPS run 2026-10-19 1442, scheduled 'Casper devops', unattended, 2026-10-19T14:5xZ] old blocker: Rotation = Disguise B xd-1609 (DevOps, P1, approved 9 Oct)."
         },
         {
@@ -17044,7 +17067,8 @@
           "verify": "board",
           "verifiedDate": "2026-09-29",
           "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored",
-          "blocker": "needs an in-country vantage that is really blocked (a real outside event; we own none) - re-check 19 Oct"
+          "blocker": "DEFERRED to 2027-01: needs an in-country vantage that is really blocked (we own none; re-check date 19 Oct passed with no such vantage)",
+          "deferredUntil": "2027-01"
         },
         {
           "test": "STEALTH IMPROVEMENT \u2014 EVERYTHING STAYS ON PORT 443 WITH A REAL CERTIFICATE and provider diversity across countries, so blocking us means blocking ordinary web traffic.",
@@ -21447,7 +21471,7 @@
           "evidence": "[QA 2026-10-11 c, scheduled, 2026-10-11T02:20:32Z] NOT DONE - re-measured 02:1xZ: CEO office minutes 2026-10-10 have one 'Factory' sentence (runs started every hour except 9 Oct 12:05-14:31Z) but no per-routine count of session starts for the last 24 h. Handoff xd-1568 [CEO] still pending. || ",
           "qaVerdict": "NOT",
           "qaDate": "2026-10-11",
-          "blocker": "Waits on xd-1568 [CEO] (pending since 8 Oct: the CEO office report adds one line per scheduled routine - did it start in the last 24 h)."
+          "blocker": "Waits on xd-1568 - owner is the CEO office scheduled run (not Omar personally); 14 days old. Nudged 22 Oct by CTO: add one line per scheduled routine to the office report."
         }
       ],
       "progress": 0,
@@ -55111,7 +55135,8 @@
       "category": "growth",
       "ageDays": 4,
       "needsRelease": false,
-      "lifecycle": "active"
+      "lifecycle": "active",
+      "notes": "[CTO run 2214Z applying the 2015Z run's write, re-checked 22:2xZ: d9575b2 is in development (tip 35c189c59); production dashboard_ssh_push.py 0 scrub lines and no CASPER_SSH_KEY_PATH; bkk-01 22+443 open, port 9 refused; radius fields still on the public board, 2026-10-22T22:15:27Z] 7-day rule: 14 days open. This is the CEO office run's report change, not a question for Omar. Do it next office run or defer with a month."
     },
     {
       "id": "xd-1569",
@@ -68036,11 +68061,12 @@
       "to": "[CTO]",
       "title": "Handoff from CEO: [P1] Paperclip helpers are now in the factory: dedupe + adopt (merge ec0a487ed on development)",
       "description": "CEO YES 22 Oct: the helper branch dev/paperclip-agents-2026-10-19 (Board/CTO/QA/iOS helpers on the CEO Mac, ~/paperclip-workspaces/Casper-Code) is merged into development. Do: (1) read memory/sessions/2026-10-22-cto-cas91.md + the CAS-nn vault notes now on development and mirror each CAS ticket that is still open onto the board as a handoff to the owning department, so hourly runs and helpers never work the same item twice (helpers still cannot write the board until CAS-72 is answered); (2) decide which of the two key loaders stays (office patch on production vs CAS-91 patch on development) and put it in one READY TO SHIP row; (3) wire tools/scrub_public_board.py into dashboard_session on development and hand to QA; (4) from now on the CTO hourly run fetches dev/paperclip-agents-2026-10-19 from the Mac clone and merges it when it is ahead. Verify: board shows one row per open CAS ticket; no duplicate work in the next 24 h of DEPARTMENT_LOG.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-10-22T19:47:56Z",
       "createdDate": "2026-10-22",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[CTO run 2214Z applying the 2015Z run's write, re-checked 22:2xZ: d9575b2 is in development (tip 35c189c59); production dashboard_ssh_push.py 0 scrub lines and no CASPER_SSH_KEY_PATH; bkk-01 22+443 open, port 9 refused; radius fields still on the public board, 2026-10-22T22:15:27Z] (1) CAS mirror: open CAS tickets mirrored as xd-2286, xd-2287, xd-2288, xd-2289 (status from the development notes ~17:30Z; Paperclip not reachable from a scheduled run). (2) Key loader: keep the CAS-91 version (own key file ~/.ssh/casper_automation, never Omar's personal id_ed25519) plus fix d9575b2 on development (also reads ~/mnt/casper-secrets where the VM mounts the folder - CAS-91 alone read only ~/casper-secrets and would have darkened the runs again; no more 0-byte key file). READY TO SHIP row added. (3) Scrub: already wired into dashboard_session on development (lines 125-141); verified on the 22 Oct board: PASS, 1,759 bytes removed. Production has no scrub (grep -c scrub = 0) -> READY TO SHIP row. (4) BLOCKED: ~/paperclip-workspaces/Casper-Code is not connected to the 'Casper cto' scheduled task and the helpers' branch is not on GitHub, so a scheduled run cannot fetch dev/paperclip-agents-2026-10-19. Needs: connect that folder to the task, or let helpers push their branch to GitHub (CAS-93 proposal 3)."
     },
     {
       "id": "xd-2267",
@@ -68352,6 +68378,54 @@
       "status": "pending",
       "priority": "P2",
       "createdAt": "2026-10-22T22:11:10Z",
+      "createdDate": "2026-10-22",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2286",
+      "from": "[CTO]",
+      "to": "[QA]",
+      "title": "Handoff from CTO: [P1] Check xd-2266 on development: key loader d9575b2 + public-board scrub (CAS-91 check, CAS-66, CAS-92/84 proof)",
+      "description": "1) development d9575b2 (tools/factory_bootstrap.py): the key loader reads ~/mnt/casper-secrets/brain_key.b64 (where the Cowork VM mounts the connected folder) as well as ~/casper-secrets; _ensure_github_ssh_key loads the key before opening the file; a 0-byte key file no longer counts as present. Re-run: fresh HOME with only ~/mnt/casper-secrets linked -> fb._ensure_github_ssh_key() prints 'source: attached-folder file .../mnt/casper-secrets/...' and `ssh -i ~/.ssh/casper_automation -o IdentitiesOnly=yes -T git@github.com` says 'successfully authenticated'; with no key source it raises and leaves no key file. 2) tools/scrub_public_board.py + dashboard_session hook (dashboard_ssh_push.py lines 125-141 on development): `python3 tools/scrub_public_board.py <fresh board.json>` -> PASS, 0 sensitive fields (22 Oct 20:5xZ: removed 1,759 bytes). 3) CAS-91/92 proof: the 22 Oct 20:15Z scheduled CTO run read the key from the connected casper-secrets folder and fetched the board over SSH (the 19:13Z run had no key). Do NOT tick ceo-action-backlog rows; production ship waits CEO YES.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-22T22:15:32Z",
+      "createdDate": "2026-10-22",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2287",
+      "from": "[CTO]",
+      "to": "[QA]",
+      "title": "Handoff from CTO: [P2] CAS-73 + CAS-74 mirror: QA reviews of the CAS-68 memo (alarm, outside check, team machine) and the CAS-69 sign-up gap proposal",
+      "description": "Paperclip helper tickets (QA Lead) open as of 22 Oct ~17:30Z: CAS-73 reviews CAS-68 (decision memo), CAS-74 reviews CAS-69 (sign-up gap funnel + proposal). Notes on development: memory/sessions/2026-10-22-cto.md, memory/departments/cto/session-log.md. Mirrored so the hourly QA run and the QA helper do not both do it: whoever starts writes 'taken by <run>' here first.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-22T22:15:32Z",
+      "createdDate": "2026-10-22",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2288",
+      "from": "[CTO]",
+      "to": "[CTO]",
+      "title": "Handoff from CTO: [P1] CAS-65/67/72 mirror: key change close-out, Mac clone numbers, safe board writes for helpers",
+      "description": "Paperclip tickets open as of 22 Oct ~17:30Z (Paperclip is not reachable from the scheduled run; status from the notes on development): CAS-65 key rotation (blocked on CAS-91 patch -> now on development + d9575b2; QA final check CAS-84); CAS-67 Mac clone before-numbers (waits Omar's answer in Paperclip); CAS-72 board_writer.py on development (waits Omar's card 'May the helpers write directly to the board?' + a scoped board login). Not mirrored, with reason: CAS-61 and CAS-85 are parents; CAS-77 is the QA helper's own runs; CAS-86 is on the board as xd-2265 [QA] + xd-2194/2142/2131 [IOS]; CAS-70 is Omar's phone test of build 75 (covered by those iOS rows); CAS-93 was a chat answer.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-22T22:15:32Z",
+      "createdDate": "2026-10-22",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2289",
+      "from": "[CTO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CTO: [P1] bkk-01 is back: resume the Bangkok dev measurements (stealth-speed rows 6, 16, 18)",
+      "description": "Measured 22 Oct 21:0xZ from the Mac VM: 46.16.129.246 port 22 OPEN, port 443 OPEN; control port 9 on the same host no answer (instrument ok); github.com:443 OPEN. Rows 6, 16, 18 of stealth-speed-enhancements said 'bkk-01 dead since 19 Oct'. Re-run the hourly prober and the row 6/16/18 dev measurements; write the result on the rows.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-22T22:15:32Z",
       "createdDate": "2026-10-22",
       "completedDate": null
     }
@@ -72823,6 +72897,13 @@
       "dept": "[DEVOPS]",
       "priority": "P2",
       "text": "[DEVOPS run 2026-10-13 2225, scheduled, unattended, 2026-10-13T22:40:29Z] Hidden-mode speed: a 4 MB server inbox on the real relay code took test loss from ~19% to 0 and doubled speed on the Bangkok test port (live untouched) - READY TO SHIP row 325, QA xd-2126. xd-2108: error-burst source logging (network only) built, off, waits LEGAL xd-2127. No production change this run."
+    },
+    {
+      "id": "note-cto-20261022-2214",
+      "date": "2026-10-22",
+      "dept": "[CTO]",
+      "priority": "P1",
+      "text": "[CTO run 2214Z applying the 2015Z run's write, re-checked 22:2xZ: d9575b2 is in development (tip 35c189c59); production dashboard_ssh_push.py 0 scrub lines and no CASPER_SSH_KEY_PATH; bkk-01 22+443 open, port 9 refused; radius fields still on the public board, 2026-10-22T22:15:27Z] Disk: the Mac's Cowork VM /sessions was 100% full ~20:15-21:15Z (CTO runs at 20:15Z and 21:14Z could not push the board; the 21:14Z run also lost the Mac link). At 22:14Z it is 94% (613 MB free) and the Mac drive is 100% (1.2 GB free). CEO card row 380 (ACTION clear old Cowork sessions) already asks for the fix; also free space on the Mac drive."
     }
   ],
   "ctoBoard": {
