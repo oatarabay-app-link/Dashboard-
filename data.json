@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-23T01:06:37Z",
+  "lastUpdated": "2026-10-23T01:16:32Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 69,
@@ -15078,12 +15078,14 @@
         {
           "test": "SHIPPED (found live 2026-10-22 23:3xZ: production 74b2a721 ci.yml L115 /linux variant) \u00b7 CEO YES 2026-10-16 (live chat, CEO office: 'go with your advice') \u00b7 READY TO SHIP approved - ship by the normal path, then [QA] | READY TO SHIP \u2014 the main server's automatic test run for the app's back-end works again on the live branch \u00b7 why: since 7 Oct it stops before testing, because it tries to download a helper that GitHub refuses (9 refusals today, last 15:56Z); so a broken back-end change is not caught \u00b7 what: one line in the test recipe uses the version of that helper that needs no download \u00b7 tested on dev: 2 green runs tonight (21:54Z and 22:56Z, 'Build & Test .NET Backend' Succeeded, test results published) \u00b7 rollback: put the one line back \u00b7 CEO: say yes or no",
           "verify": "production .github/workflows/ci.yml line 115 = 'EnricoMi/publish-unit-test-result-action/linux@v2'; next production 'Build & Test .NET Backend' run Succeeded; journalctl -u docker | grep -c 'publish-unit-test-result-action.*denied' stays 0 after the ship",
-          "met": false,
-          "passed": false,
-          "verifiedBy": "none",
+          "met": true,
+          "passed": true,
+          "verifiedBy": "tested",
           "verifiedByRaw": null,
-          "verifiedDate": null,
-          "evidence": "[DEVOPS live 2026-10-17 18:0x-18:3xZ, CEO live 'START FINALIZING OUR TASKS FIRST'] SHIPPED 2026-10-17 18:10Z: production ea05ad9c6 (cherry-pick of dev 96aff2d25) - ci.yml L115 publish-unit-test-result-action/linux@v2 (no ghcr pull). Proof waits the next production 'Build & Test .NET Backend' job = Succeeded. || [DEVOPS run 2026-10-12 2325, scheduled, unattended, 2026-10-12T23:30:37Z] xd-1485. production ci.yml (md5 7e2403a4) L115 uses the docker variant; development (e70795a5) L115 uses /linux (dev fix 96aff2d25). Runner _diag Worker_20261012-215425 + -225609: Build & Test .NET Backend, refs/heads/development, 'Job result ... Succeeded'. Ship ONLY L115 (the xd-1921 scan-cleanup lines in the same diff are a separate row). dockerd 'denied' for v2.25.0: 9 lines in 10 h, last 15:56:47Z."
+          "verifiedDate": "2026-10-23",
+          "evidence": "[QA 2026-10-23 b, scheduled 'Casper qa', unattended, 2026-10-23T01:2xZ] PASS (tested) - origin/production .github/workflows/ci.yml L115 = 'EnricoMi/publish-unit-test-result-action/linux@v2'; production 'Build & Test .NET Backend' Succeeded 23 Oct 00:54:02Z incl. 'Publish test results' (runner diag Worker_20261023-005130). Leg 3 (journalctl docker 'denied' 0) is NOT PROVEN as an instrument: the same grep also reads 0 for 7-17 Oct when the job failed, so it was not counted. || [DEVOPS live 2026-10-17 18:0x-18:3xZ, CEO live 'START FINALIZING OUR TASKS FIRST'] SHIPPED 2026-10-17 18:10Z: production ea05ad9c6 (cherry-pick of dev 96aff2d25) - ci.yml L115 publish-unit-test-result-action/linux@v2 (no ghcr pull). Proof waits the next production 'Build & Test .NET Backend' job = Succeeded. || [DEVOPS run 2026-10-12 2325, scheduled, unattended, 2026-10-12T23:30:37Z] xd-1485. production ci.yml (md5 7e2403a4) L115 uses the docker variant; development (e70795a5) L115 uses /linux (dev fix 96aff2d25). Runner _diag Worker_20261012-215425 + -225609: Build & Test .NET Backend, refs/heads/development, 'Job result ... Succeeded'. Ship ONLY L115 (the xd-1921 scan-cleanup lines in the same diff are a separate row). dockerd 'denied' for v2.25.0: 9 lines in 10 h, last 15:56:47Z.",
+          "qaVerdict": "PASS",
+          "qaDate": "2026-10-23"
         },
         {
           "test": "CEO YES 2026-10-16 (live chat, CEO office: 'go with your advice') \u00b7 READY TO SHIP approved - ship by the normal path, then [QA] | READY TO SHIP \u2014 the system can set up a new VPN server again \u00b7 why: the setting that tells it which of our keys to install on a new server is empty, so 'add a new server' stops with an error (measured tonight: 1 empty setting out of 81 in the running back-end) \u00b7 what: write our existing fleet key's public half (not a secret) into the main server's settings and restart the back-end with the safe update script \u00b7 tested on dev: not possible (the setting lives only on the main server) \u00b7 rollback: remove the line and run the same script again \u00b7 CEO: say yes or no",
@@ -15224,7 +15226,7 @@
           "owner": "[DEVOPS]",
           "test": "CEO YES 2026-10-16 (live chat, CEO office: 'go with your advice') \u00b7 YES to both | DECISION \u2014 two small server lock-downs \u00b7 (1) seven internal tools on the main server (API, admin, charts, error tracker, monitoring) listen on the open internet and are hidden only by one firewall rule - if that rule is ever lost they are exposed; tie them to the inside only, and give the charts tool its own secret key (it has none) \u00b7 cost: the admin site and the app's server restart once, about 1 minute, in a quiet hour \u00b7 (2) the Amsterdam server has an old account allowed to run admin commands without a password; measured used once in 30 days (our own audit check) - remove the two permission files \u00b7 risk: low \u00b7 rollback: (1) re-create from the old setup file, (2) put the files back from the backup \u00b7 advice: YES to both; if YES the next devops run prepares (1) on the test copy first and ships (2) with a backup (xd-1831, xd-1958)",
           "verify": "main server: docker ps --format '{{.Names}} {{.Ports}}' | grep -cE '0.0.0.0:(8080|3000|5010|3100|8090|9090|9115)' -> 0 (was 7); Amsterdam: ls /etc/sudoers.d/ -> README only (was caspervpn-cc-deploy, caspervpn-deploy)",
-          "evidence": "[QA 2026-10-17 e, CEO live 'close what u can and keep going', 2026-10-17T18:51:16Z] part 1 still open: main server 7 of 7 tools on 0.0.0.0 (8080/3000/5010/3100/8090/9090/9115) at 18:47Z - matches DevOps 'PART 1 NOT shipped'. Not ticked. || [DEVOPS live 2026-10-17 18:0x-18:3xZ, CEO live 'START FINALIZING OUR TASKS FIRST'] PART 2 SHIPPED 2026-10-17 18:29Z: Amsterdam /etc/sudoers.d/caspervpn-cc-deploy + caspervpn-deploy removed (backup /root/backups/sudoers.d.pre-row300-20261017T182902Z.tgz), visudo -c OK, README only; caspervpn login from the main server still works (parity/ip-reputation use no sudo). caspervpn is still in the sudo group WITH password (sudo -l '(ALL) ALL') = no passwordless admin left. PART 1 (7 tools to 127.0.0.1) NOT shipped: needs the dev test the row asks for (nginx + scrapers reach some via host ports) - next devops run. || [DEVOPS run 2026-10-13 0125, scheduled, unattended, 2026-10-13T01:31:52Z] added. Measured 01:3xZ: 7/7 ports on 0.0.0.0 (api 8080, admin-react 3000, prometheus 9090, probe-eu 5010, blackbox 9115, grafana 3100, glitchtip 8090); DOCKER-USER 32 rules; grafana GF_SECURITY_SECRET_KEY not set in the container env. Amsterdam: /etc/sudoers.d/caspervpn-cc-deploy (10 lines) + caspervpn-deploy (6 lines), both mtime 16 May; journalctl _COMM=sudo 30 d: 1 use by caspervpn (12 Oct 21:32 'journalctl --version' = security audit probe); caspervpn logs in 202x/30 d from the main server (parity_monitor.sh, ip_reputation_monitor.py) without sudo. Bangkok-first: Bangkok has no such files (README only), so (2) has no dev twin - it only removes unused rights."
+          "evidence": "[QA 2026-10-23 b, scheduled 'Casper qa', unattended, 2026-10-23T01:2xZ] Part 2 re-measured 01:11Z: Amsterdam /etc/sudoers.d README only, visudo OK, backup present; parity NL-AM2 12/12 every night 18-22 Oct. Part 1 not shipped - row stays open. || [QA 2026-10-17 e, CEO live 'close what u can and keep going', 2026-10-17T18:51:16Z] part 1 still open: main server 7 of 7 tools on 0.0.0.0 (8080/3000/5010/3100/8090/9090/9115) at 18:47Z - matches DevOps 'PART 1 NOT shipped'. Not ticked. || [DEVOPS live 2026-10-17 18:0x-18:3xZ, CEO live 'START FINALIZING OUR TASKS FIRST'] PART 2 SHIPPED 2026-10-17 18:29Z: Amsterdam /etc/sudoers.d/caspervpn-cc-deploy + caspervpn-deploy removed (backup /root/backups/sudoers.d.pre-row300-20261017T182902Z.tgz), visudo -c OK, README only; caspervpn login from the main server still works (parity/ip-reputation use no sudo). caspervpn is still in the sudo group WITH password (sudo -l '(ALL) ALL') = no passwordless admin left. PART 1 (7 tools to 127.0.0.1) NOT shipped: needs the dev test the row asks for (nginx + scrapers reach some via host ports) - next devops run. || [DEVOPS run 2026-10-13 0125, scheduled, unattended, 2026-10-13T01:31:52Z] added. Measured 01:3xZ: 7/7 ports on 0.0.0.0 (api 8080, admin-react 3000, prometheus 9090, probe-eu 5010, blackbox 9115, grafana 3100, glitchtip 8090); DOCKER-USER 32 rules; grafana GF_SECURITY_SECRET_KEY not set in the container env. Amsterdam: /etc/sudoers.d/caspervpn-cc-deploy (10 lines) + caspervpn-deploy (6 lines), both mtime 16 May; journalctl _COMM=sudo 30 d: 1 use by caspervpn (12 Oct 21:32 'journalctl --version' = security audit probe); caspervpn logs in 202x/30 d from the main server (parity_monitor.sh, ip_reputation_monitor.py) without sudo. Bangkok-first: Bangkok has no such files (README only), so (2) has no dev twin - it only removes unused rights."
         },
         {
           "met": false,
@@ -15921,13 +15923,16 @@
         {
           "test": "SHIPPED 2026-10-22 07:37Z \u00b7 CEO YES 2026-10-21 (Telegram: /start d360_yes (dashboard button)) \u00b7 ship after QA xd-2246 dev PASS (QA already PASS on dev where the row says so), then [QA] live | READY TO SHIP (after QA xd-2246 passes on dev) - the automatic API/admin deploy gate runs again \u00b7 why: since 9 Oct GitHub's own cloud machines run none of our jobs; the freeze gate of auto-deploy.yml ran there, so it never started and no automatic deploy could follow \u00b7 what the ship does: cherry-pick development cd0526f to production (one line: the gate runs on our own runner on the main server, like the website fix in row 349) \u00b7 note: the submission freeze lock is still on, so after this the gate says 'frozen' and deploys stay manual (/root/deploy_api.sh) until you lift it - nothing deploys by itself today \u00b7 tested: workflow file parses; same runner already runs the deploy job \u00b7 rollback: revert the commit \u00b7 advice: YES",
           "verify": "next push to production: Actions run of 'Auto-Deploy' shows job freeze-check completed on runner uk-lon-runner-1 (not queued)",
-          "met": false,
-          "passed": false,
-          "verifiedBy": "none",
+          "met": true,
+          "passed": true,
+          "verifiedBy": "tested",
           "owner": "[DEVOPS]",
           "createdBy": "[DEVOPS run 2026-10-21 0942, scheduled, unattended, 2026-10-21T09:5xZ]",
           "createdAt": "2026-10-21T09:55:00Z",
-          "evidence": "[DEVOPS run 2026-10-22 0725, scheduled, unattended, 2026-10-22T07:4xZ] production 30dac7164 (= cd0526f36). The push started Auto-Deploy: runner diag Worker_20261022-073929 = freeze-check on the uk-lon runner, ran (not queued); step Check freeze state exit 1 = BY DESIGN while SUBMISSION_FREEZE.lock is on (deploy jobs skipped). Note: every production push now shows a red Auto-Deploy until the freeze is lifted. || [CEO 2026-10-21 2026-10-21T12:52:19Z] /start d360_yes (dashboard button) (Telegram @Casperceobot; recorded by CEO BOT run 2026-10-22T06:46Z). Recorded before any action; the owning department's run ships it under the lock. || [QA 2026-10-21 a, scheduled 'Casper qa', unattended, 2026-10-21T10:0xZ] QA PASS on dev (xd-2246): cd0526f/35947f3 auto-deploy.yml freeze-check -> [self-hosted, uk-lon], yaml OK, needs-chain intact, 35947f3 = comments only. || [DEVOPS run 2026-10-21 0942 b, scheduled, unattended, 2026-10-21T09:5xZ] note for the shipper: a second devops run pushed the same one-line change on top (development 35947f351, comment text only; diff cd0526f36..35947f351 = 3 comment lines). Ship either; the runs-on line is identical."
+          "evidence": "[QA 2026-10-23 b, scheduled 'Casper qa', unattended, 2026-10-23T01:2xZ] PASS (tested) - production 30dac7164: Auto-Deploy job freeze-check ran on uk-lon-runner-1 (Worker_20261022-073716, .runner agentName uk-lon-runner-1), Failed at 'Check freeze state' = frozen by design; again for 5383b3aa2 (Worker_20261022-073929). || [DEVOPS run 2026-10-22 0725, scheduled, unattended, 2026-10-22T07:4xZ] production 30dac7164 (= cd0526f36). The push started Auto-Deploy: runner diag Worker_20261022-073929 = freeze-check on the uk-lon runner, ran (not queued); step Check freeze state exit 1 = BY DESIGN while SUBMISSION_FREEZE.lock is on (deploy jobs skipped). Note: every production push now shows a red Auto-Deploy until the freeze is lifted. || [CEO 2026-10-21 2026-10-21T12:52:19Z] /start d360_yes (dashboard button) (Telegram @Casperceobot; recorded by CEO BOT run 2026-10-22T06:46Z). Recorded before any action; the owning department's run ships it under the lock. || [QA 2026-10-21 a, scheduled 'Casper qa', unattended, 2026-10-21T10:0xZ] QA PASS on dev (xd-2246): cd0526f/35947f3 auto-deploy.yml freeze-check -> [self-hosted, uk-lon], yaml OK, needs-chain intact, 35947f3 = comments only. || [DEVOPS run 2026-10-21 0942 b, scheduled, unattended, 2026-10-21T09:5xZ] note for the shipper: a second devops run pushed the same one-line change on top (development 35947f351, comment text only; diff cd0526f36..35947f351 = 3 comment lines). Ship either; the runs-on line is identical.",
+          "verifiedDate": "2026-10-23",
+          "qaVerdict": "PASS",
+          "qaDate": "2026-10-23"
         },
         {
           "test": "CEO YES 2026-10-21 = A (Telegram dashboard button /start d361_a, tapped twice 12:51:46Z + 12:52:01Z; board advised C - the bot asked him to confirm) \u00b7 first step = ask OneProvider the price of 1-2 new Miami addresses (no spend without a priced READY TO SHIP row) | DECISION - HBO Max says 'you are using a VPN' to a customer in Lebanon on CasperVPN (xd-2245) \u00b7 what we measured 20 Oct: our US server addresses (Miami, Los Angeles, Montreal) are on public VPN lists (proxycheck.io: VPN = yes; ip-api: datacenter) - streaming services buy these lists; it is not an app bug and there is no address leak \u00b7 options: A) ask OneProvider for 1-2 new addresses on Miami and swap when one gets listed (price per address not known yet - asked on infra-cost-rightsizing#4; new datacenter addresses usually get listed again within weeks) \u00b7 B) one special 'streaming' US server on a home/ISP-type address from a provider that sells them (much more per month than a normal server; we would price it first) \u00b7 C) not now: tell the customer streaming sites are not guaranteed and look again when 3 or more customers ask \u00b7 advice: C now (one report, few paying customers), B priced if streaming complaints grow. Say A, B or C.",
@@ -67780,9 +67785,9 @@
       "createdAt": "2026-10-20T12:08:11Z",
       "createdDate": "2026-10-20",
       "completedDate": null,
-      "notes": "[QA 2026-10-22 c, scheduled 'Casper qa', unattended, 2026-10-22T21:0xZ] Day 3 of 7: 22 Oct 20:5xZ tools/facts_ledger.py (read-only) 'New real users, last 24 h' = 1 (> 0, criterion holds); WATCH: last 7 days 19 (was 27 on 21 Oct), last 30 days 106. Next reads 23-26 Oct. || [QA 2026-10-21 a, scheduled 'Casper qa', unattended, 2026-10-21T10:0xZ] Day 2 of 7: 21 Oct 09:5xZ tools/facts_ledger.py (read-only) 'New real users, last 24 h' = 3 (> 0); last 7 days 27, last 30 days 107. Next reads 22-26 Oct. || [QA 2026-10-20 b, scheduled 'Casper qa', unattended, 2026-10-20T18:2xZ] Day 1 of 7: 20 Oct 18:1xZ tools/facts_ledger.py (read-only) 'New real users, last 24 h' = 6 (> 0); last 7 days 27. Next reads 21-26 Oct.",
-      "qaNote": "[QA 2026-10-22 c, scheduled 'Casper qa', unattended, 2026-10-22T21:0xZ] Day 3 of 7: 22 Oct 20:5xZ tools/facts_ledger.py (read-only) 'New real users, last 24 h' = 1 (> 0, criterion holds); WATCH: last 7 days 19 (was 27 on 21 Oct), last 30 days 106. Next reads 23-26 Oct.",
-      "qaDate": "2026-10-22"
+      "notes": "[QA 2026-10-23 b, scheduled 'Casper qa', unattended, 2026-10-23T01:2xZ] Day 4 of 7: 23 Oct 01:12Z tools/facts_ledger.py (read-only) 'New real users, last 24 h' = 2 (> 0, criterion holds); last 7 days 19, last 30 days 107. Next reads 24-26 Oct. || [QA 2026-10-22 c, scheduled 'Casper qa', unattended, 2026-10-22T21:0xZ] Day 3 of 7: 22 Oct 20:5xZ tools/facts_ledger.py (read-only) 'New real users, last 24 h' = 1 (> 0, criterion holds); WATCH: last 7 days 19 (was 27 on 21 Oct), last 30 days 106. Next reads 23-26 Oct. || [QA 2026-10-21 a, scheduled 'Casper qa', unattended, 2026-10-21T10:0xZ] Day 2 of 7: 21 Oct 09:5xZ tools/facts_ledger.py (read-only) 'New real users, last 24 h' = 3 (> 0); last 7 days 27, last 30 days 107. Next reads 22-26 Oct. || [QA 2026-10-20 b, scheduled 'Casper qa', unattended, 2026-10-20T18:2xZ] Day 1 of 7: 20 Oct 18:1xZ tools/facts_ledger.py (read-only) 'New real users, last 24 h' = 6 (> 0); last 7 days 27. Next reads 21-26 Oct.",
+      "qaNote": "[QA 2026-10-23 b, scheduled 'Casper qa', unattended, 2026-10-23T01:2xZ] Day 4 of 7: 23 Oct 01:12Z tools/facts_ledger.py (read-only) 'New real users, last 24 h' = 2 (> 0, criterion holds); last 7 days 19, last 30 days 107. Next reads 24-26 Oct.",
+      "qaDate": "2026-10-23"
     },
     {
       "id": "xd-2243",
@@ -67995,10 +68000,10 @@
       "createdAt": "2026-10-22T07:41:51Z",
       "createdDate": "2026-10-22",
       "completedDate": null,
-      "notes": "[QA 2026-10-22 c, scheduled 'Casper qa', unattended, 2026-10-22T21:0xZ] Leg 1 PASS: main server 'nophp' / dpkg php 0, dev brain casper-dev-vps 'nophp' / 0 (control: same dpkg count finds nginx/docker = 6). Leg 3 PASS: datacapSweep lastRun 20:45:04Z today -> row 359 ticked tested. Leg 2 (backup): only the manual 19:26Z tarball exists (24.9 MB) - re-check after 23 Oct 02:00Z. Leg 5 (cleanup) after 23 Oct 03:40Z. Leg 4 (row 360 freeze-check diag) not read this run. || [DEVOPS run 2026-10-22 1924, scheduled, unattended, 2026-10-22T19:4xZ] Row 357 live proof for QA: manual run of the cron command 19:26Z -> exit 0, backups/20261022_192605.tar.gz 24.9 MB (database.sql.gz 24.9 MB inside), 'not a valid identifier' lines stay 10 (old runs only). First nightly run = 23 Oct 02:00Z; RoutineRuns 'backups' 04:30Z should then say ok (today 04:30Z said 'tarball 9999 h old' = before the 07:37Z ship).",
+      "notes": "[QA 2026-10-23 b, scheduled 'Casper qa', unattended, 2026-10-23T01:2xZ] Leg 4 PASS -> row 360 ticked tested: production push 30dac7164 started Auto-Deploy job 'freeze-check' on runner uk-lon-runner-1 (Worker_20261022-073716, ran, not queued), step 'Check freeze state' Failed by design (freeze lock on). Correction: Worker_20261022-073929 cited on the row is the NEXT push 5383b3aa2 (row 346), also freeze-check on the same runner. Left open: leg 2 (backup after 02:00Z) and leg 5 (cleanup after 03:40Z) - next run reads them. || [QA 2026-10-22 c, scheduled 'Casper qa', unattended, 2026-10-22T21:0xZ] Leg 1 PASS: main server 'nophp' / dpkg php 0, dev brain casper-dev-vps 'nophp' / 0 (control: same dpkg count finds nginx/docker = 6). Leg 3 PASS: datacapSweep lastRun 20:45:04Z today -> row 359 ticked tested. Leg 2 (backup): only the manual 19:26Z tarball exists (24.9 MB) - re-check after 23 Oct 02:00Z. Leg 5 (cleanup) after 23 Oct 03:40Z. Leg 4 (row 360 freeze-check diag) not read this run. || [DEVOPS run 2026-10-22 1924, scheduled, unattended, 2026-10-22T19:4xZ] Row 357 live proof for QA: manual run of the cron command 19:26Z -> exit 0, backups/20261022_192605.tar.gz 24.9 MB (database.sql.gz 24.9 MB inside), 'not a valid identifier' lines stay 10 (old runs only). First nightly run = 23 Oct 02:00Z; RoutineRuns 'backups' 04:30Z should then say ok (today 04:30Z said 'tarball 9999 h old' = before the 07:37Z ship).",
       "updatedAt": "2026-10-22T19:45Z",
-      "qaNote": "[QA 2026-10-22 c, scheduled 'Casper qa', unattended, 2026-10-22T21:0xZ] Leg 1 PASS: main server 'nophp' / dpkg php 0, dev brain casper-dev-vps 'nophp' / 0 (control: same dpkg count finds nginx/docker = 6). Leg 3 PASS: datacapSweep lastRun 20:45:04Z today -> row 359 ticked tested. Leg 2 (backup): only the manual 19:26Z tarball exists (24.9 MB) - re-check after 23 Oct 02:00Z. Leg 5 (cleanup) after 23 Oct 03:40Z. Leg 4 (row 360 freeze-check diag) not read this run.",
-      "qaDate": "2026-10-22"
+      "qaNote": "[QA 2026-10-23 b, scheduled 'Casper qa', unattended, 2026-10-23T01:2xZ] Leg 4 PASS -> row 360 ticked tested: production push 30dac7164 started Auto-Deploy job 'freeze-check' on runner uk-lon-runner-1 (Worker_20261022-073716, ran, not queued), step 'Check freeze state' Failed by design (freeze lock on). Correction: Worker_20261022-073929 cited on the row is the NEXT push 5383b3aa2 (row 346), also freeze-check on the same runner. Left open: leg 2 (backup after 02:00Z) and leg 5 (cleanup after 03:40Z) - next run reads them.",
+      "qaDate": "2026-10-23"
     },
     {
       "id": "xd-2256",
@@ -68868,15 +68873,18 @@
       "to": "[QA]",
       "title": "Handoff from DEVOPS: [P2] Check: production CI backend job green with the /linux test-report action (xd-1485)",
       "description": "production 74b2a721 ci.yml L115 uses EnricoMi/publish-unit-test-result-action/linux@v2 (no image pull). Verify: the next production push shows 'Build & Test .NET Backend' completed green (Actions tab or runner _diag log). Tick xd-1485 / CEO row 289.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-10-22T23:29:47Z",
       "createdDate": "2026-10-22",
-      "completedDate": null,
-      "qaNote": "[QA 2026-10-23 a, scheduled 'Casper qa', unattended, 2026-10-23T00:1xZ] FAIL: production CI not green. Push 22 Oct 23:12Z: 'Lint .NET Backend' failed at 'Restore NuGet packages' (exit 1, Worker_20261022-231210); 'Build & Test .NET Backend' never ran on production in 21-23 Oct logs. Handed to [DEVOPS] xd-2314.",
-      "notes": "[QA 2026-10-23 a, scheduled 'Casper qa', unattended, 2026-10-23T00:1xZ] FAIL: production CI not green. Push 22 Oct 23:12Z: 'Lint .NET Backend' failed at 'Restore NuGet packages' (exit 1, Worker_20261022-231210); 'Build & Test .NET Backend' never ran on production in 21-23 Oct logs. Handed to [DEVOPS] xd-2314.",
+      "completedDate": "2026-10-23",
+      "qaNote": "[QA 2026-10-23 b, scheduled 'Casper qa', unattended, 2026-10-23T01:2xZ] PASS - production 'Build & Test .NET Backend' Succeeded 23 Oct 00:54:02Z (Worker_20261023-005130, refs/heads/production): steps Restore, Build, Run unit tests, Publish test results (EnricoMi .../linux) all ran. origin/production ci.yml L115 = publish-unit-test-result-action/linux@v2. CEO card row 288 (not 289) ticked tested.",
+      "notes": "[QA 2026-10-23 b, scheduled 'Casper qa', unattended, 2026-10-23T01:2xZ] PASS - production 'Build & Test .NET Backend' Succeeded 23 Oct 00:54:02Z (Worker_20261023-005130, refs/heads/production): steps Restore, Build, Run unit tests, Publish test results (EnricoMi .../linux) all ran. origin/production ci.yml L115 = publish-unit-test-result-action/linux@v2. CEO card row 288 (not 289) ticked tested. || [QA 2026-10-23 a, scheduled 'Casper qa', unattended, 2026-10-23T00:1xZ] FAIL: production CI not green. Push 22 Oct 23:12Z: 'Lint .NET Backend' failed at 'Restore NuGet packages' (exit 1, Worker_20261022-231210); 'Build & Test .NET Backend' never ran on production in 21-23 Oct logs. Handed to [DEVOPS] xd-2314.",
       "qaDate": "2026-10-23",
-      "blocker": "waits on xd-2314 [DEVOPS] (NuGet restore failing in CI), then QA re-reads the next production push"
+      "blocker": "waits on xd-2314 [DEVOPS] (NuGet restore failing in CI), then QA re-reads the next production push",
+      "completedAt": "2026-10-23",
+      "completedBy": "[QA]",
+      "resolution": "PASS: production Build & Test .NET Backend green 00:54Z with the /linux test-report step; row 288 ticked"
     },
     {
       "id": "xd-2310",
@@ -68987,11 +68995,17 @@
       "to": "[QA]",
       "title": "Handoff from DEVOPS: [P1] xd-2314: check CI jobs pass after the build-folder reset",
       "description": "DevOps reset the shared build folder 23 Oct 00:3xZ (core.sparseCheckout false, 41 entries, dotnet restore rc 0). Verify: on the main server, the next Worker_*.log after 00:40Z for 'Lint .NET Backend' says 'Job result after all job steps finish: Succeeded'. If the next production push runs freeze-check first, jobs fail again - that is xd-2257 / row 366, not this fix.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-10-23T00:27:43Z",
       "createdDate": "2026-10-23",
-      "completedDate": null
+      "completedDate": "2026-10-23",
+      "notes": "[QA 2026-10-23 b, scheduled 'Casper qa', unattended, 2026-10-23T01:2xZ] PASS - main server runner diag: after the 00:3xZ reset every production job Succeeded: Lint .NET Backend (Worker_20261023-004033, 00:42:34Z), Check Outdated Dependencies, Build Website, Lint Admin Panel, Build & Test .NET Backend (Worker_20261023-005130, 00:54:02Z), Build Admin Panel, Build Docker Images (api) 01:07:40Z. CONTROL: the jobs before the reset (Worker_20261023-001336..001431) all Failed.",
+      "qaNote": "[QA 2026-10-23 b, scheduled 'Casper qa', unattended, 2026-10-23T01:2xZ] PASS - main server runner diag: after the 00:3xZ reset every production job Succeeded: Lint .NET Backend (Worker_20261023-004033, 00:42:34Z), Check Outdated Dependencies, Build Website, Lint Admin Panel, Build & Test .NET Backend (Worker_20261023-005130, 00:54:02Z), Build Admin Panel, Build Docker Images (api) 01:07:40Z. CONTROL: the jobs before the reset (Worker_20261023-001336..001431) all Failed.",
+      "qaDate": "2026-10-23",
+      "completedAt": "2026-10-23",
+      "completedBy": "[QA]",
+      "resolution": "PASS: 7 of 7 production CI jobs Succeeded after the reset (00:42-01:07Z); control: jobs at 00:13-00:14Z Failed"
     },
     {
       "id": "xd-2318",
@@ -68999,11 +69013,17 @@
       "to": "[QA]",
       "title": "Handoff from DEVOPS: [P3] xd-1958: check Amsterdam sudo rules are gone",
       "description": "Verify on 51.158.147.210: 'ls /etc/sudoers.d' = README only; 'visudo -c' OK; backup /root/backups/sudoers.d.pre-row300-20261017T182902Z.tgz exists; parity_monitor still 13/13 (nothing used the rules).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P3",
       "createdAt": "2026-10-23T00:27:43Z",
       "createdDate": "2026-10-23",
-      "completedDate": null
+      "completedDate": "2026-10-23",
+      "notes": "[QA 2026-10-23 b, scheduled 'Casper qa', unattended, 2026-10-23T01:2xZ] PASS - Amsterdam 51.158.147.210 01:11Z: /etc/sudoers.d = README only; visudo -c 'parsed OK' rc 0; /root/backups/sudoers.d.pre-row300-20261017T182902Z.tgz present (1718 B). Nightly parity (main server /var/log/fleet-parity-check.log) NL-AM2 12/12 on 17 Oct (before) and every night 18-22 Oct (after) - nothing used the rules. Correction: the parity scale is 12 checks per node (12 nodes listed), not '13/13'.",
+      "qaNote": "[QA 2026-10-23 b, scheduled 'Casper qa', unattended, 2026-10-23T01:2xZ] PASS - Amsterdam 51.158.147.210 01:11Z: /etc/sudoers.d = README only; visudo -c 'parsed OK' rc 0; /root/backups/sudoers.d.pre-row300-20261017T182902Z.tgz present (1718 B). Nightly parity (main server /var/log/fleet-parity-check.log) NL-AM2 12/12 on 17 Oct (before) and every night 18-22 Oct (after) - nothing used the rules. Correction: the parity scale is 12 checks per node (12 nodes listed), not '13/13'.",
+      "qaDate": "2026-10-23",
+      "completedAt": "2026-10-23",
+      "completedBy": "[QA]",
+      "resolution": "PASS: Amsterdam sudoers.d README only, visudo OK, backup present, parity NL-AM2 12/12 unchanged 17-22 Oct"
     },
     {
       "id": "xd-2319",
