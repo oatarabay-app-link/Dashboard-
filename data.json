@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-23T10:30:06Z",
+  "lastUpdated": "2026-10-23T10:31:42Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 69,
@@ -16514,6 +16514,36 @@
           "addedBy": "[GROWTH run 2026-10-23 0953, scheduled, unattended]",
           "test": "ACTION (3 min) \u2014 OK the App Store preview video storyboard (5 frames, 24 s) or say what to change \u00b7 file: marketing/APP-PREVIEW-STORYBOARD-V1-2026-10-23.md \u00b7 why: drawing it now lets us film the day Apple approves 4.3.1 \u00b7 changed from the 28 Sep brief to your later rules: no server/country count, no 'blocked networks' \u00b7 also say: music or silent (advice: calm music, no voice)",
           "evidence": "[GROWTH run 2026-10-23 0953, scheduled, unattended, 2026-10-23T10:00:54Z] added."
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "owner": "[CEO]",
+          "addedAt": "2026-10-23T10:40Z",
+          "addedBy": "[DEVOPS run 2026-10-23 1023, scheduled, unattended]",
+          "test": "DECISION \u2014 the Tokyo server has been dead since 07:25 UTC today: may DevOps restart it? \u00b7 it answers nothing (no ping, no ports) while the other 10 servers answer; the hosting company still lists it as 'Active'; the app already hides it, so users who were on it were cut and new users are not sent there \u00b7 options: A (advised) DevOps restarts it through the hosting company's control API (scripts/oneprovider-reboot.sh tyo); if the hosting company refuses the restart, DevOps writes you the 2-minute support-ticket step \u00b7 B wait and let the hosting company notice \u00b7 after a restart DevOps turns it back on in the app only after a real VPN connection works, then QA checks (xd-2378)",
+          "evidence": "[DEVOPS run 2026-10-23 1023, scheduled, unattended, 2026-10-23T10:4xZ] MEASURED 10:24Z from the main server: ping 103.106.228.235 0/3; TCP 22/443/5002 closed; control LA 443 open. OneProvider /vm/list (read-only): VM 814198 'Tokyo - JP' domainstatus=Active (a dead VM can still show Active - skill trap 19 Oct). DB: IsActive=f AutoDisabled=t since 07:25:56Z (CTO 10:16Z)."
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "owner": "[CEO]",
+          "addedAt": "2026-10-23T10:40Z",
+          "addedBy": "[DEVOPS run 2026-10-23 1023, scheduled, unattended]",
+          "test": "READY TO SHIP \u2014 close the servers' control door (port 5002) to the internet on 7 servers: Hong Kong, Mexico City, Miami, Montreal, Singapore, Sydney, Sao Paulo \u00b7 why: anyone on the internet can reach it today, the password for it travels unencrypted, and an open control door helps a censor spot a VPN server; Amsterdam, Duesseldorf and Los Angeles are already closed this way \u00b7 how: allow only our main server and the test server, block everyone else (Miami first, then the other 6) \u00b7 tested on dev: only partly - the test server Bangkok cannot be reached on that door even from our main server today (no firewall rule inside it; likely blocked by the hosting company), so the real check is on Miami first: our main server must still add and remove a VPN user there before the other 6 are done \u00b7 rollback: one command per server re-opens it (ufw allow 5002/tcp) \u00b7 advice: yes (xd-2379)",
+          "evidence": "[DEVOPS run 2026-10-23 1023, scheduled, unattended, 2026-10-23T10:4xZ] MEASURED 10:3xZ: from the Mac vantage (not allow-listed) http://<ip>:5002/health = 200 on 203.23.128.214, 147.78.1.27, 23.95.79.249, 45.154.204.206, 167.150.100.166, 103.75.119.122, 185.192.124.245; 000 on 51.158.147.210, 91.194.84.79, 208.87.243.205, 46.16.129.246. Miami ufw: '5002/tcp ALLOW Anywhere # Flask control API'. bkk-01: ss shows 0.0.0.0:5002 python3 listening, local curl 200, ufw inactive, iptables -P INPUT ACCEPT, no 5002 rule - yet from the main server curl times out (5 s) while TCP 443 opens. NOT PROVEN where it is dropped (tcpdump not run during a probe)."
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "owner": "[CEO]",
+          "addedAt": "2026-10-23T10:40Z",
+          "addedBy": "[DEVOPS run 2026-10-23 1023, scheduled, unattended]",
+          "test": "READY TO SHIP \u2014 remove one duplicate network rule on the Amsterdam server (small clean-up) \u00b7 why: the same traffic rule is listed twice; harmless today but it confuses checks and later changes \u00b7 how: delete one copy and save (iptables -t nat -D POSTROUTING -o wg1 -j MASQUERADE once, then iptables-save) \u00b7 tested on dev: not needed - it only removes an exact copy; the other copy keeps doing the same job \u00b7 rollback: add it back with one command \u00b7 advice: yes, low risk (xd-2303)",
+          "evidence": "[DEVOPS run 2026-10-23 1023, scheduled, unattended, 2026-10-23T10:4xZ] MEASURED 10:3xZ read-only: node 51.158.147.210 iptables -t nat -S POSTROUTING | grep -c -- '-o wg1 -j MASQUERADE' -> 2 (same as 22 Oct 23:2xZ)."
         }
       ],
       "progress": 0,
@@ -67277,11 +67307,15 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: Main server disk: 4 leftover build helpers removed 17 Oct (83 MB -> 6.5 GB); prevention waits CEO YES row 336",
       "description": "CEO YES 254 (17 Oct live). Removed 4 orphaned buildx builders + volumes and api:scan; log /root/reports/cto1017-254/disk.log. Watch disk; row 336 is the lasting fix (ci.yml pre-step removing builders > 2 h). Also check row 267 proof (':scan' 0 after next production build). Hand to [QA] after.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-10-17T21:31:12Z",
       "createdDate": "2026-10-17",
-      "completedDate": null
+      "completedDate": "2026-10-23",
+      "notes": "[DEVOPS run 2026-10-23 1023, scheduled, unattended, 2026-10-23T10:4xZ] CLOSED with proof: the prevention (CEO YES row 336) SHIPPED 18 Oct (ci.yml removes buildx builders > 2 h; dev 45903ab0, prod fdd09e1c). Measured 10:3xZ: docker ps -a | grep -c buildx_buildkit = 0; / 74% used (13 GB free). Row 336 QA tick stays with [QA].",
+      "blocker": "",
+      "updatedAt": "2026-10-23T10:40Z",
+      "resolution": "Prevention shipped under row 336 (18 Oct); 0 buildx builders and 74% disk measured 23 Oct 10:3xZ."
     },
     {
       "id": "xd-2232",
@@ -67471,8 +67505,9 @@
       "createdAt": "2026-10-18T18:24:59Z",
       "createdDate": "2026-10-18",
       "completedDate": null,
-      "notes": "[DEVOPS run 2026-10-19 1442, scheduled 'Casper devops', unattended, 2026-10-19T14:5xZ] DECISION row added on the CEO card (A outside check service vs B GitHub 5-minute check, advice B).",
-      "blocker": "CEO answer on the 19 Oct DECISION row (outside uptime check A/B)"
+      "notes": "[DEVOPS run 2026-10-23 1023, scheduled, unattended, 2026-10-23T10:4xZ] STALE BLOCKER REWRITTEN: the CEO answered B on ceo-action-backlog row 348 (21 Oct, Telegram 'Gonwith board advise' = board advice B: a GitHub 5-minute check). Next for [DEVOPS]: build the scheduled workflow on development (curl api/website /health, Telegram on 2 failures). Note: GitHub runs scheduled workflows only from the default branch, so it goes live only with the production ship. No uptime workflow in .github/workflows today (grep -il uptime: 0). || [DEVOPS run 2026-10-19 1442, scheduled 'Casper devops', unattended, 2026-10-19T14:5xZ] DECISION row added on the CEO card (A outside check service vs B GitHub 5-minute check, advice B).",
+      "blocker": "",
+      "updatedAt": "2026-10-23T10:40Z"
     },
     {
       "id": "xd-2196",
@@ -68376,8 +68411,8 @@
       "createdAt": "2026-10-22T08:17:20Z",
       "createdDate": "2026-10-22",
       "completedDate": null,
-      "notes": "[CTO live chat 2026-10-23 10:3xZ] SHIPPED to production ac39cd462 under lock casper-cto-live-1023-366 (CEO 'yes 366'). Folder normal at 10:2xZ, 10:28Z job Succeeded. || [CTO run 2026-10-23 1014, scheduled, unattended, 2026-10-23T10:2xZ] BROKEN AGAIN NOW: freeze-check 05:33Z (Failed) -> workspace sparse=true, 1 file; 33/33 jobs Failed 05:33-09:41Z incl. deploy-dev 06:29Z (dev server not getting new code). Ask [DEVOPS]: the same interim folder reset as 23 Oct 00:3xZ this run (build folder only, not production), then re-check one CI job Succeeded; the permanent fix still waits row 366. || [DEVOPS run 2026-10-22 1924, scheduled, unattended, 2026-10-22T19:4xZ] ROOT CAUSE MEASURED: .git/info/sparse-checkout dated 07:39:31Z (production auto-deploy freeze-check); the 08:16Z hand fix and 'git sparse-checkout disable' (git 2.43) only write false to .git/config.worktree - the next actions/checkout unsets extensions.worktreeConfig and the 'true' in .git/config returns (seen 19:29:22Z: config.worktree false, .git/config true, website 0 files; 5 dev jobs Failed 18:55Z + 5 at 19:28Z). FIX on development: daed45fe + af9342f3 = freeze-check ends (if: always()) with disable + unset worktreeConfig + core.sparseCheckout false + rm config.worktree/info/sparse-checkout. Same reset done by hand 19:31Z -> 'file:.git/config false', website 17 entries; next dev jobs Succeeded 19:33Z (Check Outdated Dependencies, Lint .NET Backend). ios-testflight.yml freeze-check is on ubuntu-latest = not the shared folder. READY TO SHIP row 366. skill: devops SKILL.md -> new trap line.",
-      "updatedAt": "2026-10-23T10:20:00Z",
+      "notes": "[DEVOPS run 2026-10-23 1023, scheduled, unattended, 2026-10-23T10:4xZ] INTERIM RESET DONE 10:26Z (build folder only, runner idle: pgrep -c Runner.Worker = 0): before 'file:.git/config true', 1 entry, info/sparse-checkout dated 05:33:08Z; did sparse-checkout disable + unset extensions.worktreeConfig + core.sparseCheckout false + rm config.worktree/info/sparse-checkout + git checkout -- . ; after 'file:.git/config false', 41 entries, website 17. NOT PROVEN yet: a CI job Succeeded after it (no job ran since; next push shows it). Live CTO session held the lock 10:27Z for 'git-push production row 366' (the permanent fix). || [CTO live chat 2026-10-23 10:3xZ] SHIPPED to production ac39cd462 under lock casper-cto-live-1023-366 (CEO 'yes 366'). Folder normal at 10:2xZ, 10:28Z job Succeeded. || [CTO run 2026-10-23 1014, scheduled, unattended, 2026-10-23T10:2xZ] BROKEN AGAIN NOW: freeze-check 05:33Z (Failed) -> workspace sparse=true, 1 file; 33/33 jobs Failed 05:33-09:41Z incl. deploy-dev 06:29Z (dev server not getting new code). Ask [DEVOPS]: the same interim folder reset as 23 Oct 00:3xZ this run (build folder only, not production), then re-check one CI job Succeeded; the permanent fix still waits row 366. || [DEVOPS run 2026-10-22 1924, scheduled, unattended, 2026-10-22T19:4xZ] ROOT CAUSE MEASURED: .git/info/sparse-checkout dated 07:39:31Z (production auto-deploy freeze-check); the 08:16Z hand fix and 'git sparse-checkout disable' (git 2.43) only write false to .git/config.worktree - the next actions/checkout unsets extensions.worktreeConfig and the 'true' in .git/config returns (seen 19:29:22Z: config.worktree false, .git/config true, website 0 files; 5 dev jobs Failed 18:55Z + 5 at 19:28Z). FIX on development: daed45fe + af9342f3 = freeze-check ends (if: always()) with disable + unset worktreeConfig + core.sparseCheckout false + rm config.worktree/info/sparse-checkout. Same reset done by hand 19:31Z -> 'file:.git/config false', website 17 entries; next dev jobs Succeeded 19:33Z (Check Outdated Dependencies, Lint .NET Backend). ios-testflight.yml freeze-check is on ubuntu-latest = not the shared folder. READY TO SHIP row 366. skill: devops SKILL.md -> new trap line.",
+      "updatedAt": "2026-10-23T10:40Z",
       "blocker": "SHIPPED 23 Oct to production ac39cd462; QA xd-2384 checks after the next production freeze-check"
     },
     {
@@ -69135,8 +69170,9 @@
       "createdAt": "2026-10-22T23:17:01Z",
       "createdDate": "2026-10-22",
       "completedDate": null,
-      "notes": "[DEVOPS run 2026-10-22 2324, scheduled, unattended, 2026-10-22T23:40:00Z] MEASURED 23:2xZ read-only: node-nl-am2 iptables -t nat -S POSTROUTING | grep -c -- '-o wg1 -j MASQUERADE' -> 2 (confirmed). Fix = delete one copy (iptables -t nat -D POSTROUTING -o wg1 -j MASQUERADE once) + iptables-save; needs CEO YES -> READY TO SHIP row on the CEO card. || ",
-      "blocker": "CEO: READY TO SHIP row (remove duplicate wg1 NAT rule on Amsterdam)"
+      "notes": "[DEVOPS run 2026-10-23 1023, scheduled, unattended, 2026-10-23T10:4xZ] The 22 Oct run said a READY TO SHIP row was written; none was on the card (searched wg1/MASQUERADE). Re-measured 10:3xZ: count 2. Row written now: ceo-action-backlog #415. || [DEVOPS run 2026-10-22 2324, scheduled, unattended, 2026-10-22T23:40:00Z] MEASURED 23:2xZ read-only: node-nl-am2 iptables -t nat -S POSTROUTING | grep -c -- '-o wg1 -j MASQUERADE' -> 2 (confirmed). Fix = delete one copy (iptables -t nat -D POSTROUTING -o wg1 -j MASQUERADE once) + iptables-save; needs CEO YES -> READY TO SHIP row on the CEO card. || ",
+      "blocker": "CEO YES on ceo-action-backlog row 415",
+      "updatedAt": "2026-10-23T10:40Z"
     },
     {
       "id": "xd-2304",
@@ -70309,8 +70345,9 @@
       "createdAt": "2026-10-23T09:27:59Z",
       "createdDate": "2026-10-23",
       "completedDate": null,
-      "notes": "[CTO run 2026-10-23 1014, scheduled, unattended, 2026-10-23T10:2xZ] STILL DOWN at 10:16Z (~2 h 50 min): ping 0/3 from the main server; TCP 22 and 443 closed from the main server and from the Mac VM; controls LA + Duesseldorf 443 open from both. DB VpnServers Tokyo IsActive=f AutoDisabled=t since 07:25:56Z (read-only SELECT). Not moved by [DEVOPS] yet; if the provider console is not ours to reach unattended, write a DECISION/ACTION row for the CEO (OneProvider ticket).",
-      "updatedAt": "2026-10-23T10:20:00Z"
+      "notes": "[DEVOPS run 2026-10-23 1023, scheduled, unattended, 2026-10-23T10:4xZ] MEASURED 10:24Z: still dead (ping 0/3, TCP 22/443/5002 closed from the main server; control LA 443 open). OneProvider /vm/list read-only: VM 814198 Tokyo domainstatus=Active. A restart of a production server needs the CEO: DECISION row ceo-action-backlog #413 (advice A: restart via provider API). || [CTO run 2026-10-23 1014, scheduled, unattended, 2026-10-23T10:2xZ] STILL DOWN at 10:16Z (~2 h 50 min): ping 0/3 from the main server; TCP 22 and 443 closed from the main server and from the Mac VM; controls LA + Duesseldorf 443 open from both. DB VpnServers Tokyo IsActive=f AutoDisabled=t since 07:25:56Z (read-only SELECT). Not moved by [DEVOPS] yet; if the provider console is not ours to reach unattended, write a DECISION/ACTION row for the CEO (OneProvider ticket).",
+      "updatedAt": "2026-10-23T10:40Z",
+      "blocker": "CEO answer on ceo-action-backlog row 413 (restart Tokyo via provider API: A/B)"
     },
     {
       "id": "xd-2379",
@@ -70322,7 +70359,10 @@
       "priority": "P1",
       "createdAt": "2026-10-23T09:27:59Z",
       "createdDate": "2026-10-23",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[DEVOPS run 2026-10-23 1023, scheduled, unattended, 2026-10-23T10:4xZ] Re-measured 10:3xZ: 7 relays answer 5002 from outside (200), 4 closed (000). READY TO SHIP row ceo-action-backlog #414 (Miami canary first). Finding: bkk-01 5002 times out even from the main server with no in-VM firewall rule, so the Bangkok-first canary cannot prove 'main server still reaches 5002'.",
+      "blocker": "CEO YES on ceo-action-backlog row 414",
+      "updatedAt": "2026-10-23T10:40Z"
     },
     {
       "id": "xd-2380",
