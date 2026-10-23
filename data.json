@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-23T09:27:59Z",
+  "lastUpdated": "2026-10-23T09:41:03Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 69,
@@ -70254,11 +70254,13 @@
       "to": "[IOS]",
       "title": "Handoff from CTO: [P0] Hidden mode build 75: no reconnect after the last path drop + the bug report loses the failing session",
       "description": "Measured by CTO run 0914 (see xd-1689 note). Two asks: (1) the bug report must carry the failing session: today tunnel_debug.previous.log holds only the last extension start, so a report sent after the user toggles the VPN (two starts 81 s apart on 20 Oct) has 3 lines and none of the drop. Keep the last N KB across restarts (e.g. 2 generations or a rolling 200 KB file) - no keys in the log. (2) On 20 Oct after the relay's 22:42:36Z timeout the phone never resumed in 10 min (grace expired 22:52:36Z) although the phone had cellular + a working network probe at 22:52:38Z: find from code why the CasperCloak path did not retry (on-demand armed? warm-get / dial give-up after POSIX 60?). Earlier gaps 85-122 s also miss the 'dead link noticed < 1 min' bar (xd-2172 check 6). Dev build + simulator proof, then [QA]. No production change by this run.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P0",
       "createdAt": "2026-10-23T09:27:59Z",
       "createdDate": "2026-10-23",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "2026-10-23 09:45Z [iOS] apps run: CODED on ios/79-hidden-log-reconnect-2377 9287c94 (base ios/76 85e213d). (1) Bug report keeps the failing session: logs now rotate current -> previous -> previous2 (was one deep), only a log holding a real session (START TUNNEL banner) is rotated, and startTunnel rotates instead of deleting; report sends the tail of all three (192 KB total, server cap 500 KB). Linux Swift harness: session A, then an init-only spawn, then start B and start C in one process -> A is still in previous2.log. (2) Why no reconnect, from code: the 24i clean restart fired only when a re-dial failed with .waiting on a satisfied path; a re-dial that simply TIMES OUT (10 s) never set that flag, so the storm looped the full 600 s (backoff up to 30 s) and gave up at 22:52:36Z = exactly 600 s after 22:42:36Z. Fix: past the relay's 90 s resume window, 2 time-outs with the network up -> the same clean restart; every failed attempt and the give-up now go into the exported log ([CC-STORM]). Proof: swiftc 6.1.2 -parse OK on the 3 files (sha256 matched the commit). NOT PROVEN: Xcode build and simulator/phone run (no Xcode in scheduled runs; needs a live Mac chat). NOT PROVEN: the 85-122 s 'dead link noticed' gaps - not changed this run (liveness ping 27d path). Handed to [QA] xd-2380.",
+      "blocker": "Xcode build + simulator/phone run of ios/79 9287c94 on the Mac (live chat); code review -> QA"
     },
     {
       "id": "xd-2378",
@@ -70281,6 +70283,18 @@
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-10-23T09:27:59Z",
+      "createdDate": "2026-10-23",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2380",
+      "from": "[IOS]",
+      "to": "[QA]",
+      "title": "Handoff from IOS: [P0] Review + build ios/79 9287c94 (xd-2377: hidden-mode log keep + reconnect after network-up time-outs)",
+      "description": "Branch ios/79-hidden-log-reconnect-2377 commit 9287c94 (3 files). Check: (a) code review of the diff vs ios/76; (b) on the next Mac build: toggle VPN twice after a hidden-mode session, then Send report -> the report shows OLDER/PREVIOUS/CURRENT sections and the first session is in it; (c) hidden mode on the phone, block the relay for >2 min with the network up -> log shows [CC-STORM] attempt lines and a CLEAN RESTART line within ~2.5 min instead of 10 min; (d) Wi-Fi off/airplane for 3 min -> no clean restart (full budget kept). No production change.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-10-23T09:41:03Z",
       "createdDate": "2026-10-23",
       "completedDate": null
     }
