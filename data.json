@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-23T07:21:39Z",
+  "lastUpdated": "2026-10-23T07:22:01Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 69,
@@ -16275,7 +16275,8 @@
           "owner": "[BACKEND]",
           "test": "READY TO SHIP (after QA xd-2306 dev PASS; ship together with row 333) \u2014 Apple Ads install records are deleted after 6 months and with the account \u00b7 why: privacy 1.9 (row 381) promises this, and today nothing ever deletes them \u00b7 what the ship does: the 6-hourly clean-up also removes Apple Ads install records older than 180 days, and both ways of deleting an account remove that person's records (and the ones the app sent before they signed in on that phone); nothing users see changes \u00b7 tested on dev: development f2863a5a7, 455/455 tests, the new tests fail on the old code (4 of 5) \u00b7 today on live: 3 records (test phones), so the 180-day rule deletes nothing until April \u00b7 risk: very low \u00b7 rollback: redeploy the previous version \u00b7 advice: YES (xd-2298)",
           "verify": "After ship: api log 'DataPurge Phase 5 (xd-2298): Purged' within 6 h of the deploy; next real account deletion -> api log 'xd-2298: account deletion removed' and SELECT count(*) FROM \"AppleAdsAttributions\" WHERE \"UserId\"='<deleted id>' -> 0",
-          "evidence": "[BACKEND run 2026-10-22 2305, scheduled, unattended, 2026-10-22T23:17:25Z] built for xd-2298 (LEGAL/GROWTH handoff)."
+          "evidence": "[BACKEND run 2026-10-22 2305, scheduled, unattended, 2026-10-22T23:17:25Z] built for xd-2298 (LEGAL/GROWTH handoff).",
+          "qaNote": "[QA 2026-10-23 h, scheduled 'Casper qa', unattended, 2026-10-23T07:3xZ] Dev 180-day purge PASS (xd-2306): 06:31Z 'Purged 1 Apple Ads install records', 200-day test row gone, 10-day control kept. Delete-with-account leg still waits row 395."
         },
         {
           "met": false,
@@ -16475,7 +16476,8 @@
           "owner": "[CEO]",
           "addedAt": "2026-10-23T06:35:00Z",
           "addedBy": "[BACKEND run 2026-10-23 0605, scheduled, unattended]",
-          "test": "READY TO SHIP \u2014 'Request a location' API (xd-2357) \u00b7 why: the new iPhone build has a 'Request a location' button; without this API the button would fail \u00b7 tested on dev: development 97f024298, build 0 errors, all 472 tests pass (13 new), live on the dev API since 06:29Z (answers 401 when signed out, was 404); QA signed-in check pending \u00b7 effect alone: none for today's app users - only the new iPhone build calls it; new empty tables, nothing existing changed \u00b7 rollback: /root/deploy_api.sh rollback tag (previous image); tables can stay \u00b7 advice: ship it with or just before the iPhone build that has the button. Reply 'YES <row>' to ship."
+          "test": "READY TO SHIP \u2014 'Request a location' API (xd-2357) \u00b7 why: the new iPhone build has a 'Request a location' button; without this API the button would fail \u00b7 tested on dev: development 97f024298, build 0 errors, all 472 tests pass (13 new), live on the dev API since 06:29Z (answers 401 when signed out, was 404); QA signed-in check pending \u00b7 effect alone: none for today's app users - only the new iPhone build calls it; new empty tables, nothing existing changed \u00b7 rollback: /root/deploy_api.sh rollback tag (previous image); tables can stay \u00b7 advice: ship it with or just before the iPhone build that has the button. Reply 'YES <row>' to ship.",
+          "qaNote": "[QA 2026-10-23 h, scheduled 'Casper qa', unattended, 2026-10-23T07:3xZ] Dev check xd-2366 partial: unit 13/13, dev route live (401 unsigned), prod 404; signed-in legs need a dev account (row 395 A). iOS ios/78 46b61d7 city limit code PASS (xd-2367)."
         }
       ],
       "progress": 0,
@@ -17234,13 +17236,13 @@
         },
         {
           "test": "NO CHANGE BREAKS THE FIVE-LINK FRONTING CHAIN (the silent-failure class that has cost us time three times): server name, certificate, front record, relay config and app config must agree exactly \u2014 names treated as opaque, never trimmed, case-changed or accent-folded in one layer only.",
-          "met": false,
-          "passed": false,
-          "verifiedByRaw": "qa-sweep-2026-09-29-not_reached",
-          "verifiedBy": "none",
-          "qaVerdict": "PARTIAL",
-          "qaDate": "2026-10-11",
-          "evidence": "[CTO run 2026-10-23 0621, scheduled, unattended, 2026-10-23T06:3xZ] LINK 5 MOVED: iOS closed xd-2352 05:3xZ - the app passes the names from the API unchanged, no built-in names; the compare (API names vs DNS: s1-s6, s8-s12-edge exist; s7, s13, s14 do not) is now xd-2355 [BACKEND]. || [CTO run 2026-10-23 0514, scheduled, unattended, 2026-10-23T05:18:09Z] CTO LEG CONFIRMED: s6-edge DNS-only IS the intended direct front. Measured 05:1xZ via dns.google: s6-edge.pompesh.com A = 91.194.84.79 (= DE-DUS relay in access-inventory.json / 02-infrastructure row 3), no Cloudflare IP; https://s6-edge.pompesh.com/ answers 200 from 91.194.84.79 with a valid certificate (ssl_verify=0). This matches cloudflare-exit-phase1 row 1 (direct front, QA-ticked) and row 171 (Duesseldorf off Cloudflare since 9 Oct). Note for link 5: s7-edge.pompesh.com does not exist (no A record) - if any server config still names it, that relay's hidden mode fails. Only link 5 (the names the app receives from the server config) is left; edge names are served by the backend (CloudflareDnsService / CasperCloak domain pool), not hard-coded in the app. || [QA 2026-10-12 m, scheduled, 2026-10-12T23:15:00Z] LINK 4 QA RE-MEASURED 23:08Z (xd-1982): systemctl ExecStart path -> md5 on 11/11 relays, all active: b675109e on 23.95.79.249, 167.150.100.166, 147.78.1.27, 103.75.119.122, 45.154.204.206, 185.192.124.245, 103.106.228.235, 203.23.128.214 (/usr/local/bin/caspercloak_ws.py) + 208.87.243.205 LA (/opt/caspercloak/relay_ws.py); Amsterdam 977a35c3; Duesseldorf ff598c6e = MANIFEST.md on development 25ad4c433; each development file's md5 equals its name; key-shaped literal grep 0/0/0. Link 4 (live relay code in git) PASS; the row's other links unchanged. || [DEVOPS run 2026-10-12 2225, scheduled, unattended, 2026-10-12T22:38:13Z] LINK 4 RE-MEASURED 22:3xZ (systemctl ExecStart path -> md5 on 11/11 relays, all active): 3 variants now (was 4) - b675109e x9 (incl. Los Angeles at /opt/caspercloak/relay_ws.py), Amsterdam 977a35c3, Duesseldorf ff598c6e - all carry today's row-251 patch. None equals the repo file (production c1433240, development c32fe0b7). The 3 live files are now in git on development: infrastructure/caspercloak/live/ (commits 96701618, d9a98a28, 789bece6, 25ad4c43; read back md5 equal; key-shaped literals 0) -> QA xd handoff. Left: link 5 (app config) = [IOS]; s6-edge DNS-only = confirm with [CTO] (direct-front note 9 Oct). || [QA 2026-10-11 e, scheduled, 2026-10-11T04:13:59Z] PARTIAL - re-run 04:1xZ: DNS + certificate agree 11/11 (*.pompesh.com, Let's Encrypt YE1, to 12 Dec 2026); edge records Cloudflare 10/11, s6-edge resolves straight to 91.194.84.79; link 4 (relay config) not re-measured. || [CTO run 2026-10-11 0334, scheduled, 2026-10-11T03:46:01Z] MEASURED (part): links 1-3 AGREE on 11/11 active relays - DNS sN.pompesh.com = the node IP in VpnServers 11/11, and the served certificate (*.pompesh.com + pompesh.com, Let's Encrypt YE1, to 12 Dec 2026) covers the name 11/11, with or without SNI. Front records: sN-edge.pompesh.com resolves to Cloudflare for 10/11 but s6-edge resolves straight to the Duesseldorf IP (DNS-only) - intent not confirmed. Link 4 (relay config) does NOT agree: 4 different relay files on the 5 nodes sampled (s1+s9 md5 4292dfd4 408 lines; s5 856b7603 614; s6 d58c2f8c 399; LA runs /opt/caspercloak/relay_ws.py) and none equals the repo file (c1433240, 609 lines) - the known 'caspercloak_ws.py variants' trap, still open. Link 5 (app config) not checked this run. | [NOT REACHED] QA 2026-09-29 sweep: Task is open and waiting for the CEO go-ahead; nothing built or measured for this row yet.",
+          "met": true,
+          "passed": true,
+          "verifiedByRaw": "qa",
+          "verifiedBy": "tested",
+          "qaVerdict": "PASS",
+          "qaDate": "2026-10-23",
+          "evidence": "QA TICK (tested) [QA 2026-10-23 h, scheduled 'Casper qa', unattended, 2026-10-23T07:3xZ]: link 5 (xd-2365) - production VpnServers: 11 active names s1-s6,s8-s12.pompesh.com, lower case, no space, domain = pool; DoH: each resolves to exactly its row's IpAddress; s7 (inactive Paris) NXDOMAIN, control s99 NXDOMAIN. Links 1-4 confirmed by CTO 05:18Z (s6-edge direct front) and iOS xd-2352 (app passes names unchanged). Verify: SELECT Name,IsActive,IpAddress,CasperCloakDomain FROM VpnServers + cloudflare-dns.com/dns-query per name. || [CTO run 2026-10-23 0621, scheduled, unattended, 2026-10-23T06:3xZ] LINK 5 MOVED: iOS closed xd-2352 05:3xZ - the app passes the names from the API unchanged, no built-in names; the compare (API names vs DNS: s1-s6, s8-s12-edge exist; s7, s13, s14 do not) is now xd-2355 [BACKEND]. || [CTO run 2026-10-23 0514, scheduled, unattended, 2026-10-23T05:18:09Z] CTO LEG CONFIRMED: s6-edge DNS-only IS the intended direct front. Measured 05:1xZ via dns.google: s6-edge.pompesh.com A = 91.194.84.79 (= DE-DUS relay in access-inventory.json / 02-infrastructure row 3), no Cloudflare IP; https://s6-edge.pompesh.com/ answers 200 from 91.194.84.79 with a valid certificate (ssl_verify=0). This matches cloudflare-exit-phase1 row 1 (direct front, QA-ticked) and row 171 (Duesseldorf off Cloudflare since 9 Oct). Note for link 5: s7-edge.pompesh.com does not exist (no A record) - if any server config still names it, that relay's hidden mode fails. Only link 5 (the names the app receives from the server config) is left; edge names are served by the backend (CloudflareDnsService / CasperCloak domain pool), not hard-coded in the app. || [QA 2026-10-12 m, scheduled, 2026-10-12T23:15:00Z] LINK 4 QA RE-MEASURED 23:08Z (xd-1982): systemctl ExecStart path -> md5 on 11/11 relays, all active: b675109e on 23.95.79.249, 167.150.100.166, 147.78.1.27, 103.75.119.122, 45.154.204.206, 185.192.124.245, 103.106.228.235, 203.23.128.214 (/usr/local/bin/caspercloak_ws.py) + 208.87.243.205 LA (/opt/caspercloak/relay_ws.py); Amsterdam 977a35c3; Duesseldorf ff598c6e = MANIFEST.md on development 25ad4c433; each development file's md5 equals its name; key-shaped literal grep 0/0/0. Link 4 (live relay code in git) PASS; the row's other links unchanged. || [DEVOPS run 2026-10-12 2225, scheduled, unattended, 2026-10-12T22:38:13Z] LINK 4 RE-MEASURED 22:3xZ (systemctl ExecStart path -> md5 on 11/11 relays, all active): 3 variants now (was 4) - b675109e x9 (incl. Los Angeles at /opt/caspercloak/relay_ws.py), Amsterdam 977a35c3, Duesseldorf ff598c6e - all carry today's row-251 patch. None equals the repo file (production c1433240, development c32fe0b7). The 3 live files are now in git on development: infrastructure/caspercloak/live/ (commits 96701618, d9a98a28, 789bece6, 25ad4c43; read back md5 equal; key-shaped literals 0) -> QA xd handoff. Left: link 5 (app config) = [IOS]; s6-edge DNS-only = confirm with [CTO] (direct-front note 9 Oct). || [QA 2026-10-11 e, scheduled, 2026-10-11T04:13:59Z] PARTIAL - re-run 04:1xZ: DNS + certificate agree 11/11 (*.pompesh.com, Let's Encrypt YE1, to 12 Dec 2026); edge records Cloudflare 10/11, s6-edge resolves straight to 91.194.84.79; link 4 (relay config) not re-measured. || [CTO run 2026-10-11 0334, scheduled, 2026-10-11T03:46:01Z] MEASURED (part): links 1-3 AGREE on 11/11 active relays - DNS sN.pompesh.com = the node IP in VpnServers 11/11, and the served certificate (*.pompesh.com + pompesh.com, Let's Encrypt YE1, to 12 Dec 2026) covers the name 11/11, with or without SNI. Front records: sN-edge.pompesh.com resolves to Cloudflare for 10/11 but s6-edge resolves straight to the Duesseldorf IP (DNS-only) - intent not confirmed. Link 4 (relay config) does NOT agree: 4 different relay files on the 5 nodes sampled (s1+s9 md5 4292dfd4 408 lines; s5 856b7603 614; s6 d58c2f8c 399; LA runs /opt/caspercloak/relay_ws.py) and none equals the repo file (c1433240, 609 lines) - the known 'caspercloak_ws.py variants' trap, still open. Link 5 (app config) not checked this run. | [NOT REACHED] QA 2026-09-29 sweep: Task is open and waiting for the CEO go-ahead; nothing built or measured for this row yet.",
           "verify": "board",
           "verifiedDate": "2026-09-29",
           "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored",
@@ -67789,9 +67791,10 @@
       "createdAt": "2026-10-19T15:33:42Z",
       "createdDate": "2026-10-19",
       "completedDate": null,
-      "notes": "[QA 2026-10-23 c, scheduled 'Casper qa', unattended, 2026-10-23T02:2xZ] Re-read: still no dev WireGuard session to watch (BACKEND 00:07Z: dev ConnectionLogs 0 since the fix, control 19 rows/30 d). BLOCKER: the CEO's answer A/B on card row 393. If A: QA checks live on the next app-closed WireGuard session that the stored bytes = max(server count, app count) - same instrument as the 772 B median. || [BACKEND run 2026-10-23 0004, scheduled, unattended, 2026-10-23T00:2xZ] MEASURED dev DB 23 Oct 00:07Z: ConnectionLogs total 45, newest 9 Oct 11:44Z, 0 since the fix (19 Oct 15:31Z) - CONTROL: same table reads 19 rows in 30 d, so the query works. The dev server gets no app traffic, so this dev check cannot pass unattended.",
+      "notes": "[QA 2026-10-23 h, scheduled 'Casper qa', unattended, 2026-10-23T07:3xZ] Re-read 07:2xZ: CEO has not answered row 393 yet; blocker field set to it (was empty, so the queue counted this as WORK). || [QA 2026-10-23 c, scheduled 'Casper qa', unattended, 2026-10-23T02:2xZ] Re-read: still no dev WireGuard session to watch (BACKEND 00:07Z: dev ConnectionLogs 0 since the fix, control 19 rows/30 d). BLOCKER: the CEO's answer A/B on card row 393. If A: QA checks live on the next app-closed WireGuard session that the stored bytes = max(server count, app count) - same instrument as the 772 B median. || [BACKEND run 2026-10-23 0004, scheduled, unattended, 2026-10-23T00:2xZ] MEASURED dev DB 23 Oct 00:07Z: ConnectionLogs total 45, newest 9 Oct 11:44Z, 0 since the fix (19 Oct 15:31Z) - CONTROL: same table reads 19 rows in 30 d, so the query works. The dev server gets no app traffic, so this dev check cannot pass unattended.",
       "qaNote": "[QA 2026-10-23 c, scheduled 'Casper qa', unattended, 2026-10-23T02:2xZ] Re-read: still no dev WireGuard session to watch (BACKEND 00:07Z: dev ConnectionLogs 0 since the fix, control 19 rows/30 d). BLOCKER: the CEO's answer A/B on card row 393. If A: QA checks live on the next app-closed WireGuard session that the stored bytes = max(server count, app count) - same instrument as the 772 B median.",
-      "qaDate": "2026-10-23"
+      "qaDate": "2026-10-23",
+      "blocker": "waits the CEO's answer A/B on card row 393 (dev server has no app traffic / no Apple key; with A QA checks live)"
     },
     {
       "id": "xd-2222",
@@ -67855,9 +67858,10 @@
       "createdAt": "2026-10-20T06:39:52Z",
       "createdDate": "2026-10-20",
       "completedDate": null,
-      "notes": "[QA 2026-10-23 c, scheduled 'Casper qa', unattended, 2026-10-23T02:2xZ] Leg 2 (code check) PASS: c1caea040 is on development (ancestor of d24d3c4); 8 files +484; both delete paths (UserService delete + admin delete) call AppleSignInTokenHooks.RevokeForDeletionAsync; token stored only via Protect() (IEncryptionService) - when encryption is missing it logs 'encryption unavailable - token not kept' and stores nothing (no plaintext path); missing key -> '[apple-token] ... not configured - skipped'; token cleared on deletion either way; logs carry 8-char user id only. Leg 1 (dev sign-in with code) cannot run: no Apple key on dev and no app traffic on dev since 9 Oct. BLOCKER: the CEO's answer A/B on card row 393 (A = ship, QA checks live). || [BACKEND run 2026-10-23 0004, scheduled, unattended, 2026-10-23T00:2xZ] Dev has no Apple key file (/app/keys only on production, SKILL trap 20 Oct) and 0 app connections since 9 Oct, so the Apple round trip can only be proven after ship; unit tests 8/8 + the app sending the code ([IOS] xd-1974) remain.",
+      "notes": "[QA 2026-10-23 h, scheduled 'Casper qa', unattended, 2026-10-23T07:3xZ] Re-read 07:2xZ: CEO has not answered row 393 yet; blocker field set to it (was empty, so the queue counted this as WORK). || [QA 2026-10-23 c, scheduled 'Casper qa', unattended, 2026-10-23T02:2xZ] Leg 2 (code check) PASS: c1caea040 is on development (ancestor of d24d3c4); 8 files +484; both delete paths (UserService delete + admin delete) call AppleSignInTokenHooks.RevokeForDeletionAsync; token stored only via Protect() (IEncryptionService) - when encryption is missing it logs 'encryption unavailable - token not kept' and stores nothing (no plaintext path); missing key -> '[apple-token] ... not configured - skipped'; token cleared on deletion either way; logs carry 8-char user id only. Leg 1 (dev sign-in with code) cannot run: no Apple key on dev and no app traffic on dev since 9 Oct. BLOCKER: the CEO's answer A/B on card row 393 (A = ship, QA checks live). || [BACKEND run 2026-10-23 0004, scheduled, unattended, 2026-10-23T00:2xZ] Dev has no Apple key file (/app/keys only on production, SKILL trap 20 Oct) and 0 app connections since 9 Oct, so the Apple round trip can only be proven after ship; unit tests 8/8 + the app sending the code ([IOS] xd-1974) remain.",
       "qaNote": "[QA 2026-10-23 c, scheduled 'Casper qa', unattended, 2026-10-23T02:2xZ] Leg 2 (code check) PASS: c1caea040 is on development (ancestor of d24d3c4); 8 files +484; both delete paths (UserService delete + admin delete) call AppleSignInTokenHooks.RevokeForDeletionAsync; token stored only via Protect() (IEncryptionService) - when encryption is missing it logs 'encryption unavailable - token not kept' and stores nothing (no plaintext path); missing key -> '[apple-token] ... not configured - skipped'; token cleared on deletion either way; logs carry 8-char user id only. Leg 1 (dev sign-in with code) cannot run: no Apple key on dev and no app traffic on dev since 9 Oct. BLOCKER: the CEO's answer A/B on card row 393 (A = ship, QA checks live).",
-      "qaDate": "2026-10-23"
+      "qaDate": "2026-10-23",
+      "blocker": "waits the CEO's answer A/B on card row 393 (dev server has no app traffic / no Apple key; with A QA checks live)"
     },
     {
       "id": "xd-2233",
@@ -69077,15 +69081,18 @@
       "to": "[QA]",
       "title": "Handoff from BACKEND: [P1] Dev check xd-2298: Apple Ads install records purged after 180 days and deleted with the account",
       "description": "development f2863a5a7: UserTelemetryRetention also deletes AppleAdsAttributions (purge older than 180 d; account delete = the user's rows + still-anonymous rows of installs the user signed in on). Full suite 455/455 on the dev clone; CONTROL with the old service: 4 of 5 UserTelemetryRetentionTests FAIL. Dev check: after the dev server redeploys, the 6-hourly line 'DataPurge Phase 5 (xd-2298): Purged N Apple Ads install records' appears in caspervpn-dev-api logs; optional: insert one 200-day + one 10-day AppleAdsAttributions row on dev and read the next purge line (same recipe as xd-2170).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-10-22T23:17:29Z",
       "createdDate": "2026-10-22",
-      "completedDate": null,
+      "completedDate": "2026-10-23",
       "qaNote": "[QA 2026-10-23 a, scheduled 'Casper qa', unattended, 2026-10-23T00:1xZ] Leg 1 PASS: dev API (caspervpn-dev-api created 22 Oct 23:55Z) logged '[23:57:10 INF] DataPurge Phase 5 (xd-2298): Purged 0 Apple Ads install records older than 180d'. Leg 2: BACKEND already inserted the test rows at 23 Oct 00:09:16Z (be1023-old-200 CreatedAt 6 Apr = 200 d; be1023-ctl-10d = 10 d); purge at 23:57 ran before them, so 0 is expected. Read the next 6-hourly purge (~05:57Z): expect 1 purged, old-200 gone, ctl-10d kept.",
-      "notes": "[QA 2026-10-23 f, scheduled 'Casper qa', unattended, 2026-10-23T05:1xZ] Not yet: at 05:1xZ the next 6-hourly dev purge (~05:57Z) had not run. Next QA run reads it. || [QA 2026-10-23 a, scheduled 'Casper qa', unattended, 2026-10-23T00:1xZ] Leg 1 PASS: dev API (caspervpn-dev-api created 22 Oct 23:55Z) logged '[23:57:10 INF] DataPurge Phase 5 (xd-2298): Purged 0 Apple Ads install records older than 180d'. Leg 2: BACKEND already inserted the test rows at 23 Oct 00:09:16Z (be1023-old-200 CreatedAt 6 Apr = 200 d; be1023-ctl-10d = 10 d); purge at 23:57 ran before them, so 0 is expected. Read the next 6-hourly purge (~05:57Z): expect 1 purged, old-200 gone, ctl-10d kept. || [BACKEND run 2026-10-23 0004, scheduled, unattended, 2026-10-23T00:2xZ] Dev api recreated 22 Oct 23:55:00Z with development code: log 23:57:10Z 'DataPurge Phase 5 (xd-2298): Purged 0 Apple Ads install records older than 180d' (control line Phase 5 (xd-2102) same minute). Dev table had 4 rows, all 11 Oct (<180 d) = 0 is right. Inserted on DEV only 2 test rows: InstallId be1023-old-200d (CreatedAt 6 Apr) + CONTROL be1023-ctl-10d (13 Oct). Next dev purge ~05:57Z: expect 'Purged 1', old row gone, control row kept.",
+      "notes": "[QA 2026-10-23 h, scheduled 'Casper qa', unattended, 2026-10-23T07:3xZ] PASS leg 2 on dev: caspervpn-dev-api log '[06:31:28 INF] DataPurge Phase 5 (xd-2298): Purged 1 Apple Ads install records older than 180d' (00:00Z run before the test rows = 0); dev AppleAdsAttributions at 07:17Z: be1023-old-200 GONE, control be1023-ctl-10d (13 Oct) KEPT, 4 Oct-11 rows kept. The 'delete with the account' leg is not in this handoff and waits CEO card row 395 (throwaway dev account). Next: row 389 ready for the CEO's answer on row 395. || [QA 2026-10-23 f, scheduled 'Casper qa', unattended, 2026-10-23T05:1xZ] Not yet: at 05:1xZ the next 6-hourly dev purge (~05:57Z) had not run. Next QA run reads it. || [QA 2026-10-23 a, scheduled 'Casper qa', unattended, 2026-10-23T00:1xZ] Leg 1 PASS: dev API (caspervpn-dev-api created 22 Oct 23:55Z) logged '[23:57:10 INF] DataPurge Phase 5 (xd-2298): Purged 0 Apple Ads install records older than 180d'. Leg 2: BACKEND already inserted the test rows at 23 Oct 00:09:16Z (be1023-old-200 CreatedAt 6 Apr = 200 d; be1023-ctl-10d = 10 d); purge at 23:57 ran before them, so 0 is expected. Read the next 6-hourly purge (~05:57Z): expect 1 purged, old-200 gone, ctl-10d kept. || [BACKEND run 2026-10-23 0004, scheduled, unattended, 2026-10-23T00:2xZ] Dev api recreated 22 Oct 23:55:00Z with development code: log 23:57:10Z 'DataPurge Phase 5 (xd-2298): Purged 0 Apple Ads install records older than 180d' (control line Phase 5 (xd-2102) same minute). Dev table had 4 rows, all 11 Oct (<180 d) = 0 is right. Inserted on DEV only 2 test rows: InstallId be1023-old-200d (CreatedAt 6 Apr) + CONTROL be1023-ctl-10d (13 Oct). Next dev purge ~05:57Z: expect 'Purged 1', old row gone, control row kept.",
       "qaDate": "2026-10-23",
-      "blocker": "next QA run after 23 Oct ~05:57Z reads the dev purge line + the 2 be1023 rows"
+      "blocker": "next QA run after 23 Oct ~05:57Z reads the dev purge line + the 2 be1023 rows",
+      "completedAt": "2026-10-23",
+      "completedBy": "[QA]",
+      "resolution": "PASS leg 2 on dev: caspervpn-dev-api log '[06:31:28 INF] DataPurge Phase 5 (xd-2298): Purged 1 Apple Ads install records older than 180d' (00:00Z run before the test rows = 0); dev AppleAdsAttributions at 07:17Z: be1023-old-200 GONE, control be1023-ctl-10d (13 Oct) KEPT, 4 Oct-11 rows kept. The 'del"
     },
     {
       "id": "xd-2307",
@@ -69919,11 +69926,15 @@
       "to": "[[QA]]",
       "title": "Handoff from [CTO]: [P2] Check xd-2359: facts_ledger.py --write works with a dead GitHub token",
       "description": "tools/facts_ledger.py: previous() now returns the sha from fb.api_get and main() passes it to fb.api_put (was None -> 422 on the SSH path). Verify: cd Code/Casper-Code && python3 tools/facts_ledger.py --write -> last lines '[github-ssh] memory/context/facts-ledger.md -> production @ <sha>' and '[ledger] written'. Control: CEO office 06:1xZ got HTTP 422 'no sha' on the old code. CTO run 06:2xZ: written a18de5b0, no wrapper.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-10-23T06:23:48Z",
       "createdDate": "2026-10-23",
-      "completedDate": null
+      "completedDate": "2026-10-23",
+      "notes": "[QA 2026-10-23 h, scheduled 'Casper qa', unattended, 2026-10-23T07:3xZ] PASS: 07:2xZ python3 tools/facts_ledger.py --write -> '[github-ssh] memory/context/facts-ledger.md -> production @ cb6dbad9 (1 path changed, 0 deleted)' + '[ledger] written'; facts_ledger.py L128 previous() returns prev_sha, L133 api_put(..., prev_sha, BR). Control: office 06:1xZ got HTTP 422 'no sha' on the old code.",
+      "completedAt": "2026-10-23",
+      "completedBy": "[QA]",
+      "resolution": "PASS: 07:2xZ python3 tools/facts_ledger.py --write -> '[github-ssh] memory/context/facts-ledger.md -> production @ cb6dbad9 (1 path changed, 0 deleted)' + '[ledger] written'; facts_ledger.py L128 previous() returns prev_sha, L133 api_put(..., prev_sha, BR). Control: office 06:1xZ got HTTP 422 'no sh"
     },
     {
       "id": "xd-2361",
@@ -69931,11 +69942,15 @@
       "to": "[[QA]]",
       "title": "Handoff from [CTO]: [P2] Judge factory-deadman row 2 on the 23 Oct office minutes",
       "description": "Criterion: the office report lists, per routine, the session starts of the last 24 h. 23 Oct office run (06:03Z) ran step 19: board-minutes/2026-10-23.md line 10 = 'Scheduled tasks: 9 enabled, none late; Mac session starts 97 in 24 h, gaps > 2 h: 22 Oct 09:05Z (3 h) and 12:06Z (6 h), both closed.' CTO view: that is a total, not one line per routine as step 19 asks -> likely PARTIAL. If FAIL, hand to [CEO] office: next run writes one line per routine (name, last fired, status, LATE).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-10-23T06:23:48Z",
       "createdDate": "2026-10-23",
-      "completedDate": null
+      "completedDate": "2026-10-23",
+      "notes": "[QA 2026-10-23 h, scheduled 'Casper qa', unattended, 2026-10-23T07:3xZ] FAIL - same verdict already handed to the CEO office as xd-2362 by QA run g (06:2xZ, xd-2315): board-minutes/2026-10-23.md line 10 is one total ('9 enabled, none late; Mac session starts 97 in 24 h, gaps ...'), not one line per routine. SUPERSEDED by xd-2362 [CEO]; factory-deadman#2 stays not met.",
+      "completedAt": "2026-10-23",
+      "completedBy": "[QA]",
+      "resolution": "FAIL - same verdict already handed to the CEO office as xd-2362 by QA run g (06:2xZ, xd-2315): board-minutes/2026-10-23.md line 10 is one total ('9 enabled, none late; Mac session starts 97 in 24 h, gaps ...'), not one line per routine. SUPERSEDED by xd-2362 [CEO]; factory-deadman#2 stays not met."
     },
     {
       "id": "xd-2362",
@@ -69955,11 +69970,15 @@
       "to": "[QA]",
       "title": "Handoff from DEVOPS: Re-check the 30-min admin login robot (xd-2358)",
       "description": "verify (main server, read-only): cat /etc/cron.d/refresh-probe-jwt -> '*/30 ... /usr/local/bin/refresh-probe-jwt.sh'; docker logs --since 2h caspervpn-api | grep 'logged in successfully: admin@' -> times on :00/:30; stat -c %y /etc/caspervpn/parity-probe.jwt matches the latest one. Never print secrets.env values. PASS = the robot is the cron named on xd-2358/xd-1522.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-10-23T06:28:11Z",
       "createdDate": "2026-10-23",
-      "completedDate": null
+      "completedDate": "2026-10-23",
+      "notes": "[QA 2026-10-23 h, scheduled 'Casper qa', unattended, 2026-10-23T07:3xZ] PASS: /etc/cron.d/refresh-probe-jwt = '*/30 * * * * root /usr/local/bin/refresh-probe-jwt.sh'; caspervpn-api log 'logged in successfully: admin@' at 04:30:06, 05:00:06, 05:30:05, 06:00:03, 06:30:05, 07:00:04Z (all :00/:30); /etc/caspervpn/parity-probe.jwt mtime 07:00:04Z = latest login. No secret printed.",
+      "completedAt": "2026-10-23",
+      "completedBy": "[QA]",
+      "resolution": "PASS: /etc/cron.d/refresh-probe-jwt = '*/30 * * * * root /usr/local/bin/refresh-probe-jwt.sh'; caspervpn-api log 'logged in successfully: admin@' at 04:30:06, 05:00:06, 05:30:05, 06:00:03, 06:30:05, 07:00:04Z (all :00/:30); /etc/caspervpn/parity-probe.jwt mtime 07:00:04Z = latest login. No secret pr"
     },
     {
       "id": "xd-2364",
@@ -69967,11 +69986,15 @@
       "to": "[QA]",
       "title": "Handoff from DEVOPS: Check the 5 OneProvider nodes are back (xd-2187)",
       "description": "verify: from the main server, echo > /dev/tcp/<ip>/22 for 147.78.1.27 23.95.79.249 45.154.204.206 167.150.100.166 185.192.124.245 -> all open; psql VpnServers IsActive=t for Mexico City, Miami, Montreal, Singapore, S\u00e3o Paulo; one real WireGuard handshake on any of them (wg show latest-handshakes on the node < 3 min).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-10-23T06:28:11Z",
       "createdDate": "2026-10-23",
-      "completedDate": null
+      "completedDate": "2026-10-23",
+      "notes": "[QA 2026-10-23 h, scheduled 'Casper qa', unattended, 2026-10-23T07:3xZ] PASS: from the main server 07:18Z port 22 open on 147.78.1.27, 23.95.79.249, 45.154.204.206, 167.150.100.166, 185.192.124.245 (control 192.0.2.1 closed); VpnServers IsActive=t for Mexico City, Miami, Montreal, Singapore, Sao Paulo; WireGuard handshake on Miami (node-mia wg0) 154 s old at 07:19Z (< 3 min). Note: other 4 newest handshakes are old (SGP ~2 h, MTL ~7 d, MX ~22 d, SAO ~39 d) - may be prober vs real user not proven.",
+      "completedAt": "2026-10-23",
+      "completedBy": "[QA]",
+      "resolution": "PASS: from the main server 07:18Z port 22 open on 147.78.1.27, 23.95.79.249, 45.154.204.206, 167.150.100.166, 185.192.124.245 (control 192.0.2.1 closed); VpnServers IsActive=t for Mexico City, Miami, Montreal, Singapore, Sao Paulo; WireGuard handshake on Miami (node-mia wg0) 154 s old at 07:19Z (< 3"
     },
     {
       "id": "xd-2365",
@@ -69979,11 +70002,15 @@
       "to": "[QA]",
       "title": "Handoff from BACKEND: [P2] Five-link chain link 5: re-run the relay-name vs DNS compare (xd-2355)",
       "description": "Backend measured: production 11/11 active relay names exact + resolve to their own node IP; s7 only on inactive Paris. Verify: on the main server run SELECT \"Name\",\"IsActive\",\"IpAddress\",'['||\"CasperCloakDomain\"||']',\"CasperCloakDomainPool\" FROM \"VpnServers\" (psql -U casper_prod -d caspervpn) and resolve each name with DoH (curl -H 'accept: application/dns-json' 'https://cloudflare-dns.com/dns-query?name=<name>&type=A'). Expect: every active name in brackets has no space/capital, resolves, IP = IpAddress. Then tick stealth-speed-enhancements row 12 if it matches.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-10-23T06:31:24Z",
       "createdDate": "2026-10-23",
-      "completedDate": null
+      "completedDate": "2026-10-23",
+      "notes": "[QA 2026-10-23 h, scheduled 'Casper qa', unattended, 2026-10-23T07:3xZ] PASS link 5: production VpnServers 07:18Z (read-only) - 11 active, each CasperCloakDomain = pool = s1..s6,s8..s12.pompesh.com (lower case, no space, bracketed); DoH cloudflare-dns 07:2xZ: all 11 resolve (Status 0) to exactly the row's IpAddress (s1 103.75.119.122 ... s12 208.87.243.205); s7 = inactive Paris -> NXDOMAIN; control s99.pompesh.com NXDOMAIN. stealth-speed-enhancements row 12 ticked (tested).",
+      "completedAt": "2026-10-23",
+      "completedBy": "[QA]",
+      "resolution": "PASS link 5: production VpnServers 07:18Z (read-only) - 11 active, each CasperCloakDomain = pool = s1..s6,s8..s12.pompesh.com (lower case, no space, bracketed); DoH cloudflare-dns 07:2xZ: all 11 resolve (Status 0) to exactly the row's IpAddress (s1 103.75.119.122 ... s12 208.87.243.205); s7 = inacti"
     },
     {
       "id": "xd-2366",
@@ -69991,11 +70018,13 @@
       "to": "[QA]",
       "title": "Handoff from BACKEND: [P1] Dev check: Request a location API (xd-2357)",
       "description": "development 97f024298, live on api.dev since 06:29Z. With a signed-in DEV account: POST /api/support/location-request {\"countryCode\":\"AE\"} -> 201 alreadyRequested false; same again -> 200 alreadyRequested true; SELECT count(*) FROM \"LocationRequests\" WHERE \"CountryCode\"='AE' = 1. {\"countryCode\":\"ARE\"} -> 400. Dev admin GET /api/admin/location-requests -> AE total 1. Unit proof: dotnet test --no-build --filter FullyQualifiedName~LocationRequestTests in /root/reports/be1020/code (13 pass). Then the iPhone leg (ios/78 6ddf16e) on the dev API.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-10-23T06:31:24Z",
       "createdDate": "2026-10-23",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[QA 2026-10-23 h, scheduled 'Casper qa', unattended, 2026-10-23T07:3xZ] Partial PASS: unit LocationRequestTests 13/13 on /root/reports/be1020/code (97f024298); dev POST /api/support/location-request unsigned -> 401 (route live, auth on); production same call 404 (not shipped = control); dev LocationRequests table exists, 0 rows. Signed-in legs (201 / 200 alreadyRequested / ARE 400 / admin list) NOT PROVEN - need a signed-in dev account.",
+      "blocker": "signed-in legs only: a signed-in dev account (CEO card row 395 option A / live session)"
     },
     {
       "id": "xd-2367",
@@ -70003,11 +70032,13 @@
       "to": "[QA]",
       "title": "Handoff from IOS: [P1] Re-check 'Request a location' on ios/78 46b61d7 (city limit)",
       "description": "Branch ios/78-request-location-1377 46b61d7 adds a city limit of 80 and cuts both fields by UTF-16 to match the dev API (LocationRequestRules.MaxCity/MaxReason, development 97f024298). Check: (1) git show 46b61d7 - one file, ServerListView.swift; (2) a 120-letter city is cut to 80 before sending; (3) with dev API: signed-in POST with an 80-letter city -> 201, again -> 200 alreadyRequested. Harness proof on the handoff xd-1377 notes.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-10-23T06:37:19Z",
       "createdDate": "2026-10-23",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[QA 2026-10-23 h, scheduled 'Casper qa', unattended, 2026-10-23T07:3xZ] Legs 1-2 PASS (code): 46b61d7 = 1 file ServerListView.swift +20/-5; cityLimit 80 + fit() cuts by character then by UTF-16 units, used in makeBody and the city TextField onChange; server development 97f024298 LocationRequestRules.MaxCity=80/MaxReason=200, controller checks .Length (UTF-16). Python emulation of fit(): 120 letters -> 80; 50 emoji -> 40 (80 UTF-16). Leg 3 NOT PROVEN: needs a signed-in DEV account (scheduled runs may not sign in).",
+      "blocker": "leg 3 only: a signed-in dev account (CEO card row 395 option A / live session)"
     },
     {
       "id": "xd-2368",
@@ -70018,6 +70049,18 @@
       "status": "pending",
       "priority": "P2",
       "createdAt": "2026-10-23T07:21:39Z",
+      "createdDate": "2026-10-23",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2369",
+      "from": "[QA]",
+      "to": "[BACKEND]",
+      "title": "Handoff from QA: [P2] xd-2306 dev PASS: Apple Ads 180-day purge proven on dev (row 389)",
+      "description": "QA [QA 2026-10-23 h, scheduled 'Casper qa', unattended, 2026-10-23T07:3xZ]: dev purge 06:31Z removed the 200-day test row, kept the 10-day control. Row 389 now waits only the CEO (row 395: delete-with-account leg needs a throwaway dev account, or his YES). Backend: keep row 389 'tested on dev' line current; ship only under CEO YES.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-23T07:22:01Z",
       "createdDate": "2026-10-23",
       "completedDate": null
     }
