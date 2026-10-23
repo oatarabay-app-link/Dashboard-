@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-23T12:02:25Z",
+  "lastUpdated": "2026-10-23T12:19:48Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 69,
@@ -16640,6 +16640,16 @@
           "addedBy": "[WEBSITE+ADMIN run 2026-10-23 1143, scheduled, unattended, 2026-10-23T11:57:39Z]",
           "test": "ACTION (about 15 minutes, only you can do it) - make the two web sign-in ids you said yes to on row 400 (option A) \u00b7 (1) Apple Developer -> Identifiers -> + -> Services IDs -> com.applinkoffshore.CasperVPN.web, turn on Sign in with Apple, domain caspervpn.com, return URL https://caspervpn.com/account/login \u00b7 (2) Google Cloud console -> APIs & Services -> Credentials -> Create OAuth client 'Web application', origins https://caspervpn.com and https://dev.caspervpn.com \u00b7 then paste the two client ids in any chat (they are public ids, not secrets) \u00b7 after that Website + Backend ship rows 400/402 together \u00b7 website-account-area row 1, xd-2338",
           "evidence": ""
+        },
+        {
+          "test": "SHIPPED 2026-10-23 12:20Z \u00b7 CEO YES 2026-10-23 (live chat, ceo-cowork: 'Unpark the 77 items (Recommended)') \u00b7 the queue tool (tools/dept_queue.py) now hands an item back to its department when every CEO-card row it cites is already answered \u00b7 why: you asked why tasks do not drop although you answered everything; measured 23 Oct ~12:30Z: 319 items were parked as 'waiting for the CEO', 77+ of them only because the word 'CEO' came first in the blocker while the row they point to was already answered \u00b7 result on today's board: 97 items OUTSIDE -> WORK (QA +10, DevOps +24, Backend +9, iOS +5, Android +16, Design +9, Admin +5, Marketing +5, CTO +4, Security +3, Website +2, CEO +3, Legal +1, Product +1), 0 other class changes; unanswered rows (419, 375, 79) stay with you \u00b7 shipped: development 92414a7d, production b421d77b (readback identical) \u00b7 rollback: put back the previous file (md5 009dc4f78b)",
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "verifiedByRaw": "none",
+          "verifiedDate": null,
+          "evidence": "[CEO live chat 2026-10-23T12:19:39Z] Why the task count does not drop (CEO live chat 23 Oct, measured on the live board ~12:30Z): (1) an answer does not close a row - after a CEO YES the department ships and QA checks; your card had 135 open rows, ~6 truly yours, 47 shipped waiting for QA, 28 approved waiting for the department; (2) items stayed 'waiting for the CEO' after he answered - fixed today in the queue tool (97 items back to their departments); (3) live-only work: the Android test (row 368, 11 items), building iPhone build 76 (row 369, 6 items) and the test admin account (row 291, 6 items) need a live session on the Mac; (4) QA is the bottleneck: 74 open QA checks, 20 older than 7 days, and every finished job creates a new QA check - 764 items opened vs 658 closed in 14 days; (5) 44 items wait for Apple, 280 deferred items still count as open.",
+          "verify": "python3 tools/dept_queue.py --dept <each dept> --limit 0 on a fresh board: no OUTSIDE item whose cited CEO-card rows are all answered; rows 419/375/79 still OUTSIDE"
         }
       ],
       "progress": 0,
@@ -70827,9 +70837,50 @@
       "createdDate": "2026-10-23",
       "completedDate": null,
       "dueBy": "2026-10-30T12:00:00Z"
+    },
+    {
+      "id": "xd-2406",
+      "from": "[CEO]",
+      "to": "[QA]",
+      "title": "Handoff from CEO: Verify the queue-tool fix: items whose CEO-card rows are already answered must be WORK for their department (CEO live chat 23 Oct)",
+      "description": "SHIPPED 2026-10-23 12:20Z \u00b7 CEO YES 2026-10-23 (live chat, ceo-cowork: 'Unpark the 77 items (Recommended)') \u00b7 the queue tool (tools/dept_queue.py) now hands an item back to its department when every CEO-card row it cites is already answered \u00b7 why: you asked why tasks do not drop although you answered everything; measured 23 Oct ~12:30Z: 319 items were parked as 'waiting for the CEO', 77+ of them only because the word 'CEO' came first in the blocker while the row they point to was already answered \u00b7 result on today's board: 97 items OUTSIDE -> WORK (QA +10, DevOps +24, Backend +9, iOS +5, Android +16, Design +9, Admin +5, Marketing +5, CTO +4, Security +3, Website +2, CEO +3, Legal +1, Product +1), 0 other class changes; unanswered rows (419, 375, 79) stay with you \u00b7 shipped: development 92414a7d, production b421d77b (readback identical) \u00b7 rollback: put back the previous file (md5 009dc4f78b) VERIFY: run tools/dept_queue.py on a fresh board for every department; compare with the 23 Oct 12:30Z baseline (TOTAL WORK 215 -> 312, OUTSIDE 319 -> 222); spot-check 5 moved items (each cites only answered CEO-card rows) and 3 controls (rows 419, 375, 79 stay OUTSIDE; 'other-task row N' refs are not read as CEO-card rows).",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-23T12:19:48Z",
+      "createdDate": "2026-10-23",
+      "completedDate": null,
+      "dueBy": "2026-10-24T12:00:00Z"
+    },
+    {
+      "id": "xd-2407",
+      "from": "[CEO]",
+      "to": "[CTO]",
+      "title": "Handoff from CEO: Own and test the dept_queue 'unpark' rule shipped by the CEO session (answered CEO-card rows no longer park items)",
+      "description": "Shipped 23 Oct 12:20Z under CEO YES (live chat): tools/dept_queue.py answered_rows() / ceo_rows_cited() / unpark() (development 92414a7d, production b421d77b). DO: add a regression test (moved item, unanswered control, 'task-x row N' control, 'list index N'), review the ANSWER regex (CEO YES/NO/A-D/ORDER/ANSWERED, DONE, SHIPPED + date, or row met), and add the rule to the CTO skill. Why the task count does not drop (CEO live chat 23 Oct, measured on the live board ~12:30Z): (1) an answer does not close a row - after a CEO YES the department ships and QA checks; your card had 135 open rows, ~6 truly yours, 47 shipped waiting for QA, 28 approved waiting for the department; (2) items stayed 'waiting for the CEO' after he answered - fixed today in the queue tool (97 items back to their departments); (3) live-only work: the Android test (row 368, 11 items), building iPhone build 76 (row 369, 6 items) and the test admin account (row 291, 6 items) need a live session on the Mac; (4) QA is the bottleneck: 74 open QA checks, 20 older than 7 days, and every finished job creates a new QA check - 764 items opened vs 658 closed in 14 days; (5) 44 items wait for Apple, 280 deferred items still count as open.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-23T12:19:48Z",
+      "createdDate": "2026-10-23",
+      "completedDate": null,
+      "dueBy": "2026-10-30T12:00:00Z"
     }
   ],
   "importantNotes": [
+    {
+      "id": "note-ceo-2026-10-23-why-not-dropping",
+      "date": "2026-10-23",
+      "priority": "P1",
+      "dept": "CEO",
+      "type": "dept-note",
+      "author": "[CEO]",
+      "title": "[CEO] Why the task count does not drop - measured 23 Oct, one fix shipped",
+      "note": "Why the task count does not drop (CEO live chat 23 Oct, measured on the live board ~12:30Z): (1) an answer does not close a row - after a CEO YES the department ships and QA checks; your card had 135 open rows, ~6 truly yours, 47 shipped waiting for QA, 28 approved waiting for the department; (2) items stayed 'waiting for the CEO' after he answered - fixed today in the queue tool (97 items back to their departments); (3) live-only work: the Android test (row 368, 11 items), building iPhone build 76 (row 369, 6 items) and the test admin account (row 291, 6 items) need a live session on the Mac; (4) QA is the bottleneck: 74 open QA checks, 20 older than 7 days, and every finished job creates a new QA check - 764 items opened vs 658 closed in 14 days; (5) 44 items wait for Apple, 280 deferred items still count as open.",
+      "body": "Why the task count does not drop (CEO live chat 23 Oct, measured on the live board ~12:30Z): (1) an answer does not close a row - after a CEO YES the department ships and QA checks; your card had 135 open rows, ~6 truly yours, 47 shipped waiting for QA, 28 approved waiting for the department; (2) items stayed 'waiting for the CEO' after he answered - fixed today in the queue tool (97 items back to their departments); (3) live-only work: the Android test (row 368, 11 items), building iPhone build 76 (row 369, 6 items) and the test admin account (row 291, 6 items) need a live session on the Mac; (4) QA is the bottleneck: 74 open QA checks, 20 older than 7 days, and every finished job creates a new QA check - 764 items opened vs 658 closed in 14 days; (5) 44 items wait for Apple, 280 deferred items still count as open.",
+      "text": "Why the task count does not drop (CEO live chat 23 Oct, measured on the live board ~12:30Z): (1) an answer does not close a row - after a CEO YES the department ships and QA checks; your card had 135 open rows, ~6 truly yours, 47 shipped waiting for QA, 28 approved waiting for the department; (2) items stayed 'waiting for the CEO' after he answered - fixed today in the queue tool (97 items back to their departments); (3) live-only work: the Android test (row 368, 11 items), building iPhone build 76 (row 369, 6 items) and the test admin account (row 291, 6 items) need a live session on the Mac; (4) QA is the bottleneck: 74 open QA checks, 20 older than 7 days, and every finished job creates a new QA check - 764 items opened vs 658 closed in 14 days; (5) 44 items wait for Apple, 280 deferred items still count as open.",
+      "createdAt": "2026-10-23T12:19:39Z",
+      "resolved": false,
+      "resolvedAt": null
+    },
     {
       "date": "2026-10-19",
       "dept": "[CEO]",
