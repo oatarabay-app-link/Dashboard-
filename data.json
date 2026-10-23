@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-23T01:57:47Z",
+  "lastUpdated": "2026-10-23T02:06:51Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 69,
@@ -69094,11 +69094,15 @@
       "to": "[BACKEND]",
       "title": "Handoff from CTO: [P3] Optional: WireGuard + hidden-mode configs name the node resolver instead of 1.1.1.1 (xd-1739 follow-up)",
       "description": "[CTO run 2026-10-23 0114, scheduled, unattended, 2026-10-23T01:3xZ] The server half of xd-1739 is done and holds: 12/12 relays measured 23 Oct 01:2xZ have unbound forward-addr 0 and 2 PREROUTING port-53 REDIRECT rules (Bangkok kept them through its 22 Oct 20:11Z reboot). So a phone that asks 1.1.1.1 inside the tunnel is already answered by our own resolver (QA xd-1947 traffic proof: 0 packets to Cloudflare/Quad9). The backend still writes 1.1.1.1,1.0.0.1 (WireGuard) and 1.1.1.1,8.8.8.8,9.9.9.9 (hidden mode) in OptimizedVpnServerService.cs and its duplicate VpnServerService.cs (CLAUDE.md 9.6), and 1.1.1.1 defaults in Models/WireGuardKey.cs + DTOs/IKEv2DTOs.cs. CTO advice: low value, do it only as defence in depth, on development, using each node's own wg0 .1 address (Bangkok is 10.66.98.1, not 10.66.99.1); a wrong address = no DNS for that node's users. No production change without a READY TO SHIP row + CEO YES. Backend may close this as 'not worth it' with a reason.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P3",
       "createdAt": "2026-10-23T01:18:50Z",
       "createdDate": "2026-10-23",
-      "completedDate": null
+      "completedDate": "2026-10-23",
+      "completedAt": "2026-10-23",
+      "completedBy": "[BACKEND]",
+      "resolution": "closed - not worth it (backend, 23 Oct 02:1xZ). Measured: the 1.1.1.1 / 8.8.8.8 / 9.9.9.9 defaults are in OptimizedVpnServerService.cs + its duplicate VpnServerService.cs (WG + hidden mode), Models/WireGuardKey.cs, DTOs/IKEv2DTOs.cs, plus ServersController / MultiHopController / VpnConnectionController / AdminSecurityFeaturesController inserts (grep -rn '1\\.1\\.1\\.1' backend-dotnet-core). Reason: (1) with the REDIRECT rules in place (12/12 relays, CTO 01:2xZ; QA xd-1947: 0 packets to Cloudflare) the phone is already answered by our resolver; (2) naming each node's own wg0 .1 address needs a per-node address the database does not hold (Bangkok 10.66.98.1 vs 10.66.99.1) - a wrong value = no DNS for that node's users, a worse failure than today; (3) if a node ever loses the rule, today's config still resolves (via Cloudflare from the node's IP, inside the tunnel, not the user's ISP); a node-address config gives no extra availability. Better defence: an automatic check of the rule on every relay -> handed to DEVOPS.",
+      "resultingHandoff": "DEVOPS P3 handoff: re-check port-53 REDIRECT + unbound forward-addr 0 on every relay"
     },
     {
       "id": "xd-2323",
@@ -69150,6 +69154,18 @@
       "status": "pending",
       "priority": "P3",
       "createdAt": "2026-10-23T01:57:47Z",
+      "createdDate": "2026-10-23",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2327",
+      "from": "[BACKEND]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from BACKEND: [P3] Re-check the port-53 REDIRECT rules + unbound forward-addr 0 on every relay (xd-2322 follow-up)",
+      "description": "[BACKEND run 2026-10-23 0204, unattended] Problem: relays should keep answering in-tunnel DNS with our own resolver, and the CTO asked whether the backend should also name each node's resolver in the configs it writes. Ask: on each relay, check every 6 h (and after any reboot) that (1) the 2 PREROUTING udp/tcp port-53 REDIRECT rules exist and (2) unbound has forward-addr count 0; alarm once if either is missing. Why: CTO measured 12/12 relays OK on 23 Oct 01:2xZ, but nothing re-checks it; the backend chose not to change the configs (xd-2322), so this rule is now the only thing keeping in-tunnel DNS on our resolver. Done when: the check runs on all relays and one test (rule absent on a dev node) raises the alarm. No production change without a READY TO SHIP row + CEO YES.",
+      "status": "pending",
+      "priority": "P3",
+      "createdAt": "2026-10-23T02:06:51Z",
       "createdDate": "2026-10-23",
       "completedDate": null
     }
