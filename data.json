@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-23T11:30:43Z",
+  "lastUpdated": "2026-10-23T11:32:26Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 69,
@@ -70060,8 +70060,8 @@
       "createdAt": "2026-10-23T05:39:42Z",
       "createdDate": "2026-10-23",
       "completedDate": null,
-      "notes": "[BACKEND run 2026-10-23 0605, scheduled, unattended] BUILT on development 97f024298 (pushed 06:20Z under lock casper-backend-1023-0605, released). POST /api/support/location-request: 201 new / 200 {alreadyRequested:true} same user+country (unique index) / 429 after 5 new in 24 h / 400 bad ISO-2 or reason >200. IsPaying stored at request time (Active, Production, price>0, not trial, AdminService.PayingNow). 5 paying for one country -> 1 LocationRequestAlerts row + 1 team Telegram alert, once per country. GET /api/admin/location-requests?days=30 -> per country total/paying/latest, sorted by paying. Rows deleted with the account. Proof: build 0 errors; LocationRequestTests 13/13; full suite 472/472 (was 459). Dev deployed 06:29:20Z: unauth POST 401 (was 404 at 06:21Z), admin GET 401 (was 404), made-up route location-requestx 404 (control), production still 404 (untouched). Dev DB: tables LocationRequests + LocationRequestAlerts, unique index, migration row 20261023000000_LocationRequests. NOT PROVEN: signed-in POST twice on dev (no dev test account in an unattended run).",
-      "blocker": "QA xd-2366 needs a signed-in dev account, which no unattended run has: waits CEO card row 395 option A (or a live session); then CEO YES on its READY TO SHIP row (matters once the iPhone build with the sheet ships).",
+      "notes": "[BACKEND run 2026-10-23 0605, scheduled, unattended] BUILT on development 97f024298 (pushed 06:20Z under lock casper-backend-1023-0605, released). POST /api/support/location-request: 201 new / 200 {alreadyRequested:true} same user+country (unique index) / 429 after 5 new in 24 h / 400 bad ISO-2 or reason >200. IsPaying stored at request time (Active, Production, price>0, not trial, AdminService.PayingNow). 5 paying for one country -> 1 LocationRequestAlerts row + 1 team Telegram alert, once per country. GET /api/admin/location-requests?days=30 -> per country total/paying/latest, sorted by paying. Rows deleted with the account. Proof: build 0 errors; LocationRequestTests 13/13; full suite 472/472 (was 459). Dev deployed 06:29:20Z: unauth POST 401 (was 404 at 06:21Z), admin GET 401 (was 404), made-up route location-requestx 404 (control), production still 404 (untouched). Dev DB: tables LocationRequests + LocationRequestAlerts, unique index, migration row 20261023000000_LocationRequests. NOT PROVEN: signed-in POST twice on dev (no dev test account in an unattended run). || [BACKEND run 2026-10-23 1113, scheduled, unattended, 2026-10-23T11:3xZ] blocker re-based: it named CEO row 395 option A, which the CEO answered and which was applied only to rows 333+389 (row 395 test text, board 11:13Z). No signed-in leg run here (no live session).",
+      "blocker": "QA xd-2366 signed-in dev legs need a live session: CEO row 395 is DONE (option A was used for rows 333+389 only, 11:0xZ), so it no longer covers this. In the next live chat, backend can do it the same way as row 333 (throwaway account on api.dev, then delete it); then READY TO SHIP row (matters once the iPhone build with the sheet ships).",
       "resultingHandoff": "xd-2366 to [QA]"
     },
     {
@@ -70517,11 +70517,14 @@
       "to": "[BACKEND]",
       "title": "Handoff from CEO: [P0] CEO answers on our own pages, step 1: POST/GET /api/admin/ceo-decisions (admin JWT) + CeoDecisions table",
       "description": "CEO 23 Oct 2026 (live chat): 'I still can't reply on the dashboard, I am redirected to Telegram.' Decision: answers are given ON OUR OWN PAGES, signed in, no Telegram hop. Design (one feature, three departments): (1) [BACKEND] POST /api/admin/ceo-decisions {row:int, answer:'yes|no|a|b|c', rowText:string} - admin JWT required, role Admin only; stores in a new table CeoDecisions(id, row, answer, rowTextHash, decidedAt, decidedBy, appliedAt null); GET /api/admin/ceo-decisions?pending=1 lists unapplied. (2) [ADMIN-PANEL] page admin.caspervpn.com/decisions: lists the open CEO-card rows from the public data.json (DECISION / READY TO SHIP / ACTION), one Yes/No or A/B/C button per row, POSTs to (1), shows 'Recorded HH:MM' at once; deep link /decisions?row=N so the public dashboard's buttons can point there instead of t.me. (3) [CTO] tools/ceo_answers.py also reads the pending rows from the API DB (read-only psql over ssh_exec, same as facts_ledger) and marks appliedAt after recording; dashboard build: 'CEO Decisions' tab buttons -> https://admin.caspervpn.com/decisions?row=N&answer=X (Telegram links stay as a second button). Order: backend on development -> QA dev pass -> admin page -> QA -> READY TO SHIP row (one row for all three) -> CEO YES -> production. No secrets on the public page. Proof for QA: sign in to admin.dev, tap Yes on a test row, row shows CEO YES on the board within one department run. || [CTO 23 Oct 11:30] ceo_answers.py (development 69ef8604) reads table \"CeoDecisions\" cols \"Id\",\"Row\",\"Answer\",\"DecidedAt\",\"DecidedBy\",\"AppliedAt\" - keep these names or tell [CTO].",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P0",
       "createdAt": "2026-10-23T10:45:56Z",
       "createdDate": "2026-10-23",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[BACKEND run 2026-10-23 1113, scheduled, unattended, 2026-10-23T11:3xZ] BUILT on development: fc86b4f5f (POST/GET /api/admin/ceo-decisions, table CeoDecisions, migration 20261023110000_CeoDecisions, CREATE TABLE IF NOT EXISTS) + 750681fe2 (Id = integer identity, to match the CTO reader 69ef8604c on xd-2389, which casts Id to int; the migration drops a uuid-Id table only if it exists and is empty). Contract: POST {row:int 1..100000, answer: yes|no|a|b|c, rowText <= 8000 chars} -> 201 {id,row,answer,rowTextHash,decidedAt,decidedBy,alreadyRecorded:false} msg 'Recorded HH:MM UTC'; double tap (same row+answer+text pending) -> 200 alreadyRecorded:true; a new answer on a row sets SupersededAt on the older pending one; bad input 400. GET ?pending=1 -> AppliedAt null AND SupersededAt null, by Id. Role: Admin,SuperAdmin (same as every /api/admin route; read 'Admin only' as admin roles). RowTextHash = lower-case hex sha256 of the trimmed UTF-8 row text; the row text itself is not stored. Proof: build 0 errors; CeoDecisionsTests 13/13 (filtered run); full suite 485/485 (was 472); lock casper-backend-1023-1113 acquired 11:22:57Z, released; git ls-remote development = 750681fe2. Control: dev + production GET /api/admin/ceo-decisions = 404 at 11:2xZ (route not there yet). NOT PROVEN: dev redeploy (still 404 at 11:31Z) and the signed-in leg (no admin JWT in an unattended run).",
+      "blocker": "Waits QA xd-2400 (dev check once dev redeploys), then ADMIN-PANEL xd-2388 (page) + CTO xd-2389 (reader filter); then one READY TO SHIP row for all three -> CEO YES.",
+      "resultingHandoff": "xd-2400"
     },
     {
       "id": "xd-2388",
@@ -70533,7 +70536,8 @@
       "priority": "P0",
       "createdAt": "2026-10-23T10:45:56Z",
       "createdDate": "2026-10-23",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[BACKEND run 2026-10-23 1113, scheduled, unattended, 2026-10-23T11:3xZ] API for this page is on development 750681fe2 (xd-2387): POST https://api.dev.caspervpn.com/api/admin/ceo-decisions with the admin Bearer token, body {row, answer:'yes'|'no'|'a'|'b'|'c', rowText: the row's test text as shown}. 201/200 both mean recorded; show response.message ('Recorded HH:MM UTC'). 400 errorCode CEO_DECISION_ROW / _ANSWER / _TEXT. GET ?pending=1 lists unapplied answers. Dev redeploy pending at 11:31Z (route still 404)."
     },
     {
       "id": "xd-2389",
@@ -70547,7 +70551,7 @@
       "createdDate": "2026-10-23",
       "completedDate": null,
       "blocker": "waits xd-2387 [BACKEND] (CeoDecisions table + API on dev) and xd-2388 [ADMIN-PANEL] (/decisions page on admin.dev); then one READY TO SHIP row for all three",
-      "notes": "[CTO run 2026-10-23 1116, scheduled, unattended, 2026-10-23T11:30:19Z] step 3 (tool part) CODED on development 69ef8604: tools/ceo_answers.py read_apidb() reads unapplied rows of \"CeoDecisions\" (read-only, default_transaction_read_only=on, same path as facts_ledger) and records them like dashboard taps (evidence 'dashboard tap api<id>', source 'admin.caspervpn.com/decisions'); AppliedAt write runs only with CEO_DECISIONS_DB_APPLY=1 (after CEO YES). Proof: production DB control query: Users -> OK, CeoDecisions -> NOTABLE, read_apidb() -> [] (safe before xd-2387 ships); offline test with a fake DB row: recorded row 416 = yes once, second pass records 0, 0 DB writes without the flag, 1 with it. Contract the tool assumes for xd-2387 (EF default quoting): table \"CeoDecisions\" cols \"Id\" int, \"Row\" int, \"Answer\" text, \"DecidedAt\" timestamptz, \"DecidedBy\" text, \"AppliedAt\" timestamptz null. Dashboard buttons NOT switched yet: pointing them at admin.caspervpn.com/decisions before xd-2388 is live would break the CEO's taps; switch in the same ship. "
+      "notes": "[BACKEND run 2026-10-23 1113, scheduled, unattended, 2026-10-23T11:3xZ] Backend matched your reader: CeoDecisions.Id is now an integer identity (750681fe2). Two gaps in 69ef8604c to fix on your side: (1) add AND \"SupersededAt\" IS NULL to the pending query - a newer tap on the same row marks the older one superseded, and without the filter both get applied; (2) optional: compare \"RowTextHash\" = sha256(row test text .strip(), utf-8).hexdigest() before writing, so an answer to a row whose text changed is not applied. Columns: Id int, Row int, Answer varchar(8) yes|no|a|b|c, RowTextHash varchar(64), DecidedAt, DecidedBy, AppliedAt, SupersededAt."
     },
     {
       "id": "xd-2390",
@@ -70672,6 +70676,18 @@
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-10-23T11:30:43Z",
+      "createdDate": "2026-10-23",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2400",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: [P0] Dev check xd-2387: CEO decisions API (POST/GET /api/admin/ceo-decisions)",
+      "description": "Built on development fc86b4f5f + 750681fe2 (backend run 1113). Check on dev once it redeploys: (1) unauth GET/POST https://api.dev.caspervpn.com/api/admin/ceo-decisions -> 401 (was 404 at 11:2xZ = control; production stays 404); (2) dev DB: table CeoDecisions exists, column Id integer identity, migration row 20261023110000_CeoDecisions; (3) unit: cd /root/reports/be1020/code/backend-dotnet-core/Tests && dotnet test --no-build --filter FullyQualifiedName~CeoDecisionsTests -> 13/13; (4) signed-in leg (needs an admin JWT on dev - live session): POST {row:1, answer:'yes', rowText:'test'} -> 201 'Recorded HH:MM UTC'; same again -> 200 alreadyRecorded; 'no' -> older row SupersededAt set; GET ?pending=1 shows only the latest; answer 'maybe' -> 400. Then ADMIN-PANEL xd-2388 builds the page; one READY TO SHIP row for all three steps after QA (CEO design on xd-2387).",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-10-23T11:32:26Z",
       "createdDate": "2026-10-23",
       "completedDate": null
     }
