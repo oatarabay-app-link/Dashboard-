@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-23T10:39:25Z",
+  "lastUpdated": "2026-10-23T10:45:56Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 69,
@@ -16544,6 +16544,19 @@
           "addedBy": "[DEVOPS run 2026-10-23 1023, scheduled, unattended]",
           "test": "READY TO SHIP \u2014 remove one duplicate network rule on the Amsterdam server (small clean-up) \u00b7 why: the same traffic rule is listed twice; harmless today but it confuses checks and later changes \u00b7 how: delete one copy and save (iptables -t nat -D POSTROUTING -o wg1 -j MASQUERADE once, then iptables-save) \u00b7 tested on dev: not needed - it only removes an exact copy; the other copy keeps doing the same job \u00b7 rollback: add it back with one command \u00b7 advice: yes, low risk (xd-2303)",
           "evidence": "[DEVOPS run 2026-10-23 1023, scheduled, unattended, 2026-10-23T10:4xZ] MEASURED 10:3xZ read-only: node 51.158.147.210 iptables -t nat -S POSTROUTING | grep -c -- '-o wg1 -j MASQUERADE' -> 2 (same as 22 Oct 23:2xZ)."
+        },
+        {
+          "test": "DECISION ANSWERED 2026-10-23 \u2014 answers on the dashboard without Telegram: the CEO decided (live chat) that the 'CEO Decisions' buttons must record on our own pages, signed in (admin.caspervpn.com/decisions), no Telegram hop. Work: xd-2387, xd-2388, xd-2389. Until it ships: tap the button, then press START in the Telegram chat that opens (the tap is only sent when START is pressed); every department run records it within the hour.",
+          "verify": "admin.caspervpn.com/decisions: tap Yes on a row -> 'Recorded' shown -> board row carries CEO YES within one run",
+          "met": true,
+          "passed": true,
+          "verifiedBy": "verified",
+          "verifiedByRaw": "ceo",
+          "verifiedDate": "2026-10-23",
+          "createdBy": "ceo-office",
+          "createdAt": "2026-10-23T10:44:53Z",
+          "owner": "[CEO]",
+          "evidence": "[CEO office live 2026-10-23 2026-10-23T10:44:53Z] CEO: 'i still cant reply on db i am redirected to telegram'. Measured: ceo_answers.py dry run 10:5xZ + now = nothing pending, so today's clicks never reached Telegram (START not pressed / Telegram not signed in on that device). Handoffs xd-2387, xd-2388, xd-2389."
         }
       ],
       "progress": 0,
@@ -70459,6 +70472,42 @@
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-10-23T10:39:25Z",
+      "createdDate": "2026-10-23",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2387",
+      "from": "[CEO]",
+      "to": "[BACKEND]",
+      "title": "Handoff from CEO: [P0] CEO answers on our own pages, step 1: POST/GET /api/admin/ceo-decisions (admin JWT) + CeoDecisions table",
+      "description": "CEO 23 Oct 2026 (live chat): 'I still can't reply on the dashboard, I am redirected to Telegram.' Decision: answers are given ON OUR OWN PAGES, signed in, no Telegram hop. Design (one feature, three departments): (1) [BACKEND] POST /api/admin/ceo-decisions {row:int, answer:'yes|no|a|b|c', rowText:string} - admin JWT required, role Admin only; stores in a new table CeoDecisions(id, row, answer, rowTextHash, decidedAt, decidedBy, appliedAt null); GET /api/admin/ceo-decisions?pending=1 lists unapplied. (2) [ADMIN-PANEL] page admin.caspervpn.com/decisions: lists the open CEO-card rows from the public data.json (DECISION / READY TO SHIP / ACTION), one Yes/No or A/B/C button per row, POSTs to (1), shows 'Recorded HH:MM' at once; deep link /decisions?row=N so the public dashboard's buttons can point there instead of t.me. (3) [CTO] tools/ceo_answers.py also reads the pending rows from the API DB (read-only psql over ssh_exec, same as facts_ledger) and marks appliedAt after recording; dashboard build: 'CEO Decisions' tab buttons -> https://admin.caspervpn.com/decisions?row=N&answer=X (Telegram links stay as a second button). Order: backend on development -> QA dev pass -> admin page -> QA -> READY TO SHIP row (one row for all three) -> CEO YES -> production. No secrets on the public page. Proof for QA: sign in to admin.dev, tap Yes on a test row, row shows CEO YES on the board within one department run.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-10-23T10:45:56Z",
+      "createdDate": "2026-10-23",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2388",
+      "from": "[CEO]",
+      "to": "[ADMIN-PANEL]",
+      "title": "Handoff from CEO: [P0] CEO answers on our own pages, step 2: admin page /decisions with Yes/No/A/B/C buttons (deep link ?row=N)",
+      "description": "CEO 23 Oct 2026 (live chat): 'I still can't reply on the dashboard, I am redirected to Telegram.' Decision: answers are given ON OUR OWN PAGES, signed in, no Telegram hop. Design (one feature, three departments): (1) [BACKEND] POST /api/admin/ceo-decisions {row:int, answer:'yes|no|a|b|c', rowText:string} - admin JWT required, role Admin only; stores in a new table CeoDecisions(id, row, answer, rowTextHash, decidedAt, decidedBy, appliedAt null); GET /api/admin/ceo-decisions?pending=1 lists unapplied. (2) [ADMIN-PANEL] page admin.caspervpn.com/decisions: lists the open CEO-card rows from the public data.json (DECISION / READY TO SHIP / ACTION), one Yes/No or A/B/C button per row, POSTs to (1), shows 'Recorded HH:MM' at once; deep link /decisions?row=N so the public dashboard's buttons can point there instead of t.me. (3) [CTO] tools/ceo_answers.py also reads the pending rows from the API DB (read-only psql over ssh_exec, same as facts_ledger) and marks appliedAt after recording; dashboard build: 'CEO Decisions' tab buttons -> https://admin.caspervpn.com/decisions?row=N&answer=X (Telegram links stay as a second button). Order: backend on development -> QA dev pass -> admin page -> QA -> READY TO SHIP row (one row for all three) -> CEO YES -> production. No secrets on the public page. Proof for QA: sign in to admin.dev, tap Yes on a test row, row shows CEO YES on the board within one department run.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-10-23T10:45:56Z",
+      "createdDate": "2026-10-23",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2389",
+      "from": "[CEO]",
+      "to": "[CTO]",
+      "title": "Handoff from CEO: [P0] CEO answers on our own pages, step 3: ceo_answers.py reads the API DB; dashboard buttons point to admin.caspervpn.com/decisions",
+      "description": "CEO 23 Oct 2026 (live chat): 'I still can't reply on the dashboard, I am redirected to Telegram.' Decision: answers are given ON OUR OWN PAGES, signed in, no Telegram hop. Design (one feature, three departments): (1) [BACKEND] POST /api/admin/ceo-decisions {row:int, answer:'yes|no|a|b|c', rowText:string} - admin JWT required, role Admin only; stores in a new table CeoDecisions(id, row, answer, rowTextHash, decidedAt, decidedBy, appliedAt null); GET /api/admin/ceo-decisions?pending=1 lists unapplied. (2) [ADMIN-PANEL] page admin.caspervpn.com/decisions: lists the open CEO-card rows from the public data.json (DECISION / READY TO SHIP / ACTION), one Yes/No or A/B/C button per row, POSTs to (1), shows 'Recorded HH:MM' at once; deep link /decisions?row=N so the public dashboard's buttons can point there instead of t.me. (3) [CTO] tools/ceo_answers.py also reads the pending rows from the API DB (read-only psql over ssh_exec, same as facts_ledger) and marks appliedAt after recording; dashboard build: 'CEO Decisions' tab buttons -> https://admin.caspervpn.com/decisions?row=N&answer=X (Telegram links stay as a second button). Order: backend on development -> QA dev pass -> admin page -> QA -> READY TO SHIP row (one row for all three) -> CEO YES -> production. No secrets on the public page. Proof for QA: sign in to admin.dev, tap Yes on a test row, row shows CEO YES on the board within one department run.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-10-23T10:45:56Z",
       "createdDate": "2026-10-23",
       "completedDate": null
     }
