@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-23T11:30:28Z",
+  "lastUpdated": "2026-10-23T11:30:43Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 69,
@@ -16241,9 +16241,9 @@
           "createdBy": "cto-live",
           "createdAt": "2026-10-22T22:30:22Z",
           "owner": "[DEVOPS]",
-          "test": "READY TO SHIP \u2014 rotate the RADIUS shared secret on every node, one node at a time (xd-2290) \u00b7 CEO YES 2026-10-22 (live chat, CTO session): 'ye to all' \u00b7 why: the old secret was readable on the public dashboard (old copies stay in GitHub history) and it also sits in a comment line inside the brain's clients.conf \u00b7 how: per node, new secret in clients.conf + that node's eap-radius config, restart FreeRADIUS, reload strongSwan, test login \u00b7 rollback: put the old line back for that node",
+          "test": "CEO YES 2026-10-23 11:17:54Z (dashboard tap d32, read from the tap store by DevOps - ceo_answers.py drops taps, xd-2395) | READY TO SHIP \u2014 rotate the RADIUS shared secret on every node, one node at a time (xd-2290) \u00b7 CEO YES 2026-10-22 (live chat, CTO session): 'ye to all' \u00b7 why: the old secret was readable on the public dashboard (old copies stay in GitHub history) and it also sits in a comment line inside the brain's clients.conf \u00b7 how: per node, new secret in clients.conf + that node's eap-radius config, restart FreeRADIUS, reload strongSwan, test login \u00b7 rollback: put the old line back for that node",
           "verify": "every fleet-* client in /etc/freeradius/3.0/clients.conf has a new secret (compare a hash, never print); no secret in any comment line; one IKEv2 test login per node accepted after its change; credentials.md updated (value only there)",
-          "evidence": "[2026-10-22T22:30:22Z] measured read-only on the brain: clients.conf has localhost + 11 per-node client blocks (fleet-us-la ... fleet-hkg-01), each its own secret line, so one node at a time is possible."
+          "evidence": "[2026-10-22T22:30:22Z] measured read-only on the brain: clients.conf has localhost + 11 per-node client blocks (fleet-us-la ... fleet-hkg-01), each its own secret line, so one node at a time is possible. || [DEVOPS run 2026-10-23 1124, scheduled, unattended, 2026-10-23T11:3xZ] CEO tap recorded."
         },
         {
           "met": false,
@@ -16292,8 +16292,9 @@
           "owner": "[DEVOPS]",
           "createdBy": "devops-run",
           "createdAt": "2026-10-22T23:40:00Z",
-          "test": "READY TO SHIP \u2014 remove one of two identical traffic rules on the Amsterdam server (xd-2303) \u00b7 why: the same rule is written twice; harmless today, but if someone removes it once the copy stays and confuses the next fix \u00b7 what the ship does: deletes one copy and saves the firewall, the other copy keeps working, users notice nothing \u00b7 tested: measured 22 Oct 23:2xZ the rule count is 2 (Los Angeles and D\u00fcsseldorf have 1); Bangkok has no such rule, so there is nothing to test there first \u00b7 risk: very low \u00b7 rollback: add the rule back with one command \u00b7 advice: YES, low priority",
-          "verify": "ssh_exec_node('node-nl-am2', \"iptables -t nat -S POSTROUTING | grep -c -- '-o wg1 -j MASQUERADE'\") -> 1, and the same in /etc/iptables/rules.v4"
+          "test": "SHIPPED 2026-10-23 | CEO YES 2026-10-23 11:17:12Z (dashboard tap d31, read from the tap store by DevOps - ceo_answers.py drops taps, xd-2395) | READY TO SHIP \u2014 remove one of two identical traffic rules on the Amsterdam server (xd-2303) \u00b7 why: the same rule is written twice; harmless today, but if someone removes it once the copy stays and confuses the next fix \u00b7 what the ship does: deletes one copy and saves the firewall, the other copy keeps working, users notice nothing \u00b7 tested: measured 22 Oct 23:2xZ the rule count is 2 (Los Angeles and D\u00fcsseldorf have 1); Bangkok has no such rule, so there is nothing to test there first \u00b7 risk: very low \u00b7 rollback: add the rule back with one command \u00b7 advice: YES, low priority | SHIPPED 2026-10-23 11:29Z (same change as row 415): count 2 -> 1 live and in rules.v4",
+          "verify": "ssh_exec_node('node-nl-am2', \"iptables -t nat -S POSTROUTING | grep -c -- '-o wg1 -j MASQUERADE'\") -> 1, and the same in /etc/iptables/rules.v4",
+          "evidence": "[DEVOPS run 2026-10-23 1124, scheduled, unattended, 2026-10-23T11:3xZ] CEO tap recorded. | SHIPPED 2026-10-23 11:29Z (same change as row 415): count 2 -> 1 live and in rules.v4"
         },
         {
           "met": false,
@@ -16363,8 +16364,8 @@
           "owner": "[DEVOPS]",
           "addedAt": "2026-10-23T02:31:00Z",
           "addedBy": "[DEVOPS] run 2026-10-23 0223",
-          "test": "READY TO SHIP \u2014 stop the 8 servers from logging any packet sent to our app ports over UDP too (443, 1194, 1195), and delete the ones already logged \u00b7 why: LEGAL verdict B on xd-2324 (xd-2325): after row 326 the firewall still logs 4-114 'UDP port 443' lines per server; our no-log promise covers every app port \u00b7 what the ship does, one server at a time (Montreal first): (1) `ufw_nolog_userports.sh apply-rule` from development f92f73e4 (infrastructure/scripts/ufw_nolog_userports.sh, md5 4f3a471c): keeps the row-326 TCP rule and adds a silent drop for UDP 443 + 1195 (nothing listens there) and for broken UDP 1194 packets (OpenVPN keeps working: real 1194 traffic is allowed before the drop); backup .bak-xd2137-nolog-<ts>, ufw reload, rolls itself back if a rule is missing; (2) `purge-logs`: deletes only app-port firewall lines from kern.log*, ufw.log*, syslog* (all rotations) - the count is per protocol, so scanner knocks on closed TCP 1194 (20-286 per server, all SYN) stay as the control; (3) `journal-cap 7` as row 326 \u00b7 tested on dev: Bangkok netns 23 Oct 02:4xZ, 5 packets each to UDP 443/1195/1194/9999: logged 15 -> 5 (only the 9999 control), dropped 10, UDP 1194 accepted 5/5 before and after, v6 rules load (ip6tables-restore --test ok), host rules untouched (0), netns + files removed; fixture test: apply twice = idempotent, purge 12 -> 0 lines, control lines kept \u00b7 counts measured 23 Oct 02:3xZ (counts only, L6): UDP 1194 = 0 on all 8, UDP 1195 = 0, UDP 443 MTL 20 \u00b7 HK 54 \u00b7 MX 4 \u00b7 MIA 30 \u00b7 SGP 38 \u00b7 SYD 96 \u00b7 SAO 24 \u00b7 TYO 114 \u00b7 verify per server after 24 h: `ufw_nolog_userports.sh check` -> rule_live udp v4=2 v6=2 and userport_lines_files=0, with the DPT=22 control > 0 \u00b7 rollback: copy the .bak files back over /etc/ufw/before.rules + before6.rules and `ufw reload` (the log purge cannot be undone - that is the point) \u00b7 advice: YES, same path as row 326",
-          "evidence": "[QA 2026-10-23 d, scheduled 'Casper qa', unattended, 2026-10-23T03:2xZ] QA DEV PASS (xd-2331): development f92f73e ufw_nolog_userports.sh md5 4f3a471c (= handoff). Fixture (RULES_DIR/LOG_DIR, PORTS=443,8443, UDP_ALLOWED=1194): apply-rule twice -> before.rules 1 tcp + 2 udp lines (443,1195 full DROP; 1194 INVALID-only), before6 2 udp, second run 'already has' x6 = idempotent; purge-logs on kern.log + .1 + .2.gz: 4 -> 0 each, kept TCP 1194 SYN, DPT=22, UDP 53 and a non-UFW line. Bangkok netns test NOT re-run by QA (DevOps 15->5). Not ticked: ships under CEO YES, QA checks live after."
+          "test": "CEO YES 2026-10-23 11:16:03Z (dashboard tap d21, read from the tap store by DevOps - ceo_answers.py drops taps, xd-2395) | READY TO SHIP \u2014 stop the 8 servers from logging any packet sent to our app ports over UDP too (443, 1194, 1195), and delete the ones already logged \u00b7 why: LEGAL verdict B on xd-2324 (xd-2325): after row 326 the firewall still logs 4-114 'UDP port 443' lines per server; our no-log promise covers every app port \u00b7 what the ship does, one server at a time (Montreal first): (1) `ufw_nolog_userports.sh apply-rule` from development f92f73e4 (infrastructure/scripts/ufw_nolog_userports.sh, md5 4f3a471c): keeps the row-326 TCP rule and adds a silent drop for UDP 443 + 1195 (nothing listens there) and for broken UDP 1194 packets (OpenVPN keeps working: real 1194 traffic is allowed before the drop); backup .bak-xd2137-nolog-<ts>, ufw reload, rolls itself back if a rule is missing; (2) `purge-logs`: deletes only app-port firewall lines from kern.log*, ufw.log*, syslog* (all rotations) - the count is per protocol, so scanner knocks on closed TCP 1194 (20-286 per server, all SYN) stay as the control; (3) `journal-cap 7` as row 326 \u00b7 tested on dev: Bangkok netns 23 Oct 02:4xZ, 5 packets each to UDP 443/1195/1194/9999: logged 15 -> 5 (only the 9999 control), dropped 10, UDP 1194 accepted 5/5 before and after, v6 rules load (ip6tables-restore --test ok), host rules untouched (0), netns + files removed; fixture test: apply twice = idempotent, purge 12 -> 0 lines, control lines kept \u00b7 counts measured 23 Oct 02:3xZ (counts only, L6): UDP 1194 = 0 on all 8, UDP 1195 = 0, UDP 443 MTL 20 \u00b7 HK 54 \u00b7 MX 4 \u00b7 MIA 30 \u00b7 SGP 38 \u00b7 SYD 96 \u00b7 SAO 24 \u00b7 TYO 114 \u00b7 verify per server after 24 h: `ufw_nolog_userports.sh check` -> rule_live udp v4=2 v6=2 and userport_lines_files=0, with the DPT=22 control > 0 \u00b7 rollback: copy the .bak files back over /etc/ufw/before.rules + before6.rules and `ufw reload` (the log purge cannot be undone - that is the point) \u00b7 advice: YES, same path as row 326",
+          "evidence": "[QA 2026-10-23 d, scheduled 'Casper qa', unattended, 2026-10-23T03:2xZ] QA DEV PASS (xd-2331): development f92f73e ufw_nolog_userports.sh md5 4f3a471c (= handoff). Fixture (RULES_DIR/LOG_DIR, PORTS=443,8443, UDP_ALLOWED=1194): apply-rule twice -> before.rules 1 tcp + 2 udp lines (443,1195 full DROP; 1194 INVALID-only), before6 2 udp, second run 'already has' x6 = idempotent; purge-logs on kern.log + .1 + .2.gz: 4 -> 0 each, kept TCP 1194 SYN, DPT=22, UDP 53 and a non-UFW line. Bangkok netns test NOT re-run by QA (DevOps 15->5). Not ticked: ships under CEO YES, QA checks live after. || [DEVOPS run 2026-10-23 1124, scheduled, unattended, 2026-10-23T11:3xZ] CEO tap recorded."
         },
         {
           "met": false,
@@ -16373,8 +16374,8 @@
           "owner": "[DEVOPS]",
           "addedAt": "2026-10-23T02:31:00Z",
           "addedBy": "[DEVOPS] run 2026-10-23 0223",
-          "test": "READY TO SHIP \u2014 take the production database password out of a script that is stored in our code history \u00b7 why: measured 23 Oct 02:3xZ: the data-cap watcher (infrastructure/scripts/datacap_enforcement_monitor.sh line 26) holds the live database password as plain text on the production AND development branches, so anyone with code access has it; the password change you already approved (row 118, xd-1024) is useless while the script would need the new one written into git again \u00b7 what the ship does: copy the development version (ee949628, md5 837ec6df) over /opt/caspervpn/datacap_enforcement_monitor.sh (backup .bak-xd1024-<ts>), run it once, then cherry-pick ee949628 to production; the script now reads the one DB_PASSWORD line from the server's .env (it never loads the whole file - trap xd-1996) and writes an ERROR line if it is missing \u00b7 tested on dev: bash -n ok; fixture .env with a quoted value -> read correctly; the value is no longer in the file \u00b7 verify: the next 15-minute run adds its normal line to /var/log/datacap-enforcement-monitor.log with no ERROR, and `git show origin/production:infrastructure/scripts/datacap_enforcement_monitor.sh | grep -c PGPW=\\\"` = 0 \u00b7 rollback: copy the .bak back \u00b7 then: xd-1024 rotates the password in .env + database + the other holders in one quiet window (list of holders on xd-1024, names only) \u00b7 advice: YES",
-          "evidence": "[QA 2026-10-23 d, scheduled 'Casper qa', unattended, 2026-10-23T03:2xZ] QA DEV PASS (xd-2331): development ee94962 datacap_enforcement_monitor.sh: grep -c 'PGPW=\"' 0 (parent 1), bash -n OK; fixture .env with a quoted value containing '=' read exactly (len 11, match yes); .env without DB_PASSWORD -> empty -> exit-2 guard. Note: the old literal stays in git history - the rotation (xd-1024) is still needed after the ship. Not ticked: ships under CEO YES."
+          "test": "CEO YES 2026-10-23 11:15:55Z (dashboard tap d20, read from the tap store by DevOps - ceo_answers.py drops taps, xd-2395) | READY TO SHIP \u2014 take the production database password out of a script that is stored in our code history \u00b7 why: measured 23 Oct 02:3xZ: the data-cap watcher (infrastructure/scripts/datacap_enforcement_monitor.sh line 26) holds the live database password as plain text on the production AND development branches, so anyone with code access has it; the password change you already approved (row 118, xd-1024) is useless while the script would need the new one written into git again \u00b7 what the ship does: copy the development version (ee949628, md5 837ec6df) over /opt/caspervpn/datacap_enforcement_monitor.sh (backup .bak-xd1024-<ts>), run it once, then cherry-pick ee949628 to production; the script now reads the one DB_PASSWORD line from the server's .env (it never loads the whole file - trap xd-1996) and writes an ERROR line if it is missing \u00b7 tested on dev: bash -n ok; fixture .env with a quoted value -> read correctly; the value is no longer in the file \u00b7 verify: the next 15-minute run adds its normal line to /var/log/datacap-enforcement-monitor.log with no ERROR, and `git show origin/production:infrastructure/scripts/datacap_enforcement_monitor.sh | grep -c PGPW=\\\"` = 0 \u00b7 rollback: copy the .bak back \u00b7 then: xd-1024 rotates the password in .env + database + the other holders in one quiet window (list of holders on xd-1024, names only) \u00b7 advice: YES",
+          "evidence": "[QA 2026-10-23 d, scheduled 'Casper qa', unattended, 2026-10-23T03:2xZ] QA DEV PASS (xd-2331): development ee94962 datacap_enforcement_monitor.sh: grep -c 'PGPW=\"' 0 (parent 1), bash -n OK; fixture .env with a quoted value containing '=' read exactly (len 11, match yes); .env without DB_PASSWORD -> empty -> exit-2 guard. Note: the old literal stays in git history - the rotation (xd-1024) is still needed after the ship. Not ticked: ships under CEO YES. || [DEVOPS run 2026-10-23 1124, scheduled, unattended, 2026-10-23T11:3xZ] CEO tap recorded."
         },
         {
           "met": false,
@@ -16403,8 +16404,9 @@
           "owner": "[DEVOPS]",
           "addedAt": "2026-10-23T04:10:00Z",
           "addedBy": "[DEVOPS] run 2026-10-23 0323",
-          "test": "READY TO SHIP \u2014 a 6-hourly read-only check that every relay still forces in-tunnel DNS to our own resolver, with an alarm \u00b7 why: xd-2327 (BACKEND xd-2322 chose not to change the app configs, so the 2 port-53 redirect rules on each relay are now the only thing keeping user DNS on our servers, and nothing re-checks them after a reboot) \u00b7 what the ship does (main server only, no change on any relay): copy infrastructure/monitoring/scripts/relay_dns_guard.sh (development 84cc8b26) to /opt/caspervpn/monitoring/, install relay-dns-guard.service + .timer (fb875f74, 01aa7c45: 00/06/12/18:41Z + 10 min after boot), add the 2 rules of relay-dns-guard.alerts.yml (4c542388) to alerts.yml, promtool check, reload Prometheus with SIGHUP (no restart) \u00b7 tested 23 Oct 03:2xZ from the main server (kit /root/reports/devops1023-0323, .keep): 12/12 relays ok=1 (11 production + bkk-01); negative control on bkk-01 (same check inside an empty network namespace) = ok=0, redirects 0, and the namespace was removed (netns 0, real rules still 2); promtool: 2 rules SUCCESS \u00b7 rollback: disable the timer, delete the .prom file and the 2 alert rules, SIGHUP \u00b7 advice: yes - read-only, ~1 min of ssh every 6 h",
-          "qaNote": "[QA 2026-10-23 e, scheduled 'Casper qa', unattended, 2026-10-23T04:2xZ] QA dev-kit check (xd-2342) PASS 04:11-04:12Z: development relay_dns_guard.sh (blob 216ba6a3, md5 50b35d05, fetched a84b3cb) run from the main server with OUT_DIR=/tmp/qa-dg/x: ok=1 on 12/12 (11 relays + bkk), redirects 2 and forward_addr 0 on each, reachable 12/12; negative control CONTROL_NETNS=1 NODES=/dev/null -> bkk ok=0, redirects 0; leftover netns on bkk = 0; live collector file casper_relay_dns_guard.prom absent (nothing installed). Ship still needs CEO YES."
+          "test": "CEO YES 2026-10-23 11:15:22Z (dashboard tap d17, read from the tap store by DevOps - ceo_answers.py drops taps, xd-2395) | READY TO SHIP \u2014 a 6-hourly read-only check that every relay still forces in-tunnel DNS to our own resolver, with an alarm \u00b7 why: xd-2327 (BACKEND xd-2322 chose not to change the app configs, so the 2 port-53 redirect rules on each relay are now the only thing keeping user DNS on our servers, and nothing re-checks them after a reboot) \u00b7 what the ship does (main server only, no change on any relay): copy infrastructure/monitoring/scripts/relay_dns_guard.sh (development 84cc8b26) to /opt/caspervpn/monitoring/, install relay-dns-guard.service + .timer (fb875f74, 01aa7c45: 00/06/12/18:41Z + 10 min after boot), add the 2 rules of relay-dns-guard.alerts.yml (4c542388) to alerts.yml, promtool check, reload Prometheus with SIGHUP (no restart) \u00b7 tested 23 Oct 03:2xZ from the main server (kit /root/reports/devops1023-0323, .keep): 12/12 relays ok=1 (11 production + bkk-01); negative control on bkk-01 (same check inside an empty network namespace) = ok=0, redirects 0, and the namespace was removed (netns 0, real rules still 2); promtool: 2 rules SUCCESS \u00b7 rollback: disable the timer, delete the .prom file and the 2 alert rules, SIGHUP \u00b7 advice: yes - read-only, ~1 min of ssh every 6 h",
+          "qaNote": "[QA 2026-10-23 e, scheduled 'Casper qa', unattended, 2026-10-23T04:2xZ] QA dev-kit check (xd-2342) PASS 04:11-04:12Z: development relay_dns_guard.sh (blob 216ba6a3, md5 50b35d05, fetched a84b3cb) run from the main server with OUT_DIR=/tmp/qa-dg/x: ok=1 on 12/12 (11 relays + bkk), redirects 2 and forward_addr 0 on each, reachable 12/12; negative control CONTROL_NETNS=1 NODES=/dev/null -> bkk ok=0, redirects 0; leftover netns on bkk = 0; live collector file casper_relay_dns_guard.prom absent (nothing installed). Ship still needs CEO YES.",
+          "evidence": "[DEVOPS run 2026-10-23 1124, scheduled, unattended, 2026-10-23T11:3xZ] CEO tap recorded."
         },
         {
           "met": false,
@@ -16423,9 +16425,10 @@
           "owner": "[DEVOPS]",
           "addedAt": "2026-10-23T04:35:00Z",
           "addedBy": "[DEVOPS] run 2026-10-23 0424",
-          "test": "READY TO SHIP \u2014 take the e-mail key out of the last 2 scripts on the main server that still have it written inside (xd-2343) \u00b7 why: after the 23 Oct key change, the alarm mail bridge and the weekly certificate renewal script still carry the key as plain text; the versions in our code already read it from the locked key file \u00b7 what the ship does: copy the 2 files from /root/reports/devops-xd2343/ (= development and production, identical: bridge md5 831fe5a1, renew md5 0f790c7c) over /opt/caspervpn/monitoring/alertmanager_resend_bridge.py and /opt/caspervpn/wildcard-cert/wildcard-renew.sh (old copies kept as .bak-xd2343 with mode 600), restart alertmanager-resend-bridge, send one test alert \u00b7 tested on the main server (read-only): both kit files have 0 key literals, python compile OK, bash -n OK; the key the new bridge reads from the file = the key the new renew script reads = the key in the installed scripts today (hash compare, value never printed) \u00b7 risk: very low (alarms go by Telegram; the bridge only mails) \u00b7 rollback: copy the .bak-xd2343 files back and restart the bridge \u00b7 advice: YES",
+          "test": "CEO YES 2026-10-23 11:14:49Z (dashboard tap d13, read from the tap store by DevOps - ceo_answers.py drops taps, xd-2395) | READY TO SHIP \u2014 take the e-mail key out of the last 2 scripts on the main server that still have it written inside (xd-2343) \u00b7 why: after the 23 Oct key change, the alarm mail bridge and the weekly certificate renewal script still carry the key as plain text; the versions in our code already read it from the locked key file \u00b7 what the ship does: copy the 2 files from /root/reports/devops-xd2343/ (= development and production, identical: bridge md5 831fe5a1, renew md5 0f790c7c) over /opt/caspervpn/monitoring/alertmanager_resend_bridge.py and /opt/caspervpn/wildcard-cert/wildcard-renew.sh (old copies kept as .bak-xd2343 with mode 600), restart alertmanager-resend-bridge, send one test alert \u00b7 tested on the main server (read-only): both kit files have 0 key literals, python compile OK, bash -n OK; the key the new bridge reads from the file = the key the new renew script reads = the key in the installed scripts today (hash compare, value never printed) \u00b7 risk: very low (alarms go by Telegram; the bridge only mails) \u00b7 rollback: copy the .bak-xd2343 files back and restart the bridge \u00b7 advice: YES",
           "verify": "on the main server: grep -cE 're_[A-Za-z0-9_]{10,}' /opt/caspervpn/monitoring/alertmanager_resend_bridge.py /opt/caspervpn/wildcard-cert/wildcard-renew.sh -> 0 and 0; md5 = 831fe5a1 / 0f790c7c; systemctl is-active alertmanager-resend-bridge = active; one test alert mail logged",
-          "qaNote": "[QA 2026-10-23 f, scheduled 'Casper qa', unattended, 2026-10-23T05:1xZ] QA pre-ship check xd-2347 PASS: /root/reports/devops-xd2343/ alertmanager_resend_bridge.py md5 831fe5a1 + wildcard-renew.sh 0f790c7c = origin/development = origin/production; key pattern count 0 + 0 (control file with a made-up key: 1); py_compile OK, bash -n OK. After the ship QA re-checks the installed copies."
+          "qaNote": "[QA 2026-10-23 f, scheduled 'Casper qa', unattended, 2026-10-23T05:1xZ] QA pre-ship check xd-2347 PASS: /root/reports/devops-xd2343/ alertmanager_resend_bridge.py md5 831fe5a1 + wildcard-renew.sh 0f790c7c = origin/development = origin/production; key pattern count 0 + 0 (control file with a made-up key: 1); py_compile OK, bash -n OK. After the ship QA re-checks the installed copies.",
+          "evidence": "[DEVOPS run 2026-10-23 1124, scheduled, unattended, 2026-10-23T11:3xZ] CEO tap recorded."
         },
         {
           "met": false,
@@ -16443,7 +16446,8 @@
           "owner": "[DEVOPS]",
           "addedAt": "2026-10-23T05:45:00Z",
           "addedBy": "[DEVOPS] run 2026-10-23 0523",
-          "test": "READY TO SHIP \u2014 relays use their own DNS resolver, not Cloudflare/Google (xd-2248, Cloudflare exit phase 2) \u00b7 why: 6 of 12 servers still ask Cloudflare 1.1.1.1 and 10 ask Google 8.8.8.8 for their own lookups, and the hosting company resets that file at every boot \u00b7 what the ship does: install one small start-up job on the 12 production servers, one at a time (it points the server at its own resolver only after that resolver answers; if it does not answer, nothing changes); no reboot, no VPN restart \u00b7 tested on dev: Bangkok 23 Oct 05:29Z, and again after a reboot (05:30Z): VPN services all came back, names resolve, API answers 200 \u00b7 rollback: per server 'systemctl disable --now casper-resolv-local; cp -p /etc/resolv.conf.casper-orig /etc/resolv.conf' (seconds) \u00b7 advice: YES"
+          "test": "CEO YES 2026-10-23 11:14:21Z (dashboard tap d10, read from the tap store by DevOps - ceo_answers.py drops taps, xd-2395) | READY TO SHIP \u2014 relays use their own DNS resolver, not Cloudflare/Google (xd-2248, Cloudflare exit phase 2) \u00b7 why: 6 of 12 servers still ask Cloudflare 1.1.1.1 and 10 ask Google 8.8.8.8 for their own lookups, and the hosting company resets that file at every boot \u00b7 what the ship does: install one small start-up job on the 12 production servers, one at a time (it points the server at its own resolver only after that resolver answers; if it does not answer, nothing changes); no reboot, no VPN restart \u00b7 tested on dev: Bangkok 23 Oct 05:29Z, and again after a reboot (05:30Z): VPN services all came back, names resolve, API answers 200 \u00b7 rollback: per server 'systemctl disable --now casper-resolv-local; cp -p /etc/resolv.conf.casper-orig /etc/resolv.conf' (seconds) \u00b7 advice: YES",
+          "evidence": "[DEVOPS run 2026-10-23 1124, scheduled, unattended, 2026-10-23T11:3xZ] CEO tap recorded."
         },
         {
           "met": false,
@@ -16523,8 +16527,8 @@
           "owner": "[CEO]",
           "addedAt": "2026-10-23T10:40Z",
           "addedBy": "[DEVOPS run 2026-10-23 1023, scheduled, unattended]",
-          "test": "DECISION \u2014 the Tokyo server has been dead since 07:25 UTC today: may DevOps restart it? \u00b7 it answers nothing (no ping, no ports) while the other 10 servers answer; the hosting company still lists it as 'Active'; the app already hides it, so users who were on it were cut and new users are not sent there \u00b7 options: A (advised) DevOps restarts it through the hosting company's control API (scripts/oneprovider-reboot.sh tyo); if the hosting company refuses the restart, DevOps writes you the 2-minute support-ticket step \u00b7 B wait and let the hosting company notice \u00b7 after a restart DevOps turns it back on in the app only after a real VPN connection works, then QA checks (xd-2378)",
-          "evidence": "[DEVOPS run 2026-10-23 1023, scheduled, unattended, 2026-10-23T10:4xZ] MEASURED 10:24Z from the main server: ping 103.106.228.235 0/3; TCP 22/443/5002 closed; control LA 443 open. OneProvider /vm/list (read-only): VM 814198 'Tokyo - JP' domainstatus=Active (a dead VM can still show Active - skill trap 19 Oct). DB: IsActive=f AutoDisabled=t since 07:25:56Z (CTO 10:16Z)."
+          "test": "CEO YES 2026-10-23 11:08:31Z (dashboard tap d3, read from the tap store by DevOps - ceo_answers.py drops taps, xd-2395) | DECISION \u2014 the Tokyo server has been dead since 07:25 UTC today: may DevOps restart it? \u00b7 it answers nothing (no ping, no ports) while the other 10 servers answer; the hosting company still lists it as 'Active'; the app already hides it, so users who were on it were cut and new users are not sent there \u00b7 options: A (advised) DevOps restarts it through the hosting company's control API (scripts/oneprovider-reboot.sh tyo); if the hosting company refuses the restart, DevOps writes you the 2-minute support-ticket step \u00b7 B wait and let the hosting company notice \u00b7 after a restart DevOps turns it back on in the app only after a real VPN connection works, then QA checks (xd-2378) | DONE what DevOps can do: provider restart tried 11:26:55Z (POST /vm/reboot vm 814198) -> error code 42 (the provider's own agent cannot reach the VM). Ping 0/2 again 11:28Z. Next step needs a support ticket on the provider panel - ACTION row for the CEO below.",
+          "evidence": "[DEVOPS run 2026-10-23 1023, scheduled, unattended, 2026-10-23T10:4xZ] MEASURED 10:24Z from the main server: ping 103.106.228.235 0/3; TCP 22/443/5002 closed; control LA 443 open. OneProvider /vm/list (read-only): VM 814198 'Tokyo - JP' domainstatus=Active (a dead VM can still show Active - skill trap 19 Oct). DB: IsActive=f AutoDisabled=t since 07:25:56Z (CTO 10:16Z). || [DEVOPS run 2026-10-23 1124, scheduled, unattended, 2026-10-23T11:3xZ] CEO tap recorded. | DONE what DevOps can do: provider restart tried 11:26:55Z (POST /vm/reboot vm 814198) -> error code 42 (the provider's own agent cannot reach the VM). Ping 0/2 again 11:28Z. Next step needs a support ticket on the provider panel - ACTION row for the CEO below."
         },
         {
           "met": false,
@@ -16533,8 +16537,8 @@
           "owner": "[CEO]",
           "addedAt": "2026-10-23T10:40Z",
           "addedBy": "[DEVOPS run 2026-10-23 1023, scheduled, unattended]",
-          "test": "READY TO SHIP \u2014 close the servers' control door (port 5002) to the internet on 7 servers: Hong Kong, Mexico City, Miami, Montreal, Singapore, Sydney, Sao Paulo \u00b7 why: anyone on the internet can reach it today, the password for it travels unencrypted, and an open control door helps a censor spot a VPN server; Amsterdam, Duesseldorf and Los Angeles are already closed this way \u00b7 how: allow only our main server and the test server, block everyone else (Miami first, then the other 6) \u00b7 tested on dev: only partly - the test server Bangkok cannot be reached on that door even from our main server today (no firewall rule inside it; likely blocked by the hosting company), so the real check is on Miami first: our main server must still add and remove a VPN user there before the other 6 are done \u00b7 rollback: one command per server re-opens it (ufw allow 5002/tcp) \u00b7 advice: yes (xd-2379)",
-          "evidence": "[DEVOPS run 2026-10-23 1023, scheduled, unattended, 2026-10-23T10:4xZ] MEASURED 10:3xZ: from the Mac vantage (not allow-listed) http://<ip>:5002/health = 200 on 203.23.128.214, 147.78.1.27, 23.95.79.249, 45.154.204.206, 167.150.100.166, 103.75.119.122, 185.192.124.245; 000 on 51.158.147.210, 91.194.84.79, 208.87.243.205, 46.16.129.246. Miami ufw: '5002/tcp ALLOW Anywhere # Flask control API'. bkk-01: ss shows 0.0.0.0:5002 python3 listening, local curl 200, ufw inactive, iptables -P INPUT ACCEPT, no 5002 rule - yet from the main server curl times out (5 s) while TCP 443 opens. NOT PROVEN where it is dropped (tcpdump not run during a probe)."
+          "test": "CEO YES 2026-10-23 11:08:24Z (dashboard tap d2, read from the tap store by DevOps - ceo_answers.py drops taps, xd-2395) | READY TO SHIP \u2014 close the servers' control door (port 5002) to the internet on 7 servers: Hong Kong, Mexico City, Miami, Montreal, Singapore, Sydney, Sao Paulo \u00b7 why: anyone on the internet can reach it today, the password for it travels unencrypted, and an open control door helps a censor spot a VPN server; Amsterdam, Duesseldorf and Los Angeles are already closed this way \u00b7 how: allow only our main server and the test server, block everyone else (Miami first, then the other 6) \u00b7 tested on dev: only partly - the test server Bangkok cannot be reached on that door even from our main server today (no firewall rule inside it; likely blocked by the hosting company), so the real check is on Miami first: our main server must still add and remove a VPN user there before the other 6 are done \u00b7 rollback: one command per server re-opens it (ufw allow 5002/tcp) \u00b7 advice: yes (xd-2379) | PARTLY SHIPPED 2026-10-23 11:29Z - Miami canary only: ufw '5002/tcp ALLOW Anywhere' (v4+v6) replaced by allow from the main server and the dev server only. Proof: Mac vantage http://<mia>:5002/health 200 -> 000 (443 still 200); main server /health 200 -> 200 and the API's own token call /wireguard/peer-stats 200 -> 200; Miami flask log shows 5 calls from the main server 11:29-11:3xZ. Backup /root/ufw-user*.rules.bak-xd2379-20261023T1129Z; rollback 'ufw allow 5002/tcp'. The other 6 servers: next DevOps run, after Miami's log shows a real peer add from the main server.",
+          "evidence": "[DEVOPS run 2026-10-23 1023, scheduled, unattended, 2026-10-23T10:4xZ] MEASURED 10:3xZ: from the Mac vantage (not allow-listed) http://<ip>:5002/health = 200 on 203.23.128.214, 147.78.1.27, 23.95.79.249, 45.154.204.206, 167.150.100.166, 103.75.119.122, 185.192.124.245; 000 on 51.158.147.210, 91.194.84.79, 208.87.243.205, 46.16.129.246. Miami ufw: '5002/tcp ALLOW Anywhere # Flask control API'. bkk-01: ss shows 0.0.0.0:5002 python3 listening, local curl 200, ufw inactive, iptables -P INPUT ACCEPT, no 5002 rule - yet from the main server curl times out (5 s) while TCP 443 opens. NOT PROVEN where it is dropped (tcpdump not run during a probe). || [DEVOPS run 2026-10-23 1124, scheduled, unattended, 2026-10-23T11:3xZ] CEO tap recorded. | PARTLY SHIPPED 2026-10-23 11:29Z - Miami canary only: ufw '5002/tcp ALLOW Anywhere' (v4+v6) replaced by allow from the main server and the dev server only. Proof: Mac vantage http://<mia>:5002/health 200 -> 000 (443 still 200); main server /health 200 -> 200 and the API's own token call /wireguard/peer-stats 200 -> 200; Miami flask log shows 5 calls from the main server 11:29-11:3xZ. Backup /root/ufw-user*.rules.bak-xd2379-20261023T1129Z; rollback 'ufw allow 5002/tcp'. The other 6 servers: next DevOps run, after Miami's log shows a real peer add from the main server."
         },
         {
           "met": false,
@@ -16543,8 +16547,8 @@
           "owner": "[CEO]",
           "addedAt": "2026-10-23T10:40Z",
           "addedBy": "[DEVOPS run 2026-10-23 1023, scheduled, unattended]",
-          "test": "READY TO SHIP \u2014 remove one duplicate network rule on the Amsterdam server (small clean-up) \u00b7 why: the same traffic rule is listed twice; harmless today but it confuses checks and later changes \u00b7 how: delete one copy and save (iptables -t nat -D POSTROUTING -o wg1 -j MASQUERADE once, then iptables-save) \u00b7 tested on dev: not needed - it only removes an exact copy; the other copy keeps doing the same job \u00b7 rollback: add it back with one command \u00b7 advice: yes, low risk (xd-2303)",
-          "evidence": "[DEVOPS run 2026-10-23 1023, scheduled, unattended, 2026-10-23T10:4xZ] MEASURED 10:3xZ read-only: node 51.158.147.210 iptables -t nat -S POSTROUTING | grep -c -- '-o wg1 -j MASQUERADE' -> 2 (same as 22 Oct 23:2xZ)."
+          "test": "SHIPPED 2026-10-23 | CEO YES 2026-10-23 11:08:16Z (dashboard tap d1, read from the tap store by DevOps - ceo_answers.py drops taps, xd-2395) | READY TO SHIP \u2014 remove one duplicate network rule on the Amsterdam server (small clean-up) \u00b7 why: the same traffic rule is listed twice; harmless today but it confuses checks and later changes \u00b7 how: delete one copy and save (iptables -t nat -D POSTROUTING -o wg1 -j MASQUERADE once, then iptables-save) \u00b7 tested on dev: not needed - it only removes an exact copy; the other copy keeps doing the same job \u00b7 rollback: add it back with one command \u00b7 advice: yes, low risk (xd-2303) | SHIPPED 2026-10-23 11:29Z: Amsterdam nat POSTROUTING '-o wg1 -j MASQUERADE' count 2 -> 1 live and 2 -> 1 in /etc/iptables/rules.v4; wg-quick@wg1 active; backup /root/rules.v4.bak-xd2303-20261023T1129Z",
+          "evidence": "[DEVOPS run 2026-10-23 1023, scheduled, unattended, 2026-10-23T10:4xZ] MEASURED 10:3xZ read-only: node 51.158.147.210 iptables -t nat -S POSTROUTING | grep -c -- '-o wg1 -j MASQUERADE' -> 2 (same as 22 Oct 23:2xZ). || [DEVOPS run 2026-10-23 1124, scheduled, unattended, 2026-10-23T11:3xZ] CEO tap recorded. | SHIPPED 2026-10-23 11:29Z: Amsterdam nat POSTROUTING '-o wg1 -j MASQUERADE' count 2 -> 1 live and 2 -> 1 in /etc/iptables/rules.v4; wg-quick@wg1 active; backup /root/rules.v4.bak-xd2303-20261023T1129Z"
         },
         {
           "test": "SHIPPED 2026-10-23 \u00b7 CEO YES 2026-10-23 (live chat: 'I want the fix shipped right away by you') | DECISION ANSWERED 2026-10-23 \u2014 answers on the dashboard without Telegram: the CEO decided (live chat) that the 'CEO Decisions' buttons must record on our own pages, signed in (admin.caspervpn.com/decisions), no Telegram hop. Work: xd-2387, xd-2388, xd-2389. Until it ships: tap the button, then press START in the Telegram chat that opens (the tap is only sent when START is pressed); every department run records it within the hour.",
@@ -16558,6 +16562,16 @@
           "createdAt": "2026-10-23T10:44:53Z",
           "owner": "[CEO]",
           "evidence": "[CEO office live 2026-10-23 2026-10-23T11:12:32Z] + free-text NOTE per row (CEO 23 Oct: 'can I also reply with a note'): server accepts answer=note (<=600 chars, Telegram echo), page has a note box + 'Send note' on every CEO-card row, ceo_answers.py writes 'CEO NOTE <date>: ...' on the row (never closes it). Arming is one-time per browser; afterwards the normal dashboard URL works. || [CEO office live 2026-10-23 2026-10-23T10:56:53Z] SHIPPED: (1) main server: systemd casper-ceo-decide (python, 172.20.0.1:5011, private) stores answers in /opt/caspervpn/ceo-decisions/decisions.jsonl, token in secrets (0600), sends a Telegram 'Recorded' message; (2) nginx api.conf /ceo/ route (production d39dfcaac + development, nginx -t ok, reload 10:54Z; /ceo/health 200, /health still 200, wrong token -> 401, CORS for the dashboard origin OK); (3) dashboard 'CEO Decisions' tab: buttons POST to api.caspervpn.com/ceo/decide, show 'Recorded <answer> at <time>', answered rows marked on load; 'via Telegram' link kept as the second way; (4) tools/ceo_answers.py reads the server store too (next step this hour). Arming: the CEO opens ONE link sent by the CEO bot (token only in Telegram + his browser). QA: xd below. || [CEO office live 2026-10-23 2026-10-23T10:44:53Z] CEO: 'i still cant reply on db i am redirected to telegram'. Measured: ceo_answers.py dry run 10:5xZ + now = nothing pending, so today's clicks never reached Telegram (START not pressed / Telegram not signed in on that device). Handoffs xd-2387, xd-2388, xd-2389."
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "owner": "[CEO]",
+          "addedAt": "2026-10-23T11:35:00Z",
+          "addedBy": "[DEVOPS run 2026-10-23 1124, scheduled, unattended, 2026-10-23T11:3xZ]",
+          "test": "ACTION \u2014 open a support ticket for the dead Tokyo server (about 2 minutes) \u00b7 why: you said yes to the restart (row 413); DevOps tried it at 11:26 UTC and the hosting company's system answered that it cannot reach the server itself, so only their support team can restart it \u00b7 how: panel.op-net.com/support/new \u2192 server 'Tokyo - JP' (814198) \u2192 department 'OneCloud Support' \u2192 'Instance unreachable' \u2192 subject 'Hard reboot required \u2014 Tokyo #814198 / 103.106.228.235 \u2014 instance unreachable' \u2192 body: 'No ping and no TCP 22/443 since 07:25 UTC 23 Oct from several places; API reboot returns code 42' \u2192 tick ONLY 'You can reboot the server' (never the data-loss box) \u2192 Submit \u00b7 after: DevOps turns it back on in the app only after a real VPN connection works (xd-2378)",
+          "verify": "ssh_exec('ping -c3 -W2 103.106.228.235') answers; then VpnServers Tokyo IsActive=t only after a real handshake"
         }
       ],
       "progress": 0,
@@ -69188,14 +69202,18 @@
       "to": "[DEVOPS]",
       "title": "Handoff from QA: [P3] Amsterdam relay: duplicate '-o wg1 -j MASQUERADE' rule (x2) in nat POSTROUTING",
       "description": "QA 22 Oct 23:1xZ read-only iptables -t nat -S POSTROUTING on node-nl-am2: '-A POSTROUTING -o wg1 -j MASQUERADE' appears twice (LA and Duesseldorf x1). Harmless duplicate unless rules are removed one at a time; same tidy as row 255. Change needs the normal CEO YES path. Verify: ssh_exec_node('node-nl-am2', \"iptables -t nat -S POSTROUTING | grep -c -- '-o wg1 -j MASQUERADE'\") -> 1.",
-      "status": "in_progress",
+      "status": "completed",
       "priority": "P3",
       "createdAt": "2026-10-22T23:17:01Z",
       "createdDate": "2026-10-22",
-      "completedDate": null,
+      "completedDate": "2026-10-23",
       "notes": "[DEVOPS run 2026-10-23 1023, scheduled, unattended, 2026-10-23T10:4xZ] The 22 Oct run said a READY TO SHIP row was written; none was on the card (searched wg1/MASQUERADE). Re-measured 10:3xZ: count 2. Row written now: ceo-action-backlog #415. || [DEVOPS run 2026-10-22 2324, scheduled, unattended, 2026-10-22T23:40:00Z] MEASURED 23:2xZ read-only: node-nl-am2 iptables -t nat -S POSTROUTING | grep -c -- '-o wg1 -j MASQUERADE' -> 2 (confirmed). Fix = delete one copy (iptables -t nat -D POSTROUTING -o wg1 -j MASQUERADE once) + iptables-save; needs CEO YES -> READY TO SHIP row on the CEO card. || ",
       "blocker": "CEO YES on ceo-action-backlog row 415",
-      "updatedAt": "2026-10-23T10:40Z"
+      "updatedAt": "2026-10-23T10:40Z",
+      "completedAt": "2026-10-23",
+      "completedBy": "[DEVOPS]",
+      "resolution": "SHIPPED 23 Oct 11:29Z under CEO YES rows 415/390 (tap d1/d31): Amsterdam duplicate '-o wg1 -j MASQUERADE' count 2 -> 1 live and in rules.v4; wg1 active. Backup /root/rules.v4.bak-xd2303-20261023T1129Z.",
+      "resultingHandoff": "QA check created"
     },
     {
       "id": "xd-2304",
@@ -70368,9 +70386,9 @@
       "createdAt": "2026-10-23T09:27:59Z",
       "createdDate": "2026-10-23",
       "completedDate": null,
-      "notes": "[DEVOPS run 2026-10-23 1023, scheduled, unattended, 2026-10-23T10:4xZ] MEASURED 10:24Z: still dead (ping 0/3, TCP 22/443/5002 closed from the main server; control LA 443 open). OneProvider /vm/list read-only: VM 814198 Tokyo domainstatus=Active. A restart of a production server needs the CEO: DECISION row ceo-action-backlog #413 (advice A: restart via provider API). || [CTO run 2026-10-23 1014, scheduled, unattended, 2026-10-23T10:2xZ] STILL DOWN at 10:16Z (~2 h 50 min): ping 0/3 from the main server; TCP 22 and 443 closed from the main server and from the Mac VM; controls LA + Duesseldorf 443 open from both. DB VpnServers Tokyo IsActive=f AutoDisabled=t since 07:25:56Z (read-only SELECT). Not moved by [DEVOPS] yet; if the provider console is not ours to reach unattended, write a DECISION/ACTION row for the CEO (OneProvider ticket).",
+      "notes": "[DEVOPS run 2026-10-23 1124, scheduled, unattended, 2026-10-23T11:3xZ] CEO YES on row 413 (tap d3 11:08:31Z). POST /vm/reboot 814198 at 11:26:55Z -> code 42 (hypervisor cannot reach the VM). Ping 0/2 at 11:28Z. ACTION row for the CEO added. || [DEVOPS run 2026-10-23 1023, scheduled, unattended, 2026-10-23T10:4xZ] MEASURED 10:24Z: still dead (ping 0/3, TCP 22/443/5002 closed from the main server; control LA 443 open). OneProvider /vm/list read-only: VM 814198 Tokyo domainstatus=Active. A restart of a production server needs the CEO: DECISION row ceo-action-backlog #413 (advice A: restart via provider API). || [CTO run 2026-10-23 1014, scheduled, unattended, 2026-10-23T10:2xZ] STILL DOWN at 10:16Z (~2 h 50 min): ping 0/3 from the main server; TCP 22 and 443 closed from the main server and from the Mac VM; controls LA + Duesseldorf 443 open from both. DB VpnServers Tokyo IsActive=f AutoDisabled=t since 07:25:56Z (read-only SELECT). Not moved by [DEVOPS] yet; if the provider console is not ours to reach unattended, write a DECISION/ACTION row for the CEO (OneProvider ticket).",
       "updatedAt": "2026-10-23T10:40Z",
-      "blocker": "CEO answer on ceo-action-backlog row 413 (restart Tokyo via provider API: A/B)"
+      "blocker": "waits CEO: support ticket on the provider panel (ACTION row 'open a support ticket for the dead Tokyo server'); API restart returned code 42 at 11:26Z"
     },
     {
       "id": "xd-2379",
@@ -70378,13 +70396,13 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: [P1] Close relay control port 5002 to the internet on 7 relays (allow-list the main server only, as Amsterdam/Duesseldorf/LA already do)",
       "description": "Measured 23 Oct 09:3xZ from the CEO-Mac vantage (not allow-listed): Hong Kong, Mexico City, Miami, Montreal, Singapore, Sydney, Sao Paulo answer http://<relay>:5002/health 200; Miami ufw shows '5002/tcp ALLOW Anywhere # Flask control API'. Amsterdam/Duesseldorf/LA: closed from outside (iptables -s <main> ACCEPT then DROP). Risk: the control token crosses the internet in clear HTTP (server.py require_auth = Bearer compare), and the open port is a probe tell (cc-probe-resistance#0). Fleet firewall = READY TO SHIP row for the CEO with a one-relay canary (keep the main server + dev allow-list, prove the API still adds a peer from the main server, rollback = ufw allow 5002). Never print the token. Then [QA] re-runs the outside probe.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-10-23T09:27:59Z",
       "createdDate": "2026-10-23",
       "completedDate": null,
-      "notes": "[DEVOPS run 2026-10-23 1023, scheduled, unattended, 2026-10-23T10:4xZ] Re-measured 10:3xZ: 7 relays answer 5002 from outside (200), 4 closed (000). READY TO SHIP row ceo-action-backlog #414 (Miami canary first). Finding: bkk-01 5002 times out even from the main server with no in-VM firewall rule, so the Bangkok-first canary cannot prove 'main server still reaches 5002'.",
-      "blocker": "CEO YES on ceo-action-backlog row 414",
+      "notes": "[DEVOPS run 2026-10-23 1124, scheduled, unattended, 2026-10-23T11:3xZ] CEO YES row 414 (tap d2). Miami canary SHIPPED 11:29Z: outside 5002 200 -> 000, main server health 200 and token call 200 after, 443 unchanged. Rollback ufw allow 5002/tcp. || [DEVOPS run 2026-10-23 1023, scheduled, unattended, 2026-10-23T10:4xZ] Re-measured 10:3xZ: 7 relays answer 5002 from outside (200), 4 closed (000). READY TO SHIP row ceo-action-backlog #414 (Miami canary first). Finding: bkk-01 5002 times out even from the main server with no in-VM firewall rule, so the Bangkok-first canary cannot prove 'main server still reaches 5002'.",
+      "blocker": "next DevOps run: the other 6 relays after Miami shows a real peer add from the main server (canary shipped 11:29Z)",
       "updatedAt": "2026-10-23T10:40Z"
     },
     {
@@ -70489,7 +70507,9 @@
       "priority": "P1",
       "createdAt": "2026-10-23T10:39:25Z",
       "createdDate": "2026-10-23",
-      "completedDate": null
+      "completedDate": null,
+      "blocker": "depends on xd-2395 [CTO]: ceo_answers.py drops every dashboard tap today (rc!=0 when applied.json is missing); a 1-minute poller of it would record nothing. Build after that fix.",
+      "notes": "[DEVOPS run 2026-10-23 1124, scheduled, unattended, 2026-10-23T11:3xZ] Not started: measured the tap store has 52 taps 11:08-11:25Z and the script returns 0 (QA xd-2395). || "
     },
     {
       "id": "xd-2387",
@@ -70604,7 +70624,8 @@
       "priority": "P0",
       "createdAt": "2026-10-23T11:18:04Z",
       "createdDate": "2026-10-23",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[DEVOPS run 2026-10-23 1124, scheduled, unattended, 2026-10-23T11:3xZ] DevOps read the tap store read-only (52 lines, ids 1-52, 11:08:16-11:25:27Z) and wrote the 10 taps for DevOps rows by hand (413,414,415,390,385,397,398,401,403,405, tagged 'dashboard tap dN'); the rest (other departments' rows, CEO-card rows 7-116) still wait the fix. applied.json NOT created. || "
     },
     {
       "id": "xd-2396",
@@ -70627,6 +70648,30 @@
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-10-23T11:30:27Z",
+      "createdDate": "2026-10-23",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2398",
+      "from": "[DEVOPS]",
+      "to": "[QA]",
+      "title": "Handoff from DEVOPS: [P2] Check Amsterdam duplicate NAT rule removed (xd-2303, CEO rows 415/390)",
+      "description": "Verify: ssh_exec_node('node-nl-am2', \"iptables -t nat -S POSTROUTING | grep -c -- '-o wg1 -j MASQUERADE'; grep -c -- '-A POSTROUTING -o wg1 -j MASQUERADE' /etc/iptables/rules.v4\") -> 1 and 1; Amsterdam WireGuard users still get internet (wg1 handshakes recent). Then tick rows 415 and 390.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-23T11:30:43Z",
+      "createdDate": "2026-10-23",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2399",
+      "from": "[DEVOPS]",
+      "to": "[QA]",
+      "title": "Handoff from DEVOPS: [P1] Check Miami control port 5002 closed to the internet (xd-2379 canary, CEO row 414)",
+      "description": "From any non-allow-listed vantage: curl -m6 http://23.95.79.249:5002/health -> 000 (was 200). From the main server: curl http://23.95.79.249:5002/health -> 200. Miami 443 still 200; a WireGuard connect to Miami still works (the API adds the peer over 5002). Do not tick row 414 until the other 6 relays are done.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-23T11:30:43Z",
       "createdDate": "2026-10-23",
       "completedDate": null
     }
