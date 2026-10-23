@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-23T00:55:57Z",
+  "lastUpdated": "2026-10-23T01:06:37Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 69,
@@ -16296,6 +16296,15 @@
           "addedAt": "2026-10-23T00:45:00Z",
           "test": "DECISION \u2014 send one test error to our error tracker (GlitchTip) to prove it still records app errors (xd-2301, xd-2311) \u00b7 why: no app error has been stored since 19 Oct; the app code does send errors (iOS checked), but we have not proven the tracker stores them \u00b7 what DevOps does: from the main server, send one event marked 'devops test' to project 1, check it appears, then delete it; no app, user or server change \u00b7 options: A = yes, do it \u00b7 B = no, wait for a real app error \u00b7 advice: A (5 minutes, no user impact).",
           "verify": "GlitchTip project 1 shows the 'devops test' event within 1 minute of sending; glitchtip-worker log shows 1 new ingest_event"
+        },
+        {
+          "test": "DECISION \u2014 4 fixes waiting on a test-system check that no unattended run can ever finish \u00b7 each needs either a signed-in test account on the test system (dev) or 2 dev servers stopped on purpose, and unattended runs may do neither \u00b7 (1) rows 333 + 389 delete app-screen, network-check and Apple Ads records with the account (xd-2102, xd-2298): the 6-month clean-up part runs on dev; the 'delete with the account' part needs a throwaway dev account \u00b7 (2) row 335 recommended servers stop showing '0 ms' (xd-2144): needs a dev sign-in (the call answers 401 without one) \u00b7 (3) row 350 dead servers hidden automatically (xd-2193, P0): QA saw dev hide a dead server and show it again; left only 'the alarm repeats at most once per 6 h', which needs most dev servers down at once \u00b7 (4) row 378 install funnel (xd-2264): QA's dev check passed 22 Oct; it waits only your YES on row 378 (QA then checks on the live admin, your 22 Oct rule) \u00b7 options: A = one 15-minute live chat with the backend: create the test admin you approved on 18 Oct (row 291) + one throwaway dev account, stop 2 dev servers for 5 minutes; QA finishes every check; then the fixes ship \u00b7 B = ship 335 + 350 now and QA checks them on the live server read-only (like row 393); 333 + 389 wait for A because they delete data \u00b7 C = keep waiting \u00b7 advice: A for 333 + 389 (deleting data deserves a real test), B for 335 + 350 (display and alarm only, tests pass with controls, rollback = previous image in ~3 min); and YES on row 378 \u00b7 reply e.g. 'A for 333, B for 335 350, yes 378'",
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "createdBy": "backend-run",
+          "createdAt": "2026-10-23T01:06:32Z",
+          "owner": "[CEO]"
         }
       ],
       "progress": 0,
@@ -65819,9 +65828,10 @@
       "notes": [
         "[BACKEND run 2026-10-22 0603, scheduled, unattended, 2026-10-22T06:31Z] Evidence for QA xd-2170: filtered unit tests on the development clone c1caea040 (main server /root/reports/be1022/t.log): AppleBillingGraceTests 4/4, ServerPingAnswerTests 4/4, UserTelemetryRetentionTests 4/4 passed, 12/12, RC=0 (full suite 451/451 on 20 Oct). Dev purge: dev purge PROVEN 22 Oct: inserted on the dev DB 06:06Z one FunnelEvents + one NetworkProbes row dated 200 days ago and one of each dated 10 days ago (AppVersion 'be1022-ret'); dev api log 06:30:17Z 'DataPurge Phase 5 (xd-2102): Purged 1 app-screen events and 1 network checks older than 180d' (the 3 earlier passes 12:30/18:30/00:30 purged 0/0); after: the 200-day rows are gone, the 10-day CONTROL rows remain (they stay on dev as test rows).",
         "[BACKEND run 2026-10-17 1445, scheduled, unattended, 2026-10-17T15:34:21Z] MEASURED + FIXED on development 7f20eff18: FunnelEvents (UserId nullable, no FK) and NetworkProbes had no cleanup and no delete with the account (UserService.DeleteUserAsync = soft delete, AdminDeleteUserAsync = Users.Remove; neither touched them). Now: UserTelemetryRetention.PurgeOlderThanAsync (DataPurgeService Phase 5, 180 d, env DataPurge__TelemetryRetentionDays) + DeleteForUserAsync in both delete paths (own rows + anonymous rows of the user's installs; other accounts on the same install kept). Tests 4 new, 424/424, control 1 FAIL. Dev DLL 4/1/1 vs production 0/0/0, dev Phase 5 line 15:13:15Z. Production today (read-only 14:5xZ): FunnelEvents 175 (oldest 2026-10-04 22:03Z), NetworkProbes 43 (oldest 2026-10-04 22:03Z). QA xd-2170; CEO card row 333.",
-        "[CEO office 17 Oct ~22:3xZ blocker sweep: the CEO answered; old blocker kept in notes] old blocker: CEO YES 17 Oct on row 333 - waits only QA xd-2170 (dev check), then BACKEND ships (cherry-pick 7f20eff18 + deploy_api.sh); LEGAL publishes privacy 1.9 the same day."
+        "[CEO office 17 Oct ~22:3xZ blocker sweep: the CEO answered; old blocker kept in notes] old blocker: CEO YES 17 Oct on row 333 - waits only QA xd-2170 (dev check), then BACKEND ships (cherry-pick 7f20eff18 + deploy_api.sh); LEGAL publishes privacy 1.9 the same day.",
+        "[BACKEND run 2026-10-23 0104, scheduled, unattended, 2026-10-23T01:06:32Z] old blocker: Waits QA xd-2170 (dev check; leg 1 evidence 22 Oct on xd-2170, leg 2 needs a signed-in dev account = xd-2199), then BACKEND ships under CEO YES row 333."
       ],
-      "blocker": "Waits QA xd-2170 (dev check; leg 1 evidence 22 Oct on xd-2170, leg 2 needs a signed-in dev account = xd-2199), then BACKEND ships under CEO YES row 333."
+      "blocker": "Leg 1 measured on dev; leg 2 needs a throwaway signed-in dev account = live session. Waits the CEO's answer on DECISION row 395 (advice A: 15-min live chat), then ship row 333 + row 389 together."
     },
     {
       "id": "xd-2103",
@@ -66518,9 +66528,10 @@
         "[BACKEND run 2026-10-22 0603, scheduled, unattended, 2026-10-22T06:31Z] Evidence for QA xd-2181: ServerPingAnswerTests 4/4 passed on development c1caea040 (/root/reports/be1022/t.log).",
         "[BACKEND live 2026-10-17 (finalize pass), 2026-10-17T19:02:06Z] (a) nearest-first ordering and (c) load were already live (measured, see xd-2181); (b) fixed on development 9d69ca543 - recommendations answer the distance estimate instead of 0. READY TO SHIP row 335.",
         "[BACKEND run 2026-10-17 1445, scheduled, unattended, 2026-10-17T15:34:21Z] MEASURED read-only 14:5xZ: all 11 active VpnServers still Ping=0, Load=0; CurrentConnections 0-2 of MaxConnections 500-1500, so Load = Current/Max*100 = 0 is the correct value today (not a bug), Ping is filled by nothing. CAUTION for (b): VpnServerDto.Ping is a non-optional int (DTOs/ServerDTOs.cs:26); sending null may break decoding in app versions already on phones - fill Ping from the prober (xd-2082 L1) or check the 4.2/4.3.1 decoders with [IOS] first. Not built this run (the run shipped 8 CEO YES rows).",
-        "[CEO office 17 Oct ~22:3xZ blocker sweep: the CEO answered; old blocker kept in notes] old blocker: CEO YES 17 Oct on row 335 - waits only QA xd-2181 (dev check), then BACKEND ships (cherry-pick 9d69ca543 + deploy_api.sh)."
+        "[CEO office 17 Oct ~22:3xZ blocker sweep: the CEO answered; old blocker kept in notes] old blocker: CEO YES 17 Oct on row 335 - waits only QA xd-2181 (dev check), then BACKEND ships (cherry-pick 9d69ca543 + deploy_api.sh).",
+        "[BACKEND run 2026-10-23 0104, scheduled, unattended, 2026-10-23T01:06:32Z] old blocker: Waits QA xd-2181 (dev check; the signed-in leg needs a dev token = xd-2199 or the CEO's dev session), then BACKEND ships under CEO YES row 335."
       ],
-      "blocker": "Waits QA xd-2181 (dev check; the signed-in leg needs a dev token = xd-2199 or the CEO's dev session), then BACKEND ships under CEO YES row 335."
+      "blocker": "Signed-in leg needs a dev sign-in token. Waits the CEO's answer on DECISION row 395 (advice B: ship row 335 now, QA live read-only)."
     },
     {
       "id": "xd-2145",
@@ -67059,8 +67070,11 @@
       "createdAt": "2026-10-18T18:15:26Z",
       "createdDate": "2026-10-18",
       "completedDate": null,
-      "notes": "[BACKEND run 2026-10-19 1442, scheduled, unattended, 2026-10-19T15:33:38Z] Fixed on development 6cdd4115f (once per 6 h + plain text naming the failing servers; see QA xd-2220). The 'no alarm for the public outage' part is an outside check: DEVOPS xd-2195 (open).",
-      "blocker": "Waits QA xd-2220 (dev check); outside-uptime part = DEVOPS xd-2195."
+      "notes": [
+        "[BACKEND run 2026-10-19 1442, scheduled, unattended, 2026-10-19T15:33:38Z] Fixed on development 6cdd4115f (once per 6 h + plain text naming the failing servers; see QA xd-2220). The 'no alarm for the public outage' part is an outside check: DEVOPS xd-2195 (open).",
+        "[BACKEND run 2026-10-23 0104, scheduled, unattended, 2026-10-23T01:06:32Z] old blocker: Waits QA xd-2220 (dev check); outside-uptime part = DEVOPS xd-2195."
+      ],
+      "blocker": "Ships with xd-2193 / row 350. Waits the CEO's answer on DECISION row 395 (advice B). Outside-uptime part = DEVOPS xd-2195."
     },
     {
       "id": "xd-2191",
@@ -67107,8 +67121,11 @@
       "createdAt": "2026-10-18T18:24:59Z",
       "createdDate": "2026-10-18",
       "completedDate": null,
-      "notes": "READY TO SHIP row 350 on the CEO card. [BACKEND run 2026-10-19 1442, scheduled, unattended, 2026-10-19T15:33:38Z] Fixed on development 6cdd4115f with xd-2190 (see QA xd-2220). The 'temporarily offline' flag the CEO asked for already exists: AutoDisabled (set only by the watchdog, never a human pull) - kept, not a new column. Waits QA xd-2220.",
-      "blocker": "Waits QA xd-2220 (dev check; vantage leg needs a real multi-node failure), then BACKEND ships after a CEO YES on row 350."
+      "notes": [
+        "READY TO SHIP row 350 on the CEO card. [BACKEND run 2026-10-19 1442, scheduled, unattended, 2026-10-19T15:33:38Z] Fixed on development 6cdd4115f with xd-2190 (see QA xd-2220). The 'temporarily offline' flag the CEO asked for already exists: AutoDisabled (set only by the watchdog, never a human pull) - kept, not a new column. Waits QA xd-2220.",
+        "[BACKEND run 2026-10-23 0104, scheduled, unattended, 2026-10-23T01:06:32Z] old blocker: Waits QA xd-2220 (dev check; vantage leg needs a real multi-node failure), then BACKEND ships after a CEO YES on row 350."
+      ],
+      "blocker": "Dev check leg 1 measured by QA (hide + show again on dev). Leg 2 cannot happen unattended. Waits the CEO's answer on DECISION row 395 (advice B: ship row 350 now, QA live read-only)."
     },
     {
       "id": "xd-2194",
@@ -68131,9 +68148,12 @@
       "createdAt": "2026-10-22T19:43:39Z",
       "createdDate": "2026-10-22",
       "completedDate": null,
-      "notes": "READY TO SHIP row 378 on ceo-action-backlog. || [BACKEND run 2026-10-22 2005, scheduled, unattended, 2026-10-22T21:19:15Z] BUILT on development 3fff78fc7 (pushed 21:05Z, dev API live 21:13Z): (1) intro_viewed added to the install-event allow-list; (2) new GET /api/admin/ops/install-funnel?days=30 (Admin only): per day and per step (app_opened, intro_viewed, signup_screen_viewed, signup_started, signup_failed, signup_completed) rows + distinct installs, signup_failed split by error code, window totals; anonymous only. Proof: full suite 454/454; InstallFunnelDailyTests 3/3 + InstallAttributionTests 12/12; CONTROL without the allow-list change 2 of 3 new tests FAIL. Live dev: POST /api/funnel/install-events intro_viewed -> {success:true} (before: 'Unknown event', IOS measured), app_opened -> true (control), intro_viewed_x -> 'Unknown event' (control); dev DB rows intro_viewed + app_opened for install xd2264-qa-1792703599, UserId null, build 76. GET install-funnel unauthenticated -> 401 (was 404 before the deploy). NOT PROVEN: the signed-in admin answer on dev (needs a dev admin = xd-2199). skill: backend SKILL.md (FunnelEvents trap xd-1688: UserId nullable, InstallId kept on linked rows) -> counts all rows with an install id, linked or not. || [BACKEND run 2026-10-22 2105, scheduled, unattended, 2026-10-22T21:14:14Z] Not worked by this run: another backend session already committed it on development 3fff78fc7 at 20:57Z (intro_viewed + GET /api/admin/ops/install-funnel, tests 454/454). Dev not redeployed yet at 21:1xZ (dev POST intro_viewed -> 'Unknown event', admin route 404). That session owns the QA handoff.",
+      "notes": [
+        "READY TO SHIP row 378 on ceo-action-backlog. || [BACKEND run 2026-10-22 2005, scheduled, unattended, 2026-10-22T21:19:15Z] BUILT on development 3fff78fc7 (pushed 21:05Z, dev API live 21:13Z): (1) intro_viewed added to the install-event allow-list; (2) new GET /api/admin/ops/install-funnel?days=30 (Admin only): per day and per step (app_opened, intro_viewed, signup_screen_viewed, signup_started, signup_failed, signup_completed) rows + distinct installs, signup_failed split by error code, window totals; anonymous only. Proof: full suite 454/454; InstallFunnelDailyTests 3/3 + InstallAttributionTests 12/12; CONTROL without the allow-list change 2 of 3 new tests FAIL. Live dev: POST /api/funnel/install-events intro_viewed -> {success:true} (before: 'Unknown event', IOS measured), app_opened -> true (control), intro_viewed_x -> 'Unknown event' (control); dev DB rows intro_viewed + app_opened for install xd2264-qa-1792703599, UserId null, build 76. GET install-funnel unauthenticated -> 401 (was 404 before the deploy). NOT PROVEN: the signed-in admin answer on dev (needs a dev admin = xd-2199). skill: backend SKILL.md (FunnelEvents trap xd-1688: UserId nullable, InstallId kept on linked rows) -> counts all rows with an install id, linked or not. || [BACKEND run 2026-10-22 2105, scheduled, unattended, 2026-10-22T21:14:14Z] Not worked by this run: another backend session already committed it on development 3fff78fc7 at 20:57Z (intro_viewed + GET /api/admin/ops/install-funnel, tests 454/454). Dev not redeployed yet at 21:1xZ (dev POST intro_viewed -> 'Unknown event', admin route 404). That session owns the QA handoff.",
+        "[BACKEND run 2026-10-23 0104, scheduled, unattended, 2026-10-23T01:06:32Z] old blocker: Waits QA xd-2274 (dev check; the admin leg needs a dev admin = xd-2199), then the CEO YES on the READY TO SHIP row; admin card = xd-2275, privacy text = xd-2276."
+      ],
       "updatedAt": "2026-10-22T21:14:14Z",
-      "blocker": "Waits QA xd-2274 (dev check; the admin leg needs a dev admin = xd-2199), then the CEO YES on the READY TO SHIP row; admin card = xd-2275, privacy text = xd-2276."
+      "blocker": "QA xd-2274 leg 1 PASS on dev 22 Oct 22:1xZ. Waits only the CEO YES on row 378 (asked again in DECISION row 395); then BACKEND ships and QA checks on the live admin."
     },
     {
       "id": "xd-2265",
