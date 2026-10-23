@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-23T02:19:55Z",
+  "lastUpdated": "2026-10-23T02:32:22Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 69,
@@ -16157,7 +16157,7 @@
           "owner": "[CEO]",
           "addedAt": "2026-10-22T21:55:00Z",
           "addedBy": "[CEO BOT] run 2026-10-22 21:49Z",
-          "test": "ACTION \u2014 clear old Cowork sessions in the Claude app (about 2 minutes) \u00b7 why: the Mac's Cowork workspace disk is 93% full (666 MB free, measured 22 Oct 21:49Z with df /sessions); at 99-100% earlier today runs stopped working \u00b7 what you do: in the Claude desktop app, delete old finished Cowork sessions you no longer need \u00b7 board advice: do it tonight \u00b7 re-measured 23 Oct 00:04Z (backend run): 94% used, 648 MB free - still needed",
+          "test": "ACTION \u2014 clear old Cowork sessions in the Claude app (about 2 minutes) \u00b7 why: the Mac's Cowork workspace disk is 93% full (666 MB free, measured 22 Oct 21:49Z with df /sessions); at 99-100% earlier today runs stopped working \u00b7 what you do: in the Claude desktop app, delete old finished Cowork sessions you no longer need \u00b7 board advice: do it tonight \u00b7 re-measured 23 Oct 00:04Z (backend run): 94% used, 648 MB free - still needed | [DEVOPS 23 Oct 02:23Z] still open: df /sessions 94% used, 568-627 MB free.",
           "qaNote": "[QA 2026-10-23 a, scheduled 'Casper qa', unattended, 2026-10-23T00:1xZ] still open: Mac /sessions 94% (637 MB free) at 00:0xZ 23 Oct - not duplicated as a new row.",
           "evidence": " [CTO run 2026-10-23 0014, scheduled, unattended, 2026-10-23T00:16:49Z] still needed: df /sessions 95% used, 554 MB free (843 session folders since 6 Oct)."
         },
@@ -16325,6 +16325,24 @@
           "addedBy": "[CTO] run 2026-10-23 0114",
           "test": "DECISION \u2014 keep one login server for IKEv2 (RADIUS) instead of building a backup \u00b7 what: one task asks for a second login server for the IKEv2 road \u00b7 measured 13 Oct: IKEv2 is used by 1 account (306 sessions in 7 days, mostly our test account) vs 23 accounts on WireGuard; the login server sits on the main server, so if the main server is down the app cannot sign in anyway and a second login server would not help \u00b7 options: (A) accept one login server until IKEv2 has 50+ real accounts a week or the main server gets a twin - DevOps rewords the task; (B) build a second login server now (about a day of work + a small server bill) \u00b7 advice: A \u00b7 say 'A' or 'B' in any chat (xd-2009, radius-finalize row 6)",
           "verify": "CEO answer recorded here as CEO YES <date> (<where>): <words>; then DEVOPS rewords radius-finalize row 6 and QA checks it"
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "owner": "[DEVOPS]",
+          "addedAt": "2026-10-23T02:55:00Z",
+          "addedBy": "[DEVOPS] run 2026-10-23 0223",
+          "test": "READY TO SHIP \u2014 stop the 8 servers from logging any packet sent to our app ports over UDP too (443, 1194, 1195), and delete the ones already logged \u00b7 why: LEGAL verdict B on xd-2324 (xd-2325): after row 326 the firewall still logs 4-114 'UDP port 443' lines per server; our no-log promise covers every app port \u00b7 what the ship does, one server at a time (Montreal first): (1) `ufw_nolog_userports.sh apply-rule` from development f92f73e4 (infrastructure/scripts/ufw_nolog_userports.sh, md5 4f3a471c): keeps the row-326 TCP rule and adds a silent drop for UDP 443 + 1195 (nothing listens there) and for broken UDP 1194 packets (OpenVPN keeps working: real 1194 traffic is allowed before the drop); backup .bak-xd2137-nolog-<ts>, ufw reload, rolls itself back if a rule is missing; (2) `purge-logs`: deletes only app-port firewall lines from kern.log*, ufw.log*, syslog* (all rotations) - the count is per protocol, so scanner knocks on closed TCP 1194 (20-286 per server, all SYN) stay as the control; (3) `journal-cap 7` as row 326 \u00b7 tested on dev: Bangkok netns 23 Oct 02:4xZ, 5 packets each to UDP 443/1195/1194/9999: logged 15 -> 5 (only the 9999 control), dropped 10, UDP 1194 accepted 5/5 before and after, v6 rules load (ip6tables-restore --test ok), host rules untouched (0), netns + files removed; fixture test: apply twice = idempotent, purge 12 -> 0 lines, control lines kept \u00b7 counts measured 23 Oct 02:3xZ (counts only, L6): UDP 1194 = 0 on all 8, UDP 1195 = 0, UDP 443 MTL 20 \u00b7 HK 54 \u00b7 MX 4 \u00b7 MIA 30 \u00b7 SGP 38 \u00b7 SYD 96 \u00b7 SAO 24 \u00b7 TYO 114 \u00b7 verify per server after 24 h: `ufw_nolog_userports.sh check` -> rule_live udp v4=2 v6=2 and userport_lines_files=0, with the DPT=22 control > 0 \u00b7 rollback: copy the .bak files back over /etc/ufw/before.rules + before6.rules and `ufw reload` (the log purge cannot be undone - that is the point) \u00b7 advice: YES, same path as row 326"
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "owner": "[DEVOPS]",
+          "addedAt": "2026-10-23T02:55:00Z",
+          "addedBy": "[DEVOPS] run 2026-10-23 0223",
+          "test": "READY TO SHIP \u2014 take the production database password out of a script that is stored in our code history \u00b7 why: measured 23 Oct 02:3xZ: the data-cap watcher (infrastructure/scripts/datacap_enforcement_monitor.sh line 26) holds the live database password as plain text on the production AND development branches, so anyone with code access has it; the password change you already approved (row 118, xd-1024) is useless while the script would need the new one written into git again \u00b7 what the ship does: copy the development version (ee949628, md5 837ec6df) over /opt/caspervpn/datacap_enforcement_monitor.sh (backup .bak-xd1024-<ts>), run it once, then cherry-pick ee949628 to production; the script now reads the one DB_PASSWORD line from the server's .env (it never loads the whole file - trap xd-1996) and writes an ERROR line if it is missing \u00b7 tested on dev: bash -n ok; fixture .env with a quoted value -> read correctly; the value is no longer in the file \u00b7 verify: the next 15-minute run adds its normal line to /var/log/datacap-enforcement-monitor.log with no ERROR, and `git show origin/production:infrastructure/scripts/datacap_enforcement_monitor.sh | grep -c PGPW=\\\"` = 0 \u00b7 rollback: copy the .bak back \u00b7 then: xd-1024 rotates the password in .env + database + the other holders in one quiet window (list of holders on xd-1024, names only) \u00b7 advice: YES"
         }
       ],
       "progress": 0,
@@ -43435,7 +43453,7 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: P1: change the production database password \u2014 it is a single dictionary word and is in git history",
       "description": "[DEVOPS run 2026-10-11 i, scheduled, unattended, 2026-10-11T23:26:01Z] TRIAGE (xd-1813): (d) ACTIVE, dueBy 18 Oct. Missed the 10 Oct window (no run did it). Next step: a devops run that fires inside 23:00-01:00Z first lists every holder of the DB password without printing it (grep -lF on main server .env, FreeRADIUS sql, exporters, backup scripts, dev host), then rotates all in one step and proves a real IKEv2 login. CEO YES of 5 Oct still stands. || [CEO YES 5 Oct 01:1xZ - quiet window 02:00-04:00 Beirut, all consumers in one step.] [2026-10-05T14:41:24Z eng run 1005b] xd-978 done this run (3 accounts rotated 14:12Z). Order unchanged: xd-1024 next (02:00-04:00 Beirut window \u2014 the 03:19 Beirut apps run is the only firing inside it; it takes postgres + API .env + FreeRADIUS + exporters + backup in one step, then a real IKEv2 login); xd-896 dual-accept only with the 4.4 app. \u00b7 [2026-10-05T08:04Z eng run 1005a] [DEVOPS/SECURITY] CEO YES row 118 read this run; not executed this run (the run's time went to xd-1356/1338, xd-1357, xd-1359, xd-1353). Order kept: node sudo password (xd-978) first \u2014 measure which nodes still use the caspervpn user + password and that root key access works on each BEFORE changing it; relay PSK (xd-896) only as dual-accept PREV+NEW and the client half rides 4.4; DB password (xd-1024) in the 02:00-04:00 Beirut window with postgres + API env + FreeRADIUS + exporters + backup switched together and a real IKEv2 login proven after. Next engineering run (17:57 Beirut) takes xd-978. \u00b7 [CEO 5 Oct 01:1xZ] CEO YES: 'yes to all four' rotations. DevOps executes under /run/casper-deploy.lock with a rollback: relay PSK + node sudo + dev test-account first; the production DB password last, in a quiet window (02:00-04:00 Beirut), every consumer (.env of api/website/admin/exporters/backup) switched in one step, health checks after, old password revoked only after 24 h clean. Never print a secret anywhere but /opt/caspervpn/secrets and the brain's .env. [ENGINEERING run 2026-10-04 c (fired 22:48Z = 01:48 Beirut 5 Oct, Cowork, Mac folder attached)] (d) ACTIVE again, dueBy 2026-10-11 \u2014 production database password: a live-server/production change \u2014 needs a CEO yes. Next step: the CEO answers DECISION row 'secret rotations' on the CEO card (added tonight); the next engineering run then rotates under the session lock, one secret per run, value recorded only in the credentials note. No answer by 11 Oct \u2192 deferred with that reason.\n\n[CEO office 2026-09-30] dueBy set by the 7-day rule (xdPolicy: createdAt + 7 d; already past \u2192 7 Oct). MEASURED 2026-09-25: the casper_prod database password is ONE ordinary English word (it appears 9 times in the DevOps skill as normal prose). It was also written into that skill as the password itself (now removed from the current text) and so remains in git history. Change it to a long random value and record it ONLY in memory/context/credentials.md. \u26a0\ufe0f Plan it, do not rush it: the DevOps skill itself records that a past casper_prod password change reached postgres and the API but NOT FreeRADIUS, which broke every IKEv2 login fleet-wide. The change must update, together: postgres, the API environment, FreeRADIUS on the brain, and every script that reads it \u2014 then prove a real IKEv2 login on a node.\n\n[2026-09-27 DEVOPS] CEO 2026-09-26: the CEO is handling the rotation.\n\n[2026-09-27b DEVOPS] Before rotating: do the postgres-exporter/consumer-check spin-off first (the 2026-07-14 rotation left monitoring broken for 6 days).",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-09-25T01:50:24Z",
       "createdDate": "2026-09-25",
@@ -43453,8 +43471,8 @@
       "deferReason": "[CTO live chat 2026-10-07T21:40:42Z - CEO URGENT 6 (xd-1475/xd-1476): close with proof, merge, or plan a month] PLANNED for 2026-10-10: CEO YES 5 Oct. Plan: the 02:00-04:00 Beirut window on 10 Oct - postgres + API .env + FreeRADIUS + exporters + backup in one step, then a real IKEv2 login; together with xd-1384.",
       "updatedAt": "2026-10-07T21:40:42Z",
       "previousResolution": "DEFERRED to 2026-10-10 - CEO YES 5 Oct. Plan: the 02:00-04:00 Beirut window on 10 Oct - postgres + API .env + FreeRADIUS + exporters + backup in one step, then a real IKEv2 login; together with xd-1384.",
-      "blocker": "No outside blocker. DevOps does it in a quiet window 02:00-04:00Z with rollback kept 24 h (CEO YES row 118). Needs an attended or quiet-hours run; not done 22 Oct 2124 (Cowork disk full).",
-      "notes": "[DEVOPS run 2026-10-22 2124 b, scheduled, unattended, 2026-10-22T21:4xZ] CORRECTION: the 2124 push auto-closed this row by mistake (reconcile reads the old DEFERRED text in resolution as done). Reopened; old resolution moved here: [DEVOPS run 2026-10-11 j, scheduled, unattended, 2026-10-11T23:43:41Z] RE-DEFERRED to 18 Oct (window 10 Oct 02:00-04:00 Beirut passed unused; measured tonight: 3+ other sessions were changing the main server at 23:1x-23:3xZ - backend build, admin deploy, devops run i - so a password change across the database, API, FreeRADIUS and exporters cannot be done safely in a shared night). CEO YES 5 Oct still stands. Unblocks: one quiet 02:00-04:00 Beirut window with the factory paused for 30 min (CEO flips factory-status), xd-1024 and xd-1384 together. || [DEVOPS run 2026-10-22 2124, scheduled, unattended, 2026-10-22T21:3xZ] un-deferred: production database password - quiet window 02-04Z, rollback kept 24 h."
+      "blocker": "(1) CEO YES on row 398 (script out of git) first; (2) then one quiet 02:00-04:00Z window with the factory paused 30 min (CEO flips memory/context/factory-status.md) - rotation of .env + database + FreeRADIUS sql + 4 containers in one step, rollback 24 h (CEO YES row 118)",
+      "notes": "[DEVOPS run 2026-10-23 0223, scheduled, unattended, 2026-10-23T02:5xZ] MEASURED 02:3xZ on the main server (value never printed to the board; grep -lF with the .env value): the live DB password (DB_PASSWORD, 48 chars) is held by: .env + 6 .env.bak* copies in /root/Casper/Casper-Code; /etc/freeradius/3.0/mods-enabled/sql; /opt/caspervpn/datacap_enforcement_monitor.sh (+2 .bak); containers caspervpn-api, caspervpn-postgres, caspervpn-scheduler, postgres-exporter (env). FINDING: infrastructure/scripts/datacap_enforcement_monitor.sh line 26 holds it as a literal on origin/production AND origin/development (also /opt/caspervpn/reality-repo checkout) = the CURRENT password is in git. Dev fix ee949628 (reads DB_PASSWORD from .env, one key) -> READY TO SHIP row 398. CORRECTION / own mistake: while reading that file this run printed line 26 into its own Cowork session output once (not on the board, not in the vault, not in git) - one more reason to rotate. Rotation itself still needs a quiet 02:00-04:00Z window: this hour 4 other runs wrote the board (growth 02:00, backend 02:04, CTO 02:14, this run). skill: security + owner (departments/security/skill/external/) -> grep -lF holder inventory, no value printed. || [DEVOPS run 2026-10-22 2124 b, scheduled, unattended, 2026-10-22T21:4xZ] CORRECTION: the 2124 push auto-closed this row by mistake (reconcile reads the old DEFERRED text in resolution as done). Reopened; old resolution moved here: [DEVOPS run 2026-10-11 j, scheduled, unattended, 2026-10-11T23:43:41Z] RE-DEFERRED to 18 Oct (window 10 Oct 02:00-04:00 Beirut passed unused; measured tonight: 3+ other sessions were changing the main server at 23:1x-23:3xZ - backend build, admin deploy, devops run i - so a password change across the database, API, FreeRADIUS and exporters cannot be done safely in a shared night). CEO YES 5 Oct still stands. Unblocks: one quiet 02:00-04:00 Beirut window with the factory paused for 30 min (CEO flips factory-status), xd-1024 and xd-1384 together. || [DEVOPS run 2026-10-22 2124, scheduled, unattended, 2026-10-22T21:3xZ] un-deferred: production database password - quiet window 02-04Z, rollback kept 24 h."
     },
     {
       "id": "xd-1025",
@@ -66444,8 +66462,8 @@
       "createdAt": "2026-10-14T01:13:10Z",
       "createdDate": "2026-10-14",
       "completedDate": null,
-      "blocker": "waits xd-2324 [LEGAL] ruling on UDP 443 lines (A reword / B add UDP drop) - then DevOps acts the same day",
-      "notes": "[DEVOPS run 2026-10-23 0123, scheduled, unattended, 2026-10-23T01:4xZ] L4 24h read DONE 01:2xZ (counts only): TCP rule works on 8/8 (rule 1/1, DROP counters 1,729-33,776, journald 7day), but UDP 443 BLOCK lines still log 4-114 per server (100% UDP/443 on TYO+MTL; nothing listens on UDP 443). Ruling asked from LEGAL xd-2324 with options A/B (advice B). || \n[DEVOPS run 2026-10-14 0125, scheduled, unattended, 2026-10-14T01:33Z] Bangkok-first done (netns, Bangkok has no ufw): LOG 10/60 -> 0/120, control 22 still logs, real connects 3/3. Script development 2d7ff60d (md5 683ed3fa). READY TO SHIP row = ceo-action-backlog index 326. QA handoff created. || [CEO office 17 Oct ~22:3xZ blocker sweep: the CEO answered; old blocker kept in notes] old blocker: waits CEO YES on ceo-action-backlog index 326 (READY TO SHIP - ufw no-log for user ports, 8 nodes) + QA check of the Bangkok kit"
+      "blocker": "waits CEO YES on ceo-action-backlog row 397 (xd-2325, UDP 443/1194/1195) - row 326 TCP part shipped",
+      "notes": "[DEVOPS run 2026-10-23 0223, scheduled, unattended, 2026-10-23T02:5xZ] UDP part moved to xd-2325 (LEGAL verdict B): kit development f92f73e4, READY TO SHIP row 397. || [DEVOPS run 2026-10-23 0123, scheduled, unattended, 2026-10-23T01:4xZ] L4 24h read DONE 01:2xZ (counts only): TCP rule works on 8/8 (rule 1/1, DROP counters 1,729-33,776, journald 7day), but UDP 443 BLOCK lines still log 4-114 per server (100% UDP/443 on TYO+MTL; nothing listens on UDP 443). Ruling asked from LEGAL xd-2324 with options A/B (advice B). || \n[DEVOPS run 2026-10-14 0125, scheduled, unattended, 2026-10-14T01:33Z] Bangkok-first done (netns, Bangkok has no ufw): LOG 10/60 -> 0/120, control 22 still logs, real connects 3/3. Script development 2d7ff60d (md5 683ed3fa). READY TO SHIP row = ceo-action-backlog index 326. QA handoff created. || [CEO office 17 Oct ~22:3xZ blocker sweep: the CEO answered; old blocker kept in notes] old blocker: waits CEO YES on ceo-action-backlog index 326 (READY TO SHIP - ufw no-log for user ports, 8 nodes) + QA check of the Bangkok kit"
     },
     {
       "id": "xd-2138",
@@ -68287,7 +68305,7 @@
       "createdAt": "2026-10-22T19:49:27Z",
       "createdDate": "2026-10-22",
       "completedDate": null,
-      "notes": "[DEVOPS run 2026-10-22 2124 b, scheduled, unattended, 2026-10-22T21:4xZ] CORRECTION: xd-1021 and xd-896 have real outside blockers (Apple review demo account; app build with the new relay key). Only xd-1024 is ours to do (quiet window). || [DEVOPS run 2026-10-22 2124, scheduled, unattended, 2026-10-22T21:3xZ] All 3 un-deferred to pending with the plan on each (CEO YES row 118 covers them). Order: xd-1021, xd-896, xd-1024. NOT PROVEN: none rotated yet."
+      "notes": "[DEVOPS run 2026-10-23 0223, scheduled, unattended, 2026-10-23T02:5xZ] xd-1024 moved: holder inventory done + DB password found as a literal in git (dev fix ee949628, READY TO SHIP row 398). xd-1021 (Apple review account) and xd-896 (needs app build with new relay key) keep their outside blockers - re-checked on the board 02:5xZ, unchanged. || [DEVOPS run 2026-10-22 2124 b, scheduled, unattended, 2026-10-22T21:4xZ] CORRECTION: xd-1021 and xd-896 have real outside blockers (Apple review demo account; app build with the new relay key). Only xd-1024 is ours to do (quiet window). || [DEVOPS run 2026-10-22 2124, scheduled, unattended, 2026-10-22T21:3xZ] All 3 un-deferred to pending with the plan on each (CEO YES row 118 covers them). Order: xd-1021, xd-896, xd-1024. NOT PROVEN: none rotated yet."
     },
     {
       "id": "xd-2271",
@@ -69155,11 +69173,13 @@
       "to": "[DEVOPS]",
       "title": "Handoff from LEGAL: [P1] xd-2324 Legal verdict B: silent drop for UDP 443 + 1194 + 1195 (same xd-2137 script)",
       "description": "LEGAL answered xd-2324 = B, wider than asked. (1) First count, read-only, counts only (L6): '[UFW BLOCK].*PROTO=UDP.*DPT=1194 ' on the 8 nodes (kern.log + ufw.log) - 1194 is the app's default OpenVPN UDP port and was not in the 23 Oct count. (2) Add silent drops for udp/443, udp/1194, udp/1195 before the ufw log rule (same script), Bangkok netns test, READY TO SHIP row on the CEO card (CEO YES needed: fleet change). (3) After YES: purge old user-port lines in the 4 places (L2), journal limit (L3), 24 h proof per node: grep -cE 'UFW BLOCK.*DPT=(443|1194|1195) ' = 0 with a scanner-port control > 0 (L1). Then [QA]. Review: memory/departments/legal/reviews/udp-user-ports-ufw-2026-10-23.md",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-10-23T01:57:47Z",
       "createdDate": "2026-10-23",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[DEVOPS run 2026-10-23 0223, scheduled, unattended, 2026-10-23T02:5xZ] (1) COUNT DONE 02:3xZ, counts only (L6), kern.log*+ufw.log* incl. .gz on the 8 nodes: UDP 1194 = 0 on all 8 (1194/udp is ufw-ALLOWed, so OpenVPN packets are not blocked, nothing to log); UDP 1195 = 0; UDP 443 MTL 20 HK 54 MX 4 MIA 30 SGP 38 SYD 96 SAO 24 TYO 114. NEW FACT for LEGAL: TCP 1194 BLOCK lines exist (MX 20 ... TYO 286), 100% SYN (checked MTL/TYO/HK: syn count = total) to a closed port (ss: no TCP 1194 listener; OpenVPN is udp 1194 + tcp 1195) = new connection knocks, not late packets of our users - so the L1 proof line must be protocol-aware (TCP ports: PROTO=TCP; UDP 443/1194/1195: PROTO=UDP), otherwise 'DPT=1194' never reaches 0. (2) SCRIPT on development f92f73e4 (md5 4f3a471c): silent drop UDP 443+1195 (closed) + INVALID UDP 1194 (open), protocol-aware count/purge. Bangkok netns test 02:4xZ: logged 15->5 (control 9999 only), dropped 10, UDP 1194 accepted 5/5, v6 syntax ok, cleanup 0/0. READY TO SHIP = ceo-action-backlog row 397. skill: devops SKILL.md \u00a70 Bangkok-first -> netns test on bkk-01 before the row; legal (no outside skill - gap). || ",
+      "blocker": "waits CEO YES on ceo-action-backlog row 397 (fleet change + log purge) - then DevOps ships the same day, Montreal first"
     },
     {
       "id": "xd-2326",
@@ -69179,11 +69199,12 @@
       "to": "[DEVOPS]",
       "title": "Handoff from BACKEND: [P3] Re-check the port-53 REDIRECT rules + unbound forward-addr 0 on every relay (xd-2322 follow-up)",
       "description": "[BACKEND run 2026-10-23 0204, unattended] Problem: relays should keep answering in-tunnel DNS with our own resolver, and the CTO asked whether the backend should also name each node's resolver in the configs it writes. Ask: on each relay, check every 6 h (and after any reboot) that (1) the 2 PREROUTING udp/tcp port-53 REDIRECT rules exist and (2) unbound has forward-addr count 0; alarm once if either is missing. Why: CTO measured 12/12 relays OK on 23 Oct 01:2xZ, but nothing re-checks it; the backend chose not to change the configs (xd-2322), so this rule is now the only thing keeping in-tunnel DNS on our resolver. Done when: the check runs on all relays and one test (rule absent on a dev node) raises the alarm. No production change without a READY TO SHIP row + CEO YES.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P3",
       "createdAt": "2026-10-23T02:06:51Z",
       "createdDate": "2026-10-23",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[DEVOPS run 2026-10-23 0223, scheduled, unattended, 2026-10-23T02:5xZ] MEASURED 02:2xZ: bkk-01 (rebooted 22 Oct 20:11Z) still has both PREROUTING port-53 REDIRECT rules + unbound forward-addr 0 + unbound active = the rules survive a reboot there; TYO and DE-DU same (2 rules, 0 forward-addr). Node exporters on the relays run WITHOUT a textfile collector, so a node-local metric is not possible without changing node_exporter on 13 hosts. Plan (next run): one read-only checker on the main server next to the hourly vpn-standard exporter, every 6 h over the existing ssh hop, writes casper_relay_dns_guard_ok{node} into its textfile + a Prometheus alert; negative control = run it against a netns on bkk-01 without the rules. Production cron only via a READY TO SHIP row. skill: devops + qa (skills/fleet-onboarding.md) -> check belongs in onboarding too. || "
     },
     {
       "id": "xd-2328",
@@ -69218,6 +69239,18 @@
       "status": "pending",
       "priority": "P2",
       "createdAt": "2026-10-23T02:17:31Z",
+      "createdDate": "2026-10-23",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2331",
+      "from": "[DEVOPS]",
+      "to": "[QA]",
+      "title": "Handoff from DEVOPS: Check the dev kits for xd-2325 (UDP no-log) and xd-1024 (DB password out of git)",
+      "description": "Two development commits from the DEVOPS run 23 Oct 0223. (1) f92f73e4 infrastructure/scripts/ufw_nolog_userports.sh (md5 4f3a471c): re-run the fixture test (RULES_DIR/LOG_DIR/PORTS/UDP_ALLOWED hooks: apply-rule twice = 2 udp lines once; purge removes UDP 443/1194/1195 + TCP user-port lines, keeps TCP 1194 SYN + DPT=22 + UDP 53) and, if you can, the Bangkok netns test (expect logged 15->5, UDP 1194 accepted). READY TO SHIP row 397. (2) ee949628 infrastructure/scripts/datacap_enforcement_monitor.sh: no literal password left (grep -c 'PGPW=\"' = 0 on development); bash -n ok; fixture .env read. READY TO SHIP row 398. Never print the .env value.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-23T02:32:22Z",
       "createdDate": "2026-10-23",
       "completedDate": null
     }
