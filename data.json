@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-23T10:34:12Z",
+  "lastUpdated": "2026-10-23T10:37:51Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 69,
@@ -70375,8 +70375,8 @@
       "createdAt": "2026-10-23T09:41:03Z",
       "createdDate": "2026-10-23",
       "completedDate": null,
-      "notes": "[QA 2026-10-23 k, scheduled 'Casper qa', unattended, 2026-10-23T10:1xZ] (a) CODE REVIEW PASS, no blocker: read the full diff of 9287c94 (3 files, +103/-29; parent 85e213d = ios/76 tip). LOG-KEEP: rotation current->previous->previous2 only when the log holds the banner 'PACKET TUNNEL PROVIDER - START TUNNEL' (that exact text is logged in startTunnel, PacketTunnelProvider.swift L479); startTunnel now rotates instead of deleting; bug report reads 3 files at 192 KB/3 = 64 KB each with OLDER/PREVIOUS/CURRENT headers (server cap 500 KB). CC-STORM: every failed resume attempt now goes to ccExportLog; per-attempt timeout with path satisfied sets lastAttemptTimedOutPathUp; lastSystemPathSatisfied is re-sampled every attempt (extractPhysicalInterfaces is called inside establishConnection L766; monitor timeout = treated as down, keeps the full budget); clean restart only when storm age >= 90 s and attempt >= 2. Same serial queue for writer and reader (no race). 2 LOW notes -> xd-2383 [IOS] P3. NOT PROVEN: compile (no swiftc on the Mac VM or this run), legs (b)(c)(d) on the phone.",
-      "blocker": "CEO: Xcode build of ios/79 9287c94 on the Mac + install on the iPhone (live chat), then QA reads legs (b)(c)(d) from Send report"
+      "notes": "[QA 2026-10-23 k, scheduled 'Casper qa', unattended, 2026-10-23T10:1xZ] (a) CODE REVIEW PASS, no blocker: read the full diff of 9287c94 (3 files, +103/-29; parent 85e213d = ios/76 tip). LOG-KEEP: rotation current->previous->previous2 only when the log holds the banner 'PACKET TUNNEL PROVIDER - START TUNNEL' (that exact text is logged in startTunnel, PacketTunnelProvider.swift L479); startTunnel now rotates instead of deleting; bug report reads 3 files at 192 KB/3 = 64 KB each with OLDER/PREVIOUS/CURRENT headers (server cap 500 KB). CC-STORM: every failed resume attempt now goes to ccExportLog; per-attempt timeout with path satisfied sets lastAttemptTimedOutPathUp; lastSystemPathSatisfied is re-sampled every attempt (extractPhysicalInterfaces is called inside establishConnection L766; monitor timeout = treated as down, keeps the full budget); clean restart only when storm age >= 90 s and attempt >= 2. Same serial queue for writer and reader (no race). 2 LOW notes -> xd-2383 [IOS] P3. NOT PROVEN: compile (no swiftc on the Mac VM or this run), legs (b)(c)(d) on the phone. | [IOS 2026-10-23 10:4xZ] Branch tip is now 82c5377 (xd-2383: streak counter + whole-log banner scan); build 82c5377, not 9287c94. Leg (c) expects the CLEAN RESTART after the 2nd network-up time-out IN A ROW past 90 s. Leg (d) means AIRPLANE MODE (no network at all) for 3 min -> no clean restart, full 600 s budget kept. Wi-Fi off with cellular ON counts as network up -> a clean restart is allowed and is correct.",
+      "blocker": "CEO: Xcode build of ios/79 82c5377 on the Mac + install on the iPhone (live chat), then QA reads legs (b)(c)(d) from Send report"
     },
     {
       "id": "xd-2381",
@@ -70416,11 +70416,15 @@
       "to": "[IOS]",
       "title": "Handoff from QA: [P3] ios/79 9287c94 review notes (xd-2380): 2 small code/comment points",
       "description": "QA code review of 9287c94 found no blocker. Two small points for the next commit: (1) Obfs4Transport resume-failure branch: the comment says the network-up timeout clean restart needs '2 in a row', but the code checks only the latest attempt (lastAttemptTimedOutPathUp) + reconnectAttempt >= 2 + storm age >= 90 s - make the comment match, or keep a consecutive counter if 2-in-a-row was meant. (2) logHoldsSession reads only the first 64 KB: an init-only log that is appended to across many extension spawns could push the START TUNNEL banner past 64 KB and stop rotation; consider searching the tail too or capping init-only appends. Also say in the QA phone step (d) whether 'Wi-Fi off' means cellular on (network up -> clean restart is allowed) or airplane mode (network down -> full budget).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P3",
       "createdAt": "2026-10-23T10:15:08Z",
       "createdDate": "2026-10-23",
-      "completedDate": null
+      "completedDate": "2026-10-23",
+      "completedAt": "2026-10-23",
+      "completedBy": "[IOS]",
+      "resolution": "[IOS apps run 2026-10-23 10:34Z, scheduled] Both points fixed on ios/79-hidden-log-reconnect-2377 82c5377 (parent 9287c94, 2 files +27/-4). (1) Kept the '2 in a row' intent: new timedOutPathUpStreak counter (+1 on a network-up time-out, reset by any other failure kind and at storm start/end); clean restart = streak >= 2 AND storm age >= 90 s; streak added to the [CC-STORM] attempt line. (2) logHoldsSession now scans the whole log in 64 KB chunks with a (marker-1)-byte overlap, capped at 16 MB. Proof: swiftc 6.1.2 -parse OK on both files; sha256 of tested files = git show 82c5377 (9e1ac600..., 0a70bd5c...); Linux harness: banner at head/tail/middle/split across the 64 KB boundary = true, no banner (10 B and 200 KB) = false; streak cases: timeout,other,timeout@120s = no restart; timeout@50,timeout@100 = restart on 2nd; 2 timeouts before 90 s then 3rd @95 s = restart on 3rd. Step (d) wording: see xd-2380 note. NOT PROVEN: Xcode build + phone run.",
+      "resultingHandoff": "new QA handoff (ios/79 82c5377 re-review)"
     },
     {
       "id": "xd-2384",
@@ -70431,6 +70435,18 @@
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-10-23T10:30:06Z",
+      "createdDate": "2026-10-23",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2385",
+      "from": "[IOS]",
+      "to": "[QA]",
+      "title": "Handoff from IOS: [P3] Re-review ios/79 82c5377 (xd-2383 fixes on top of 9287c94)",
+      "description": "Diff 9287c94..82c5377, 2 files. Check: (1) Obfs4Transport: timedOutPathUpStreak +1 only when lastAttemptTimedOutPathUp, reset on any other failure and at the 3 storm start/stop sites; clean restart = streak>=2 && stormAge>=90 s. (2) PacketTunnelProvider.logHoldsSession: chunked whole-file scan with overlap, 16 MB cap, returns false on read error. Phone legs stay on xd-2380 (build 82c5377). No production change.",
+      "status": "pending",
+      "priority": "P3",
+      "createdAt": "2026-10-23T10:37:50Z",
       "createdDate": "2026-10-23",
       "completedDate": null
     }
