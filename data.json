@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-23T04:05:39Z",
+  "lastUpdated": "2026-10-23T04:11:34Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 69,
@@ -16379,6 +16379,15 @@
           "addedAt": "2026-10-23T04:10:00Z",
           "addedBy": "[DEVOPS] run 2026-10-23 0323",
           "test": "READY TO SHIP \u2014 a 6-hourly read-only check that every relay still forces in-tunnel DNS to our own resolver, with an alarm \u00b7 why: xd-2327 (BACKEND xd-2322 chose not to change the app configs, so the 2 port-53 redirect rules on each relay are now the only thing keeping user DNS on our servers, and nothing re-checks them after a reboot) \u00b7 what the ship does (main server only, no change on any relay): copy infrastructure/monitoring/scripts/relay_dns_guard.sh (development 84cc8b26) to /opt/caspervpn/monitoring/, install relay-dns-guard.service + .timer (fb875f74, 01aa7c45: 00/06/12/18:41Z + 10 min after boot), add the 2 rules of relay-dns-guard.alerts.yml (4c542388) to alerts.yml, promtool check, reload Prometheus with SIGHUP (no restart) \u00b7 tested 23 Oct 03:2xZ from the main server (kit /root/reports/devops1023-0323, .keep): 12/12 relays ok=1 (11 production + bkk-01); negative control on bkk-01 (same check inside an empty network namespace) = ok=0, redirects 0, and the namespace was removed (netns 0, real rules still 2); promtool: 2 rules SUCCESS \u00b7 rollback: disable the timer, delete the .prom file and the 2 alert rules, SIGHUP \u00b7 advice: yes - read-only, ~1 min of ssh every 6 h"
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "owner": "[CEO]",
+          "addedAt": "2026-10-23T04:11:28Z",
+          "addedBy": "[BACKEND run 2026-10-23 0404, scheduled, unattended]",
+          "test": "READY TO SHIP \u2014 API part of website 'Sign in with Apple / Google' (xd-2338) \u00b7 why: the website code (row 400, xd-2334) sends Apple/Google tokens to our API, and the API refused them because it only knew the app's ids \u00b7 tested on dev: development a84b3cb7c, build 0 errors, all 459 tests pass (4 new); QA dev check pending \u00b7 effect alone: none for app users - the new ids are empty until you do row 400, so nothing changes until then; also makes web Apple sign-ins require the anti-replay check \u00b7 rollback: /root/deploy_api.sh rollback tag (previous image) \u00b7 advice: ship it together with the website after your row 400 answer (A). Reply 'YES 401' to ship."
         }
       ],
       "progress": 0,
@@ -69432,11 +69441,13 @@
       "to": "[BACKEND]",
       "title": "Handoff from WEBSITE: [P2] Let the API accept website Sign in with Apple / Google tokens (xd-2334)",
       "description": "The website now sends Apple/Google ID tokens to POST /api/auth/apple and /api/auth/google (same as the app). Two audience gaps: (1) Apple: a web sign-in token's 'aud' is the Apple Services ID, not the bundle id - AuthService ValidateAppleIdentityTokenAsync + ValidateAppleTokenBasicAsync only accept bundleId / com.caspervpn.app / com.applinkoffshore.CasperVPN. Add config Apple:ServicesId (empty = off) to ValidAudiences in both. (2) Google: the website uses a Web OAuth client; it must be in Google:ClientId or Google:iOSClientId, or add Google:WebClientId to validAudiences. Apple 'sub' is per team, so app and web give the same AppleId; Google 'sub' is global - existing accounts link. Also (security, found while reading): the Apple nonce is only checked when BOTH the request and the token carry one (AuthService ~L974) - a token with no nonce skips replay protection. Consider requiring a nonce for web sign-ins. Build on development + tests, then [QA]. No production change without a CEO YES.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P2",
       "createdAt": "2026-10-23T04:03:08Z",
       "createdDate": "2026-10-23",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[BACKEND run 2026-10-23 0404, scheduled, unattended] BUILT on development a84b3cb7c (pushed 04:10Z under lock casper-backend-1023-0404). AuthService: Apple:ServicesId (empty = off) added to accepted Apple audiences in BOTH the signed check and the fallback check; Google:WebClientId added to accepted Google audiences; Apple nonce: a website token (aud = Services ID) must carry a nonce matching the one sent - app tokens keep the old rule so builds in users' hands keep working; nonce values no longer written to the log. Proof: build 0 errors; full suite 459/459 (was 455 + 4 new WebSignInAudienceTests). NOT PROVEN: no control run of the new tests against the old code (they call new methods, so they cannot build without it); no real web token tested - needs the Services ID + Web client id from CEO card DECISION row 400. Website already sends the raw nonce and the Apple token carries SHA256(raw) (website commit 0e3f334af) = matches the API rule. Next: QA dev check, then ship with the website under the READY TO SHIP row.",
+      "blocker": "Waits QA dev check (backend->qa handoff of 23 Oct 04:1xZ) + CEO card row 400 (Services ID / Web client id) for a real web sign-in"
     },
     {
       "id": "xd-2339",
@@ -69495,6 +69506,18 @@
       "status": "pending",
       "priority": "P2",
       "createdAt": "2026-10-23T04:05:39Z",
+      "createdDate": "2026-10-23",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2344",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: [P2] Dev check xd-2338: API accepts website Apple/Google sign-in tokens + nonce required for web Apple tokens",
+      "description": "development a84b3cb7c (AuthService + Tests/WebSignInAudienceTests.cs). Check after the dev API redeploys: (1) the DLL has the new code: docker cp caspervpn-dev-api:/app/CasperVPN.dll to host, grep -c AppleNonceOk = 1+ ; (2) app sign-in unchanged: POST /api/auth/apple with a junk token still returns the same refusal as before (no 500); (3) filtered tests: dotnet test --no-build --filter FullyQualifiedName~WebSignInAudienceTests in /root/reports/be1020/code (4/4). A real website sign-in needs CEO card row 400 (Apple Services ID + Google Web client id set as Apple__ServicesId / Google__WebClientId on the API and APPLE_SERVICES_ID / GOOGLE_WEB_CLIENT_ID on the website). No production change.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-23T04:11:34Z",
       "createdDate": "2026-10-23",
       "completedDate": null
     }
