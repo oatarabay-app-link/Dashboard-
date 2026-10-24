@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-24T01:32:56Z",
+  "lastUpdated": "2026-10-24T02:10:02Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 69,
@@ -17023,6 +17023,17 @@
           "createdAt": "2026-10-24T01:32:51Z",
           "addedAt": "2026-10-24T01:32:51Z",
           "evidence": "[CEO YES 2026-10-24 (live chat, ~01:15Z)] 'We cant test a conc fron uae on dev we need fhe fix on prod asap' || [BACKEND run 2026-10-24 0104 + CEO live chat, 2026-10-24T01:3xZ] SHIPPED: production 5c6644815 = cherry-pick -x of development 2c27bf5b8 (3 files: Services/StealthFailover.cs DohFailover, Controllers/ServersController.cs caspercloak-config, Tests/DohFailoverTests.cs). Tests: 5 new + 6 StealthFailover PASS; full suite 490/490 PASS. /root/deploy_api.sh 01:28-01:30Z EXIT 0, health 200, rollback tag caspervpn-api:rollback-202610240128 = image bdecfb8a4ee3. Live DLL: 'DohFailover: user=' UTF-16 count 1 (was 0). GET /api/servers/{id}/caspercloak-config no token -> 401 (route alive). Read-only prod: users with a DoH hard-fail in 7 d = 1 (65fd9bed, 11 rows) -> only that user gets the no-lookup road; everyone else (CEO included) unchanged. Bare-IP road checked from the main server: the 3 relays he tried (Singapore, Los Angeles, Dusseldorf) answer TLS with no SNI (cert *.pompesh.com) and WebSocket /cc upgrade 101. NOT PROVEN: a real UAE connect on this road - needs his next try (log line 'DohFailover: ... OMITTED' then a ConnectionLogs row). Rollback: set CasperCloak:DohFailover:Enabled=false, or redeploy rollback-202610240128."
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "addedAt": "2026-10-24T02:15:00Z",
+          "addedBy": "[BACKEND] backend run 1024-0205",
+          "owner": "[BACKEND]",
+          "test": "READY TO SHIP \u2014 a Telegram alert within 15 minutes when a NEW user in a censored country tries 3+ times and never connects (xd-2492) \u00b7 why: the first UAE newcomer on 4.3.1 failed 11 times at 00:11Z and we only saw it by chance on the next run \u00b7 what: a small read-only check every 15 min on the main server, same alert path as the 'server dropped out' alert; paywall refusals are not counted; each user alerts once, a failed send is retried \u00b7 tested on dev: development 86650cff6, run read-only against the real data: it flags the 00:11Z UAE user at 00:20Z and nobody at 00:12Z \u00b7 rollback: delete the one cron line \u00b7 advice: YES",
+          "verify": "main server: crontab -l | grep restricted_newcomer_alarm ; tail -3 /var/log/restricted-newcomer-alarm.log (one JSON line per 15 min, first line baseline:true)",
+          "evidence": "[BACKEND run 2026-10-24 0205, scheduled, unattended, 2026-10-24T02:1xZ] built + measured on dev/prod read-only; no production change."
         }
       ],
       "progress": 0,
@@ -72930,9 +72941,25 @@
       "to": "[BACKEND]",
       "title": "Handoff from BACKEND: [P1] Follow-ups from the restricted-region gap hunt (xd-2488)",
       "description": "(a) Alarm: Telegram when a user < 24 h old in a restricted country has >=3 failures and 0 successes (65fd9bed was missed by the 00:05Z run). (b) Lost-user counts must exclude APIError:7 (subscriptionRequired, 46 LB rows) and APIError:12 (httpError, 32) - paywall, not censorship. (c) Log the road served per connect (StealthTier line exists) and join to failures daily. (d) Extend the fast-fail switch (StealthFailover) beyond the Cloudflare road. Measured 30 d: 8 lost users in restricted countries (AE 2, IR 2, LB 2, CN 1, RU 1), 435 of 640 failure rows have category 'unknown' (old builds).",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-10-24T01:32:56Z",
+      "createdDate": "2026-10-24",
+      "completedDate": null,
+      "notes": [
+        "[BACKEND run 2026-10-24 0205, scheduled, unattended, 2026-10-24T02:1xZ] (a)+(b)+(c per failure) built on development 86650cff6 (lock casper-backend-1024-0205 taken/released). Measured read-only prod 02:08Z: --now 00:20Z flags 65fd9bed AE 11 fails road 'unknown' last error CasperCloakHidingError:0; --now 00:12Z flags 0 (control); --report 30 d lost users all 8 -> not-paywall 6 (AE2 IR2 CN1 RU1); by road: old-build 5, unknown 1 - FrontUsed already records the road per failure on new builds, so (c) needs no new log line. (d) not built: 5 of 6 lost users are old builds with no road recorded, so there is no data yet on which road fails besides DoH. Re-run --report on 31 Oct (a week of public 4.3.1) and decide (d) from the by-road numbers. QA handoff created."
+      ],
+      "blocker": "(a)(b)(c) on development 86650cff6 - waits QA dev check + CEO card READY TO SHIP row (cron install). (d) re-measure with --report 31 Oct (needs a week of 4.3.1 failures by road), owner [BACKEND]."
+    },
+    {
+      "id": "xd-2493",
+      "from": "[[BACKEND]]",
+      "to": "[[QA]]",
+      "title": "Handoff from [BACKEND]: Handoff from BACKEND: [P1] Check xd-2492 on development 86650cff6: restricted-region newcomer alarm + lost-user report",
+      "description": "development 86650cff6 adds infrastructure/scripts/restricted_newcomer_alarm.py (read-only SELECTs; posts to Alertmanager like fleet_rotation_guard.py). Re-run on the main server from a clone of development (never /opt): (1) `python3 restricted_newcomer_alarm.py --dry-run --now 2026-10-24T00:20:00Z` must list 65fd9bed (AE, 11 fails, 0 connects) - the missed case; (2) `--dry-run --now 2026-10-24T00:12:00Z` must list 0 (control: only 1 failure yet); (3) `--report` must show 'all 8' and 'not-paywall 6' (AE2 IR2 CN1 RU1; the 2 LB users were APIError:7/12 only). Backend measured exactly these at 02:08Z. Live install (cron */15) waits the CEO card READY TO SHIP row.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-24T02:10:02Z",
       "createdDate": "2026-10-24",
       "completedDate": null
     }
