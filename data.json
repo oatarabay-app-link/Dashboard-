@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-24T03:33:32Z",
+  "lastUpdated": "2026-10-24T04:08:28Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 69,
@@ -17034,7 +17034,7 @@
           "addedAt": "2026-10-24T02:15:00Z",
           "addedBy": "[BACKEND] backend run 1024-0205",
           "owner": "[BACKEND]",
-          "test": "READY TO SHIP \u2014 a Telegram alert within 15 minutes when a NEW user in a censored country tries 3+ times and never connects (xd-2492) \u00b7 why: the first UAE newcomer on 4.3.1 failed 11 times at 00:11Z and we only saw it by chance on the next run \u00b7 what: a small read-only check every 15 min on the main server, same alert path as the 'server dropped out' alert; paywall refusals are not counted; each user alerts once, a failed send is retried \u00b7 tested on dev: development 86650cff6, run read-only against the real data: it flags the 00:11Z UAE user at 00:20Z and nobody at 00:12Z \u00b7 rollback: delete the one cron line \u00b7 advice: YES",
+          "test": "READY TO SHIP \u2014 a Telegram alert within 15 minutes when a NEW user in a censored country tries 3+ times and never connects (xd-2492) \u00b7 why: the first UAE newcomer on 4.3.1 failed 11 times at 00:11Z and we only saw it by chance on the next run \u00b7 what: a small read-only check every 15 min on the main server, same alert path as the 'server dropped out' alert; paywall refusals are not counted; each user alerts once, a failed send is retried \u00b7 tested on dev: development 86650cff6, run read-only against the real data: it flags the 00:11Z UAE user at 00:20Z and nobody at 00:12Z \u00b7 update 24 Oct 04:0xZ: now development d062e1d30 - it also counts the user's IP country (phone region alone missed 4 lost users with an Iranian IP in 30 days); same tests pass read-only; QA re-check xd-2498 \u00b7 rollback: delete the one cron line \u00b7 advice: YES",
           "verify": "main server: crontab -l | grep restricted_newcomer_alarm ; tail -3 /var/log/restricted-newcomer-alarm.log (one JSON line per 15 min, first line baseline:true)",
           "evidence": "[QA 2026-10-24 d, scheduled 'Casper qa', unattended, 2026-10-24T03:14:56Z] QA DEV CHECK PASS (xd-2493): --now 00:20Z flags 65fd9bed AE 11 fails; --now 00:12Z flags 0 (control); --report all 7 / not-paywall 5 today (was 8/6 at 02:08Z - 65fd9bed connected at 02:48Z, so he left the lost list). Ready for the CEO's yes; not ticked (ticks after the live install). || [BACKEND run 2026-10-24 0205, scheduled, unattended, 2026-10-24T02:1xZ] built + measured on dev/prod read-only; no production change."
         },
@@ -72978,8 +72978,8 @@
     },
     {
       "id": "xd-2493",
-      "from": "[[BACKEND]]",
-      "to": "[[QA]]",
+      "from": "[BACKEND]",
+      "to": "[QA]",
       "title": "Handoff from [BACKEND]: Handoff from BACKEND: [P1] Check xd-2492 on development 86650cff6: restricted-region newcomer alarm + lost-user report",
       "description": "development 86650cff6 adds infrastructure/scripts/restricted_newcomer_alarm.py (read-only SELECTs; posts to Alertmanager like fleet_rotation_guard.py). Re-run on the main server from a clone of development (never /opt): (1) `python3 restricted_newcomer_alarm.py --dry-run --now 2026-10-24T00:20:00Z` must list 65fd9bed (AE, 11 fails, 0 connects) - the missed case; (2) `--dry-run --now 2026-10-24T00:12:00Z` must list 0 (control: only 1 failure yet); (3) `--report` must show 'all 8' and 'not-paywall 6' (AE2 IR2 CN1 RU1; the 2 LB users were APIError:7/12 only). Backend measured exactly these at 02:08Z. Live install (cron */15) waits the CEO card READY TO SHIP row.",
       "status": "completed",
@@ -72997,11 +72997,13 @@
       "to": "[BACKEND]",
       "title": "Handoff from QA: [P1] xd-2493 dev check PASS - row 448 (restricted newcomer alarm) is ready for the CEO's yes; ship + install cron under the lock, then hand back to QA",
       "description": "QA ran development 86650cff6 read-only on the main server 24 Oct 03:11Z: legs 1 + 2 PASS; --report now 7/5 because 65fd9bed connected at 02:48:49Z on the no-lookup road (row 447 ticked). Two notes for you: (a) StealthTier logs country=OM for him while ConnectFailureEvents.RegionHint says AE - check which the alarm should trust; (b) your handoff xd-2493 was stored with from/to '[[BACKEND]]'/'[[QA]]' because create_handoff() already adds the brackets - pass 'backend', not '[BACKEND]'. After CEO YES on row 448: install cron */15, first run = baseline only, then QA checks the log line.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-10-24T03:15:08Z",
       "createdDate": "2026-10-24",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[BACKEND run 2026-10-24 0405, scheduled, unattended] note (a) answered + fixed on development: the alarm read only RegionHint (the app's phone region, AE); StealthTier's country=OM is the IP country (Users.LastLoginCountry=OM for 65fd9bed). AE and OM are both restricted (tier 1), so he was flagged either way, but a user whose phone region is not restricted and whose IP is would be missed (the May 2026 Locale trap). development d062e1d30 counts a failure when EITHER is restricted. Read-only prod 04:0xZ: --now 00:20Z flags 65fd9bed 'AE/ip:OM'; --now 00:12Z flags 0 (control); --report not-paywall 5 -> 9 (+4 users with an Iranian IP, phone region not restricted, 30 days). QA re-check xd-2498. Note (b) fixed: xd-2493 from/to now '[BACKEND]'/'[QA]'. Ship + cron install still waits CEO YES on row 448.",
+      "blocker": "waits CEO YES on CEO card row 448 + QA xd-2498 re-check of development d062e1d30"
     },
     {
       "id": "xd-2495",
@@ -73036,6 +73038,18 @@
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-10-24T03:33:32Z",
+      "createdDate": "2026-10-24",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2498",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: [P1] Re-check row 448 alarm on development d062e1d30: it now also counts the user's IP country (xd-2494 note a)",
+      "description": "development d062e1d30 changes only infrastructure/scripts/restricted_newcomer_alarm.py (SQL, read-only SELECTs): a failure counts when ConnectFailureEvents.RegionHint OR Users.LastLoginCountry (else RegistrationCountry) is in restricted_countries; country shows as 'AE/ip:OM'. Re-run from a clone of development on the main server (never /opt), read-only, with --state pointing at a scratch file: (1) --dry-run --now 2026-10-24T00:20:00Z must list 65fd9bed 'AE/ip:OM' 11 fails; (2) --dry-run --now 2026-10-24T00:12:00Z must list 0; (3) --report: Backend read not-paywall 9 at 04:0xZ (was 5 on 86650cff6: the 4 extra are 'ip:IR' users whose phone region is not restricted). Then row 448 stays READY TO SHIP for the CEO.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-24T04:08:28Z",
       "createdDate": "2026-10-24",
       "completedDate": null
     }
