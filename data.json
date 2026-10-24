@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-24T15:28:09Z",
+  "lastUpdated": "2026-10-24T15:32:45Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 69,
@@ -17265,6 +17265,24 @@
           "addedBy": "[QA] run 2026-10-24 r",
           "owner": "[CEO]",
           "test": "ACTION \u2014 Admin page 'Subscriptions' (2 min, any time you are signed in on admin.caspervpn.com): open Subscriptions. You should see 5 plan cards (Weekly, Monthly, 6-Month, Yearly, Lifetime) and a 'Free trials' card. Tap 'Free trials': one person on the 6-Month plan, 'Trial ends 30 Oct (6 days left)'. The newest Yearly purchase should be the first row. QA already checked the numbers behind the page (they match the payments: $374.51 all time, $75.04 this month). Reply 'subs ok' or what looks wrong."
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "addedAt": "2026-10-24T15:35:00Z",
+          "addedBy": "[BACKEND] backend run 1024-1444",
+          "owner": "[BACKEND]",
+          "test": "READY TO SHIP \u2014 hidden mode uses each server's own new 'front' name, not Cloudflare (xd-2556, your order 'implement plan in full') \u00b7 why: today the app is sent to sN-edge.pompesh.com names; DevOps gave every server its own new front name on profitechlb.com (no Cloudflare), but the server does not hand them out yet \u00b7 what: for the 11 live servers the app gets e.g. wss://kostel.profitechlb.com/ for Los Angeles (Tokyo morvex, Sydney taluse, Singapore elbrin, Hong Kong vantel, Amsterdam orinda, Dusseldorf ferani, Mexico City pelaro, Montreal zubric, Miami halvin, Sao Paulo dremos); Paris keeps its old name; nothing else changes \u00b7 tested on dev: development 7f5ed5732, build 0 errors, 502 of 502 tests; dev server before 14:56Z Los Angeles -> wss://s12.pompesh.com/, after 15:31Z -> wss://kostel.profitechlb.com/, Bangkok -> wss://jumira.profitechlb.com/; 10 of 11 new names answer the hidden-mode door (101) with a valid certificate - Tokyo's server does not answer at all right now (its old name does not either; it is hidden from the list) \u00b7 NOT PROVEN: a real phone through a new name (please test hidden mode once after the ship) \u00b7 rollback: remove the name list from the settings and redeploy (saved image kept) \u00b7 advice: YES. Step 2 of your plan (switching off the 6 old Cloudflare Worker addresses) is a database change I will do after your phone test - today those addresses carry no traffic because the native road is on"
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "addedAt": "2026-10-24T15:35:00Z",
+          "addedBy": "[BACKEND] backend run 1024-1444",
+          "owner": "[BACKEND]",
+          "test": "READY TO SHIP \u2014 stop counting one connection twice against the free 512 MB (xd-2549, your question 'why do we have a user that crossed the limit?') \u00b7 what we found: it was ONE connection, not two. The server cut it at 639 MB (the check runs every 20 s; the user was downloading ~60 Mbps in the last minute, so it passed 512 MB by one check). The app also reported the same connection under 'Los Angeles', and when it closed the server added those 612 MB again: the counter reads 1,251 MB. He is blocked now (2 refusals at 04:00Z) \u00b7 what: when a connection the server only learned about from the app's check-in overlaps a real one of the same user, its bytes are not added again \u00b7 how often: last 7 days 10 such rows, 2 overlapping (624 MB counted twice, 2 users) \u00b7 tested on dev: development 89769c5a0, 502 of 502 tests (3 new); a live dev check is not possible (no app traffic on dev since 9 Oct) - NOT PROVEN live \u00b7 rollback: redeploy the saved image \u00b7 advice: YES; this user's counter stays as it is (he did use 639 MB)"
         }
       ],
       "progress": 0,
@@ -73303,17 +73321,21 @@
       "to": "[BACKEND]",
       "title": "Handoff from BACKEND: [P1] Follow-ups from the restricted-region gap hunt (xd-2488)",
       "description": "(a) Alarm: Telegram when a user < 24 h old in a restricted country has >=3 failures and 0 successes (65fd9bed was missed by the 00:05Z run). (b) Lost-user counts must exclude APIError:7 (subscriptionRequired, 46 LB rows) and APIError:12 (httpError, 32) - paywall, not censorship. (c) Log the road served per connect (StealthTier line exists) and join to failures daily. (d) Extend the fast-fail switch (StealthFailover) beyond the Cloudflare road. Measured 30 d: 8 lost users in restricted countries (AE 2, IR 2, LB 2, CN 1, RU 1), 435 of 640 failure rows have category 'unknown' (old builds).",
-      "status": "in_progress",
+      "status": "deferred",
       "priority": "P1",
       "createdAt": "2026-10-24T01:32:56Z",
       "createdDate": "2026-10-24",
       "completedDate": null,
       "notes": [
+        "[BACKEND run 2026-10-24 1444, scheduled, unattended] Deferred (d) to 2026-10-31 with reason; owner [BACKEND].",
         "[DEVOPS live 2026-10-24 13:3x-13:5xZ, CEO in chat] Row 448 SHIPPED by DEVOPS 13:35Z (CEO live yes): production af1612cf4, installed md5 0773fb93, cron */15. Row 449 not touched (no yes). BACKEND: nothing left for 448 except (d) on 31 Oct.",
         "[BACKEND run 2026-10-24 0305, scheduled, unattended, 2026-10-24T03:2xZ] blocker rewritten: the READY TO SHIP row now exists (CEO card row 448, added 02:15Z); old text said it was still to be written.",
         "[BACKEND run 2026-10-24 0205, scheduled, unattended, 2026-10-24T02:1xZ] (a)+(b)+(c per failure) built on development 86650cff6 (lock casper-backend-1024-0205 taken/released). Measured read-only prod 02:08Z: --now 00:20Z flags 65fd9bed AE 11 fails road 'unknown' last error CasperCloakHidingError:0; --now 00:12Z flags 0 (control); --report 30 d lost users all 8 -> not-paywall 6 (AE2 IR2 CN1 RU1); by road: old-build 5, unknown 1 - FrontUsed already records the road per failure on new builds, so (c) needs no new log line. (d) not built: 5 of 6 lost users are old builds with no road recorded, so there is no data yet on which road fails besides DoH. Re-run --report on 31 Oct (a week of public 4.3.1) and decide (d) from the by-road numbers. QA handoff created."
       ],
-      "blocker": "(a)(b)(c) on development 86650cff6 - waits the CEO's answer on card row 448 (READY TO SHIP, cron install). (d) re-measure with --report on 31 Oct (owner [BACKEND])."
+      "blocker": "(a)(b)(c) SHIPPED 13:35Z with row 448. (d) DEFERRED to 31 Oct: re-run restricted_newcomer_alarm.py --report after a week of public 4.3.1 and decide the fast-fail extension from the by-road numbers (5 of 6 lost users had no road recorded).",
+      "deferredUntil": "2026-10-31",
+      "lifecycle": "deferred",
+      "deferredBy": "[BACKEND run 2026-10-24 1444, scheduled, unattended]"
     },
     {
       "id": "xd-2493",
@@ -73427,8 +73449,11 @@
       "createdAt": "2026-10-24T04:20:12Z",
       "createdDate": "2026-10-24",
       "completedDate": null,
-      "blocker": "Waits the CEO's YES on card rows 448 and 449 (ceo_answers 06:05Z: no answer on either). Ship d062e1d30 (448) + c8278796a (449) the run after a YES.",
-      "notes": "[DEVOPS live 2026-10-24 13:3x-13:5xZ, CEO in chat] Row 448 SHIPPED by DEVOPS 13:35Z (CEO live yes): production af1612cf4, installed md5 0773fb93, cron */15. Row 449 not touched (no yes). BACKEND: nothing left for 448 except (d) on 31 Oct."
+      "blocker": "Row 448 SHIPPED by DEVOPS 13:35Z (CEO live yes). Only row 449 left (DDoS fake alarms, c8278796a): waits the CEO's YES - ceo_answers 14:44Z nothing new.",
+      "notes": [
+        "[BACKEND run 2026-10-24 1444, scheduled, unattended] Re-based: 448 shipped (production af1612cf4, md5 0773fb93, cron */15); 449 untouched.",
+        "[DEVOPS live 2026-10-24 13:3x-13:5xZ, CEO in chat] Row 448 SHIPPED by DEVOPS 13:35Z (CEO live yes): production af1612cf4, installed md5 0773fb93, cron */15. Row 449 not touched (no yes). BACKEND: nothing left for 448 except (d) on 31 Oct."
+      ]
     },
     {
       "id": "xd-2500",
@@ -73932,11 +73957,18 @@
       "to": "[BACKEND]",
       "title": "Handoff from PRODUCT: [P2] Server field for the trial screen's pre-picked plan (lever A of xd-2524) - build on dev only",
       "description": "[GROWTH run 2026-10-24 1040, scheduled 'Casper growth', unattended, 2026-10-24T10:53Z] build 75 pre-picks the first /api/plans item with isPopular (SubscriptionService.cs:385 computes it: Premium + yearly) -> Yearly. Add a separate field (e.g. trialPreselected on the Monthly plan) and make the app-facing isPopular follow it WITHOUT moving the website 'Most popular' badge - check which callers read isPopular first. Dev only; READY TO SHIP row after the CEO letter A/C on the DECISION row. Spec: memory/departments/product/trial-offer-skip-2026-10-24.md",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-10-24T10:53:45Z",
       "createdDate": "2026-10-24",
-      "completedDate": null
+      "completedDate": "2026-10-24",
+      "notes": [
+        "[BACKEND run 2026-10-24 1444, scheduled, unattended] Superseded by xd-2541 (CEO 12:3xZ: A/B test the pre-picked plan - per-user arm on /api/plans isPopular). The separate trialPreselected field is part of that build."
+      ],
+      "completedAt": "2026-10-24",
+      "completedBy": "[BACKEND]",
+      "resolution": "SUPERSEDED by xd-2541 (CEO A/B order 24 Oct 12:3xZ covers the server field)",
+      "resultingHandoff": "xd-2541 (BACKEND)"
     },
     {
       "id": "xd-2534",
@@ -73977,12 +74009,19 @@
       "to": "[BACKEND]",
       "title": "Handoff from QA: [P0] Ship card row 462 (xd-2522 Gulf first-try no-lookup road) - CEO YES given, ship now - QA dev check xd-2535 PASS",
       "description": "QA dev check xd-2535 PASS (diff read, dev DLL strings vs control 0, dev log AE/OM OMITTED first-try, GB control not omitted). Card row 462 is READY TO SHIP and waits the CEO YES. On YES: ship development 559474de6 by the normal path under the lock, then hand [QA] the live check (prod log DohFailover first-try lines for AE/OM users; non-Gulf users keep the domain).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P0",
       "createdAt": "2026-10-24T11:18:19Z",
       "createdDate": "2026-10-24",
-      "completedDate": null,
-      "notes": "[QA 2026-10-24T11:50Z] CEO YES given in live chat ('yes row 462') - SHIP NOW by the normal path under the lock; mark row 462 SHIPPED <time>; hand [QA] the live check (prod log 'DohFailover ... first-try country' for AE/OM/SA/BH users; non-Gulf users keep the domain)."
+      "completedDate": "2026-10-24",
+      "notes": [
+        "[BACKEND run 2026-10-24 1444, scheduled, unattended] Row 462 SHIPPED 12:07Z by the BACKEND live session (production 35175fd4c, image 0956b9112339, DLL DefaultFirstTryCountries 0 -> 1). QA live check is xd-2539. Nothing left here.",
+        "[QA 2026-10-24T11:50Z] CEO YES given in live chat ('yes row 462') - SHIP NOW by the normal path under the lock; mark row 462 SHIPPED <time>; hand [QA] the live check (prod log 'DohFailover ... first-try country' for AE/OM/SA/BH users; non-Gulf users keep the domain)."
+      ],
+      "completedAt": "2026-10-24",
+      "completedBy": "[BACKEND]",
+      "resolution": "SHIPPED card row 462 2026-10-24 12:07Z (production 35175fd4c); live check = QA xd-2539",
+      "resultingHandoff": "xd-2539 to [QA]"
     },
     {
       "id": "xd-2537",
@@ -74006,7 +74045,10 @@
       "priority": "P1",
       "createdAt": "2026-10-24T11:52:36Z",
       "createdDate": "2026-10-24",
-      "completedDate": null
+      "completedDate": null,
+      "notes": [
+        "[BACKEND run 2026-10-24 1444, scheduled, unattended] Measured only (not built this run): the dev DB's only Bangkok row ('Bangkok Dev', d37d856b) is IsActive=false since 21 Aug, so even dev apps never list it. The staff-only production entry needs: a staff check on /api/servers + caspercloak-config, and the production API able to add a peer on bkk-01 (its control-API key in production config = DevOps). Next backend run builds the server part on development."
+      ]
     },
     {
       "id": "xd-2539",
@@ -74165,11 +74207,15 @@
       "to": "[BACKEND]",
       "title": "Handoff from CEO: [P1] Free user used 1,193 MB on a 512 MB cap in 18 minutes (24 Oct 03:42-04:00Z) - the cap cut only one of two parallel sessions",
       "description": "[CEO office live 2026-10-24 12:5xZ, CEO in chat] CEO: 'why do we have a user that crossed the limit?'. MEASURED prod read-only 12:5xZ: user 2a659e83 (icloud, Free plan, created 03:40:50Z, no FunnelEvents at all, ConnectionLogs AppVersion/Build empty, DeviceOs Unknown) had TWO overlapping sessions: WireGuard 03:42:19-03:59:56Z 463 MB ended 'data cap reached'; CasperCloak 03:42:23-04:00:25Z 584 MB, UserAgent 'heartbeat-adopt (xd-1434)', no cap reason. CurrentCycleDataUsedBytes 1,193 MB vs limit 512 MB. Control: bcb2ff10 on 22 Oct stopped at 515/512 MB after one WireGuard session (the cap works there). Questions to answer with the code + logs: (1) does the cap check run for relay-adopted (heartbeat) hidden-mode sessions at all, or only for app-reported ones; (2) how often the cap is evaluated (the first session ran 17 min = ~450 MB past the cap before the cut - what is the interval and the bytes source); (3) why two sessions at once from a brand-new account (two devices? app reconnect that did not tear down the first tunnel? which app - no version recorded); (4) whether the user can keep connecting now (used > limit) - and whether he is shown the free-data's-up sheet. Fix on development: evaluate the cap on every usage report for every protocol and across all live sessions of the user; kill all peers when it trips; READY TO SHIP row. QA re-check with a dev account that opens WG + hidden mode together.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-10-24T13:16:14Z",
       "createdDate": "2026-10-24",
-      "completedDate": null
+      "completedDate": null,
+      "blocker": "Fix on development 89769c5a0, QA xd-2570; production waits the CEO YES on card row 471.",
+      "notes": [
+        "[BACKEND run 2026-10-24 1444, scheduled, unattended] MEASURED prod read-only 14:5xZ. (3) Not two sessions: ONE tunnel. WG peer hhOh6F2t on Duesseldorf (wg-sync opened its row 03:42:36Z, no app /connect) and the app's heartbeat said 'Los Angeles CasperCloak' -> heartbeat-adopt row. Both end with the WG cut (03:59:55Z) / the 402 at reconnect (04:00:25Z). (1) The cap is checked only by the WG sync per WG peer and at connect (402); hidden mode is a WG peer too, so it is covered; adopt rows are never checked mid-session. (2) wg-sync polls every ~20 s; the user moved ~150 MB per poll in the last minute (03:59:15/36/56Z), so the cut came at 638.9 MB = 119%. (4) Counter now 1,251,275,932 B = 638.9 MB billed by the sync + 612.4 MB added again when the adopt row closed (OptimizedVpnServerService disconnect, BandwidthRecorded was false on the LA row) -> he is refused with 402 (2x 04:00:25Z). The free-data sheet is app-side: NOT PROVEN. 7 days: 10 adopt rows, 2 overlap (624 MB, 2 users). Fix: skip the close-time increment for an adopt row overlapping a real row of the same user (both service files). Caveat: two devices of one user would be under-billed by the adopt one (rare)."
+      ]
     },
     {
       "id": "xd-2550",
@@ -74177,11 +74223,15 @@
       "to": "[BACKEND]",
       "title": "Handoff from DEVOPS: [BACKEND] xd-1609: dev Bangkok gets a 2nd hidden-mode name (velmora.shortaalmashahir.com) - add it to the dev pool",
       "description": "DevOps put velmora.shortaalmashahir.com live on bkk-01 24 Oct 13:39Z (own wildcard cert by SNI, canary pass, DNS-only). Please on DEV only: VpnServers Bangkok CasperCloakDomainPool = [\"velmora.shortaalmashahir.com\",\"s13.pompesh.com\"] (CasperCloakDomain = velmora... ) and confirm caspercloak-config returns it; rollback = old row. Then the same for each production relay as DevOps adds its name (CEO YES row 184 + CEO live 24 Oct 'do xd-1609 next'). Also CEO 24 Oct live on the block detector: 'shouldnt this fire on the first or second not reached attempt?' - BlockDetectionAggregator needs MIN_EVIDENCE_WEIGHT 20 in 5 min per server; at our volume (7-13 hidden-mode failures a day fleet-wide) it never fires. Proposal: a second rule for small numbers - >= 2 distinct users (or 1 user >= 2 failures and 0 successes) on the same server+road in 30 min from a restricted country -> Telegram via casper_notify (row 448 already covers single newcomers). Build on development, READY TO SHIP row.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-10-24T13:43:30Z",
       "createdDate": "2026-10-24",
-      "completedDate": null
+      "completedDate": null,
+      "blocker": "Pool part done on dev. Left: the small-number block rule (>=2 users or 1 user >=2 fails, 0 successes, 30 min) - next backend run builds it on development.",
+      "notes": [
+        "[BACKEND run 2026-10-24 1444, scheduled, unattended] Dev VpnServers 'Bangkok Dev' (d37d856b): CasperCloakDomain s13.pompesh.com -> velmora.shortaalmashahir.com, pool [cc-bkk-dev.caspervpn.com] -> [velmora.shortaalmashahir.com, s13.pompesh.com] (before copy /root/reports/be1024-1444/bkk-before.txt). caspercloak-config returns it (15:31Z). Note: the dev Bangkok row is IsActive=false since 21 Aug (the dev app list never shows it; the read was done with it briefly active, then put back). Production pools already set by DevOps 14:0xZ (all 11)."
+      ]
     },
     {
       "id": "xd-2551",
@@ -74264,11 +74314,15 @@
       "to": "[BACKEND]",
       "title": "Handoff from DEVOPS: [BACKEND P0, CEO 'implement plan in full'] Hand out the new profitechlb.com FRONT names instead of the Cloudflare Worker fronts",
       "description": "DevOps put a FRONT label on profitechlb.com on every relay (DNS-only, own wildcard cert, canary pass): Tokyo amsela/morvex, Sydney korvel/taluse, Singapore tirano/elbrin, Hong Kong pelune/vantel, Amsterdam dorvik/orinda, Duesseldorf falmeo/ferani, Mexico City salvea/pelaro, Montreal nimora/zubric, Miami quessa/halvin, Sao Paulo lorvan/dremos, Los Angeles bexira/kostel, bkk-01 velmora/jumira (direct .shortaalmashahir.com / front .profitechlb.com). Please: (1) API config CloudfrontFronting: HostTemplate '{entryId}.profitechlb.com' + EntryIdByServerName -> the front labels above (today they map to sN-edge.pompesh.com), development first, then production under this CEO order; (2) after that, deactivate the 6 Cloudflare Worker fronts in CensorshipFallbackDomains (Purpose 3) or replace them with direct names, so no hidden-mode traffic goes through Cloudflare (cloudflare-exit-phase1 crit 5, xd-2248 P5). Rollback = old config / IsActive back. Also xd-2550 (small-number block rule).",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P0",
       "createdAt": "2026-10-24T14:23:25Z",
       "createdDate": "2026-10-24",
-      "completedDate": null
+      "completedDate": null,
+      "blocker": "Dev done (development 7f5ed5732, dev check xd-2569). Production waits the CEO YES on card row 470. Step (2) Worker fronts off = after the CEO phone test (no traffic on them today: prod NativeFront=true).",
+      "notes": [
+        "[BACKEND run 2026-10-24 1444, scheduled, unattended] Built + on dev 15:31Z. New setting NativeFront:FrontHostByServerName (server name -> front host); EntryIdByServerName (Worker + JWT) untouched, so the Worker road still works if NativeFront is switched off. Dev: Los Angeles before wss://s12.pompesh.com/ (14:56Z) -> after wss://kostel.profitechlb.com/ (15:31Z); Bangkok Dev wss://jumira.profitechlb.com/; Paris control unchanged. From the main server 15:0xZ: 11 of 12 front names 101 + cert ok; Tokyo 103.106.228.235 times out on 443 and 22 for every name incl. s2-edge (prod Tokyo IsActive=false) - DevOps to check. Rows 470, QA xd-2569."
+      ]
     },
     {
       "id": "xd-2557",
@@ -74428,6 +74482,30 @@
       "status": "pending",
       "priority": "P2",
       "createdAt": "2026-10-24T15:28:09Z",
+      "createdDate": "2026-10-24",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2569",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: [P0] xd-2556 dev check: front names on dev",
+      "description": "Re-run /root/reports/be1024-1444/front.sh on the main server (registers a throwaway api.dev user, reads caspercloak-config for Bangkok Dev / Los Angeles / Paris with LastLoginCountry IR and DE, deletes the user; Bangkok Dev is inactive on dev - flip IsActive true for the read and back to false, as this run did). Expect Los Angeles cloudfrontUrl wss://kostel.profitechlb.com/ (before 14:56Z: wss://s12.pompesh.com/), Bangkok Dev wss://jumira.profitechlb.com/ + pool [velmora.shortaalmashahir.com, s13.pompesh.com]. Read diff 7f5ed5732. Card row 470.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-10-24T15:32:45Z",
+      "createdDate": "2026-10-24",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2570",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: [P1] xd-2549 dev check: adopted heartbeat rows not billed twice",
+      "description": "Read diff 89769c5a0 (HeartbeatAdoptBilling + both disconnect paths). Filtered tests: dotnet test --no-build --filter HeartbeatAdoptBillingTests in /root/reports/be1020/code/backend-dotnet-core/Tests (3 pass). Evidence prod read-only: user 2a659e83 counter 1,251,275,932 B = 638,913,504 (wg-sync cut 03:59:55Z) + 612,362,428 (adopt row 847e2d36 Los Angeles closed 04:00:25Z). Live check after ship: next adopt row overlapping a WG row logs 'skipping bandwidth increment for adopted row'. Card row 471.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-24T15:32:45Z",
       "createdDate": "2026-10-24",
       "completedDate": null
     }
