@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-24T01:17:59Z",
+  "lastUpdated": "2026-10-24T01:32:56Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 69,
@@ -17013,6 +17013,16 @@
           "addedAt": "2026-10-24T01:12:45Z",
           "addedBy": "[DPI-SESSION] stage 0 2026-10-24",
           "evidence": "[DPI-SESSION stage 0 (logged [CTO]), Claude Code on the CEO Mac, 2026-10-24T01:12:45Z] asked once (dpi-resistance-program row 0.4). Baseline grade today B+ (details memory/departments/security/context/dpi-baseline-2026-10-24.md)."
+        },
+        {
+          "test": "SHIPPED 2026-10-24 01:30Z \u2014 UAE newcomers who fail hidden mode's private lookup now get a road that needs no lookup (xd-2488) \u00b7 why: the first public 4.3.1 newcomer in the UAE failed 11 times and never connected \u00b7 what: after one such failure the server stops sending the hidden-mode domain for 7 days, so the app dials the server address directly \u00b7 rollback: one setting or the saved image",
+          "verify": "docker logs caspervpn-api | grep 'DohFailover:' ; SELECT count(DISTINCT \"UserId\") FROM \"ConnectFailureEvents\" WHERE \"ErrorCode\" LIKE 'CasperVPN.CasperCloakHidingError:0%' AND \"Timestamp\">now()-interval '7 days'",
+          "met": false,
+          "owner": "[BACKEND]",
+          "createdBy": "[BACKEND]",
+          "createdAt": "2026-10-24T01:32:51Z",
+          "addedAt": "2026-10-24T01:32:51Z",
+          "evidence": "[CEO YES 2026-10-24 (live chat, ~01:15Z)] 'We cant test a conc fron uae on dev we need fhe fix on prod asap' || [BACKEND run 2026-10-24 0104 + CEO live chat, 2026-10-24T01:3xZ] SHIPPED: production 5c6644815 = cherry-pick -x of development 2c27bf5b8 (3 files: Services/StealthFailover.cs DohFailover, Controllers/ServersController.cs caspercloak-config, Tests/DohFailoverTests.cs). Tests: 5 new + 6 StealthFailover PASS; full suite 490/490 PASS. /root/deploy_api.sh 01:28-01:30Z EXIT 0, health 200, rollback tag caspervpn-api:rollback-202610240128 = image bdecfb8a4ee3. Live DLL: 'DohFailover: user=' UTF-16 count 1 (was 0). GET /api/servers/{id}/caspercloak-config no token -> 401 (route alive). Read-only prod: users with a DoH hard-fail in 7 d = 1 (65fd9bed, 11 rows) -> only that user gets the no-lookup road; everyone else (CEO included) unchanged. Bare-IP road checked from the main server: the 3 relays he tried (Singapore, Los Angeles, Dusseldorf) answer TLS with no SNI (cert *.pompesh.com) and WebSocket /cc upgrade 101. NOT PROVEN: a real UAE connect on this road - needs his next try (log line 'DohFailover: ... OMITTED' then a ConnectionLogs row). Rollback: set CasperCloak:DohFailover:Enabled=false, or redeploy rollback-202610240128."
         }
       ],
       "progress": 0,
@@ -72871,11 +72881,12 @@
       "to": "[CTO]",
       "title": "Handoff from BACKEND: [P1] First public 4.3.1 newcomer in the UAE never connected: hidden mode refused 11 times (DoH hard-fail)",
       "description": "Read-only prod 24 Oct 01:0xZ. User 65fd9bed (Sign in with Apple, created 24 Oct 00:11:29Z), iPhone iOS 16.7.16, app 4.3.1, Wi-Fi, region AE. 00:11:53-00:14:22Z: 11 connect failures, all protocol caspercloak, ErrorCode 'CasperVPN.CasperCloakHidingError:0' on 3 different servers (13f1a013, b321c2ce, 847e2d36); 0 successful ConnectionLogs rows for this user. CasperCloakHidingError case 0 = dohHardFailInRestrictedRegion: the app's private DNS lookup (primary + secondary) failed and, because the region is restricted, the app refuses to use normal DNS, so it never connects. Control: the CEO's iOS 27 phone on 4.3.1 connected fine. Ask: why does DoH fail on this network/iOS 16, and what fallback lets a UAE newcomer connect (e.g. bare IP / WireGuard / the second road from xd-1793). Owners likely IOS + DEVOPS; CTO routes. Not a CEO test account as far as the board shows (privaterelay Apple address, new).",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-10-24T01:09:15Z",
       "createdDate": "2026-10-24",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[BACKEND run 2026-10-24 0104 + CEO live chat, 2026-10-24T01:3xZ] SERVER PART SHIPPED under CEO live YES (card row 447): production 5c6644815 = cherry-pick -x of development 2c27bf5b8 (3 files: Services/StealthFailover.cs DohFailover, Controllers/ServersController.cs caspercloak-config, Tests/DohFailoverTests.cs). Tests: 5 new + 6 StealthFailover PASS; full suite 490/490 PASS. /root/deploy_api.sh 01:28-01:30Z EXIT 0, health 200, rollback tag caspervpn-api:rollback-202610240128 = image bdecfb8a4ee3. Live DLL: 'DohFailover: user=' UTF-16 count 1 (was 0). GET /api/servers/{id}/caspercloak-config no token -> 401 (route alive). Read-only prod: users with a DoH hard-fail in 7 d = 1 (65fd9bed, 11 rows) -> only that user gets the no-lookup road; everyone else (CEO included) unchanged. Bare-IP road checked from the main server: the 3 relays he tried (Singapore, Los Angeles, Dusseldorf) answer TLS with no SNI (cert *.pompesh.com) and WebSocket /cc upgrade 101. NOT PROVEN: a real UAE connect on this road - needs his next try (log line 'DohFailover: ... OMITTED' then a ConnectionLogs row). Rollback: set CasperCloak:DohFailover:Enabled=false, or redeploy rollback-202610240128. || "
     },
     {
       "id": "xd-2489",
@@ -72886,6 +72897,42 @@
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-10-24T01:12:52Z",
+      "createdDate": "2026-10-24",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2490",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: [P1] Live check xd-2488 (card row 447): DoH-fail user gets the no-lookup road and connects",
+      "description": "Shipped 24 Oct 01:30Z. Check on the next real event: api log line 'DohFailover: user=<id> ... domain=OMITTED' for a user with ErrorCode CasperVPN.CasperCloakHidingError:0, followed by a ConnectionLogs row for that user (first candidate: 65fd9bed, UAE). Control: users with no such failure still get casperCloakDomain (CEO's own config call unchanged). Proof on card row 447.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-24T01:32:56Z",
+      "createdDate": "2026-10-24",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2491",
+      "from": "[BACKEND]",
+      "to": "[IOS]",
+      "title": "Handoff from BACKEND: [P1] Build 76: stop hidden mode aborting in restricted regions (xd-2488 app part)",
+      "description": "Server part shipped 24 Oct 01:30Z (only helps after one failure). App part, from the gap hunt (vault copy - confirm on ios/75): (1) VPNConnectionManager resolveBridge runs the DoH lookup before the Cloudflare road check (~:2786 vs :2801) - skip/ignore DoH when a cloudfront url+token are present; (2) nothing catches dohHardFailInRestrictedRegion (CasperCloakHiding.swift:158) - on that error retry once with the server-sent IP (the :134-145 bare-IP path), then the direct road; (3) DoHResolver tries only cloudflare-dns.com + dns.google (:111-112) - add Quad9 and a lookup over our own API channel; (4) after 2 identical failures switch road, then protocol, and show the honest message (telemetry v2 #4) - 65fd9bed failed 11x in 149 s on the same error, 2bfce6df (AE, 1 Oct) 28x; (5) test once on iOS 16 (the only iOS 16 user seen is the lost one).",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-24T01:32:56Z",
+      "createdDate": "2026-10-24",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2492",
+      "from": "[BACKEND]",
+      "to": "[BACKEND]",
+      "title": "Handoff from BACKEND: [P1] Follow-ups from the restricted-region gap hunt (xd-2488)",
+      "description": "(a) Alarm: Telegram when a user < 24 h old in a restricted country has >=3 failures and 0 successes (65fd9bed was missed by the 00:05Z run). (b) Lost-user counts must exclude APIError:7 (subscriptionRequired, 46 LB rows) and APIError:12 (httpError, 32) - paywall, not censorship. (c) Log the road served per connect (StealthTier line exists) and join to failures daily. (d) Extend the fast-fail switch (StealthFailover) beyond the Cloudflare road. Measured 30 d: 8 lost users in restricted countries (AE 2, IR 2, LB 2, CN 1, RU 1), 435 of 640 failure rows have category 'unknown' (old builds).",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-24T01:32:56Z",
       "createdDate": "2026-10-24",
       "completedDate": null
     }
