@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-24T07:13:59Z",
+  "lastUpdated": "2026-10-24T07:20:23Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 69,
@@ -15889,7 +15889,7 @@
           "owner": "[BACKEND]",
           "test": "SHIPPED 2026-10-23 12:20Z | CEO YES 2026-10-21 (Telegram: 'Gonwith board advise and answer all and close tabs' = board advice YES) \u00b7 ship after QA xd-2221 dev PASS (QA already PASS on dev where the row says so), then [QA] live | READY TO SHIP (after QA xd-2221 passes on dev) \u2014 WireGuard session data use is recorded correctly \u00b7 why: the server counted the real bytes but the app's 'disconnect' message overwrote them with almost nothing (median 772 bytes per session), so reports said WireGuard users use no data \u00b7 what the ship does: keeps the larger of the two numbers; billing and data limits are not touched \u00b7 tested on dev: development 6387ff46a, 441/441, control fails; QA xd-2221 \u00b7 risk: very low - a report number \u00b7 rollback: redeploy the previous version \u00b7 advice: YES (xd-2183)",
           "verify": "After ship: WireGuard ConnectionLogs closed by the app after the ship, >= 60 s: median BytesDownloaded >> 1 KB (before: 772 B)",
-          "evidence": "[QA 2026-10-24 g, scheduled 'Casper qa', unattended, 2026-10-24T06:19:52Z] RECONCILE B re-measure - FAIL against the verify: WireGuard ConnectionLogs (Protocol 0) closed by the app (DisconnectReason null, >= 60 s) after the 23 Oct 12:20:28Z ship: 25 sessions from 4 users, median BytesDownloaded 1,184 B (before, 16-23 Oct, same filter: 238 sessions, median 624 B). Verify asks median >> 1 KB: not met. Most after-ship rows are ~200-240 s with 0.5-1.9 KB down and 0 B up (e.g. 18:24Z 14,627 s / 2,064 B / up 0); only 3 rows carry real traffic (23.6 MB, 24.2 MB, 277 KB). One account (2a2153cb, 11 rows, no UA/OS) may be a prober - not proven. Control: WHERE false 0. Handed back. Handoff xd-2508. || [BACKEND run 2026-10-23 1704, scheduled, unattended, 2026-10-23T17:2xZ] SHIPPED 2026-10-23 12:20Z (found unmarked): production 8b29e6be5 (xd-2183) is in the deploy clone; api container created 12:20:28Z; SessionByteCounts type in the live /app/CasperVPN.dll: 1. Live check = QA xd-2408 (needs a real event). || [CEO 2026-10-21 2026-10-21T12:53:19Z] 'Gonwith board advise and answer all and close tabs' = board advice YES (Telegram @Casperceobot; recorded by CEO BOT run 2026-10-22T06:46Z). Recorded before any action; the owning department's run ships it under the lock. || [BACKEND run 2026-10-19 1442, scheduled, unattended, 2026-10-19T15:33:38Z] added; QA dev checks pending."
+          "evidence": "[BACKEND run 2026-10-24 0705, scheduled, unattended, 2026-10-24T07:2xZ] QA FAIL explained (xd-2508): the 23 Oct ship fixed the app-disconnect path, but WireGuard rows are mostly closed by the node's RADIUS Stop, which overwrote the total with the last minute's delta. Second fix = card row 454. || [QA 2026-10-24 g, scheduled 'Casper qa', unattended, 2026-10-24T06:19:52Z] RECONCILE B re-measure - FAIL against the verify: WireGuard ConnectionLogs (Protocol 0) closed by the app (DisconnectReason null, >= 60 s) after the 23 Oct 12:20:28Z ship: 25 sessions from 4 users, median BytesDownloaded 1,184 B (before, 16-23 Oct, same filter: 238 sessions, median 624 B). Verify asks median >> 1 KB: not met. Most after-ship rows are ~200-240 s with 0.5-1.9 KB down and 0 B up (e.g. 18:24Z 14,627 s / 2,064 B / up 0); only 3 rows carry real traffic (23.6 MB, 24.2 MB, 277 KB). One account (2a2153cb, 11 rows, no UA/OS) may be a prober - not proven. Control: WHERE false 0. Handed back. Handoff xd-2508. || [BACKEND run 2026-10-23 1704, scheduled, unattended, 2026-10-23T17:2xZ] SHIPPED 2026-10-23 12:20Z (found unmarked): production 8b29e6be5 (xd-2183) is in the deploy clone; api container created 12:20:28Z; SessionByteCounts type in the live /app/CasperVPN.dll: 1. Live check = QA xd-2408 (needs a real event). || [CEO 2026-10-21 2026-10-21T12:53:19Z] 'Gonwith board advise and answer all and close tabs' = board advice YES (Telegram @Casperceobot; recorded by CEO BOT run 2026-10-22T06:46Z). Recorded before any action; the owning department's run ships it under the lock. || [BACKEND run 2026-10-19 1442, scheduled, unattended, 2026-10-19T15:33:38Z] added; QA dev checks pending."
         },
         {
           "met": true,
@@ -17090,6 +17090,19 @@
           "addedAt": "2026-10-24T07:10Z",
           "addedBy": "[MARKETING] growth run 2026-10-24 0655",
           "evidence": "[GROWTH run 2026-10-24 0655, scheduled, unattended, 2026-10-24T07:1xZ] follows row 437 (answered in live chat; the scheduled-task step itself not done)."
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "addedAt": "2026-10-24T07:25:00Z",
+          "addedBy": "[BACKEND] backend run 1024-0705",
+          "owner": "[BACKEND]",
+          "test": "READY TO SHIP \u2014 WireGuard sessions keep their real data use when the server closes them \u00b7 why: QA found the 23 Oct fix (row 352) did not move the number: the server's own 'session ended' message replaced the real total with only the last minute of traffic (one session: the app saw 12.9 MB, the report kept 2 KB) \u00b7 what: the session total is never lowered by that message; billing and data limits are not touched \u00b7 tested on dev: development 035fe631a, builds with 0 errors, 491 of 491 tests pass; QA dev check xd-2515; a real WireGuard session on dev is not possible (no traffic there) \u00b7 rollback: redeploy the saved image (caspervpn-api:rollback-<time>) \u00b7 advice: YES, small and safe; ship with rows 448-450 in one deploy",
+          "verify": "After ship: WireGuard ConnectionLogs closed after the ship, >= 60 s, excluding internal accounts: median BytesDownloaded of app-opened rows >> 1 KB; and for one row with an app heartbeat, row bytes >= the heartbeat bytesRx",
+          "evidence": "[BACKEND run 2026-10-24 0705, scheduled, unattended, 2026-10-24T07:2xZ] xd-2508 measurement on the handoff (Miami node vs DB 564 B gap; Amsterdam rows = last Stop delta).",
+          "blocker": "",
+          "notes": ""
         }
       ],
       "progress": 0,
@@ -22074,7 +22087,7 @@
           "passed": false,
           "verifiedBy": "none",
           "evidence": "[BACKEND run 2026-10-12 2215, scheduled, unattended, 2026-10-12T22:49:20Z] MEASURED: the iPhone fix f4265a9b is in build 69 (ios/69 2975ed12a, merge-base yes); server needs no change (resets measured 7 Oct). || [APPS run 2026-10-07 al 2026-10-07T21:11:58Z] [IOS, self-reported, NOT ticked - QA ticks] iPhone fix on ios/trial-at-signup f4265a9b (build 65, marker 26p): SubscriptionManager.swift syncFromBackend now compares against the cycle start SAVED per user (was memory-only -> nil after relaunch -> server reset never seen -> max() kept last month). Rules 8/8 on Linux swiftc, control 7/8. DEV device test still to do (xd-1488). [BACKEND 2026-10-07 f] No server fix needed (server resets measured). The fix is in the iPhone app - sent to [iOS]. Test for QA/iOS: account over 512 MB, set its cycle start/end into the past on DEV, wait for the hourly job, relaunch the app: it must show the fresh allowance and connect.",
-          "blocker": "Waits QA xd-2172 (build 75 phone pass: over-limit account with a past cycle). Server reset measured 7 Oct; app fix f4265a9b in builds since 69.",
+          "blocker": "Waits the CEO's hands: phone pass on build 75 in a live chat (card row 427; QA xd-2172 is blocked on it, not on QA). Waits QA xd-2172 (build 75 phone pass: over-limit account with a past cycle). Server reset measured 7 Oct; app fix f4265a9b in builds since 69.",
           "notes": " || [CEO office 17 Oct ~22:3xZ blocker sweep: the CEO answered; old blocker kept in notes] old blocker: CEO device test of build 69 (account over the limit with a past cycle on DEV, relaunch -> fresh allowance), then QA; build 69 assembled 12 Oct (xd-1953)"
         },
         {
@@ -22084,7 +22097,7 @@
           "passed": false,
           "verifiedBy": "none",
           "evidence": "[BACKEND run 2026-10-24 0005, scheduled, unattended, 2026-10-24T00:2xZ] Apple released iOS 4.3.1 build 75 on 23 Oct 23:22:08Z (CEO bot, itunes lookup). MEASURED read-only prod 00:1xZ (BEGIN READ ONLY on Users): over the allowance with cycle start > 31 days ago = 0; control: over the allowance in the current cycle = 17 of 645; AutoResetDataMonthly with cycle end in the past = 0. App fix f4265a9b is in the public build. old blocker: Server query already 0; app fix f4265a9b is in builds since 69. Waits Apple review of 4.3.1 build 75 (WAITING_FOR_REVIEW since 16 Oct 23:03Z, day 7 on 23 Oct; board rows re-check 24 Oct), then QA xd-2 || [BACKEND run 2026-10-10 2314, scheduled, unattended, 2026-10-10T23:54:44Z] MEASURED production read-only 2026-10-10T23:54Z: active users with a cycle start > 31 days ago AND at/over their cycle limit = 0 (row-1 population); control: over the limit in the CURRENT cycle = 10 (normal free-cap users), AutoResetDataMonthly users with a cycle end in the past = 1 (hourly reset job picks it up). The server side needs no ship; the remaining fix is the iPhone one (SubscriptionManager, build-65 branch, marker 26p). || [BACKEND run 2026-10-23 0304, scheduled, unattended, 2026-10-23T03:1xZ] stale blocker rewritten (named build 65/67/69, the build in review is 75). old blocker: Server query already 0; waits for the iPhone fix to reach users in the next App Store build (owner [IOS], xd-1488 device test; build 67 on HOLD).",
-          "blocker": "Waits QA xd-2172 (phone pass on build 75). xd-2475 is done (24 Oct 00:17Z). Server query = 0 on 24 Oct 00:1xZ."
+          "blocker": "Waits the CEO's hands: phone pass on build 75 in a live chat (card row 427; QA xd-2172 is blocked on it, not on QA). Waits QA xd-2172 (phone pass on build 75). xd-2475 is done (24 Oct 00:17Z). Server query = 0 on 24 Oct 00:1xZ."
         }
       ],
       "dueBy": "2026-10-09T20:03:23Z",
@@ -59729,13 +59742,14 @@
       "handoffTo": "[IOS]",
       "handoffNote": "then IOS adds the fix to the next build",
       "notes": [
+        "[BACKEND run 2026-10-24 0705, scheduled, unattended, 2026-10-24T07:2xZ] Re-based: named QA xd-2172 itself waits the CEO (card row 427).",
         "[BACKEND run 2026-10-22 2205, scheduled, unattended, 2026-10-22T22:11:05Z] RE-MEASURED production read-only: UserDeviceTokens 3, newest 2026-10-13 21:07Z (no new token since). Server side unchanged; the test push still waits QA xd-2172.",
         "[BACKEND run 2026-10-22 0603, scheduled, unattended, 2026-10-22T06:31Z] MEASURED read-only 22 Oct: UserDeviceTokens 3 rows, 3 active, newest 13 Oct 21:07Z (no new phone registered since); api log 20-22 Oct 'APNs push sent successfully' 0, any 'apns' line 0. The send leg stays NOT PROVEN until one real push is triggered from a registered phone (build 75 pass).",
         "[BACKEND live 2026-10-17 (CEO: 'START FINALIZING BACK END TASKS EARLIEST DATE FIRST'), 2026-10-17T18:50:52Z] re-measured: active device tokens 3; 'APNs push sent successfully' 0 on 15-17 Oct (the 17 Oct ship of rows 284/285 adds real senders). Still waits one delivered push.",
         "[BACKEND run 2026-10-12 0115, scheduled, unattended, 2026-10-12T01:18:58Z] QA xd-1860 completed PARTIAL 12 Oct (211/222/240 pass); this row's state: row 223: QA xd-1860 PARTIAL - APNs key present in the container, active UserDeviceTokens 2; waits the CEO's one test push from build 68 ('APNs push sent successfully' 0). | [BACKEND run 2026-10-11 0118, scheduled, unattended, 2026-10-11T01:39:44Z] MEASURED on production (read-only): config KeyPath /app/keys/AuthKey_MLKCGXNWXW.p8 (appsettings.json, UseSandbox=false, topic com.applinkoffshore.CasperVPN) but /app/keys does NOT exist in caspervpn-api (mounts: geoip, api-logs, apple.p8, reports, secrets/api; 0 PushNotifications env vars) -> the API cannot sign a single push today. The matching key exists on the main server only at /opt/caspervpn/push-service/keys/ (root:root 0600 - the API runs as uid 1000, so a plain mount would not be readable). UserDeviceTokens = 0 rows; api log 7 d 'apns' lines = 0. Dev API has no key either. FIX on development e19e1de78: compose mounts /opt/caspervpn/secrets/apns -> /app/keys:ro; sender retries the other APNs gateway once on 400 BadDeviceToken (Xcode installs = sandbox tokens, TestFlight/App Store = production). Main-server build 0 errors, suite 318/318, ApnsGatewayFallbackTests 6/6 (real ES256 JWT from a temp key); CONTROL old sender 3/6 fail (the retry cases). Dev API recreated 01:38:40Z healthy; dev DLL literal 'retrying on the other gateway' = 1, production DLL = 0 (control). Ship needs the CEO YES on the new READY TO SHIP row (production compose + key copy + api recreate).\n[BACKEND run 2026-10-11 2306, scheduled, unattended, 2026-10-11T23:31:41Z] shipped to production a8708d4b1; QA xd-1860.",
         "[CEO office 17 Oct ~22:3xZ blocker sweep: the CEO answered; old blocker kept in notes] old blocker: Waits the CEO's one test push from build 68. Before: Shipped 11 Oct 23:22Z. row 223: QA xd-1860 PARTIAL - APNs key present in the container, active UserDeviceTokens 2; waits the CEO's one test push from build 68 ('APNs push sent successfully' 0)."
       ],
-      "blocker": "Waits QA xd-2172 (build 75 phone pass: one test push); server tokens 3, pushes sent 0 (22 Oct).",
+      "blocker": "Waits the CEO's hands: one test push during the build 75 phone pass (card row 427; QA xd-2172 is blocked on the CEO, not on QA). Server tokens 3, pushes sent 0 (22 Oct).",
       "category": "factory-ops",
       "ageDays": 2,
       "needsRelease": false,
@@ -68099,8 +68113,8 @@
       "createdAt": "2026-10-17T21:27:53Z",
       "createdDate": "2026-10-17",
       "completedDate": null,
-      "notes": "[BACKEND run 2026-10-23 1208, scheduled, unattended, 2026-10-23T12:2xZ] SHIPPED to production 12:20Z under CEO YES (row 393 A). production 24d444f49 (cherry-pick -x of development 6387ff46a, c1caea040, 97f024298, 35c189c59 + compose line 764e58573), lock 4f87bc04f -> release 34ef1aaa5; build 0 errors, tests 464/464; /root/deploy_api.sh 12:18:12-12:20:56Z DONE OK, image 164ccd6297bd -> 06be7977ee36, rollback tag caspervpn-api:rollback-202610231218; /health 200; 0 exceptions/ERR lines in 10 min; migrations AppleRefreshToken + LocationRequests applied 12:20:43Z. Live check -> QA xd-2408. || READY TO SHIP row 352 on the CEO card. [BACKEND run 2026-10-19 1442, scheduled, unattended, 2026-10-19T15:33:38Z] Answer: the number was wrong, not the traffic - the disconnect call overwrote the server's count with the app's (proof in QA xd-2221). Fixed on development 6387ff46a. || [BACKEND run 2026-10-23 0004, scheduled, unattended, 2026-10-23T00:2xZ] MEASURED dev DB 23 Oct 00:07Z: ConnectionLogs total 45, newest 9 Oct 11:44Z, 0 since the fix (19 Oct 15:31Z) - CONTROL: same table reads 19 rows in 30 d, so the query works. The dev server gets no app traffic, so this dev check cannot pass unattended.",
-      "blocker": "SHIPPED 23 Oct 12:20Z - waits QA xd-2408 (live check on the next real event)."
+      "notes": "[BACKEND run 2026-10-24 0705, scheduled, unattended, 2026-10-24T07:2xZ] Second cause found by xd-2508: RADIUS Stop overwrote the row with the last delta; fix development 035fe631a, card row 454. || [BACKEND run 2026-10-23 1208, scheduled, unattended, 2026-10-23T12:2xZ] SHIPPED to production 12:20Z under CEO YES (row 393 A). production 24d444f49 (cherry-pick -x of development 6387ff46a, c1caea040, 97f024298, 35c189c59 + compose line 764e58573), lock 4f87bc04f -> release 34ef1aaa5; build 0 errors, tests 464/464; /root/deploy_api.sh 12:18:12-12:20:56Z DONE OK, image 164ccd6297bd -> 06be7977ee36, rollback tag caspervpn-api:rollback-202610231218; /health 200; 0 exceptions/ERR lines in 10 min; migrations AppleRefreshToken + LocationRequests applied 12:20:43Z. Live check -> QA xd-2408. || READY TO SHIP row 352 on the CEO card. [BACKEND run 2026-10-19 1442, scheduled, unattended, 2026-10-19T15:33:38Z] Answer: the number was wrong, not the traffic - the disconnect call overwrote the server's count with the app's (proof in QA xd-2221). Fixed on development 6387ff46a. || [BACKEND run 2026-10-23 0004, scheduled, unattended, 2026-10-23T00:2xZ] MEASURED dev DB 23 Oct 00:07Z: ConnectionLogs total 45, newest 9 Oct 11:44Z, 0 since the fix (19 Oct 15:31Z) - CONTROL: same table reads 19 rows in 30 d, so the query works. The dev server gets no app traffic, so this dev check cannot pass unattended.",
+      "blocker": "SHIPPED part 1 23 Oct 12:20Z (app disconnect). Part 2 (RADIUS Stop) on development 035fe631a - waits QA xd-2515 + CEO YES card row 454 (xd-2508)."
     },
     {
       "id": "xd-2184",
@@ -72853,8 +72867,8 @@
       "createdAt": "2026-10-24T00:08:53Z",
       "createdDate": "2026-10-24",
       "completedDate": null,
-      "blocker": "Waits BACKEND xd-2512: a probe target for the WebSocket and WireGuard-UDP steps",
-      "notes": "[APPS run 2026-10-24 0633, scheduled, unattended, 2026-10-24T06:4xZ] [IOS] Measured on ios/77: the empty steps are by design (no relay token / peer keys in the probe). Sent xd-2512 to [BACKEND] for a no-auth probe target."
+      "blocker": "Waits DEVOPS xd-2516 (no-auth WebSocket path + UDP echo port on the fleet), then BACKEND adds the targets, then [IOS] build 76+.",
+      "notes": "[BACKEND run 2026-10-24 0705, scheduled, unattended, 2026-10-24T07:2xZ] xd-2512 answered: targets go on the fleet -> DEVOPS xd-2516. || [APPS run 2026-10-24 0633, scheduled, unattended, 2026-10-24T06:4xZ] [IOS] Measured on ios/77: the empty steps are by design (no relay token / peer keys in the probe). Sent xd-2512 to [BACKEND] for a no-auth probe target."
     },
     {
       "id": "xd-2479",
@@ -73287,11 +73301,13 @@
       "to": "[BACKEND]",
       "title": "Handoff from QA: [P2] Ship card row 450 (social sign-up attribution) under CEO YES - QA dev check PASS",
       "description": "QA xd-2503 PASS on development 1b298e152 (build 0 errors, 490/490 by QA, diff read). Ship by the normal path only after CEO YES on card row 450, mark SHIPPED, then hand [QA] the live leg: next real Apple/Google newcomer has RegistrationUserAgent non-empty (control: e-mail sign-ups 214/215 filled).",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P2",
       "createdAt": "2026-10-24T06:20:06Z",
       "createdDate": "2026-10-24",
-      "completedDate": null
+      "completedDate": null,
+      "blocker": "Waits the CEO's YES on card row 450 (ceo_answers 07:04Z: nothing new). Ship 1b298e152 with rows 448/449 in one deploy the run after a YES.",
+      "notes": "[BACKEND run 2026-10-24 0705, scheduled, unattended, 2026-10-24T07:2xZ] ceo_answers --apply 07:04Z: nothing new; row 450 has no CEO YES. Nothing to ship yet."
     },
     {
       "id": "xd-2508",
@@ -73299,11 +73315,13 @@
       "to": "[BACKEND]",
       "title": "Handoff from QA: [P1] Card row 352 live check FAIL: WireGuard session bytes still ~1 KB after the ship",
       "description": "QA 24 Oct 06:2xZ prod read-only: after the 23 Oct 12:20Z ship, app-closed WireGuard sessions >= 60 s: 25, median BytesDownloaded 1,184 B (before 624 B); most rows 0 B upload even for 4 h sessions. Either the server-side count is not reaching ConnectionLogs on disconnect, or these are idle/prober sessions. Please measure one known session end to end (node wg peer transfer vs the ConnectionLogs row) and fix or show the rows are not real use; then hand [QA] the re-check. Query on card row 352 evidence.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-10-24T06:20:06Z",
       "createdDate": "2026-10-24",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[BACKEND run 2026-10-24 0705, scheduled, unattended, 2026-10-24T07:2xZ] MEASURED root cause. (1) Server count works: live WG session Miami (user 4f63e9b0) node 'wg show' 07:07:43Z rx 460,928,588 / tx 3,414,442,720 vs DB peer row at sync 07:07:30Z rx 460,928,240 / tx 3,414,442,156 (gap 564 B in 13 s); session row climbing (2,880,387,284 B). (2) The ~1 KB rows: the WireGuard RADIUS daemon (/opt/caspervpn/wg-radius-accounting.py, md5 4fadc7c3 = repo scripts/) sends only the bytes since its last report; RadiusAuthController's Stop branch wrote that delta OVER the row. Proof: row 22:00:53Z Amsterdam (user 2eecd0e6) closed at 1,184 B = the last Stop line 23:57:59Z 'Bytes: 1184'; row 2173adf3 (build 75, 14:20-18:24Z) closed at 2,064 B while the app's own heartbeat at 15:27:29Z said bytesRx 12,890,100. (3) QA's 30 rows since the ship: 15 are one internal account (2a2153cb, caspervpn address) and many are sync-opened idle peers - not real use. FIX on development 035fe631a (Stop keeps max(row, record), same rule as xd-2183); tests 491/491. Dev check -> [QA] xd-2515; READY TO SHIP row added on the CEO card.",
+      "blocker": "Fix on development 035fe631a - waits QA dev check xd-2515, then the CEO YES on the new READY TO SHIP row (WireGuard RADIUS Stop keeps the session bytes)."
     },
     {
       "id": "xd-2509",
@@ -73353,11 +73371,13 @@
       "to": "[BACKEND]",
       "title": "Handoff from IOS: [IOS] Network probe WebSocket + WireGuard-UDP steps need a probe target (xd-2478)",
       "description": "Measured on ios/77 81e60d2 (ConnectFailureReport.swift:864): the probe leaves wsOk / wgUdpOk empty ON PURPOSE - a WebSocket upgrade needs a relay token and a WireGuard check needs peer keys the probe does not have, and sending 'false' for a step not run would lie. So build 75's WsOk 0/15, WgUdpOk 0/15 is by design, not a bug. To fill them the app needs: (a) a public no-auth WebSocket echo path (e.g. wss://api host/ws-probe answering 101 then closing) and (b) a UDP echo port on one fleet node (or a dedicated probe key pair the API hands out). Please say which target (with DEVOPS if a node port is needed); then [IOS] adds the two steps in one build.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P2",
       "createdAt": "2026-10-24T06:39:10Z",
       "createdDate": "2026-10-24",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[BACKEND run 2026-10-24 0705, scheduled, unattended, 2026-10-24T07:2xZ] Answer: the API has no WebSocket support and the hidden-mode road is the relay on the nodes, so both probe targets belong on the fleet: (a) a no-auth /ws-probe on each CasperCloak relay front answering 101 then closing; (b) a rate-limited UDP echo on one port (51899) on the same nodes. Handed to DEVOPS xd-2516; BACKEND then adds the targets to the probe config and [IOS] adds the two steps (xd-2478).",
+      "blocker": "Waits DEVOPS xd-2516 (probe targets on the fleet; fleet change needs a CEO YES row)."
     },
     {
       "id": "xd-2513",
@@ -73380,6 +73400,30 @@
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-10-24T06:59:26Z",
+      "createdDate": "2026-10-24",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2515",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: [P1] Dev check: WireGuard RADIUS Stop keeps the session bytes (xd-2508, development 035fe631a)",
+      "description": "Code leg on development 035fe631a: RadiusAuthController Stop branch now uses SessionByteCounts.Keep (never lowers the row). Build + tests 491/491 on the main-server clone (new test WireGuardRadiusStopDelta_doesNotLowerRow). Check: (1) diff read; (2) dev API DLL created after ~07:40Z contains the change (grep -c SessionByteCounts in /app/CasperVPN.dll >= previous+0; method names via plain grep); (3) filtered dotnet test --filter FullyQualifiedName~SessionByteCounts passes. The dev server has no WireGuard traffic, so the real leg is LIVE after the CEO YES on the new READY TO SHIP row: WireGuard rows closed by 'RADIUS Stop'/app after the ship, >= 60 s, non-internal, BytesDownloaded vs the app heartbeat bytesRx for the same row.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-24T07:20:23Z",
+      "createdDate": "2026-10-24",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2516",
+      "from": "[BACKEND]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from BACKEND: [P2] Probe targets for the iPhone network probe: a no-auth WebSocket path + a UDP echo port (xd-2512 / xd-2478)",
+      "description": "The iPhone network probe (telemetry v2 row 1) must test (a) a WebSocket upgrade and (b) one WireGuard-style UDP round trip, without a relay token or peer keys. BACKEND answer to xd-2512: the API has no WebSocket support and the hidden-mode road is the CasperCloak relay on the nodes, so the honest targets live on the fleet: (a) on each CasperCloak relay front (same cc-*.caspervpn.com domain the app uses), a path /ws-probe that answers 101 Switching Protocols with no auth, then closes (no tunnel, no data); (b) on the same nodes, a UDP echo on one fixed port (suggest 51899) that answers 1 small packet per packet, rate-limited per source IP. Fleet config needs the CEO YES (READY TO SHIP row). When both are on dev/one node, tell BACKEND: we add the two targets to the probe config the app reads, then [IOS] adds the steps (xd-2478).",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-24T07:20:23Z",
       "createdDate": "2026-10-24",
       "completedDate": null
     }
