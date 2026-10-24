@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-24T23:21:08Z",
+  "lastUpdated": "2026-10-24T23:26:08Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 69,
@@ -17381,6 +17381,15 @@
           "addedBy": "[DPI-SESSION] stage 3 pre-req 2026-10-24",
           "evidence": "[DPI-SESSION Option A (logged BACKEND), Claude Code live chat with the CEO, 2026-10-24T22:22:36Z] OPTION A PROVEN ON DEV 22:2xZ: nginx on bkk-01 proxies https://s13.pompesh.com/<secret>/ to 127.0.0.1:5002 (Flask token still auths each op); 3 backend services (VpnServerControlService + ServerHealthPollerService + FleetNodeHealthWatchdogService) read VpnServers:ControlApiOverrides[ip] before the default :5002 (development; compile 0 errors). Dev api recreated with the override env set: after a full poller+watchdog cycle 'Bangkok Dev' STAYED IsActive=true Status=Online AutoDisabled=false, LastHealthCheck fresh 22:19:58Z (was auto-disabled/unreachable before); dev api log calls https://s13.pompesh.com/<secret>/wireguard/peer-stats + /health over 443. Both brains reach the path (200). PRODUCTION STEP (the deploy, on CEO A): deploy_api.sh ships the 3 services + set VpnServers__ControlApiOverrides__46.16.129.246=https://s13.pompesh.com/<secret> in the prod brain docker-compose.override.yml (secret out of git); then the prod watchdog re-enables 'Bangkok (test)' and the CEO admin phone sees it. Rollback: remove the env + redeploy (code is a no-op without the override). || [DPI-SESSION as DEVOPS (logged SECURITY), Claude Code live chat with the CEO, 2026-10-24T21:57:42Z] PROVEN: brain->bkk:5002 refused 3x (curl http=000 connect=0.000) + the production node-watchdog gets 000 + tcpdump on bkk saw NO packets arrive from 178.62.101.221 on 5002; brain->bkk:22/443 open; brain->sgp/hk/mia:5002 = 200; bkk local iptables INPUT policy ACCEPT, no 5002 rule (only nat wg0 port-53 REDIRECT), ufw/nft inactive, bkk answers its own public :5002 (200); brain OUTPUT has no block to bkk, route via 178.62.64.1 normal, no ipset. VAULT (credentials.md:395-406): legacy-4 restrict 5002 to brain+dev ACCEPT then DROP; 'Fleet 8 + Bangkok dev have :5002 world-open'. So this is drift from the documented world-open state, in the inter-provider path. I earlier guessed 'OneProvider panel/edge' twice - wrong, corrected. Option A detail: nginx on bkk:443 (stage 2) already reachable from the brain; add an internal authenticated proxy to 127.0.0.1:5002 + a VpnServers.ControlApiUrl so the backend stops hardcoding http://<ip>:5002 (VpnServerControlService DEFAULT_API_PORT 5002). || [DPI-SESSION as BACKEND (logged [SECURITY]), Claude Code live chat with the CEO, 2026-10-24T20:23:18Z] NOW GATES VISIBILITY TOO: the API node-watchdog probes http://46.16.129.246:5002/health every ~60 s, got no answer, and auto-disabled 'Bangkok (test)' at 20:10:26Z (IsActive=f, Status=Offline, AutoDisabled=t; api log 20:20:55/20:22:00 'Sending HTTP request GET http://46.16.129.246:5002/health', sweep '3 auto-disabled'). Once the OneProvider rule lets 178.62.101.221 reach 46.16.129.246:5002, the watchdog re-enables the row itself and the CEO's (now Admin) account sees Bangkok (test) within ~10 min (cache). || [DPI-SESSION as BACKEND (logged [SECURITY]), Claude Code live chat with the CEO, 2026-10-24T20:09:43Z] brain -> bkk:5002 closed/filtered, brain -> sgp:5002 open, dev-brain -> bkk:5002 closed/filtered; bkk ss 0.0.0.0:5002 LISTEN, iptables INPUT ACCEPT no 5002 rule, local /health 200. DevOps (panel access) may do it instead of the CEO.",
           "updatedAt": "2026-10-24T22:22:36Z"
+        },
+        {
+          "test": "ACTION (2 minutes) \u2014 the CEO answer poller you approved on 23 Oct (row 425, every minute on the main server) is still not running: your taps on the dashboard reach the board only when a department run happens to start \u00b7 why: DevOps has it as xd-2386 but spent today's runs on the Cloudflare move you ordered \u00b7 what you do: nothing - this row is here so it is not forgotten; it is first in DevOps' queue after the relays \u00b7 if nothing: answers keep landing 1-4 hours late",
+          "verify": "ssh main server: systemctl list-timers | grep ceo-answers (or the cron line) exists and ran in the last 5 min",
+          "owner": "[CEO]",
+          "met": false,
+          "addedAt": "2026-10-24T23:05Z",
+          "addedBy": "ceo-office",
+          "evidence": "[CEO office live 2026-10-24 23:0xZ, CEO in chat] added after the CEO asked why runs do not record answers; xd-2386 pending since 23 Oct."
         }
       ],
       "progress": 0,
@@ -75018,6 +75027,30 @@
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-10-24T23:21:08Z",
+      "createdDate": "2026-10-24",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2594",
+      "from": "[CEO]",
+      "to": "[CTO]",
+      "title": "Handoff from CEO: [P0] Every run's first CEO-answer read fails: dashboard_ssh_push.py defaults DASH_WORK to /tmp (12 failures today) - fix the default, make START.md 2.0 one command that always works",
+      "description": "[CEO office live 2026-10-24 23:0xZ, CEO in chat] CEO: 'why do runs not record answers and tasks'. MEASURED: tools/dashboard_ssh_push.py line 49 `WORK = os.environ.get('DASH_WORK', '/tmp/casper-dash-ssh')`; /tmp is owned by an earlier run in the VM, so `ceo_answers.py --apply` dies with 'could not lock config file /tmp/casper-dash-ssh/.git/config: Permission denied' on the FIRST try in every run (DEPARTMENT_LOG today: 12 'first try failed' lines); runs that do not retry record nothing that run. Fix on development: default WORK to a per-process folder under $HOME (e.g. $HOME/dash-ssh-<pid>) and remove it at exit; same in ceo_answers.py and any tool that imports it; START.md 2.0 command updated so no run needs to know the env var; add a unit test that the default is never under /tmp. Also note in START.md: a 'Run now' from the Claude app sometimes fires in the cloud without the Mac folder (3 growth runs today stopped at START.md) - the run must say 'no Mac link' in ONE line and exit, and the CEO must press Run now on the Mac's Claude app. Ship under the lock (tools are CTO-owned, production branch), prove with the next 3 scheduled runs: 0 first-try failures. Hand [QA].",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-10-24T23:26:07Z",
+      "createdDate": "2026-10-24",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2595",
+      "from": "[CEO]",
+      "to": "[CTO]",
+      "title": "Handoff from CEO: [P1] Runs that find nothing vs piles of work: measure today's 141 run entries and propose the schedule rebalance (CEO bot hourly 'no messages' x8 vs DevOps 51 WORK on 2 runs/day)",
+      "description": "[CEO office live 2026-10-24 23:0xZ, CEO in chat] CEO: 'the factory makes runs with nothing to do while we have piled up tasks'. MEASURED from DEPARTMENT_LOG 24 Oct: 141 session entries; CEO bot 9 runs, 8 'no messages, nothing posted'; QA 26 entries, 3 runs WORK 14->14; BACKEND 19 entries, 3 runs 14->14; DEVOPS 51 WORK items, 2 scheduled runs, moved 2 (one run spent on the row 324 ship); ANDROID 7->7 (all wait a live Mac chat); DESKTOP 25 deferred. Deliver for the CEO as ONE DECISION row with numbers: (A) CEO bot hourly -> only the 09:00/19:00 brief slots + a 15-min answer poller on the main server (xd-2386, already approved, pending DEVOPS) so taps land without a run; (B) DevOps 2 -> 4 runs/day while WORK > 20; (C) hourly QA/BACKEND -> every 2 h, since 3 of today's runs moved 0; token cost per run from xd-2232 numbers. Also: items that 'wait a real event' must leave WORK (dept_queue class OUTSIDE with the event named) so WORK counts only what a run can do now - today WORK over-counts and the runs look idle while the count looks full.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-24T23:26:07Z",
       "createdDate": "2026-10-24",
       "completedDate": null
     }
