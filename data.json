@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-24T00:41:41Z",
+  "lastUpdated": "2026-10-24T01:09:15Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 69,
@@ -20048,9 +20048,9 @@
           "verify": "SELECT count(*) FILTER (WHERE \"AppVersion\" IS NOT NULL), count(*) FROM \"ConnectionLogs\" WHERE \"ConnectedAt\">now()-interval '7 days'",
           "met": false,
           "verifiedBy": "none",
-          "evidence": "[BACKEND run 2026-10-13 0015, scheduled, unattended, 2026-10-13T00:48:54Z] RE-MEASURED production read-only (7 d): ConnectionLogs AppVersion set on 29 of 726 rows (4.4: 16, 4.3.1: 13; store builds send none); ConnectFailureEvents AppVersion 98 of 218, OsVersion 0 of 218 (column live since row 221; no app sends it yet). Server side complete; nothing left for BACKEND. || [BACKEND run 2026-10-10 2314, scheduled, unattended, 2026-10-10T23:54:44Z] MEASURED production read-only: ConnectionLogs has columns DeviceOs + AppVersion, ConnectFailureEvents has AppVersion (server side is live). Last 7 days: ConnectionLogs 16 of 647 rows carry an AppVersion (all '4.4' = build-65 testers), ConnectFailureEvents 99 of 230. The live App Store app (4.2) sends none. | [QA 2026-10-10 u, scheduled, 2026-10-10T23:34:26Z] PARTIAL - production 23:10Z, last 7 days: ConnectionLogs AppVersion set on 16 of 646 rows (all 16 = 4.4 test builds, DeviceOs 16/16; store 4.2 rows 630 NULL); ConnectFailureEvents AppVersion 4.4 on 98 of 224 rows, and the table has NO OS-version column (information_schema: only AppVersion). App version half works in the next build; the OS half is missing on ConnectFailureEvents -> handed to [BACKEND]. ||  || [BACKEND run 2026-10-23 0304, scheduled, unattended, 2026-10-23T03:1xZ] stale blocker rewritten (named build 65/67/69, the build in review is 75). old blocker: App Store: the next iPhone build (69, contains the version + OS fields) needs the CEO's Xcode upload and Apple's review; re-measure the same query 7 days after release (owner [IOS] + CEO).",
+          "evidence": "[BACKEND run 2026-10-24 0104, scheduled, unattended, 2026-10-24T01:1xZ] RE-RUN on public 4.3.1 (read-only prod, 01:06Z): since release 23:22:08Z ConnectionLogs 20 rows, 3 from 4.3.1 - all 3 carry AppVersion 4.3.1 + DeviceOs 'iOS 27.0.0' (3/3); other 17 rows (2 users) come from older builds with no version (expected). ConnectFailureEvents last 7 d: 12 rows from 4.3.1, all 12 carry AppVersion + OsVersion (iOS 16.7.16 x11, iOS 27.0.0 x1); control: 44 older-build rows have neither. So every row written by build 75 carries both. verify: SELECT \"AppVersion\",\"DeviceOs\",count(*) FROM \"ConnectionLogs\" WHERE \"ConnectedAt\">='2026-10-23 23:22:08' GROUP BY 1,2; same on ConnectFailureEvents (\"AppVersion\",\"OsVersion\", \"Timestamp\"). Small sample (2 users on 4.3.1) - QA judges. || [BACKEND run 2026-10-13 0015, scheduled, unattended, 2026-10-13T00:48:54Z] RE-MEASURED production read-only (7 d): ConnectionLogs AppVersion set on 29 of 726 rows (4.4: 16, 4.3.1: 13; store builds send none); ConnectFailureEvents AppVersion 98 of 218, OsVersion 0 of 218 (column live since row 221; no app sends it yet). Server side complete; nothing left for BACKEND. || [BACKEND run 2026-10-10 2314, scheduled, unattended, 2026-10-10T23:54:44Z] MEASURED production read-only: ConnectionLogs has columns DeviceOs + AppVersion, ConnectFailureEvents has AppVersion (server side is live). Last 7 days: ConnectionLogs 16 of 647 rows carry an AppVersion (all '4.4' = build-65 testers), ConnectFailureEvents 99 of 230. The live App Store app (4.2) sends none. | [QA 2026-10-10 u, scheduled, 2026-10-10T23:34:26Z] PARTIAL - production 23:10Z, last 7 days: ConnectionLogs AppVersion set on 16 of 646 rows (all 16 = 4.4 test builds, DeviceOs 16/16; store 4.2 rows 630 NULL); ConnectFailureEvents AppVersion 4.4 on 98 of 224 rows, and the table has NO OS-version column (information_schema: only AppVersion). App version half works in the next build; the OS half is missing on ConnectFailureEvents -> handed to [BACKEND]. ||  || [BACKEND run 2026-10-23 0304, scheduled, unattended, 2026-10-23T03:1xZ] stale blocker rewritten (named build 65/67/69, the build in review is 75). old blocker: App Store: the next iPhone build (69, contains the version + OS fields) needs the CEO's Xcode upload and Apple's review; re-measure the same query 7 days after release (owner [IOS] + CEO).",
           "qaDate": "2026-10-10",
-          "blocker": "Apple part done 23 Oct 23:22Z (4.3.1 build 75 live, QA ASC read 24 Oct 00:2xZ). Owner re-runs now: xd-2483. Old: Version + OS fields are in build 75. Waits Apple review of 4.3.1 build 75 (WAITING_FOR_REVIEW since 16 Oct 23:03Z, day 7 on 23 Oct; board rows re-check 24 Oct); re-measure the same query 7 days after release (owner [BACKEND])."
+          "blocker": "Waits QA xd-2487 (tick check on the public 4.3.1 rows, measured 24 Oct 01:06Z)."
         },
         {
           "test": "The funnel is split by LastLoginCountry and the 3 countries with the largest never-connected share are named with their top failure reason (from ConnectFailureEvents), excluding probe/staff accounts",
@@ -21988,7 +21988,7 @@
           "passed": false,
           "verifiedBy": "none",
           "evidence": "[BACKEND run 2026-10-24 0005, scheduled, unattended, 2026-10-24T00:2xZ] Apple released iOS 4.3.1 build 75 on 23 Oct 23:22:08Z (CEO bot, itunes lookup). MEASURED read-only prod 00:1xZ (BEGIN READ ONLY on Users): over the allowance with cycle start > 31 days ago = 0; control: over the allowance in the current cycle = 17 of 645; AutoResetDataMonthly with cycle end in the past = 0. App fix f4265a9b is in the public build. old blocker: Server query already 0; app fix f4265a9b is in builds since 69. Waits Apple review of 4.3.1 build 75 (WAITING_FOR_REVIEW since 16 Oct 23:03Z, day 7 on 23 Oct; board rows re-check 24 Oct), then QA xd-2 || [BACKEND run 2026-10-10 2314, scheduled, unattended, 2026-10-10T23:54:44Z] MEASURED production read-only 2026-10-10T23:54Z: active users with a cycle start > 31 days ago AND at/over their cycle limit = 0 (row-1 population); control: over the limit in the CURRENT cycle = 10 (normal free-cap users), AutoResetDataMonthly users with a cycle end in the past = 1 (hourly reset job picks it up). The server side needs no ship; the remaining fix is the iPhone one (SubscriptionManager, build-65 branch, marker 26p). || [BACKEND run 2026-10-23 0304, scheduled, unattended, 2026-10-23T03:1xZ] stale blocker rewritten (named build 65/67/69, the build in review is 75). old blocker: Server query already 0; waits for the iPhone fix to reach users in the next App Store build (owner [IOS], xd-1488 device test; build 67 on HOLD).",
-          "blocker": "Not waiting on Apple any more (4.3.1(75) public 23 Oct 23:22Z). Server query = 0 on 24 Oct 00:1xZ. Waits QA xd-2475 (tick with the 4.3.1 approval) / xd-2172 phone pass."
+          "blocker": "Waits QA xd-2172 (phone pass on build 75). xd-2475 is done (24 Oct 00:17Z). Server query = 0 on 24 Oct 00:1xZ."
         }
       ],
       "dueBy": "2026-10-09T20:03:23Z",
@@ -68040,13 +68040,16 @@
       "to": "[BACKEND]",
       "title": "Handoff from CEO: [P1] Admin support list hides new messages on old tickets (sorted by created date)",
       "description": "[CEO 2026-10-17 live] 'support ticket does not receive support msgs from app, it used to work'. Measured 22:4xZ: the app's 2 messages (22:32:37Z, 22:37:58Z) ARE saved on ticket TKT-20260412-D42C95 ('Hello test', created 12 Apr, user 2eecd0e6); admin bell notification created 22:32:37 + Telegram sent (200); 2nd message no repeat alert (10-min window, by design). Real fault: AdminSupportController.GetAllTickets orders by t.CreatedAt DESC, so a new message on an old ticket stays at row 17 under April, not at the top; the ticket UpdatedAt was bumped to 22:37:58Z. Ask: ORDER BY COALESCE(t.\"UpdatedAt\", t.\"CreatedAt\") DESC in GetAllTickets (+ return a last-message time / unread flag so the admin list can bold it); ship by the normal path, then QA sends one app message on an old ticket and sees it at the top. skill: departments/backend/skill/SKILL.md + admin + qa.",
-      "status": "in_progress",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-10-17T22:44:03Z",
       "createdDate": "2026-10-17",
-      "completedDate": null,
+      "completedDate": "2026-10-24",
       "notes": "READY TO SHIP row 351 on the CEO card. [BACKEND run 2026-10-19 1442, scheduled, unattended, 2026-10-19T15:33:38Z] Fixed on development b683fcbf4 (see QA xd-2219). Waits only QA xd-2219, then a READY TO SHIP row on the CEO card (added this run). || [BACKEND run 2026-10-23 0004, scheduled, unattended, 2026-10-23T00:2xZ] SHIPPED row 351 to production 7b1b9431e (CEO 22 Oct admin rule). Tests 428/428; DLL AdminTicketListOrder 0->1; health 200; no-sign-in 401; prod read-only order puts D42C95 at row 2 (was 17). QA live handoff created. || [BACKEND run 2026-10-23 0706] blocker now names the QA handoff id xd-2316 (dev check xd-2219 is separate, still pending).",
-      "blocker": "SHIPPED 23 Oct 00:15Z - waits QA xd-2316 (live check on production admin Support list, pending since 00:17Z)."
+      "blocker": "SHIPPED 23 Oct 00:15Z - waits QA xd-2316 (live check on production admin Support list, pending since 00:17Z).",
+      "completedAt": "2026-10-24",
+      "completedBy": "[BACKEND]",
+      "resolution": "[BACKEND run 2026-10-24 0104, scheduled, unattended, 2026-10-24T01:1xZ] CLOSED: QA live pass xd-2316 (CEO signed in, 22:30-22:45Z) PASS - Support list ordered by newest message (TKT-20261019-49E3DF first). Nothing left."
     },
     {
       "id": "xd-2187",
@@ -68571,13 +68574,16 @@
       "to": "[BACKEND]",
       "title": "Handoff from ADMIN-PANEL: [BACKEND] connection-logs API: add userEmail + serverName + serverCountry to each row (admin page shows a short id today)",
       "description": "GET /api/admin/connection-logs (EnterpriseAdminController.cs ~line 678) returns raw ConnectionLog entities. Admin page (development ba37199fb) now maps bytes/duration but can only show the first 8 chars of userId/serverId. Ask: project each item with userEmail (Users.Email), serverName + serverCountry (VpnServers) - a Select projection, not Include (the 2026-07-02 object-cycle 500 trap in the same method). No IP fields: none are stored (no-log).",
-      "status": "in_progress",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-10-19T15:16:15Z",
       "createdDate": "2026-10-19",
-      "completedDate": null,
+      "completedDate": "2026-10-24",
       "blocker": "SHIPPED 22 Oct 23:13Z - waits QA xd-2305 (live check).",
-      "notes": "[BACKEND run 2026-10-20 0608, scheduled, unattended, 2026-10-20T06:39:46Z] BUILT on development 0fb3dff19 (projection + 3 fields); dev deployed 06:32:51Z; QA xd-2224; READY TO SHIP row on the CEO card. ADMIN-PANEL: field names userEmail / serverName / serverCountry. || [BACKEND run 2026-10-22 2305, scheduled, unattended, 2026-10-22T23:17:25Z] SHIPPED 2026-10-22 23:13Z in the same deploy: production 838465f24 (cherry-pick -x 0fb3dff19); DLL ConnectionLogAdminRow/<ServerCountry> matches 1 -> 2; GET /api/admin/connection-logs no token -> 401 (route alive). NOT PROVEN: signed-in admin answer with userEmail/serverName/serverCountry -> QA live with the CEO signed in."
+      "notes": "[BACKEND run 2026-10-20 0608, scheduled, unattended, 2026-10-20T06:39:46Z] BUILT on development 0fb3dff19 (projection + 3 fields); dev deployed 06:32:51Z; QA xd-2224; READY TO SHIP row on the CEO card. ADMIN-PANEL: field names userEmail / serverName / serverCountry. || [BACKEND run 2026-10-22 2305, scheduled, unattended, 2026-10-22T23:17:25Z] SHIPPED 2026-10-22 23:13Z in the same deploy: production 838465f24 (cherry-pick -x 0fb3dff19); DLL ConnectionLogAdminRow/<ServerCountry> matches 1 -> 2; GET /api/admin/connection-logs no token -> 401 (route alive). NOT PROVEN: signed-in admin answer with userEmail/serverName/serverCountry -> QA live with the CEO signed in.",
+      "completedAt": "2026-10-24",
+      "completedBy": "[BACKEND]",
+      "resolution": "[BACKEND run 2026-10-24 0104, scheduled, unattended, 2026-10-24T01:1xZ] CLOSED: QA live pass xd-2305 PASS - GET /api/admin/connection-logs 200, every row has userEmail + serverName + serverCountry. Nothing left."
     },
     {
       "id": "xd-2218",
@@ -72757,11 +72763,15 @@
       "to": "[BACKEND]",
       "title": "Handoff from QA: [P1] 4.3.1 is live: re-run 1 rows that waited for Apple",
       "description": "Apple approved iOS 4.3.1 (build 75); it is live in the App Store since 23 Oct 23:22Z. ASC read-only on the main server 24 Oct ~00:2xZ (tools/asc_metadata_scan.get): 4.3.1 appStoreState READY_FOR_SALE / appVersionState READY_FOR_DISTRIBUTION, releaseType AFTER_APPROVAL, build 75 (uploaded 14 Oct, VALID), appStoreVersionPhasedRelease = none (released to everyone at once). Public lookup itunes id 1187243615 US/LB/GB = 4.3.1, released 2026-10-23T23:22:08Z (control: unknown id 1 -> 0 results). These open rows of yours said they wait for Apple / 4.3.1: activation-first-connection-funnel#1. Re-run each one now on the live store version: PASS -> hand to [QA] with the proof; still blocked -> write the real outside blocker (not Apple). gtm-06 #6 keeps its own 15 Nov money deferral.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-10-24T00:17:17Z",
       "createdDate": "2026-10-24",
-      "completedDate": null
+      "completedDate": "2026-10-24",
+      "completedAt": "2026-10-24",
+      "completedBy": "[BACKEND]",
+      "resolution": "[BACKEND run 2026-10-24 0104, scheduled, unattended, 2026-10-24T01:1xZ] Re-ran activation-first-connection-funnel#1 on public 4.3.1: PASS on every 4.3.1 row (ConnectionLogs 3/3, ConnectFailureEvents 12/12 have app + OS version). Handed to QA.",
+      "resultingHandoff": "xd-2487 to [QA]"
     },
     {
       "id": "xd-2484",
@@ -72805,6 +72815,30 @@
       "createdDate": "2026-10-24",
       "completedDate": null,
       "notes": "[CEO live 2026-10-24 2026-10-24T00:41:22Z] Re-addressed to [DPI-SESSION]: the CEO runs this in a dedicated Claude Code session; hourly runs skip it (overload). QA still ticks the rows after the session hands over. "
+    },
+    {
+      "id": "xd-2487",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: [P1] Tick check: activation-first-connection-funnel #1 (app + OS version on every row from 4.3.1)",
+      "description": "4.3.1 (build 75) public since 23 Oct 23:22Z. Read-only prod 24 Oct 01:06Z: ConnectionLogs from 4.3.1 3/3 with AppVersion + DeviceOs; ConnectFailureEvents from 4.3.1 12/12 with AppVersion + OsVersion; older builds none (control). Queries on the row. Re-run and tick if you agree (sample is small: 2 users).",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-24T01:09:15Z",
+      "createdDate": "2026-10-24",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2488",
+      "from": "[BACKEND]",
+      "to": "[CTO]",
+      "title": "Handoff from BACKEND: [P1] First public 4.3.1 newcomer in the UAE never connected: hidden mode refused 11 times (DoH hard-fail)",
+      "description": "Read-only prod 24 Oct 01:0xZ. User 65fd9bed (Sign in with Apple, created 24 Oct 00:11:29Z), iPhone iOS 16.7.16, app 4.3.1, Wi-Fi, region AE. 00:11:53-00:14:22Z: 11 connect failures, all protocol caspercloak, ErrorCode 'CasperVPN.CasperCloakHidingError:0' on 3 different servers (13f1a013, b321c2ce, 847e2d36); 0 successful ConnectionLogs rows for this user. CasperCloakHidingError case 0 = dohHardFailInRestrictedRegion: the app's private DNS lookup (primary + secondary) failed and, because the region is restricted, the app refuses to use normal DNS, so it never connects. Control: the CEO's iOS 27 phone on 4.3.1 connected fine. Ask: why does DoH fail on this network/iOS 16, and what fallback lets a UAE newcomer connect (e.g. bare IP / WireGuard / the second road from xd-1793). Owners likely IOS + DEVOPS; CTO routes. Not a CEO test account as far as the board shows (privaterelay Apple address, new).",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-24T01:09:15Z",
+      "createdDate": "2026-10-24",
+      "completedDate": null
     }
   ],
   "importantNotes": [
