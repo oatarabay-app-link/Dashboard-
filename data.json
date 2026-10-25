@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-25T17:08:42Z",
+  "lastUpdated": "2026-10-25T17:45:04Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 69,
@@ -17481,6 +17481,24 @@
           "addedBy": "[PRODUCT] growth run 2026-10-25 0833",
           "verify": "sample sizes: two-sided 5%, power 80%, standard two-proportion formula (computed this run)",
           "evidence": "[GROWTH run 2026-10-25 0833, scheduled, unattended, 2026-10-25T08:5xZ] memory/departments/product/free-2gb-and-ab-test-2026-10-25.md \u00a72."
+        },
+        {
+          "test": "READY TO SHIP \u2014 admin Subscriptions page: paying customers first, and every row (and the Free-trials view) shows what each person did: connections + last connection, money paid + number of payments, 'converted from trial' \u00b7 why: you could not find the yearly subscriber who converted on 24 Oct (tlshaban95) - he sat 5th behind free accounts \u00b7 what: development d95dc72a8 (backend GetAllSubscriptions: paid > trial > rest, then latest change; new fields connectionsCount, lastConnectedAt, paymentsCount, paidTotal, userLastLoginAt; admin table: 2 new columns 'Connections' and 'Paid'); also carries the 24 Oct Free-trials view (xd-2559) that production does not have yet \u00b7 tested: backend build 0 errors on the main server; dev deploy running 17:41Z; QA dev check next \u00b7 rollback: previous API image tag + previous admin bundle \u00b7 advice: YES \u2014 say 'yes <this row>' and Backend + Admin ship it by the normal path",
+          "verify": "GET /api/admin/subscriptions?page=1&pageSize=5 on production: first rows are paid (planType != Free, isFreeTrial false), fields paidTotal/connectionsCount present; admin.caspervpn.com Subscriptions table shows 'Connections' and 'Paid' columns",
+          "owner": "[CEO]",
+          "met": false,
+          "addedAt": "2026-10-25T17:55Z",
+          "addedBy": "ceo-office",
+          "evidence": "[CEO office live 2026-10-25 17:5xZ, CEO: 'u do it not admin' + 'add a preferred sources badge to the website'] coded by the CEO office on branch admin/subs-paying-first-trials-2026-10-25, merged ff into development d95dc72a8 under the session lock; dotnet build Release 0 errors (/root/reports/ceo1025/build.log, 1 min 16 s); admin tsc not checkable on the brain (no node_modules outside Docker) - the dev Docker build is the check."
+        },
+        {
+          "test": "READY TO SHIP \u2014 website footer gets Google's 'Add as preferred source' button (new Google feature: readers who pick us see our articles more in Top Stories and AI Mode) \u00b7 what: development 7efcdf502 - the official embed (news.google.com/swg/js/v1/publisher.js + the google-add-preferred-source-btn element, dark theme) under 'Latest from the Blog' in the footer, with a plain link fallback https://www.google.com/preferences/source?q=caspervpn.com where scripts are off \u00b7 source: developers.google.com/search/docs/appearance/preferred-sources (read 25 Oct) \u00b7 note: Google shows the button only on domains it already lists in the source tool; if it does not render, the fallback link still works \u00b7 tested: dev deploy running 17:41Z; QA checks the footer on dev \u00b7 rollback: revert one commit \u00b7 advice: YES",
+          "verify": "curl -s https://caspervpn.com/ | grep -c 'google-add-preferred-source-btn' = 1 and the footer shows the button or the link",
+          "owner": "[CEO]",
+          "met": false,
+          "addedAt": "2026-10-25T17:56Z",
+          "addedBy": "ceo-office",
+          "evidence": "[CEO office live 2026-10-25 17:5xZ, CEO: 'u do it not admin' + 'add a preferred sources badge to the website'] coded by the CEO office on the main server worktree, branch website/google-preferred-source-2026-10-25, merged ff into development 7efcdf502 under the lock. Deploy-dev job on the self-hosted runner started 17:41Z (dev checkout at 7efcdf502; containers still rebuilding at 17:43Z)."
         }
       ],
       "progress": 0,
@@ -75436,6 +75454,18 @@
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-10-25T17:03:16Z",
+      "createdDate": "2026-10-25",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2610",
+      "from": "[CEO]",
+      "to": "[QA]",
+      "title": "Handoff from CEO: [P1] Dev check: admin Subscriptions paying-first + per-user details (d95dc72a8) and the website Google preferred-source footer button (7efcdf502)",
+      "description": "[CEO office live 2026-10-25 17:5xZ, CEO: 'u do it not admin' + 'add a preferred sources badge to the website'] Both on development, dev deploy started 17:41Z. Check on dev: (1) GET https://api.dev.caspervpn.com/api/admin/subscriptions?page=1&pageSize=10 (dev-admin token): order = paid first (planType != Free, isFreeTrial false, environment Production), then isFreeTrial rows, then the rest; each row has connectionsCount, lastConnectedAt, paymentsCount, paidTotal, userLastLoginAt; trial=true still returns only trial users, soonest end first, now with the same fields; control: a row with 0 connections shows connectionsCount 0 and lastConnectedAt null. (2) admin.dev.caspervpn.com Subscriptions > Active tab: columns 'Connections' and 'Paid' render; click 'Free trials' card -> list with trial end + connections + paid. (3) https://dev.caspervpn.com footer: element google-add-preferred-source-btn present (curl grep = 1); in a browser the Google button renders or (if Google does not know the dev domain) nothing - the noscript link is the fallback; no console error from publisher.js. Then PASS -> the two READY TO SHIP rows wait the CEO's yes; FAIL -> back to [CEO] office with the measurement.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-25T17:45:02Z",
       "createdDate": "2026-10-25",
       "completedDate": null
     }
