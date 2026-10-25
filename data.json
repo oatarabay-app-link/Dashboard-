@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-25T07:17:17Z",
+  "lastUpdated": "2026-10-25T07:18:57Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 69,
@@ -17092,7 +17092,7 @@
           "owner": "[BACKEND]",
           "test": "CEO YES 2026-10-24 (dashboard tap api12, admin.caspervpn.com/decisions 2026-10-24T17:55:41Z) | READY TO SHIP \u2014 record where a new Apple/Google user signed up (phone app or website) \u00b7 why: this week's newcomer list could not say app or website for any of the 17 new users, because Apple/Google sign-ups saved no sign-up details (e-mail sign-ups already do) \u00b7 what: the same 4 details e-mail sign-up already saves (hashed address, country, device/browser name) are now also saved for Apple/Google sign-ups; existing users are not touched; no database change \u00b7 tested on dev: development 1b298e152, builds with 0 errors, 490 of 490 tests pass; a real sign-up on dev is not possible without a phone (NOT PROVEN) \u00b7 rollback: revert one commit \u00b7 advice: YES (needed before the website sign-in goes live, row 419)",
           "verify": "after ship: SELECT \"RegistrationUserAgent\" IS NOT NULL, count(*) FROM \"Users\" WHERE \"CreatedAt\">'<ship time>' AND (\"AppleId\" IS NOT NULL OR \"GoogleId\" IS NOT NULL) GROUP BY 1 -> all true; control: same before ship -> all false",
-          "evidence": "[CEO YES 2026-10-24 (dashboard tap api12, admin.caspervpn.com/decisions 2026-10-24T17:55:41Z)] 'admin page button: row 450 = yes' - recorded by ceo_answers.py in the qa run 2026-10-24T18:10:51Z; the owner department takes this row at its next run. || [QA 2026-10-24 g, scheduled 'Casper qa', unattended, 2026-10-24T06:19:52Z] QA dev check PASS (activation-silent-newcomers#0, development 1b298e152): diff read - Apple + Google paths call the same BuildAttributionAsync as e-mail /register (try/catch, never throws) and set the 4 Registration* fields only inside 'if (user == null) user = new User' (linking an existing account is untouched); QA's own build on the main server (scratch /root/qa-tmp, removed after): 0 errors; Tests/CasperVPN.Tests.csproj 490/490 passed. No test covers the new lines (the diff adds none). Prod read-only control 06:1xZ: last 60 days e-mail sign-ups RegistrationUserAgent filled 214/215, Google 2/47, Apple 0/108; last 7 days apple 15 + google 3, filled 0 (WHERE false 0). Live leg after ship: next real Apple/Google newcomer has a non-empty RegistrationUserAgent. Ship handoff xd-2507."
+          "evidence": "[CEO YES 2026-10-24 (dashboard tap api12, admin.caspervpn.com/decisions 2026-10-24T17:55:41Z)] 'admin page button: row 450 = yes' - recorded by ceo_answers.py in the qa run 2026-10-24T18:10:51Z; the owner department takes this row at its next run. || [QA 2026-10-24 g, scheduled 'Casper qa', unattended, 2026-10-24T06:19:52Z] QA dev check PASS (activation-silent-newcomers#0, development 1b298e152): diff read - Apple + Google paths call the same BuildAttributionAsync as e-mail /register (try/catch, never throws) and set the 4 Registration* fields only inside 'if (user == null) user = new User' (linking an existing account is untouched); QA's own build on the main server (scratch /root/qa-tmp, removed after): 0 errors; Tests/CasperVPN.Tests.csproj 490/490 passed. No test covers the new lines (the diff adds none). Prod read-only control 06:1xZ: last 60 days e-mail sign-ups RegistrationUserAgent filled 214/215, Google 2/47, Apple 0/108; last 7 days apple 15 + google 3, filled 0 (WHERE false 0). Live leg after ship: next real Apple/Google newcomer has a non-empty RegistrationUserAgent. Ship handoff xd-2507. | [BACKEND run 2026-10-25 0705, scheduled, unattended, 2026-10-25T07:4xZ] CEO YES seen; ship blocked: brain ssh port 22 timed out since ~23:49Z 24 Oct (api itself up, /health 200). Ships the first run after ssh is back."
         },
         {
           "test": "CEO YES 2026-10-24 (dashboard tap api11, admin.caspervpn.com/decisions 2026-10-24T17:55:15Z) | ACTION \u2014 DigitalOcean says your River Zen website server (river-zen-website) runs a Node.js version with a serious hole (CVE-2026-111497, rated High: an attacker can run code through compressed web traffic) \u00b7 why: mail 'URGENT: Security Alert - Node.js action required' 23 Oct 14:33Z to applinks123@gmail.com \u00b7 this is River Zen, not CasperVPN, so no CasperVPN run touches it \u00b7 what to do: have whoever runs the River Zen site update Node.js to 22.23.4 / 24.22.1 / 26.12.1 or newer and restart it (about 15 minutes) \u00b7 if nothing: the site stays open to remote takeover and DigitalOcean may cut its traffic \u00b7 CasperVPN's own website has the same kind of issue and is handed to [WEBSITE] separately",
@@ -17409,6 +17409,26 @@
           "verifiedBy": "none",
           "evidence": "[CTO run 2026-10-25 07:2xZ, scheduled] from xd-2595 measurements (CEO office live 24 Oct 23:0xZ).",
           "blocker": "waits CEO answer"
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "addedAt": "2026-10-25T07:40:00Z",
+          "addedBy": "[BACKEND] backend run 1025-0705",
+          "owner": "[BACKEND]",
+          "test": "READY TO SHIP (after QA dev check) \u2014 fix the Admin 'Audit Logs' page (xd-2589) \u00b7 why: it shows an error when a date is picked; the server sends the date to the database in a form it refuses \u00b7 tested: build OK, 504 of 504 tests pass, 2 new tests prove it; QA checks it on the dev admin next \u00b7 rollback: the image the deploy tags before every ship \u00b7 advice: YES, small and safe (admin page only).",
+          "verify": "production GET /api/admin/audit-logs?startDate=2026-10-01&endDate=2026-10-25 -> 200; api log 0 'Error getting audit logs' (QA xd-2598 dev first)"
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "addedAt": "2026-10-25T07:40:00Z",
+          "addedBy": "[BACKEND] backend run 1025-0705",
+          "owner": "[BACKEND]",
+          "test": "READY TO SHIP (after QA check) \u2014 a faster block alarm (xd-2550, your question 'shouldnt this fire on the first or second not reached attempt?') \u00b7 what: when 2 people (or 1 person twice) in a blocked country fail on the same server and road and nobody connects there for 30 min, Telegram tells us \u00b7 why: today's detector needs about 20 failures in 5 minutes and never fires at our size \u00b7 tested: 9 tests pass; not yet run on the real database \u00b7 rollback: remove the new part, the old alarm is unchanged \u00b7 advice: YES after QA's dry run on the main server.",
+          "verify": "brain: /var/log/restricted-newcomer-alarm.log has 'rule\": \"server-road' lines every 15 min; QA xd-2599"
         }
       ],
       "progress": 0,
@@ -73777,8 +73797,11 @@
       "createdAt": "2026-10-24T06:20:06Z",
       "createdDate": "2026-10-24",
       "completedDate": null,
-      "blocker": "Waits the CEO's YES on card row 450 (ceo_answers 07:04Z: nothing new). Ship 1b298e152 with rows 448/449 in one deploy the run after a YES.",
-      "notes": "[BACKEND run 2026-10-24 0705, scheduled, unattended, 2026-10-24T07:2xZ] ceo_answers --apply 07:04Z: nothing new; row 450 has no CEO YES. Nothing to ship yet."
+      "blocker": "Waits DEVOPS/CEO: brain ssh port 22 back (timed out since ~23:49Z 24 Oct). First backend run after that ships 1b298e152 under the lock.",
+      "notes": [
+        "[BACKEND run 2026-10-24 0705, scheduled, unattended, 2026-10-24T07:2xZ] ceo_answers --apply 07:04Z: nothing new; row 450 has no CEO YES. Nothing to ship yet.",
+        "[BACKEND run 2026-10-25 0705, scheduled, unattended, 2026-10-25T07:4xZ] CEO YES on card row 450 is on the board (dashboard tap 24 Oct 17:55:41Z). Not shipped: 1b298e152 was NOT in the 23:17Z deploy (cherry-picks were 495705f46, 4daae618f, ff8307a89). Ship needs /root/deploy_api.sh on the brain: brain port 22 times out from the Mac since ~23:49Z 24 Oct (ceo_answers 07:04Z rc=255 'connect to host 178.62.101.221 port 22: Connection timed out'; control: api.caspervpn.com/health 200, brain :443 open, github :22 open, dev brain :22 open)."
+      ]
     },
     {
       "id": "xd-2508",
@@ -74432,9 +74455,10 @@
       "createdAt": "2026-10-24T13:43:30Z",
       "createdDate": "2026-10-24",
       "completedDate": null,
-      "blocker": "Pool part done on dev. Left: the small-number block rule (>=2 users or 1 user >=2 fails, 0 successes, 30 min) - next backend run builds it on development.",
+      "blocker": "Waits QA xd-2599 (dev check; brain dry-run needs brain ssh back), then CEO YES to install on the brain.",
       "notes": [
-        "[BACKEND run 2026-10-24 1444, scheduled, unattended] Dev VpnServers 'Bangkok Dev' (d37d856b): CasperCloakDomain s13.pompesh.com -> velmora.shortaalmashahir.com, pool [cc-bkk-dev.caspervpn.com] -> [velmora.shortaalmashahir.com, s13.pompesh.com] (before copy /root/reports/be1024-1444/bkk-before.txt). caspercloak-config returns it (15:31Z). Note: the dev Bangkok row is IsActive=false since 21 Aug (the dev app list never shows it; the read was done with it briefly active, then put back). Production pools already set by DevOps 14:0xZ (all 11)."
+        "[BACKEND run 2026-10-24 1444, scheduled, unattended] Dev VpnServers 'Bangkok Dev' (d37d856b): CasperCloakDomain s13.pompesh.com -> velmora.shortaalmashahir.com, pool [cc-bkk-dev.caspervpn.com] -> [velmora.shortaalmashahir.com, s13.pompesh.com] (before copy /root/reports/be1024-1444/bkk-before.txt). caspercloak-config returns it (15:31Z). Note: the dev Bangkok row is IsActive=false since 21 Aug (the dev app list never shows it; the read was done with it briefly active, then put back). Production pools already set by DevOps 14:0xZ (all 11).",
+        "[BACKEND run 2026-10-25 0705, scheduled, unattended, 2026-10-25T07:4xZ] Small-number rule BUILT on development 9b22f05: restricted_newcomer_alarm.py now also checks each server + road over 30 min (failures from a restricted country, paywall errors not counted): 0 connections on that server AND (>=2 users, or 1 user >=2 fails) -> Alertmanager 'RestrictedServerRoadFailing' -> the existing Telegram + mail. Once per server+road per 6 h; failed post retried; own state file; try/except so it cannot stop the newcomer alarm. 9 unit tests OK (python3 -I infrastructure/scripts/test_restricted_server_rule.py), mutation control (rule >=3 users) -> 3 fail + 1 error. NOT PROVEN against the real database (no Postgres reachable: brain port 22 times out from the Mac since ~23:49Z 24 Oct (ceo_answers 07:04Z rc=255 'connect to host 178.62.101.221 port 22: Connection timed out'; control: api.caspervpn.com/health 200, brain :443 open, github :22 open, dev brain :22 open))."
       ]
     },
     {
@@ -74748,11 +74772,18 @@
       "to": "[BACKEND]",
       "title": "Handoff from QA: [P0] xd-2556 front names: QA dev check PASS - ship card row 470 to production, then hand QA the live check",
       "description": "QA dev check xd-2569 PASS (evidence on xd-2569 + card row 470). Next: ship 7f5ed5732 to production by the normal path when row 470 carries the CEO's YES (xd-2556 cites the CEO order 'implement plan in full' - confirm it covers this production ship, else ask once). After ship: production api log 'NATIVE front for Los Angeles -> wss://kostel.profitechlb.com/' and a QA handoff for the live check. Tokyo's name only works once xd-2558 [DEVOPS] brings the Tokyo relay back.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P0",
       "createdAt": "2026-10-24T16:23:40Z",
       "createdDate": "2026-10-24",
-      "completedDate": null
+      "completedDate": "2026-10-25",
+      "notes": [
+        "[BACKEND run 2026-10-25 0705, scheduled, unattended, 2026-10-25T07:4xZ] Already done: card row 470 SHIPPED 2026-10-24 23:17Z (production ff8307a89, deploy_api.sh DONE OK, /health 200; evidence on xd-2590). Live check handed to QA as xd-2590."
+      ],
+      "completedAt": "2026-10-25",
+      "completedBy": "[BACKEND]",
+      "resolution": "shipped 24 Oct 23:17Z (card row 470); live check xd-2590 [QA]",
+      "resultingHandoff": "xd-2590 to [QA]"
     },
     {
       "id": "xd-2572",
@@ -74760,11 +74791,18 @@
       "to": "[BACKEND]",
       "title": "Handoff from QA: [P1] xd-2549 double billing: QA dev check PASS - ship card row 471, then hand QA the live check",
       "description": "QA dev check xd-2570 PASS (evidence on xd-2570 + card row 471, incl. a mutation control). Next: ship 89769c5a0 when row 471 carries the CEO's YES. Optional hardening (low): ignore real rows that are still open but started long before the adopt row (stale DisconnectedAt null) in BilledByOverlappingRowAsync - 1 such row exists now (oldest 22 Oct 21:42Z), 0 affected adopt rows in 7 days. Also decide whether user 2a659e83's counter (1,251 MB) should be corrected by the 612 MB double count (a data change = CEO gate).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-10-24T16:23:40Z",
       "createdDate": "2026-10-24",
-      "completedDate": null
+      "completedDate": "2026-10-25",
+      "notes": [
+        "[BACKEND run 2026-10-25 0705, scheduled, unattended, 2026-10-25T07:4xZ] Already done: card row 471 SHIPPED 2026-10-24 23:17Z (production ff8307a89, deploy_api.sh DONE OK, /health 200; evidence on xd-2591). Live check handed to QA as xd-2591."
+      ],
+      "completedAt": "2026-10-25",
+      "completedBy": "[BACKEND]",
+      "resolution": "shipped 24 Oct 23:17Z (card row 471); live check xd-2591 [QA]",
+      "resultingHandoff": "xd-2591 to [QA]"
     },
     {
       "id": "xd-2573",
@@ -74997,11 +75035,15 @@
       "to": "[BACKEND]",
       "title": "Handoff from QA: [P1] Admin Audit Logs page: API 400 - DateTime Kind=Unspecified sent to Postgres",
       "description": "Production 24 Oct 22:36:29Z: GET /api/admin/audit-logs -> 400 {success:false,'Failed to get audit logs'}; api log: [ERR] Error getting audit logs - System.ArgumentException: Cannot write DateTime with Kind=Unspecified to PostgreSQL type 'timestamp with time zone', only UTC is supported (Npgsql). Likely the from/to date filter parsed without DateTimeKind.Utc. Verify: admin.caspervpn.com/audit-logs loads rows; api log 0 'Error getting audit logs'.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-10-24T22:52:32Z",
       "createdDate": "2026-10-24",
-      "completedDate": null
+      "completedDate": null,
+      "notes": [
+        "[BACKEND run 2026-10-25 0705, scheduled, unattended, 2026-10-25T07:4xZ] FIX on development b7df040: EnterpriseAdminController audit-logs + audit-logs/export turn startDate/endDate into UTC (AsUtc: Unspecified->SpecifyKind Utc, Local->ToUniversalTime), a date-only end date now covers that whole day. dotnet build 0 errors; dotnet test 504/504 (2 new in Tests/AuditLogDateFilterTests.cs); mutation control (AsUtc returns d) -> 1 fails. Dev redeploy is automatic ~6-9 min after push - NOT PROVEN on dev by this run (no admin login for admin.dev from an unattended run)."
+      ],
+      "blocker": "Waits QA xd-2598 dev check, then CEO YES on the READY TO SHIP row."
     },
     {
       "id": "xd-2590",
@@ -75103,6 +75145,30 @@
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-10-25T07:17:17Z",
+      "createdDate": "2026-10-25",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2598",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: [P1] xd-2589 dev check: Admin Audit Logs loads on admin.dev (date filter no longer 400)",
+      "description": "development b7df040 (pushed 07:16Z 25 Oct). Check on admin.dev / api.dev as an admin: GET /api/admin/audit-logs?startDate=2026-10-01&endDate=2026-10-25 -> 200 success:true (before: 400 'Failed to get audit logs', Npgsql Kind=Unspecified); dev api log 0 'Error getting audit logs'. Also /api/admin/audit-logs/export with the same dates -> CSV. Control: no dates -> 200 as before. Unit: dotnet test --filter AuditLogDateFilterTests 2/2. PASS -> card row 'READY TO SHIP - Audit Logs page' needs the CEO YES; ship = cherry-pick b7df040 to production + /root/deploy_api.sh.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-25T07:18:57Z",
+      "createdDate": "2026-10-25",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2599",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: [P1] xd-2550 dev check: small-number block alarm (server+road, 30 min)",
+      "description": "development 9b22f05. Read the diff of infrastructure/scripts/restricted_newcomer_alarm.py; run python3 -I infrastructure/scripts/test_restricted_server_rule.py (9 OK). On the brain (when ssh is back) a read-only run: python3 restricted_newcomer_alarm.py --dry-run --now <time of a known failing burst, e.g. 2026-10-24T00:15:00Z for user 65fd9bed> -> a 'server-road' line with failing>=1; control --now a quiet hour -> failing 0. PASS -> READY TO SHIP row on the card.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-25T07:18:57Z",
       "createdDate": "2026-10-25",
       "completedDate": null
     }
