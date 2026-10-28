@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-28T08:01:46Z",
+  "lastUpdated": "2026-10-28T09:18:36Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 69,
@@ -17671,17 +17671,19 @@
           "addedAt": "2026-10-26T08:01:15Z",
           "addedBy": "[WEBSITE+ADMIN run 2026-10-26 0742, scheduled, unattended, 2026-10-26T08:1xZ]",
           "test": "SHIPPED 2026-10-27 \u00b7 CEO YES 2026-10-26 (Paperclip card e1932f85, Board 14:47Z; board advice 95%) \u2014 READY TO SHIP - blank the secret VPN keys in 3 stored bug reports and replace the 2 keys they expose (xd-1526 / xd-1843) \u00b7 why: re-counted today (read-only): the 2 April/May reports you decided on (row 224) no longer hold a key, but 3 newer reports (12-13 Oct, app build 57 = version 4.2) still hold 2 secret keys that are STILL ACTIVE, both on one River Zen gmail account (key ids 1941 and 1777) - anyone who can read our bug-report table could pretend to be that phone \u00b7 what: (a) replace each key in the 3 stored log snippets with [REDACTED] - dry run on production (read-only) shows 3 rows, 4 keys blanked, 0 left; (b) retire keys 1941 and 1777 like key 1587 on 23 Oct - the phone(s) on that account get a new key on next connect (VPN drops once) \u00b7 tested: dry run only; script ready on the main server /root/reports/webadmin-1026/redact_bugreport_keys.sql (prints counts, never values) \u00b7 rollback: (a) none on purpose (bringing a leaked key back is the risk); (b) set IsActive back on the 2 key rows \u00b7 advice: YES to both; if that account is yours, connect once after we do it",
-          "evidence": "[[WEBSITE+ADMIN run 2026-10-27 1004, scheduled, unattended] 2026-10-27T10:3xZ] SHIPPED 10:09:35Z. The /root/reports/webadmin-1026 kit was gone (cleanup row 434), so the run measured again first: 3 reports (a6860168/7259130b/ed4fac22, build 57, user 212ddb7b) held private_key=<64 hex>, 2 distinct keys; derived x25519 public keys match WireGuardKeys 1941 (active), 1777 (active) and 421 (already inactive) - proof the keys are those rows. One transaction: UPDATE BugReports 3 (snippet -> private_key=[REDACTED]), ExtraJson 0, WireGuardKeys 2 (IsActive false, RevokedAt 10:09:35, reason row 493). After: rows with a key 3 -> 0; [REDACTED] rows 3; keys 1777/1941 IsActive f. That user still has 4 other active keys (phone gets a key on next connect). No backup of the key text on purpose (row rollback a). || [CEO YES 2026-10-26 (dashboard tap api34, admin.caspervpn.com/decisions 2026-10-26T15:10:16Z)] 'admin page button: row 493 = yes [row text changed after the tap - owner: check the answer still fits this row]' - recorded by ceo_answers.py in the ceo run 2026-10-27T10:04:41Z; the owner department takes this row at its next run. || CAS-138 Board meeting 2026-10-26, D3: 95% confidence, no dissent. CEO YES 14:47Z on Paperclip card e1932f85. Ships by Mac Security run; QA after.\n\n[SECURITY CAS-152 2026-10-26T18:3xZ] EXACT SHIP STEPS (Mac Security run, Omar's keys required for production DB write):\n\nStep 1 \u2014 Dry run (read-only, confirm target count):\n  docker exec -i caspervpn-postgres psql -U casper_prod -d caspervpn -X -tA -c \"\\i /root/reports/webadmin-1026/redact_bugreport_keys.sql\"\n  Expected output: \"targets 3, keys_to_blank 4, keys_already_blank 0\"\n\nStep 2 \u2014 Execute redaction (replace key material with [REDACTED]):\n  docker exec -i caspervpn-postgres psql -U casper_prod -d caspervpn -X -tA -c \"\\set DRY_RUN false \\i /root/reports/webadmin-1026/redact_bugreport_keys.sql\"\n  Verify: count(*) WHERE description LIKE '%private_key=%' IN BugReports for user 212ddb7b \u2192 0\n\nStep 3 \u2014 Retire keys 1941 and 1777:\n  docker exec -i caspervpn-postgres psql -U casper_prod -d caspervpn -X -tA -c \"UPDATE \\\"WireGuardKeys\\\" SET \\\"IsActive\\\"=false, \\\"RevokedAt\\\"=NOW(), \\\"RevokedReason\\\"='security-exposed-bug-report-xd-1526-CEO-YES-2026-10-26' WHERE \\\"Id\\\" IN (1941, 1777) AND \\\"IsActive\\\"=true RETURNING \\\"Id\\\", \\\"IsActive\\\", \\\"RevokedAt\\\"\"\n  Expected: 2 rows returned with IsActive=false.\n\nStep 4 \u2014 Verify:\n  docker exec -i caspervpn-postgres psql -U casper_prod -d caspervpn -X -tA -c \"SELECT \\\"Id\\\", \\\"IsActive\\\" FROM \\\"WireGuardKeys\\\" WHERE \\\"Id\\\" IN (1941, 1777)\"\n  Expected: both rows IsActive=false.\n\nStep 5 \u2014 Write on xd-1526 and xd-1843: \"SHIPPED <date>: 3 BugReport rows redacted, keys 1941/1777 retired\".\nStep 6 \u2014 Hand to [QA] to verify the count is 0 and the keys show IsActive=false.\n\nNOTE: the phone on user 212ddb7b (River Zen gmail) will get a new WireGuard key on next VPN connect \u2014 VPN drops once for that user."
+          "evidence": "[QA 2026-10-28 a, scheduled 'Casper qa', unattended, 09:1x-09:5xZ] FAIL (leg b). Leg a PASS: BugReports with private_key=<64 hex> = 0 (control: 'mtu' matches 41, WHERE false 0). WireGuardKeys 1777 + 1941 IsActive=f, RevokedAt 27 Oct 10:09:35Z. BUT the SAME two public keys were registered again at 27 Oct 14:31:21Z + 14:33:21Z as new rows 8495 + 8496 (IsActive=t) on ANOTHER account (user hash a55e88cb; the old account is 9d8076f7). Fleet: peer-key hashes on all nodes - key of 1941 is a live peer on Singapore wg0 (handshake 37 s before the read, 8.5 MB up / 83.7 MB down); 1777 hash 0 on all nodes; controls: first peer of every node found 1/1. So the exposed keys are in use again and the server accepts a re-registration of a revoked public key. Handed to [SECURITY] (see newest handoff). Not ticked. || [[WEBSITE+ADMIN run 2026-10-27 1004, scheduled, unattended] 2026-10-27T10:3xZ] SHIPPED 10:09:35Z. The /root/reports/webadmin-1026 kit was gone (cleanup row 434), so the run measured again first: 3 reports (a6860168/7259130b/ed4fac22, build 57, user 212ddb7b) held private_key=<64 hex>, 2 distinct keys; derived x25519 public keys match WireGuardKeys 1941 (active), 1777 (active) and 421 (already inactive) - proof the keys are those rows. One transaction: UPDATE BugReports 3 (snippet -> private_key=[REDACTED]), ExtraJson 0, WireGuardKeys 2 (IsActive false, RevokedAt 10:09:35, reason row 493). After: rows with a key 3 -> 0; [REDACTED] rows 3; keys 1777/1941 IsActive f. That user still has 4 other active keys (phone gets a key on next connect). No backup of the key text on purpose (row rollback a). || [CEO YES 2026-10-26 (dashboard tap api34, admin.caspervpn.com/decisions 2026-10-26T15:10:16Z)] 'admin page button: row 493 = yes [row text changed after the tap - owner: check the answer still fits this row]' - recorded by ceo_answers.py in the ceo run 2026-10-27T10:04:41Z; the owner department takes this row at its next run. || CAS-138 Board meeting 2026-10-26, D3: 95% confidence, no dissent. CEO YES 14:47Z on Paperclip card e1932f85. Ships by Mac Security run; QA after.\n\n[SECURITY CAS-152 2026-10-26T18:3xZ] EXACT SHIP STEPS (Mac Security run, Omar's keys required for production DB write):\n\nStep 1 \u2014 Dry run (read-only, confirm target count):\n  docker exec -i caspervpn-postgres psql -U casper_prod -d caspervpn -X -tA -c \"\\i /root/reports/webadmin-1026/redact_bugreport_keys.sql\"\n  Expected output: \"targets 3, keys_to_blank 4, keys_already_blank 0\"\n\nStep 2 \u2014 Execute redaction (replace key material with [REDACTED]):\n  docker exec -i caspervpn-postgres psql -U casper_prod -d caspervpn -X -tA -c \"\\set DRY_RUN false \\i /root/reports/webadmin-1026/redact_bugreport_keys.sql\"\n  Verify: count(*) WHERE description LIKE '%private_key=%' IN BugReports for user 212ddb7b \u2192 0\n\nStep 3 \u2014 Retire keys 1941 and 1777:\n  docker exec -i caspervpn-postgres psql -U casper_prod -d caspervpn -X -tA -c \"UPDATE \\\"WireGuardKeys\\\" SET \\\"IsActive\\\"=false, \\\"RevokedAt\\\"=NOW(), \\\"RevokedReason\\\"='security-exposed-bug-report-xd-1526-CEO-YES-2026-10-26' WHERE \\\"Id\\\" IN (1941, 1777) AND \\\"IsActive\\\"=true RETURNING \\\"Id\\\", \\\"IsActive\\\", \\\"RevokedAt\\\"\"\n  Expected: 2 rows returned with IsActive=false.\n\nStep 4 \u2014 Verify:\n  docker exec -i caspervpn-postgres psql -U casper_prod -d caspervpn -X -tA -c \"SELECT \\\"Id\\\", \\\"IsActive\\\" FROM \\\"WireGuardKeys\\\" WHERE \\\"Id\\\" IN (1941, 1777)\"\n  Expected: both rows IsActive=false.\n\nStep 5 \u2014 Write on xd-1526 and xd-1843: \"SHIPPED <date>: 3 BugReport rows redacted, keys 1941/1777 retired\".\nStep 6 \u2014 Hand to [QA] to verify the count is 0 and the keys show IsActive=false.\n\nNOTE: the phone on user 212ddb7b (River Zen gmail) will get a new WireGuard key on next VPN connect \u2014 VPN drops once for that user."
         },
         {
-          "met": false,
-          "passed": false,
-          "verifiedBy": "none",
+          "met": true,
+          "passed": true,
+          "verifiedBy": "tested",
           "owner": "[SECURITY]",
           "addedAt": "2026-10-26T08:01:15Z",
           "addedBy": "[WEBSITE+ADMIN run 2026-10-26 0742, scheduled, unattended, 2026-10-26T08:1xZ]",
           "test": "SHIPPED 2026-10-27 \u00b7 CEO YES 2026-10-26 (Paperclip card e1932f85, Board 14:47Z; board advice 90%) \u2014 READY TO SHIP - switch on the nightly DPI alarm (xd-2576) \u00b7 what: one line in the main server's daily schedule, 02:30 UTC: test our Bangkok lab hidden-mode relay against a real website on the same machine; if the relay answers differently in anything but timing, the alarms Telegram bot tells you (at most once a day) \u00b7 why: QA needs it to tick DPI stage 2 \u00b7 tested: ran once by hand from the main server 26 Oct 07:52Z - GREEN (5 differences, all timing); the red check was tested with a planted difference and with a probe that did not finish - both RED \u00b7 script: development a2f951a infrastructure/scripts/dpi_alarm_nightly.sh \u00b7 rollback: delete the line \u00b7 advice: YES (read-only probe of our own lab server, ~2 min a night)",
-          "evidence": "[[WEBSITE+ADMIN run 2026-10-27 1004, scheduled, unattended] 2026-10-27T10:3xZ] SHIPPED 10:10Z. /opt/caspervpn/dpi_alarm_nightly.sh = development a2f951a8c; /etc/cron.d/casper-dpi-alarm '30 2 * * * root flock -n ... >> /var/log/dpi-alarm.log' (rollback: rm that file); /root/reports/dpi-probe/.keep so the 1-day cleanup keeps the history. Run by hand 10:13Z: history.log '20261027T1013Z GREEN 7 differences, all timing' (probe takes ~5 min). First nightly run 28 Oct 02:30Z. || [CEO YES 2026-10-26 (dashboard tap api35, admin.caspervpn.com/decisions 2026-10-26T15:10:37Z)] 'admin page button: row 494 = yes [row text changed after the tap - owner: check the answer still fits this row]' - recorded by ceo_answers.py in the ceo run 2026-10-27T10:04:41Z; the owner department takes this row at its next run. || CAS-138 Board meeting 2026-10-26, D3: 90% confidence, no dissent. CEO YES 14:47Z on Paperclip card e1932f85. Ships by Mac Security run; QA after.\n\n[SECURITY CAS-152 2026-10-26T18:3xZ] EXACT SHIP STEPS (Mac Security run or [DEVOPS] on brain 178.62.101.221):\n\nStep 1 \u2014 Fetch script from development branch:\n  git -C /root/Casper/Casper-Code fetch -q origin\n  git -C /root/Casper/Casper-Code show origin/development:infrastructure/scripts/dpi_alarm_nightly.sh > /opt/caspervpn/dpi_alarm_nightly.sh\n  chmod +x /opt/caspervpn/dpi_alarm_nightly.sh\n\nStep 2 \u2014 Add nightly cron entry:\n  echo '30 2 * * * root /opt/caspervpn/dpi_alarm_nightly.sh >> /var/log/dpi-alarm.log 2>&1' > /etc/cron.d/casper-dpi-alarm\n  chmod 644 /etc/cron.d/casper-dpi-alarm\n\nStep 3 \u2014 Verify by running once:\n  /opt/caspervpn/dpi_alarm_nightly.sh\n  Expected output (last line): \"<timestamp> GREEN <N> differences, all timing\"\n  If RED: check /root/reports/dpi-probe/history.log for details.\n\nStep 4 \u2014 Verify RED path with planted difference (optional, already tested 26 Oct 07:52Z):\n  DPI_IDLE=1 /opt/caspervpn/dpi_alarm_nightly.sh  \u2192 should be RED \"probe did not finish\"\n\nStep 5 \u2014 Write on xd-2576: \"SHIPPED <date>: DPI alarm live, cron 02:30 UTC, GREEN test verified\".\nStep 6 \u2014 Hand to [QA] to tick cc-probe-resistance stage 2 criteria (needs one nightly run at 02:30 UTC).\n\nRollback: rm /etc/cron.d/casper-dpi-alarm"
+          "evidence": "[QA 2026-10-28 a, scheduled 'Casper qa', unattended, 09:1x-09:5xZ] PASS. /etc/cron.d/casper-dpi-alarm present (30 2 * * *, flock, dpi_alarm_nightly.sh). Unattended nightly run landed: history.log '20261028T0230Z GREEN 6 differences, all timing' (control: hand-run 27 Oct 10:13Z GREEN 7). RED path was proven by SECURITY with a planted difference (not re-run here). Re-run: tail -3 /root/reports/dpi-probe/history.log || [[WEBSITE+ADMIN run 2026-10-27 1004, scheduled, unattended] 2026-10-27T10:3xZ] SHIPPED 10:10Z. /opt/caspervpn/dpi_alarm_nightly.sh = development a2f951a8c; /etc/cron.d/casper-dpi-alarm '30 2 * * * root flock -n ... >> /var/log/dpi-alarm.log' (rollback: rm that file); /root/reports/dpi-probe/.keep so the 1-day cleanup keeps the history. Run by hand 10:13Z: history.log '20261027T1013Z GREEN 7 differences, all timing' (probe takes ~5 min). First nightly run 28 Oct 02:30Z. || [CEO YES 2026-10-26 (dashboard tap api35, admin.caspervpn.com/decisions 2026-10-26T15:10:37Z)] 'admin page button: row 494 = yes [row text changed after the tap - owner: check the answer still fits this row]' - recorded by ceo_answers.py in the ceo run 2026-10-27T10:04:41Z; the owner department takes this row at its next run. || CAS-138 Board meeting 2026-10-26, D3: 90% confidence, no dissent. CEO YES 14:47Z on Paperclip card e1932f85. Ships by Mac Security run; QA after.\n\n[SECURITY CAS-152 2026-10-26T18:3xZ] EXACT SHIP STEPS (Mac Security run or [DEVOPS] on brain 178.62.101.221):\n\nStep 1 \u2014 Fetch script from development branch:\n  git -C /root/Casper/Casper-Code fetch -q origin\n  git -C /root/Casper/Casper-Code show origin/development:infrastructure/scripts/dpi_alarm_nightly.sh > /opt/caspervpn/dpi_alarm_nightly.sh\n  chmod +x /opt/caspervpn/dpi_alarm_nightly.sh\n\nStep 2 \u2014 Add nightly cron entry:\n  echo '30 2 * * * root /opt/caspervpn/dpi_alarm_nightly.sh >> /var/log/dpi-alarm.log 2>&1' > /etc/cron.d/casper-dpi-alarm\n  chmod 644 /etc/cron.d/casper-dpi-alarm\n\nStep 3 \u2014 Verify by running once:\n  /opt/caspervpn/dpi_alarm_nightly.sh\n  Expected output (last line): \"<timestamp> GREEN <N> differences, all timing\"\n  If RED: check /root/reports/dpi-probe/history.log for details.\n\nStep 4 \u2014 Verify RED path with planted difference (optional, already tested 26 Oct 07:52Z):\n  DPI_IDLE=1 /opt/caspervpn/dpi_alarm_nightly.sh  \u2192 should be RED \"probe did not finish\"\n\nStep 5 \u2014 Write on xd-2576: \"SHIPPED <date>: DPI alarm live, cron 02:30 UTC, GREEN test verified\".\nStep 6 \u2014 Hand to [QA] to tick cc-probe-resistance stage 2 criteria (needs one nightly run at 02:30 UTC).\n\nRollback: rm /etc/cron.d/casper-dpi-alarm",
+          "verifiedByRaw": "qa",
+          "verifiedDate": "2026-10-28"
         },
         {
           "test": "DONE 2026-10-26 (CEO added the deploy key with write) | ACTION (2 clicks, only you) \u2014 finish the Paperclip workers' GitHub key: the page is open in your Chrome (Casper-Code > Settings > Deploy keys > Add new, title paperclip-agents-2026-10-26, key filled in): tick 'Allow write access' and press 'Add key'. Then the same key on the dashboard repo: Dashboard- > Settings > Deploy keys > Add deploy key, title paperclip-agents-2026-10-26, key = ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHryRnNQHx4OEicHrYscrL+CujxC95c6fui66+GFbQWq paperclip-agents-2026-10-26, tick write, Add. (Row 439 is still a third key, for the main server.) \u00b7 why: my rules do not let me grant write access myself; without it the workers can read code but not push their paperclip/* branches or write the board",
@@ -17901,6 +17903,17 @@
           "owner": "[CEO]",
           "addedAt": "2026-10-28T08:30:00Z",
           "addedBy": "[GROWTH run 2026-10-28 0754, scheduled, unattended, 2026-10-28T08:3xZ]"
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "owner": "[CEO]",
+          "addedAt": "2026-10-28T09:50:00Z",
+          "addedBy": "[QA 2026-10-28 a, scheduled 'Casper qa', unattended, 09:1x-09:5xZ]",
+          "test": "DECISION \u2014 test the new SSH-door alarm once? The watchdog on the dev server (checks every 5 min that the main server's SSH door is open) now has the alarm-bot key and your chat id, but it has never sent a real message. Options: (A) DevOps runs a one-off test copy that checks a door we know is closed, so you get ONE test Telegram message in about 10 minutes - nothing on the main server changes; (B) a real test: block the dev server at the main server's firewall for 12 minutes (touches production); (C) do not test, trust the dry run. Advice: A (no production change, proves the whole path in 10 minutes).",
+          "verify": "one Telegram test message from the SSH-door watchdog + a line in /var/log/ssh-watchdog.log on 188.166.174.132",
+          "evidence": "[QA 2026-10-28 a, scheduled 'Casper qa', unattended, 09:1x-09:5xZ] dry run PASS: script lines 9-10 fill the bot key (46 chars) and chat id (10 chars) from the 2 secret files when cron gives empty values (control: empty assignment = 0); cron */5 in root crontab, 467 syslog runs, last 09:10Z; log empty = port 22 open. Real send NOT PROVEN (xd-2682, xd-2670)."
         }
       ],
       "progress": 0,
@@ -21862,11 +21875,14 @@
         {
           "test": "A node leaving rotation (VpnServers IsActive false) raises one alert that names the public surfaces to re-check (website, Buffer queue, App Review notes)",
           "verify": "brain: grep -n 'IsActive' infrastructure/monitoring/alert-rules*.yml or RoutineRuns 'fleet-count' row within 1 h of a node change",
-          "met": false,
-          "verifiedBy": "none",
+          "met": true,
+          "verifiedBy": "tested",
           "autoTickReverted": "2026-10-07 growth x: auto-ticked by session_exit at 23:54Z 6 Oct (board 2c61c1337), restored",
-          "evidence": "[GROWTH run 2026-10-28 0754, scheduled, unattended, 2026-10-28T08:3xZ] /var/log/fleet-rotation-guard.log on the main server, 416 lines since 24 Oct: 1 real drop = Tokyo left 2026-10-24T14:30:06Z, sent=1; Tokyo returned 25 Oct 15:00Z, Bangkok (test) returned 26 Oct 02:00Z (returns sent=0). Last line 28 Oct 07:45Z: 14 servers, 12 active, no change. QA judges (xd-2642). || [GROWTH run 2026-10-27 1006, scheduled, unattended, 2026-10-27T10:3xZ] Row 442 SHIPPED 24 Oct (xd-2466 completed). Re-check handed to [QA] xd-2642. || [QA 2026-10-23 w, scheduled 'Casper qa', unattended, 2026-10-23T20:3xZ] PARTIAL (not ticked) - real events happened, measured /var/log/fleet-rotation-guard.log: detection 3/3 (18 Oct 17:45Z five nodes, 21 Oct 14:15Z Tokyo, 23 Oct 07:30Z Tokyo, each in the first 15-min run); alert delivered 1/3 (23 Oct sent 1; 18 + 21 Oct send_error 'Connection refused' = Alertmanager down, no retry because STATE is overwritten - lines 84-85). Control: 1136 runs with no change -> 0 alerts. Handed to [DEVOPS] xd-2466 (retry/fallback). || [WEBSITE+ADMIN run 2026-10-13 0605, scheduled, unattended, 2026-10-13T06:13Z] Blocker re-written to the real outside event (QA's own words on xd-1966 22:20Z). Nothing left for WEBSITE; not re-measured (2110 run measured cron + md5 787d2879, no change since). || [WEBSITE+ADMIN run 2026-10-12 2205, scheduled, unattended, 2026-10-12T22:07:51Z] Nothing left for WEBSITE: measured by the 2110 run (cron + md5 787d2879 + runs sent 0); QA xd-1966 open. Not re-measured (no-repeat rule, <1 h). || [WEBSITE+ADMIN run 2026-10-12 2110, scheduled, unattended, 2026-10-12T21:19:53Z] DONE by [DEVOPS] xd-1701 (CEO YES row 243, shipped 11 Oct 22:29Z). Re-measured 21:1xZ main server: /etc/cron.d/fleet-rotation-guard present; /opt/caspervpn/fleet_rotation_guard.py md5 787d2879 (= the QA-checked copy); last runs 21:00:06Z and 21:15:03Z servers=13 active=11 left [] sent 0 (control: nothing left -> no alert); the script names the public surfaces (4 hits for website/store/social/review). Live drop path not exercised (dry-run proof xd-1808). Old blocker (DEVOPS handoff) is done -> QA handoff this run. || [GROWTH run 2026-10-10 2204, scheduled, 2026-10-10T22:10:19Z] MEASURED: git grep -iE 'IsActive|fleet.?count' origin/production -- infrastructure/monitoring -> 0 hits. No alert exists when a node leaves rotation. Handed to [DEVOPS] this run.",
-          "blocker": "Waits [QA] xd-2642 on the next real node drop after 24 Oct."
+          "evidence": "[QA 2026-10-28 a, scheduled 'Casper qa', unattended, 09:1x-09:5xZ] PASS on a real event. /opt/caspervpn/fleet_rotation_guard.py mtime 24 Oct 03:28:13Z (row 442 retry/PENDING version; SURFACES constant names website, store listing text, scheduled social posts). Since then 1 real drop: Tokyo left 2026-10-24T14:30:06Z -> sent=1 (posted first try; retry path not exercised). Returns (Tokyo 25 Oct 15:00Z, Bangkok test 26 Oct 02:00Z) sent=0 by design. Control: pre-ship drop 23 Oct 07:30Z also sent=1; 1574 log lines, last 09:00Z 28 Oct (14 servers, 12 active). Re-run: grep -v '\"left\": \\[\\], \"returned\": \\[\\]' /var/log/fleet-rotation-guard.log || [GROWTH run 2026-10-28 0754, scheduled, unattended, 2026-10-28T08:3xZ] /var/log/fleet-rotation-guard.log on the main server, 416 lines since 24 Oct: 1 real drop = Tokyo left 2026-10-24T14:30:06Z, sent=1; Tokyo returned 25 Oct 15:00Z, Bangkok (test) returned 26 Oct 02:00Z (returns sent=0). Last line 28 Oct 07:45Z: 14 servers, 12 active, no change. QA judges (xd-2642). || [GROWTH run 2026-10-27 1006, scheduled, unattended, 2026-10-27T10:3xZ] Row 442 SHIPPED 24 Oct (xd-2466 completed). Re-check handed to [QA] xd-2642. || [QA 2026-10-23 w, scheduled 'Casper qa', unattended, 2026-10-23T20:3xZ] PARTIAL (not ticked) - real events happened, measured /var/log/fleet-rotation-guard.log: detection 3/3 (18 Oct 17:45Z five nodes, 21 Oct 14:15Z Tokyo, 23 Oct 07:30Z Tokyo, each in the first 15-min run); alert delivered 1/3 (23 Oct sent 1; 18 + 21 Oct send_error 'Connection refused' = Alertmanager down, no retry because STATE is overwritten - lines 84-85). Control: 1136 runs with no change -> 0 alerts. Handed to [DEVOPS] xd-2466 (retry/fallback). || [WEBSITE+ADMIN run 2026-10-13 0605, scheduled, unattended, 2026-10-13T06:13Z] Blocker re-written to the real outside event (QA's own words on xd-1966 22:20Z). Nothing left for WEBSITE; not re-measured (2110 run measured cron + md5 787d2879, no change since). || [WEBSITE+ADMIN run 2026-10-12 2205, scheduled, unattended, 2026-10-12T22:07:51Z] Nothing left for WEBSITE: measured by the 2110 run (cron + md5 787d2879 + runs sent 0); QA xd-1966 open. Not re-measured (no-repeat rule, <1 h). || [WEBSITE+ADMIN run 2026-10-12 2110, scheduled, unattended, 2026-10-12T21:19:53Z] DONE by [DEVOPS] xd-1701 (CEO YES row 243, shipped 11 Oct 22:29Z). Re-measured 21:1xZ main server: /etc/cron.d/fleet-rotation-guard present; /opt/caspervpn/fleet_rotation_guard.py md5 787d2879 (= the QA-checked copy); last runs 21:00:06Z and 21:15:03Z servers=13 active=11 left [] sent 0 (control: nothing left -> no alert); the script names the public surfaces (4 hits for website/store/social/review). Live drop path not exercised (dry-run proof xd-1808). Old blocker (DEVOPS handoff) is done -> QA handoff this run. || [GROWTH run 2026-10-10 2204, scheduled, 2026-10-10T22:10:19Z] MEASURED: git grep -iE 'IsActive|fleet.?count' origin/production -- infrastructure/monitoring -> 0 hits. No alert exists when a node leaves rotation. Handed to [DEVOPS] this run.",
+          "blocker": "Waits [QA] xd-2642 on the next real node drop after 24 Oct.",
+          "passed": true,
+          "verifiedByRaw": "qa",
+          "verifiedDate": "2026-10-28"
         },
         {
           "test": "App Review notes of each submission name no server or country count (CEO 3 Oct no-number rule: 'Global' / 'Worldwide'), or, if a count is ever named, only the count measured on the day of submission",
@@ -23373,14 +23389,16 @@
         {
           "test": "lynis PKGS-7392 (vulnerable packages openvpn, zlib1g, zlib1g-dev on the main server) is gone: Ubuntu's security fix installed",
           "verify": "main server: grep -c PKGS-7392 /var/log/lynis-report.dat = 0 after the weekly run; apt list --upgradable | grep -cE 'openvpn|zlib1g' = 0",
-          "met": false,
-          "passed": false,
-          "verifiedBy": "none",
+          "met": true,
+          "passed": true,
+          "verifiedBy": "tested",
           "owner": "DEVOPS",
           "addedAt": "2026-10-23T08:45Z",
           "addedBy": "[DEVOPS run 2026-10-23 0823] from QA xd-2373",
           "blocker": "DEFERRED to 2026-10-25 (Sunday security sweep): fix installed 23 Oct 06:29Z; only a fresh lynis run is left to clear PKGS-7392. No production change needed, no CEO YES needed. QA ticks after the 25 Oct lynis run.",
-          "evidence": "[QA 2026-10-27 a, scheduled 'Casper qa', unattended, 10:0x-10:2xZ] Measured 10:0xZ: newest /var/log/lynis-report.dat = report_datetime_start 2026-10-27 00:07:36 (after the 23 Oct install); grep -c PKGS-7392 = 4 (warning still listed) BUT vulnerable_packages_found=1 = libbrotli1 only - openvpn + zlib are no longer named (the fix this row is about holds). libbrotli1 1.1.0-2ubuntu0.1 was installed by the system at 27 Oct 06:09:25Z (dpkg.log), after that report. Verify (count = 0) not met yet; re-read the next lynis report (after 27 Oct 06:09Z) on the next QA run, tick if 0. || [CTO run 2026-10-23 1914, scheduled, unattended, 2026-10-23T19:2xZ] CORRECTION: the fix is ALREADY INSTALLED. Ubuntu published openvpn 2.6.19-0ubuntu0.24.04.5 (noble-security 22 Oct 15:30Z) and zlib 1:1.3.dfsg-3.1ubuntu2.3 (noble-security 22 Oct 18:50Z) - Launchpad getPublishedSources. Main server dpkg.log: 23 Oct 06:29:12Z zlib1g -> 1:1.3.dfsg-3.1ubuntu2.3, 06:29:36Z openvpn -> 2.6.19-0ubuntu0.24.04.5 (unattended upgrade); dpkg-query shows those versions for openvpn, zlib1g, zlib1g-dev; apt-cache policy zlib1g Installed = Candidate. The lynis report that flags PKGS-7392 ran 23 Oct 00:10-00:13Z, 6 h BEFORE the install, so it is stale. The 12:26Z CTO and 08:25Z DEVOPS checks read 'upgradable 0' as 'no fix yet' - wrong reading: 0 because it was already installed. || [CTO run 2026-10-23 1222, scheduled, unattended, 2026-10-23T12:27:33Z] Re-measured read-only 12:26Z on the main server: apt cache 06:29Z, upgradable openvpn|zlib1g = 0 (68 others), installed openvpn 2.6.19-0ubuntu0.24.04.5, zlib1g 1:1.3.dfsg-3.1ubuntu2.3, lynis PKGS-7392 lines = 4. Same as DEVOPS 08:25Z. || [DEVOPS run 2026-10-23 0823, scheduled, unattended, 2026-10-23T08:4xZ] lynis 23 Oct 00:13Z: warning[]=PKGS-7392, vulnerable_package[] openvpn, zlib1g, zlib1g-dev; apt list --upgradable (cache 06:29Z) has none of them."
+          "evidence": "[QA 2026-10-28 a, scheduled 'Casper qa', unattended, 09:1x-09:5xZ] PASS. Newest /var/log/lynis-report.dat report_datetime_start 2026-10-28 00:13:54 (after libbrotli1 06:09Z 27 Oct + openvpn/zlib 23 Oct installs): vulnerable_packages_found=0, vulnerable_package[] lines 0, warning[]=PKGS-7392 0, suggestion[] 0. The literal 'grep -c PKGS-7392' reads 2, but both lines are slow_test[] and tests_executed (the test ran, found nothing) - control: the 27 Oct report read 4 with vulnerable_package libbrotli1. apt list --upgradable | grep -cE 'openvpn|zlib1g' = 0 (control: 68 other upgradable lines). Re-run: grep -E '^(warning|vulnerable_package)' /var/log/lynis-report.dat | grep -c PKGS-7392 || [QA 2026-10-27 a, scheduled 'Casper qa', unattended, 10:0x-10:2xZ] Measured 10:0xZ: newest /var/log/lynis-report.dat = report_datetime_start 2026-10-27 00:07:36 (after the 23 Oct install); grep -c PKGS-7392 = 4 (warning still listed) BUT vulnerable_packages_found=1 = libbrotli1 only - openvpn + zlib are no longer named (the fix this row is about holds). libbrotli1 1.1.0-2ubuntu0.1 was installed by the system at 27 Oct 06:09:25Z (dpkg.log), after that report. Verify (count = 0) not met yet; re-read the next lynis report (after 27 Oct 06:09Z) on the next QA run, tick if 0. || [CTO run 2026-10-23 1914, scheduled, unattended, 2026-10-23T19:2xZ] CORRECTION: the fix is ALREADY INSTALLED. Ubuntu published openvpn 2.6.19-0ubuntu0.24.04.5 (noble-security 22 Oct 15:30Z) and zlib 1:1.3.dfsg-3.1ubuntu2.3 (noble-security 22 Oct 18:50Z) - Launchpad getPublishedSources. Main server dpkg.log: 23 Oct 06:29:12Z zlib1g -> 1:1.3.dfsg-3.1ubuntu2.3, 06:29:36Z openvpn -> 2.6.19-0ubuntu0.24.04.5 (unattended upgrade); dpkg-query shows those versions for openvpn, zlib1g, zlib1g-dev; apt-cache policy zlib1g Installed = Candidate. The lynis report that flags PKGS-7392 ran 23 Oct 00:10-00:13Z, 6 h BEFORE the install, so it is stale. The 12:26Z CTO and 08:25Z DEVOPS checks read 'upgradable 0' as 'no fix yet' - wrong reading: 0 because it was already installed. || [CTO run 2026-10-23 1222, scheduled, unattended, 2026-10-23T12:27:33Z] Re-measured read-only 12:26Z on the main server: apt cache 06:29Z, upgradable openvpn|zlib1g = 0 (68 others), installed openvpn 2.6.19-0ubuntu0.24.04.5, zlib1g 1:1.3.dfsg-3.1ubuntu2.3, lynis PKGS-7392 lines = 4. Same as DEVOPS 08:25Z. || [DEVOPS run 2026-10-23 0823, scheduled, unattended, 2026-10-23T08:4xZ] lynis 23 Oct 00:13Z: warning[]=PKGS-7392, vulnerable_package[] openvpn, zlib1g, zlib1g-dev; apt list --upgradable (cache 06:29Z) has none of them.",
+          "verifiedByRaw": "qa",
+          "verifiedDate": "2026-10-28"
         }
       ],
       "createdAt": "2026-10-09T06:15:28Z",
@@ -73859,16 +73877,19 @@
       "to": "[QA]",
       "title": "Handoff from CTO: [P2] Tick ops-weekly-security-sweep row 2 after the 25 Oct lynis run",
       "description": "Fix is already installed on the main server (dpkg.log 23 Oct 06:29Z: openvpn 2.6.19-0ubuntu0.24.04.5, zlib1g/zlib1g-dev 1:1.3.dfsg-3.1ubuntu2.3 = Ubuntu noble-security 22 Oct). The lynis report flagging PKGS-7392 is from 00:13Z, before the install. After the Sunday 25 Oct sweep: verify = grep -c PKGS-7392 /var/log/lynis-report.dat = 0 and report_datetime_start after 23 Oct 06:29Z. PASS -> tick; still flagged with a newer report -> hand back to DEVOPS.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-10-23T19:17:02Z",
       "createdDate": "2026-10-23",
-      "completedDate": null,
+      "completedDate": "2026-10-28",
       "qaNote": "[QA 2026-10-23 w, scheduled 'Casper qa', unattended, 2026-10-23T20:3xZ] Not runnable yet: the check needs the Sunday 25 Oct lynis sweep (outside event = scheduled date). Re-check on/after 25 Oct: grep -c PKGS-7392 /var/log/lynis-report.dat = 0 with report_datetime_start after 23 Oct 06:29Z.",
       "waitingOn": "date: 25 Oct 2026 lynis sweep",
       "qaDate": "2026-10-23",
       "notes": "[QA 2026-10-27 a, scheduled 'Casper qa', unattended, 10:0x-10:2xZ] Measured 10:0xZ: newest /var/log/lynis-report.dat = report_datetime_start 2026-10-27 00:07:36 (after the 23 Oct install); grep -c PKGS-7392 = 4 (warning still listed) BUT vulnerable_packages_found=1 = libbrotli1 only - openvpn + zlib are no longer named (the fix this row is about holds). libbrotli1 1.1.0-2ubuntu0.1 was installed by the system at 27 Oct 06:09:25Z (dpkg.log), after that report. Verify (count = 0) not met yet; re-read the next lynis report (after 27 Oct 06:09Z) on the next QA run, tick if 0.",
-      "blocker": "date: next lynis report after 27 Oct 06:09Z (libbrotli1 update) - re-read 28 Oct"
+      "blocker": "date: next lynis report after 27 Oct 06:09Z (libbrotli1 update) - re-read 28 Oct",
+      "completedAt": "2026-10-28",
+      "completedBy": "[QA]",
+      "resolution": "[QA 2026-10-28 a, scheduled 'Casper qa', unattended, 09:1x-09:5xZ] PASS - ops-weekly-security-sweep row 2 ticked tested (28 Oct lynis: 0 vulnerable packages, PKGS-7392 only as tests_executed/slow_test)."
     },
     {
       "id": "xd-2464",
@@ -76678,12 +76699,15 @@
       "to": "[QA]",
       "title": "Handoff from MARKETING: [P2] public-fleet-count-guard row 2: re-check after card row 442 SHIPPED 24 Oct",
       "description": "Row 442 (keep re-sending an unsent node-drop alert, xd-2466 completed) is SHIPPED 24 Oct. Re-measure /var/log/fleet-rotation-guard.log: every real node drop since 24 Oct has sent=1 (a refused send retried until sent). If no real drop happened yet, write that and the date; tick only on a real event.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-10-27T10:12:42Z",
       "createdDate": "2026-10-27",
-      "completedDate": null,
-      "notes": "[GROWTH run 2026-10-28 0754, scheduled, unattended, 2026-10-28T08:3xZ] Real drop found: Tokyo left 24 Oct 14:30:06Z with sent=1 (after row 442 shipped 24 Oct - check ship time vs 14:30Z). Returns 25/26 Oct sent=0. Please tick or say why not."
+      "completedDate": "2026-10-28",
+      "notes": "[GROWTH run 2026-10-28 0754, scheduled, unattended, 2026-10-28T08:3xZ] Real drop found: Tokyo left 24 Oct 14:30:06Z with sent=1 (after row 442 shipped 24 Oct - check ship time vs 14:30Z). Returns 25/26 Oct sent=0. Please tick or say why not.",
+      "completedAt": "2026-10-28",
+      "completedBy": "[QA]",
+      "resolution": "[QA 2026-10-28 a, scheduled 'Casper qa', unattended, 09:1x-09:5xZ] PASS - public-fleet-count-guard row 2 ticked tested (Tokyo drop 24 Oct 14:30Z sent=1, after the 03:28Z ship)."
     },
     {
       "id": "xd-2643",
@@ -76827,11 +76851,15 @@
       "to": "[QA]",
       "title": "Handoff from SECURITY: [P1] Check rows 493 + 494 on production (security ships 27 Oct)",
       "description": "[WEBSITE+ADMIN run 2026-10-27 1004, scheduled, unattended] Re-runnable checks (read-only): (1) row 493: docker exec caspervpn-postgres psql -U casper_prod -d caspervpn -tA -c \"select count(*) from \\\"BugReports\\\" where coalesce(\\\"TunnelLogSnippet\\\",'')||coalesce(\\\"ExtraJson\\\"::text,'') ~* 'private_key=[0-9a-f]{64}'\" = 0 (was 3); select \\\"Id\\\",\\\"IsActive\\\" from \\\"WireGuardKeys\\\" where \\\"Id\\\" in (1777,1941) = f,f; then check the fleet no longer carries those two peers (same check as xd-2418 for key 1587). (2) row 494: cat /etc/cron.d/casper-dpi-alarm; after 28 Oct 02:30Z tail /root/reports/dpi-probe/history.log shows a new GREEN/RED line; hand-run 27 Oct 10:13Z was GREEN 7 diffs all timing. Then tick DPI stage 2 if it holds (xd-2576). Tick ceo-action-backlog rows 493/494 if PASS.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-10-27T10:35:52Z",
       "createdDate": "2026-10-27",
-      "completedDate": null
+      "completedDate": "2026-10-28",
+      "completedAt": "2026-10-28",
+      "completedBy": "[QA]",
+      "resolution": "[QA 2026-10-28 a, scheduled 'Casper qa', unattended, 09:1x-09:5xZ] Row 494 PASS + ticked (02:30Z nightly GREEN). Row 493 FAIL: retired keys re-registered as 8495/8496 and one is live on Singapore - handed back to [SECURITY]. DPI stage 2 not ticked here (needs the stage's own control re-run, xd-2486).",
+      "resultingHandoff": "xd-2686 to [SECURITY]"
     },
     {
       "id": "xd-2655",
@@ -76851,11 +76879,14 @@
       "to": "[QA]",
       "title": "Handoff from WEBSITE: [P2] Check the 2 blog posts of 27 Oct",
       "description": "[WEBSITE+ADMIN run 2026-10-27 1004, scheduled; task text allows 2 daily posts] Published 10:18Z: /blog/iphone-safety-check-3-minutes and /blog/iphone-photo-location-privacy-2-minutes (cat-privacy, author admin). Backup first: /root/backups/blog_posts_webadmin1027_20261027T1018Z.sql (312,449 B). Published 22 -> 24. Live: both 200, one <h1>, title once with ' | CasperVPN', in sitemap. Banned/claims check tools/asc_metadata_scan.check: 0 on both drafts and both live pages; control sentence 4 hits. Not published: growth's 27 Oct draft 'iphone-lock-screen-privacy-2-minutes' - same topic as the live post lock-screen-privacy-iphone-3-minutes (11 Oct), would split ranking. Drafts: marketing/blog/drafts/2026-10-27-*.md. Checks: curl both URLs (200, 1 h1, no 'Target keyword', no [a-z]''[a-z]).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-10-27T10:36:28Z",
       "createdDate": "2026-10-27",
-      "completedDate": null
+      "completedDate": "2026-10-28",
+      "completedAt": "2026-10-28",
+      "completedBy": "[QA]",
+      "resolution": "[QA 2026-10-28 a, scheduled 'Casper qa', unattended, 09:1x-09:5xZ] PASS: /blog/iphone-safety-check-3-minutes + /blog/iphone-photo-location-privacy-2-minutes both 200, 1 <h1>, title once with ' | CasperVPN', 0 'Target keyword', 0 doubled quotes, each once in sitemap.xml; claim words (stealth, military-grade, unblock, money-back, 100% secure) 0 in page text - only 'anonymous' = the fonts crossOrigin attribute, not copy (control sentence 3 hits). Control URL 404."
     },
     {
       "id": "xd-2657",
@@ -77040,7 +77071,8 @@
       "priority": "P1",
       "createdAt": "2026-10-27T13:55:08Z",
       "createdDate": "2026-10-27",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[QA 2026-10-28 a, scheduled 'Casper qa', unattended, 09:1x-09:5xZ] Row 500 dry-run PASS (vars filled from files: 46/10 chars, never printed; control 0; cron */5, 467 runs, last 09:10Z). Real Telegram message NOT PROVEN -> DECISION row added on the CEO card (test option A advised). Row 423 (staff password old 401 / new 200) not run: a scheduled run may not type a password - next live session."
     },
     {
       "id": "xd-2671",
@@ -77207,7 +77239,8 @@
       "priority": "P1",
       "createdAt": "2026-10-28T07:27:31Z",
       "createdDate": "2026-10-28",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[QA 2026-10-28 a, scheduled 'Casper qa', unattended, 09:1x-09:5xZ] Re-read PASS: ssh-watchdog.sh 1228 B (27 Oct 13:50Z), secret files 47 B + 11 B mode 600, cron */5, 467 syslog runs, log empty. Test proposal written as ONE DECISION row on the CEO card (A: test copy at a closed port = one test message; B: 12-min block; C: none). Waits the CEO's answer."
     },
     {
       "id": "xd-2683",
@@ -77242,6 +77275,18 @@
       "status": "pending",
       "priority": "P2",
       "createdAt": "2026-10-28T08:01:46Z",
+      "createdDate": "2026-10-28",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2686",
+      "from": "[QA]",
+      "to": "[SECURITY]",
+      "title": "Handoff from QA: [P1] Row 493 FAIL: the 2 retired WireGuard keys (1777, 1941) were registered again 4 h later on another account and one is live on Singapore",
+      "description": "[QA 2026-10-28 a, scheduled 'Casper qa', unattended, 09:1x-09:5xZ] Measured read-only 28 Oct 09:3xZ. WireGuardKeys 1777/1941 IsActive=f RevokedAt 27 Oct 10:09:35Z, but rows 8495 (same PublicKey as 1941) and 8496 (same as 1777) were created 27 Oct 14:31:21Z/14:33:21Z, IsActive=t, user hash a55e88cb (an internal-looking e-mail; old account 9d8076f7). node-sgp wg0 carries the 1941 key with a handshake 37 s old, 83.7 MB down. 1777 key on 0 nodes. Two possibilities: (1) the same phone (app keeps its key pair in the keychain) signed in to a second account and re-sent the old key; (2) someone used the leaked private key. Either way the exposed keys are back in service and the API accepts a revoked public key. Asks: (a) find out which device/account 8495/8496 are (read-only, no customer contact); (b) READY TO SHIP row: refuse registering a PublicKey that has a RevokedAt row + make the app create a fresh key pair when the server says so; (c) re-retire 8495/8496 under CEO YES. Re-run: select \"Id\",\"IsActive\" from \"WireGuardKeys\" where left(md5(\"PublicKey\"),8) in ('94350de7','d69aaa24'); on nodes hash 'wg show all dump' peers (md5 first 8).",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-28T09:18:35Z",
       "createdDate": "2026-10-28",
       "completedDate": null
     }
