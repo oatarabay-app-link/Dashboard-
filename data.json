@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-28T12:13:00Z",
+  "lastUpdated": "2026-10-28T12:34:37Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 69,
@@ -24436,7 +24436,7 @@
       "priority": "P0",
       "owner": "[CTO]",
       "category": "infrastructure",
-      "status": "PARTIAL \u2014 4 of 10 pass on first measurement (27 Oct); 6 open with owners",
+      "status": "PARTIAL - 7 of 10 pass (re-measured 2026-10-28T12:33:37Z by tools/security_command.py scale); open: 01, 02, 06",
       "description": "CEO 27 Oct: check the infrastructure against the '10 things that expose you at 1,000 users' list before scaling (PRtronics, ads). Each row = what we measured, owner, verify.",
       "acceptanceCriteria": [
         {
@@ -24445,10 +24445,12 @@
           "owner": "[BACKEND]",
           "met": false,
           "passed": false,
-          "evidence": "[CEO office live 2026-10-27T17:0xZ, measured read-only on the main server] Known fixes shipped (late disconnect 499, double count 471, WG bytes 454) but no standing check that proves 0 duplicates; admin shows free users over the 512 MB cap (1.17 GB) -> NOT PROVEN.",
+          "evidence": "[SECURITY+CTO security-command, CEO live order 28 Oct, measured 2026-10-28T12:33:37Z, production read-only via tools/security_command.py scale] FAIL - dup open sessions (user+device+server, 7 d) 0; free users over the 512 MB cap 19 (>50 MB over: 2, max 681 MB). Overshoot list: 16 of 19 are <= 22 MB (the 3-minute enforcement sweep); 681 MB (CasperCloak, cycle from 24 Oct) and 141 MB (WireGuard, 28 Sep) are real leaks - find the road per user per hour in BandwidthUsageLogs before any fix. Also 1 paying user carries the 512 MB cap; 3 duplicate SessionId values in 7 d; 56 overlapping session pairs (55 with DeviceId null = cannot be called a race). No code fix this run. || [CEO office live 2026-10-27T17:0xZ, measured read-only on the main server] Known fixes shipped (late disconnect 499, double count 471, WG bytes 454) but no standing check that proves 0 duplicates; admin shows free users over the 512 MB cap (1.17 GB) -> NOT PROVEN.",
           "addedAt": "2026-10-27T17:00:00Z",
           "addedBy": "[CEO] office live",
-          "verifiedBy": "none"
+          "verifiedBy": "none",
+          "lastMeasured": "2026-10-28T12:33:37Z",
+          "lastResult": "FAIL"
         },
         {
           "test": "02 N+1 queries: no endpoint does one DB query per list item",
@@ -24456,10 +24458,12 @@
           "owner": "[BACKEND]",
           "met": false,
           "passed": false,
-          "evidence": "[CEO office live 2026-10-27T17:0xZ, measured read-only on the main server] pg_stat_statements is NOT installed on production (extension count 0) - we cannot see query counts today. DB is small (207 MB, 20/100 connections) so it does not hurt yet.",
+          "evidence": "[SECURITY+CTO security-command, CEO live order 28 Oct, measured 2026-10-28T12:33:37Z, production read-only via tools/security_command.py scale] FAIL - pg_stat_statements on production: installed 0, preloaded 0 (dev: on since 28 Oct). DEV 28 Oct: pg_stat_statements on (ALTER SYSTEM + docker restart caspervpn-dev-postgres, IP 172.18.0.4 kept). Load 13 endpoints x20 (servers, recommended, users/me, subscriptions/me, multihop/routes, connections history/stats, plans, admin users/servers/dashboard/analytics/plan-summary): all 200, p95 0.09-0.19 s, max 1.07 executions per request = no per-request N+1. Background N+1: WireGuardUsageSyncService.cs:253 (by PublicKey+ServerId) and :290 (by AssignedIp+ServerId) run once per peer per cycle (~150/min each on dev with 73 keys) - batch-load per server. PRODUCTION step needs a CEO YES (10 s Postgres restart, 02:00-04:00 Beirut): ALTER SYSTEM SET shared_preload_libraries='pg_stat_statements'; docker restart caspervpn-postgres; CREATE EXTENSION pg_stat_statements; rollback ALTER SYSTEM RESET + restart (skill module-scale-readiness-1000 item 02). || [CEO office live 2026-10-27T17:0xZ, measured read-only on the main server] pg_stat_statements is NOT installed on production (extension count 0) - we cannot see query counts today. DB is small (207 MB, 20/100 connections) so it does not hurt yet.",
           "addedAt": "2026-10-27T17:00:00Z",
           "addedBy": "[CEO] office live",
-          "verifiedBy": "none"
+          "verifiedBy": "none",
+          "lastMeasured": "2026-10-28T12:33:37Z",
+          "lastResult": "FAIL"
         },
         {
           "test": "03 Error tracking: app + API errors land in one place and alert",
@@ -24467,12 +24471,14 @@
           "owner": "[DEVOPS]",
           "met": true,
           "passed": true,
-          "evidence": "[CEO office live 2026-10-27T17:0xZ, measured read-only on the main server] GlitchTip web/worker/postgres/redis Up 9 d; Prometheus + Alertmanager + Grafana Up. (Alert routing to Telegram for GlitchTip not re-checked.)",
+          "evidence": "[SECURITY+CTO security-command, CEO live order 28 Oct, measured 2026-10-28T12:33:37Z, production read-only via tools/security_command.py scale] PASS - GlitchTip containers up 4/4; Alertmanager up 1. || [CEO office live 2026-10-27T17:0xZ, measured read-only on the main server] GlitchTip web/worker/postgres/redis Up 9 d; Prometheus + Alertmanager + Grafana Up. (Alert routing to Telegram for GlitchTip not re-checked.)",
           "addedAt": "2026-10-27T17:00:00Z",
           "addedBy": "[CEO] office live",
           "verifiedBy": "verified",
           "verifiedByRaw": "ceo-office",
-          "verifiedDate": "2026-10-27"
+          "verifiedDate": "2026-10-27",
+          "lastMeasured": "2026-10-28T12:33:37Z",
+          "lastResult": "PASS"
         },
         {
           "test": "04 Rate limits on the API and sign-in",
@@ -24480,12 +24486,14 @@
           "owner": "[DEVOPS]",
           "met": true,
           "passed": true,
-          "evidence": "[CEO office live 2026-10-27T17:0xZ, measured read-only on the main server] nginx: limit_req_zone api_limit 10r/s used in 20 locations, general_limit 100r/s; no app-level limiter in ASP.NET (nginx only) - per-account limits (sign-in/OTP) to review.",
+          "evidence": "[SECURITY+CTO security-command, CEO live order 28 Oct, measured 2026-10-28T12:33:37Z, production read-only via tools/security_command.py scale] PASS - nginx zones: zone=api_limit zone=dev_api_limit zone=general_limit; limit_req uses 28. || [CEO office live 2026-10-27T17:0xZ, measured read-only on the main server] nginx: limit_req_zone api_limit 10r/s used in 20 locations, general_limit 100r/s; no app-level limiter in ASP.NET (nginx only) - per-account limits (sign-in/OTP) to review.",
           "addedAt": "2026-10-27T17:00:00Z",
           "addedBy": "[CEO] office live",
           "verifiedBy": "verified",
           "verifiedByRaw": "ceo-office",
-          "verifiedDate": "2026-10-27"
+          "verifiedDate": "2026-10-27",
+          "lastMeasured": "2026-10-28T12:33:37Z",
+          "lastResult": "PASS"
         },
         {
           "test": "05 Background jobs run and someone knows when one fails",
@@ -24493,10 +24501,12 @@
           "owner": "[DEVOPS]",
           "met": false,
           "passed": false,
-          "evidence": "[CEO office live 2026-10-27T17:0xZ, measured read-only on the main server] 0 failed units; 49 crontab lines + 21 cron.d files. Most have no failure alarm (deadman covers only the factory). NOT PROVEN.",
+          "evidence": "[SECURITY+CTO security-command, CEO live order 28 Oct, measured 2026-10-28T12:33:37Z, production read-only via tools/security_command.py scale] PASS - failed units 0; cron jobs 72, without failure alarm 0; last run failing: none. NEW 28 Oct 12:09Z: /opt/caspervpn/cron_guard.sh (md5 71f6c89c) wraps every job: 49 root crontab + 22 cron.d lines + spend-check = 72, round-trip check exact; failure -> Telegram via casper_notify.py (24 h cooldown per job); state /var/lib/casper-cron/<job>.json; TEST alarm 'CRON FAIL: TEST-cron-guard-dryrun' telegram 200; 23 jobs ran through it by 12:3xZ, all rc 0. Backup + rollback: /root/backups/cron-guard/crontab.before-20261028T120910Z + cron.d-20261028T120910Z. || [CEO office live 2026-10-27T17:0xZ, measured read-only on the main server] 0 failed units; 49 crontab lines + 21 cron.d files. Most have no failure alarm (deadman covers only the factory). NOT PROVEN.",
           "addedAt": "2026-10-27T17:00:00Z",
           "addedBy": "[CEO] office live",
-          "verifiedBy": "none"
+          "verifiedBy": "none",
+          "lastMeasured": "2026-10-28T12:33:37Z",
+          "lastResult": "PASS"
         },
         {
           "test": "06 Spend alerts on every paid account",
@@ -24504,10 +24514,12 @@
           "owner": "[CEO]",
           "met": false,
           "passed": false,
-          "evidence": "[CEO office live 2026-10-27T17:0xZ, measured read-only on the main server] No billing/spend alert found in the vault or on the board. Paperclip stopped today for insufficient funds = the exact failure this item is about.",
+          "evidence": "[SECURITY+CTO security-command, CEO live order 28 Oct, measured 2026-10-28T12:33:37Z, production read-only via tools/security_command.py scale] FAIL - providers without an alert: DigitalOcean (main + dev servers), Resend (e-mail), Cloudflare, Apple Developer Program, Anthropic / Claude + Paperclip agents, Namecheap (domains); OneProvider credit 22.68, runway 6.3 days (crit). OneProvider (12 relays): NEW /opt/caspervpn/spend_check.py daily 06:41Z (/etc/cron.d/casper-spend-check) - credit 22.68 USD vs 9 hourly servers 3.60 USD/day = 6.3 days runway (to ~3 Nov) -> alarm sent to Telegram 12:13Z. CEO ACTION: top up OneProvider credit (panel.op-net.com -> Billing -> Add funds). Other providers: no billing-alert API we hold - 2-click steps per provider in memory/departments/security/context/spend-alerts.json (DigitalOcean billing alert, Cloudflare notifications, Anthropic spend limit, Paperclip low-balance mail, Apple membership date, Namecheap auto-renew). Resend quota watch is blind (infra check: 'no key available'). || [CEO office live 2026-10-27T17:0xZ, measured read-only on the main server] No billing/spend alert found in the vault or on the board. Paperclip stopped today for insufficient funds = the exact failure this item is about.",
           "addedAt": "2026-10-27T17:00:00Z",
           "addedBy": "[CEO] office live",
-          "verifiedBy": "none"
+          "verifiedBy": "none",
+          "lastMeasured": "2026-10-28T12:33:37Z",
+          "lastResult": "FAIL"
         },
         {
           "test": "07 Rollback in one command",
@@ -24515,12 +24527,14 @@
           "owner": "[DEVOPS]",
           "met": true,
           "passed": true,
-          "evidence": "[CEO office live 2026-10-27T17:0xZ, measured read-only on the main server] Rollback images present: caspervpn-api:rollback-202610271025 (6 h), -202610271012, -202610261138; admin rollback-202610261603. Website rollback tag not seen.",
+          "evidence": "[SECURITY+CTO security-command, CEO live order 28 Oct, measured 2026-10-28T12:33:37Z, production read-only via tools/security_command.py scale] PASS - api rollback-202610280217; website rollback-202610281203; admin-react rollback-202610281211. 28 Oct: website rollback tag caspervpn-website:rollback-202610281203 (= running image 4788c2111600) + admin caspervpn-admin-react:rollback-202610281211 (the 26 Oct admin tag had been pruned). Limit: the 04:00 prune deletes an untagged-label image 24 h after no container uses it. || [CEO office live 2026-10-27T17:0xZ, measured read-only on the main server] Rollback images present: caspervpn-api:rollback-202610271025 (6 h), -202610271012, -202610261138; admin rollback-202610261603. Website rollback tag not seen.",
           "addedAt": "2026-10-27T17:00:00Z",
           "addedBy": "[CEO] office live",
           "verifiedBy": "verified",
           "verifiedByRaw": "ceo-office",
-          "verifiedDate": "2026-10-27"
+          "verifiedDate": "2026-10-27",
+          "lastMeasured": "2026-10-28T12:33:37Z",
+          "lastResult": "PASS"
         },
         {
           "test": "08 Live database safe: separate dev DB, migrations reviewed, connections + disk headroom",
@@ -24528,10 +24542,12 @@
           "owner": "[BACKEND]+[DEVOPS]",
           "met": false,
           "passed": false,
-          "evidence": "[CEO office live 2026-10-27T17:0xZ, measured read-only on the main server] DB 207 MB; 20 of 100 connections; dev has its own DB. Main server disk 75% (65% this morning) - 3.1 GB images + 1.9 GB build cache reclaimable. Watch item.",
+          "evidence": "[SECURITY+CTO security-command, CEO live order 28 Oct, measured 2026-10-28T12:33:37Z, production read-only via tools/security_command.py scale] PASS - disk 67%; DB 207 MB; connections 20/100. 28 Oct disk reclaim: docker builder prune -f (1.756 GB) + docker image prune -f (dangling only, 1 image) = 1.72 GB; disk 78% -> 70% (37 -> 33 GB used) at 12:0xZ. || [CEO office live 2026-10-27T17:0xZ, measured read-only on the main server] DB 207 MB; 20 of 100 connections; dev has its own DB. Main server disk 75% (65% this morning) - 3.1 GB images + 1.9 GB build cache reclaimable. Watch item.",
           "addedAt": "2026-10-27T17:00:00Z",
           "addedBy": "[CEO] office live",
-          "verifiedBy": "none"
+          "verifiedBy": "none",
+          "lastMeasured": "2026-10-28T12:33:37Z",
+          "lastResult": "PASS"
         },
         {
           "test": "09 Webhooks: Apple and crypto notifications arrive, are verified, and are idempotent",
@@ -24539,10 +24555,12 @@
           "owner": "[BACKEND]",
           "met": false,
           "passed": false,
-          "evidence": "[CEO office live 2026-10-27T17:0xZ, measured read-only on the main server] 0 hits on /api/payments/apple-webhook since nginx start 18 Oct, 0 NOWPayments hits - with 3 paying Apple subs, check the App Store Server Notifications URL in App Store Connect. NOT PROVEN.",
+          "evidence": "[SECURITY+CTO security-command, CEO live order 28 Oct, measured 2026-10-28T12:33:37Z, production read-only via tools/security_command.py scale] PASS - Apple POSTs 7 x200, 4 non-200 (retried) in 15 days of logs; IAP unique index 1; duplicate Apple transactions 0; NOWPayments 1 x200. CORRECTION of 27 Oct '0 hits': that read nginx access.log, a symlink to stdout. The real logs (volume caspervpn-nginx-logs, api_ssl_access.log*, 15 days): Apple POST /api/payments/apple-webhook 7 x200 + 4 x400; every 400 ('No matching user found' - notification before the app's receipt) is followed by a 200 ~1 h later (Apple retry). So the App Store Server Notifications URL is set and working. Idempotency: unique index ix_payments_iap_txn_id_unique on Metadata->>'TransactionId', 0 duplicates in 466 Apple payments; signature verified (xd-935) + bundle check (xd-1799). NOWPayments: 1 x200 (17 Oct), route skips completed orders, .NET crypto/record idempotent. No code change needed. || [CEO office live 2026-10-27T17:0xZ, measured read-only on the main server] 0 hits on /api/payments/apple-webhook since nginx start 18 Oct, 0 NOWPayments hits - with 3 paying Apple subs, check the App Store Server Notifications URL in App Store Connect. NOT PROVEN.",
           "addedAt": "2026-10-27T17:00:00Z",
           "addedBy": "[CEO] office live",
-          "verifiedBy": "none"
+          "verifiedBy": "none",
+          "lastMeasured": "2026-10-28T12:33:37Z",
+          "lastResult": "PASS"
         },
         {
           "test": "10 Backups: daily, off-site, and a tested restore",
@@ -24550,17 +24568,20 @@
           "owner": "[DEVOPS]",
           "met": false,
           "passed": false,
-          "evidence": "[CEO office live 2026-10-27T17:0xZ, measured read-only on the main server] Daily pg dump 03:00 OK (daily_2026-10-27_0300.dump), weekly kept, nightly repo tar, off-site rsync OK daily ('remote size 4.4G' 27 Oct). No restore drill on record -> partial until a restore is proven.",
+          "evidence": "[SECURITY+CTO security-command, CEO live order 28 Oct, measured 2026-10-28T12:33:37Z, production read-only via tools/security_command.py scale] PASS - newest daily dump 9 h old; off-site OK today 1; last restore drill 2026-10-28 (0 days ago, counts match True). 28 Oct RESTORE DRILL on DEV: off-site copy daily_2026-10-28_0300.dump (25,465,630 B) -> scratch DB restore_drill_20261028 on caspervpn-dev-postgres: pg_restore rc 0 in 9 s; rows created before 03:00Z production vs restored: Users 663/663, ConnectionLogs 8234/8234, Subscriptions 663/663; whole tables Payments 467/467, WireGuardKeys 3185/3185, AuditLogs 2091/2091 (others = rows added since 03:00). Scratch DB dropped. Registry memory/departments/security/context/restore-drills.json. || [CEO office live 2026-10-27T17:0xZ, measured read-only on the main server] Daily pg dump 03:00 OK (daily_2026-10-27_0300.dump), weekly kept, nightly repo tar, off-site rsync OK daily ('remote size 4.4G' 27 Oct). No restore drill on record -> partial until a restore is proven.",
           "addedAt": "2026-10-27T17:00:00Z",
           "addedBy": "[CEO] office live",
-          "verifiedBy": "none"
+          "verifiedBy": "none",
+          "lastMeasured": "2026-10-28T12:33:37Z",
+          "lastResult": "PASS"
         }
       ],
       "progress": 0,
       "blocked": false,
       "blocker": "",
       "deps": [],
-      "weight": 0.7
+      "weight": 0.7,
+      "verify": "python3 tools/security_command.py scale"
     },
     {
       "id": "partner-router-program",
@@ -77148,11 +77169,13 @@
       "to": "[BACKEND]",
       "title": "Handoff from CEO: scale-readiness-1000 rows 01, 02, 08, 09: measure + fix plan",
       "description": "Turn on pg_stat_statements on dev then prod (READY TO SHIP row), list N+1 endpoints; prove 0 duplicate sessions; check App Store Server Notifications URL + webhook idempotency (Apple + NOWPayments); free users over 512 MB.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-10-27T16:01:57Z",
       "createdDate": "2026-10-27",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[SECURITY+CTO security-command, CEO live order 28 Oct, measured 2026-10-28T12:33:37Z, production read-only via tools/security_command.py scale] Items owned: 01 FAIL, 02 FAIL, 08 PASS, 09 PASS. 01: 19 free users over cap (2 by >50 MB, max 681 MB) - leak road not yet found. 02: dev pg_stat_statements on, no per-request N+1 in 13 endpoints, background N+1 WireGuardUsageSyncService.cs:253/:290; production enable = CEO YES step on the scale task row 02. 09 PASS (correction: Apple webhooks arrive, 7x200). Not completed: 01 and 02 open.",
+      "updatedAt": "2026-10-28T12:33:37Z"
     },
     {
       "id": "xd-2674",
@@ -77160,11 +77183,16 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CEO: scale-readiness-1000 rows 05, 07, 08, 10: job alarms, website rollback, disk, restore drill",
       "description": "Failure alarm for every backup/cron job; website rollback tag; reclaim build cache/images (disk 75%); one restore drill of last night's dump into a scratch DB with row counts.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-10-27T16:01:57Z",
       "createdDate": "2026-10-27",
-      "completedDate": null
+      "completedDate": "2026-10-28",
+      "notes": "[SECURITY+CTO security-command, CEO live order 28 Oct, measured 2026-10-28T12:33:37Z, production read-only via tools/security_command.py scale] Items owned: 05 PASS, 07 PASS, 08 PASS, 10 PASS. Done: cron_guard on 72 jobs (Telegram, TEST 200), website + admin rollback tags, disk 78%->70%, restore drill exact on dev. QA re-runs: python3 tools/security_command.py scale (items 05/07/08/10).",
+      "updatedAt": "2026-10-28T12:33:37Z",
+      "completedAt": "2026-10-28",
+      "completedBy": "[SECURITY]",
+      "resolution": "05/07/08/10 PASS on 28 Oct (security_command.py scale): job failure alarms on all 72 cron jobs, website+admin rollback tags, disk 70%, restore drill exact. QA verifies by re-running the scale check."
     },
     {
       "id": "xd-2675",
@@ -77366,11 +77394,13 @@
       "to": "[SECURITY]",
       "title": "Handoff from CEO: [P1] Re-run Cloudflare security-audit skill (latest) on the whole system + build ONE unified CasperVPN cyber-security skill/tool",
       "description": "CEO 28 Oct live. (1) Update the vendored Cloudflare skill (github.com/cloudflare/security-audit-skill, MIT, install: npx skills add https://github.com/cloudflare/security-audit-skill --skill security-audit) to latest and run it on everything changed since the 12-slice audit of 6-12 Oct (backend, website, admin, iOS 78-plus..ios/89, Android, relays/caspercloak, infra scripts), reusing the old ledger/findings. Confirmed findings get fixed in the same run where safe (dev), production on CEO say. (2) Merge all security skills (security SKILL.md, security-audit, affaan-m-security-review, trailofbits-*, mukul975-*, masriyan network-security, DPI program stages 1-6 + truth table, PSK rotation runbook, Cloudflare-exit, scale-readiness-1000 checklist: race conditions, N+1, error tracking, rate limits, background jobs, spend alerts, rollback, live DB, webhooks, backups) into ONE caspervpn-security skill with one index + one runner. Done by the CEO-office live session itself (no further handoffs).",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-10-28T11:55:07Z",
       "createdDate": "2026-10-28",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[SECURITY+CTO security-command, CEO live order 28 Oct, measured 2026-10-28T12:33:37Z, production read-only via tools/security_command.py scale] PART 2 DONE: one skill 'CasperVPN Security Command' = memory/departments/security/skill/SKILL.md (routing table task -> module / outside skill) + references/module-{code-audit,crypto-and-keys,network-and-dpi,infra-hardening,app-security,payments-and-webhooks,compliance,scale-readiness-1000,incident-response}.md; old SKILL.md verbatim in references/anticensorship-framework-2026-10-28.md; external/ untouched. Runner tools/security_command.py audit|dpi|scale|secrets|relays (all 5 run 28 Oct). Cloud package memory/departments/security/caspervpn-security.skill (65 files). Part 1 (re-run the Cloudflare audit) not done in this run: start with 'python3 tools/security_command.py audit'.",
+      "updatedAt": "2026-10-28T12:33:37Z"
     },
     {
       "id": "xd-2690",
