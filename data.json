@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-29T20:14:23Z",
+  "lastUpdated": "2026-10-29T20:41:40Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 69,
@@ -18199,14 +18199,24 @@
           "evidence": "[DEVOPS live 2026-10-29 19:5x-20:1xZ, CEO Cowork, 2026-10-29T19:54:48Z] IKE accounting row (security-lockdown 18) asked to fill radacct - NOT done: that would create a second user+IP log. Root cause of 'radacct empty': queries.conf accounting queries are blank (query = \"\") - looks deliberate."
         },
         {
-          "test": "BUILD 82 = build 81 (609516bf6) + xd-2688 (fresh WireGuard key per account, new key when the server refuses a retired one, keys deleted on sign-out); version 4.3.1 (82), marker 2026-10-29-82; branch ios/92-build82 93e7ac194. CEO 29 Oct: 'make sure build 82 includes all changes made in all branches and run it on my phone'. Branch audit (content check against 609516bf6, every ios/* and dev/* branch + development + production): all iOS changes already in 81 except the 9 Oct iPad layout (CEO no, 21 Oct) and xd-2688 (added). NOT in 82: the hidden-mode padding/timing tune (row 517 A) - it needs one phone capture on a relay first (stage 3), so it goes in build 83; the new hidden-mode key (needs a build setting so the key stays out of git).",
+          "test": "CEO 2026-10-29 (Cowork chat: 'why not add them to the current built?' -> 'Both, padding behind switch') | BUILD 82 = build 81 (609516bf6) + xd-2688 (fresh WireGuard key per account, new key when the server refuses a retired one, keys deleted on sign-out); version 4.3.1 (82), marker 2026-10-29-82; branch ios/92-build82 93e7ac194. CEO 29 Oct: 'make sure build 82 includes all changes made in all branches and run it on my phone'. Branch audit (content check against 609516bf6, every ios/* and dev/* branch + development + production): all iOS changes already in 81 except the 9 Oct iPad layout (CEO no, 21 Oct) and xd-2688 (added). ADDED (xd-2712, branch tip aad4fc98a): (1) hidden-mode traffic shape v2 behind a server switch, OFF by default: continuous frame sizes (need + 0-320 B, cap 1500) instead of 4 fixed sizes, cover frames 40-1200 B every 150-2500 ms; wire format unchanged, relays ignore pad length; log line [CC-SHAPE] v1|v2. (2) the NEW relay key read from the build setting CASPERCLOAK_PSK, filled at build time from ~/casper-secrets/cc_relay_psk (outside Dropbox and git; build log scrubbed); a build without it falls back to the old key. All 12 relays accept new + old key (sha checked 29 Oct 20:4xZ).",
           "verify": "_ios/build82.log: patch applied, BUILD SUCCEEDED, app marker 82 = 1+, Info 4.3.1 (82), 'App installed' on the CEO iPhone; console-build82.log shows 'BUILD MARKER 2026-10-29-82'",
           "met": false,
           "passed": false,
           "verifiedBy": null,
           "verifiedByRaw": null,
           "verifiedDate": null,
-          "evidence": "[CTO, CEO office live 2026-10-29 20:0xZ] branch pushed 93e7ac194 (8x CURRENT_PROJECT_VERSION 82, 0x 81, marker 1). b82-delta.patch (7 files, md5 ac1b4f2f) + build82.command in Dropbox _ios. The Mac run did not start from this chat: Finder did not answer the remote control and Terminal is click-only -> the CEO starts it with one Terminal line: bash ~/Dropbox/app-link/CasperVPN/_ios/build82.command"
+          "evidence": "[CTO, CEO office live 2026-10-29 21:0xZ] ios/92-build82 aad4fc98a pushed; b82-delta.patch md5 7763fc63 (13 files) + build82.command (syntax OK) in Dropbox _ios. Backend switch xd-2712 on development becd34a80 (CasperCloak:ShapeProfile off|staff|v2, default off): dotnet build 0 errors, tests 549/549. NOT PROVEN: Xcode compile of the app changes (no Xcode in the VM) - the build script stops on any error. || [CTO, CEO office live 2026-10-29 20:0xZ] branch pushed 93e7ac194 (8x CURRENT_PROJECT_VERSION 82, 0x 81, marker 1). b82-delta.patch (7 files, md5 ac1b4f2f) + build82.command in Dropbox _ios. The Mac run did not start from this chat: Finder did not answer the remote control and Terminal is click-only -> the CEO starts it with one Terminal line: bash ~/Dropbox/app-link/CasperVPN/_ios/build82.command"
+        },
+        {
+          "test": "READY TO SHIP (after build 82 is on the CEO phone) - backend switch for the new hidden-mode traffic shape (xd-2712) \u00b7 what: caspercloak-config returns shapeProfile; production setting CasperCloak__ShapeProfile=staff first (only Admin accounts = your phone get v2), then v2 for everyone after one measured day \u00b7 why: lets us test the build-82 shape on your phone and switch it for all users without a new app \u00b7 tested on development: build 0 errors, 549/549 tests (becd34a80) \u00b7 rollback: set off (no rebuild) \u00b7 advice: yes, ship with 'staff' tomorrow.",
+          "verify": "production API log/response: caspercloak-config for the CEO account has shapeProfile=v2, for a normal account null; phone export log shows [CC-SHAPE] v2",
+          "met": false,
+          "passed": false,
+          "verifiedBy": null,
+          "verifiedByRaw": null,
+          "verifiedDate": null,
+          "evidence": "[CTO, CEO office live 2026-10-29 21:0xZ] development becd34a80."
         }
       ],
       "progress": 0,
@@ -78496,6 +78506,18 @@
       "status": "pending",
       "priority": "P3",
       "createdAt": "2026-10-29T20:05:58Z",
+      "createdDate": "2026-10-29",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2728",
+      "from": "[CTO]",
+      "to": "[QA]",
+      "title": "Handoff from CTO: xd-2712 dev check: shapeProfile switch on the dev API",
+      "description": "development becd34a80: set CasperCloak__ShapeProfile=staff on the dev API, call caspercloak-config as a staff account (expect shapeProfile=v2) and a normal account (expect null); off -> null for both. Then the build-82 phone check: export log [CC-SHAPE] v1 with the switch off.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-29T20:41:40Z",
       "createdDate": "2026-10-29",
       "completedDate": null
     }
