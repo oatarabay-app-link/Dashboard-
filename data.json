@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-29T19:54:53Z",
+  "lastUpdated": "2026-10-29T20:01:53Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 69,
@@ -18167,14 +18167,14 @@
           "evidence": "[CTO, CEO office live 2026-10-29 19:4xZ] counts read-only from UserDeviceTokens (IsActive) x ConnectionLogs."
         },
         {
-          "test": "DECISION - how long we keep logs (CEO 29 Oct: 'why has the server log been deleted dont we keep logs for 6 months?') \u00b7 MEASURED: (1) database records (connections, failures, bug reports, funnel) = 180 days - these are what the investigations use and they are all there; (2) main-server API text log = about 3 days (a 1 Jul disk-full stopgap deletes files older than 1 day inside the container; the host keeps 3 day files, 54-66 MB each); (3) VPN server logs = 7 days ON PURPOSE (our no-log promise, LEGAL xd-2135; installing it on 27-28 Oct wiped everything older, which is why 26 Oct is gone). \u00b7 A: keep as is. B (advice): API text log 30 days with IP addresses and e-mails removed before writing; VPN servers stay at 7 days (the promise). C: VPN servers 30 days too - breaks the privacy policy, not advised.",
+          "test": "CEO A 2026-10-29 (Cowork chat: 'a for now we will discuss it with the board for tomorrow or next week') | DECISION - how long we keep logs (CEO 29 Oct: 'why has the server log been deleted dont we keep logs for 6 months?') \u00b7 MEASURED: (1) database records (connections, failures, bug reports, funnel) = 180 days - these are what the investigations use and they are all there; (2) main-server API text log = about 3 days (a 1 Jul disk-full stopgap deletes files older than 1 day inside the container; the host keeps 3 day files, 54-66 MB each); (3) VPN server logs = 7 days ON PURPOSE (our no-log promise, LEGAL xd-2135; installing it on 27-28 Oct wiped everything older, which is why 26 Oct is gone). \u00b7 A: keep as is. B (advice): API text log 30 days with IP addresses and e-mails removed before writing; VPN servers stay at 7 days (the promise). C: VPN servers 30 days too - breaks the privacy policy, not advised.",
           "verify": "after B: ls /opt/caspervpn/api-logs shows 30 day files; grep -c of an IPv4 pattern in them = 0",
-          "met": false,
-          "passed": false,
-          "verifiedBy": null,
-          "verifiedByRaw": null,
-          "verifiedDate": null,
-          "evidence": "[CTO, CEO office live 2026-10-29 19:4xZ] cron casper-apilog-guard (find -mtime +1 -delete); appsettings Serilog retainedFileCountLimit 10; node-sgp /etc/systemd/journald.conf.d/xd2137-nolog.conf MaxRetentionSec=7day, journal starts 27 Oct 06:23Z."
+          "met": true,
+          "passed": true,
+          "verifiedBy": "verified",
+          "verifiedByRaw": "ceo",
+          "verifiedDate": "2026-10-29",
+          "evidence": "[CEO A 2026-10-29 (Cowork chat)] Keep as is for now; on the board agenda (next board meeting this week): API text log 30 days with IPs/e-mails removed (option B). || [CTO, CEO office live 2026-10-29 19:4xZ] cron casper-apilog-guard (find -mtime +1 -delete); appsettings Serilog retainedFileCountLimit 10; node-sgp /etc/systemd/journald.conf.d/xd2137-nolog.conf MaxRetentionSec=7day, journal starts 27 Oct 06:23Z."
         },
         {
           "met": false,
@@ -18197,6 +18197,16 @@
           "test": "DECISION (P0, privacy) \u2014 our login server keeps a session log of IKEv2 users: who, their real IP, when \u00b7 MEASURED 29 Oct (counts only, nothing printed): FreeRADIUS on the main server writes every IKEv2 connect/disconnect to /var/log/freeradius/radacct/<server>/detail-<date> (User-Name + Calling-Station-Id = the user's real IP + Framed-IP + timestamps), 492 files from 16 Feb 2026 to today, 18 different users, rotated but kept 52 days+; also radwtmp (login records, 52 days) and acct-forward.log. This contradicts a no-logs promise. A: stop it tonight in the 02-04Z window (remove 'detail' + 'unix' from the accounting section, FreeRADIUS restart ~4 s, IKEv2 logins and usage counting keep working) and Legal decides within 7 days what happens to the existing files (lock like row 269, or delete) \u00b7 B: stop it AND delete all existing files now \u00b7 C: leave as is until Legal reviews \u00b7 advice: A (stop new logging now; deleting is Legal's call, may need a record first).",
           "verify": "after A: no new detail-<date> files, radwtmp not growing, IKEv2 login + accounting forward still work",
           "evidence": "[DEVOPS live 2026-10-29 19:5x-20:1xZ, CEO Cowork, 2026-10-29T19:54:48Z] IKE accounting row (security-lockdown 18) asked to fill radacct - NOT done: that would create a second user+IP log. Root cause of 'radacct empty': queries.conf accounting queries are blank (query = \"\") - looks deliberate."
+        },
+        {
+          "test": "BUILD 82 = build 81 (609516bf6) + xd-2688 (fresh WireGuard key per account, new key when the server refuses a retired one, keys deleted on sign-out); version 4.3.1 (82), marker 2026-10-29-82; branch ios/92-build82 93e7ac194. CEO 29 Oct: 'make sure build 82 includes all changes made in all branches and run it on my phone'. Branch audit (content check against 609516bf6, every ios/* and dev/* branch + development + production): all iOS changes already in 81 except the 9 Oct iPad layout (CEO no, 21 Oct) and xd-2688 (added). NOT in 82: the hidden-mode padding/timing tune (row 517 A) - it needs one phone capture on a relay first (stage 3), so it goes in build 83; the new hidden-mode key (needs a build setting so the key stays out of git).",
+          "verify": "_ios/build82.log: patch applied, BUILD SUCCEEDED, app marker 82 = 1+, Info 4.3.1 (82), 'App installed' on the CEO iPhone; console-build82.log shows 'BUILD MARKER 2026-10-29-82'",
+          "met": false,
+          "passed": false,
+          "verifiedBy": null,
+          "verifiedByRaw": null,
+          "verifiedDate": null,
+          "evidence": "[CTO, CEO office live 2026-10-29 20:0xZ] branch pushed 93e7ac194 (8x CURRENT_PROJECT_VERSION 82, 0x 81, marker 1). b82-delta.patch (7 files, md5 ac1b4f2f) + build82.command in Dropbox _ios. The Mac run did not start from this chat: Finder did not answer the remote control and Terminal is click-only -> the CEO starts it with one Terminal line: bash ~/Dropbox/app-link/CasperVPN/_ios/build82.command"
         }
       ],
       "progress": 0,
@@ -78423,6 +78433,18 @@
       "status": "pending",
       "priority": "P0",
       "createdAt": "2026-10-29T19:54:52Z",
+      "createdDate": "2026-10-29",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2726",
+      "from": "[CTO]",
+      "to": "[QA]",
+      "title": "Handoff from CTO: Build 82 phone check (after the CEO runs build82.command)",
+      "description": "Read _ios/build82.log + console-build82.log: marker 82 on the phone; then the CEO script: hidden mode connect, 3 sites, speed test, 10-min hold (closes cloudflare-exit-phase1 row 4); sign out + sign in = new WireGuard key (xd-2688, xd-2702 checks). During the 10-min hold, take the stage-3 capture on the relay (5 min, headers/sizes/timing only, no payload) for the padding/timing tune of build 83.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-10-29T20:01:53Z",
       "createdDate": "2026-10-29",
       "completedDate": null
     }
