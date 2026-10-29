@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-29T23:22:48Z",
+  "lastUpdated": "2026-10-29T23:31:30Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 69,
@@ -18198,9 +18198,9 @@
           "addedAt": "2026-10-29T19:54:48Z",
           "addedBy": "[DEVOPS]",
           "owner": "[CEO]",
-          "test": "DECISION (P0, privacy) \u2014 our login server keeps a session log of IKEv2 users: who, their real IP, when \u00b7 MEASURED 29 Oct (counts only, nothing printed): FreeRADIUS on the main server writes every IKEv2 connect/disconnect to /var/log/freeradius/radacct/<server>/detail-<date> (User-Name + Calling-Station-Id = the user's real IP + Framed-IP + timestamps), 492 files from 16 Feb 2026 to today, 18 different users, rotated but kept 52 days+; also radwtmp (login records, 52 days) and acct-forward.log. This contradicts a no-logs promise. A: stop it tonight in the 02-04Z window (remove 'detail' + 'unix' from the accounting section, FreeRADIUS restart ~4 s, IKEv2 logins and usage counting keep working) and Legal decides within 7 days what happens to the existing files (lock like row 269, or delete) \u00b7 B: stop it AND delete all existing files now \u00b7 C: leave as is until Legal reviews \u00b7 advice: A (stop new logging now; deleting is Legal's call, may need a record first).",
+          "test": "SHIPPED 2026-10-29 23:30Z \u00b7 CEO B 2026-10-29 (Cowork chat: 'b for 536') | DECISION (P0, privacy) \u2014 our login server keeps a session log of IKEv2 users: who, their real IP, when \u00b7 MEASURED 29 Oct (counts only, nothing printed): FreeRADIUS on the main server writes every IKEv2 connect/disconnect to /var/log/freeradius/radacct/<server>/detail-<date> (User-Name + Calling-Station-Id = the user's real IP + Framed-IP + timestamps), 492 files from 16 Feb 2026 to today, 18 different users, rotated but kept 52 days+; also radwtmp (login records, 52 days) and acct-forward.log. This contradicts a no-logs promise. A: stop it tonight in the 02-04Z window (remove 'detail' + 'unix' from the accounting section, FreeRADIUS restart ~4 s, IKEv2 logins and usage counting keep working) and Legal decides within 7 days what happens to the existing files (lock like row 269, or delete) \u00b7 B: stop it AND delete all existing files now \u00b7 C: leave as is until Legal reviews \u00b7 advice: A (stop new logging now; deleting is Legal's call, may need a record first).",
           "verify": "after A: no new detail-<date> files, radwtmp not growing, IKEv2 login + accounting forward still work",
-          "evidence": "[DEVOPS live 2026-10-29 19:5x-20:1xZ, CEO Cowork, 2026-10-29T19:54:48Z] IKE accounting row (security-lockdown 18) asked to fill radacct - NOT done: that would create a second user+IP log. Root cause of 'radacct empty': queries.conf accounting queries are blank (query = \"\") - looks deliberate."
+          "evidence": "[DEVOPS live 2026-10-29 23:2x-23:3xZ, CEO Cowork, 2026-10-29T23:31:25Z] /etc/freeradius/3.0/sites-enabled/default accounting section: 'detail' (line 658) and 'unix' (line 666) commented out (backup /root/reports/devops1029-1820/freeradius-default.bak-20261029); freeradius -C ok; restart 23:30Z, active, 1812/1813 listening, 0 errors in journal. DELETED: all /var/log/freeradius/radacct/<server>/detail-* (492 files, 133 distinct client IPs, 16 Feb-29 Oct), radwtmp + 52 rotations, acct-forward.log (usernames + server + time, no client IPs). find /var /root /opt /home /tmp: 0 copies left; nightly backups do not include /var/log/freeradius. Still logged: authz.log + the recreated acct-forward.log keep first 12 chars of the username + server + time (no client IP) - follow-up. NOT PROVEN yet: an IKEv2 login after the restart (none happened by 23:32Z). Rollback of the config: copy the backup back + restart (deleted files cannot come back). || [DEVOPS live 2026-10-29 19:5x-20:1xZ, CEO Cowork, 2026-10-29T19:54:48Z] IKE accounting row (security-lockdown 18) asked to fill radacct - NOT done: that would create a second user+IP log. Root cause of 'radacct empty': queries.conf accounting queries are blank (query = \"\") - looks deliberate."
         },
         {
           "test": "CEO 2026-10-29 (Cowork chat: 'why not add them to the current built?' -> 'Both, padding behind switch') | BUILD 82 = build 81 (609516bf6) + xd-2688 (fresh WireGuard key per account, new key when the server refuses a retired one, keys deleted on sign-out); version 4.3.1 (82), marker 2026-10-29-82; branch ios/92-build82 93e7ac194. CEO 29 Oct: 'make sure build 82 includes all changes made in all branches and run it on my phone'. Branch audit (content check against 609516bf6, every ios/* and dev/* branch + development + production): all iOS changes already in 81 except the 9 Oct iPad layout (CEO no, 21 Oct) and xd-2688 (added). ADDED (xd-2712, branch tip aad4fc98a): (1) hidden-mode traffic shape v2 behind a server switch, OFF by default: continuous frame sizes (need + 0-320 B, cap 1500) instead of 4 fixed sizes, cover frames 40-1200 B every 150-2500 ms; wire format unchanged, relays ignore pad length; log line [CC-SHAPE] v1|v2. (2) the NEW relay key read from the build setting CASPERCLOAK_PSK, filled at build time from ~/casper-secrets/cc_relay_psk (outside Dropbox and git; build log scrubbed); a build without it falls back to the old key. All 12 relays accept new + old key (sha checked 29 Oct 20:4xZ).",
@@ -78761,7 +78761,8 @@
       "priority": "P0",
       "createdAt": "2026-10-29T19:54:52Z",
       "createdDate": "2026-10-29",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[DEVOPS live 2026-10-29 23:2x-23:3xZ, CEO Cowork, 2026-10-29T23:31:25Z] CEO chose B: logging stopped and all existing IP-bearing files deleted 23:30Z (see card row 536). Left for Legal: (1) does the privacy policy / any user need telling; (2) is a written internal record of what existed + when deleted enough (this note is that record: 492 detail files, 133 distinct client IPs, 18 users, 16 Feb-29 Oct 2026, deleted 29 Oct 23:30Z)."
     },
     {
       "id": "xd-2726",
@@ -78941,6 +78942,30 @@
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-10-29T23:22:48Z",
+      "createdDate": "2026-10-29",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2740",
+      "from": "[DEVOPS]",
+      "to": "[QA]",
+      "title": "Handoff from DEVOPS: [P0] Row 536: IKEv2 still logs in after FreeRADIUS change, and no new session files",
+      "description": "[DEVOPS live 2026-10-29 23:2x-23:3xZ, CEO Cowork, 2026-10-29T23:31:25Z] After the 23:30Z restart: (1) the next real IKEv2 login appears in authz.log as ALLOW and its accounting reaches the API (acct-forward.log line, http 200); (2) find /var/log/freeradius/radacct -type f = 0 and no radwtmp after 24 h. Counts only, never copy a line.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-10-29T23:31:30Z",
+      "createdDate": "2026-10-29",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2741",
+      "from": "[DEVOPS]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from DEVOPS: [P1] Strip usernames from authz.log + acct-forward.log (row 536 follow-up)",
+      "description": "[DEVOPS live 2026-10-29 23:2x-23:3xZ, CEO Cowork, 2026-10-29T23:31:25Z] /usr/local/bin/radius-acct-forward.py (LOG line 39) and the casper_authz script still write first 12 chars of the username + server + time per login. Change both to counts only (or no file), on dev first, then a READY TO SHIP row (CEO B on row 536 covers stopping session logs).",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-29T23:31:30Z",
       "createdDate": "2026-10-29",
       "completedDate": null
     }
