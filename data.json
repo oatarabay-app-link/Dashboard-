@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-29T19:48:09Z",
+  "lastUpdated": "2026-10-29T19:54:53Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 69,
@@ -8268,7 +8268,7 @@
           "passed": false,
           "verifiedBy": "none",
           "verifiedAt": "2026-03-14T22:00:00Z",
-          "evidence": "[DEVOPS live 2026-10-29 19:1x-19:3xZ, CEO Cowork: 'yes for the other 7 ship rows', 2026-10-29T19:08:24Z] MEASURED: accounting is already ON at both ends - eap-radius.conf 'accounting = yes' (acct_port 1813) on relays, FreeRADIUS writes per-node detail files today (/var/log/freeradius/radacct/<node>/), but 'radacct' in database caspervpn has 0 rows: the custom sql module answers accounting with nothing (soft '-sql', no error). Fix = add the accounting queries to the sql module, test on the dev RADIUS (Bangkok points to the dev server), then the main server in a quiet hour (FreeRADIUS restart = ~4 s login pause). || RE-OPENED 2026-10-29 (CEO: 'start closing the 10 rows'). MEASURED: radacct 0 rows, radpostauth 0 rows in the production database - IKEv2 sessions are not accounted. [DEVOPS live 2026-10-29 18:1x-19:0xZ, CEO Cowork: 'yes you should add this and we should start closing the 10 rows', 2026-10-29T18:39:09Z] || DEFERRED to Nov 2026 - IKEv2 RADIUS accounting tables + start/stop records - fleet strongSwan change, Bangkok first. [DEVOPS live 2026-10-29 01:1x-01:4xZ, CEO Cowork 'finalize only open tasks', 2026-10-29T01:25:00Z] || [DEVOPS run 2026-10-11 c, scheduled, unattended, 2026-10-11T02:4xZ] STILL FAIL, production DB read-only 02:33Z: radacct rows ever = 0, radpostauth 7 d = 0, while ConnectionLogs shows 306 IKEv2 sessions in 7 d - the servers do not send RADIUS accounting. Fix = strongSwan eap-radius accounting on every server (fleet change, Bangkok first) = needs CEO YES. || QA 2026-09-24 FAIL: radacct/radpostauth tables exist, but radacct has 0 session starts in 7 days. -> [DEVOPS]",
+          "evidence": "[DEVOPS live 2026-10-29 19:5x-20:1xZ, CEO Cowork, 2026-10-29T19:54:48Z] STOPPED, NOT BUILT: filling radacct would store who connected, from which real IP, when - the opposite of no-logs. The blank accounting queries look deliberate. Proposal: close this criterion as conflicting with the no-log policy (CEO row 536, Legal xd-2725). || [DEVOPS live 2026-10-29 19:1x-19:3xZ, CEO Cowork: 'yes for the other 7 ship rows', 2026-10-29T19:08:24Z] MEASURED: accounting is already ON at both ends - eap-radius.conf 'accounting = yes' (acct_port 1813) on relays, FreeRADIUS writes per-node detail files today (/var/log/freeradius/radacct/<node>/), but 'radacct' in database caspervpn has 0 rows: the custom sql module answers accounting with nothing (soft '-sql', no error). Fix = add the accounting queries to the sql module, test on the dev RADIUS (Bangkok points to the dev server), then the main server in a quiet hour (FreeRADIUS restart = ~4 s login pause). || RE-OPENED 2026-10-29 (CEO: 'start closing the 10 rows'). MEASURED: radacct 0 rows, radpostauth 0 rows in the production database - IKEv2 sessions are not accounted. [DEVOPS live 2026-10-29 18:1x-19:0xZ, CEO Cowork: 'yes you should add this and we should start closing the 10 rows', 2026-10-29T18:39:09Z] || DEFERRED to Nov 2026 - IKEv2 RADIUS accounting tables + start/stop records - fleet strongSwan change, Bangkok first. [DEVOPS live 2026-10-29 01:1x-01:4xZ, CEO Cowork 'finalize only open tasks', 2026-10-29T01:25:00Z] || [DEVOPS run 2026-10-11 c, scheduled, unattended, 2026-10-11T02:4xZ] STILL FAIL, production DB read-only 02:33Z: radacct rows ever = 0, radpostauth 7 d = 0, while ConnectionLogs shows 306 IKEv2 sessions in 7 d - the servers do not send RADIUS accounting. Fix = strongSwan eap-radius accounting on every server (fleet change, Bangkok first) = needs CEO YES. || QA 2026-09-24 FAIL: radacct/radpostauth tables exist, but radacct has 0 session starts in 7 days. -> [DEVOPS]",
           "met": false,
           "verifiedDate": "2026-09-24",
           "verifiedByRaw": "qa-tested",
@@ -8276,7 +8276,7 @@
           "qaDate": "2026-09-24",
           "verifiedByPrevious": "tested",
           "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored",
-          "blocker": "next DevOps run: accounting queries on the dev FreeRADIUS + one Bangkok IKEv2 session -> radacct row; then main server in the 02-04Z window",
+          "blocker": "waits CEO answer on ceo-action-backlog row 536 + Legal xd-2725; DevOps proposes closing this criterion (conflicts with no-logs)",
           "dueBy": "2026-11-05"
         },
         {
@@ -18065,9 +18065,9 @@
           "addedAt": "2026-10-29T18:39:09Z",
           "addedBy": "[DEVOPS]",
           "owner": "[DEVOPS]",
-          "test": "READY TO SHIP \u2014 let the DNS resolver on every VPN server answer the OpenVPN-over-TCP network too (10.9.0.0/24) \u00b7 what: add one 'access-control: 10.9.0.0/24 allow' line to /etc/unbound/unbound.conf.d/caspervpn.conf on the 11 relays + main server, restart unbound (~1 s, DNS for WireGuard users pauses for that second) \u00b7 why: security-lockdown row 4 - every server lists 10.8.0.0/24 (OpenVPN UDP) but not 10.9.0.0/24; today OpenVPN pushes 1.1.1.1 so no user is hurt, the gap is only a consistency/readiness fix \u00b7 tested on dev: Bangkok 29 Oct 18:5xZ: line added, unbound-checkconf no errors, active, local resolve OK; backup .bak-20261029 \u00b7 rollback: copy the .bak back + restart unbound \u00b7 advice: YES (low value, low risk).",
+          "test": "SHIPPED 2026-10-29 19:5xZ on 12 of 12 \u00b7 CEO YES 2026-10-29 (Cowork chat: 'if its okay ship the dns fix') | READY TO SHIP \u2014 let the DNS resolver on every VPN server answer the OpenVPN-over-TCP network too (10.9.0.0/24) \u00b7 what: add one 'access-control: 10.9.0.0/24 allow' line to /etc/unbound/unbound.conf.d/caspervpn.conf on the 11 relays + main server, restart unbound (~1 s, DNS for WireGuard users pauses for that second) \u00b7 why: security-lockdown row 4 - every server lists 10.8.0.0/24 (OpenVPN UDP) but not 10.9.0.0/24; today OpenVPN pushes 1.1.1.1 so no user is hurt, the gap is only a consistency/readiness fix \u00b7 tested on dev: Bangkok 29 Oct 18:5xZ: line added, unbound-checkconf no errors, active, local resolve OK; backup .bak-20261029 \u00b7 rollback: copy the .bak back + restart unbound \u00b7 advice: YES (low value, low risk).",
           "verify": "QA: grep -c '10.9.0.0/24' in caspervpn.conf = 1 on 12 servers + unbound active + dig @127.0.0.1 ok",
-          "evidence": "[DEVOPS live 2026-10-29 18:1x-19:0xZ, CEO Cowork: 'yes you should add this and we should start closing the 10 rows', 2026-10-29T18:39:09Z] measured on 13 servers: ACL has 10.8.0.0/24, lacks 10.9.0.0/24 everywhere."
+          "evidence": "[DEVOPS live 2026-10-29 19:5x-20:1xZ, CEO Cowork, 2026-10-29T19:54:48Z] 11 relays + main server: line added after 10.8.0.0/24, unbound-checkconf ok, restart, active, n9=1, local dig ok on 12/12; backup .bak-20261029 each; log /root/reports/devops1029-1820/ubroll.log. Front-path check after: 11/11 = 101. || [DEVOPS live 2026-10-29 18:1x-19:0xZ, CEO Cowork: 'yes you should add this and we should start closing the 10 rows', 2026-10-29T18:39:09Z] measured on 13 servers: ACL has 10.8.0.0/24, lacks 10.9.0.0/24 everywhere."
         },
         {
           "met": false,
@@ -18141,9 +18141,9 @@
           "addedAt": "2026-10-29T19:05:07Z",
           "addedBy": "[DEVOPS]",
           "owner": "[CEO]",
-          "test": "DECISION \u2014 Cloudflare exit, phase 3 (xd-2248): where the website + API + admin live once they leave Cloudflare's proxy \u00b7 A: move them behind a DDoS-protected host that allows VPN companies (we read its terms first; small monthly cost) \u00b7 B: serve them straight from our main server now (no extra cost, but a flood attack hits the server directly) \u00b7 C: wait until after 31 Oct (Android beta) and decide then \u00b7 advice: A (from the 21 Oct plan: no single server exposed), C if you want no change before the beta.",
+          "test": "CEO ANSWER 2026-10-29 (Cowork chat: 'if we are not in danger for keeping it on cf keep for now and seek alternatives that accept vpns and prepare a plan to email them') = keep on Cloudflare for now + find VPN-friendly alternatives | DECISION \u2014 Cloudflare exit, phase 3 (xd-2248): where the website + API + admin live once they leave Cloudflare's proxy \u00b7 A: move them behind a DDoS-protected host that allows VPN companies (we read its terms first; small monthly cost) \u00b7 B: serve them straight from our main server now (no extra cost, but a flood attack hits the server directly) \u00b7 C: wait until after 31 Oct (Android beta) and decide then \u00b7 advice: A (from the 21 Oct plan: no single server exposed), C if you want no change before the beta.",
           "verify": "CEO answer A/B/C recorded here",
-          "evidence": "[DEVOPS live 2026-10-29 19:0xZ, CEO Cowork: 'yes ... close what u can close', 2026-10-29T19:05:07Z]"
+          "evidence": "[DEVOPS live 2026-10-29 19:5x-20:1xZ, CEO Cowork, 2026-10-29T19:54:48Z] Plan + 5 candidates + e-mail template (CEO sends, nothing sent): memory/departments/devops/research/cloudflare-alternatives-2026-10-29.md. Danger read: Cloudflare's Terms of Use (12 Sep 2025 copy) prohibit using the Services 'to provide a virtual private network or other similar proxy services'; the website/API is low risk, the old hidden-mode road through the Worker (still used by old builds) is the part that matches; DNS in the same account means one account action takes everything down - move DNS first. || [DEVOPS live 2026-10-29 19:0xZ, CEO Cowork: 'yes ... close what u can close', 2026-10-29T19:05:07Z]"
         },
         {
           "met": false,
@@ -18186,6 +18186,17 @@
           "test": "CEO YES 2026-10-29 (QA live chat, 19:3xZ): 'yes for fire wall' | READY TO SHIP \u2014 close the open door at the end of the main server's firewall (xd-2718) \u00b7 what: the last firewall rule accepts almost any new connection (274,000 packets so far), so the 'block everything else' setting does nothing; first list what that rule has been letting in (ports only), add explicit allows for anything real, then remove the catch-all rule \u00b7 why: security-lockdown-p1 AC14 \u00b7 rollback: re-add the one rule (saved copy of the rules taken first) \u00b7 test: from outside, a closed port times out, the website/API/VPN ports still answer, and the API /health stays 200",
           "verify": "main server: iptables -L INPUT -n -v --line-numbers | tail -3 -> no ACCEPT ctstate NEW without a port; from the Mac VM: TCP to a closed port fails, 443 + 22 open (control); api.caspervpn.com/health 200",
           "evidence": "[QA live 2026-10-29 z, CEO in chat 19:3xZ: 'yes for fire wall and keep going the new built tests can be compiled in one task when all changes are in the built for testong'] CEO said yes in the QA chat. Owner [DEVOPS] ships under the lock with a saved copy of the rules; QA re-runs the verify after."
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": null,
+          "addedAt": "2026-10-29T19:54:48Z",
+          "addedBy": "[DEVOPS]",
+          "owner": "[CEO]",
+          "test": "DECISION (P0, privacy) \u2014 our login server keeps a session log of IKEv2 users: who, their real IP, when \u00b7 MEASURED 29 Oct (counts only, nothing printed): FreeRADIUS on the main server writes every IKEv2 connect/disconnect to /var/log/freeradius/radacct/<server>/detail-<date> (User-Name + Calling-Station-Id = the user's real IP + Framed-IP + timestamps), 492 files from 16 Feb 2026 to today, 18 different users, rotated but kept 52 days+; also radwtmp (login records, 52 days) and acct-forward.log. This contradicts a no-logs promise. A: stop it tonight in the 02-04Z window (remove 'detail' + 'unix' from the accounting section, FreeRADIUS restart ~4 s, IKEv2 logins and usage counting keep working) and Legal decides within 7 days what happens to the existing files (lock like row 269, or delete) \u00b7 B: stop it AND delete all existing files now \u00b7 C: leave as is until Legal reviews \u00b7 advice: A (stop new logging now; deleting is Legal's call, may need a record first).",
+          "verify": "after A: no new detail-<date> files, radwtmp not growing, IKEv2 login + accounting forward still work",
+          "evidence": "[DEVOPS live 2026-10-29 19:5x-20:1xZ, CEO Cowork, 2026-10-29T19:54:48Z] IKE accounting row (security-lockdown 18) asked to fill radacct - NOT done: that would create a second user+IP log. Root cause of 'radacct empty': queries.conf accounting queries are blank (query = \"\") - looks deliberate."
         }
       ],
       "progress": 0,
@@ -78400,6 +78411,18 @@
       "status": "pending",
       "priority": "P2",
       "createdAt": "2026-10-29T19:48:09Z",
+      "createdDate": "2026-10-29",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2725",
+      "from": "[DEVOPS]",
+      "to": "[LEGAL]",
+      "title": "Handoff from DEVOPS: [P0] FreeRADIUS keeps IKEv2 session logs with user IPs (16 Feb - today) - what to do with the files",
+      "description": "[DEVOPS live 2026-10-29 19:5x-20:1xZ, CEO Cowork, 2026-10-29T19:54:48Z] See CEO card row 536. Measured counts only: 492 detail files (User-Name, real client IP, Framed-IP, start/stop times) 16 Feb - 29 Oct 2026, 18 users; radwtmp 52 days; acct-forward.log. Ask: (1) confirm stopping new logging is required by our privacy policy / Law 81/2018 / GDPR; (2) existing files: record + lock (as row 269) or delete, and by when; (3) do we need to tell users or the policy page. Never copy a line of these files anywhere.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-10-29T19:54:52Z",
       "createdDate": "2026-10-29",
       "completedDate": null
     }
