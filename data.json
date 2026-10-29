@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-29T19:33:58Z",
+  "lastUpdated": "2026-10-29T19:39:54Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 69,
@@ -18175,6 +18175,17 @@
           "verifiedByRaw": null,
           "verifiedDate": null,
           "evidence": "[CTO, CEO office live 2026-10-29 19:4xZ] cron casper-apilog-guard (find -mtime +1 -delete); appsettings Serilog retainedFileCountLimit 10; node-sgp /etc/systemd/journald.conf.d/xd2137-nolog.conf MaxRetentionSec=7day, journal starts 27 Oct 06:23Z."
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": null,
+          "addedAt": "2026-10-29T19:39:48Z",
+          "addedBy": "[QA]",
+          "owner": "[DEVOPS]",
+          "test": "CEO YES 2026-10-29 (QA live chat, 19:3xZ): 'yes for fire wall' | READY TO SHIP \u2014 close the open door at the end of the main server's firewall (xd-2718) \u00b7 what: the last firewall rule accepts almost any new connection (274,000 packets so far), so the 'block everything else' setting does nothing; first list what that rule has been letting in (ports only), add explicit allows for anything real, then remove the catch-all rule \u00b7 why: security-lockdown-p1 AC14 \u00b7 rollback: re-add the one rule (saved copy of the rules taken first) \u00b7 test: from outside, a closed port times out, the website/API/VPN ports still answer, and the API /health stays 200",
+          "verify": "main server: iptables -L INPUT -n -v --line-numbers | tail -3 -> no ACCEPT ctstate NEW without a port; from the Mac VM: TCP to a closed port fails, 443 + 22 open (control); api.caspervpn.com/health 200",
+          "evidence": "[QA live 2026-10-29 z, CEO in chat 19:3xZ: 'yes for fire wall and keep going the new built tests can be compiled in one task when all changes are in the built for testong'] CEO said yes in the QA chat. Owner [DEVOPS] ships under the lock with a saved copy of the rules; QA re-runs the verify after."
         }
       ],
       "progress": 0,
@@ -72908,13 +72919,17 @@
       "to": "[QA]",
       "title": "Handoff from IOS: [P0] Review + build ios/79 9287c94 (xd-2377: hidden-mode log keep + reconnect after network-up time-outs)",
       "description": "Branch ios/79-hidden-log-reconnect-2377 commit 9287c94 (3 files). Check: (a) code review of the diff vs ios/76; (b) on the next Mac build: toggle VPN twice after a hidden-mode session, then Send report -> the report shows OLDER/PREVIOUS/CURRENT sections and the first session is in it; (c) hidden mode on the phone, block the relay for >2 min with the network up -> log shows [CC-STORM] attempt lines and a CLEAN RESTART line within ~2.5 min instead of 10 min; (d) Wi-Fi off/airplane for 3 min -> no clean restart (full budget kept). No production change.",
-      "status": "in_progress",
+      "status": "completed",
       "priority": "P0",
       "createdAt": "2026-10-23T09:41:03Z",
       "createdDate": "2026-10-23",
-      "completedDate": null,
-      "notes": "[QA live 2026-10-28 d, CEO live chat 'i still see 54 qa tasks on db', 22:4x-23:1xZ] Also carries the open phone legs of xd-2172 (build 75), xd-2212 (build 76), xd-2349 (quota-sheet trial button) - one phone pass on the current build. || [QA 2026-10-23 k, scheduled 'Casper qa', unattended, 2026-10-23T10:1xZ] (a) CODE REVIEW PASS, no blocker: read the full diff of 9287c94 (3 files, +103/-29; parent 85e213d = ios/76 tip). LOG-KEEP: rotation current->previous->previous2 only when the log holds the banner 'PACKET TUNNEL PROVIDER - START TUNNEL' (that exact text is logged in startTunnel, PacketTunnelProvider.swift L479); startTunnel now rotates instead of deleting; bug report reads 3 files at 192 KB/3 = 64 KB each with OLDER/PREVIOUS/CURRENT headers (server cap 500 KB). CC-STORM: every failed resume attempt now goes to ccExportLog; per-attempt timeout with path satisfied sets lastAttemptTimedOutPathUp; lastSystemPathSatisfied is re-sampled every attempt (extractPhysicalInterfaces is called inside establishConnection L766; monitor timeout = treated as down, keeps the full budget); clean restart only when storm age >= 90 s and attempt >= 2. Same serial queue for writer and reader (no race). 2 LOW notes -> xd-2383 [IOS] P3. NOT PROVEN: compile (no swiftc on the Mac VM or this run), legs (b)(c)(d) on the phone. | [IOS 2026-10-23 10:4xZ] Branch tip is now 82c5377 (xd-2383: streak counter + whole-log banner scan); build 82c5377, not 9287c94. Leg (c) expects the CLEAN RESTART after the 2nd network-up time-out IN A ROW past 90 s. Leg (d) means AIRPLANE MODE (no network at all) for 3 min -> no clean restart, full 600 s budget kept. Wi-Fi off with cellular ON counts as network up -> a clean restart is allowed and is correct.",
-      "blocker": "CEO: Xcode build of ios/79 82c5377 on the Mac + install on the iPhone (live chat), then QA reads legs (b)(c)(d) from Send report"
+      "completedDate": "2026-10-29",
+      "notes": "[QA live 2026-10-29 z, CEO in chat 19:3xZ: 'yes for fire wall and keep going the new built tests can be compiled in one task when all changes are in the built for testong'] SUPERSEDED into xd-2721 (one build pass, CEO 29 Oct). Phone leg: report shows OLDER/PREVIOUS/CURRENT; relay blocked > 2 min with network up -> [CC-STORM] + CLEAN RESTART within ~2.5 min; airplane 3 min -> no clean restart; plus the open phone legs of builds 75/76 (xd-2172, xd-2212) and the quota-sheet trial button (xd-2349). || [QA live 2026-10-28 d, CEO live chat 'i still see 54 qa tasks on db', 22:4x-23:1xZ] Also carries the open phone legs of xd-2172 (build 75), xd-2212 (build 76), xd-2349 (quota-sheet trial button) - one phone pass on the current build. || [QA 2026-10-23 k, scheduled 'Casper qa', unattended, 2026-10-23T10:1xZ] (a) CODE REVIEW PASS, no blocker: read the full diff of 9287c94 (3 files, +103/-29; parent 85e213d = ios/76 tip). LOG-KEEP: rotation current->previous->previous2 only when the log holds the banner 'PACKET TUNNEL PROVIDER - START TUNNEL' (that exact text is logged in startTunnel, PacketTunnelProvider.swift L479); startTunnel now rotates instead of deleting; bug report reads 3 files at 192 KB/3 = 64 KB each with OLDER/PREVIOUS/CURRENT headers (server cap 500 KB). CC-STORM: every failed resume attempt now goes to ccExportLog; per-attempt timeout with path satisfied sets lastAttemptTimedOutPathUp; lastSystemPathSatisfied is re-sampled every attempt (extractPhysicalInterfaces is called inside establishConnection L766; monitor timeout = treated as down, keeps the full budget); clean restart only when storm age >= 90 s and attempt >= 2. Same serial queue for writer and reader (no race). 2 LOW notes -> xd-2383 [IOS] P3. NOT PROVEN: compile (no swiftc on the Mac VM or this run), legs (b)(c)(d) on the phone. | [IOS 2026-10-23 10:4xZ] Branch tip is now 82c5377 (xd-2383: streak counter + whole-log banner scan); build 82c5377, not 9287c94. Leg (c) expects the CLEAN RESTART after the 2nd network-up time-out IN A ROW past 90 s. Leg (d) means AIRPLANE MODE (no network at all) for 3 min -> no clean restart, full 600 s budget kept. Wi-Fi off with cellular ON counts as network up -> a clean restart is allowed and is correct.",
+      "blocker": "CEO: Xcode build of ios/79 82c5377 on the Mac + install on the iPhone (live chat), then QA reads legs (b)(c)(d) from Send report",
+      "completedAt": "2026-10-29",
+      "completedBy": "[QA]",
+      "resolution": "superseded into xd-2721 (one build pass for all iOS changes, CEO 29 Oct)",
+      "resultingHandoff": "xd-2721 to [QA]; xd-2722 to [IOS]"
     },
     {
       "id": "xd-2381",
@@ -75046,13 +75061,17 @@
       "to": "[QA]",
       "title": "Handoff from IOS: [IOS] Phone check: hidden mode connects when the private lookup fails (xd-2491) + failure rows carry stage 'resolve' (xd-2501)",
       "description": "Code: ios/80-doh-fallback-2491 a8889f0 (on ios/77 81e60d2). (1) CasperCloakHiding.resolveBridge: when DoH for the relay name fails, the SAME attempt dials the server-sent relay address if it is a literal IP (no lookup, nothing to national DNS) - log line '[XD-2491] DoH for <domain> -> <tag> ... no-lookup road: bare IP <ip>'. A hostname still aborts as before. (2) a CasperCloakHidingError failure row now goes out namedFailure dns-failed, StageReached 'resolve', FrontUsed 'cc-relay' (build 75: empty / 'unknown' 11/11). Proof so far: swiftc 6.1.2 -parse both files OK; isIPLiteral harness 9/9 PASS (IPv4, IPv6, padded, hostnames, bad octets). NOT PROVEN: Xcode build, a phone. Check when this branch is in an iPhone build: on a network where cloudflare-dns.com + dns.google are blocked (or the UAE user's next session), production ConnectFailureEvents for that build show StageReached 'resolve' and a ConnectionLogs row follows; device log has the [XD-2491] line. Open parts NOT in this branch: per-stage ms (still only total), Quad9/API-channel DoH, road switch after 2 identical failures.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-10-24T06:39:10Z",
       "createdDate": "2026-10-24",
-      "completedDate": null,
-      "notes": "[QA 2026-10-24 h, scheduled 'Casper qa', unattended, 2026-10-24T07:13:53Z] Not testable yet: the handoff itself says Xcode build + phone NOT PROVEN; ios/80 a8889f0 is not in any built iPhone build named on the board. No production failure row can carry stage 'resolve' until a build with it is installed.",
-      "blocker": "waits [IOS]/CEO: an iPhone build that contains ios/80-doh-fallback-2491 a8889f0, installed on a phone (then QA reads ConnectFailureEvents StageReached='resolve' for that build)"
+      "completedDate": "2026-10-29",
+      "notes": "[QA live 2026-10-29 z, CEO in chat 19:3xZ: 'yes for fire wall and keep going the new built tests can be compiled in one task when all changes are in the built for testong'] SUPERSEDED into xd-2721 (one build pass, CEO 29 Oct). Phone leg: private lookup fails -> hidden mode still connects on a bare-IP relay ('[XD-2491] ... no-lookup road'); failure rows StageReached 'resolve', FrontUsed 'cc-relay'. || [QA 2026-10-24 h, scheduled 'Casper qa', unattended, 2026-10-24T07:13:53Z] Not testable yet: the handoff itself says Xcode build + phone NOT PROVEN; ios/80 a8889f0 is not in any built iPhone build named on the board. No production failure row can carry stage 'resolve' until a build with it is installed.",
+      "blocker": "waits [IOS]/CEO: an iPhone build that contains ios/80-doh-fallback-2491 a8889f0, installed on a phone (then QA reads ConnectFailureEvents StageReached='resolve' for that build)",
+      "completedAt": "2026-10-29",
+      "completedBy": "[QA]",
+      "resolution": "superseded into xd-2721 (one build pass for all iOS changes, CEO 29 Oct)",
+      "resultingHandoff": "xd-2721 to [QA]; xd-2722 to [IOS]"
     },
     {
       "id": "xd-2511",
@@ -75327,14 +75346,18 @@
       "to": "[QA]",
       "title": "Handoff from CEO: [P1] Pre-submit gate gap: no build goes to Apple again without a 'restricted-region connect' test (DoH blocked) on dev",
       "description": "[CEO office live 2026-10-24 10:4xZ, CEO in chat] CEO: 'didn't we make sure of that before the new build?'. Answer measured: the abort when the private DNS lookup fails in a restricted region (CasperCloakHiding.resolveBridge -> dohHardFailInRestrictedRegion) has been in the app since 20 May 2026 (commit 292d10f14a, 'LAYER 2 full hiding stack'), so it was in the previous live build too; it is a deliberate 'never leak DNS' rule with no fallback road. The pre-submit gate (memory/departments/marketing/context/app-store-submission-gate.md) checks store text, pictures and strings - it has NO connect test from a censored network, and no run owns a UAE/Iran device or network. Add to the gate, mandatory before ANY submit: on the dev server, with DoH endpoints (cloudflare-dns.com, dns.google) blocked at the network level, a fresh install must connect on the first try in hidden mode and in WireGuard; log the proof on the build's checklist row. Write the test script (simulator + a real phone with a DNS-blocking profile), run it on build 77 before the CEO submits it, and on every build after.",
-      "status": "in_progress",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-10-24T10:45:11Z",
       "createdDate": "2026-10-24",
-      "completedDate": null,
-      "notes": "[QA 2026-10-24 l, scheduled 'Casper qa', unattended, 2026-10-24T11:2xZ] Test written: memory/departments/qa/restricted-region-connect-test.md (pass rule: fresh install, DoH blocked at network level with curl 000/200 proof, Gulf dev account, FIRST try connects in hidden mode AND WireGuard, no-block control; proof = ConnectionLogs first rows + 0 ConnectFailureEvents + dev log 'DohFailover ... first-try country AE'). Gate made mandatory: app-store-submission-gate.md section 13 (no proof on the build row = do not submit). Run on build 77: simulator + phone legs need the CEO Mac sitting (folded into card row 459); scheduled runs can only do the dev read (step 5). Not run yet - no Swift/simulator on the Mac VM.",
+      "completedDate": "2026-10-29",
+      "notes": "[QA live 2026-10-29 z, CEO in chat 19:3xZ: 'yes for fire wall and keep going the new built tests can be compiled in one task when all changes are in the built for testong'] SUPERSEDED into xd-2721 (one build pass, CEO 29 Oct). Phone leg: fresh install, DoH blocked at network level, Gulf dev account: FIRST try connects in hidden mode AND WireGuard - mandatory before any Apple submit. || [QA 2026-10-24 l, scheduled 'Casper qa', unattended, 2026-10-24T11:2xZ] Test written: memory/departments/qa/restricted-region-connect-test.md (pass rule: fresh install, DoH blocked at network level with curl 000/200 proof, Gulf dev account, FIRST try connects in hidden mode AND WireGuard, no-block control; proof = ConnectionLogs first rows + 0 ConnectFailureEvents + dev log 'DohFailover ... first-try country AE'). Gate made mandatory: app-store-submission-gate.md section 13 (no proof on the build row = do not submit). Run on build 77: simulator + phone legs need the CEO Mac sitting (folded into card row 459); scheduled runs can only do the dev read (step 5). Not run yet - no Swift/simulator on the Mac VM.",
       "updatedAt": "2026-10-24T11:20:00Z",
-      "blocker": "build 77 sitting on the CEO Mac + phone (card row 459): run the restricted-region connect test before the CEO submits"
+      "blocker": "build 77 sitting on the CEO Mac + phone (card row 459): run the restricted-region connect test before the CEO submits",
+      "completedAt": "2026-10-29",
+      "completedBy": "[QA]",
+      "resolution": "superseded into xd-2721 (one build pass for all iOS changes, CEO 29 Oct)",
+      "resultingHandoff": "xd-2721 to [QA]; xd-2722 to [IOS]"
     },
     {
       "id": "xd-2529",
@@ -75342,14 +75365,18 @@
       "to": "[QA]",
       "title": "Handoff from IOS: [IOS] Phone check: Google sign-in report names the outcome (xd-2523)",
       "description": "Code: ios/81-google-cancel-code-2523 e2db712 (on ios/78 e78642a). InstallFunnel.errorCode maps GoogleSignInError to google_canceled / google_failed / google_not_configured / google_no_view / google_no_result / google_no_id_token (was googlesigninerror_<Swift case number>; production 24 Oct 05:57Z 'googlesigninerror_3' = canceled). Proof so far: Linux swiftc 6.1.2 harness 6/6, control old path = googlesigninerror_3. Check once the branch is in an iPhone build (CEO-card READY TO SHIP row 460): start Google sign-in on a fresh install, close the window -> FunnelEvents signup_failed ErrorCode 'google_canceled' for that build; a completed Google sign-in -> signup_completed google (the control Google has never recorded on build 75).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-10-24T10:48:57Z",
       "createdDate": "2026-10-24",
-      "completedDate": null,
-      "notes": "[QA 2026-10-24 l, scheduled 'Casper qa', unattended, 2026-10-24T11:2xZ] Waits a phone: production FunnelEvents can only show 'google_canceled' once an iPhone build with ios/81-google-cancel-code-2523 e2db712 is installed (card row 460 READY TO SHIP, not built yet; build 77 sitting = row 459). Nothing to measure from a scheduled run today.",
+      "completedDate": "2026-10-29",
+      "notes": "[QA live 2026-10-29 z, CEO in chat 19:3xZ: 'yes for fire wall and keep going the new built tests can be compiled in one task when all changes are in the built for testong'] SUPERSEDED into xd-2721 (one build pass, CEO 29 Oct). Phone leg: close the Google sign-in window -> FunnelEvents signup_failed 'google_canceled'; a finished Google sign-in -> signup_completed google. || [QA 2026-10-24 l, scheduled 'Casper qa', unattended, 2026-10-24T11:2xZ] Waits a phone: production FunnelEvents can only show 'google_canceled' once an iPhone build with ios/81-google-cancel-code-2523 e2db712 is installed (card row 460 READY TO SHIP, not built yet; build 77 sitting = row 459). Nothing to measure from a scheduled run today.",
       "updatedAt": "2026-10-24T11:20:00Z",
-      "blocker": "an iPhone build containing e2db712 on a phone (card row 460 needs CEO YES + the Xcode build sitting of row 459)"
+      "blocker": "an iPhone build containing e2db712 on a phone (card row 460 needs CEO YES + the Xcode build sitting of row 459)",
+      "completedAt": "2026-10-29",
+      "completedBy": "[QA]",
+      "resolution": "superseded into xd-2721 (one build pass for all iOS changes, CEO 29 Oct)",
+      "resultingHandoff": "xd-2721 to [QA]; xd-2722 to [IOS]"
     },
     {
       "id": "xd-2530",
@@ -76555,11 +76582,16 @@
       "to": "[QA]",
       "title": "Handoff from IOS: [P1] xd-2564 check: custom DNS refuses IPv6 (ios/83-dns-ipv4-2564 0756486)",
       "description": "Code: DNSAddressCheck.normalized() now accepts IPv4 only; an IPv6 entry shows 'IPv6 DNS is not supported yet - it would block your internet while connected'; a SAVED IPv6 entry is skipped, so the tunnel falls back to server/default DNS (WireGuardManager.resolveActiveDNS; WireGuard + hidden mode use it; IKEv2/OpenVPN never read custom DNS). Harness tools/ios-tests/xd2564/run.sh (swiftc 6.1.2 Linux): new code 8 passed / 0 failed; control = ios/78 code 3 passed / 5 failed. swiftc -parse SettingsViewModel.swift rc=0. NOT built in Xcode, NOT on a phone. Your check: (1) re-run the harness; (2) in the build that carries it: Settings > DNS > Custom 2606:4700:4700::1111 -> refused with the message; a phone that had it saved -> connected traffic flows (your 24 Oct control: 252 B vs 7.7 MB).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-10-25T07:50:26Z",
       "createdDate": "2026-10-25",
-      "completedDate": null
+      "completedDate": "2026-10-29",
+      "notes": "[QA live 2026-10-29 z, CEO in chat 19:3xZ: 'yes for fire wall and keep going the new built tests can be compiled in one task when all changes are in the built for testong'] SUPERSEDED into xd-2721 (one build pass, CEO 29 Oct). Phone leg: Settings > DNS > Custom 2606:4700:4700::1111 refused with the IPv6 message; a saved IPv6 entry is skipped and the internet still works while connected.",
+      "completedAt": "2026-10-29",
+      "completedBy": "[QA]",
+      "resolution": "superseded into xd-2721 (one build pass for all iOS changes, CEO 29 Oct)",
+      "resultingHandoff": "xd-2721 to [QA]; xd-2722 to [IOS]"
     },
     {
       "id": "xd-2603",
@@ -76567,11 +76599,16 @@
       "to": "[QA]",
       "title": "Handoff from IOS: [P1] Build 78 branch now also holds xd-1520 sign-out report + xd-1377 Request a location (ios/78 2be2d53) - add both to the build-78 phone list",
       "description": "ios/78 e78642a -> 2be2d53 (07:4xZ): merge of ios/82-logout-report-1520 26b9b76 (CEO YES card row 467; your xd-2562) + merge of ios/78-request-location-1377 46b61d7 (your PASS xd-2587; API live since 23 Oct, card row 409). Both merges clean (0 conflicts). Build number on the branch = 78 (8 lines CURRENT_PROJECT_VERSION = 78). Not in it: ios/81 (card row 460 has no CEO answer), ios/83 xd-2564 (new READY TO SHIP row), ios/79 xd-2377. NOT built in Xcode. Phone checks in the build-78 sitting (card row 459): sign out while connected -> server session closed; Servers footer 'Request a location' -> sheet -> 201, again -> already requested.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-10-25T07:50:26Z",
       "createdDate": "2026-10-25",
-      "completedDate": null
+      "completedDate": "2026-10-29",
+      "notes": "[QA live 2026-10-29 z, CEO in chat 19:3xZ: 'yes for fire wall and keep going the new built tests can be compiled in one task when all changes are in the built for testong'] SUPERSEDED into xd-2721 (one build pass, CEO 29 Oct). Phone leg: sign out while connected -> server session closed; Servers footer 'Request a location' -> 201, again -> already requested.",
+      "completedAt": "2026-10-29",
+      "completedBy": "[QA]",
+      "resolution": "superseded into xd-2721 (one build pass for all iOS changes, CEO 29 Oct)",
+      "resultingHandoff": "xd-2721 to [QA]; xd-2722 to [IOS]"
     },
     {
       "id": "xd-2604",
@@ -76824,11 +76861,16 @@
       "to": "[QA]",
       "title": "Handoff from IOS: [P1] xd-2561 cold start: check the restored protocol label + real timer (branch ios/84-coldstart-2561 9630f0f)",
       "description": "What changed: when iOS kills the app while the tunnel stays up, the next app start now reads the protocol from the saved tunnel profile (caspercloak / wireguard / multi-hop / IKEv2; OpenVPN left blank) and the session start from the OS (NEVPNConnection.connectedDate), instead of showing no protocol and 00:00. Code: VPNConnectionManager.restoreConnectedServerIfTunnelUp, blocks [COLDSTART-2561] + [COLDSTART-2561-HELPERS]. Checks done: tools/ios-tests/xd2561/run.sh on the branch = 10 passed 0 failed (uses the real times from BugReport 0111a89b); control with the ios/78 file = does not compile (no restore exists); swiftc -parse of the whole file rc 0. NOT built in Xcode, NOT on a phone. Please: (1) re-run the harness; (2) once the branch is in an iPhone build: connect hidden mode, wait 5+ min, kill the app from the switcher, reopen -> protocol 'CasperCloak' and the timer continues (control: build 75/76 shows blank + 00:00).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-10-26T07:39:49Z",
       "createdDate": "2026-10-26",
-      "completedDate": null
+      "completedDate": "2026-10-29",
+      "notes": "[QA live 2026-10-29 z, CEO in chat 19:3xZ: 'yes for fire wall and keep going the new built tests can be compiled in one task when all changes are in the built for testong'] SUPERSEDED into xd-2721 (one build pass, CEO 29 Oct). Phone leg: kill the app with the tunnel up, reopen -> protocol label + real timer (not blank / 00:00).",
+      "completedAt": "2026-10-29",
+      "completedBy": "[QA]",
+      "resolution": "superseded into xd-2721 (one build pass for all iOS changes, CEO 29 Oct)",
+      "resultingHandoff": "xd-2721 to [QA]; xd-2722 to [IOS]"
     },
     {
       "id": "xd-2621",
@@ -77279,12 +77321,16 @@
       "to": "[QA]",
       "title": "Handoff from IOS: [P1] xd-2628 plain WireGuard: no session row / success report until a real handshake; no handshake -> one failure report stage wg-handshake (branch ios/87-wg-handshake-2628 4e93422)",
       "description": "MEASURED (prod DB read-only 27 Oct 10:2xZ) for the 26 Oct Los Angeles case: 1 ConnectionLogs row, ConnectedAt 09:38:37.37Z, LastSeenAt 09:38:37.55Z (only the first heartbeat, none after), 0/0 bytes, closed by the sweep 10:43:20Z (Status 3); 0 ConnectFailureEvents for that user ever. Build 75 already tears a no-handshake WireGuard tunnel down after 15 s (extension start gate xd-2145), but the app had already opened the row and sent the success report, and the 20 s no-traffic check only runs while connected - so it was never reported. NOT PROVEN that the gate fired on that phone (no phone log). What changed: for a user-started plain-WireGuard connect the app asks the tunnel for its handshake once a second (up to 14 s) before it opens the session row, sends connect-success and starts the heartbeat; no handshake -> no row, one ConnectFailureEvent (category wireguard-handshake-timeout, stage wg-handshake, errorCode wg-no-handshake-after-connected). If the tunnel never answers (old extension) the old behaviour stays. CasperCloak / Multi-Hop / IKEv2 / OpenVPN unchanged. Checks done: tools/ios-tests/xd2628/run.sh = 11 passed 0 failed (cuts the real decision block, includes the LA sequence); swiftc -parse rc 0 on both files. NOT built in Xcode, NOT on a phone. Please: (1) re-run the harness; (2) phone with this build on a network that blocks UDP 51820 (or a dead WG node on DEV): connect WireGuard -> no ConnectionLogs row, one ConnectFailureEvents row StageReached 'wg-handshake'; (3) normal WireGuard connect -> row + success as before (log line '[WG-HANDSHAKE-2628] <server>: proved after N ms').",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-10-27T10:22:11Z",
       "createdDate": "2026-10-27",
-      "completedDate": null,
-      "notes": "[CEO office live 2026-10-28 22:0x-22:2xZ, CEO live 'what handoffs can u close and check of in db', production read-only psql + api-logs] NOT PROVEN: builds 78/79/80 plain-WireGuard rows since 20 Oct: 78 0 of 4 zero-byte, 79 1 of 12 (b0e2da07, 27 Oct 23:42:31Z, closed after 0.8 s, Status 1), 80 0 of 1. ConnectFailureEvents builds 78-80 since 27 Oct: 3 'connected-no-traffic', 0 'wireguard-handshake-timeout'. The 0.8 s row says a row still opens before the handshake check on build 79 (or a user cancel) - needs the phone log."
+      "completedDate": "2026-10-29",
+      "notes": "[QA live 2026-10-29 z, CEO in chat 19:3xZ: 'yes for fire wall and keep going the new built tests can be compiled in one task when all changes are in the built for testong'] SUPERSEDED into xd-2721 (one build pass, CEO 29 Oct). Phone leg: plain WireGuard to a server with no handshake -> no session row, one failure 'wg-handshake'; a good server -> row only after the handshake. || [CEO office live 2026-10-28 22:0x-22:2xZ, CEO live 'what handoffs can u close and check of in db', production read-only psql + api-logs] NOT PROVEN: builds 78/79/80 plain-WireGuard rows since 20 Oct: 78 0 of 4 zero-byte, 79 1 of 12 (b0e2da07, 27 Oct 23:42:31Z, closed after 0.8 s, Status 1), 80 0 of 1. ConnectFailureEvents builds 78-80 since 27 Oct: 3 'connected-no-traffic', 0 'wireguard-handshake-timeout'. The 0.8 s row says a row still opens before the handshake check on build 79 (or a user cancel) - needs the phone log.",
+      "completedAt": "2026-10-29",
+      "completedBy": "[QA]",
+      "resolution": "superseded into xd-2721 (one build pass for all iOS changes, CEO 29 Oct)",
+      "resultingHandoff": "xd-2721 to [QA]; xd-2722 to [IOS]"
     },
     {
       "id": "xd-2651",
@@ -78049,11 +78095,16 @@
       "to": "[QA]",
       "title": "Handoff from IOS: [P1] Check ios/91 (xd-2688: WireGuard key per account + new key on WG_KEY_REVOKED) and put it on the CEO phone in build 82",
       "description": "[IOS apps run 29 Oct] Branch ios/91-wg-key-reset-2688 2886cc4 (on top of build 81 ios/90 609516b). What changed: (1) sign-out and the session-expired path delete every 'wg-private-*' keychain key (AppCoordinator); (2) keys carry an owner = the JWT 'sub' (keychain item 'wg-key-owner'); if the stored keys belong to another account or have no owner (made before this fix) they are all deleted before the next connect (ServerService.fetchServerConfig -> KeychainService.ensureWireGuardKeysBelong); (3) HTTP 409 whose body carries WG_KEY_REVOKED -> APIError.wireGuardKeyRevoked: that server's key is deleted, a new pair made, ONE retry; (4) no key is logged (only counts + server ids, lines tagged [WGKEY-2688]). Proof so far: tools/ios-tests/xd2688/run.sh = 20 passed 0 failed (swift 6.1.2 Linux, cuts the real [WGKEY-2688] block); mutation controls fail it (shouldWipe->false: 2 fail; 409->any 4xx: 3 fail); swiftc -parse OK on the 5 changed files. NOT PROVEN: full Xcode build (needs the Mac). QA asks: (a) code check of the diff (git diff 609516b 2886cc4); (b) merge ios/91 into the next CEO build (82) and bump CURRENT_PROJECT_VERSION; on the phone: sign in account A, connect server X, sign out, sign in account B, connect X -> production WireGuardKeys (read-only) shows a NEW PublicKey for B, not A's; device log shows '[WGKEY-2688] sign-out removed N WireGuard key(s)'; (c) after BACKEND xd-2687 is on dev: a retired key gets 409 WG_KEY_REVOKED and the app connects on the retry with a new key. Same sitting, two older iPhone rows: password-reset#4 (Reset stays disabled at 9 characters, works at 10 - code: ResetPasswordView isPasswordValid count >= 10 = server ResetPasswordRequest [MinLength(10)], production c19eed8) and double-vpn-cc-silent-degrade#1 (Double VPN + hidden mode in a restricted network; it was not in the xd-2657 script). Watch: the first connect after this update makes a new key on every server for every existing user (owner unknown), so each server gets one extra peer per user until DevOps' unused-key clean-up (CEO card row 283). Ship order: backend xd-2687 together with or after this build.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-10-29T07:42:07Z",
       "createdDate": "2026-10-29",
-      "completedDate": null
+      "completedDate": "2026-10-29",
+      "notes": "[QA live 2026-10-29 z, CEO in chat 19:3xZ: 'yes for fire wall and keep going the new built tests can be compiled in one task when all changes are in the built for testong'] SUPERSEDED into xd-2721 (one build pass, CEO 29 Oct). Phone leg: sign out -> keys deleted; switch account -> new key before connect; a revoked key (409 WG_KEY_REVOKED) -> new key + one retry; no key in logs.",
+      "completedAt": "2026-10-29",
+      "completedBy": "[QA]",
+      "resolution": "superseded into xd-2721 (one build pass for all iOS changes, CEO 29 Oct)",
+      "resultingHandoff": "xd-2721 to [QA]; xd-2722 to [IOS]"
     },
     {
       "id": "xd-2703",
@@ -78267,7 +78318,7 @@
       "from": "[QA]",
       "to": "[DEVOPS]",
       "title": "Handoff from QA: [P1] security-lockdown-p1 AC14 FAIL: main server INPUT ends in a catch-all NEW ACCEPT (rule 65, 274K packets) - DROP policy is bypassed",
-      "description": "QA 29 Oct 19:3xZ: `iptables -L INPUT -n -v --line-numbers | tail -3` on the main server: 63 udp 1701 NEW (measure), 64 'xd-1014 measure: anything else still rel...' (count), 65 ACCEPT ctstate NEW limit avg 625/sec burst 200 '/* catch-all mo...' - 274K packets / 14 MB matched. So any NEW inbound connection under 625/s is accepted and the -P INPUT DROP (true on main + dev + 11 relays; Bangkok test ACCEPT) does nothing for the main server. The row's verify is 'no unconditional NEW ACCEPT at the end'. Ask: read what rule 64 counted (ports only), add explicit ALLOWs for anything real, then remove rule 65 under a CEO YES row (live firewall change, have a rollback). Hand back to [QA].",
+      "description": "[QA live 2026-10-29 z, CEO in chat 19:3xZ: 'yes for fire wall and keep going the new built tests can be compiled in one task when all changes are in the built for testong'] CEO YES 2026-10-29 19:3xZ ('yes for fire wall') - recorded on new card row 535. Ship it: save the rules, read what rule 64/65 let in (ports only, counts), add explicit ALLOWs, remove rule 65, check /health + the VPN ports, mark card row 535 SHIPPED <date>, hand to [QA]. || QA 29 Oct 19:3xZ: `iptables -L INPUT -n -v --line-numbers | tail -3` on the main server: 63 udp 1701 NEW (measure), 64 'xd-1014 measure: anything else still rel...' (count), 65 ACCEPT ctstate NEW limit avg 625/sec burst 200 '/* catch-all mo...' - 274K packets / 14 MB matched. So any NEW inbound connection under 625/s is accepted and the -P INPUT DROP (true on main + dev + 11 relays; Bangkok test ACCEPT) does nothing for the main server. The row's verify is 'no unconditional NEW ACCEPT at the end'. Ask: read what rule 64 counted (ports only), add explicit ALLOWs for anything real, then remove rule 65 under a CEO YES row (live firewall change, have a rollback). Hand back to [QA].",
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-10-29T19:30:05Z",
@@ -78295,6 +78346,31 @@
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-10-29T19:33:58Z",
+      "createdDate": "2026-10-29",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2721",
+      "from": "[QA]",
+      "to": "[QA]",
+      "title": "Handoff from QA: [P1] ONE build pass: all waiting iOS branch checks on the next build (9 items)",
+      "description": "ONE phone pass for every iOS change waiting a build (CEO 29 Oct: 'the new build tests can be compiled in one task when all changes are in the build for testing'). Starts when [IOS] has merged ALL branches below into one build, the CEO has built it in Xcode and installed it on his iPhone, and [IOS] has written the build number + the merged commit list here. Then QA runs every leg in one sitting (live chat with the CEO for the phone steps; QA reads the DB / api log / Send-report side):\n- xd-2380: ios/79-hidden-log-reconnect-2377 82c5377 (9287c94) -> report shows OLDER/PREVIOUS/CURRENT; relay blocked > 2 min with network up -> [CC-STORM] + CLEAN RESTART within ~2.5 min; airplane 3 min -> no clean restart; plus the open phone legs of builds 75/76 (xd-2172, xd-2212) and the quota-sheet trial button (xd-2349)\n- xd-2510: ios/80-doh-fallback-2491 a8889f0 -> private lookup fails -> hidden mode still connects on a bare-IP relay ('[XD-2491] ... no-lookup road'); failure rows StageReached 'resolve', FrontUsed 'cc-relay'\n- xd-2528: restricted-region connect test (memory/departments/qa/restricted-region-connect-test.md) -> fresh install, DoH blocked at network level, Gulf dev account: FIRST try connects in hidden mode AND WireGuard - mandatory before any Apple submit\n- xd-2529: ios/81-google-cancel-code-2523 e2db712 -> close the Google sign-in window -> FunnelEvents signup_failed 'google_canceled'; a finished Google sign-in -> signup_completed google\n- xd-2602: ios/83-dns-ipv4-2564 0756486 -> Settings > DNS > Custom 2606:4700:4700::1111 refused with the IPv6 message; a saved IPv6 entry is skipped and the internet still works while connected\n- xd-2603: ios/78 2be2d53 (xd-1520 sign-out report + xd-1377 Request a location) -> sign out while connected -> server session closed; Servers footer 'Request a location' -> 201, again -> already requested\n- xd-2620: ios/84-coldstart-2561 9630f0f -> kill the app with the tunnel up, reopen -> protocol label + real timer (not blank / 00:00)\n- xd-2650: ios/87-wg-handshake-2628 4e93422 -> plain WireGuard to a server with no handshake -> no session row, one failure 'wg-handshake'; a good server -> row only after the handshake\n- xd-2702: ios/91-wg-key-reset-2688 2886cc4 -> sign out -> keys deleted; switch account -> new key before connect; a revoked key (409 WG_KEY_REVOKED) -> new key + one retry; no key in logs\nEach old task is closed SUPERSEDED into this one; their notes keep the full detail.",
+      "status": "in_progress",
+      "priority": "P1",
+      "createdAt": "2026-10-29T19:39:54Z",
+      "createdDate": "2026-10-29",
+      "completedDate": null,
+      "blocker": "waits [IOS] xd-2722: one build with all 9 items merged + CEO Xcode install on his iPhone"
+    },
+    {
+      "id": "xd-2722",
+      "from": "[QA]",
+      "to": "[IOS]",
+      "title": "Handoff from QA: [P1] Put every waiting iOS branch into ONE build for the QA phone pass",
+      "description": "CEO 29 Oct (QA chat): test all new-build changes together in one task once they are all in the build. Merge into the next build (82?) every branch listed on xd-2721: ios/79 82c5377, ios/80 a8889f0, ios/81 e2db712, ios/83 0756486, ios/78 2be2d53, ios/84 9630f0f, ios/87 4e93422, ios/91 2886cc4 (say which are already in build 81 ios/90 609516b). Write on xd-2721: build number, branch tip, the merged commit list, and anything left out with the reason. Then the CEO builds + installs it (CEO card row for the Xcode sitting).",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-29T19:39:54Z",
       "createdDate": "2026-10-29",
       "completedDate": null
     }
