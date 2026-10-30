@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-30T15:19:23Z",
+  "lastUpdated": "2026-10-30T15:34:39Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 69,
@@ -18503,9 +18503,9 @@
           "addedAt": "2026-10-30T15:20:00Z",
           "addedBy": "[CTO]",
           "owner": "[BACKEND]",
-          "test": "READY TO SHIP \u2014 hidden mode: no name lookup for users outside censored countries (xd-2797) \u00b7 why: the App Store app stops with an error when the lookup fails; 2 US users hit it on Los Angeles, one never connected \u00b7 works on the App Store app, no update needed \u00b7 CEO YES 2026-10-30 (live chat): '1. Server: skip lookup (Recommended)' + 'What do u advise go with it' (= fixes 1 + 2; fix 3 = DevOps check only) \u00b7 tested on dev: see evidence \u00b7 rollback: setting CasperCloak:DohFailover:NonRestrictedFirstTry=false (no deploy) or revert 68b506a",
+          "test": "SHIPPED 2026-10-30 15:33Z \u2014 \u2014 hidden mode: no name lookup for users outside censored countries (xd-2797) \u00b7 why: the App Store app stops with an error when the lookup fails; 2 US users hit it on Los Angeles, one never connected \u00b7 works on the App Store app, no update needed \u00b7 CEO YES 2026-10-30 (live chat): '1. Server: skip lookup (Recommended)' + 'What do u advise go with it' (= fixes 1 + 2; fix 3 = DevOps check only) \u00b7 tested on dev: see evidence \u00b7 rollback: setting CasperCloak:DohFailover:NonRestrictedFirstTry=false (no deploy) or revert 68b506a",
           "verify": "dev: GET /api/servers/<LA>/caspercloak-config as a non-restricted user -> casperCloakDomain null + domainPool null (before 15:18Z: s12.pompesh.com); prod after ship: same + api log 'not-restricted first try, xd-2797'; ConnectFailureEvents CasperCloakHidingError:0 from non-restricted users = 0 over 7 days",
-          "evidence": "development 68b506a (rebased on e2feda0, same ServersController blob bbed82e9ad as built); dotnet build Release 0 errors, control with a typo fails CS0103."
+          "evidence": "development 68b506a (rebased on e2feda0, same ServersController blob bbed82e9ad as built); dotnet build Release 0 errors, control with a typo fails CS0103. | dev: LA caspercloak-config domain s12.pompesh.com at 15:24Z -> null at 15:27Z (restricted=false; Dusseldorf/Bangkok same). prod: production c0fc5aa (cherry-pick of 68b506a; conflict = xd-2712 shape block not on production, left out; dotnet build of the production tree 0 errors), /root/deploy_api.sh 15:29-15:33Z DEPLOY DONE OK, image 4517fde1f95f -> 13cd808ab459, rollback tag caspervpn-api:rollback-202610301529, /health 200; UTF-16 strings 'NonRestrictedFirstTry' + 'not-restricted first try, xd-2797' found 1x each in /app/CasperVPN.dll. NOT PROVEN yet: a live user request (prod test account login 401 - credentials.md row stale)."
         }
       ],
       "progress": 0,
@@ -80569,7 +80569,7 @@
       "from": "[IOS]",
       "to": "[DEVOPS]",
       "title": "Handoff from IOS: [P1] Los Angeles hidden mode fails for real users: 1 success vs 8 failures since 24 Oct (both US 'lookup' errors were on LA)",
-      "description": "Measured 30 Oct 13:5xZ (prod DB, read-only): since 24 Oct hidden-mode (Protocol 3) ConnectionLogs on Los Angeles 847e2d36 = 1; ConnectFailureEvents caspercloak on LA = 8 (Amsterdam 25 ok / 6 fail, Singapore 12/13). Both US CasperCloakHidingError rows were LA (b994ab38 27 Oct 03:27Z cellular, b60246e9 29 Oct 18:43Z wifi; pool s12.pompesh.com + bexira.shortaalmashahir.com). b994ab38 connected on another server 5 s later (5 h session) and failed LA again 12:17Z (tcp-timeout) then moved again; b60246e9 has 0 ConnectionLogs ever = lost user. Today from the cloud box both LA names resolve (Cloudflare + Google DoH -> 208.87.243.205) and answer https 200 (control s1 200), so LA is up from here - the failure is on the users' path. Do: run tools/dpi_truth_table.py for LA, compare LA relay config/cert/nginx front with Amsterdam (changed 24 Oct: own-cert-by-SNI + nginx-in-front), check LA relay logs for 27 Oct 03:27Z / 29 Oct 18:43Z, and whether US carriers reach 208.87.243.205:443. If LA cannot be fixed fast: DECISION row to take LA out of hidden-mode hand-out. | [CTO live 30 Oct 15:2xZ] CEO YES 2026-10-30 (live chat): '1. Server: skip lookup (Recommended)' + 'What do u advise go with it' (= fixes 1 + 2; fix 3 = DevOps check only). Measured: LA relay healthy - canary s12 96/96 every day, 101 on /cc by both names and no-SNI; b994ab38 failed LA by lookup AND later by direct IP (tcp-timeout) then worked on Dusseldorf = LA address not reachable from his network. Fixes 1 (server, development 68b506a) and 2 (iOS ios/94 e9275a2) done by CTO. DEVOPS keeps part 3: are US networks blocking 208.87.243.205? If yes, DECISION row: move LA to a spare IP.",
+      "description": "Measured 30 Oct 13:5xZ (prod DB, read-only): since 24 Oct hidden-mode (Protocol 3) ConnectionLogs on Los Angeles 847e2d36 = 1; ConnectFailureEvents caspercloak on LA = 8 (Amsterdam 25 ok / 6 fail, Singapore 12/13). Both US CasperCloakHidingError rows were LA (b994ab38 27 Oct 03:27Z cellular, b60246e9 29 Oct 18:43Z wifi; pool s12.pompesh.com + bexira.shortaalmashahir.com). b994ab38 connected on another server 5 s later (5 h session) and failed LA again 12:17Z (tcp-timeout) then moved again; b60246e9 has 0 ConnectionLogs ever = lost user. Today from the cloud box both LA names resolve (Cloudflare + Google DoH -> 208.87.243.205) and answer https 200 (control s1 200), so LA is up from here - the failure is on the users' path. Do: run tools/dpi_truth_table.py for LA, compare LA relay config/cert/nginx front with Amsterdam (changed 24 Oct: own-cert-by-SNI + nginx-in-front), check LA relay logs for 27 Oct 03:27Z / 29 Oct 18:43Z, and whether US carriers reach 208.87.243.205:443. If LA cannot be fixed fast: DECISION row to take LA out of hidden-mode hand-out. | [CTO live 30 Oct 15:2xZ] CEO YES 2026-10-30 (live chat): '1. Server: skip lookup (Recommended)' + 'What do u advise go with it' (= fixes 1 + 2; fix 3 = DevOps check only). Measured: LA relay healthy - canary s12 96/96 every day, 101 on /cc by both names and no-SNI; b994ab38 failed LA by lookup AND later by direct IP (tcp-timeout) then worked on Dusseldorf = LA address not reachable from his network. Fixes 1 (server, development 68b506a) and 2 (iOS ios/94 e9275a2) done by CTO. DEVOPS keeps part 3: are US networks blocking 208.87.243.205? If yes, DECISION row: move LA to a spare IP. | [CTO 30 Oct 15:3xZ] part 1 SHIPPED production c0fc5aa 15:33Z -> QA xd-2802. Note for DEVOPS/CTO: production commit 0a34c96 'auto: local sync' and the deploy pulled .factory-transfer/*.tgz into git (Dropbox auto-sync commits that folder) - add it to .gitignore.",
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-10-30T14:13:23Z",
@@ -80623,6 +80623,18 @@
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-10-30T15:05:09Z",
+      "createdDate": "2026-10-30",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2802",
+      "from": "[CTO]",
+      "to": "[QA]",
+      "title": "Handoff from CTO: [P1] Check xd-2797 live: users outside censored countries get hidden mode with no name lookup",
+      "description": "Production c0fc5aa deployed 15:33Z. Check: (1) api log lines 'DohFailover: ... not-restricted first try, xd-2797' appear for real users; (2) for those users caspercloak-config has casperCloakDomain null and they connect (ConnectionLogs Protocol 3 after the line); (3) 7 days: ConnectFailureEvents ErrorCode CasperVPN.CasperCloakHidingError:0 from users with regionRestricted=false = 0 (before: 2 US users 27+29 Oct); (4) restricted users (AE/OM/SA/BH, RU, CN, IR) are unchanged: still get the domain unless DohFailover fired. Rollback: CasperCloak:DohFailover:NonRestrictedFirstTry=false in compose env.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-30T15:34:39Z",
       "createdDate": "2026-10-30",
       "completedDate": null
     }
