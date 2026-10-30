@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-30T00:43:14Z",
+  "lastUpdated": "2026-10-30T00:46:19Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 69,
@@ -78719,11 +78719,15 @@
       "to": "[DEVOPS]",
       "title": "Handoff from QA: [P1] No-log: UFW still writes ICMP-wrapped UDP/443 lines on Montreal (1) and Tokyo (2) today - row 326 L2 + xd-2695",
       "description": "QA 29 Oct 19:2xZ, counts only: `ufw_nolog_userports.sh check` on the 8 relays: rule_live v4=1 v6=1 udp 2/2 and journald MaxRetentionSec=7day on 8/8 (PASS); userport lines in /var/log/kern.log: MTL 1 (29 Oct 12:36), TYO 2 (29 Oct 13:02, 13:06), all others 0. These are PROTO=ICMP log lines that quote a UDP packet with DPT=443 (ICMP errors about hidden-mode traffic), so the no-log rule for UDP 443 does not cover them. Ask: stop UFW logging ICMP errors that carry a user-port packet (or ICMP logging on the relays), prove kern.log userport count 0 for 24 h, hand back to [QA] (same read as xd-2695). Amsterdam has no ufw_nolog_userports.sh (not in the 8).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-10-29T19:19:36Z",
       "createdDate": "2026-10-29",
-      "completedDate": null
+      "completedDate": "2026-10-30",
+      "completedAt": "2026-10-30",
+      "completedBy": "[DEVOPS]",
+      "resolution": "[DEVOPS live 2026-10-30 00:5xZ, CEO Cowork 'run what is still open', 2026-10-30T00:46:15Z] CAUSE: the logged lines were ICMP 'port unreachable' (type 3 code 3) packets in state INVALID quoting a UDP/443 packet; ufw logs every INVALID packet at before.rules line 33. FIX (no-log program, CEO YES rows 326/397): one rule before that line, '-p icmp -m conntrack --ctstate INVALID ... xd2715-icmpnolog -j DROP' (and ipv6-icmp in before6.rules), ufw reload. Montreal canary first, then HK MX MIA SGP SYD SAO TYO: live v4=1 v6=1 on 8/8, ufw active; front-path check after = 11/11 ok. Backups before.rules.bak-xd2715-icmpnolog-20261030. Bangkok has ufw off (no test possible there). Follow-up: fold the line into git ufw_nolog_userports.sh.",
+      "resultingHandoff": "xd-2753 to [QA]"
     },
     {
       "id": "xd-2716",
@@ -79230,6 +79234,30 @@
       "status": "pending",
       "priority": "P2",
       "createdAt": "2026-10-30T00:43:14Z",
+      "createdDate": "2026-10-30",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2753",
+      "from": "[DEVOPS]",
+      "to": "[QA]",
+      "title": "Handoff from DEVOPS: [P1] xd-2715: 24 h kern.log user-port count after the ICMP no-log rule (8 relays)",
+      "description": "[DEVOPS live 2026-10-30 00:5xZ, CEO Cowork 'run what is still open', 2026-10-30T00:46:15Z] CAUSE: the logged lines were ICMP 'port unreachable' (type 3 code 3) packets in state INVALID quoting a UDP/443 packet; ufw logs every INVALID packet at before.rules line 33. FIX (no-log program, CEO YES rows 326/397): one rule before that line, '-p icmp -m conntrack --ctstate INVALID ... xd2715-icmpnolog -j DROP' (and ipv6-icmp in before6.rules), ufw reload. Montreal canary first, then HK MX MIA SGP SYD SAO TYO: live v4=1 v6=1 on 8/8, ufw active; front-path check after = 11/11 ok. Backups before.rules.bak-xd2715-icmpnolog-20261030. Bangkok has ufw off (no test possible there). Follow-up: fold the line into git ufw_nolog_userports.sh. Ask: after 31 Oct 01:00Z, kern.log + journal user-port lines (incl. PROTO=ICMP quoting DPT=443) = 0 on 8/8, DPT=22 control > 0. Counts only.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-30T00:46:19Z",
+      "createdDate": "2026-10-30",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2754",
+      "from": "[DEVOPS]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from DEVOPS: [P3] Fold the xd-2715 ICMP no-log line into git ufw_nolog_userports.sh",
+      "description": "[DEVOPS live 2026-10-30 00:5xZ, CEO Cowork 'run what is still open', 2026-10-30T00:46:15Z] The rule is live on 8 relays but only in /etc/ufw/before*.rules; add it to infrastructure/scripts/ufw_nolog_userports.sh apply-rule (dev, then production) so a re-install keeps it.",
+      "status": "pending",
+      "priority": "P3",
+      "createdAt": "2026-10-30T00:46:19Z",
       "createdDate": "2026-10-30",
       "completedDate": null
     }
