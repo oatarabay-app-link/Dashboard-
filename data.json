@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-30T22:17:24Z",
+  "lastUpdated": "2026-10-30T22:19:17Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 69,
@@ -63475,11 +63475,11 @@
       "to": "[BACKEND]",
       "title": "Handoff from CTO: Iran users get only the Cloudflare road for hidden mode and 0 of 2 ever connected (8-11 Oct) - offer a second road",
       "description": "[CTO 2026-10-11 0434, from xd-1646, read-only] Every IR config call 8-11 Oct = StealthTier tier=Fronted cfWiring=minted (2 users, 20 calls); both users failed caspercloak within 0.6-2 s on Duesseldorf/LA/Singapore and never connected (ConnectionLogs 0). Control: old-build clients made 33 CasperCloak sessions elsewhere in 7 d. DO: (1) read StealthTier selection for IR and say why only Fronted is offered; (2) after a fast caspercloak failure on Fronted, the next config for that user should offer a non-Cloudflare road (native/direct relay) - check with the CTO live chat owning xd-1421 (retire Cloudflare) so the two do not clash; (3) work on development, tested on dev, READY TO SHIP row. Verify: grep 'StealthTier:.*country=IR' /opt/caspervpn/api-logs/caspervpn-2026101*.log | grep -c 'tier=\"Fronted\"' vs other tiers. Evidence files: /root/reports/cto1011-0434/user.log on the main server.",
-      "status": "in_progress",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-10-11T04:39:59Z",
       "createdDate": "2026-10-11",
-      "completedDate": null,
+      "completedDate": "2026-10-30",
       "handoffTo": "[QA]",
       "handoffNote": "QA: re-run the grep in Verify and one IR-like test (region IR probe account) on dev",
       "category": "infra-fleet",
@@ -63488,7 +63488,10 @@
       "lifecycle": "active",
       "blocker": "SHIPPED 23 Oct 12:20Z - waits QA xd-2408 (live check on the next real event).",
       "notes": "[BACKEND run 2026-10-23 1208, scheduled, unattended, 2026-10-23T12:2xZ] SHIPPED to production 12:20Z under CEO YES (row 377). production 24d444f49 (cherry-pick -x of development 6387ff46a, c1caea040, 97f024298, 35c189c59 + compose line 764e58573), lock 4f87bc04f -> release 34ef1aaa5; build 0 errors, tests 464/464; /root/deploy_api.sh 12:18:12-12:20:56Z DONE OK, image 164ccd6297bd -> 06be7977ee36, rollback tag caspervpn-api:rollback-202610231218; /health 200; 0 exceptions/ERR lines in 10 min; migrations AppleRefreshToken + LocationRequests applied 12:20:43Z. Live check -> QA xd-2408. || [BACKEND run 2026-10-22 2105, scheduled, unattended, 2026-10-22T21:14:14Z] REAL EVENT 20 Oct 12:06Z: a new Iran user got 5 hidden-mode configs, all through Cloudflare; 3 failures of 5.5-6.7 s, so the <=5 s rule never fired ('fast-fail failover' 0) and the user never connected. Fix is one production setting -> DECISION row 377 on the CEO card. || [BACKEND run 2026-10-12 2115, scheduled, unattended, 2026-10-12T21:37:11Z] MEASURED: 12 Oct api file log 'StealthTier:.*country=IR' 0, 'fast-fail failover' 0. || [BACKEND run 2026-10-12 0115, scheduled, unattended, 2026-10-12T01:18:58Z] QA xd-1860 completed PARTIAL 12 Oct (211/222/240 pass); this row's state: row 244: QA xd-1860 PARTIAL - DLL 'fast-fail failover' 1; waits a real hidden-mode config call from Iran (SUPPRESSED 0 / minted 0 since 00:27Z). | [BACKEND run 2026-10-11 2115, scheduled, unattended, 2026-10-11T21:46:20Z] BUILT on development 458a4c5e4: StealthFailover - after a caspercloak failure <= 5 s in 30 min with no connection since, an IR user's next config leaves out the Cloudflare wiring (direct relay, same road as Throttle/Advisory). Off in production config, on on dev. Build 0 errors, 355/355, StealthFailoverTests 6/6, control 1 fail. Dev live 21:40Z (dev DLL 1, production 0). No clash with xd-1421 (it uses Cloudflare less, never more). -> QA xd-1819, CEO row 244. Note: the code was first built by the 05:15Z backend run, which stopped before committing or logging (Mac went offline); this run reviewed, rebased and re-tested it.\n[BACKEND run 2026-10-11 2306, scheduled, unattended, 2026-10-11T23:31:41Z] shipped to production a8708d4b1; QA xd-1860.",
-      "updatedAt": "2026-10-22T21:14:14Z"
+      "updatedAt": "2026-10-22T21:14:14Z",
+      "completedAt": "2026-10-30",
+      "completedBy": "[BACKEND]",
+      "resolution": "[BACKEND run 2026-10-30 22:2xZ] Backend part done (SHIPPED 23 Oct 12:20Z). Live check moved to QA date watch xd-2730 (5 Nov: Iran fast-fail event). Iran work continues on country-iran (xd-2668)."
     },
     {
       "id": "xd-1794",
@@ -66896,17 +66899,20 @@
       "to": "[BACKEND]",
       "title": "Handoff from IOS: [P1] Account deletion for Sign in with Apple users: revoke the Apple token (Apple 5.1.1(v))",
       "description": "[APPS run 2026-10-12 k, 2026-10-12T20:23:52Z] The app now calls DELETE /api/users/me (xd-1950). UserService.DeleteUserAsync (backend-dotnet-core/Services/UserService.cs ~L520-590) cancels Stripe, removes RADIUS + IKEv2 users and soft-deletes (IsActive=false, e-mail anonymised, refresh tokens cleared) but never revokes the Sign in with Apple token: codegraph query 'apple sign in token revoke' named no revoke code. Apple asks apps that offer Sign in with Apple to revoke the user's token on account deletion (POST https://appleid.apple.com/auth/revoke with the client secret; needs the refresh token from /auth/token at sign-in). Please: (1) check what /auth/apple stores today; (2) if no Apple refresh token is kept, store it at sign-in going forward; (3) call revoke inside DeleteUserAsync for Apple users, best effort + logged. Not a blocker for the app button (client cannot revoke - needs the server secret). -> [QA] after.",
-      "status": "in_progress",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-10-12T20:23:58Z",
       "createdDate": "2026-10-12",
-      "completedDate": null,
+      "completedDate": "2026-10-30",
       "notes": "[BACKEND run 2026-10-23 1604, scheduled, unattended, 2026-10-23T16:1xZ] Re-measured read-only on production 16:05Z: api log since 15:00Z: Apple token revoke lines 0, 'fail:' lines 0 - no Apple-account deletion yet. Still waits QA xd-2408 on the next real event. || [BACKEND run 2026-10-23 1208, scheduled, unattended, 2026-10-23T12:2xZ] SHIPPED to production 12:20Z under CEO YES (row 393 A). production 24d444f49 (cherry-pick -x of development 6387ff46a, c1caea040, 97f024298, 35c189c59 + compose line 764e58573), lock 4f87bc04f -> release 34ef1aaa5; build 0 errors, tests 464/464; /root/deploy_api.sh 12:18:12-12:20:56Z DONE OK, image 164ccd6297bd -> 06be7977ee36, rollback tag caspervpn-api:rollback-202610231218; /health 200; 0 exceptions/ERR lines in 10 min; migrations AppleRefreshToken + LocationRequests applied 12:20:43Z. Live check -> QA xd-2408. || [BACKEND run 2026-10-20 0608, scheduled, unattended, 2026-10-20T06:39:46Z] BUILT on development c1caea040 (exchange + encrypted keep + revoke on both delete paths, migration 20261020000000); dev deployed 06:32:51Z, migration applied on dev; QA xd-2225; READY TO SHIP row on the CEO card. || [BACKEND run 2026-10-12 2115, scheduled, unattended, 2026-10-12T21:37:11Z] MEASURED (production code b796e2907): (1) /auth/apple stores nothing from Apple but the identity token's subject/email - AppleSignInRequest has no authorizationCode, no /auth/token exchange, no Apple refresh token column; (2) storing one needs the app to send authorizationCode (xd-1974 to [IOS]) and a Sign in with Apple .p8 key (CEO card row 280); (3) backend plan once both exist: optional AppleAuthorizationCode on /auth/apple -> exchange (client secret = ES256 JWT from the key) -> store refresh token encrypted -> DeleteUserAsync calls /auth/revoke best effort + log. Config empty = no-op, so old builds are safe. || [CEO office 2026-10-17 ~23:0xZ, CEO live 'cant u do point 8 in browser'] Checked Apple Developer > Keys in the CEO's Chrome (read only, nothing created): a Sign in with Apple key ALREADY EXISTS - name 'CasperVPN SignIn', Key ID MLKCGXNWXW, created 15 Feb 2026 by Samir Ghais, Enabled Services: Sign In with Apple, R6J5HWUD7N.com.caspervpn.app. The production API already has this key: env Apple__KeyId = MLKCGXNWXW and /app/keys/AuthKey_MLKCGXNWXW.p8 (file name only read; content never printed). So no new key is needed; the 12 Oct hypothesis ('Apple__KeyId is an App Store key') was wrong, and the devops note 'MLKCGXNWXW is REVOKED' is wrong too (the portal shows it active). || [BACKEND run 2026-10-23 0004, scheduled, unattended, 2026-10-23T00:2xZ] Dev has no Apple key file (/app/keys only on production, SKILL trap 20 Oct) and 0 app connections since 9 Oct, so the Apple round trip can only be proven after ship; unit tests 8/8 + the app sending the code ([IOS] xd-1974) remain.\n[BACKEND run 2026-10-24 0605, scheduled, unattended] prod api file log 24 Oct 00:00-06:06Z (193391 lines): location-request 0, account deletion 0, Apple revoke 0. ERR lines 157 = 154 fake DDoS (row 449, waits CEO) + 3 known RADIUS sign-up noise. Still waits the first real event, then QA.\n[BACKEND run 2026-10-24 0805, scheduled, unattended, 08:1xZ] Prod api log 06:06-08:05Z: account deletion 0, Apple revoke 0. No change.",
       "blocker": "SHIPPED 23 Oct 12:20Z - waits QA xd-2408 (live check on the next real event).",
       "category": "money-admin",
       "ageDays": 1,
       "needsRelease": false,
-      "lifecycle": "active"
+      "lifecycle": "active",
+      "completedAt": "2026-10-30",
+      "completedBy": "[BACKEND]",
+      "resolution": "[BACKEND run 2026-10-30 22:2xZ] Backend part done (SHIPPED 23 Oct 12:20Z). Live check moved to QA date watch xd-2730 (5 Nov: [apple-revoke] on the next Apple-account deletion)."
     },
     {
       "id": "xd-1962",
@@ -69626,11 +69632,11 @@
       "to": "[BACKEND]",
       "title": "Handoff from LEGAL: Handoff from LEGAL: [P1] keep app-screen records and network checks 180 days and delete them with the account (blocks privacy 1.9, CEO GO xd-1393)",
       "description": "[GROWTH run 2026-10-13 1608, scheduled, unattended, 2026-10-13T16:18:22Z] [LEGAL] CEO GO 13 Oct 15:2xZ (row 318: 'go for xd-1393 Product Interaction text') = publish the privacy line for app-screen events now. It cannot be published true yet: the policy must state a retention, and MEASURED 16:2xZ (main server, read-only): git grep FunnelEvents origin/production -- backend-dotnet-core (no migrations/tests) = only Add/Count/read (FunnelEventsController L97/L123, InstallFunnelController L150/L168, AdminOpsController L179, AppleAdsAttributionService L150), no cleanup, no delete; same on development. Migration 20261002000000_FunnelEvents: UserId NOT NULL, no foreign key -> rows survive account deletion. NetworkProbes: no cleanup found either. DB: FunnelEvents 88 rows since 2026-10-04 (5 accounts, 79 screen_exit, test builds), NetworkProbes 29 rows (5 accounts). ASK (development first, dev check, then READY TO SHIP row): (1) daily cleanup deleting FunnelEvents and NetworkProbes rows older than 180 days; (2) account deletion also deletes that user's FunnelEvents (UserId and the install rows tied to it) and NetworkProbes rows; (3) a test for each. Legal publishes policy 1.9 (text ready: memory/departments/legal/reviews/privacy-1.9-app-screens-2026-10-13.md) the same day this ships. Then [QA] checks dev, and the CEO sets App Privacy Product Interaction = Yes.",
-      "status": "in_progress",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-10-13T16:18:31Z",
       "createdDate": "2026-10-13",
-      "completedDate": null,
+      "completedDate": "2026-10-30",
       "taskRef": "xd-1393",
       "handoffTo": "[LEGAL]",
       "handoffNote": "LEGAL publishes policy 1.9 (app screens + network checks) the day this ships; QA checks dev first.",
@@ -69646,7 +69652,10 @@
         "[BACKEND run 2026-10-24 0605, scheduled, unattended] prod api file log 24 Oct 00:00-06:06Z (193391 lines): location-request 0, account deletion 0, Apple revoke 0. ERR lines 157 = 154 fake DDoS (row 449, waits CEO) + 3 known RADIUS sign-up noise. Still waits the first real event, then QA.",
         "[BACKEND run 2026-10-24 0805, scheduled, unattended, 08:1xZ] Prod api log 06:06-08:05Z: account deletion 0. Waits QA xd-2394 (next real deletion)."
       ],
-      "blocker": "SHIPPED 23 Oct 11:02Z (rows 333 + 389) - waits QA xd-2394 (live log lines + next real account deletion). Then LEGAL publishes privacy 1.9."
+      "blocker": "SHIPPED 23 Oct 11:02Z (rows 333 + 389) - waits QA xd-2394 (live log lines + next real account deletion). Then LEGAL publishes privacy 1.9.",
+      "completedAt": "2026-10-30",
+      "completedBy": "[BACKEND]",
+      "resolution": "[BACKEND run 2026-10-30 22:2xZ] Closed with proof: QA xd-2394 PASS (purge cycle live, deletion path live on prod, removal proven on dev). LEGAL can publish privacy 1.9."
     },
     {
       "id": "xd-2103",
@@ -70368,11 +70377,11 @@
       "to": "[BACKEND]",
       "title": "Handoff from CTO: Server list: rank by region/latency server-side and stop recommending far relays (Sydney/Sao Paulo) to Middle-East users; set VpnServers.Ping to a real value or null",
       "description": "Production VpnServers: Ping=0, Load=0 for all 11 active servers (14 Oct). The app (until build 74) showed that 0 as '0ms'. Backend: (a) order /api/servers by distance from the request country (GeoIP) and keep 'recommended' only for relays < ~150 ms from the user's region; (b) either fill Ping from the prober (xd-2082 L1) or send null, never 0; (c) Load from CurrentConnections/MaxConnections. This helps every app version on the store today (4.2) without a release.",
-      "status": "in_progress",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-10-14T11:12:06Z",
       "createdDate": "2026-10-14",
-      "completedDate": null,
+      "completedDate": "2026-10-30",
       "notes": [
         "[BACKEND run 2026-10-22 0603, scheduled, unattended, 2026-10-22T06:31Z] Evidence for QA xd-2181: ServerPingAnswerTests 4/4 passed on development c1caea040 (/root/reports/be1022/t.log).",
         "[BACKEND live 2026-10-17 (finalize pass), 2026-10-17T19:02:06Z] (a) nearest-first ordering and (c) load were already live (measured, see xd-2181); (b) fixed on development 9d69ca543 - recommendations answer the distance estimate instead of 0. READY TO SHIP row 335.",
@@ -70381,7 +70390,10 @@
         "[BACKEND run 2026-10-23 0104, scheduled, unattended, 2026-10-23T01:06:32Z] old blocker: Waits QA xd-2181 (dev check; the signed-in leg needs a dev token = xd-2199 or the CEO's dev session), then BACKEND ships under CEO YES row 335.",
         "[BACKEND live 2026-10-23, CEO chat, 10:4xZ] SHIPPED row 335. production 15b220681 (cherry-pick -x of 9d69ca543, 6cdd4115f, 3fff78fc7) on 5d8d98c03 lock; ship build 0 errors, tests 434/434; lock 5d8d98c03 -> release 32aa73578; deploy_api.sh 10:42:43-10:45:56Z DONE OK, image 6aaed40a3874 -> e1d6459dca52, rollback caspervpn-api:rollback-202610231042; /health 200; 0 exceptions first 4 min. DLL before -> after: AnswerPingMs 0->1, MinHealthyForTrustedVantage 0->1, 'intro_viewed' (UTF-16) 0->2, made-up symbol 0->0. QA live handoff xd-2390."
       ],
-      "blocker": "SHIPPED 23 Oct 10:45Z - waits QA xd-2390 (signed-in smart-recommend call with clientCountryCode AE, needs a live chat)."
+      "blocker": "SHIPPED 23 Oct 10:45Z - waits QA xd-2390 (signed-in smart-recommend call with clientCountryCode AE, needs a live chat).",
+      "completedAt": "2026-10-30",
+      "completedBy": "[BACKEND]",
+      "resolution": "[BACKEND run 2026-10-30 22:2xZ] Closed with proof: QA xd-2390 PASS live, row 335 ticked. Per-country ranking from first-try numbers continues on xd-2799 (2)."
     },
     {
       "id": "xd-2145",
@@ -70853,13 +70865,16 @@
       "to": "[BACKEND]",
       "title": "Handoff from QA: [P1] WireGuard session bytes read ~0 for ~90% of real sessions - instrument or real? (IKEv2 control reads normal)",
       "description": "[QA 2026-10-17 f, CEO live 'do the 21 your self', 2026-10-17T21:27:47Z] Production ConnectionLogs since 14 Oct, sessions >= 60 s: WireGuard 241, median BytesDownloaded 920 B, >= 1 MB only 16, 0 B 12 (daily < 100 KB: 13 Oct 52/58, 14 Oct 53/56, 15 Oct 48/53, 16 Oct 76/78, 17 Oct 45/54 - not falling since the 13 Oct DNS fix). CONTROL: IKEv2 23 sessions median 10.1 MB, 19 >= 1 MB; hidden mode median 8 KB. The servers themselves pass a real WireGuard client 11/11 every hour (row 322 prober, 1 MB each). 235 of 241 WireGuard rows have no BuildNumber (= old store app 4.2, MTU 1420). Two hypotheses, neither proven: (a) the WireGuard byte sync (peer-stats -> ConnectionLogs) under-counts (CEO 12 Oct: phone 44 KB, backend 92 B); (b) old 4.2 apps really move nothing on some paths (MTU 1420; 4.3.1 with 1280 is at Apple). Measure first: for 3 live WireGuard sessions compare node 'wg show wg0 transfer' for that peer with the ConnectionLogs row at disconnect. Then hand back to [QA].",
-      "status": "in_progress",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-10-17T21:27:53Z",
       "createdDate": "2026-10-17",
-      "completedDate": null,
+      "completedDate": "2026-10-30",
       "notes": "[BACKEND run 2026-10-24 1040, scheduled, unattended, 2026-10-24T11:1xZ] SHIPPED card row 454 at 10:47Z (production 431dc4ed8, deploy DONE OK, rollback tag rollback-202610241045). Live check -> QA xd-2534. || [BACKEND run 2026-10-24 0904, scheduled, unattended, 2026-10-24T09:1xZ] xd-2515 dev PASS recorded; waits CEO YES row 454 only. || [BACKEND run 2026-10-24 0705, scheduled, unattended, 2026-10-24T07:2xZ] Second cause found by xd-2508: RADIUS Stop overwrote the row with the last delta; fix development 035fe631a, card row 454. || [BACKEND run 2026-10-23 1208, scheduled, unattended, 2026-10-23T12:2xZ] SHIPPED to production 12:20Z under CEO YES (row 393 A). production 24d444f49 (cherry-pick -x of development 6387ff46a, c1caea040, 97f024298, 35c189c59 + compose line 764e58573), lock 4f87bc04f -> release 34ef1aaa5; build 0 errors, tests 464/464; /root/deploy_api.sh 12:18:12-12:20:56Z DONE OK, image 164ccd6297bd -> 06be7977ee36, rollback tag caspervpn-api:rollback-202610231218; /health 200; 0 exceptions/ERR lines in 10 min; migrations AppleRefreshToken + LocationRequests applied 12:20:43Z. Live check -> QA xd-2408. || READY TO SHIP row 352 on the CEO card. [BACKEND run 2026-10-19 1442, scheduled, unattended, 2026-10-19T15:33:38Z] Answer: the number was wrong, not the traffic - the disconnect call overwrote the server's count with the app's (proof in QA xd-2221). Fixed on development 6387ff46a. || [BACKEND run 2026-10-23 0004, scheduled, unattended, 2026-10-23T00:2xZ] MEASURED dev DB 23 Oct 00:07Z: ConnectionLogs total 45, newest 9 Oct 11:44Z, 0 since the fix (19 Oct 15:31Z) - CONTROL: same table reads 19 rows in 30 d, so the query works. The dev server gets no app traffic, so this dev check cannot pass unattended.",
-      "blocker": "SHIPPED 24 Oct 10:47Z (row 454). Waits QA xd-2534: live check on WireGuard sessions that close after the ship."
+      "blocker": "SHIPPED 24 Oct 10:47Z (row 454). Waits QA xd-2534: live check on WireGuard sessions that close after the ship.",
+      "completedAt": "2026-10-30",
+      "completedBy": "[BACKEND]",
+      "resolution": "[BACKEND run 2026-10-30 22:2xZ] Closed with proof: QA xd-2534 PASS, card row 454 ticked (median 11.9 MB; row 480 MB >= heartbeat 461 MB)."
     },
     {
       "id": "xd-2184",
@@ -70988,11 +71003,11 @@
       "to": "[BACKEND]",
       "title": "Handoff from QA: [P1] Row 330 alarm repeat: 'Fleet-wide health checks failing' sent to Telegram 31 times (every 15 min, 10:43-17:35Z) and blamed the monitor while 5 nodes were really dead",
       "description": "QA 2026-10-18 (xd-2179 check). /opt/caspervpn/api-logs/caspervpn-20261018.log: '[live-alerts] sent to team Telegram for critical alert: Fleet-wide health checks failing - suspect monitor vantage, not the nodes' at 10:43, 10:58, 11:14 ... 17:35Z = 31 sends for one problem. Row 330 option A asked 'same problem once per 6 h'. The per-server alarms (Sao Paulo/Mexico City/Miami/Montreal/Singapore OFFLINE) each sent once (10:45-10:46Z) - correct. The fleet-wide text was wrong: the 5 nodes did not answer from 2 vantages (brain + la-2, CEO office 17:4xZ), so 'suspect monitor vantage' sent people the wrong way. Also: no alarm at all for the public outage 00:05-17:37Z (nginx gone; the API itself was up, so its own checks could not see it). Fix on development: dedupe the fleet-wide alarm per 6 h like the others; only say 'suspect monitor' when a second vantage still reaches the nodes; consider an outside check of https://api.caspervpn.com/health. Hand to [QA].",
-      "status": "in_progress",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-10-18T18:15:26Z",
       "createdDate": "2026-10-18",
-      "completedDate": null,
+      "completedDate": "2026-10-30",
       "notes": [
         "[BACKEND run 2026-10-23 1604, scheduled, unattended, 2026-10-23T16:1xZ] Re-measured read-only on production 16:05Z: 0 'fleet-wide' / alert lines since 15:00Z; latest sweeps 16:04:34Z + 16:05:34Z 'sweep clean'. No alarm repeat. QA xd-2391 judges.",
         "[BACKEND run 2026-10-23 1408, scheduled, unattended, 2026-10-23T14:2xZ] REAL EVENT on production (api file log /opt/caspervpn/api-logs/caspervpn-20261023.log): Tokyo 103.106.228.235 failed :5002/health 1/3 07:23:35Z, 2/3 07:24:45Z, pulled 07:25:56Z ('Fleet node auto-pulled from rotation', IsActive=false AutoDisabled=true); shown again 13:50:16Z ('Server back online - shown in the app again', 3 healthy checks). Now (14:11Z) DB: Tokyo IsActive=t AutoDisabled=f LastHealthCheck 14:11:06Z; watchdog 'sweep clean - 11 active, 1 auto-disabled (Paris, since 1 Oct), 0 failures'. Alarm repeat (row 330/xd-2190): container since 12:20Z: 'fleet-wide failure guard' lines 0, 'keeping in rotation' 0, watchdog alerts = 1 pull + 1 back, no repeats. Not ticked by BACKEND - QA judges the hide+show legs from these lines (re-run: grep node-watchdog <that log> | grep -i tokyo).",
@@ -71000,7 +71015,10 @@
         "[BACKEND run 2026-10-23 0104, scheduled, unattended, 2026-10-23T01:06:32Z] old blocker: Waits QA xd-2220 (dev check); outside-uptime part = DEVOPS xd-2195.",
         "[BACKEND live 2026-10-23, CEO chat, 10:4xZ] SHIPPED row 350. production 15b220681 (cherry-pick -x of 9d69ca543, 6cdd4115f, 3fff78fc7) on 5d8d98c03 lock; ship build 0 errors, tests 434/434; lock 5d8d98c03 -> release 32aa73578; deploy_api.sh 10:42:43-10:45:56Z DONE OK, image 6aaed40a3874 -> e1d6459dca52, rollback caspervpn-api:rollback-202610231042; /health 200; 0 exceptions first 4 min. DLL before -> after: AnswerPingMs 0->1, MinHealthyForTrustedVantage 0->1, 'intro_viewed' (UTF-16) 0->2, made-up symbol 0->0. QA live handoff xd-2391."
       ],
-      "blocker": "SHIPPED 23 Oct 10:45Z. Waits QA xd-2391 to judge the real Tokyo event (pulled 07:25:56Z, shown again 13:50:16Z) - evidence on this row."
+      "blocker": "SHIPPED 23 Oct 10:45Z. Waits QA xd-2391 to judge the real Tokyo event (pulled 07:25:56Z, shown again 13:50:16Z) - evidence on this row.",
+      "completedAt": "2026-10-30",
+      "completedBy": "[BACKEND]",
+      "resolution": "[BACKEND run 2026-10-30 22:2xZ] Closed with proof: same ship as xd-2193; QA xd-2391 PASS 26 Oct (one alarm per event, watchdog live)."
     },
     {
       "id": "xd-2191",
@@ -71042,11 +71060,11 @@
       "to": "[BACKEND]",
       "title": "Handoff from CEO: [P0] Auto-hide dead servers: a node failing health for 15 min is hidden from /api/servers, shown again when healthy",
       "description": "[CEO 18 Oct live] 'why didnt the app only show the online servers rather than crash' + 'u didnt get the bug reports?' - outage 18 Oct (xd-2187/2188): API front door down 00:05-17:37Z made the whole app fail; 5 OneProvider nodes dead since 10:45Z were still listed until hidden by hand at ~17:45Z; no BugReports row arrived all day. Ask: use the fleet-health result (0/11 = down) or the API's own node probe to flip a 'temporarily offline' flag (not IsActive) automatically, both ways, with a log line + Telegram; /api/servers and smart-recommend skip offline nodes. Today it took a human ~7 h. Then QA.",
-      "status": "in_progress",
+      "status": "completed",
       "priority": "P0",
       "createdAt": "2026-10-18T18:24:59Z",
       "createdDate": "2026-10-18",
-      "completedDate": null,
+      "completedDate": "2026-10-30",
       "notes": [
         "[BACKEND run 2026-10-23 1604, scheduled, unattended, 2026-10-23T16:1xZ] Re-measured read-only on production 16:05Z: node-watchdog since 13:50:16Z (Tokyo shown again): 134 sweeps '11 active, 1 auto-disabled' (the 1 = Paris, AutoDisabled since 1 Oct 04:04Z, IsActive f), 0 new pulls, 0 repeats. QA xd-2391 has everything to judge.",
         "[BACKEND run 2026-10-23 1408, scheduled, unattended, 2026-10-23T14:2xZ] REAL EVENT on production (api file log /opt/caspervpn/api-logs/caspervpn-20261023.log): Tokyo 103.106.228.235 failed :5002/health 1/3 07:23:35Z, 2/3 07:24:45Z, pulled 07:25:56Z ('Fleet node auto-pulled from rotation', IsActive=false AutoDisabled=true); shown again 13:50:16Z ('Server back online - shown in the app again', 3 healthy checks). Now (14:11Z) DB: Tokyo IsActive=t AutoDisabled=f LastHealthCheck 14:11:06Z; watchdog 'sweep clean - 11 active, 1 auto-disabled (Paris, since 1 Oct), 0 failures'. Alarm repeat (row 330/xd-2190): container since 12:20Z: 'fleet-wide failure guard' lines 0, 'keeping in rotation' 0, watchdog alerts = 1 pull + 1 back, no repeats. Not ticked by BACKEND - QA judges the hide+show legs from these lines (re-run: grep node-watchdog <that log> | grep -i tokyo).",
@@ -71055,7 +71073,10 @@
         "[BACKEND live 2026-10-23, CEO chat, 10:4xZ] SHIPPED row 350. production 15b220681 (cherry-pick -x of 9d69ca543, 6cdd4115f, 3fff78fc7) on 5d8d98c03 lock; ship build 0 errors, tests 434/434; lock 5d8d98c03 -> release 32aa73578; deploy_api.sh 10:42:43-10:45:56Z DONE OK, image 6aaed40a3874 -> e1d6459dca52, rollback caspervpn-api:rollback-202610231042; /health 200; 0 exceptions first 4 min. DLL before -> after: AnswerPingMs 0->1, MinHealthyForTrustedVantage 0->1, 'intro_viewed' (UTF-16) 0->2, made-up symbol 0->0. QA live handoff xd-2391.",
         "[QA CAS-160 2026-10-26 19:xZ] Tokyo evidence from board (23 Oct): pulled 07:25:56Z (failed 3x health checks), shown again 13:50:16Z (3 consecutive passes). File log caspervpn-20261023.log. Today 26 Oct: API restarted 11:40:52Z; docker logs shows watchdog running clean since then (12 active, 1 auto-disabled = Paris); Bangkok-test restore at 01:46:57Z confirmed in file log 26 Oct (node came back after auto-disable). Verify command: docker logs caspervpn-api 2>&1 | grep -E \"\\[node-watchdog\\]|pulled.*Tokyo|restored.*Tokyo|auto-pull|auto-restore\" | grep \"2026-10-26\" | head -20 (applied by the CEO office 2026-10-26T18:58Z from the helper's comment, Paperclip CAS-154/CAS-160)"
       ],
-      "blocker": "SHIPPED 23 Oct 10:45Z. Waits QA xd-2391 to judge the real Tokyo event (pulled 07:25:56Z, shown again 13:50:16Z) - evidence on this row."
+      "blocker": "SHIPPED 23 Oct 10:45Z. Waits QA xd-2391 to judge the real Tokyo event (pulled 07:25:56Z, shown again 13:50:16Z) - evidence on this row.",
+      "completedAt": "2026-10-30",
+      "completedBy": "[BACKEND]",
+      "resolution": "[BACKEND run 2026-10-30 22:2xZ] Closed with proof: QA xd-2391 PASS 26 Oct (watchdog live, 1 auto-disabled Paris, Bangkok-test restore 01:46:57Z). Auto-hide live since 23 Oct 10:45Z."
     },
     {
       "id": "xd-2194",
@@ -72780,11 +72801,11 @@
       "to": "[[BACKEND]]",
       "title": "Handoff from [LEGAL]: [P1] Apple Ads install records: keep 180 days and delete with the account (blocks privacy 1.9 ad line, CEO card row 381)",
       "description": "[GROWTH run 2026-10-22 2254, scheduled, unattended, 2026-10-22T22:58:20Z] MEASURED read-only on origin/development + origin/production: backend-dotnet-core/Services/UserTelemetryRetention.cs and DataPurgeService.cs Phase 5 (xd-2102) clean only FunnelEvents + NetworkProbes; AppleAdsAttribution (Models/AppleAdsAttribution.cs: InstallId, UserId nullable) has no purge and no delete-with-account on either branch. Privacy 1.9 (development e86bdd30/00fc24e4) says the ad-campaign record is kept 180 days and deleted with the account. ASK (development first): (1) DataPurge removes AppleAdsAttributions older than 180 days; (2) both account-delete paths remove the user's rows and the rows of installs the user signed in on (same rule as UserTelemetryRetention.DeleteForUserAsync); (3) a test each, with a control. Then [QA] dev check and a READY TO SHIP row that ships with row 333.",
-      "status": "in_progress",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-10-22T22:58:25Z",
       "createdDate": "2026-10-22",
-      "completedDate": null,
+      "completedDate": "2026-10-30",
       "notes": [
         "[BACKEND run 2026-10-22 2305, scheduled, unattended, 2026-10-22T23:17:25Z] BUILT on development f2863a5a7 (4 files, +59/-5): purge + both account-delete paths now remove Apple Ads install records; tests 455/455, control 4/5 FAIL. Dev deploy pending (dev server picks up development). QA xd-2306; READY TO SHIP row added to ceo-action-backlog (ships with row 333).",
         "[BACKEND run 2026-10-23 0004, scheduled, unattended, 2026-10-23T00:2xZ] Dev api recreated 22 Oct 23:55:00Z with development code: log 23:57:10Z 'DataPurge Phase 5 (xd-2298): Purged 0 Apple Ads install records older than 180d' (control line Phase 5 (xd-2102) same minute). Dev table had 4 rows, all 11 Oct (<180 d) = 0 is right. Inserted on DEV only 2 test rows: InstallId be1023-old-200d (CreatedAt 6 Apr) + CONTROL be1023-ctl-10d (13 Oct). Next dev purge ~05:57Z: expect 'Purged 1', old row gone, control row kept.",
@@ -72796,7 +72817,10 @@
         "[BACKEND run 2026-10-24 0605, scheduled, unattended] prod api file log 24 Oct 00:00-06:06Z (193391 lines): location-request 0, account deletion 0, Apple revoke 0. ERR lines 157 = 154 fake DDoS (row 449, waits CEO) + 3 known RADIUS sign-up noise. Still waits the first real event, then QA.",
         "[BACKEND run 2026-10-24 0805, scheduled, unattended, 08:1xZ] Prod api log 06:06-08:05Z: account deletion 0. Waits QA xd-2394 (next real deletion)."
       ],
-      "blocker": "SHIPPED 23 Oct 11:02Z (rows 333 + 389) - waits QA xd-2394 (live log lines + next real account deletion). Then LEGAL publishes privacy 1.9."
+      "blocker": "SHIPPED 23 Oct 11:02Z (rows 333 + 389) - waits QA xd-2394 (live log lines + next real account deletion). Then LEGAL publishes privacy 1.9.",
+      "completedAt": "2026-10-30",
+      "completedBy": "[BACKEND]",
+      "resolution": "[BACKEND run 2026-10-30 22:2xZ] Closed with proof: QA xd-2394 PASS (same ship rows 333+389). LEGAL can publish privacy 1.9 ad line."
     },
     {
       "id": "xd-2299",
@@ -73781,11 +73805,11 @@
       "to": "[BACKEND]",
       "title": "Handoff from IOS: Build POST /support/location-request for the iPhone 'Request a location' sheet (xd-1376 is deferred on a stale reason)",
       "description": "The iPhone side is coded (ios/78-request-location-1377 6ddf16e, xd-1377). Your row xd-1376 is DEFERRED 'after build 65 ships' - build 65 was replaced by 75/76 long ago, and the CEO's 22 Oct order allows deferring only finance + desktop. Contract the app uses: POST /api/support/location-request (auth) body {countryCode: ISO-2 upper-case, city: string|null, reason: string|null <=200}; reply {success, message, data:{alreadyRequested: bool}} with 201 new / 200 already (unique UserId+CountryCode); 429 when over 5/user/day (app shows a 'try again tomorrow' line). Table + admin GET + 5-paying rule per product-strategy/REQUEST-A-LOCATION-SPEC-2026-10-05.md. Build on development; hand to [QA] with: POST twice same country on dev -> 1 row.",
-      "status": "in_progress",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-10-23T05:39:42Z",
       "createdDate": "2026-10-23",
-      "completedDate": null,
+      "completedDate": "2026-10-30",
       "notes": [
         "[BACKEND run 2026-10-23 1604, scheduled, unattended, 2026-10-23T16:1xZ] Re-measured read-only on production 16:05Z: LocationRequests rows 0 (no real request yet; the iPhone sheet is not in a released build). Still waits QA xd-2408 signed-in leg / first real request. || [BACKEND run 2026-10-23 1208, scheduled, unattended, 2026-10-23T12:2xZ] SHIPPED to production 12:20Z under CEO YES (row 409). production 24d444f49 (cherry-pick -x of development 6387ff46a, c1caea040, 97f024298, 35c189c59 + compose line 764e58573), lock 4f87bc04f -> release 34ef1aaa5; build 0 errors, tests 464/464; /root/deploy_api.sh 12:18:12-12:20:56Z DONE OK, image 164ccd6297bd -> 06be7977ee36, rollback tag caspervpn-api:rollback-202610231218; /health 200; 0 exceptions/ERR lines in 10 min; migrations AppleRefreshToken + LocationRequests applied 12:20:43Z. Live check -> QA xd-2408. || [BACKEND run 2026-10-23 0605, scheduled, unattended] BUILT on development 97f024298 (pushed 06:20Z under lock casper-backend-1023-0605, released). POST /api/support/location-request: 201 new / 200 {alreadyRequested:true} same user+country (unique index) / 429 after 5 new in 24 h / 400 bad ISO-2 or reason >200. IsPaying stored at request time (Active, Production, price>0, not trial, AdminService.PayingNow). 5 paying for one country -> 1 LocationRequestAlerts row + 1 team Telegram alert, once per country. GET /api/admin/location-requests?days=30 -> per country total/paying/latest, sorted by paying. Rows deleted with the account. Proof: build 0 errors; LocationRequestTests 13/13; full suite 472/472 (was 459). Dev deployed 06:29:20Z: unauth POST 401 (was 404 at 06:21Z), admin GET 401 (was 404), made-up route location-requestx 404 (control), production still 404 (untouched). Dev DB: tables LocationRequests + LocationRequestAlerts, unique index, migration row 20261023000000_LocationRequests. NOT PROVEN: signed-in POST twice on dev (no dev test account in an unattended run). || [BACKEND run 2026-10-23 1113, scheduled, unattended, 2026-10-23T11:3xZ] blocker re-based: it named CEO row 395 option A, which the CEO answered and which was applied only to rows 333+389 (row 395 test text, board 11:13Z). No signed-in leg run here (no live session). || [BACKEND run 2026-10-23 1806, scheduled, unattended, 2026-10-23T18:1xZ] location-request since ship: only unsigned 401 checks (last 15:36:15Z); no signed-in request yet - waits the new iPhone build. || [BACKEND run 2026-10-23 1904, scheduled, unattended] 19:06Z: location-request still only unsigned 401 checks (last 15:36:15Z).\n[BACKEND run 2026-10-23 2004, scheduled, 20:08Z] location-request: still only unsigned 401 checks (last 15:36Z); no signed-in request yet.",
         "[BACKEND run 2026-10-23 2106, scheduled] Re-read production api log 20:00-21:07Z read-only (25737 lines): intro_viewed 0, location-request 0, account-deletion lines 0, errors 0. No change - still waits QA + first real user event.",
@@ -73794,7 +73818,10 @@
         "[BACKEND run 2026-10-24 0805, scheduled, unattended, 08:1xZ] Prod api log 06:06-08:05Z: 1 POST /api/support/location-request at 06:17:20Z = QA unauthenticated probe (401 + control route qa-bogus-route-x 404). Still 0 signed-in requests - waits the first real one from the new iPhone build."
       ],
       "blocker": "SHIPPED 23 Oct 12:20Z - waits QA xd-2408 (live check; signed-in leg = first real request from the new iPhone build).",
-      "resultingHandoff": "xd-2366 to [QA]"
+      "resultingHandoff": "xd-2366 to [QA]",
+      "completedAt": "2026-10-30",
+      "completedBy": "[BACKEND]",
+      "resolution": "[BACKEND run 2026-10-30 22:2xZ] Backend part done (SHIPPED 23 Oct 12:20Z). Live check moved to QA date watch xd-2730 (5 Nov, xd-2408 events: first real request from the new iPhone build)."
     },
     {
       "id": "xd-2358",
@@ -76145,17 +76172,20 @@
       "to": "[BACKEND]",
       "title": "Handoff from QA: [P1] Rows 448 + 449: QA dev checks PASS - ship under the CEO YES when it comes",
       "description": "(1) Row 448 (xd-2498): development d062e1d30 restricted_newcomer_alarm.py (md5 0773fb93) PASS read-only 04:11Z: 00:20Z flags 65fd9bed 'AE/ip:OM' 11, 00:12Z flags 0, --report not-paywall 9 (= 5 old + 4 ip:IR; control old file read 5 the same minute). Ship THIS version, not 86650cff6. (2) Row 449 (xd-2495): dev DLL has 0 'DDoS alert raised for server' / 0 'DDoS detection call failed' (control 'Error disconnecting from server' 1; production DLL 1/1/1). Production is still raising them: 77 today, 11 in the last 2 h. Not proven: the signed-in POST heartbeat leg. Both rows wait the CEO's YES; after the ship QA re-runs each row's verify live.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-10-24T04:20:12Z",
       "createdDate": "2026-10-24",
-      "completedDate": null,
+      "completedDate": "2026-10-30",
       "blocker": "Row 448 SHIPPED 13:35Z (DEVOPS); row 449 SHIPPED 2026-10-24 23:17Z. Waits QA xd-2592 live check.",
       "notes": [
         "[BACKEND live 2026-10-24 23:0x-23:2xZ, CEO in chat: \"Rows 470, 471 and 449YES.\"] production ff8307a89 (cherry-picks 495705f46 = c8278796a, 4daae618f = 7f5ed5732, ff8307a89 = 89769c5a0); build 0 errors, tests 494/494; lock casper-backend-1024-2300-ship taken/released; deploy_api.sh DONE OK 23:17:25Z, image d3a05c4d01de -> 2913c30b2209, rollback caspervpn-api:rollback-202610242314; /health 200. DLL before/after: HeartbeatAdoptBilling 0 -> 2, appsettings FrontHostByServerName 0 -> 1 (Los Angeles = kostel.profitechlb.com), 'DDoS alert raised for server' 1 -> 0. Live traffic proof pending (0 NATIVE front calls and 0 [ERR] in the first 5 min, 02:2x Beirut).",
         "[BACKEND run 2026-10-24 1444, scheduled, unattended] Re-based: 448 shipped (production af1612cf4, md5 0773fb93, cron */15); 449 untouched.",
         "[DEVOPS live 2026-10-24 13:3x-13:5xZ, CEO in chat] Row 448 SHIPPED by DEVOPS 13:35Z (CEO live yes): production af1612cf4, installed md5 0773fb93, cron */15. Row 449 not touched (no yes). BACKEND: nothing left for 448 except (d) on 31 Oct."
-      ]
+      ],
+      "completedAt": "2026-10-30",
+      "completedBy": "[BACKEND]",
+      "resolution": "[BACKEND run 2026-10-30 22:2xZ] Closed with proof: rows 448 + 449 SHIPPED; QA xd-2592 PASS 26 Oct (0 fake DDoS alerts in 36 h, row 449 ticked)."
     },
     {
       "id": "xd-2500",
@@ -76297,13 +76327,16 @@
       "to": "[BACKEND]",
       "title": "Handoff from QA: [P1] Card row 352 live check FAIL: WireGuard session bytes still ~1 KB after the ship",
       "description": "QA 24 Oct 06:2xZ prod read-only: after the 23 Oct 12:20Z ship, app-closed WireGuard sessions >= 60 s: 25, median BytesDownloaded 1,184 B (before 624 B); most rows 0 B upload even for 4 h sessions. Either the server-side count is not reaching ConnectionLogs on disconnect, or these are idle/prober sessions. Please measure one known session end to end (node wg peer transfer vs the ConnectionLogs row) and fix or show the rows are not real use; then hand [QA] the re-check. Query on card row 352 evidence.",
-      "status": "in_progress",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-10-24T06:20:06Z",
       "createdDate": "2026-10-24",
-      "completedDate": null,
+      "completedDate": "2026-10-30",
       "notes": "[BACKEND run 2026-10-24 1040, scheduled, unattended, 2026-10-24T11:1xZ] SHIPPED card row 454 at 10:47Z (production 431dc4ed8, deploy DONE OK, rollback tag rollback-202610241045). Live check -> QA xd-2534. || [BACKEND run 2026-10-24 0904, scheduled, unattended, 2026-10-24T09:1xZ] QA xd-2515 PASS on dev 08:32Z; blocker rewritten - nothing left for BACKEND until CEO YES row 454. Prod log 08:05-09:1xZ ERR/FTL 0. || [BACKEND run 2026-10-24 0705, scheduled, unattended, 2026-10-24T07:2xZ] MEASURED root cause. (1) Server count works: live WG session Miami (user 4f63e9b0) node 'wg show' 07:07:43Z rx 460,928,588 / tx 3,414,442,720 vs DB peer row at sync 07:07:30Z rx 460,928,240 / tx 3,414,442,156 (gap 564 B in 13 s); session row climbing (2,880,387,284 B). (2) The ~1 KB rows: the WireGuard RADIUS daemon (/opt/caspervpn/wg-radius-accounting.py, md5 4fadc7c3 = repo scripts/) sends only the bytes since its last report; RadiusAuthController's Stop branch wrote that delta OVER the row. Proof: row 22:00:53Z Amsterdam (user 2eecd0e6) closed at 1,184 B = the last Stop line 23:57:59Z 'Bytes: 1184'; row 2173adf3 (build 75, 14:20-18:24Z) closed at 2,064 B while the app's own heartbeat at 15:27:29Z said bytesRx 12,890,100. (3) QA's 30 rows since the ship: 15 are one internal account (2a2153cb, caspervpn address) and many are sync-opened idle peers - not real use. FIX on development 035fe631a (Stop keeps max(row, record), same rule as xd-2183); tests 491/491. Dev check -> [QA] xd-2515; READY TO SHIP row added on the CEO card.\n[BACKEND run 2026-10-24 0805, scheduled, unattended, 08:1xZ] Dev deploy confirmed: caspervpn-dev-api created 07:50:22Z, after 035fe631a (07:18Z). No live WG traffic on dev to replay (0 RADIUS lines since restart) - QA xd-2515 = diff + tests; live proof after CEO YES row 454 (same instrument: node wg show vs closed ConnectionLogs row). | [BACKEND run 2026-10-24 1004, scheduled, unattended] re-checked 10:0xZ: card row 454 still unanswered (ceo_answers: nothing new); prod log 09:10-10:05Z read-only ERR/FTL 0 (control WRN 39), api healthy. Nothing else to do before the YES.",
-      "blocker": "SHIPPED 24 Oct 10:47Z (row 454). Waits QA xd-2534: live check on WireGuard sessions that close after the ship."
+      "blocker": "SHIPPED 24 Oct 10:47Z (row 454). Waits QA xd-2534: live check on WireGuard sessions that close after the ship.",
+      "completedAt": "2026-10-30",
+      "completedBy": "[BACKEND]",
+      "resolution": "[BACKEND run 2026-10-30 22:2xZ] Closed with proof: QA xd-2534 PASS, card row 454 ticked (WireGuard bytes real after 24 Oct ship)."
     },
     {
       "id": "xd-2509",
@@ -76528,13 +76561,16 @@
       "to": "[BACKEND]",
       "title": "Handoff from CEO: [P0] UAE/restricted newcomers on LIVE 4.3.1 (build 75): what can the SERVER do so the FIRST try connects, without a new build?",
       "description": "[CEO office live 2026-10-24 10:1xZ, CEO in chat] CEO asked: 'what can be done in the current version that is live before uploading a new build? can it be fixed without a new build?'. Facts: UAE newcomer 65fd9bed failed 11x in 2.5 min (CasperCloakHidingError:0, private DNS lookup blocked) before any tunnel; the 24 Oct 01:30Z server fix gives the bare-IP road only AFTER one failure; the app fix (row 452, ios/80-doh-fallback-2491) needs a new build. Ask: read the build-75 code path (VPNConnectionManager.resolveBridge ~:2786, CasperCloakHiding.swift:134-158) with iOS and list every server-side lever 4.3.1 already obeys on its FIRST attempt - e.g. config the app fetches before connecting (bridge host as a literal IP, cloudfront url/token, protocol order, default protocol WireGuard for restricted regions by country of IP). For each: does build 75 read it (code line), risk, test on dev with a UAE-like DNS block. Then a READY TO SHIP row. verify: dev test with DoH blocked -> first attempt connects on build 75.",
-      "status": "in_progress",
+      "status": "completed",
       "priority": "P0",
       "createdAt": "2026-10-24T10:14:44Z",
       "createdDate": "2026-10-24",
-      "completedDate": null,
+      "completedDate": "2026-10-30",
       "notes": "[BACKEND live 2026-10-24 ~13:0xZ, CEO in chat] CORRECTION (measured): the 02:48Z UAE first-try connect did NOT use Cloudflare. Prod log 02:48:46Z 'CloudfrontFronting: NATIVE front for Dusseldorf -> wss://s6-edge.pompesh.com/'; app telemetry 02:48:50Z connect-success front=cloudfront elapsed=3918 ms; s6-edge.pompesh.com via dns.google = 91.194.84.79 = node-de-du (our server), no cf-ray, Server: nginx (Duesseldorf DNS-only since 9 Oct). 'cloudfront'/cfWiring is an old label for the edge road; it is Cloudflare only on relays still proxied (xd-2540: 3 moved today 12:23-12:28Z, 7 left). || [BACKEND live 2026-10-24 ~12:1xZ, CEO in chat: 'ship'] [BACKEND live 2026-10-24 ~12:1xZ, CEO in chat: 'ship'] SHIPPED: production 35175fd4c = cherry-pick -x development 559474de6 (only backend commit since 431dc4ed8); build 0 errors, tests 486/486; lock casper-backend-1024-live 12:03:02Z taken/released; deploy_api.sh 12:03-12:07:03Z DONE OK, image b24a189beb37 -> 0956b9112339, rollback caspervpn-api:rollback-202610241203; /health 200; DLL DefaultFirstTryCountries 0 -> 1 (control 0). NOT PROVEN live: no Gulf user has fetched hidden-mode settings since. QA live check on the handoff. || [CEO office live 2026-10-24 11:3xZ, CEO in chat] CEO asked why the no-lookup road lasts only 7 days. The 7 days is the per-user memory after ONE failure (xd-2488, WindowMinutes default 7 d) - a guess, not a measurement. Row 462 (country rule for AE/OM/SA/BH) has no window, so for Gulf users it is permanent once shipped. For other countries: make the window renew on every failure and review the length with data (how many users fail again after day 7). Put the number on the row. || [BACKEND run 2026-10-24 1040, scheduled, unattended, 2026-10-24T11:1xZ] CONFIRMED on origin/ios/75 (80d579230) CasperCloakHiding.resolveBridge :104-145: empty domainPool AND empty casperCloakDomain -> 'bare-IP' return, no DoH lookup, no throw. REAL PROOF it works in the UAE: newcomer 65fd9bed (IP country OM) failed 11x 00:11-00:14Z with the domain; at 02:48:46Z the server left the domain out (DohFailover line) and the FIRST try connected (ConnectionLogs 02:48:49Z-04:01:59Z, 250,251,028 B). Lever built: the same no-domain road on the FIRST try for IP countries AE, OM, SA, BH (setting CasperCloak:DohFailover:FirstTryCountries, empty = off; country = the StealthTier country, sticky LastLoginCountry first). development 559474de6, build 0 errors, tests 494/494 (+3). DEV CHECK PASS 11:08Z (throwaway account, deleted after): BEFORE (old dev image) AE/OM/DE all got domain s12.pompesh.com; AFTER (dev api 11:05:55Z, DLL has DefaultFirstTryCountries 1, control 0) AE -> domain None + 'DohFailover ... first-try country AE', OM -> None, DE/GB control -> domain kept. Other levers read: protocol order / default protocol need the app (not server-driven on build 75 - not changed). Trade-off: a bare IP is easier to block by IP list than a domain; Cloudflare wiring is untouched. NOT PROVEN: a phone with DoH blocked on dev (no phone unattended). || [CEO office live 2026-10-24 10:2xZ] LEAD (read in a local worktree copy, NOT yet confirmed on the exact build-75 tag): CasperCloakHiding.resolveBridge (~:104-160) - when the config sends NO domainPool and NO casperCloakDomain, the app skips the DoH lookup entirely and uses the server-sent bare IP (fallbackAddress) on the FIRST try; the abort (dohHardFailInRestrictedRegion) only happens when a domain is sent. So the server can make 4.3.1 connect first time in restricted regions by sending an empty domain pool to restricted-region users (same road the 01:30Z fix gives after one failure). Trade-off to write on the row: bare IP is easier to block by IP list than a domain. Confirm on ios/75, test on dev with DoH blocked, then READY TO SHIP. || \n[QA CAS-160 2026-10-26 19:xZ] SQL for xd-2539 executed read-only on brain (PGOPTIONS read-only). Results since 2026-10-24 12:07:00Z: AE: 1 first-attempt, 1 success, 100.0% | SA: 1 first-attempt, 1 success, 100.0%. Total 2 Gulf first-attempts, both succeeded. Numbers growing (2 real Gulf newcomers post-ship). Command: docker exec -i caspervpn-postgres psql -U casper_prod -d caspervpn -At < qa_gulf_sql.sql (applied by the CEO office 2026-10-26T18:58Z from the helper's comment, Paperclip CAS-154/CAS-160)",
-      "blocker": "SHIPPED 24 Oct 12:07Z (row 462, CEO 'ship'). Waits QA xd-2539 live check on the next Gulf user."
+      "blocker": "SHIPPED 24 Oct 12:07Z (row 462, CEO 'ship'). Waits QA xd-2539 live check on the next Gulf user.",
+      "completedAt": "2026-10-30",
+      "completedBy": "[BACKEND]",
+      "resolution": "[BACKEND run 2026-10-30 22:2xZ] Closed with proof: QA xd-2539 TICK 26 Oct - 2 Gulf newcomers after the ship, both connected first try (AE 100%, SA 100%). Country work continues on country-* tasks (xd-2668)."
     },
     {
       "id": "xd-2523",
@@ -76993,16 +77029,19 @@
       "to": "[BACKEND]",
       "title": "Handoff from CEO: [P1] Free user used 1,193 MB on a 512 MB cap in 18 minutes (24 Oct 03:42-04:00Z) - the cap cut only one of two parallel sessions",
       "description": "[CEO office live 2026-10-24 12:5xZ, CEO in chat] CEO: 'why do we have a user that crossed the limit?'. MEASURED prod read-only 12:5xZ: user 2a659e83 (icloud, Free plan, created 03:40:50Z, no FunnelEvents at all, ConnectionLogs AppVersion/Build empty, DeviceOs Unknown) had TWO overlapping sessions: WireGuard 03:42:19-03:59:56Z 463 MB ended 'data cap reached'; CasperCloak 03:42:23-04:00:25Z 584 MB, UserAgent 'heartbeat-adopt (xd-1434)', no cap reason. CurrentCycleDataUsedBytes 1,193 MB vs limit 512 MB. Control: bcb2ff10 on 22 Oct stopped at 515/512 MB after one WireGuard session (the cap works there). Questions to answer with the code + logs: (1) does the cap check run for relay-adopted (heartbeat) hidden-mode sessions at all, or only for app-reported ones; (2) how often the cap is evaluated (the first session ran 17 min = ~450 MB past the cap before the cut - what is the interval and the bytes source); (3) why two sessions at once from a brand-new account (two devices? app reconnect that did not tear down the first tunnel? which app - no version recorded); (4) whether the user can keep connecting now (used > limit) - and whether he is shown the free-data's-up sheet. Fix on development: evaluate the cap on every usage report for every protocol and across all live sessions of the user; kill all peers when it trips; READY TO SHIP row. QA re-check with a dev account that opens WG + hidden mode together.",
-      "status": "in_progress",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-10-24T13:16:14Z",
       "createdDate": "2026-10-24",
-      "completedDate": null,
+      "completedDate": "2026-10-30",
       "blocker": "SHIPPED 2026-10-24 23:17Z (row 471). Waits QA xd-2591 live check.",
       "notes": [
         "[BACKEND live 2026-10-24 23:0x-23:2xZ, CEO in chat: \"Rows 470, 471 and 449YES.\"] production ff8307a89 (cherry-picks 495705f46 = c8278796a, 4daae618f = 7f5ed5732, ff8307a89 = 89769c5a0); build 0 errors, tests 494/494; lock casper-backend-1024-2300-ship taken/released; deploy_api.sh DONE OK 23:17:25Z, image d3a05c4d01de -> 2913c30b2209, rollback caspervpn-api:rollback-202610242314; /health 200. DLL before/after: HeartbeatAdoptBilling 0 -> 2, appsettings FrontHostByServerName 0 -> 1 (Los Angeles = kostel.profitechlb.com), 'DDoS alert raised for server' 1 -> 0. Live traffic proof pending (0 NATIVE front calls and 0 [ERR] in the first 5 min, 02:2x Beirut).",
         "[BACKEND run 2026-10-24 1444, scheduled, unattended] MEASURED prod read-only 14:5xZ. (3) Not two sessions: ONE tunnel. WG peer hhOh6F2t on Duesseldorf (wg-sync opened its row 03:42:36Z, no app /connect) and the app's heartbeat said 'Los Angeles CasperCloak' -> heartbeat-adopt row. Both end with the WG cut (03:59:55Z) / the 402 at reconnect (04:00:25Z). (1) The cap is checked only by the WG sync per WG peer and at connect (402); hidden mode is a WG peer too, so it is covered; adopt rows are never checked mid-session. (2) wg-sync polls every ~20 s; the user moved ~150 MB per poll in the last minute (03:59:15/36/56Z), so the cut came at 638.9 MB = 119%. (4) Counter now 1,251,275,932 B = 638.9 MB billed by the sync + 612.4 MB added again when the adopt row closed (OptimizedVpnServerService disconnect, BandwidthRecorded was false on the LA row) -> he is refused with 402 (2x 04:00:25Z). The free-data sheet is app-side: NOT PROVEN. 7 days: 10 adopt rows, 2 overlap (624 MB, 2 users). Fix: skip the close-time increment for an adopt row overlapping a real row of the same user (both service files). Caveat: two devices of one user would be under-billed by the adopt one (rare)."
-      ]
+      ],
+      "completedAt": "2026-10-30",
+      "completedBy": "[BACKEND]",
+      "resolution": "[BACKEND run 2026-10-30 22:2xZ] Backend part done (SHIPPED row 471, 24 Oct 23:17Z). Live check moved to QA date watch xd-2730 (5 Nov: xd-2591 adopted-row billing)."
     },
     {
       "id": "xd-2550",
@@ -77119,11 +77158,11 @@
       "to": "[BACKEND]",
       "title": "Handoff from DEVOPS: [BACKEND P0, CEO 'implement plan in full'] Hand out the new profitechlb.com FRONT names instead of the Cloudflare Worker fronts",
       "description": "DevOps put a FRONT label on profitechlb.com on every relay (DNS-only, own wildcard cert, canary pass): Tokyo amsela/morvex, Sydney korvel/taluse, Singapore tirano/elbrin, Hong Kong pelune/vantel, Amsterdam dorvik/orinda, Duesseldorf falmeo/ferani, Mexico City salvea/pelaro, Montreal nimora/zubric, Miami quessa/halvin, Sao Paulo lorvan/dremos, Los Angeles bexira/kostel, bkk-01 velmora/jumira (direct .shortaalmashahir.com / front .profitechlb.com). Please: (1) API config CloudfrontFronting: HostTemplate '{entryId}.profitechlb.com' + EntryIdByServerName -> the front labels above (today they map to sN-edge.pompesh.com), development first, then production under this CEO order; (2) after that, deactivate the 6 Cloudflare Worker fronts in CensorshipFallbackDomains (Purpose 3) or replace them with direct names, so no hidden-mode traffic goes through Cloudflare (cloudflare-exit-phase1 crit 5, xd-2248 P5). Rollback = old config / IsActive back. Also xd-2550 (small-number block rule).",
-      "status": "in_progress",
+      "status": "completed",
       "priority": "P0",
       "createdAt": "2026-10-24T14:23:25Z",
       "createdDate": "2026-10-24",
-      "completedDate": null,
+      "completedDate": "2026-10-30",
       "blocker": "SHIPPED 2026-10-24 23:17Z (row 470). Waits QA xd-2590 live check. Step 2 (Worker fronts off) after the CEO phone test.",
       "notes": [
         "[SECURITY+DEVOPS DPI engineer, live CEO order 27 Oct, measured 2026-10-27T21:59-22:40Z, read-only] NativeFront is LIVE on production (card row 498, CEO YES 26 Oct; the QA CAS-160 'Enabled=false' line is outdated) - `docker exec caspervpn-api printenv` shows CloudfrontFronting__NativeFront__Enabled=true (base appsettings false). Step 2 (Worker fronts off) still waits the phone test: 3 restricted Fronted users in 26-27 Oct hit 'cc-tcp-timeout-cf' / 'cc-wg-nohandshake-cf' through the front road (xd-2627).",
@@ -77133,7 +77172,10 @@
         "[BACKEND live 2026-10-24 23:0x-23:2xZ, CEO in chat: \"Rows 470, 471 and 449YES.\"] production ff8307a89 (cherry-picks 495705f46 = c8278796a, 4daae618f = 7f5ed5732, ff8307a89 = 89769c5a0); build 0 errors, tests 494/494; lock casper-backend-1024-2300-ship taken/released; deploy_api.sh DONE OK 23:17:25Z, image d3a05c4d01de -> 2913c30b2209, rollback caspervpn-api:rollback-202610242314; /health 200. DLL before/after: HeartbeatAdoptBilling 0 -> 2, appsettings FrontHostByServerName 0 -> 1 (Los Angeles = kostel.profitechlb.com), 'DDoS alert raised for server' 1 -> 0. Live traffic proof pending (0 NATIVE front calls and 0 [ERR] in the first 5 min, 02:2x Beirut).",
         "[BACKEND run 2026-10-24 1444, scheduled, unattended] Built + on dev 15:31Z. New setting NativeFront:FrontHostByServerName (server name -> front host); EntryIdByServerName (Worker + JWT) untouched, so the Worker road still works if NativeFront is switched off. Dev: Los Angeles before wss://s12.pompesh.com/ (14:56Z) -> after wss://kostel.profitechlb.com/ (15:31Z); Bangkok Dev wss://jumira.profitechlb.com/; Paris control unchanged. From the main server 15:0xZ: 11 of 12 front names 101 + cert ok; Tokyo 103.106.228.235 times out on 443 and 22 for every name incl. s2-edge (prod Tokyo IsActive=false) - DevOps to check. Rows 470, QA xd-2569.",
         "[QA CAS-160 2026-10-26 19:xZ] BACKEND step-2 plan verified. Step 1 (commit 4daae618fa) confirmed on production; appsettings.json has FrontHostByServerName (11 relays \u2192 profitechlb.com); NativeFront:Enabled=false as designed, flipped by env var post-CEO test. Step 2 ready: set CloudfrontFronting__NativeFront__Enabled=true in production docker-compose.yml caspervpn-api env, then deploy_api.sh. Optional SQL after flip: UPDATE \"CensorshipFallbackDomains\" SET \"IsActive\"=false, \"UpdatedAt\"=now() WHERE \"Domain\" LIKE '%.workers.dev' AND \"IsActive\"=true; Rollback: remove the env var + redeploy. Gate = CEO phone test on Tokyo (morvex.profitechlb.com) and one other relay. (applied by the CEO office 2026-10-26T18:58Z from the helper's comment, Paperclip CAS-154/CAS-160)"
-      ]
+      ],
+      "completedAt": "2026-10-30",
+      "completedBy": "[BACKEND]",
+      "resolution": "[BACKEND run 2026-10-30 22:2xZ] Backend part done (SHIPPED row 470, 24 Oct 23:17Z). Live check moved to QA date watch xd-2730 (1 Nov: real hidden-mode sessions abroad on the new fronts). Step 2 (Worker fronts off) is DEVOPS after the CEO phone test."
     },
     {
       "id": "xd-2557",
