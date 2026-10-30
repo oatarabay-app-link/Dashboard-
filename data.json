@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-30T15:08:51Z",
+  "lastUpdated": "2026-10-30T15:19:23Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 69,
@@ -18495,6 +18495,17 @@
           "met": false,
           "owner": "backend",
           "verify": "after the switch: free users in IR/CN/RU see Amsterdam; country tables 48 h later (python3 tools/dpi_truth_table.py --since <time> --before-after)"
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": null,
+          "addedAt": "2026-10-30T15:20:00Z",
+          "addedBy": "[CTO]",
+          "owner": "[BACKEND]",
+          "test": "READY TO SHIP \u2014 hidden mode: no name lookup for users outside censored countries (xd-2797) \u00b7 why: the App Store app stops with an error when the lookup fails; 2 US users hit it on Los Angeles, one never connected \u00b7 works on the App Store app, no update needed \u00b7 CEO YES 2026-10-30 (live chat): '1. Server: skip lookup (Recommended)' + 'What do u advise go with it' (= fixes 1 + 2; fix 3 = DevOps check only) \u00b7 tested on dev: see evidence \u00b7 rollback: setting CasperCloak:DohFailover:NonRestrictedFirstTry=false (no deploy) or revert 68b506a",
+          "verify": "dev: GET /api/servers/<LA>/caspercloak-config as a non-restricted user -> casperCloakDomain null + domainPool null (before 15:18Z: s12.pompesh.com); prod after ship: same + api log 'not-restricted first try, xd-2797'; ConnectFailureEvents CasperCloakHidingError:0 from non-restricted users = 0 over 7 days",
+          "evidence": "development 68b506a (rebased on e2feda0, same ServersController blob bbed82e9ad as built); dotnet build Release 0 errors, control with a typo fails CS0103."
         }
       ],
       "progress": 0,
@@ -80483,7 +80494,7 @@
       "from": "[IOS]",
       "to": "[QA]",
       "title": "Handoff from IOS: [P1] Check build 84 (branch ios/94-tunnel-start-2787 418d940): tunnel that never starts + data cap not a failure",
-      "description": "Build 84 = build 83 + 3 commits (a818b67 xd-2778, adef823 xd-2787, 729cfd1 version 84). CEO builds it with _ios/build84.command (row 545). Checks: (1) harness: `SWIFTC=<swift 6.1.2> tools/ios-tests/xd2787/run.sh` on ios/94 = 7 passed 0 failed (run 30 Oct 13:3xZ; mutation control fails 2). (2) Phone, hidden mode on: connect, then switch Wi-Fi network / toggle Wi-Fi during the session; reconnect. Send report must show '[XD-2787] NEVPNStatus ->' lines; if the tunnel does not come back, the log must show '[XD-2787] tunnel extension did not start ... Recovery 1' (and 2) on the SAME server, never a walk over other servers, and one message 'Couldn't start the VPN. Tap Connect to try again.'. (3) ConnectFailureEvents: a row from such a stop has DetailedCategory 'extension-not-started'; a free account over 512 MB gets the paywall and NO ConnectFailureEvents row with ErrorCode 'CasperVPN.APIError:2' (before: 4 rows for 65fd9bed 30 Oct 02:41-02:42Z). (4) Normal hidden-mode and WireGuard connects still work (no false 'did not start': log has no Recovery line). Also re-point xd-2721 legs to build 84. | [IOS CEO live 2026-10-30 13:4xZ] CEO: 'restart the iphone is not a message we should send it complicates users' -> message is now 'Couldn't start the VPN. Tap Connect to try again.' (418d940, harness 8/8 incl. 'no restart / Settings' check). Also check: recovery 2 (remove + re-save profile) may show iOS's 'Allow VPN configuration' prompt - note on the phone whether it appears.",
+      "description": "Build 84 = build 83 + 3 commits (a818b67 xd-2778, adef823 xd-2787, 729cfd1 version 84). CEO builds it with _ios/build84.command (row 545). Checks: (1) harness: `SWIFTC=<swift 6.1.2> tools/ios-tests/xd2787/run.sh` on ios/94 = 7 passed 0 failed (run 30 Oct 13:3xZ; mutation control fails 2). (2) Phone, hidden mode on: connect, then switch Wi-Fi network / toggle Wi-Fi during the session; reconnect. Send report must show '[XD-2787] NEVPNStatus ->' lines; if the tunnel does not come back, the log must show '[XD-2787] tunnel extension did not start ... Recovery 1' (and 2) on the SAME server, never a walk over other servers, and one message 'Couldn't start the VPN. Tap Connect to try again.'. (3) ConnectFailureEvents: a row from such a stop has DetailedCategory 'extension-not-started'; a free account over 512 MB gets the paywall and NO ConnectFailureEvents row with ErrorCode 'CasperVPN.APIError:2' (before: 4 rows for 65fd9bed 30 Oct 02:41-02:42Z). (4) Normal hidden-mode and WireGuard connects still work (no false 'did not start': log has no Recovery line). Also re-point xd-2721 legs to build 84. | [IOS CEO live 2026-10-30 13:4xZ] CEO: 'restart the iphone is not a message we should send it complicates users' -> message is now 'Couldn't start the VPN. Tap Connect to try again.' (418d940, harness 8/8 incl. 'no restart / Settings' check). Also check: recovery 2 (remove + re-save profile) may show iOS's 'Allow VPN configuration' prompt - note on the phone whether it appears. | [CTO 30 Oct 15:2xZ] build 84 now also has xd-2797 (e9275a2): pick hidden mode by hand on a server that fails (e.g. block it with a bad server) -> the app tries the next servers in hidden mode and says where it landed; never switches to plain WireGuard.",
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-10-30T13:28:40Z",
@@ -80558,7 +80569,7 @@
       "from": "[IOS]",
       "to": "[DEVOPS]",
       "title": "Handoff from IOS: [P1] Los Angeles hidden mode fails for real users: 1 success vs 8 failures since 24 Oct (both US 'lookup' errors were on LA)",
-      "description": "Measured 30 Oct 13:5xZ (prod DB, read-only): since 24 Oct hidden-mode (Protocol 3) ConnectionLogs on Los Angeles 847e2d36 = 1; ConnectFailureEvents caspercloak on LA = 8 (Amsterdam 25 ok / 6 fail, Singapore 12/13). Both US CasperCloakHidingError rows were LA (b994ab38 27 Oct 03:27Z cellular, b60246e9 29 Oct 18:43Z wifi; pool s12.pompesh.com + bexira.shortaalmashahir.com). b994ab38 connected on another server 5 s later (5 h session) and failed LA again 12:17Z (tcp-timeout) then moved again; b60246e9 has 0 ConnectionLogs ever = lost user. Today from the cloud box both LA names resolve (Cloudflare + Google DoH -> 208.87.243.205) and answer https 200 (control s1 200), so LA is up from here - the failure is on the users' path. Do: run tools/dpi_truth_table.py for LA, compare LA relay config/cert/nginx front with Amsterdam (changed 24 Oct: own-cert-by-SNI + nginx-in-front), check LA relay logs for 27 Oct 03:27Z / 29 Oct 18:43Z, and whether US carriers reach 208.87.243.205:443. If LA cannot be fixed fast: DECISION row to take LA out of hidden-mode hand-out.",
+      "description": "Measured 30 Oct 13:5xZ (prod DB, read-only): since 24 Oct hidden-mode (Protocol 3) ConnectionLogs on Los Angeles 847e2d36 = 1; ConnectFailureEvents caspercloak on LA = 8 (Amsterdam 25 ok / 6 fail, Singapore 12/13). Both US CasperCloakHidingError rows were LA (b994ab38 27 Oct 03:27Z cellular, b60246e9 29 Oct 18:43Z wifi; pool s12.pompesh.com + bexira.shortaalmashahir.com). b994ab38 connected on another server 5 s later (5 h session) and failed LA again 12:17Z (tcp-timeout) then moved again; b60246e9 has 0 ConnectionLogs ever = lost user. Today from the cloud box both LA names resolve (Cloudflare + Google DoH -> 208.87.243.205) and answer https 200 (control s1 200), so LA is up from here - the failure is on the users' path. Do: run tools/dpi_truth_table.py for LA, compare LA relay config/cert/nginx front with Amsterdam (changed 24 Oct: own-cert-by-SNI + nginx-in-front), check LA relay logs for 27 Oct 03:27Z / 29 Oct 18:43Z, and whether US carriers reach 208.87.243.205:443. If LA cannot be fixed fast: DECISION row to take LA out of hidden-mode hand-out. | [CTO live 30 Oct 15:2xZ] CEO YES 2026-10-30 (live chat): '1. Server: skip lookup (Recommended)' + 'What do u advise go with it' (= fixes 1 + 2; fix 3 = DevOps check only). Measured: LA relay healthy - canary s12 96/96 every day, 101 on /cc by both names and no-SNI; b994ab38 failed LA by lookup AND later by direct IP (tcp-timeout) then worked on Dusseldorf = LA address not reachable from his network. Fixes 1 (server, development 68b506a) and 2 (iOS ios/94 e9275a2) done by CTO. DEVOPS keeps part 3: are US networks blocking 208.87.243.205? If yes, DECISION row: move LA to a spare IP.",
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-10-30T14:13:23Z",
