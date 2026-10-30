@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-30T11:51:18Z",
+  "lastUpdated": "2026-10-30T11:59:08Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 69,
@@ -18209,8 +18209,8 @@
           "owner": "[DEVOPS]",
           "test": "CEO YES 2026-10-29 (QA live chat, 19:3xZ): 'yes for fire wall' | READY TO SHIP \u2014 close the open door at the end of the main server's firewall (xd-2718) \u00b7 what: the last firewall rule accepts almost any new connection (274,000 packets so far), so the 'block everything else' setting does nothing; first list what that rule has been letting in (ports only), add explicit allows for anything real, then remove the catch-all rule \u00b7 why: security-lockdown-p1 AC14 \u00b7 rollback: re-add the one rule (saved copy of the rules taken first) \u00b7 test: from outside, a closed port times out, the website/API/VPN ports still answer, and the API /health stays 200",
           "verify": "main server: iptables -L INPUT -n -v --line-numbers | tail -3 -> no ACCEPT ctstate NEW without a port; from the Mac VM: TCP to a closed port fails, 443 + 22 open (control); api.caspervpn.com/health 200",
-          "evidence": "[DEVOPS run 2026-10-30 0725, scheduled, unattended, 2026-10-30T07:4xZ] MEASURED read-only 07:2xZ (main server, iptables -L INPUT -v): rule 64 (count of NEW reaching the catch-all) 322K pkts, rule 65 catch-all ACCEPT 287K. Removing rule 65 as-is WOULD BREAK services that only the catch-all lets in: tcp 9443 caspercloak-ws (python3 on host, 3,269 NEW counted by rule 61), udp 1701 xl2tpd (137), udp 51821 wg1 (1). Host ports also reached from Docker bridges through INPUT: 9097 (python3), 4444/5002 (python3), 5011 (172.20.0.1) - their share of rule 64 is unknown. Ship plan v2: (1) add explicit ACCEPT for tcp 9443, udp 1701, udp 51821 and for -i docker0/br-+ to the host ports in use; (2) count rule 64 again for 1 h; (3) then delete rule 65; rollback = iptables-restore of the saved copy. NOT SHIPPED: this unattended run was refused writes on live servers (07:3xZ; even counter-only rules). Needs a live session (CEO present) - not the 02-04Z window alone. || [QA live 2026-10-29 z, CEO in chat 19:3xZ: 'yes for fire wall and keep going the new built tests can be compiled in one task when all changes are in the built for testong'] CEO said yes in the QA chat. Owner [DEVOPS] ships under the lock with a saved copy of the rules; QA re-runs the verify after.",
-          "blocker": "needs a LIVE DevOps session (unattended runs cannot write to live servers); ship plan v2 in evidence (allow 9443/1701/51821 + docker bridges first)"
+          "evidence": "[DEVOPS live 2026-10-30 11:5x-12:0xZ, CEO Cowork 'yes row 535', 2026-10-30T11:59:00Z] STEP 1 DONE (plan v2, live session): saved iptables-save -> /root/reports/devops1030-1200/iptables-before.rules (246 lines); inserted explicit ACCEPTs before the catch-all: tcp 9443 (caspercloak-ws), udp 1701 (l2tp), udp 51821 (wg1 Double VPN), -i docker0, -i br-+ (rules 64-68); API /health 200. Not yet persisted to disk (a reboot would drop only these additions; the catch-all is still there). STEP 2: re-read the 'anything else' counter (rule 69) after ~1 h. STEP 3: delete the catch-all (rule 70) in a live session, prove, persist. || [DEVOPS run 2026-10-30 0725, scheduled, unattended, 2026-10-30T07:4xZ] MEASURED read-only 07:2xZ (main server, iptables -L INPUT -v): rule 64 (count of NEW reaching the catch-all) 322K pkts, rule 65 catch-all ACCEPT 287K. Removing rule 65 as-is WOULD BREAK services that only the catch-all lets in: tcp 9443 caspercloak-ws (python3 on host, 3,269 NEW counted by rule 61), udp 1701 xl2tpd (137), udp 51821 wg1 (1). Host ports also reached from Docker bridges through INPUT: 9097 (python3), 4444/5002 (python3), 5011 (172.20.0.1) - their share of rule 64 is unknown. Ship plan v2: (1) add explicit ACCEPT for tcp 9443, udp 1701, udp 51821 and for -i docker0/br-+ to the host ports in use; (2) count rule 64 again for 1 h; (3) then delete rule 65; rollback = iptables-restore of the saved copy. NOT SHIPPED: this unattended run was refused writes on live servers (07:3xZ; even counter-only rules). Needs a live session (CEO present) - not the 02-04Z window alone. || [QA live 2026-10-29 z, CEO in chat 19:3xZ: 'yes for fire wall and keep going the new built tests can be compiled in one task when all changes are in the built for testong'] CEO said yes in the QA chat. Owner [DEVOPS] ships under the lock with a saved copy of the rules; QA re-runs the verify after.",
+          "blocker": "step 3 (delete the catch-all) in the next live DevOps session after 13:00Z 30 Oct (CEO present); unattended runs are refused live-server writes"
         },
         {
           "met": false,
@@ -79205,7 +79205,7 @@
       "createdAt": "2026-10-29T19:54:52Z",
       "createdDate": "2026-10-29",
       "completedDate": "2026-10-30",
-      "notes": "[DEVOPS live 2026-10-29 23:2x-23:3xZ, CEO Cowork, 2026-10-29T23:31:25Z] CEO chose B: logging stopped and all existing IP-bearing files deleted 23:30Z (see card row 536). Left for Legal: (1) does the privacy policy / any user need telling; (2) is a written internal record of what existed + when deleted enough (this note is that record: 492 detail files, 133 distinct client IPs, 18 users, 16 Feb-29 Oct 2026, deleted 29 Oct 23:30Z).",
+      "notes": "[DEVOPS live 2026-10-30 11:5x-12:0xZ, CEO Cowork 'yes row 535', 2026-10-30T11:59:00Z] CHECKED (counts only): backup.sh tar = only the repo backups folder (0 /var/log refs); pg_backup.sh = database only; newest repo tarball 20261030_020002.tar.gz: 0 freeradius paths; off-site copies on the dev server: 0 files named radius/detail-*/radwtmp; whole main-server disk: 0 detail-2026*/radwtmp* files. No copy left in our backups. NOT CHECKED (no access): DigitalOcean droplet snapshots/weekly backups of the main server - if that feature is on, older images still hold the files until they expire; CEO to check the DigitalOcean panel (Droplet > Backups/Snapshots). || [DEVOPS live 2026-10-29 23:2x-23:3xZ, CEO Cowork, 2026-10-29T23:31:25Z] CEO chose B: logging stopped and all existing IP-bearing files deleted 23:30Z (see card row 536). Left for Legal: (1) does the privacy policy / any user need telling; (2) is a written internal record of what existed + when deleted enough (this note is that record: 492 detail files, 133 distinct client IPs, 18 users, 16 Feb-29 Oct 2026, deleted 29 Oct 23:30Z).",
       "completedAt": "2026-10-30",
       "completedBy": "[LEGAL]",
       "resolution": "Review written: memory/departments/legal/reviews/2026-10-30-radius-ip-logs-xd-2725.md. Stopping was required; not a reportable breach on these facts; internal record BR-2026-002 needed; backups may still hold the files -> DEVOPS xd-2774; policy line + user notice -> CEO card row 557.",
@@ -79887,11 +79887,15 @@
       "to": "[DEVOPS]",
       "title": "Handoff from LEGAL: [P1] FreeRADIUS IPs: are the deleted IKEv2 log files still inside any backup?",
       "description": "[GROWTH run 2026-10-30 0754, scheduled, unattended, 2026-10-30T08:05:25Z] Legal review memory/departments/legal/reviews/2026-10-30-radius-ip-logs-xd-2725.md point 4: backup.sh (tar.gz) and pg_backup.sh run daily on the main server. Check, counts only, whether /var/log/freeradius (detail files, radwtmp, acct-forward.log) is in any backup or snapshot on the main server or offsite; if yes, list how many copies and propose delete/expiry on the CEO card (deleting needs CEO YES). Never print a line of those files.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-10-30T08:05:31Z",
       "createdDate": "2026-10-30",
-      "completedDate": null
+      "completedDate": "2026-10-30",
+      "completedAt": "2026-10-30",
+      "completedBy": "[DEVOPS]",
+      "resolution": "[DEVOPS live 2026-10-30 11:5x-12:0xZ, CEO Cowork 'yes row 535', 2026-10-30T11:59:00Z] CHECKED (counts only): backup.sh tar = only the repo backups folder (0 /var/log refs); pg_backup.sh = database only; newest repo tarball 20261030_020002.tar.gz: 0 freeradius paths; off-site copies on the dev server: 0 files named radius/detail-*/radwtmp; whole main-server disk: 0 detail-2026*/radwtmp* files. No copy left in our backups. NOT CHECKED (no access): DigitalOcean droplet snapshots/weekly backups of the main server - if that feature is on, older images still hold the files until they expire; CEO to check the DigitalOcean panel (Droplet > Backups/Snapshots).",
+      "resultingHandoff": "answer for LEGAL xd-2725; CEO checks DigitalOcean backups"
     },
     {
       "id": "xd-2775",
