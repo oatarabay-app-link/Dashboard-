@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-30T07:08:34Z",
+  "lastUpdated": "2026-10-30T07:35:51Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 69,
@@ -8209,7 +8209,7 @@
           "passed": false,
           "verifiedBy": "none",
           "verifiedAt": "2026-09-24T21:05:00Z",
-          "evidence": "[DEVOPS live 2026-10-29 23:4xZ, CEO Cowork, 2026-10-29T23:33:14Z] CORRECTION to my 18:4xZ note: 'INPUT DROP on all production' was true for the POLICY only. QA xd-2718 found the main server's INPUT chain ends in a catch-all NEW ACCEPT rule (~65), so in practice it is open. My check read only the policy line. Fix = card row 535 (CEO YES 29 Oct), planned for the 30 Oct 02-04Z window together with the port lock-down. Relays not re-checked for a catch-all yet - same read needed. || [QA 2026-10-29 y, 'Casper qa' run continued live, 2026-10-29T19:3xZ] FAIL (not ticked): -P INPUT DROP on 11/11 relays + main + dev (Bangkok test ACCEPT), BUT the main server's last INPUT rule 65 is ACCEPT ctstate NEW limit 625/sec (catch-all, 274K packets) = an unconditional NEW ACCEPT -> [DEVOPS] xd-2718. Relays' rule tails not read this run. || RE-OPENED 2026-10-29 (CEO: 'start closing the 10 rows'). MEASURED 18:4xZ: iptables -P INPUT DROP on all 11 relays + main + dev (Bangkok dev = ACCEPT). The criterion is met in production. [DEVOPS live 2026-10-29 18:1x-19:0xZ, CEO Cowork: 'yes you should add this and we should start closing the 10 rows', 2026-10-29T18:39:09Z] || DEFERRED to Nov 2026 - firewall default DROP on every server - first measure what still uses the catch-all, then a READY TO SHIP row. [DEVOPS live 2026-10-29 01:1x-01:4xZ, CEO Cowork 'finalize only open tasks', 2026-10-29T01:25:00Z] || [DEVOPS run 2026-10-11 d, scheduled, unattended, 2026-10-11T03:30Z] STILL FAIL, read 03:3xZ on the main server: INPUT policy DROP, but rule 69 'ctstate NEW limit 625/sec ACCEPT' (catch-all) has 233K packets / 13M; the measuring rule 68 just above it counts the same 233K = new connections that still rely on the catch-all. Removing it is a live firewall change on production -> needs a CEO YES after we list what those 233K are (next step: a LOG rule sample by port, read-only). || [FAIL] QA 2026-09-30: INPUT policy is DROP, but the last rule (69) 'ctstate NEW limit 625/sec ACCEPT' still accepts every new inbound connection: 48,696 packets matched the measuring rule 68 ('anything else still relying on the catch-all'). From Bangkok, 9443 answers (not in this row's allow-list). Open under xd-1014 [DEVOPS]. | prior: QA 2026-09-24 PASS: iptables -S INPUT: -P INPUT DROP.",
+          "evidence": "[DEVOPS run 2026-10-30 0725, scheduled, unattended, 2026-10-30T07:4xZ] MEASURED read-only 07:2xZ (main server, iptables -L INPUT -v): rule 64 (count of NEW reaching the catch-all) 322K pkts, rule 65 catch-all ACCEPT 287K. Removing rule 65 as-is WOULD BREAK services that only the catch-all lets in: tcp 9443 caspercloak-ws (python3 on host, 3,269 NEW counted by rule 61), udp 1701 xl2tpd (137), udp 51821 wg1 (1). Host ports also reached from Docker bridges through INPUT: 9097 (python3), 4444/5002 (python3), 5011 (172.20.0.1) - their share of rule 64 is unknown. Ship plan v2: (1) add explicit ACCEPT for tcp 9443, udp 1701, udp 51821 and for -i docker0/br-+ to the host ports in use; (2) count rule 64 again for 1 h; (3) then delete rule 65; rollback = iptables-restore of the saved copy. NOT SHIPPED: this unattended run was refused writes on live servers (07:3xZ; even counter-only rules). Needs a live session (CEO present) - not the 02-04Z window alone. || [DEVOPS live 2026-10-29 23:4xZ, CEO Cowork, 2026-10-29T23:33:14Z] CORRECTION to my 18:4xZ note: 'INPUT DROP on all production' was true for the POLICY only. QA xd-2718 found the main server's INPUT chain ends in a catch-all NEW ACCEPT rule (~65), so in practice it is open. My check read only the policy line. Fix = card row 535 (CEO YES 29 Oct), planned for the 30 Oct 02-04Z window together with the port lock-down. Relays not re-checked for a catch-all yet - same read needed. || [QA 2026-10-29 y, 'Casper qa' run continued live, 2026-10-29T19:3xZ] FAIL (not ticked): -P INPUT DROP on 11/11 relays + main + dev (Bangkok test ACCEPT), BUT the main server's last INPUT rule 65 is ACCEPT ctstate NEW limit 625/sec (catch-all, 274K packets) = an unconditional NEW ACCEPT -> [DEVOPS] xd-2718. Relays' rule tails not read this run. || RE-OPENED 2026-10-29 (CEO: 'start closing the 10 rows'). MEASURED 18:4xZ: iptables -P INPUT DROP on all 11 relays + main + dev (Bangkok dev = ACCEPT). The criterion is met in production. [DEVOPS live 2026-10-29 18:1x-19:0xZ, CEO Cowork: 'yes you should add this and we should start closing the 10 rows', 2026-10-29T18:39:09Z] || DEFERRED to Nov 2026 - firewall default DROP on every server - first measure what still uses the catch-all, then a READY TO SHIP row. [DEVOPS live 2026-10-29 01:1x-01:4xZ, CEO Cowork 'finalize only open tasks', 2026-10-29T01:25:00Z] || [DEVOPS run 2026-10-11 d, scheduled, unattended, 2026-10-11T03:30Z] STILL FAIL, read 03:3xZ on the main server: INPUT policy DROP, but rule 69 'ctstate NEW limit 625/sec ACCEPT' (catch-all) has 233K packets / 13M; the measuring rule 68 just above it counts the same 233K = new connections that still rely on the catch-all. Removing it is a live firewall change on production -> needs a CEO YES after we list what those 233K are (next step: a LOG rule sample by port, read-only). || [FAIL] QA 2026-09-30: INPUT policy is DROP, but the last rule (69) 'ctstate NEW limit 625/sec ACCEPT' still accepts every new inbound connection: 48,696 packets matched the measuring rule 68 ('anything else still relying on the catch-all'). From Bangkok, 9443 answers (not in this row's allow-list). Open under xd-1014 [DEVOPS]. | prior: QA 2026-09-24 PASS: iptables -S INPUT: -P INPUT DROP.",
           "met": false,
           "verifiedDate": "2026-09-30",
           "verifiedByRaw": "qa-sweep-2026-09-30-fail",
@@ -8218,7 +8218,7 @@
           "verify": "brain: iptables -L INPUT -n -v --line-numbers | tail -3 -> no unconditional NEW ACCEPT at the end",
           "verifiedByPrevious": "tested",
           "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored",
-          "blocker": "card row 535 ship in the 30 Oct 02-04Z window (main server catch-all ACCEPT), then the same catch-all read on the 11 relays, then QA",
+          "blocker": "card row 535 ship plan v2 in a LIVE DevOps session (unattended runs cannot write to live servers), then the catch-all read on the 11 relays, then QA",
           "dueBy": "2026-11-05"
         },
         {
@@ -18193,7 +18193,8 @@
           "owner": "[DEVOPS]",
           "test": "CEO YES 2026-10-29 (QA live chat, 19:3xZ): 'yes for fire wall' | READY TO SHIP \u2014 close the open door at the end of the main server's firewall (xd-2718) \u00b7 what: the last firewall rule accepts almost any new connection (274,000 packets so far), so the 'block everything else' setting does nothing; first list what that rule has been letting in (ports only), add explicit allows for anything real, then remove the catch-all rule \u00b7 why: security-lockdown-p1 AC14 \u00b7 rollback: re-add the one rule (saved copy of the rules taken first) \u00b7 test: from outside, a closed port times out, the website/API/VPN ports still answer, and the API /health stays 200",
           "verify": "main server: iptables -L INPUT -n -v --line-numbers | tail -3 -> no ACCEPT ctstate NEW without a port; from the Mac VM: TCP to a closed port fails, 443 + 22 open (control); api.caspervpn.com/health 200",
-          "evidence": "[QA live 2026-10-29 z, CEO in chat 19:3xZ: 'yes for fire wall and keep going the new built tests can be compiled in one task when all changes are in the built for testong'] CEO said yes in the QA chat. Owner [DEVOPS] ships under the lock with a saved copy of the rules; QA re-runs the verify after."
+          "evidence": "[DEVOPS run 2026-10-30 0725, scheduled, unattended, 2026-10-30T07:4xZ] MEASURED read-only 07:2xZ (main server, iptables -L INPUT -v): rule 64 (count of NEW reaching the catch-all) 322K pkts, rule 65 catch-all ACCEPT 287K. Removing rule 65 as-is WOULD BREAK services that only the catch-all lets in: tcp 9443 caspercloak-ws (python3 on host, 3,269 NEW counted by rule 61), udp 1701 xl2tpd (137), udp 51821 wg1 (1). Host ports also reached from Docker bridges through INPUT: 9097 (python3), 4444/5002 (python3), 5011 (172.20.0.1) - their share of rule 64 is unknown. Ship plan v2: (1) add explicit ACCEPT for tcp 9443, udp 1701, udp 51821 and for -i docker0/br-+ to the host ports in use; (2) count rule 64 again for 1 h; (3) then delete rule 65; rollback = iptables-restore of the saved copy. NOT SHIPPED: this unattended run was refused writes on live servers (07:3xZ; even counter-only rules). Needs a live session (CEO present) - not the 02-04Z window alone. || [QA live 2026-10-29 z, CEO in chat 19:3xZ: 'yes for fire wall and keep going the new built tests can be compiled in one task when all changes are in the built for testong'] CEO said yes in the QA chat. Owner [DEVOPS] ships under the lock with a saved copy of the rules; QA re-runs the verify after.",
+          "blocker": "needs a LIVE DevOps session (unattended runs cannot write to live servers); ship plan v2 in evidence (allow 9443/1701/51821 + docker bridges first)"
         },
         {
           "met": false,
@@ -18360,6 +18361,17 @@
           "passed": false,
           "verifiedBy": "none",
           "evidence": "[GROWTH live 2026-10-30, CEO: \"start keyword work and agi seo work\"]"
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": null,
+          "addedAt": "2026-10-30T07:35:51Z",
+          "addedBy": "[DEVOPS]",
+          "owner": "[DEVOPS]",
+          "test": "READY TO SHIP \u2014 copy one script change to production (xd-2754) \u00b7 what: the firewall no-log install script now also adds the ICMP no-log line, so a server rebuild keeps it \u00b7 why: it is live on 8 relays but only in their files, not in git \u00b7 tested on dev: development 1c8f0a25c, offline test passes, no server touched \u00b7 rollback: git revert \u00b7 advice: yes (low risk, script only)",
+          "verify": "git show origin/production:infrastructure/scripts/ufw_nolog_userports.sh | grep -c xd2715-icmpnolog -> >=1",
+          "evidence": "[DEVOPS run 2026-10-30 0725, scheduled, unattended, 2026-10-30T07:4xZ] development 1c8f0a25c; QA xd-2771"
         }
       ],
       "progress": 0,
@@ -22749,7 +22761,8 @@
       "blocked": false,
       "blocker": "",
       "deps": [],
-      "weight": 0.52
+      "weight": 0.52,
+      "notes": "[DEVOPS run 2026-10-30 0725, scheduled, unattended, 2026-10-30T07:4xZ] Cloudflare Observability pricing from 1 Dec 2026 (xd-2769): ws-edge worker logs 100% of requests; Free = 0.5 GB/day cap then stops (no charge), Paid = 50 GB/month included then $0.25/GB. Expected extra cost $0 at our volume; not measured (plan + GB/day unread)."
     },
     {
       "id": "cc-probe-resistance",
@@ -73536,8 +73549,8 @@
       "createdAt": "2026-10-23T10:39:25Z",
       "createdDate": "2026-10-23",
       "completedDate": null,
-      "blocker": "not blocked: DevOps adds CASPER_ON_BRAIN local mode to factory_bootstrap.ssh_exec on development, one manual run on the brain, then the 1-minute timer + READY TO SHIP row",
-      "notes": "[DEVOPS run 2026-10-29 0724, scheduled, unattended, 2026-10-29T07:4xZ] MEASURED (not built this run - xd-2699 false fleet alarm came first): on the main server tools/ceo_answers.py + dashboard_ssh_push.py present in /root/Casper/Casper-Code; /root/.ssh/github_deploy_dashboard present; no ceo-answers timer (systemctl list-timers: none). Build gap found: ceo_answers.py reads the tap store with fb.ssh_exec (ssh root@178.62.101.221) and factory_bootstrap has NO local mode, so on the brain it would ssh to itself; dashboard_ssh_push uses ~/.ssh/casper_automation, needs DASH_SSH_KEY=/root/.ssh/github_deploy_dashboard + GIT_SSH with -F /dev/null. Next step: add a local-exec switch to fb.ssh_exec (env CASPER_ON_BRAIN=1), test once by hand on the brain, then the timer. || [DEVOPS run 2026-10-28 0724, scheduled, unattended, 2026-10-28T07:27:26Z] KEY NOW WORKS (card row 439 done by the CEO office 27 Oct): ssh -F /dev/null -i /root/.ssh/github_deploy_dashboard -o IdentitiesOnly=yes -T git@github.com -> 'Hi oatarabay-app-link/Dashboard-!' (07:2xZ). Old blocker gone. || [DEVOPS run 2026-10-23 1325, scheduled, unattended, 2026-10-23T13:3xZ] OLD BLOCKER GONE: xd-2395 is fixed (ceo_answers.py recorded 47 answers; this run's --apply = 'nothing new'). NEW MEASURED BLOCKER: the main server's GitHub key is a deploy key for Casper-Code only ('ssh -T git@github.com' -> 'Hi oatarabay-app-link/Casper-Code!'), so a poller there cannot push the board (Dashboard- repo). DECISION row added on the CEO card (A: add a Dashboard- write deploy key for the main server; B: keep it in the department runs, answers land within ~1 h). || [DEVOPS run 2026-10-23 1124, scheduled, unattended, 2026-10-23T11:3xZ] Not started: measured the tap store has 52 taps 11:08-11:25Z and the script returns 0 (QA xd-2395)."
+      "blocker": "brain install needs a LIVE DevOps session (unattended runs refused live-server writes 30 Oct); dev code part = next DevOps run",
+      "notes": "[DEVOPS run 2026-10-30 0725, scheduled, unattended, 2026-10-30T07:4xZ] Blocker rewritten: the code part (CASPER_ON_BRAIN local mode on development) is DevOps work, not blocked; the manual run + 1-minute timer on the brain is a live-server write, which unattended runs are refused (30 Oct 07:3xZ) -> do it in a live DevOps session. || [DEVOPS run 2026-10-29 0724, scheduled, unattended, 2026-10-29T07:4xZ] MEASURED (not built this run - xd-2699 false fleet alarm came first): on the main server tools/ceo_answers.py + dashboard_ssh_push.py present in /root/Casper/Casper-Code; /root/.ssh/github_deploy_dashboard present; no ceo-answers timer (systemctl list-timers: none). Build gap found: ceo_answers.py reads the tap store with fb.ssh_exec (ssh root@178.62.101.221) and factory_bootstrap has NO local mode, so on the brain it would ssh to itself; dashboard_ssh_push uses ~/.ssh/casper_automation, needs DASH_SSH_KEY=/root/.ssh/github_deploy_dashboard + GIT_SSH with -F /dev/null. Next step: add a local-exec switch to fb.ssh_exec (env CASPER_ON_BRAIN=1), test once by hand on the brain, then the timer. || [DEVOPS run 2026-10-28 0724, scheduled, unattended, 2026-10-28T07:27:26Z] KEY NOW WORKS (card row 439 done by the CEO office 27 Oct): ssh -F /dev/null -i /root/.ssh/github_deploy_dashboard -o IdentitiesOnly=yes -T git@github.com -> 'Hi oatarabay-app-link/Dashboard-!' (07:2xZ). Old blocker gone. || [DEVOPS run 2026-10-23 1325, scheduled, unattended, 2026-10-23T13:3xZ] OLD BLOCKER GONE: xd-2395 is fixed (ceo_answers.py recorded 47 answers; this run's --apply = 'nothing new'). NEW MEASURED BLOCKER: the main server's GitHub key is a deploy key for Casper-Code only ('ssh -T git@github.com' -> 'Hi oatarabay-app-link/Casper-Code!'), so a poller there cannot push the board (Dashboard- repo). DECISION row added on the CEO card (A: add a Dashboard- write deploy key for the main server; B: keep it in the department runs, answers land within ~1 h). || [DEVOPS run 2026-10-23 1124, scheduled, unattended, 2026-10-23T11:3xZ] Not started: measured the tap store has 52 taps 11:08-11:25Z and the script returns 0 (QA xd-2395)."
     },
     {
       "id": "xd-2387",
@@ -74530,8 +74543,8 @@
       "createdAt": "2026-10-23T16:26:12Z",
       "createdDate": "2026-10-23",
       "completedDate": null,
-      "blocker": "not blocked: DevOps adds CASPER_ON_BRAIN local mode to factory_bootstrap.ssh_exec on development, one manual run on the brain, then the 1-minute timer + READY TO SHIP row",
-      "notes": "[DEVOPS run 2026-10-29 0724, scheduled, unattended, 2026-10-29T07:4xZ] MEASURED (not built this run - xd-2699 false fleet alarm came first): on the main server tools/ceo_answers.py + dashboard_ssh_push.py present in /root/Casper/Casper-Code; /root/.ssh/github_deploy_dashboard present; no ceo-answers timer (systemctl list-timers: none). Build gap found: ceo_answers.py reads the tap store with fb.ssh_exec (ssh root@178.62.101.221) and factory_bootstrap has NO local mode, so on the brain it would ssh to itself; dashboard_ssh_push uses ~/.ssh/casper_automation, needs DASH_SSH_KEY=/root/.ssh/github_deploy_dashboard + GIT_SSH with -F /dev/null. Next step: add a local-exec switch to fb.ssh_exec (env CASPER_ON_BRAIN=1), test once by hand on the brain, then the timer. || [DEVOPS run 2026-10-28 0724, scheduled, unattended, 2026-10-28T07:27:26Z] KEY NOW WORKS (card row 439 done by the CEO office 27 Oct): ssh -F /dev/null -i /root/.ssh/github_deploy_dashboard -o IdentitiesOnly=yes -T git@github.com -> 'Hi oatarabay-app-link/Dashboard-!' (07:2xZ). Old blocker gone. || [DEVOPS run 2026-10-23 1924, scheduled, unattended, 2026-10-23T19:2xZ] re-checked on the main server: ssh -F /dev/null -i /root/.ssh/github_deploy_dashboard -o IdentitiesOnly=yes -T git@github.com -> Permission denied (publickey). Key still not added (card row 439). Main server 6.4 GB free (87%), API /health 200. Blocker unchanged. || [DEVOPS run 2026-10-23 1824, scheduled, unattended, 2026-10-23T18:2xZ] re-checked 18:24Z on the main server: ssh -i /root/.ssh/github_deploy_dashboard -T git@github.com -> 'Permission denied (publickey)' = the CEO has not added the deploy key yet (card ACTION row 439). Blocker unchanged. || [DEVOPS run 2026-10-23 1724, scheduled, unattended, 2026-10-23T17:32:46Z] Key made on the main server: /root/.ssh/github_deploy_dashboard (ed25519, mode 600; private half never printed) + .pub, fingerprint SHA256:Z8K6uhYs6DB43OkyMJ3G2glBP28e89CVwa+kAd//qrA. Control: ssh -F /dev/null -i <key> -o IdentitiesOnly=yes -T git@github.com = 'Permission denied (publickey)' (not added yet - expected). TRAP: without -F /dev/null the Host github.com entry in /root/.ssh/config adds github_deploy_prod and a read of the public Dashboard- repo succeeds with the WRONG key - the recorder must use -F /dev/null (or its own Host alias). Public half put on the CEO card as an ACTION row. skill: none matched.",
+      "blocker": "brain install needs a LIVE DevOps session (unattended runs refused live-server writes 30 Oct); dev code part = next DevOps run",
+      "notes": "[DEVOPS run 2026-10-30 0725, scheduled, unattended, 2026-10-30T07:4xZ] Blocker rewritten: the code part (CASPER_ON_BRAIN local mode on development) is DevOps work, not blocked; the manual run + 1-minute timer on the brain is a live-server write, which unattended runs are refused (30 Oct 07:3xZ) -> do it in a live DevOps session. || [DEVOPS run 2026-10-29 0724, scheduled, unattended, 2026-10-29T07:4xZ] MEASURED (not built this run - xd-2699 false fleet alarm came first): on the main server tools/ceo_answers.py + dashboard_ssh_push.py present in /root/Casper/Casper-Code; /root/.ssh/github_deploy_dashboard present; no ceo-answers timer (systemctl list-timers: none). Build gap found: ceo_answers.py reads the tap store with fb.ssh_exec (ssh root@178.62.101.221) and factory_bootstrap has NO local mode, so on the brain it would ssh to itself; dashboard_ssh_push uses ~/.ssh/casper_automation, needs DASH_SSH_KEY=/root/.ssh/github_deploy_dashboard + GIT_SSH with -F /dev/null. Next step: add a local-exec switch to fb.ssh_exec (env CASPER_ON_BRAIN=1), test once by hand on the brain, then the timer. || [DEVOPS run 2026-10-28 0724, scheduled, unattended, 2026-10-28T07:27:26Z] KEY NOW WORKS (card row 439 done by the CEO office 27 Oct): ssh -F /dev/null -i /root/.ssh/github_deploy_dashboard -o IdentitiesOnly=yes -T git@github.com -> 'Hi oatarabay-app-link/Dashboard-!' (07:2xZ). Old blocker gone. || [DEVOPS run 2026-10-23 1924, scheduled, unattended, 2026-10-23T19:2xZ] re-checked on the main server: ssh -F /dev/null -i /root/.ssh/github_deploy_dashboard -o IdentitiesOnly=yes -T git@github.com -> Permission denied (publickey). Key still not added (card row 439). Main server 6.4 GB free (87%), API /health 200. Blocker unchanged. || [DEVOPS run 2026-10-23 1824, scheduled, unattended, 2026-10-23T18:2xZ] re-checked 18:24Z on the main server: ssh -i /root/.ssh/github_deploy_dashboard -T git@github.com -> 'Permission denied (publickey)' = the CEO has not added the deploy key yet (card ACTION row 439). Blocker unchanged. || [DEVOPS run 2026-10-23 1724, scheduled, unattended, 2026-10-23T17:32:46Z] Key made on the main server: /root/.ssh/github_deploy_dashboard (ed25519, mode 600; private half never printed) + .pub, fingerprint SHA256:Z8K6uhYs6DB43OkyMJ3G2glBP28e89CVwa+kAd//qrA. Control: ssh -F /dev/null -i <key> -o IdentitiesOnly=yes -T git@github.com = 'Permission denied (publickey)' (not added yet - expected). TRAP: without -F /dev/null the Host github.com entry in /root/.ssh/config adds github_deploy_prod and a read of the public Dashboard- repo succeeds with the WRONG key - the recorder must use -F /dev/null (or its own Host alias). Public half put on the CEO card as an ACTION row. skill: none matched.",
       "updatedAt": "2026-10-23T17:32:46Z"
     },
     {
@@ -79004,7 +79017,9 @@
       "priority": "P1",
       "createdAt": "2026-10-29T19:30:05Z",
       "createdDate": "2026-10-29",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[DEVOPS run 2026-10-30 0725, scheduled, unattended, 2026-10-30T07:4xZ] MEASURED read-only 07:2xZ (main server, iptables -L INPUT -v): rule 64 (count of NEW reaching the catch-all) 322K pkts, rule 65 catch-all ACCEPT 287K. Removing rule 65 as-is WOULD BREAK services that only the catch-all lets in: tcp 9443 caspercloak-ws (python3 on host, 3,269 NEW counted by rule 61), udp 1701 xl2tpd (137), udp 51821 wg1 (1). Host ports also reached from Docker bridges through INPUT: 9097 (python3), 4444/5002 (python3), 5011 (172.20.0.1) - their share of rule 64 is unknown. Ship plan v2: (1) add explicit ACCEPT for tcp 9443, udp 1701, udp 51821 and for -i docker0/br-+ to the host ports in use; (2) count rule 64 again for 1 h; (3) then delete rule 65; rollback = iptables-restore of the saved copy. NOT SHIPPED: this unattended run was refused writes on live servers (07:3xZ; even counter-only rules). Needs a live session (CEO present) - not the 02-04Z window alone.",
+      "blocker": "live DevOps session needed for row 535 (plan v2 on the row)"
     },
     {
       "id": "xd-2719",
@@ -79490,11 +79505,15 @@
       "to": "[DEVOPS]",
       "title": "Handoff from DEVOPS: [P3] Fold the xd-2715 ICMP no-log line into git ufw_nolog_userports.sh",
       "description": "[DEVOPS live 2026-10-30 00:5xZ, CEO Cowork 'run what is still open', 2026-10-30T00:46:15Z] The rule is live on 8 relays but only in /etc/ufw/before*.rules; add it to infrastructure/scripts/ufw_nolog_userports.sh apply-rule (dev, then production) so a re-install keeps it.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P3",
       "createdAt": "2026-10-30T00:46:19Z",
       "createdDate": "2026-10-30",
-      "completedDate": null
+      "completedDate": "2026-10-30",
+      "completedAt": "2026-10-30",
+      "completedBy": "[DEVOPS]",
+      "resolution": "Done on development 1c8f0a25c (bash -n ok, offline idempotency test ok, order = live MTL). Production copy waits a CEO YES (READY TO SHIP row added). No live change - the rule is already live on 8 relays.",
+      "resultingHandoff": "xd-2771 to [QA]"
     },
     {
       "id": "xd-2755",
@@ -79623,11 +79642,15 @@
       "to": "[DEVOPS]",
       "title": "Handoff from DEVOPS: [P1] Hong Kong relay still drops UDP packets after the buffer fix (+11,207 in 24 h)",
       "description": "[DEVOPS 2026-10-30 01:3xZ, self-scheduled check in the CEO live session, 2026-10-30T01:34:32Z] UdpRcvbufErrors 24 h after the 29 Oct 01:2xZ baseline (drop-in present 11/11): MX 28->28, MIA 374->374, MTL 42,906->42,906, SGP 102,143->102,143, SYD 8,185->8,185, SAO 2,918->2,918, TYO 55->55, AM2 549,291->549,291, DU 967,614->967,614, LA 31,986->31,986 = 0 growth on 10 relays (DU was ~4,000/day, AM2 ~2,850/day before). EXCEPTION: Hong Kong 500,119 -> 511,326 (+11,207 in 24 h, more than its ~3,440/day before). Next: on HK compare the running caspercloak_ws.py md5 + its effective SO_RCVBUF (ss -ump) with Montreal, check net.core.rmem_max, CPU steal and how many sessions HK carries; HK is the busiest relay.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-10-30T01:34:37Z",
       "createdDate": "2026-10-30",
-      "completedDate": null
+      "completedDate": "2026-10-30",
+      "completedAt": "2026-10-30",
+      "completedBy": "[DEVOPS]",
+      "resolution": "Cause found (read-only): HK's ongoing UdpRcvbufErrors growth is strongSwan charon's DHCP-plugin socket on UDP 68 (receive buffer 2,304 bytes) dropping DHCP broadcasts on the provider LAN - NOT the CasperCloak relay. Proof: 2 reads 40 s apart on node-hk 07:2xZ: socket 0.0.0.0:68 drops 68,473->68,479 and UdpRcvbufErrors 514,073->514,079 (+6 each, 1:1); no other UDP socket has drops; ~13k/day = matches the +11,207/24 h. Montreal has the same :68 socket with d0 (quiet LAN). HK IKEv2 uses a static pool (rightsourceip=10.10.10.0/24), so the dhcp plugin is unused. Users unaffected. Optional cleanup (fleet change, Bangkok first, CEO YES): /etc/strongswan.d/charon/dhcp.conf load = no + charon restart; or make the drop check read per-socket drops of caspercloak-ws only. Side finding: HK caspercloak_ws.py md5 0ec4675d (546 l) != Montreal b53904fd (505 l) - both have the xd-883 rcvbuf code + CC_UDP_RCVBUF=4194304; HK has the extra xd-2108 drop-in (auto-off 4 Nov).",
+      "resultingHandoff": "xd-2770 to [QA]"
     },
     {
       "id": "xd-2766",
@@ -79671,9 +79694,37 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CEO: Cloudflare Observability pricing changes from 1 Dec 2026",
       "description": "[CEO office 2026-10-30 07:1xZ, scheduled, unattended, lean] Company inbox 30 Oct: '[Notice] Cloudflare Observability pricing changes starting December 1, 2026'. Check whether we use Workers logs/Observability (workers.dev front) and whether this adds a cost; note the answer on infra-cost-rightsizing. Read only.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P3",
       "createdAt": "2026-10-30T07:08:34Z",
+      "createdDate": "2026-10-30",
+      "completedDate": "2026-10-30",
+      "completedAt": "2026-10-30",
+      "completedBy": "[DEVOPS]",
+      "resolution": "Read only. We DO use Workers Observability: infrastructure/cloudflare-worker/wrangler.toml (ws-edge, the hidden-mode front worker) has [observability] enabled = true, head_sampling_rate = 1.0 (every request logged); staging ws-edge-do-test the same. New pricing from 1 Dec 2026 (developers.cloudflare.com/observability/pricing): Free plan 0.5 GB/day ingestion, 7-day retention, ingestion just STOPS at the cap (no charge); Paid plan 50 GB/month + 10 GB-month storage included, then $0.25/GB ingest, $0.10/GB-month. Our volume is small (hundreds of users), far under 50 GB/month. Expected extra cost: $0. NOT PROVEN: our plan (Free vs Paid) and actual GB/day - not read (needs the Cloudflare dashboard/API). Safe move if ever needed: head_sampling_rate 0.1. Note written on infra-cost-rightsizing.",
+      "resultingHandoff": "none (read-only answer)"
+    },
+    {
+      "id": "xd-2770",
+      "from": "[DEVOPS]",
+      "to": "[QA]",
+      "title": "Handoff from DEVOPS: [P3] Re-check: Hong Kong UDP drop growth is charon port 68, not the relay (xd-2765)",
+      "description": "[DEVOPS run 2026-10-30 0725, scheduled, unattended, 2026-10-30T07:4xZ] Re-run on node-hk, 2 reads 40 s apart: `ss -uanm` drops on 0.0.0.0:68 (charon dhcp plugin) and `nstat -az UdpRcvbufErrors`. PASS = both grow by the same number and caspercloak-ws sockets show d0. DevOps read 07:2xZ: :68 68,473->68,479, UdpRcvbufErrors 514,073->514,079 (+6 each in 40 s).",
+      "status": "pending",
+      "priority": "P3",
+      "createdAt": "2026-10-30T07:35:51Z",
+      "createdDate": "2026-10-30",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2771",
+      "from": "[DEVOPS]",
+      "to": "[QA]",
+      "title": "Handoff from DEVOPS: [P3] Check the ICMP no-log line in git ufw_nolog_userports.sh (xd-2754, development 1c8f0a25c)",
+      "description": "[DEVOPS run 2026-10-30 0725, scheduled, unattended, 2026-10-30T07:4xZ] development 1c8f0a25c: apply-rule now also inserts '-A ufw-before-input -p icmp -m conntrack --ctstate INVALID -m comment --comment xd2715-icmpnolog -j DROP' (v4) before ufw-logging-deny, idempotent; check prints icmp v4=<n>. Offline test (fake RULES_DIR, two runs): order = live Montreal before.rules lines 30-33, second run changes nothing. Verify: git show 1c8f0a25c; RULES_DIR=<tmp> PORTS=80,443 UDP_ALLOWED=1194 bash ufw_nolog_userports.sh apply-rule twice. No live server changed.",
+      "status": "pending",
+      "priority": "P3",
+      "createdAt": "2026-10-30T07:35:51Z",
       "createdDate": "2026-10-30",
       "completedDate": null
     }
