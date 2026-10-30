@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-30T22:45:04Z",
+  "lastUpdated": "2026-10-30T22:46:00Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 69,
@@ -18588,6 +18588,45 @@
           "addedAt": "2026-10-30T21:04:05Z",
           "addedBy": "security",
           "evidence": "[SECURITY live 2026-10-30 18:0x-21:04Z, CEO: \"what else canu keep on working?\" + \"do we still have any passwords in plain sight anywhere for any keys or servers ?\"] Measured tonight; detail memory/departments/security/audit-2026-10-30/REPORT.md section I (private)."
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": null,
+          "verifiedByRaw": null,
+          "verifiedDate": null,
+          "evidence": "",
+          "addedAt": "2026-10-30T22:50:00Z",
+          "addedBy": "[BACKEND]",
+          "owner": "[BACKEND]",
+          "test": "READY TO SHIP (after QA dev check xd-2815) - failure reports stored once + 2 old VPN routes admin-only (xd-2804, xd-2813) \u00b7 why: the same failure was counted up to 5 times (32 of 273), so alarms and the investigator over-count; two old routes let any signed-in account remove another user's WireGuard access or add an L2TP user (inactive today only because a setting is missing) \u00b7 tested on development: 575/575 tests, new tests fail on the old code (04f15a1e0, 2c7dfe1d1) \u00b7 rollback: rollback image tag from deploy_api.sh \u00b7 advice: yes",
+          "verify": "production: same report posted twice -> 1 ConnectFailureEvents row; customer token on POST /api/vpn/wg-disconnect -> 403"
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": null,
+          "verifiedByRaw": null,
+          "verifiedDate": null,
+          "evidence": "",
+          "addedAt": "2026-10-30T22:50:00Z",
+          "addedBy": "[BACKEND]",
+          "owner": "[BACKEND]",
+          "test": "READY TO SHIP (after QA xd-2815, with build 83) - trial length you can switch: 7 or 14 days (xd-2810) \u00b7 what: the server tells the app the trial length (trialDays), mails keyed on the trial end; production then gets setting Trial__Days=14 when you want the 14-day trial \u00b7 why: your 30 Oct yes for 14 days without an app update \u00b7 tested on development 69ed4a360: 575/575 \u00b7 rollback: Trial__Days=7 (no rebuild) \u00b7 advice: ship the code now with 7, switch to 14 the day build 83 is live (marketing fixes the 'free week' mail first)",
+          "verify": "production /api/subscriptions/me shows trialDays; after the switch a new trial ends 14 days later"
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": null,
+          "verifiedByRaw": null,
+          "verifiedDate": null,
+          "evidence": "",
+          "addedAt": "2026-10-30T22:50:00Z",
+          "addedBy": "[BACKEND]",
+          "owner": "[BACKEND]",
+          "test": "READY TO SHIP (after QA xd-2815) - 3 security fixes from the 30 Oct check (xd-2756 items 2, 4, 5) \u00b7 what: password-reset links stored scrambled (a database copy can no longer reset accounts), every password change/reset written to the audit log (no IP), SSH library updated (2 high advisories) \u00b7 tested on development 1813eb315 + 31f247b43: 575/575 \u00b7 note: reset links sent before the ship keep working until they expire (24 h) \u00b7 rollback: rollback image tag \u00b7 advice: yes",
+          "verify": "production: Users.PasswordResetToken of a new reset starts 'sha256:'; AuditLogs has a password_* row after a test change"
         }
       ],
       "progress": 0,
@@ -80321,12 +80360,12 @@
       "to": "[BACKEND]",
       "title": "Handoff from SECURITY: Rate limits must use the visitor's real address + 5 small hardening items (security check 30 Oct)",
       "description": "[SECURITY live 2026-10-30, CEO live chat order] Plain summary (the board is public); file lines, the dev test and the fix design are in memory/departments/security/audit-2026-10-30/REPORT.md (private repo) section B (N1, N3, N5, N6) and section A rows 4, 11, 21, 25, 26. (1) N1: per-visitor limits must key on the real visitor address - pair with the DEVOPS web-server handoff of the same run; prove on dev with the test written in the vault, then a READY TO SHIP row. (2) Upgrade the SSH library that has 2 high advisories (trace its use first; run all tests). (3) Delete the two unused raw-SQL helpers; parameterize the admin key-list query. (4) Store password-reset tokens hashed. (5) Write every password change and reset (user and admin) to the audit log. Dev first; production only on a CEO YES row; hand to QA.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-10-30T00:59:43Z",
       "createdDate": "2026-10-30",
       "completedDate": null,
-      "notes": "[SECURITY live 2026-10-30 14:2x-15:1xZ, CEO: \"what can u keep doing while i do my task ?\"] PART 1 DONE by Security (rate limits on the real visitor address): development e2feda0ca, production 506a7010f, live 15:03Z via the standard API deploy (CEO A row 561). Proof: test server BEFORE = a new made-up address on every call was never limited; AFTER = the same visitor was refused (429) from the 4th call although every call carried a new made-up address; production AFTER = the same - refused from the 4th call (429) at 15:03Z, while another network was still allowed. 6 new tests (3 fail on the old code), 555/555. Also found: the limit middleware runs before sign-in is read, so every limit is per address today (the 'per user' comments are not true). Items 2-5 stay with Backend; suggested item 6: count IPv6 visitors by their /64 block (one home holds a whole block and can rotate inside it). QA: xd-2801. Detail: memory/departments/security/audit-2026-10-30/REPORT.md section H (private). || [SECURITY live 2026-10-30 13:4x-14:5xZ, CEO: \"we need to finalize all points start going\"] UPDATE: DevOps shipped real visitor address on nginx 13:37Z (CEO A row 561; logs now without addresses). The API still keys anonymous limits on the LEFT-most X-Forwarded-For entry, which the visitor controls (nginx appends the real address at the end). Fix: use the X-Real-IP header nginx sets (= real visitor) or the right-most entry; same helper for the login IP block and the country lookup; dev test: anonymous requests with a rotating fake X-Forwarded-For must still reach 429."
+      "notes": "[BACKEND run 2026-10-30 22:2x-22:5xZ, scheduled] Items 2, 4, 5 FIXED on development: (2) 31f247b43 SSH.NET 2024.1.0 -> 2026.0.0 (both advisories fixed in 2026.0.0 per OSV; both are ScpClient, which we never use - only SshClient in server activation); `dotnet list package --vulnerable` = none. (4) 1813eb315 reset/account-setup tokens stored as sha256 (link keeps the raw value); links issued before the ship still work until they expire (raw match only when the stored value has no hash prefix - a stolen DB hash cannot be replayed, test TheStoredHash_cannotBeUsedAsTheToken). (5) 1813eb315 AuditLogs row on user change, e-mail reset and admin reset (no IP, no password). Tests 575/575. Waits QA xd-2815, then CEO YES row. Item 3 (raw-SQL helpers + admin key-list query) still open - next backend run. || [SECURITY live 2026-10-30 14:2x-15:1xZ, CEO: \"what can u keep doing while i do my task ?\"] PART 1 DONE by Security (rate limits on the real visitor address): development e2feda0ca, production 506a7010f, live 15:03Z via the standard API deploy (CEO A row 561). Proof: test server BEFORE = a new made-up address on every call was never limited; AFTER = the same visitor was refused (429) from the 4th call although every call carried a new made-up address; production AFTER = the same - refused from the 4th call (429) at 15:03Z, while another network was still allowed. 6 new tests (3 fail on the old code), 555/555. Also found: the limit middleware runs before sign-in is read, so every limit is per address today (the 'per user' comments are not true). Items 2-5 stay with Backend; suggested item 6: count IPv6 visitors by their /64 block (one home holds a whole block and can rotate inside it). QA: xd-2801. Detail: memory/departments/security/audit-2026-10-30/REPORT.md section H (private). || [SECURITY live 2026-10-30 13:4x-14:5xZ, CEO: \"we need to finalize all points start going\"] UPDATE: DevOps shipped real visitor address on nginx 13:37Z (CEO A row 561; logs now without addresses). The API still keys anonymous limits on the LEFT-most X-Forwarded-For entry, which the visitor controls (nginx appends the real address at the end). Fix: use the X-Real-IP header nginx sets (= real visitor) or the right-most entry; same helper for the login IP block and the country lookup; dev test: anonymous requests with a rotating fake X-Forwarded-For must still reach 429."
     },
     {
       "id": "xd-2757",
@@ -80713,11 +80752,13 @@
       "to": "[BACKEND]",
       "title": "Handoff from LEGAL: [P1] Send the IKEv2 correction email (CEO YES 30 Oct live: \"inform the users\")",
       "description": "[GROWTH live 2026-10-30, CEO Cowork chat, 2026-10-30T12:18:28Z] Text: memory/departments/legal/reviews/2026-10-30-radius-user-notice-and-provider-requests.md \u00a71. Recipients: accounts with an IKEv2 ConnectionLog 16 Feb-29 Oct 2026 (count first, put the count on row 557). Kind 'R1', once per user, same mailer pattern as /root/reports/growth-1030-winback/winback.py. Proof: sent count + 0 errors.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-10-30T12:18:34Z",
       "createdDate": "2026-10-30",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[BACKEND run 2026-10-30 22:2x-22:5xZ, scheduled] NOT SENT - recipient list does not match. Measured (production read-only): accounts with an IKEv2 ConnectionLog 16 Feb-29 Oct = 8 (7 mailable, of which 3 staff/test addresses and 2 Apple relay), but the deleted FreeRADIUS files named 18 users. A mail by the database list would miss up to 10 of the people the notice is for. Waits: [DEVOPS]/[LEGAL] - the 18 usernames from the 29 Oct deletion note (row 536) if they were written down; if not, the CEO decides 'send to the 5 real ones we can find' (card row 557).",
+      "blocker": "Recipient list: DB has 8 IKEv2 accounts, the deleted files named 18 - need the 18 from DEVOPS/LEGAL or a CEO call (row 557)"
     },
     {
       "id": "xd-2784",
@@ -80913,12 +80954,12 @@
       "to": "[BACKEND]",
       "title": "Handoff from CTO: [P1] Country server ranking + 'please update' minimum version + find the 403 refusals (log findings 30 Oct)",
       "description": "(1) 76% of 30-day failures come from builds < 75 that send no reason, and 13 real users still connected on them last week: add a minimum app version to the config/version endpoint so old builds show 'please update' (off by default; READY TO SHIP row). (2) per-country server order in the config the app receives, ranked from the truth table first-try numbers (tools/dpi_truth_table.py), so Gulf/Iran users are not sent to Los Angeles first. (3) APIError:12 = 403 'forbidden' (Swift case numbering, payload cases first) 26 times from 2-3 Lebanon users on WireGuard: find which endpoint refused and why from the API log. (4) on each failure report, store the request's country (Cloudflare country header, country code only - no IP, same as LastLoginCountry) next to the event, because phone language differs from login country on 36 of 49 failures. Check with [LEGAL] that a country code on a failure report fits the no-log policy. Dev first, then [QA].",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-10-30T14:34:52Z",
       "createdDate": "2026-10-30",
       "completedDate": null,
-      "notes": "[CTO live 2026-10-30 15:xxZ, CEO: \"this is not a censor its our app, this needs to be finalized before the new build\"] CORRECTION to item (3): connect_investigator.py lists APIError:12 as a paywall code (free user on a premium server -> 403). Check that first; it is probably not a fault."
+      "notes": "[BACKEND run 2026-10-30 22:2x-22:5xZ, scheduled] Item (3) MEASURED (production read-only): ErrorCode is stored as 'CasperVPN.APIError:12' = 36 events, 3 users, ALL on 7 Oct 2026 (none in the 23 days since), all WireGuard, all from Lebanon, on Los Angeles / Duesseldorf / Singapore which are NOT premium servers - so not the premium paywall. Same day as the monthly-limit-reset fault (urgent-monthly-limit-reset, measured 7 Oct). Verdict: old, not happening now; no fix needed for (3). Items (1) minimum version, (2) per-country order, (4) country on the report stay open. || [CTO live 2026-10-30 15:xxZ, CEO: \"this is not a censor its our app, this needs to be finalized before the new build\"] CORRECTION to item (3): connect_investigator.py lists APIError:12 as a paywall code (free user on a premium server -> 403). Check that first; it is probably not a fault."
     },
     {
       "id": "xd-2800",
@@ -80978,11 +81019,12 @@
       "to": "[BACKEND]",
       "title": "Handoff from CTO: [P2] Failure reports are stored up to 5 times - dedupe them",
       "description": "30 d real users: 318 ConnectFailureEvents rows, 273 unique (same UserId, ServerId, ClientTimestamp, ElapsedMsBeforeFailure); 32 groups duplicated, max 5 copies, often ~30 s apart (phone retry upload). Ignore a report that matches an existing row on those 4 fields (or a unique index), on development first; tell [IOS] if the phone resends on a timeout it should not. Counts, alarms and the investigator all over-count today.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P2",
       "createdAt": "2026-10-30T18:15:51Z",
       "createdDate": "2026-10-30",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[BACKEND run 2026-10-30 22:2x-22:5xZ, scheduled] FIXED on development 04f15a1e0: a report with the same user + server + phone time + elapsed ms is stored once; the repeat gets 200 duplicate=true so the phone stops retrying. Old builds without clientTimestamp are stored as before. Tests ConnectFailureDedupeTests 4 (the repeat test FAILS on the old code), all 575/575. Waits QA dev check xd-2815, then CEO YES (card row 'READY TO SHIP - failure reports stored once'). [IOS] note: the phone resends after an upload timeout ~30 s - harmless now."
     },
     {
       "id": "xd-2805",
@@ -81050,11 +81092,12 @@
       "to": "[BACKEND]",
       "title": "Handoff from PRODUCT: [P1] Trial length configurable (CEO YES 30 Oct: 14-day trial with build 83)",
       "description": "[GROWTH live 2026-10-30, CEO: 'if we can offer the 14 day trial lets do it if not keep the app in review and lets make it happen in the new version', 2026-10-30T20:09:44Z] The no-card 'Free Trial' plan length must come from config (Plans table / setting), returned to the app, so a 14-day window can be switched on and back to 7 without an app update. Dev first + READY TO SHIP row. Also note for MARKETING: the App Store introductory offer (2 weeks) is set in ASC for the dated window only after build 83 is live.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-10-30T20:09:51Z",
       "createdDate": "2026-10-30",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[BACKEND run 2026-10-30 22:2x-22:5xZ, scheduled] MEASURED: trial length was ALREADY a server setting (Trial:Days, env Trial__Days, 1-90, default 7; TrialService) but the app could not read it before the trial started. FIXED on development 69ed4a360: `trialDays` on the subscription DTO (/subscriptions/me, /auth/me); lifecycle mails A1/A2 keyed on the trial end (were fixed at day 5-7 / 8-10, A2 would never send for 14 days). Tests TrialDaysConfigTests 5; 575/575. Next: QA xd-2815, IOS xd-2816 (show N-day), MARKETING xd-2817 (A1 'free week' text). Switch = production env Trial__Days=14, CEO YES row."
     },
     {
       "id": "xd-2811",
@@ -81086,11 +81129,12 @@
       "to": "[BACKEND]",
       "title": "Handoff from SECURITY: Lock 2 dormant VPN routes to admins (found in the first break-in tests)",
       "description": "[SECURITY live 2026-10-30 18:0x-21:04Z, CEO: \"what else canu keep on working?\" + \"do we still have any passwords in plain sight anywhere for any keys or servers ?\"] Two older VPN routes can be called by ANY signed-in account and act on other users' VPN access. They do nothing today only because a server setting they need is missing - adding that setting would make them live. Ask: allow them for admins only, or delete them if no app uses them (Security found no caller). Names, file lines and the test in memory/departments/security/audit-2026-10-30/REPORT.md section I (private) (I1). Dev first, tests, then a READY TO SHIP row.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P2",
       "createdAt": "2026-10-30T21:04:10Z",
       "createdDate": "2026-10-30",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[BACKEND run 2026-10-30 22:2x-22:5xZ, scheduled] FIXED on development 2c7dfe1d1: POST /api/vpn/wg-disconnect and POST /api/vpn/l2tp/user now need Admin/SuperAdmin (chose admin-only over delete: smaller, reversible). Caller grep of the vault code: only scripts/test-vpn-integration.sh + CHANGELOG, no app. Test DormantVpnRoutesAdminOnlyTests 2 (both FAIL on the old code); 575/575. Waits QA xd-2815, then CEO YES row."
     },
     {
       "id": "xd-2814",
@@ -81101,6 +81145,42 @@
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-10-30T22:45:04Z",
+      "createdDate": "2026-10-30",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2815",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: [P1] Dev check on api.dev: xd-2804 + xd-2813 + xd-2810 + xd-2756 items 2/4/5 (development 31f247b43)",
+      "description": "Backend pushed to development 22:29Z and 22:34Z (69ed4a360, 1813eb315, 31f247b43). Tests 575/575 (were 561 + 14 new); mutation: the 3 new dedupe/admin-only tests FAIL on the old code. Dev redeploy NOT yet visible at 22:45Z (dev swagger SubscriptionDto has no trialDays) - check `docker inspect -f {{.Created}} caspervpn-dev-api` first. Checks: (1) xd-2804: POST /api/diagnostics/connect-failure twice with the same serverId+clientTimestamp+elapsedMsBeforeFailure -> both 200, second has duplicate=true, 1 row; change clientTimestamp -> 2 rows. (2) xd-2813: customer token -> POST /api/vpn/wg-disconnect and POST /api/vpn/l2tp/user = 403 (before: 500 'primary' not configured). (3) xd-2810: GET /api/subscriptions/me and /api/auth/me subscription carry trialDays=7 (dev default); with Trial__Days=14 on dev -> 14 and a trial start gives 14 days. (4) xd-2756 item 4: POST forgot-password on a throwaway account -> Users.PasswordResetToken starts 'sha256:' and the mailed link still resets; item 5: AuditLogs gets password_change / password_reset_email / password_reset_admin rows with IpAddress NULL; item 2: server activation (SSH.NET 2026.0.0) - one dry activation on dev if a test node exists.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-30T22:46:00Z",
+      "createdDate": "2026-10-30",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2816",
+      "from": "[BACKEND]",
+      "to": "[IOS]",
+      "title": "Handoff from BACKEND: [P1] xd-2810: read trialDays from the subscription (7 or 14) for the trial screen text in build 83",
+      "description": "Backend development 69ed4a360 adds `trialDays` (int) to the subscription object of GET /api/subscriptions/me and /api/auth/me (from server setting Trial:Days, default 7). Show 'N-day free trial' from it; fall back to 7 when absent (old API). The trial itself is already server-timed (TrialEndsAt). Production switch to 14 = env Trial__Days=14 at ship, CEO YES row on the card.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-30T22:46:00Z",
+      "createdDate": "2026-10-30",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2817",
+      "from": "[BACKEND]",
+      "to": "[MARKETING]",
+      "title": "Handoff from BACKEND: [P2] xd-2810: lifecycle mail A1 says 'free week' - needs a 14-day wording before Trial__Days=14",
+      "description": "Backend development 69ed4a360 keys mails A1 (2 days before the trial ends) and A2 (1-3 days after) on the trial END date, so they keep working for 7 or 14 days. A1 subject today: 'Your CasperVPN free week ends in 2 days' - wrong for a 14-day trial. Give a neutral text ('Your CasperVPN free trial ends in 2 days'); backend swaps it on dev.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-30T22:46:00Z",
       "createdDate": "2026-10-30",
       "completedDate": null
     }
