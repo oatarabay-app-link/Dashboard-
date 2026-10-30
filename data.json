@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-30T21:01:56Z",
+  "lastUpdated": "2026-10-30T21:04:10Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 69,
@@ -18579,6 +18579,15 @@
           "addedAt": "2026-10-30T20:59:23Z",
           "addedBy": "security",
           "evidence": "[SECURITY live 2026-10-30 18:0x-20:59Z, CEO: \"what else canu keep on working?\"] Development 4df0eb429. Before/after measured on the test server; 7 new tests, full suite green. Detail: memory/departments/security/audit-2026-10-30/REPORT.md section I (private)."
+        },
+        {
+          "test": "DECISION (P1, security) - an old full copy of the customer database from March sits in a staff account's folder on the main server, outside the locked backup area. A) MOVE it into the locked backup area (reversible) \u00b7 B) DELETE it (newer backups exist) \u00b7 advice: B, it is 7 months old.",
+          "met": false,
+          "owner": "CEO",
+          "verify": "CEO answer recorded on this row; Security does it and QA checks",
+          "addedAt": "2026-10-30T21:04:05Z",
+          "addedBy": "security",
+          "evidence": "[SECURITY live 2026-10-30 18:0x-21:04Z, CEO: \"what else canu keep on working?\" + \"do we still have any passwords in plain sight anywhere for any keys or servers ?\"] Measured tonight; detail memory/departments/security/audit-2026-10-30/REPORT.md section I (private)."
         }
       ],
       "progress": 0,
@@ -59847,11 +59856,11 @@
       "to": "[SECURITY]",
       "title": "Handoff from QA: Remove the mail-service key written as a default value in disk-guard.sh (seen by DEVOPS on xd-1616, QA confirmed)",
       "description": "[DEVOPS 2026-10-11 00:0xZ] installed on the main server (row 191 SHIPPED, production 2a7fa70cd) -> QA xd-1727. The 10 fleet copies are handled by the rotation xd-1710. | [QA 2026-10-09 o] infrastructure/scripts/disk-guard.sh line 43 sets RESEND_API_KEY=\"${RESEND_API_KEY:-<literal key>}\" on origin/production AND origin/development, and the installed /opt/caspervpn/disk-guard.sh on the main server carries the same pattern (grep count 1, value not printed or copied). Same family as CLAUDE.md 9.6 'hardcoded secrets in repo'. Ask: (1) decide whether the key must be rotated (it is in git history); (2) remove the default so the script reads the key only from the environment / a root-only file; (3) -> [QA] to re-grep production + the installed file (expect 0) and confirm the 03:30Z disk-guard e-mail alert path still works. Not urgent for users; P2.\n\n[ENGINEERING run 2026-10-09 2004, 2026-10-09T20:10:03Z] [SECURITY] PARTIAL. MEASURED first: the SAME mail key (sha256 prefix 415886f587, never printed here) is written in 13 files of the private Casper-Code repo, not 1: disk-guard.sh, parity_monitor.sh, datacap_enforcement_monitor.sh, fleet_health_loop.sh, subdomain-resolution-check.sh, wildcard-renew.sh, active_probe_detector.py, ct_log_monitor.py, ip_reputation_monitor.py, monitoring/scripts/alertmanager_resend_bridge.py, dev-vps/.env.dev.example, memory/context/credentials.md, an old email template; 5 more scripts scrape it from the installed bridge/ct_log_monitor files. Control: the public Dashboard- board carries 0 mail keys; Casper-Code is private (unauthenticated GitHub API 404). Main server: /etc/caspervpn/secrets.env has no mail key; cron 30 3 * * * root /opt/caspervpn/disk-guard.sh. DONE on development 613f9c28a (1 file): disk-guard.sh reads RESEND_API_KEY from env, else root-only /etc/caspervpn/resend.key; empty -> logs 'ALERT NOT E-MAILED' and exits 1 instead of sending. Proof: bash -n OK; isolated tests: file -> key loaded, env wins over file, missing file -> empty and no stderr; literals in file 1 -> 0. Install needs CEO YES (row READY TO SHIP). Removing the key from git does not make it secret again - rotation is the real fix (row DECISION). Other 12 files: follow-up after the rotation decision (same pattern, one script per commit). Note for honesty: this run's own diff output showed the key once in the run transcript (Cowork, not stored anywhere new) - one more reason to rotate.",
-      "status": "consolidated",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-10-09T18:26:29Z",
       "createdDate": "2026-10-09",
-      "completedDate": "2026-10-11",
+      "completedDate": "2026-10-30",
       "claimedBy": "[SECURITY] engineering run 1009-2004",
       "qaNote": "[QA 2026-10-09 r, scheduled, 2026-10-09T21:07:46Z] development 613f9c28a passed QA (xd-1620 closed): disk-guard.sh carries 0 literal keys (production + installed copy still 1 each until ship). Before install the key file /etc/caspervpn/resend.key must exist (absent today; cron passes no env) or the alert e-mail stops. 12 other files + rotation stay open (row 192).",
       "category": "infra-fleet",
@@ -59859,7 +59868,10 @@
       "needsRelease": false,
       "lifecycle": "done",
       "consolidatedInto": "xd-1710",
-      "resolution": "[WEBSITE+ADMIN run 2026-10-11 0107, scheduled, unattended, 2026-10-11T01:40:19Z] CONSOLIDATED into xd-1710 [DEVOPS] (CEO YES row 192). disk-guard.sh part done by DEVOPS (main server 0 keys, QA xd-1727). MEASURED on development f39fc4062 (count by hash, value never printed): the old mail key (sha256 prefix 415886f587) is still in 12 repo files - .env.dev.example, alertmanager_resend_bridge.py, active_probe_detector.py, ct_log_monitor.py, datacap_enforcement_monitor.sh, fleet_health_loop.sh, ip_reputation_monitor.py, parity_monitor.sh, subdomain-resolution-check.sh, wildcard-renew.sh, scripts/security-sweep-weekly.sh, one 2026-05-03 session note. That is exactly xd-1710 step 5 (repo redaction, scripts read /opt/caspervpn/secrets/resend_api_key), so one owner. After step 4 (old key deleted at Resend) the copies are dead."
+      "resolution": "[SECURITY live 2026-10-30 18:0x-21:04Z, CEO: \"what else canu keep on working?\" + \"do we still have any passwords in plain sight anywhere for any keys or servers ?\"] DONE: no key left in current code; the old key is dead (only one key exists at the e-mail service, made 23 Oct); the live key is in root-only files. Two old script copies on the main server still hold the dead key (tidy-up on xd-2796). Detail memory/departments/security/audit-2026-10-30/REPORT.md section I (private).",
+      "completedAt": "2026-10-30",
+      "completedBy": "[SECURITY]",
+      "resultingHandoff": "xd-2812 to [QA]"
     },
     {
       "id": "xd-1619",
@@ -79194,7 +79206,7 @@
       "createdAt": "2026-10-28T09:18:35Z",
       "createdDate": "2026-10-28",
       "completedDate": null,
-      "notes": "[QA live 2026-10-28 b, CEO live chat, 11:0x-11:3xZ] CEO: 'same phone signed in' (his phone, account switch). Wider read: key 1587 (retired 23 Oct) is back too as row 8453 (25 Oct 11:01Z, same user), live peer on Dusseldorf. Other exposure: 702 text/json columns in the production DB = 0 private keys (control: 26 bug reports carry the app's 'private_key=<redacted>' marker = redaction works); vault memory/ + QA/ 0; ONE old backup /root/casper-db-backup-gate2-20260529-133528.sql held 2 private keys (1583 = retired, on 0 nodes; 1587), mode 644 -> DELETED 11:2xZ under CEO YES 2026-10-28 ('Delete it'); 56 dump files scanned, 0 others; nightly dump today 0 keys. Open for SECURITY: daily dumps in /root/backups/postgres are mode 644 (check /root perms + who can read). CEO YES: fix code then retire - see the new [BACKEND] + [IOS] handoffs."
+      "notes": "[SECURITY live 2026-10-30 18:0x-21:04Z, CEO: \"what else canu keep on working?\" + \"do we still have any passwords in plain sight anywhere for any keys or servers ?\"] Backups: the nightly database copies sit under the top admin account's folder, which no other account can enter - not readable by others (checked tonight). Found instead: an old March copy in a staff account's folder - CEO decision on card row 573. || [QA live 2026-10-28 b, CEO live chat, 11:0x-11:3xZ] CEO: 'same phone signed in' (his phone, account switch). Wider read: key 1587 (retired 23 Oct) is back too as row 8453 (25 Oct 11:01Z, same user), live peer on Dusseldorf. Other exposure: 702 text/json columns in the production DB = 0 private keys (control: 26 bug reports carry the app's 'private_key=<redacted>' marker = redaction works); vault memory/ + QA/ 0; ONE old backup /root/casper-db-backup-gate2-20260529-133528.sql held 2 private keys (1583 = retired, on 0 nodes; 1587), mode 644 -> DELETED 11:2xZ under CEO YES 2026-10-28 ('Delete it'); 56 dump files scanned, 0 others; nightly dump today 0 keys. Open for SECURITY: daily dumps in /root/backups/postgres are mode 644 (check /root perms + who can read). CEO YES: fix code then retire - see the new [BACKEND] + [IOS] handoffs."
     },
     {
       "id": "xd-2687",
@@ -80285,7 +80297,7 @@
       "createdAt": "2026-10-30T00:59:43Z",
       "createdDate": "2026-10-30",
       "completedDate": null,
-      "notes": "[DEVOPS live 2026-10-30 13:3x-13:4xZ, CEO Cowork 'do point 1 go with advise and do what is still open', 2026-10-30T13:37:43Z] Part 1 DONE: nginx/sites/02-cloudflare-realip.conf (Cloudflare v4+v6 ranges from cloudflare.com, real_ip_header CF-Connecting-IP), git development 5c31310 / production 1d67e84 (md5 02e105ff); dev 13:33Z then production 13:34Z: nginx -t ok, reload, api/site/admin/sentry 200, front 11/11. All access_log lines use the IP-free 'noip' format (log line now '- - - [time]'); API container log: no new user IPs after the change (other public IPs 2 before / 1 after, all non-user). Rollback: delete the file + nginx -s reload. || [DEVOPS live 2026-10-30 12:5x-13:1xZ, CEO Cowork 'finalize what is still open on your side', 2026-10-30T12:56:03Z] Part 1 needs the CEO answer on card row 561 (real IP would land in the 15-day access logs). Parts 2 (dead keys in code) and 3 (weekly gitleaks + osv-scanner) - next DevOps session.",
+      "notes": "[SECURITY live 2026-10-30 18:0x-21:04Z, CEO: \"what else canu keep on working?\" + \"do we still have any passwords in plain sight anywhere for any keys or servers ?\"] ADD for DevOps: (1) the TEST server's API answers browser calls from any website, with credentials (live server is correct - only our own sites); (2) the three /health locations on the live server do not set the real-address header (low). Detail memory/departments/security/audit-2026-10-30/REPORT.md section I (private) (I1). || [DEVOPS live 2026-10-30 13:3x-13:4xZ, CEO Cowork 'do point 1 go with advise and do what is still open', 2026-10-30T13:37:43Z] Part 1 DONE: nginx/sites/02-cloudflare-realip.conf (Cloudflare v4+v6 ranges from cloudflare.com, real_ip_header CF-Connecting-IP), git development 5c31310 / production 1d67e84 (md5 02e105ff); dev 13:33Z then production 13:34Z: nginx -t ok, reload, api/site/admin/sentry 200, front 11/11. All access_log lines use the IP-free 'noip' format (log line now '- - - [time]'); API container log: no new user IPs after the change (other public IPs 2 before / 1 after, all non-user). Rollback: delete the file + nginx -s reload. || [DEVOPS live 2026-10-30 12:5x-13:1xZ, CEO Cowork 'finalize what is still open on your side', 2026-10-30T12:56:03Z] Part 1 needs the CEO answer on card row 561 (real IP would land in the 15-day access logs). Parts 2 (dead keys in code) and 3 (weekly gitleaks + osv-scanner) - next DevOps session.",
       "blocker": "parts 2 (dead keys in code) + 3 (weekly gitleaks/osv) - DevOps next"
     },
     {
@@ -80826,7 +80838,7 @@
       "createdAt": "2026-10-30T13:53:36Z",
       "createdDate": "2026-10-30",
       "completedDate": null,
-      "notes": "[SECURITY live 2026-10-30 14:2x-15:1xZ, CEO: \"what can u keep doing while i do my task ?\"] CORRECTIONS: (2) probe keys - MEASURED: no program checks either key, so changing them protects nothing (the probe is protected another way). No rotation needed - just delete the unused settings at the next settings edit. (4) the 'trap' was WRONG: the old line in the settings file is unused (the API takes that value from the new key's setting); a recreate is safe - proven at 15:03Z when the API was recreated and calls to the VPN servers kept working (12 calls to VPN servers, all 26 outgoing requests answered 200, 0 errors in the first minute). Delete the unused line at the next edit. Items 1, 3 and 5 unchanged. ADD to item 5: the automatic production deploy is off only because of the submission-freeze file; if anyone lifts it, that workflow would overwrite the live certificate files in the server's code folder and restart the API without its extra settings file - fix the workflow before any lift. Detail: memory/departments/security/audit-2026-10-30/REPORT.md section H (private)."
+      "notes": "[SECURITY live 2026-10-30 18:0x-21:04Z, CEO: \"what else canu keep on working?\" + \"do we still have any passwords in plain sight anywhere for any keys or servers ?\"] ADD (plain-sight check tonight): (a) one of the live VPN passwords in our code history is the CEO's own account's - it was ALSO still in an old session note; Security removed it from the note tonight, the password itself still needs a new value (with Backend); (b) two old copies of a script on the main server, readable by every local account, hold a DEAD e-mail key - delete them in the tidy-up; (c) the 9 settings backups in the code folder are readable only by the top admin account - keep them out of git, tidy up. Detail memory/departments/security/audit-2026-10-30/REPORT.md section I (private) (I3). || [SECURITY live 2026-10-30 14:2x-15:1xZ, CEO: \"what can u keep doing while i do my task ?\"] CORRECTIONS: (2) probe keys - MEASURED: no program checks either key, so changing them protects nothing (the probe is protected another way). No rotation needed - just delete the unused settings at the next settings edit. (4) the 'trap' was WRONG: the old line in the settings file is unused (the API takes that value from the new key's setting); a recreate is safe - proven at 15:03Z when the API was recreated and calls to the VPN servers kept working (12 calls to VPN servers, all 26 outgoing requests answered 200, 0 errors in the first minute). Delete the unused line at the next edit. Items 1, 3 and 5 unchanged. ADD to item 5: the automatic production deploy is off only because of the submission-freeze file; if anyone lifts it, that workflow would overwrite the live certificate files in the server's code folder and restart the API without its extra settings file - fix the workflow before any lift. Detail: memory/departments/security/audit-2026-10-30/REPORT.md section H (private)."
     },
     {
       "id": "xd-2797",
@@ -81008,6 +81020,30 @@
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-10-30T20:46:09Z",
+      "createdDate": "2026-10-30",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2812",
+      "from": "[SECURITY]",
+      "to": "[QA]",
+      "title": "Handoff from SECURITY: Verify: no e-mail service key left in our scripts (xd-1618)",
+      "description": "[SECURITY live 2026-10-30 18:0x-21:04Z, CEO: \"what else canu keep on working?\" + \"do we still have any passwords in plain sight anywhere for any keys or servers ?\"] Security measured tonight: (1) 0 e-mail-service keys in any current file of our private code; the scripts read the key from locked server files; (2) the key that was once written in the scripts is dead - the e-mail service lists one key only, made 23 Oct, and its fingerprint differs; (3) the live key sits only in root-only files and the API settings. QA: re-run the checks in memory/departments/security/audit-2026-10-30/REPORT.md section I (private) (I2) and confirm the nightly disk alert still sends mail.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-30T21:04:10Z",
+      "createdDate": "2026-10-30",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2813",
+      "from": "[SECURITY]",
+      "to": "[BACKEND]",
+      "title": "Handoff from SECURITY: Lock 2 dormant VPN routes to admins (found in the first break-in tests)",
+      "description": "[SECURITY live 2026-10-30 18:0x-21:04Z, CEO: \"what else canu keep on working?\" + \"do we still have any passwords in plain sight anywhere for any keys or servers ?\"] Two older VPN routes can be called by ANY signed-in account and act on other users' VPN access. They do nothing today only because a server setting they need is missing - adding that setting would make them live. Ask: allow them for admins only, or delete them if no app uses them (Security found no caller). Names, file lines and the test in memory/departments/security/audit-2026-10-30/REPORT.md section I (private) (I1). Dev first, tests, then a READY TO SHIP row.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-10-30T21:04:10Z",
       "createdDate": "2026-10-30",
       "completedDate": null
     }
@@ -86725,8 +86761,8 @@
   },
   "cyberSecurity": {
     "title": "Cyber Security",
-    "updatedAt": "2026-10-30T15:05:01Z",
-    "measuredAt": "30 Oct 2026, 00:20-00:55 UTC; updated 13:2x-14:5x UTC; evening 14:2x-15:1x UTC",
+    "updatedAt": "2026-10-30T21:04:05Z",
+    "measuredAt": "30 Oct 2026, 00:20-00:55 UTC; updated 13:2x-14:5x UTC; evening 14:2x-15:1x UTC; night 18:0x-21:04 UTC",
     "updatedBy": "[SECURITY] live session with the CEO, 30 Oct",
     "ceoOrder": "CEO 30 Oct 2026 (live chat, [SECURITY] session): 'look into tasks and see what security checks are still open, what we did not do yet; look into security skills we have and see what cyber security skills are on git to test against our system; and create a cyber security category on website with what is done and what is not; add these as well [the 27 pre-launch checks from the BreakingBreach video]'",
     "intro": "Every security check we know of, in one place: the 27 pre-launch checks from the BreakingBreach video, measured on CasperVPN; every other open security task on the board; what was finished recently; and the tools that can test us.",
@@ -86822,8 +86858,8 @@
           "group": "Keys & secrets",
           "check": "Secrets kept in protected server settings, not in the code",
           "status": "partial",
-          "note": "Live server settings read every secret from protected settings. On 30 Oct Security removed 13 secret values from 7 files in our private code (10 old ones, 2 live Cloudflare keys, and 1 internal probe key that no program checks - it needs no change). Left: replace the 2 Cloudflare keys.",
-          "next": "You make one new Cloudflare key (card row 563); DevOps switches the server to it; then you delete both old keys.",
+          "note": "Live server settings read every secret from protected settings. 30 Oct: 13 secret values removed from our code; tonight's re-scan found one more live password in an old note (your own account's VPN password) and removed it. Still live in old code history: 2 Cloudflare keys, your VPN password, one test VPN account.",
+          "next": "New Cloudflare key (card 563); new VPN password for your account and remove the test account (DevOps/Backend).",
           "owner": "CEO + DevOps",
           "refs": [
             "xd-2796",
@@ -86845,7 +86881,7 @@
           "group": "Keys & secrets",
           "check": "Code history scanned for leaked secrets",
           "status": "partial",
-          "note": "Done on 30 Oct: all 34,546 saved changes and today's code scanned, and every value compared by fingerprint with what our main server really uses. Result: 6 values in the old history still work (2 Cloudflare keys, 2 internal probe keys, 2 VPN login passwords) - they are being changed; the rest are old or harmless.",
+          "note": "Done on 30 Oct: all 34,546 saved changes and today's code scanned, and every value compared by fingerprint with what our main server really uses. Result: 6 values in the old history still work (2 Cloudflare keys, 2 internal probe keys, 2 VPN login passwords) - they are being changed; the rest are old or harmless. 30 Oct night: the public board's live files scanned - no live key or password; its OLD versions on GitHub are public and not scanned yet (fix: make the board private, CTO stage 2 + your step).",
           "next": "Change the 6 live values; then QA re-runs the comparison.",
           "owner": "DevOps + CEO",
           "refs": [
@@ -86953,10 +86989,13 @@
           "group": "Web attacks",
           "check": "Every input checked on the server",
           "status": "partial",
-          "note": "All 52 server controllers use built-in input checks and the website uses a validation library, but no endpoint-by-endpoint review has been done yet.",
-          "next": "Endpoint review in the next audit.",
+          "note": "First break-in tests by hand on the test server (30 Oct): a normal account was refused on all 201 admin routes, could not make itself admin, could not fake a sign-in, and password reset does not reveal who has an account. ONE serious hole found: an account could give itself a paid plan without paying - fixed and proven on the test server; live after your YES (card row 572). Tool-based tests still to come.",
+          "next": "Your YES on card row 572; then QA checks it live.",
           "owner": "Security",
-          "refs": []
+          "refs": [
+            "card 572",
+            "xd-2762"
+          ]
         },
         {
           "n": 20,
@@ -86989,7 +87028,7 @@
           "group": "Server protections",
           "check": "CORS: only our own sites may call the API from a browser",
           "status": "done",
-          "note": "Measured tonight: a foreign website gets no permission; our admin site does.",
+          "note": "Measured tonight: a foreign website gets no permission; our admin site does. 30 Oct night: live server confirmed (a foreign site gets no access); the TEST server still allows any site - DevOps note.",
           "next": "",
           "owner": "Backend",
           "refs": []
@@ -87009,7 +87048,7 @@
           "group": "Server protections",
           "check": "Admin pages and admin API locked to admins",
           "status": "done",
-          "note": "Every admin API route requires the admin role (re-checked 28 Oct). The 7 unprotected website handlers found on 12 Oct were fixed and tested live.",
+          "note": "Every admin API route requires the admin role (re-checked 28 Oct). The 7 unprotected website handlers found on 12 Oct were fixed and tested live. 30 Oct night: 201 admin routes refused a normal account; 2 dormant VPN routes need an admin lock (xd-2813).",
           "next": "",
           "owner": "Backend + Website",
           "refs": []
@@ -87055,6 +87094,32 @@
       ]
     },
     "openItems": [
+      {
+        "priority": "P0",
+        "title": "Billing-rule hole: fixed and proven on the test server - live after your YES",
+        "owner": "CEO, then Security",
+        "waitsOn": "your YES on card row 572",
+        "refs": [
+          "card 572"
+        ]
+      },
+      {
+        "priority": "P1",
+        "title": "Old copy of the customer database (March) in a staff folder on the main server",
+        "owner": "CEO decision, then Security",
+        "waitsOn": "your answer on card row 573",
+        "refs": [
+          "card 573",
+          "xd-2686"
+        ]
+      },
+      {
+        "priority": "P1",
+        "title": "Your credentials file in Dropbox holds every password in plain text - move it into a password manager",
+        "owner": "CEO",
+        "waitsOn": "you",
+        "refs": []
+      },
       {
         "priority": "P0",
         "title": "Take back control of the Apple developer account (only you can do this)",
@@ -87315,6 +87380,27 @@
       }
     ],
     "doneItems": [
+      {
+        "date": "30 Oct",
+        "title": "Test-server admin robot password changed (another session's chat had printed it); a stale test-account entry removed",
+        "refs": []
+      },
+      {
+        "date": "30 Oct",
+        "title": "Plain-sight check: public board clean; 1 live password removed from an old note; the old e-mail key confirmed dead",
+        "refs": [
+          "xd-1618",
+          "xd-2812"
+        ]
+      },
+      {
+        "date": "30 Oct",
+        "title": "First break-in tests on the test server (by hand): admin routes, sign-in faking and profile tricks held; 1 serious billing hole found and fixed on the test server",
+        "refs": [
+          "xd-2762",
+          "card 572"
+        ]
+      },
       {
         "date": "30 Oct",
         "title": "Request limits now count the real visitor - a faked address no longer gets around them (API fix live)",
