@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-30T14:10:38Z",
+  "lastUpdated": "2026-10-30T14:13:23Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 69,
@@ -80046,7 +80046,7 @@
       "completedDate": "2026-10-30",
       "completedAt": "2026-10-30",
       "completedBy": "[IOS]",
-      "resolution": "MEASURED: not a login problem. The 4 'CasperVPN.APIError:2' (30 Oct 02:41-02:42Z, build 75) were HTTP 402 DATA_CAP_REACHED: api log 'Bandwidth quota exceeded for user 65fd9bed (used=541446528 limit=536870912)' x5 on POST /wireguard-config; Swift numbers payload cases first, so APIError case 2 = dataCapReached (swiftc harness on the build-75 enum: unauthorized=11, networkError=7 - matches the 'api-unreachable' rows). The user started a free trial at 02:42:51Z (xd-1076 FREE_TRIAL booked) and connected at 02:43 = the paywall worked. Token refresh on 401 already exists (APIClient.request auto-refresh, lines 238-320 on ios/93) - no change needed. FIX: a data cap / premium refusal is no longer sent as a connect failure (a818b67 on ios/94). US CasperCloakHidingError:0 (b994ab38 27 Oct, b60246e9 29 Oct, build 75): that error is thrown when every lookup fails, in ANY region (the name says 'restricted' but the code also throws when the system lookup fails outside restricted regions); build 75 had no fallback (XD-2491 count 0); build 80+ dials the server's bare IP instead (CasperCloakHiding.swift XD-2491 block on ios/93). NOT PROVEN which case those two users hit (no bug report, api log has no line for them). | [CEO live 30 Oct, asked 'is this resolved?'] US hidden-mode error: fixed in code (builds 80+), NOT resolved for users yet: all 13 CasperCloakHidingError rows ever are build 75 (3 users, last 29 Oct 18:43Z); 0 on builds 78-81 but those had only ~35 connects on 3-4 test phones. Resolved when a build >= 80 reaches the App Store.",
+      "resolution": "MEASURED: not a login problem. The 4 'CasperVPN.APIError:2' (30 Oct 02:41-02:42Z, build 75) were HTTP 402 DATA_CAP_REACHED: api log 'Bandwidth quota exceeded for user 65fd9bed (used=541446528 limit=536870912)' x5 on POST /wireguard-config; Swift numbers payload cases first, so APIError case 2 = dataCapReached (swiftc harness on the build-75 enum: unauthorized=11, networkError=7 - matches the 'api-unreachable' rows). The user started a free trial at 02:42:51Z (xd-1076 FREE_TRIAL booked) and connected at 02:43 = the paywall worked. Token refresh on 401 already exists (APIClient.request auto-refresh, lines 238-320 on ios/93) - no change needed. FIX: a data cap / premium refusal is no longer sent as a connect failure (a818b67 on ios/94). US CasperCloakHidingError:0 (b994ab38 27 Oct, b60246e9 29 Oct, build 75): that error is thrown when every lookup fails, in ANY region (the name says 'restricted' but the code also throws when the system lookup fails outside restricted regions); build 75 had no fallback (XD-2491 count 0); build 80+ dials the server's bare IP instead (CasperCloakHiding.swift XD-2491 block on ios/93). NOT PROVEN which case those two users hit (no bug report, api log has no line for them). | [CEO live 30 Oct, asked 'is this resolved?'] US hidden-mode error: fixed in code (builds 80+), NOT resolved for users yet: all 13 CasperCloakHidingError rows ever are build 75 (3 users, last 29 Oct 18:43Z); 0 on builds 78-81 but those had only ~35 connects on 3-4 test phones. Resolved when a build >= 80 reaches the App Store. | [CEO live 30 Oct 13:5xZ] CEO: new builds are tested only by him, proves nothing. Correct. No iOS change was made for the US error in this run; build-80 bare-IP fallback is untested on users. New measurement: both US errors were on Los Angeles (1 hidden success / 8 failures since 24 Oct) -> DEVOPS handoff.",
       "resultingHandoff": "xd-2791 to [QA]"
     },
     {
@@ -80270,6 +80270,18 @@
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-10-30T13:53:36Z",
+      "createdDate": "2026-10-30",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2797",
+      "from": "[IOS]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from IOS: [P1] Los Angeles hidden mode fails for real users: 1 success vs 8 failures since 24 Oct (both US 'lookup' errors were on LA)",
+      "description": "Measured 30 Oct 13:5xZ (prod DB, read-only): since 24 Oct hidden-mode (Protocol 3) ConnectionLogs on Los Angeles 847e2d36 = 1; ConnectFailureEvents caspercloak on LA = 8 (Amsterdam 25 ok / 6 fail, Singapore 12/13). Both US CasperCloakHidingError rows were LA (b994ab38 27 Oct 03:27Z cellular, b60246e9 29 Oct 18:43Z wifi; pool s12.pompesh.com + bexira.shortaalmashahir.com). b994ab38 connected on another server 5 s later (5 h session) and failed LA again 12:17Z (tcp-timeout) then moved again; b60246e9 has 0 ConnectionLogs ever = lost user. Today from the cloud box both LA names resolve (Cloudflare + Google DoH -> 208.87.243.205) and answer https 200 (control s1 200), so LA is up from here - the failure is on the users' path. Do: run tools/dpi_truth_table.py for LA, compare LA relay config/cert/nginx front with Amsterdam (changed 24 Oct: own-cert-by-SNI + nginx-in-front), check LA relay logs for 27 Oct 03:27Z / 29 Oct 18:43Z, and whether US carriers reach 208.87.243.205:443. If LA cannot be fixed fast: DECISION row to take LA out of hidden-mode hand-out.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-30T14:13:23Z",
       "createdDate": "2026-10-30",
       "completedDate": null
     }
