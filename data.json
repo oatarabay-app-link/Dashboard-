@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-30T12:52:28Z",
+  "lastUpdated": "2026-10-30T12:56:08Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 69,
@@ -18455,6 +18455,17 @@
           "test": "CEO A 2026-10-30 (Cowork: '2 dleete') - delete the snapshot; the delete click is the CEO's (a permanent delete in his account is not something the AI may click) | DECISION \u2014 old DigitalOcean snapshot 'ubuntu-v-server-pre-destroy-2026-05-03' (7.94 GB, $0.48/month): an image of a server destroyed in May. If that server ran our login service, it may still hold IKEv2 session logs (the ones row 536 deleted) \u00b7 A: delete the snapshot (Backups & Snapshots > Snapshots > ... > Delete) \u00b7 B: keep it \u00b7 advice: A (no automated DigitalOcean backups exist for the Casper servers; the other snapshot is River Zen's).",
           "verify": "snapshot gone from the Snapshots list",
           "evidence": "[DEVOPS live 2026-10-30 12:0x-12:3xZ, CEO Cowork ('yes row 535', signed in to DigitalOcean), 2026-10-30T12:28:41Z] Snapshots page: pre-node22-upgrade-2026-10-24 (river-zen-website), ubuntu-v-server-pre-destroy-2026-05-03. Backups page: none for Casper droplets (only river-zen-website daily backups)."
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": null,
+          "addedAt": "2026-10-30T12:56:03Z",
+          "addedBy": "[DEVOPS]",
+          "owner": "[CEO]",
+          "test": "DECISION \u2014 real visitor addresses on the main web server (Security audit xd-2757 part 1) \u00b7 today the web server sees only Cloudflare's addresses, so its rate limits count Cloudflare, not the attacker. Turning on 'real address' would ALSO write every app user's real IP into the API access logs, which we keep 15 days - against no-logs \u00b7 A: turn on real address for the limits AND switch all access logs to a format with no IP at all (DevOps, dev first) \u00b7 B: leave as is (limits stay weak) \u00b7 advice: A.",
+          "verify": "after A: nginx -T shows real_ip_header CF-Connecting-IP + set_real_ip_from Cloudflare ranges; access log lines contain no IP; old logs rotated out in 15 days",
+          "evidence": "[DEVOPS live 2026-10-30 12:5x-13:1xZ, CEO Cowork 'finalize what is still open on your side', 2026-10-30T12:56:03Z] measured: caspervpn-nginx keeps api/website/admin/sentry access logs 15 rotations each; default format logs $remote_addr (today = Cloudflare)."
         }
       ],
       "progress": 0,
@@ -63644,8 +63655,8 @@
       "ageDays": 2,
       "needsRelease": false,
       "lifecycle": "active",
-      "blocker": "F9 grafana secret key: next live DevOps session (grafana restart)",
-      "notes": "[DEVOPS live 2026-10-30 12:0x-12:3xZ, CEO Cowork ('yes row 535', signed in to DigitalOcean), 2026-10-30T12:28:41Z] Part F8 (internal ports): closed from outside (see xd-2449). Part F9 OPEN: grafana has no GF_SECURITY_SECRET_KEY (runs on the default key); setting one needs a grafana restart and may need datasource secrets re-entered - next live session. || [DEVOPS run 2026-10-26 0725, scheduled, unattended, 2026-10-26T07:3xZ] The 26 Oct 02:00-04:00Z quiet hour passed with no run in it (this routine fires ~07:25Z). Brain SSH is back. || [DEVOPS run 2026-10-25 0724, scheduled, unattended, 2026-10-25T07:2xZ] The 25 Oct 02:00-04:00Z quiet hour was missed: brain SSH down from 23:49Z 24 Oct (xd-2596). Nothing changed on the server. Next window: 26 Oct 02:00-04:00Z, if SSH is back by then (CEO YES row 300 still stands). || [DEVOPS run 2026-10-24 0307, scheduled, unattended, 2026-10-24T03:3xZ] Same: done together with xd-2449 in the next quiet window, 25 Oct 02:00-04:00Z. || [DEVOPS run 2026-10-23 0020, scheduled, unattended, 2026-10-23T00:4xZ] NOT DONE yet, measured 00:3xZ 'docker ps': still on 0.0.0.0 = caspervpn-api 8080, caspervpn-admin-react 3000, caspervpn-probe-eu 5010, blackbox-exporter 9115, grafana 3100, glitchtip-web 8090 (prometheus, alertmanager, node-exporter, postgres already 127.0.0.1). Grafana: no GF_SECURITY_SECRET_KEY in its env. Ship needs container recreates -> do it in the 02-04Z quiet window, internal tools first (grafana, blackbox, glitchtip), check probe-eu callers before binding it. || [DEVOPS run 2026-10-13 0125, scheduled, unattended, 2026-10-13T01:31:52Z] Re-measured 01:3xZ: 7/7 still on 0.0.0.0 (8080, 3000, 9090, 5010, 9115, 3100, 8090); DOCKER-USER 32 rules; GF_SECURITY_SECRET_KEY absent from grafana env. Plan if YES: edit docker-compose.yml (api, admin-react), probe compose (5010) and monitoring compose (match the file, which already says 127.0.0.1) on development; ship api through /root/deploy_api.sh, others compose up -d per service; random grafana key from /opt/caspervpn/secrets (never printed). DECISION row 300. || [CEO office 17 Oct ~22:3xZ blocker sweep: the CEO answered; old blocker kept in notes] old blocker: CEO card row 300 (DECISION: bind 7 ports to 127.0.0.1 + Grafana key) || [DEVOPS run 2026-10-23 1724, scheduled, unattended, 2026-10-23T17:32:46Z] Same work as xd-2449 (row 300 part 1): full source/consumer map + per-port plan written there; done together in the 24 Oct 02-04Z window.",
+      "blocker": "next live DevOps session: grafana recreate with a data volume + new admin password + secret key (plan in notes)",
+      "notes": "[DEVOPS live 2026-10-30 12:5x-13:1xZ, CEO Cowork 'finalize what is still open on your side', 2026-10-30T12:56:03Z] F9 PLAN (not done - found a trap): grafana runs from grafana/grafana:latest with NO volume for /var/lib/grafana (grafana.db lives in the container layer) and its env still holds the OLD admin password (changed in-app 23 Oct). Recreating it to add GF_SECURITY_SECRET_KEY would (a) wipe users/settings and (b) put back the old, published admin password. Safe order: 1) copy grafana.db out (docker cp), 2) recreate with a named volume holding that db, new GF_SECURITY_ADMIN_PASSWORD from credentials.md and a new GF_SECURITY_SECRET_KEY, pinned image tag, 3) re-enter the datasource secret if any, 4) prove login new 200 / old 401. Monitoring-only restart (~30 s), no user impact. || [DEVOPS live 2026-10-30 12:0x-12:3xZ, CEO Cowork ('yes row 535', signed in to DigitalOcean), 2026-10-30T12:28:41Z] Part F8 (internal ports): closed from outside (see xd-2449). Part F9 OPEN: grafana has no GF_SECURITY_SECRET_KEY (runs on the default key); setting one needs a grafana restart and may need datasource secrets re-entered - next live session. || [DEVOPS run 2026-10-26 0725, scheduled, unattended, 2026-10-26T07:3xZ] The 26 Oct 02:00-04:00Z quiet hour passed with no run in it (this routine fires ~07:25Z). Brain SSH is back. || [DEVOPS run 2026-10-25 0724, scheduled, unattended, 2026-10-25T07:2xZ] The 25 Oct 02:00-04:00Z quiet hour was missed: brain SSH down from 23:49Z 24 Oct (xd-2596). Nothing changed on the server. Next window: 26 Oct 02:00-04:00Z, if SSH is back by then (CEO YES row 300 still stands). || [DEVOPS run 2026-10-24 0307, scheduled, unattended, 2026-10-24T03:3xZ] Same: done together with xd-2449 in the next quiet window, 25 Oct 02:00-04:00Z. || [DEVOPS run 2026-10-23 0020, scheduled, unattended, 2026-10-23T00:4xZ] NOT DONE yet, measured 00:3xZ 'docker ps': still on 0.0.0.0 = caspervpn-api 8080, caspervpn-admin-react 3000, caspervpn-probe-eu 5010, blackbox-exporter 9115, grafana 3100, glitchtip-web 8090 (prometheus, alertmanager, node-exporter, postgres already 127.0.0.1). Grafana: no GF_SECURITY_SECRET_KEY in its env. Ship needs container recreates -> do it in the 02-04Z quiet window, internal tools first (grafana, blackbox, glitchtip), check probe-eu callers before binding it. || [DEVOPS run 2026-10-13 0125, scheduled, unattended, 2026-10-13T01:31:52Z] Re-measured 01:3xZ: 7/7 still on 0.0.0.0 (8080, 3000, 9090, 5010, 9115, 3100, 8090); DOCKER-USER 32 rules; GF_SECURITY_SECRET_KEY absent from grafana env. Plan if YES: edit docker-compose.yml (api, admin-react), probe compose (5010) and monitoring compose (match the file, which already says 127.0.0.1) on development; ship api through /root/deploy_api.sh, others compose up -d per service; random grafana key from /opt/caspervpn/secrets (never printed). DECISION row 300. || [CEO office 17 Oct ~22:3xZ blocker sweep: the CEO answered; old blocker kept in notes] old blocker: CEO card row 300 (DECISION: bind 7 ports to 127.0.0.1 + Grafana key) || [DEVOPS run 2026-10-23 1724, scheduled, unattended, 2026-10-23T17:32:46Z] Same work as xd-2449 (row 300 part 1): full source/consumer map + per-port plan written there; done together in the 24 Oct 02-04Z window.",
       "updatedAt": "2026-10-25T07:30Z"
     },
     {
@@ -79654,8 +79665,8 @@
       "completedDate": "2026-10-30",
       "completedAt": "2026-10-30",
       "completedBy": "[DEVOPS]",
-      "resolution": "Done on development 1c8f0a25c (bash -n ok, offline idempotency test ok, order = live MTL). Production copy waits a CEO YES (READY TO SHIP row added). No live change - the rule is already live on 8 relays.",
-      "resultingHandoff": "xd-2771 to [QA]"
+      "resolution": "[DEVOPS live 2026-10-30 12:5x-13:1xZ, CEO Cowork 'finalize what is still open on your side', 2026-10-30T12:56:03Z] git: another run folded the v4 ICMP line (1c8f0a2); this run added the ipv6-icmp line + its check (development f19abfb) so a reinstall matches the 8 live relays.",
+      "resultingHandoff": "production with the next DevOps script ship"
     },
     {
       "id": "xd-2755",
@@ -79687,11 +79698,13 @@
       "to": "[DEVOPS]",
       "title": "Handoff from SECURITY: Web server: take the visitor's real address from Cloudflare + remove dead key copies from the code (security check 30 Oct)",
       "description": "[SECURITY live 2026-10-30, CEO live chat order] Detail in memory/departments/security/audit-2026-10-30/REPORT.md (private repo) section B (N1) + section A row 8 + section C. (1) The live web server has no real-address setting, so its limits count Cloudflare's addresses: add the Cloudflare ranges + header in a conf.d file (nginx -t before reload, dev first), together with the BACKEND handoff of this run. (2) Remove from the code the dead copies of the two keys changed 28 Oct, the expired certificate key file and the dead token script listed in the vault (values are dead - never print them; history keeps them until a purge). (3) Add a secret scan (gitleaks) and a library check (osv-scanner) to the weekly security sweep on the main server - GitHub's hosted checks are blocked (card row 539).",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P2",
       "createdAt": "2026-10-30T00:59:43Z",
       "createdDate": "2026-10-30",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[DEVOPS live 2026-10-30 12:5x-13:1xZ, CEO Cowork 'finalize what is still open on your side', 2026-10-30T12:56:03Z] Part 1 needs the CEO answer on card row 561 (real IP would land in the 15-day access logs). Parts 2 (dead keys in code) and 3 (weekly gitleaks + osv-scanner) - next DevOps session.",
+      "blocker": "part 1 waits CEO answer on ceo-action-backlog row 561; parts 2-3 next DevOps session"
     },
     {
       "id": "xd-2758",
@@ -79795,8 +79808,8 @@
       "completedDate": "2026-10-30",
       "completedAt": "2026-10-30",
       "completedBy": "[DEVOPS]",
-      "resolution": "Cause found (read-only): HK's ongoing UdpRcvbufErrors growth is strongSwan charon's DHCP-plugin socket on UDP 68 (receive buffer 2,304 bytes) dropping DHCP broadcasts on the provider LAN - NOT the CasperCloak relay. Proof: 2 reads 40 s apart on node-hk 07:2xZ: socket 0.0.0.0:68 drops 68,473->68,479 and UdpRcvbufErrors 514,073->514,079 (+6 each, 1:1); no other UDP socket has drops; ~13k/day = matches the +11,207/24 h. Montreal has the same :68 socket with d0 (quiet LAN). HK IKEv2 uses a static pool (rightsourceip=10.10.10.0/24), so the dhcp plugin is unused. Users unaffected. Optional cleanup (fleet change, Bangkok first, CEO YES): /etc/strongswan.d/charon/dhcp.conf load = no + charon restart; or make the drop check read per-socket drops of caspercloak-ws only. Side finding: HK caspercloak_ws.py md5 0ec4675d (546 l) != Montreal b53904fd (505 l) - both have the xd-883 rcvbuf code + CC_UDP_RCVBUF=4194304; HK has the extra xd-2108 drop-in (auto-off 4 Nov).",
-      "resultingHandoff": "xd-2770 to [QA]"
+      "resolution": "[DEVOPS live 2026-10-30 12:5x-13:1xZ, CEO Cowork 'finalize what is still open on your side', 2026-10-30T12:56:03Z] ROOT CAUSE (measured, counts only): on Hong Kong the dropping socket is UDP port 68 (systemd-networkd DHCP client: /proc/net/udp drops 70,975, recv-q full 3,584), not the hidden-mode relay (relay sockets 0 drops; 2 drops per 20 s now). The provider's network floods DHCP broadcasts on HK. No user traffic is lost; the relay buffer fix works on HK too. Nothing to change.",
+      "resultingHandoff": "none (no user impact)"
     },
     {
       "id": "xd-2766",
