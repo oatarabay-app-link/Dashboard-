@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-31T11:05:26Z",
+  "lastUpdated": "2026-10-31T11:08:00Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 69,
@@ -18683,6 +18683,58 @@
           "owner": "[CEO]",
           "test": "ACTION - Android month-end check is due (you deferred Android checks to 31 Oct) \u00b7 what: the Android app needs one test on the emulator on your Mac to find the cause of the 2 bugs from 23 Oct (A and B) and to pass QA's checklist; the scheduled runs cannot open Android Studio on their own \u00b7 your step: open a live chat at the Mac and say 'android check' (about 20 min; Android Studio is already installed) \u00b7 also: the 31 Oct closed-beta date is missed - Google Play needs the organisation developer account first (row 264, still open) \u00b7 advice: do the emulator check this week; it does not need the Play account. Until then the Android rows are re-dated to 7 Nov.",
           "verify": "board: xd-1491 [QA] gets an emulator result; android-app rows 1/3/5/6/8/9 change"
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": null,
+          "verifiedByRaw": null,
+          "verifiedDate": null,
+          "evidence": "",
+          "addedAt": "2026-10-31T11:20:00Z",
+          "addedBy": "[BACKEND]",
+          "owner": "[BACKEND]",
+          "test": "DECISION (P1) - free data starts again when the same phone makes a new account (xd-2819, your bug report 31 Oct). What happened: your first account on 30 Oct 23:00 was 'caspervpnoffcial@' (typo, never confirmed) and used its 0.5 GB; on 31 Oct 10:00 you signed up as 'caspervpnofficial@' - a NEW address, so the server gave a new 0.5 GB. Same phone: both accounts carry the same install id and device id. Anyone can do this with a new e-mail. Today it is rare: in 30 days 2 phones had more than one account, 5 of the 7 accounts on them are ours. A) free data is per PHONE: a new account on a phone that already used free data this month starts with what is left (recommended) \u00b7 B) A + a new account gets no free data until its e-mail is confirmed \u00b7 C) leave it. Advice: A now (small server change, no app change); B later if abuse grows.",
+          "verify": "CEO answer recorded here; then Backend builds A on development, QA re-runs: account 1 uses data, account 2 on the same install id shows the same used bytes"
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": null,
+          "verifiedByRaw": null,
+          "verifiedDate": null,
+          "evidence": "",
+          "addedAt": "2026-10-31T11:20:00Z",
+          "addedBy": "[BACKEND]",
+          "owner": "[BACKEND]",
+          "test": "READY TO SHIP (after QA dev check) - branded e-mails + better 'couldn't connect' mail (xd-2818, xd-2751) \u00b7 what: every customer e-mail (verification, password reset, welcome, receipts, lifecycle) gets the CasperVPN logo, brand colours and a footer; the day-2 'couldn't connect' mail uses Marketing's new 3-step text without the banned word \u00b7 why: your 31 Oct note (no branding) and 0 of 25 people connected after the old day-2 mail \u00b7 tested on development 98735aff4 + 987dba9bb: 590/590 tests \u00b7 rollback: rollback image tag from deploy_api.sh \u00b7 advice: yes",
+          "verify": "production: request a verification mail to a test inbox -> logo + navy/blue header; B2 HTML has no 'stealth'"
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": null,
+          "verifiedByRaw": null,
+          "verifiedDate": null,
+          "evidence": "",
+          "addedAt": "2026-10-31T11:20:00Z",
+          "addedBy": "[BACKEND]",
+          "owner": "[BACKEND]",
+          "test": "READY TO SHIP (after QA dev check) - stop the false 'RADIUS user' error at every sign-up (xd-2727) \u00b7 what: a never-built connection to localhost:3000 is skipped instead of failing \u00b7 why: it writes an error line at every sign-up and hides real errors in the error count \u00b7 tested on development c3f6994ff: 590/590 \u00b7 rollback: rollback image tag \u00b7 advice: yes, ship with the mails row",
+          "verify": "production api log: a new sign-up writes no 'Error creating RADIUS user' line"
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": null,
+          "verifiedByRaw": null,
+          "verifiedDate": null,
+          "evidence": "",
+          "addedAt": "2026-10-31T11:20:00Z",
+          "addedBy": "[BACKEND]",
+          "owner": "[BACKEND]",
+          "test": "READY TO SHIP - database connection headroom (xd-2713, QA scale check) \u00b7 what: the app may hold at most 70 database connections instead of 100 \u00b7 why: the database allows 100 and the website, RADIUS, backups and monitoring share it - at a full app pool a backup or admin login would be refused \u00b7 measured: today the app uses 5 \u00b7 tested: setting only, no code \u00b7 rollback: put 100 back and redeploy \u00b7 advice: yes, ship with the next backend deploy",
+          "verify": "docker inspect caspervpn-api shows Maximum Pool Size=70; pg_stat_activity during a backup shows the backup connected"
         }
       ],
       "progress": 0,
@@ -61219,9 +61271,9 @@
       "createdAt": "2026-10-10T20:16:31Z",
       "createdDate": "2026-10-10",
       "completedDate": null,
-      "notes": "[BACKEND run 2026-10-11 0118, scheduled, unattended, 2026-10-11T01:39:44Z] Not started on purpose: the spec says register our sender with Apple's private relay BEFORE the first send (8 of 12 at-limit users use Hide My Email); NOT PROVEN that it is registered - no record on the board or in credentials. This is an Apple Developer account step (Certificates, Identifiers & Profiles -> Sign in with Apple for Email Communication -> add caspervpn.com sender) that only the account holder can do.\n\n[BACKEND run 2026-10-11 0315, scheduled, unattended, 2026-10-11T03:54:32Z] MEASURED production read-only 03:28Z: 95 of 322 real users sign in with an Apple private-relay address. The new lifecycle mails (xd-1744) skip them until our sender is registered with Apple - so this CEO step now unlocks about 30% of mail recipients, not only the free-limit mail.\n[BACKEND run 2026-10-23 0905, scheduled, unattended, 2026-10-23T09:2xZ] 13 days with no CEO card row for this step - added ACTION row 410 (first ask on the card). Re-measured production read-only: 112 of 644 users have an @privaterelay.appleid.com address.",
-      "blocker": "CEO: ACTION row 410 on the CEO card (register caspervpn.com with Apple 'Sign in with Apple for Email Communication'). Backend builds the mail on dev the run after he says done.",
-      "updatedAt": "2026-10-23T09:20:00Z",
+      "notes": "[BACKEND run 2026-10-31 1051, scheduled, unattended] Blocker rewritten: the CEO step (card row 410) was DONE 27 Oct 12:0xZ ('Successfully Registered', CEO office live). Nothing waits on the CEO; the build is Backend work. || [BACKEND run 2026-10-11 0118, scheduled, unattended, 2026-10-11T01:39:44Z] Not started on purpose: the spec says register our sender with Apple's private relay BEFORE the first send (8 of 12 at-limit users use Hide My Email); NOT PROVEN that it is registered - no record on the board or in credentials. This is an Apple Developer account step (Certificates, Identifiers & Profiles -> Sign in with Apple for Email Communication -> add caspervpn.com sender) that only the account holder can do.\n\n[BACKEND run 2026-10-11 0315, scheduled, unattended, 2026-10-11T03:54:32Z] MEASURED production read-only 03:28Z: 95 of 322 real users sign in with an Apple private-relay address. The new lifecycle mails (xd-1744) skip them until our sender is registered with Apple - so this CEO step now unlocks about 30% of mail recipients, not only the free-limit mail.\n[BACKEND run 2026-10-23 0905, scheduled, unattended, 2026-10-23T09:2xZ] 13 days with no CEO card row for this step - added ACTION row 410 (first ask on the card). Re-measured production read-only: 112 of 644 users have an @privaterelay.appleid.com address.",
+      "blocker": "none - card row 410 DONE 27 Oct (Apple relay sender registered). Backend builds the quota-hit mail on development next (spec QUOTA-HIT-TRIAL-OFFER-SPEC-2026-10-05.md).",
+      "updatedAt": "2026-10-31T11:20:00Z",
       "category": "infra-fleet",
       "ageDays": 3,
       "needsRelease": false,
@@ -79798,11 +79850,13 @@
       "to": "[BACKEND]",
       "title": "Handoff from QA: [P3] API DB pool = Postgres max_connections (100 = 100): no headroom for admin/backup/exporter at scale",
       "description": "QA 29 Oct (scale-readiness-1000 row 7): caspervpn-api connection string Maximum Pool Size=100 and caspervpn-postgres max_connections=100 (live 22 in use, DB 208 MB, disk 75%). At a full pool, pg_dump / admin / postgres-exporter would be refused. Option: pool 60-80 or max_connections 150 (CEO-gated ship). Hand back to [QA] with the chosen numbers.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P3",
       "createdAt": "2026-10-29T19:13:51Z",
       "createdDate": "2026-10-29",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[BACKEND run 2026-10-31 1051, scheduled, unattended] MEASURED production 11:1xZ: max_connections 100 (3 reserved for superuser = 97 usable); API 'Maximum Pool Size=100'; other users of the same Postgres: casper_website 6 connections, FreeRADIUS 3, plus postgres-exporter / backups / psql. Now in use: API 5, website 6, radius 3. CHOSEN NUMBERS: API Maximum Pool Size 100 -> 70, Postgres max_connections stays 100 (no database restart). Leaves 27 for website + RADIUS + exporter + backup + admin. Change = the API connection string (production config, CEO-gated): READY TO SHIP row 585. Handed back to [QA] with the numbers.",
+      "updatedAt": "2026-10-31T11:20:00Z"
     },
     {
       "id": "xd-2714",
@@ -79900,7 +79954,9 @@
       "priority": "P1",
       "createdAt": "2026-10-29T19:33:58Z",
       "createdDate": "2026-10-29",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[BACKEND run 2026-10-31 1051, scheduled, unattended] MEASURED production 11:1xZ: 3 real never-connected users (60 days) have an active iPhone push token; 0 'APNs push sent' lines in the 3 days of api logs (only the automatic censorship push exists - there is no admin 'send to a list' path). Left: a one-off admin-only send with dry-run on development, first to the 2 staff tokens; you confirm it arrived on your phone; then the 3. NOT started this run.",
+      "updatedAt": "2026-10-31T11:20:00Z"
     },
     {
       "id": "xd-2720",
@@ -80021,11 +80077,13 @@
       "to": "[BACKEND]",
       "title": "Handoff from QA: [P3] Every sign-up logs 'Error creating RADIUS user' (localhost:3000 connection refused)",
       "description": "QA 29 Oct: api log 27 Oct 6 errors / 2 sign-ups, 28 Oct 1/1, 29 Oct 5/1 ('Error creating RADIUS user: <name>' -> HttpRequestException Connection refused (localhost:3000), then 'RADIUS user creation failed' WRN). IKEv2/EAP sign-ins still work (radius-connect on 9 servers today), so the old RADIUS-user service looks retired (radius-finalize row 3 superseded). Confirm nothing needs it and remove the call (or point it at the live path) so sign-up logs carry no false ERR. Seen on the CEO's test sign-up 19:58:56Z.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P3",
       "createdAt": "2026-10-29T20:05:58Z",
       "createdDate": "2026-10-29",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[BACKEND run 2026-10-31 1051, scheduled, unattended] MEASURED production: no Radius ApiEndpoint is set (env has Radius__Host/Port/Secret/ApiKey/ProbeApiKey only), so FreeRadiusService calls the built-in placeholder http://localhost:3000 - 2 'Error creating RADIUS user' in the last 24 h, 0 'RADIUS user created' ever. FIXED on development c3f6994ff: with no real endpoint, create/update/delete are skipped (debug line, return ok); a configured endpoint is still called. IKEv2 auth unchanged (/api/radius/auth). Tests RadiusRestSkipTests 7; 590/590. Waits QA dev check, then READY TO SHIP row.",
+      "updatedAt": "2026-10-31T11:20:00Z"
     },
     {
       "id": "xd-2728",
@@ -80377,11 +80435,13 @@
       "to": "[BACKEND]",
       "title": "Handoff from MARKETING: [P1] Lifecycle mail B2: 0 of 25 connected after it + text says \"stealth\" - rewrite (marketing copy) and register sender for Apple relay (xd-1677)",
       "description": "[GROWTH live 2026-10-30, CEO: \"yes for 2\" + \"start the seo and agi audit\"] Measured: LifecycleEmailSends B2 = 25 sent, 0 with a ConnectionLogs row after SentAt. B2 HTML says 'CasperCloak (our own stealth protocol)' - banned word (QA xd-2457 rule). Replace with the W1 text (memory/departments/marketing/email/2026-10-30-winback-never-connected-draft.md) on development; QA; READY TO SHIP. 21 of 63 never-connected users have Apple private-relay addresses that get no mail until the sender is registered (xd-1677, CEO step in Apple Developer).",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-10-30T00:32:29Z",
       "createdDate": "2026-10-30",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[BACKEND run 2026-10-31 1051, scheduled, unattended] FIXED on development 987dba9bb: B2 body = the W1 three steps (open, Connect, Allow) + '0.5 GB every month on up to 3 devices, no card' + reply line; the banned word is gone. Subject unchanged. The W1 'Open CasperVPN' caspervpn:// button left out (mail apps drop custom-scheme links). Test B2_has_the_W1_steps_and_no_banned_word FAILS on the old body (run 11:0xZ), passes on new; 590/590. Part 2 (Apple relay sender) is done: card row 410 DONE 27 Oct. Waits QA dev check, then the READY TO SHIP row.",
+      "updatedAt": "2026-10-31T11:20:00Z"
     },
     {
       "id": "xd-2752",
@@ -81336,11 +81396,13 @@
       "to": "[BACKEND]",
       "title": "Handoff from CEO: [P1] Verification e-mail has no CasperVPN branding (CEO 31 Oct)",
       "description": "[CEO office live 2026-10-31, CEO: 'check bug report and latest app test' + 'verifictaion email includes no casper branding as well'] MEASURED in code (production branch): EmailService.SendVerificationEmailAsync still uses the old generic template - purple gradient #667eea->#764ba2, the word 'CasperVPN' as plain text, no logo, button 'Verify Email'. The password-reset mail (BuildPasswordResetBody, xd-1934) already uses the brand navy->blue #0A1628->#3B82F6. Fix: one shared branded layout (logo image hosted on caspervpn.com, brand colours, footer with caspervpn.com + support link) for verification, password reset, subscription and win-back mails; keep the https verify link. Dev first + a test that the verify mail contains the logo URL and brand colour; then READY TO SHIP row for the CEO. verify: send a verify mail on dev to a test inbox, screenshot.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-10-31T10:12:48Z",
       "createdDate": "2026-10-31",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[BACKEND run 2026-10-31 1051, scheduled, unattended] FIXED on development 98735aff4 (pushed 11:05Z): one branded layout Helpers/EmailBrand for verification, reset, welcome, subscription, receipt, payment-failed, cancelled and all lifecycle mails - logo https://caspervpn.com/icon-192.png (checked 200 image/png), navy->blue #0A1628->#3B82F6, footer caspervpn.com + Support + Privacy (both 200). Verify link unchanged (https, token URL-safe). Tests BrandedEmailTests 7 new, 590/590 pass. Next: QA dev check (handoff to QA, same run), then READY TO SHIP row.",
+      "updatedAt": "2026-10-31T11:20:00Z"
     },
     {
       "id": "xd-2819",
@@ -81348,11 +81410,14 @@
       "to": "[BACKEND]",
       "title": "Handoff from BACKEND: [P1] Free data resets when the same person signs up again (CEO bug report 31 Oct 10:02Z, user 625de7b6)",
       "description": "[CEO office live 2026-10-31, CEO: 'check bug report and latest app test' + 'verifictaion email includes no casper branding as well'] BugReports 31 Oct 10:02:55Z + 10:08:12Z (build 4.3.1(84), iPhone15,2): 'every time i create an account data resets' and 'i managed to free data when signed up with same account'. Log shows tier=free used=1,005,212 of 536,870,912 right after sign-up = a fresh 0.5 GB allowance. Measure first: how the CEO made the 2nd account (same e-mail after delete? Apple/Google relay address? +alias?) - count Users rows per normalised e-mail and per device id, read-only. Then propose a rule (free allowance per device / per normalised e-mail, carried over on re-signup) as a DECISION row with options + advice. Abuse risk: unlimited free data by re-signing up.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-10-31T10:12:48Z",
       "createdDate": "2026-10-31",
-      "completedDate": null
+      "completedDate": null,
+      "blocker": "waits CEO answer on card row 582 (DECISION A/B/C)",
+      "notes": "[BACKEND run 2026-10-31 1051, scheduled, unattended] MEASURED production read-only 11:0xZ: user 625de7b6 = caspervpnofficial@ created 31 Oct 10:00:40Z, 6.1 MB used; earlier account fa243207 = caspervpnoffcial@ (typo, IsEmailVerified=false) created 30 Oct 23:00:36Z, 539,084,788 bytes used (cap hit). Same FunnelEvents InstallId (md5 ba876d58) and same ConnectionLogs DeviceId on both. So 'same account' was two different addresses; the server keys free data on the account only. 30-day scale: 2 installs with >1 account (of 24 with ids), 7 accounts on them, 5 staff. DECISION row 582 on the CEO card (A per phone / B + confirm first / C leave). skill: departments/backend/skill/SKILL.md -> measure-first (no fix before the CEO picks).",
+      "updatedAt": "2026-10-31T11:20:00Z"
     },
     {
       "id": "xd-2820",
@@ -81505,6 +81570,30 @@
       "status": "pending",
       "priority": "P2",
       "createdAt": "2026-10-31T11:05:26Z",
+      "createdDate": "2026-10-31",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2832",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: [P1] Dev check on api.dev: branded mails (xd-2818), B2 text (xd-2751), RADIUS noise (xd-2727) - development c3f6994ff",
+      "description": "Backend pushed to development 11:05Z (98735aff4, 987dba9bb, c3f6994ff). Tests 590/590. Checks on dev after the redeploy (docker inspect -f {{.Created}} caspervpn-dev-api later than 11:05Z): (1) register a throwaway account on api.dev with a test inbox -> verification mail shows the CasperVPN logo (https://caspervpn.com/icon-192.png), navy->blue header, footer caspervpn.com/Support/Privacy; the button opens https://dev.../verify-email and confirms; (2) forgot-password on it -> same layout, link still resets; (3) dev api log after the sign-up has no 'Error creating RADIUS user'; (4) B2 HTML (LifecycleEmailService.Build B2, or a DryRun send) has no 'stealth'. Then the CEO card rows 583 + 584 can be answered.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-31T11:08:00Z",
+      "createdDate": "2026-10-31",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2833",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: [P3] DB pool numbers chosen (xd-2713): API pool 70, Postgres stays 100",
+      "description": "As asked on xd-2713: measured 11:1xZ max_connections 100 (97 usable), API pool 100, website 6 + RADIUS 3 connections in use. Chosen: API Maximum Pool Size=70, max_connections unchanged. CEO card row 585 (READY TO SHIP). After the ship QA checks docker inspect + a backup connecting during load.",
+      "status": "pending",
+      "priority": "P3",
+      "createdAt": "2026-10-31T11:08:00Z",
       "createdDate": "2026-10-31",
       "completedDate": null
     }
