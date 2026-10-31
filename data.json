@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-31T10:58:30Z",
+  "lastUpdated": "2026-10-31T10:59:14Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 69,
@@ -18660,7 +18660,7 @@
           "verify": "re-run memory/departments/devops/drafts/ip_log_sweep.sh: /var/log/openvpn 0, nginx error.log 0 on every relay, charon journal 0"
         },
         {
-          "test": "OPEN - DECISION (P0) - stop code updates from breaking the website certificate (xd-2794) \u00b7 what happens: twice in 7 days (24 Oct, 30 Oct) a code update on the main server turned the website certificate files into empty stubs; the site stayed up only because the web server was not restarted. One restart or reboot in that state = website, app login and admin all down until someone repairs it by hand (DevOps repaired it 31 Oct 02:06Z; it is fine right now). \u00b7 options: A) point the web server at the certificate store the server renews itself (one setting, one restart of the web server of about 5 seconds at a quiet hour; then code updates can no longer touch the certificate) - B) stop the code storing the certificate files (a code change; risky: the first update after it removes the files and breaks the site unless done by hand in the right order) - C) keep repairing by hand after every update (no change; it will happen again). \u00b7 advice: A, done by DevOps at a quiet hour with the old setting kept for a 1-minute rollback; then B later to also remove an old private key from the code (Security). \u00b7 reply \"A\", \"B\" or \"C\".",
+          "test": "OPEN - DECISION (P0) - stop code updates from breaking the website certificate (xd-2794) \u00b7 what happens: twice in 7 days (24 Oct, 30 Oct) a code update on the main server turned the website certificate files into empty stubs; the site stayed up only because the web server was not restarted. One restart or reboot in that state = website, app login and admin all down until someone repairs it by hand (DevOps repaired it 31 Oct 02:06Z; it is fine right now). \u00b7 options: A) point the web server at the certificate store the server renews itself (one setting, one restart of the web server of about 5 seconds at a quiet hour; then code updates can no longer touch the certificate) - B) stop the code storing the certificate files (a code change; risky: the first update after it removes the files and breaks the site unless done by hand in the right order) - C) keep repairing by hand after every update (no change; it will happen again). \u00b7 advice: A, done by DevOps at a quiet hour with the old setting kept for a 1-minute rollback; then B later as a clean-up with Security. \u00b7 reply \"A\", \"B\" or \"C\".",
           "verify": "main server: docker inspect caspervpn-nginx mounts show the host certificate store; after a git reset the cert files stay real and nginx -t ok",
           "met": false,
           "owner": "[DEVOPS]",
@@ -80956,7 +80956,7 @@
       "createdAt": "2026-10-30T13:37:50Z",
       "createdDate": "2026-10-30",
       "completedDate": null,
-      "notes": "[CTO run 2026-10-31 10:5xZ, scheduled \"Casper cto\"] Measured read-only on the main server: cert files are real now (fullchain 4,918 B, written 31 Oct 02:06Z), nginx -t ok. The 10:18Z fast-forward merge did not break them; only \"git reset --hard\" does (reflog: 30 Oct 14:13Z and 19:40Z resets). 4 files under nginx/letsencrypt/live are tracked as symlinks (mode 120000); the nginx container mounts the repo folder ./nginx/letsencrypt as /etc/letsencrypt (read-write). Scripts that run git reset/checkout on the box: scripts/server-deploy.sh, fix-docker-proxy.sh, reality-probes-weekly.sh, setup-caspervpn-deploy-user.sh, /root/mk75.sh, /root/enterprise-tenancy-migration.sh. ALSO FOUND (for [SECURITY]): the repo tracks the OLD certificate private key and the Lets Encrypt account key under nginx/letsencrypt/archive and accounts (names only read, no content). DECISION row written on the CEO card with options + advice. || [DEVOPS quiet-hour check 2026-10-31 02:0xZ (scheduled in the CEO live session), 2026-10-31T02:07:43Z] RECURRED as predicted: 'git reset --hard origin/production' in /root/Casper/Casper-Code at 30 Oct 19:40:58Z (reflog) turned the 4 cert files back into 37-42 byte stubs; nginx -t FAILED for ~6.5 h (site stayed up only because nginx was not restarted). Repaired 31 Oct 02:06Z with the sync hook: nginx -t ok, API/site 200, cert to 22 Dec. Row 535 + internal ports re-checked: catch-all 0, 5 allows persisted, 3000/3100/9115/8090/5010/8080/9999 closed from outside, front 11/11. This will happen again on the next reset until the repo stops tracking nginx/letsencrypt - needs a decision today.",
+      "notes": "[CTO run 2026-10-31 10:5xZ, scheduled \"Casper cto\"] Measured read-only on the main server: cert files are real now (fullchain 4,918 B, written 31 Oct 02:06Z), nginx -t ok. The 10:18Z fast-forward merge did not break them; only \"git reset --hard\" does (reflog: 30 Oct 14:13Z and 19:40Z resets). 4 files under nginx/letsencrypt/live are tracked as symlinks (mode 120000); the nginx container mounts the repo folder ./nginx/letsencrypt as /etc/letsencrypt (read-write). Scripts that run git reset/checkout on the box: scripts/server-deploy.sh, fix-docker-proxy.sh, reality-probes-weekly.sh, setup-caspervpn-deploy-user.sh, /root/mk75.sh, /root/enterprise-tenancy-migration.sh. One extra security finding about these files went to [SECURITY] (detail in the private vault, not on this board). DECISION row written on the CEO card with options + advice. || [DEVOPS quiet-hour check 2026-10-31 02:0xZ (scheduled in the CEO live session), 2026-10-31T02:07:43Z] RECURRED as predicted: 'git reset --hard origin/production' in /root/Casper/Casper-Code at 30 Oct 19:40:58Z (reflog) turned the 4 cert files back into 37-42 byte stubs; nginx -t FAILED for ~6.5 h (site stayed up only because nginx was not restarted). Repaired 31 Oct 02:06Z with the sync hook: nginx -t ok, API/site 200, cert to 22 Dec. Row 535 + internal ports re-checked: catch-all 0, 5 allows persisted, 3000/3100/9115/8090/5010/8080/9999 closed from outside, front 11/11. This will happen again on the next reset until the repo stops tracking nginx/letsencrypt - needs a decision today.",
       "blocker": "OUTSIDE - waits the CEO answer on the card row \"DECISION (P0) - stop code updates from breaking the website certificate\" (31 Oct). Until then: after any git reset on the main server run the sync hook + nginx -t."
     },
     {
@@ -81347,6 +81347,18 @@
       "status": "pending",
       "priority": "P2",
       "createdAt": "2026-10-31T10:58:30Z",
+      "createdDate": "2026-10-31",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2826",
+      "from": "[CTO]",
+      "to": "[SECURITY]",
+      "title": "Handoff from CTO: [P1] Certificate files tracked in the code repo - review (detail in private vault)",
+      "description": "CTO run 31 Oct, found while measuring xd-2794. Detail: memory/departments/security/private-findings/2026-10-31-cto-letsencrypt-keys-in-repo.md (private vault). Decide clean-up after xd-2794 option is chosen.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-10-31T10:59:13Z",
       "createdDate": "2026-10-31",
       "completedDate": null
     }
