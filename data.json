@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-31T11:02:05Z",
+  "lastUpdated": "2026-10-31T11:02:34Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 69,
@@ -8207,19 +8207,19 @@
         },
         {
           "test": "AC14: iptables INPUT chain default policy set to DROP \u2014 explicit ALLOW rules for SSH(22), HTTP(80), HTTPS(443), WireGuard(51820/udp), IKEv2(500+4500/udp), OpenVPN-UDP(1194/udp), OpenVPN-TCP(1195/tcp), CasperCloak(4444/tcp), obfs4(4443+4446/tcp), TCP-WG relay(4445/tcp), established/related. All other inbound traffic dropped. Verify: nmap from external shows only allowed ports.",
-          "passed": false,
-          "verifiedBy": "none",
-          "verifiedAt": "2026-09-24T21:05:00Z",
-          "evidence": "[DEVOPS live 2026-10-30 12:0x-12:3xZ, CEO Cowork ('yes row 535', signed in to DigitalOcean), 2026-10-30T12:28:41Z] main server: catch-all removed, see card row 535. || [DEVOPS run 2026-10-30 0725, scheduled, unattended, 2026-10-30T07:4xZ] MEASURED read-only 07:2xZ (main server, iptables -L INPUT -v): rule 64 (count of NEW reaching the catch-all) 322K pkts, rule 65 catch-all ACCEPT 287K. Removing rule 65 as-is WOULD BREAK services that only the catch-all lets in: tcp 9443 caspercloak-ws (python3 on host, 3,269 NEW counted by rule 61), udp 1701 xl2tpd (137), udp 51821 wg1 (1). Host ports also reached from Docker bridges through INPUT: 9097 (python3), 4444/5002 (python3), 5011 (172.20.0.1) - their share of rule 64 is unknown. Ship plan v2: (1) add explicit ACCEPT for tcp 9443, udp 1701, udp 51821 and for -i docker0/br-+ to the host ports in use; (2) count rule 64 again for 1 h; (3) then delete rule 65; rollback = iptables-restore of the saved copy. NOT SHIPPED: this unattended run was refused writes on live servers (07:3xZ; even counter-only rules). Needs a live session (CEO present) - not the 02-04Z window alone. || [DEVOPS live 2026-10-29 23:4xZ, CEO Cowork, 2026-10-29T23:33:14Z] CORRECTION to my 18:4xZ note: 'INPUT DROP on all production' was true for the POLICY only. QA xd-2718 found the main server's INPUT chain ends in a catch-all NEW ACCEPT rule (~65), so in practice it is open. My check read only the policy line. Fix = card row 535 (CEO YES 29 Oct), planned for the 30 Oct 02-04Z window together with the port lock-down. Relays not re-checked for a catch-all yet - same read needed. || [QA 2026-10-29 y, 'Casper qa' run continued live, 2026-10-29T19:3xZ] FAIL (not ticked): -P INPUT DROP on 11/11 relays + main + dev (Bangkok test ACCEPT), BUT the main server's last INPUT rule 65 is ACCEPT ctstate NEW limit 625/sec (catch-all, 274K packets) = an unconditional NEW ACCEPT -> [DEVOPS] xd-2718. Relays' rule tails not read this run. || RE-OPENED 2026-10-29 (CEO: 'start closing the 10 rows'). MEASURED 18:4xZ: iptables -P INPUT DROP on all 11 relays + main + dev (Bangkok dev = ACCEPT). The criterion is met in production. [DEVOPS live 2026-10-29 18:1x-19:0xZ, CEO Cowork: 'yes you should add this and we should start closing the 10 rows', 2026-10-29T18:39:09Z] || DEFERRED to Nov 2026 - firewall default DROP on every server - first measure what still uses the catch-all, then a READY TO SHIP row. [DEVOPS live 2026-10-29 01:1x-01:4xZ, CEO Cowork 'finalize only open tasks', 2026-10-29T01:25:00Z] || [DEVOPS run 2026-10-11 d, scheduled, unattended, 2026-10-11T03:30Z] STILL FAIL, read 03:3xZ on the main server: INPUT policy DROP, but rule 69 'ctstate NEW limit 625/sec ACCEPT' (catch-all) has 233K packets / 13M; the measuring rule 68 just above it counts the same 233K = new connections that still rely on the catch-all. Removing it is a live firewall change on production -> needs a CEO YES after we list what those 233K are (next step: a LOG rule sample by port, read-only). || [FAIL] QA 2026-09-30: INPUT policy is DROP, but the last rule (69) 'ctstate NEW limit 625/sec ACCEPT' still accepts every new inbound connection: 48,696 packets matched the measuring rule 68 ('anything else still relying on the catch-all'). From Bangkok, 9443 answers (not in this row's allow-list). Open under xd-1014 [DEVOPS]. | prior: QA 2026-09-24 PASS: iptables -S INPUT: -P INPUT DROP.",
-          "met": false,
-          "verifiedDate": "2026-09-30",
-          "verifiedByRaw": "qa-sweep-2026-09-30-fail",
-          "qaVerdict": "FAIL",
-          "qaDate": "2026-09-30",
+          "passed": true,
+          "verifiedBy": "tested",
+          "verifiedAt": "2026-10-31T11:10:00Z",
+          "evidence": "[QA run 2026-10-31 1051, scheduled, unattended, 2026-10-31T11:1xZ] PASS: main server: iptables -S INPUT policy DROP, 0 unconditional NEW/all ACCEPT rules (last rule = xd-1014 counter with no target), saved /etc/iptables/rules.v4 catch-all 0; from outside (Mac VM, public IP 185.76.178.220 = not a Casper server, 0 hits in access-inventory): 3000/3100/9115/8090/5010/8080/9090/9999 closed, control 443 open. Relays (blocker leg): INPUT policy DROP + 0 unconditional ACCEPT on all 15 production nodes read via ssh_exec_node (11:0xZ, before the session permission check began refusing production reads); bkk-dev (dev) policy ACCEPT - dev box, noted only. || [DEVOPS live 2026-10-30 12:0x-12:3xZ, CEO Cowork ('yes row 535', signed in to DigitalOcean), 2026-10-30T12:28:41Z] main server: catch-all removed, see card row 535. || [DEVOPS run 2026-10-30 0725, scheduled, unattended, 2026-10-30T07:4xZ] MEASURED read-only 07:2xZ (main server, iptables -L INPUT -v): rule 64 (count of NEW reaching the catch-all) 322K pkts, rule 65 catch-all ACCEPT 287K. Removing rule 65 as-is WOULD BREAK services that only the catch-all lets in: tcp 9443 caspercloak-ws (python3 on host, 3,269 NEW counted by rule 61), udp 1701 xl2tpd (137), udp 51821 wg1 (1). Host ports also reached from Docker bridges through INPUT: 9097 (python3), 4444/5002 (python3), 5011 (172.20.0.1) - their share of rule 64 is unknown. Ship plan v2: (1) add explicit ACCEPT for tcp 9443, udp 1701, udp 51821 and for -i docker0/br-+ to the host ports in use; (2) count rule 64 again for 1 h; (3) then delete rule 65; rollback = iptables-restore of the saved copy. NOT SHIPPED: this unattended run was refused writes on live servers (07:3xZ; even counter-only rules). Needs a live session (CEO present) - not the 02-04Z window alone. || [DEVOPS live 2026-10-29 23:4xZ, CEO Cowork, 2026-10-29T23:33:14Z] CORRECTION to my 18:4xZ note: 'INPUT DROP on all production' was true for the POLICY only. QA xd-2718 found the main server's INPUT chain ends in a catch-all NEW ACCEPT rule (~65), so in practice it is open. My check read only the policy line. Fix = card row 535 (CEO YES 29 Oct), planned for the 30 Oct 02-04Z window together with the port lock-down. Relays not re-checked for a catch-all yet - same read needed. || [QA 2026-10-29 y, 'Casper qa' run continued live, 2026-10-29T19:3xZ] FAIL (not ticked): -P INPUT DROP on 11/11 relays + main + dev (Bangkok test ACCEPT), BUT the main server's last INPUT rule 65 is ACCEPT ctstate NEW limit 625/sec (catch-all, 274K packets) = an unconditional NEW ACCEPT -> [DEVOPS] xd-2718. Relays' rule tails not read this run. || RE-OPENED 2026-10-29 (CEO: 'start closing the 10 rows'). MEASURED 18:4xZ: iptables -P INPUT DROP on all 11 relays + main + dev (Bangkok dev = ACCEPT). The criterion is met in production. [DEVOPS live 2026-10-29 18:1x-19:0xZ, CEO Cowork: 'yes you should add this and we should start closing the 10 rows', 2026-10-29T18:39:09Z] || DEFERRED to Nov 2026 - firewall default DROP on every server - first measure what still uses the catch-all, then a READY TO SHIP row. [DEVOPS live 2026-10-29 01:1x-01:4xZ, CEO Cowork 'finalize only open tasks', 2026-10-29T01:25:00Z] || [DEVOPS run 2026-10-11 d, scheduled, unattended, 2026-10-11T03:30Z] STILL FAIL, read 03:3xZ on the main server: INPUT policy DROP, but rule 69 'ctstate NEW limit 625/sec ACCEPT' (catch-all) has 233K packets / 13M; the measuring rule 68 just above it counts the same 233K = new connections that still rely on the catch-all. Removing it is a live firewall change on production -> needs a CEO YES after we list what those 233K are (next step: a LOG rule sample by port, read-only). || [FAIL] QA 2026-09-30: INPUT policy is DROP, but the last rule (69) 'ctstate NEW limit 625/sec ACCEPT' still accepts every new inbound connection: 48,696 packets matched the measuring rule 68 ('anything else still relying on the catch-all'). From Bangkok, 9443 answers (not in this row's allow-list). Open under xd-1014 [DEVOPS]. | prior: QA 2026-09-24 PASS: iptables -S INPUT: -P INPUT DROP.",
+          "met": true,
+          "verifiedDate": "2026-10-31",
+          "verifiedByRaw": "qa",
+          "qaVerdict": "PASS",
+          "qaDate": "2026-10-31",
           "verify": "brain: iptables -L INPUT -n -v --line-numbers | tail -3 -> no unconditional NEW ACCEPT at the end",
           "verifiedByPrevious": "tested",
           "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored",
-          "blocker": "waits QA xd-2786; relays not yet read for a catch-all",
+          "blocker": "",
           "dueBy": "2026-11-05"
         },
         {
@@ -18361,11 +18361,16 @@
         {
           "test": "SHIPPED 2026-10-30 (production b7681b1, live ~12:2xZ) | CEO YES 2026-10-30 (Cowork live chat): 'yes for row 551' \u00b7 PUSHED to production b7681b1 08:4xZ - deploy NOT yet run (server clone still 7a3eeabf3, live llms-full.txt 404 at +20 min) | READY TO SHIP \u2014 SEO/GEO website fixes (xd-2750) \u00b7 what: /faq + /no-log-policy in the sitemap, article markup (BlogPosting) on blog posts, blog titles cut to 60 / descriptions 160, llms.txt refreshed + new llms-full.txt for AI answer engines, 'verified' removed from the /free-vpn no-logs line \u00b7 why: audit 30 Oct (AI-search 44/100, SEO 67/100) + a claim we cannot prove \u00b7 tested on dev: development eb2c9f0, type check 0 errors with a planted-error control, dev curl: llms-full 200, sitemap 2/2, 'verified' 0, BlogPosting present (long-title cut not provable on dev: 1 short post) \u00b7 rollback: revert eb2c9f0 on production + redeploy website \u00b7 advice: YES",
           "verify": "curl -s -o /dev/null -w '%{http_code}' https://caspervpn.com/llms-full.txt -> 200; curl -s https://caspervpn.com/sitemap.xml | grep -c -E '/faq<|/no-log-policy<' -> 2",
-          "met": false,
-          "passed": false,
-          "verifiedBy": "none",
-          "evidence": "[GROWTH live 2026-10-30, CEO Cowork, 2026-10-30T12:43:41Z] LIVE: llms-full.txt 200; sitemap /faq + /no-log-policy 2/2; /free-vpn 'verified no-logs' 0; BlogPosting on posts 2; title 60 chars, description 133. Deploy ran late (runner broker connection errors in _diag, then caught up). || [CTO live 2026-10-30 12:5xZ, CEO Cowork chat: \"start and complete what you can\"] LIVE now: curl https://caspervpn.com/llms-full.txt -> 200; sitemap /faq + /no-log-policy count = 2 (was 404 / 0 at 12:04Z). Hand to QA for the other legs ('verified' wording on /free-vpn, BlogPosting). || [GROWTH live 2026-10-30, CEO Cowork chat, 2026-10-30T12:04:00Z] cherry-pick of eb2c9f0 -> production b7681b1. Live check after +20 min: llms-full 404, sitemap /faq 0, /free-vpn 'verified no-logs' 2, BlogPosting 0 = NOT LIVE. Deploy Website workflow did not run -> [WEBSITE]. || [GROWTH live 2026-10-30, CEO: \"start keyword work and agi seo work\"]",
-          "owner": "website"
+          "met": true,
+          "passed": true,
+          "verifiedBy": "tested",
+          "evidence": "[QA run 2026-10-31 1051, scheduled, unattended, 2026-10-31T11:1xZ] PASS: measured live from the Mac 11:0xZ: llms-full.txt 200 (2,255 B); sitemap /faq 1 + /no-log-policy 1 (control /pricing 1); /free-vpn 'verified no-logs' 0 (control 'free' 165); 35 blog URLs in sitemap = 30 posts all with BlogPosting markup (5 without = category pages guides/privacy/security/comparisons/protocols) and 30/30 posts title <= 60 + description <= 160. Re-run: curl -s https://caspervpn.com/sitemap.xml | grep -c -E '/faq<|/no-log-policy<' -> 2. Outside scope: /free-vpn (67/163) and /no-log-policy (76/173) page titles/descriptions are over 60/160 -> new P3 [WEBSITE] handoff. || [GROWTH live 2026-10-30, CEO Cowork, 2026-10-30T12:43:41Z] LIVE: llms-full.txt 200; sitemap /faq + /no-log-policy 2/2; /free-vpn 'verified no-logs' 0; BlogPosting on posts 2; title 60 chars, description 133. Deploy ran late (runner broker connection errors in _diag, then caught up). || [CTO live 2026-10-30 12:5xZ, CEO Cowork chat: \"start and complete what you can\"] LIVE now: curl https://caspervpn.com/llms-full.txt -> 200; sitemap /faq + /no-log-policy count = 2 (was 404 / 0 at 12:04Z). Hand to QA for the other legs ('verified' wording on /free-vpn, BlogPosting). || [GROWTH live 2026-10-30, CEO Cowork chat, 2026-10-30T12:04:00Z] cherry-pick of eb2c9f0 -> production b7681b1. Live check after +20 min: llms-full 404, sitemap /faq 0, /free-vpn 'verified no-logs' 2, BlogPosting 0 = NOT LIVE. Deploy Website workflow did not run -> [WEBSITE]. || [GROWTH live 2026-10-30, CEO: \"start keyword work and agi seo work\"]",
+          "owner": "website",
+          "verifiedByRaw": "qa",
+          "verifiedAt": "2026-10-31T11:10:00Z",
+          "verifiedDate": "2026-10-31",
+          "qaVerdict": "PASS",
+          "qaDate": "2026-10-31"
         },
         {
           "test": "CEO YES 2026-10-30 (Cowork live): 'update app listing with harmful keyword check' -> Draft C (Apple Ads popularity) for the build-83 submission | DECISION (P1) \u2014 new App Store words for the next submission (en-US). Today we rank in NO top-190 search result for vpn/fast vpn/secure vpn/double vpn (0 US ratings). A (ADVICE): title 'CasperVPN: Secure WiFi VPN', subtitle 'Online Privacy & Hotspot Guard', keywords 'proxy,ip,hide,changer,dedicated,multi,hop,ikev2,encryption,shield,internet,protect,fast,double' - aims at easier searches (online privacy, wifi security, hotspot, dedicated ip). B: title 'CasperVPN - Private VPN Proxy', subtitle 'Secure Public Wi-Fi & Hotspot' - more volume, harder. C: keep today's. Banned-word check 0 on A and B. Report marketing/reports/aso-keywords-2026-10-30.md. Goes in with build 83's submission (you edit App Store Connect).",
@@ -18530,7 +18535,7 @@
           "owner": "[MARKETING]",
           "test": "SHIPPED 2026-10-31 (production 57c6e0fc3, cherry-pick of a1d103c, pushed 11:0xZ by growth run; live check after the Deploy Website job) | CEO YES 2026-10-30 (dashboard tap api47, admin.caspervpn.com/decisions 2026-10-30T20:51:58Z) | READY TO SHIP - Smart App Banner on caspervpn.com (CEO YES 30 Oct live 'do all the 4') \u00b7 development a1d103c website/app/layout.tsx metadata.itunes appId 1187243615 \u00b7 production push from the live session was refused by the session safety check -> website run ships after dev check \u00b7 rollback: revert a1d103c",
           "verify": "curl -s https://caspervpn.com/ | grep -c 'apple-itunes-app' -> 1",
-          "evidence": "[GROWTH run 2026-10-31 1051, scheduled, unattended, 2026-10-31T11:0xZ] dev check: curl dev.caspervpn.com | grep -c apple-itunes-app = 1; live before push = 0. Pushed production 57c6e0fc3 (1 file, +2 lines). QA checks live. || [CEO YES 2026-10-30 (dashboard tap api47, admin.caspervpn.com/decisions 2026-10-30T20:51:58Z)] 'admin page button: row 567 = yes' - recorded by ceo_answers.py in the backend run 2026-10-30T22:17:24Z; the owner department takes this row at its next run. || [GROWTH live 2026-10-30, CEO Cowork 'do all the 4', 2026-10-30T18:28:05Z] development a1d103c pushed."
+          "evidence": "[QA run 2026-10-31 1051, scheduled, unattended, 2026-10-31T11:1xZ] Reconcile A: CEO YES recorded; verify re-run 11:0xZ: curl -s https://caspervpn.com/ | grep -o apple-itunes-app = 0 -> not live yet (owner ships, then QA re-runs). Not ticked. || [GROWTH run 2026-10-31 1051, scheduled, unattended, 2026-10-31T11:0xZ] dev check: curl dev.caspervpn.com | grep -c apple-itunes-app = 1; live before push = 0. Pushed production 57c6e0fc3 (1 file, +2 lines). QA checks live. || [CEO YES 2026-10-30 (dashboard tap api47, admin.caspervpn.com/decisions 2026-10-30T20:51:58Z)] 'admin page button: row 567 = yes' - recorded by ceo_answers.py in the backend run 2026-10-30T22:17:24Z; the owner department takes this row at its next run. || [GROWTH live 2026-10-30, CEO Cowork 'do all the 4', 2026-10-30T18:28:05Z] development a1d103c pushed."
         },
         {
           "met": false,
@@ -19965,7 +19970,7 @@
           "verifiedBy": "none",
           "verifiedDate": "",
           "verifiedAt": "",
-          "evidence": "[GROWTH run 2026-10-11 0204, scheduled, unattended, 2026-10-11T02:13:09Z] Product accepts QA FAIL xd-1747: 1 Succeeded crypto payment ever, the CEO's own staff account (psql 02:0xZ). | [QA 2026-10-11 b, scheduled, 2026-10-11T01:19:27Z] FAIL (claim corrected) - the only Succeeded crypto Payment ($2.99 USDTBSC, PaidAt 2026-10-01 16:23Z) belongs to the account gm@applinkoffshore.com, which is on the staff list (memory/context/staff-accounts.md) - it is the CEO's own test, not a stranger's /checkout payment. The growth run's 'not a staff email' was wrong (email pattern check missed it). Website orders since 1 Oct (01:1xZ): completed 1 (1 Oct 10:39Z), failed 1, pending 2 (newest 6 Oct). Stays BLOCKED on the first real paid order (xd-1492). -> [PRODUCT] || [GROWTH run 2026-10-11 0003, scheduled, 2026-10-11T00:14:32Z] MEASURED production DB read-only 00:1xZ: Payments Method=Crypto(3) Status=Succeeded(1): 1 row, $2.99 USDTBSC, PaidAt 2026-10-01 16:23Z, account not on the staff/CEO list (email pattern check); plus Crypto Refunded 1 (6 Oct). /login -> customer sign-in (QA 29 Sep). So /checkout has completed at least one real payment -> to [QA] to confirm against the website order record and xd-949. || [BLOCKED] QA 2026-09-29: /login -> /account/login, a customer sign-in page ('Use the same email and password as in the CasperVPN app') - met. /checkout renders its own crypto flow; no real crypto payment has ever completed (xd-949, P0) - 'completes a payment' is unproven until the CEO's one real $1 payment (CEO checklist row 1). | was: 2026-09-23: /login \u2192 /download is live and verified. /checkout still renders its own flow (xd-837). New today, same family: the ADMIN login could never succeed (JWT_SECRET absent from the container) \u2014 fixed in 2d82bc3f, admin@caspervpn.com now signs in and lands on the new Marketing page.",
+          "evidence": "[QA run 2026-10-31 1051, scheduled, unattended, 2026-10-31T11:1xZ] Reconcile C: /login leg PASS - curl -sL www.caspervpn.com/login -> /account/login 200 (control made-up page 404); /checkout 200; the paid-order leg still waits a real non-staff web payment (blocker date 1 Nov kept). || [GROWTH run 2026-10-11 0204, scheduled, unattended, 2026-10-11T02:13:09Z] Product accepts QA FAIL xd-1747: 1 Succeeded crypto payment ever, the CEO's own staff account (psql 02:0xZ). | [QA 2026-10-11 b, scheduled, 2026-10-11T01:19:27Z] FAIL (claim corrected) - the only Succeeded crypto Payment ($2.99 USDTBSC, PaidAt 2026-10-01 16:23Z) belongs to the account gm@applinkoffshore.com, which is on the staff list (memory/context/staff-accounts.md) - it is the CEO's own test, not a stranger's /checkout payment. The growth run's 'not a staff email' was wrong (email pattern check missed it). Website orders since 1 Oct (01:1xZ): completed 1 (1 Oct 10:39Z), failed 1, pending 2 (newest 6 Oct). Stays BLOCKED on the first real paid order (xd-1492). -> [PRODUCT] || [GROWTH run 2026-10-11 0003, scheduled, 2026-10-11T00:14:32Z] MEASURED production DB read-only 00:1xZ: Payments Method=Crypto(3) Status=Succeeded(1): 1 row, $2.99 USDTBSC, PaidAt 2026-10-01 16:23Z, account not on the staff/CEO list (email pattern check); plus Crypto Refunded 1 (6 Oct). /login -> customer sign-in (QA 29 Sep). So /checkout has completed at least one real payment -> to [QA] to confirm against the website order record and xd-949. || [BLOCKED] QA 2026-09-29: /login -> /account/login, a customer sign-in page ('Use the same email and password as in the CasperVPN app') - met. /checkout renders its own crypto flow; no real crypto payment has ever completed (xd-949, P0) - 'completes a payment' is unproven until the CEO's one real $1 payment (CEO checklist row 1). | was: 2026-09-23: /login \u2192 /download is live and verified. /checkout still renders its own flow (xd-837). New today, same family: the ADMIN login could never succeed (JWT_SECRET absent from the container) \u2014 fixed in 2d82bc3f, admin@caspervpn.com now signs in and lands on the new Marketing page.",
           "verifiedByRaw": "none",
           "qaVerdict": "BLOCKED",
           "qaDate": "2026-10-11",
@@ -25521,8 +25526,8 @@
           "passed": false,
           "verifiedBy": "none",
           "owner": "marketing",
-          "evidence": "[GROWTH run 2026-10-31 1051, scheduled, unattended, 2026-10-31T11:0xZ] Row 551 fixes proven LIVE 31 Oct: /llms.txt 200, /llms-full.txt 200, sitemap has /faq + /no-log-policy (2/2), BlogPosting markup on the new post (2 hits), /free-vpn 'verified no-log' 0. Daily posts 31 Oct with geo-citability + geo-content + seo-content: spot-fake-wifi-network-1-minute + public-wifi-banking-safety-4-rules (backup /root/backups/blog_posts_growth1031_20261031T1053Z.sql; INSERT 0 1 x2; live 200, 1 h1 each, in sitemap, live asc scan 0 with control 3; /api/blog 30 -> 32). Ready for QA. || [GROWTH live 2026-10-30, CEO: \"start keyword work and agi seo work\"] Fixes coded on development eb2c9f0 and checked on dev; READY TO SHIP on the card. || [GROWTH live 2026-10-30, CEO: \"yes for 2\" + \"start the seo and agi audit\"] First audit done: marketing/reports/seo-geo-audit-2026-10-30.md - GEO 44/100 (Poor), SEO technical 67/100; PageSpeed not measured (quota). Fixes handed to WEBSITE/MARKETING; live changes need READY TO SHIP. || [GROWTH live 2026-10-29, CEO: \"start with point 4 and 1 and set a plan to do all\"]",
-          "blocker": "Waits [QA]: check row 551 fixes live (handoff 31 Oct)."
+          "evidence": "[QA run 2026-10-31 1051, scheduled, unattended, 2026-10-31T11:1xZ] Reconcile B: legs 1-2 PASS - audit file marketing/reports/seo-geo-audit-2026-10-30.md present; READY TO SHIP row 551 shipped and QA-ticked today. Leg 3 OPEN: 2 posting sessions 30 Oct (12:18Z, 23:37Z) log 'geo-citability + geo-content + seo-content', not 'seo-page'. Not ticked. || [GROWTH run 2026-10-31 1051, scheduled, unattended, 2026-10-31T11:0xZ] Row 551 fixes proven LIVE 31 Oct: /llms.txt 200, /llms-full.txt 200, sitemap has /faq + /no-log-policy (2/2), BlogPosting markup on the new post (2 hits), /free-vpn 'verified no-log' 0. Daily posts 31 Oct with geo-citability + geo-content + seo-content: spot-fake-wifi-network-1-minute + public-wifi-banking-safety-4-rules (backup /root/backups/blog_posts_growth1031_20261031T1053Z.sql; INSERT 0 1 x2; live 200, 1 h1 each, in sitemap, live asc scan 0 with control 3; /api/blog 30 -> 32). Ready for QA. || [GROWTH live 2026-10-30, CEO: \"start keyword work and agi seo work\"] Fixes coded on development eb2c9f0 and checked on dev; READY TO SHIP on the card. || [GROWTH live 2026-10-30, CEO: \"yes for 2\" + \"start the seo and agi audit\"] First audit done: marketing/reports/seo-geo-audit-2026-10-30.md - GEO 44/100 (Poor), SEO technical 67/100; PageSpeed not measured (quota). Fixes handed to WEBSITE/MARKETING; live changes need READY TO SHIP. || [GROWTH live 2026-10-29, CEO: \"start with point 4 and 1 and set a plan to do all\"]",
+          "blocker": "Leg 3: every daily post logs seo-page + geo-citability (seo-page not logged yet) - [MARKETING]"
         },
         {
           "test": "Step 5 - ads only after steps 1-3 are live on most phones; DECISION row with cost per paying user (Apple spend x AppleAdsAttributions)",
@@ -78830,7 +78835,7 @@
       "from": "[BACKEND]",
       "to": "[QA]",
       "title": "Handoff from BACKEND: [P1] xd-2635 dev check: branded unconfirmed-e-mail refusal body",
-      "description": "development d9fa1cd9a: the 403 refusal (all 3 config mouths: /api/servers*, /api/vpn/*, multihop) already carried errorCode AUTH_1006 + message + email + resendEndpoint; added title 'Confirm your e-mail to connect', reason 'email_not_verified', resendMethod POST, resendQueryParam 'email' (additive, old builds ignore). Rule unchanged; resend endpoint stays sign-in free. Tests 506/506 (brain); new EmailNotVerifiedResponseShapeTests; mutation (reason changed) -> test FAILS. Check: on api.dev an unverified e-mail account past the grace (or grace off) -> GET a config -> 403 JSON has errorCode AUTH_1006, title, reason, resendEndpoint, resendMethod, resendQueryParam; POST /api/auth/resend-verification?email=<addr> without a token -> 200. Unit: dotnet test --filter EmailNotVerifiedResponseShapeTests 1/1. PASS -> CEO card READY TO SHIP row (xd-2635). Also tell [IOS]/[ANDROID]: render title+message, button calls resendMethod resendEndpoint?resendQueryParam=email.\nADDED 29 Oct - same need (a dev test account): xd-2707 (retired WireGuard key -> 409 WG_KEY_REVOKED, control idle key 200; reviewer account sees no StaffOnly server) and xd-2728 (CasperCloak__ShapeProfile=staff: staff account -> shapeProfile v2, normal account -> null; off -> null for both).",
+      "description": "development d9fa1cd9a: the 403 refusal (all 3 config mouths: /api/servers*, /api/vpn/*, multihop) already carried errorCode AUTH_1006 + message + email + resendEndpoint; added title 'Confirm your e-mail to connect', reason 'email_not_verified', resendMethod POST, resendQueryParam 'email' (additive, old builds ignore). Rule unchanged; resend endpoint stays sign-in free. Tests 506/506 (brain); new EmailNotVerifiedResponseShapeTests; mutation (reason changed) -> test FAILS. Check: on api.dev an unverified e-mail account past the grace (or grace off) -> GET a config -> 403 JSON has errorCode AUTH_1006, title, reason, resendEndpoint, resendMethod, resendQueryParam; POST /api/auth/resend-verification?email=<addr> without a token -> 200. Unit: dotnet test --filter EmailNotVerifiedResponseShapeTests 1/1. PASS -> CEO card READY TO SHIP row (xd-2635). Also tell [IOS]/[ANDROID]: render title+message, button calls resendMethod resendEndpoint?resendQueryParam=email.\nADDED 29 Oct - same need (a dev test account): xd-2707 (retired WireGuard key -> 409 WG_KEY_REVOKED, control idle key 200; reviewer account sees no StaffOnly server) and xd-2728 (CasperCloak__ShapeProfile=staff: staff account -> shapeProfile v2, normal account -> null; off -> null for both).\nADDED 31 Oct (QA) - xd-2815 legs, same need (customer token on api.dev): (1) xd-2804 POST /api/diagnostics/connect-failure twice same serverId+clientTimestamp+elapsedMsBeforeFailure -> 2nd duplicate=true, 1 row; changed timestamp -> 2 rows; (2) xd-2813 customer token POST /api/vpn/wg-disconnect + /api/vpn/l2tp/user = 403; (3) xd-2810 /api/subscriptions/me + /api/auth/me trialDays=7 (Trial__Days=14 -> 14); (4) xd-2756 item 4 forgot-password -> PasswordResetToken starts 'sha256:' + link resets; item 5 AuditLogs password_* rows IpAddress NULL; item 2 one dry server activation if a dev test node exists. Measured 31 Oct without a token: dev swagger SubscriptionDto HAS trialDays (redeploy live); both endpoints answer 401 AUTH_1001 without a token (control made-up path 404).",
       "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-10-27T10:29:26Z",
@@ -79913,7 +79918,7 @@
       "createdDate": "2026-10-29",
       "completedDate": null,
       "blocker": "needs the CEO's hands: build 83 in Xcode on the CEO Mac (card row 545, _ios/build83.command) + install on his iPhone; then this one phone pass covers all 9 items + xd-2743.",
-      "notes": "[APPS run 2026-10-30 0734, scheduled, unattended, 2026-10-30T07:4xZ] [IOS] ADDED 3 legs that were lost when xd-2702 closed (all in build 83): (a) password-reset #4: Reset password with 9 characters -> Reset button stays disabled; 10 characters -> works (ResetPasswordView.swift:32/:126 on 2cca3d5). (b) double-vpn-cc-silent-degrade #1: Double VPN + hidden mode in a restricted network -> connects, ConnectionLogs served=caspercloak outcome=success; DevOps reads the relay logs. (c) dedicated-ip-prod-readiness #6: sandbox Dedicated IP purchase -> activation -> connect -> whatismyip = the dedicated IP; plus one port forward and one allowed-country rule. Build 83 status 07:4xZ: not built yet (_ios has build83.command 00:03Z, no console-build83.log). || [IOS live 2026-10-30, CEO asked 'what is left on iphone for latest build', 2026-10-30T00:42:30Z] [IOS] Build for this pass = 83, branch ios/93-build83-onboarding 2cca3d5. All 8 branches are in build 83 (ios/93-build83-onboarding 2cca3d5, = build 82 aad4fc9 + growth fixes). git merge-base --is-ancestor: ios/80 a8889f0, ios/81 e2db712, ios/83 0756486, ios/78 2be2d53, ios/87 4e93422, ios/91 2886cc4 = YES. ios/79 82c5377 (+9287c94) and ios/84 9630f0f are not ancestors but git cherry shows '-' for each = the same change is already in build 83 (cherry-picked). Left out: iPad layout branch (CEO said no, build 82 audit). Still open: iPad render step for every sidebar screen (xd-2107/xd-2109) needs the Mac simulator. || "
+      "notes": "[QA run 2026-10-31 1051, scheduled, unattended, 2026-10-31T11:1xZ] Row 545 answer acted on: build 84 (not 83) is the build for this pass - _ios/build84.log: 'App installed: com.applinkoffshore.CasperVPN ... END 2026-10-30T18:11:11Z' on the CEO iPhone. ADDED from xd-2791 (closed into this pass): hidden mode on, change/toggle Wi-Fi mid-session -> Send report shows '[XD-2787] NEVPNStatus ->'; if the tunnel does not return: 'tunnel extension did not start ... Recovery 1/2' on the SAME server and one message 'Couldn't start the VPN. Tap Connect to try again.'; ConnectFailureEvents DetailedCategory 'extension-not-started'; free account over 512 MB -> paywall and no ConnectFailureEvents row 'CasperVPN.APIError:2'; normal connects show no Recovery line. ADDED from xd-2811 leg 1: staff phone, hidden mode on 3 servers -> first try, speed test, Send report shows the shape v2 line (card row 569). Note: _ios/console-build84.log (21:51Z-00:01Z) holds only system lines - 0 '[XD-2787]', 0 app tags - so the phone legs still need the CEO sitting. || [APPS run 2026-10-30 0734, scheduled, unattended, 2026-10-30T07:4xZ] [IOS] ADDED 3 legs that were lost when xd-2702 closed (all in build 83): (a) password-reset #4: Reset password with 9 characters -> Reset button stays disabled; 10 characters -> works (ResetPasswordView.swift:32/:126 on 2cca3d5). (b) double-vpn-cc-silent-degrade #1: Double VPN + hidden mode in a restricted network -> connects, ConnectionLogs served=caspercloak outcome=success; DevOps reads the relay logs. (c) dedicated-ip-prod-readiness #6: sandbox Dedicated IP purchase -> activation -> connect -> whatismyip = the dedicated IP; plus one port forward and one allowed-country rule. Build 83 status 07:4xZ: not built yet (_ios has build83.command 00:03Z, no console-build83.log). || [IOS live 2026-10-30, CEO asked 'what is left on iphone for latest build', 2026-10-30T00:42:30Z] [IOS] Build for this pass = 83, branch ios/93-build83-onboarding 2cca3d5. All 8 branches are in build 83 (ios/93-build83-onboarding 2cca3d5, = build 82 aad4fc9 + growth fixes). git merge-base --is-ancestor: ios/80 a8889f0, ios/81 e2db712, ios/83 0756486, ios/78 2be2d53, ios/87 4e93422, ios/91 2886cc4 = YES. ios/79 82c5377 (+9287c94) and ios/84 9630f0f are not ancestors but git cherry shows '-' for each = the same change is already in build 83 (cherry-picked). Left out: iPad layout branch (CEO said no, build 82 audit). Still open: iPad render step for every sidebar screen (xd-2107/xd-2109) needs the Mac simulator. || "
     },
     {
       "id": "xd-2722",
@@ -80048,14 +80053,14 @@
       "from": "[QA]",
       "to": "[QA]",
       "title": "Handoff from QA: [P1] QA date watch: re-check these on their dates (one task instead of 9)",
-      "description": "Every item below is measured as far as it can be today; each waits a date or a real event. QA re-reads each on its date, ticks the row or hands back:\n- 29 Oct after 23:10Z: xd-2695 no-log 24 h read on the 8 relays (+ ICMP gap xd-2715)\n- 30 Oct: card row 324 second UdpRcvbufErrors reading on 9 relays (one reading taken 29 Oct 18:3xZ); pile-consolidation-with-skills row 2 re-count\n- 31 Oct: xd-2547 crit 5 (7 days off Cloudflare) + s13 inventory xd-2716; xd-2703 the 3 Buffer posts of 31 Oct 17:00Z sent; card row 434 3-day disk min > 8 GB after 13:55Z\n- 1 Nov: xd-2708 / xd-2590 real hidden-mode sessions abroad > 1 MB and > 10 min on the new fronts (card rows 529 leg 3 + 470)\n- 5 Nov: xd-2591 adopted-row billing (card row 471); xd-2619 Tokyo first real WireGuard handshake (0 in 24 h on 29 Oct)\n- 5 Nov: xd-2408 events - an Iran hidden-mode failure of 5-8 s followed by the fast-fail line (row 377 env MaxElapsedMs=8000 set); [apple-revoke] on an Apple-account deletion (needs build with xd-1974)\n- 5 Nov: xd-2704 / card row 523 first real user-trouble Telegram (alarm runs every 15 min, sent 0 so far)\n- 13 Nov: fleet-tls-cert-verification row 3 - *.pompesh.com renewed on the brain = on 11/11 relays\n- 15 Nov (CEO 30 Oct 'put a note for us to check it later'): Grafana - (a) from outside: 3100/3000/9090 still closed on the main server (TCP test + 443 control); (b) ask [DEVOPS] to re-run their local login check (new password 200, old 401) and paste the two status codes here; (c) Grafana version up to date. Card row 387 was closed on the CEO's word on 30 Oct.",
+      "description": "Every item below is measured as far as it can be today; each waits a date or a real event. QA re-reads each on its date, ticks the row or hands back:\n- 29 Oct after 23:10Z: xd-2695 no-log 24 h read on the 8 relays (+ ICMP gap xd-2715)\n- 30 Oct: card row 324 second UdpRcvbufErrors reading on 9 relays (one reading taken 29 Oct 18:3xZ); pile-consolidation-with-skills row 2 re-count\n- 31 Oct: xd-2547 crit 5 (7 days off Cloudflare) + s13 inventory xd-2716; xd-2703 the 3 Buffer posts of 31 Oct 17:00Z sent; card row 434 3-day disk min > 8 GB after 13:55Z\n- 1 Nov: xd-2708 / xd-2590 real hidden-mode sessions abroad > 1 MB and > 10 min on the new fronts (card rows 529 leg 3 + 470)\n- 5 Nov: xd-2591 adopted-row billing (card row 471); xd-2619 Tokyo first real WireGuard handshake (0 in 24 h on 29 Oct)\n- 5 Nov: xd-2408 events - an Iran hidden-mode failure of 5-8 s followed by the fast-fail line (row 377 env MaxElapsedMs=8000 set); [apple-revoke] on an Apple-account deletion (needs build with xd-1974)\n- 5 Nov: xd-2704 / card row 523 first real user-trouble Telegram (alarm runs every 15 min, sent 0 so far)\n- 13 Nov: fleet-tls-cert-verification row 3 - *.pompesh.com renewed on the brain = on 11/11 relays\n- 15 Nov (CEO 30 Oct 'put a note for us to check it later'): Grafana - (a) from outside: 3100/3000/9090 still closed on the main server (TCP test + 443 control); (b) ask [DEVOPS] to re-run their local login check (new password 200, old 401) and paste the two status codes here; (c) Grafana version up to date. Card row 387 was closed on the CEO's word on 30 Oct.\n- ADDED 31 Oct: xd-2811 legs 2-3 - a non-staff account's caspercloak-config has shapeProfile null; dev-brain /opt/dpi-lab/results/history.txt has 12 relay verdicts after 31 Oct 02:00Z (any FAIL -> [CTO]) (card row 570)\n- ADDED 31 Oct (real event): xd-2742 - next user with >= 2 failures and no success: Telegram 'CasperVPN investigation' within 5-10 min + report in /root/reports/investigations/ + verdict matches a hand read (04:15Z 30 Oct case: timing PASS, Telegram NOT PROVEN)\n- ADDED 1 Nov 18:15Z: xd-2805 - free account server list includes Amsterdam and a free connect is not refused (no APIError:12/403); then python3 tools/dpi_truth_table.py --since 2026-10-30T18:14Z --before-after --label row564",
       "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-10-29T20:52:07Z",
       "createdDate": "2026-10-29",
       "completedDate": null,
       "blocker": "date: first item 29 Oct 23:10Z (xd-2695), then 30 Oct, 31 Oct, 1 Nov, 5 Nov, 13 Nov",
-      "notes": "[QA run 2026-10-30 0913, scheduled, unattended, 2026-10-30T09:2xZ] ADDED 30 Oct 23:30Z: xd-2740 leg 2 - on the brain `find /var/log/freeradius/radacct -type f | wc -l` = 0 and no radwtmp, 24 h after the 29 Oct 23:29Z FreeRADIUS restart (9 h 45 min read = 0/0). ADDED 5 Nov: xd-2776 leg 1 - the 6 Buffer posts due 3 + 5 Nov show as published (not error)."
+      "notes": "[QA run 2026-10-31 1051, scheduled, unattended, 2026-10-31T11:1xZ] 31 Oct items (xd-2547 crit 5, xd-2716, card row 434) NOT read: production read refused this run by the session permission check (not retried) - next QA run or a live QA session measures it. xd-2703 Buffer posts are due 17:00Z (later today). || [QA run 2026-10-30 0913, scheduled, unattended, 2026-10-30T09:2xZ] ADDED 30 Oct 23:30Z: xd-2740 leg 2 - on the brain `find /var/log/freeradius/radacct -type f | wc -l` = 0 and no radwtmp, 24 h after the 29 Oct 23:29Z FreeRADIUS restart (9 h 45 min read = 0/0). ADDED 5 Nov: xd-2776 leg 1 - the 6 Buffer posts due 3 + 5 Nov show as published (not error)."
     },
     {
       "id": "xd-2731",
@@ -80128,7 +80133,8 @@
       "priority": "P1",
       "createdAt": "2026-10-29T22:38:13Z",
       "createdDate": "2026-10-29",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[QA run 2026-10-31 1051, scheduled, unattended, 2026-10-31T11:1xZ] Files leg PASS: Dropbox CasperVPN/Partners/PRtronics/pilot/ = 5 partner-prtronics-0N-miami.conf (each has [Interface] + [Peer] + Endpoint = 3/3) + 5 .png (all real PNG headers). DB legs (5 users, plan, DataLimitBytes, WireGuardPeerUsages): production read refused this run by the session permission check (not retried) - next QA run or a live QA session measures it."
     },
     {
       "id": "xd-2736",
@@ -80140,7 +80146,8 @@
       "priority": "P1",
       "createdAt": "2026-10-29T23:05:59Z",
       "createdDate": "2026-10-29",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[QA run 2026-10-31 1051, scheduled, unattended, 2026-10-31T11:1xZ] Not measured: production read refused this run by the session permission check (not retried) - next QA run or a live QA session measures it."
     },
     {
       "id": "xd-2737",
@@ -80148,11 +80155,14 @@
       "to": "[QA]",
       "title": "Handoff from BACKEND: [P2] Admin-check robot log-in ready (dev only)",
       "description": "qa-robot-admin@caspervpn.com, Admin on admin.dev / api.dev only; password in credentials.md \u00a719 (read the file, never print it). Use it for the xd-1696 robot pass.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-10-29T23:05:59Z",
       "createdDate": "2026-10-29",
-      "completedDate": null
+      "completedDate": "2026-10-31",
+      "completedAt": "2026-10-31",
+      "completedBy": "[QA]",
+      "resolution": "NOTED - robot admin entry present in credentials.md (grep -c 'qa-robot-admin' = 1, value not read); used by the xd-1696 robot pass; nothing to test on its own"
     },
     {
       "id": "xd-2738",
@@ -80219,12 +80229,16 @@
       "to": "[QA]",
       "title": "Handoff from CTO: Verify the connect investigator on the next real incident",
       "description": "Live since 23:2xZ 29 Oct (cron */5). On the next user who fails >= 2 times with no success: a Telegram 'CasperVPN investigation: ...' within 5-10 min, a report in /root/reports/investigations/, and the verdict matches what you measure by hand. Then tick the row.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-10-29T23:32:33Z",
       "createdDate": "2026-10-29",
-      "completedDate": null,
-      "notes": "[QA live 2026-10-30 11:4xZ, CEO Cowork chat] Real case found: investigation report /root/reports/investigations/20261030T0415Z-65fd9bed.md written at 04:15Z, 1 min after the 2nd failure (04:14:33Z) - timing PASS. Verdict 'UNCLEAR - ask for a bug report'. QA by hand (api log 30 Oct, counts): this Gulf user (phone UAE, network Oman) had 19 hidden-mode connect-success 02:17-05:33Z but sessions of 0.5 s to 42 min, then 15 ConnectFailure (cat=unknown, CasperCloak:-2) incl. 06:10-06:25Z on Amsterdam/Dusseldorf/Hong Kong/Singapore/Sao Paulo, bug report 06:24Z, nothing after 06:25:41Z. 'Unclear' is honest (door tests 101 from our side) but the pattern = connects then drops. NOT PROVEN: Telegram 'CasperVPN investigation' message for this report. Handed the case to [CTO]."
+      "completedDate": "2026-10-31",
+      "notes": "[QA live 2026-10-30 11:4xZ, CEO Cowork chat] Real case found: investigation report /root/reports/investigations/20261030T0415Z-65fd9bed.md written at 04:15Z, 1 min after the 2nd failure (04:14:33Z) - timing PASS. Verdict 'UNCLEAR - ask for a bug report'. QA by hand (api log 30 Oct, counts): this Gulf user (phone UAE, network Oman) had 19 hidden-mode connect-success 02:17-05:33Z but sessions of 0.5 s to 42 min, then 15 ConnectFailure (cat=unknown, CasperCloak:-2) incl. 06:10-06:25Z on Amsterdam/Dusseldorf/Hong Kong/Singapore/Sao Paulo, bug report 06:24Z, nothing after 06:25:41Z. 'Unclear' is honest (door tests 101 from our side) but the pattern = connects then drops. NOT PROVEN: Telegram 'CasperVPN investigation' message for this report. Handed the case to [CTO].",
+      "completedAt": "2026-10-31",
+      "completedBy": "[QA]",
+      "resolution": "CONSOLIDATED into QA date watch xd-2730 (waits a real failing user); 30 Oct case: timing PASS, Telegram receipt NOT PROVEN",
+      "resultingHandoff": "xd-2730"
     },
     {
       "id": "xd-2743",
@@ -80328,7 +80342,8 @@
       "priority": "P1",
       "createdAt": "2026-10-30T00:06:00Z",
       "createdDate": "2026-10-30",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[QA run 2026-10-31 1051, scheduled, unattended, 2026-10-31T11:1xZ] Not measured: production read refused this run by the session permission check (not retried) - next QA run or a live QA session measures it."
     },
     {
       "id": "xd-2750",
@@ -80366,7 +80381,7 @@
       "createdAt": "2026-10-30T00:43:14Z",
       "createdDate": "2026-10-30",
       "completedDate": null,
-      "notes": "[QA run 2026-10-30 0913, scheduled, unattended, 2026-10-30T09:3xZ] Leg 1 (weekly restore test) PASS: restore-test-2026-10-30.txt RESULT=PASS, Users 665 = production 665; ops-database-backups row 5 ticked. Leg 2 (throughput report running) not yet read - next QA run."
+      "notes": "[QA run 2026-10-31 1051, scheduled, unattended, 2026-10-31T11:1xZ] Not measured: production read refused this run by the session permission check (not retried) - next QA run or a live QA session measures it. || [QA run 2026-10-30 0913, scheduled, unattended, 2026-10-30T09:3xZ] Leg 1 (weekly restore test) PASS: restore-test-2026-10-30.txt RESULT=PASS, Users 665 = production 665; ops-database-backups row 5 ticked. Leg 2 (throughput report running) not yet read - next QA run."
     },
     {
       "id": "xd-2753",
@@ -80378,7 +80393,8 @@
       "priority": "P1",
       "createdAt": "2026-10-30T00:46:19Z",
       "createdDate": "2026-10-30",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[QA run 2026-10-31 1051, scheduled, unattended, 2026-10-31T11:1xZ] Not measured: production read refused this run by the session permission check (not retried) - next QA run or a live QA session measures it."
     },
     {
       "id": "xd-2754",
@@ -80530,7 +80546,8 @@
       "priority": "P2",
       "createdAt": "2026-10-30T01:34:37Z",
       "createdDate": "2026-10-30",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[QA run 2026-10-31 1051, scheduled, unattended, 2026-10-31T11:1xZ] Not measured: production read refused this run by the session permission check (not retried) - next QA run or a live QA session measures it."
     },
     {
       "id": "xd-2765",
@@ -80634,11 +80651,14 @@
       "to": "[QA]",
       "title": "Handoff from DEVOPS: [P3] Check the ICMP no-log line in git ufw_nolog_userports.sh (xd-2754, development 1c8f0a25c)",
       "description": "[DEVOPS run 2026-10-30 0725, scheduled, unattended, 2026-10-30T07:4xZ] development 1c8f0a25c: apply-rule now also inserts '-A ufw-before-input -p icmp -m conntrack --ctstate INVALID -m comment --comment xd2715-icmpnolog -j DROP' (v4) before ufw-logging-deny, idempotent; check prints icmp v4=<n>. Offline test (fake RULES_DIR, two runs): order = live Montreal before.rules lines 30-33, second run changes nothing. Verify: git show 1c8f0a25c; RULES_DIR=<tmp> PORTS=80,443 UDP_ALLOWED=1194 bash ufw_nolog_userports.sh apply-rule twice. No live server changed.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P3",
       "createdAt": "2026-10-30T07:35:51Z",
       "createdDate": "2026-10-30",
-      "completedDate": null
+      "completedDate": "2026-10-31",
+      "completedAt": "2026-10-31",
+      "completedBy": "[QA]",
+      "resolution": "PASS - git show 1c8f0a25c (+ dev tip, which also adds the v6 ipv6-icmp line): offline test with fake RULES_DIR, PORTS=80,443 UDP_ALLOWED=1194: run 1 inserts 1 icmp line in before.rules + 1 in before6.rules, right before ufw-logging-deny; run 2 diff 0 lines (idempotent), control = fresh files had 0"
     },
     {
       "id": "xd-2772",
@@ -80849,11 +80869,14 @@
       "to": "[QA]",
       "title": "Handoff from DEVOPS: [P1] Row 535 shipped: main server firewall has no catch-all; internal ports closed from outside",
       "description": "[DEVOPS live 2026-10-30 12:0x-12:3xZ, CEO Cowork ('yes row 535', signed in to DigitalOcean), 2026-10-30T12:28:41Z] Step 3 12:25Z: catch-all ACCEPT (was rule 70) deleted after explicit allows (9443/tcp, 1701/udp, 51821/udp, docker0, br-+). Every host service that listens is accepted by its own rule, so only closed ports were reaching the catch-all (352 NEW in 26 min). PROOF: API/site/admin 200; closed port 9999 from the dev server: before = refused at once, after = timeout (dropped); ssh from dev still open; front-path check 11/11; Double VPN wg1 handshakes 1-51 s old; Prometheus up 75/75; API 0 errors in 10 min. Persisted: /etc/iptables/rules.v4 (backup rules.v4.bak-20261030; catch-all 0, row535 allows 5). Rollback: iptables-restore < /root/reports/devops1030-1200/iptables-before-step3.rules. ALSO measured: host ports 3000 (admin), 3100 (grafana), 9115 (blackbox), 8090 (glitchtip), 5010 (probe), 8080 (api direct) all CLOSED from outside (dev server test). Tick security-lockdown-p1 row 14 if 'no unconditional NEW ACCEPT' holds; check xd-2449 (row 300 part 1) as met by the firewall.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-10-30T12:28:48Z",
       "createdDate": "2026-10-30",
-      "completedDate": null
+      "completedDate": "2026-10-31",
+      "completedAt": "2026-10-31",
+      "completedBy": "[QA]",
+      "resolution": "PASS - security-lockdown-p1 row 14 ticked: catch-all 0 in live + saved rules, INPUT DROP; 8 internal ports closed from outside, control 443 open; xd-2449 already completed"
     },
     {
       "id": "xd-2787",
@@ -80881,7 +80904,8 @@
       "priority": "P1",
       "createdAt": "2026-10-30T12:35:37Z",
       "createdDate": "2026-10-30",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[QA run 2026-10-31 1051, scheduled, unattended, 2026-10-31T11:1xZ] Not measured: production read refused this run by the session permission check (not retried) - next QA run or a live QA session measures it."
     },
     {
       "id": "xd-2789",
@@ -80889,11 +80913,14 @@
       "to": "[QA]",
       "title": "Handoff from CTO: [P2] Card row 551 (SEO/GEO fixes) now live - tick the remaining legs",
       "description": "30 Oct 12:5xZ: llms-full.txt 200 and sitemap 2/2 on caspervpn.com. Check /free-vpn has 0 'verified no-logs' and blog posts carry BlogPosting markup, then tick row 551 (list index 551, starts 'CEO YES 2026-10-30 (Cowork live chat): yes for row 551').",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-10-30T12:35:37Z",
       "createdDate": "2026-10-30",
-      "completedDate": null
+      "completedDate": "2026-10-31",
+      "completedAt": "2026-10-31",
+      "completedBy": "[QA]",
+      "resolution": "PASS - row 551 ticked (all legs live; evidence on the row)"
     },
     {
       "id": "xd-2790",
@@ -80901,11 +80928,14 @@
       "to": "[QA]",
       "title": "Handoff from MARKETING: [P2] Check row 551 SEO/GEO fixes live",
       "description": "[GROWTH live 2026-10-30, CEO Cowork, 2026-10-30T12:43:41Z] Verify: curl llms-full.txt 200; sitemap grep /faq + /no-log-policy = 2; /free-vpn 'verified no-logs' 0; BlogPosting in a blog post; titles <= 60, descriptions <= 160.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-10-30T12:43:51Z",
       "createdDate": "2026-10-30",
-      "completedDate": null
+      "completedDate": "2026-10-31",
+      "completedAt": "2026-10-31",
+      "completedBy": "[QA]",
+      "resolution": "PASS - row 551 ticked: llms-full 200, sitemap 2/2, verified 0, BlogPosting 30/30 posts, blog titles/descriptions 30/30 within 60/160"
     },
     {
       "id": "xd-2791",
@@ -80913,11 +80943,15 @@
       "to": "[QA]",
       "title": "Handoff from IOS: [P1] Check build 84 (branch ios/94-tunnel-start-2787 418d940): tunnel that never starts + data cap not a failure",
       "description": "Build 84 = build 83 + 3 commits (a818b67 xd-2778, adef823 xd-2787, 729cfd1 version 84). CEO builds it with _ios/build84.command (row 545). Checks: (1) harness: `SWIFTC=<swift 6.1.2> tools/ios-tests/xd2787/run.sh` on ios/94 = 7 passed 0 failed (run 30 Oct 13:3xZ; mutation control fails 2). (2) Phone, hidden mode on: connect, then switch Wi-Fi network / toggle Wi-Fi during the session; reconnect. Send report must show '[XD-2787] NEVPNStatus ->' lines; if the tunnel does not come back, the log must show '[XD-2787] tunnel extension did not start ... Recovery 1' (and 2) on the SAME server, never a walk over other servers, and one message 'Couldn't start the VPN. Tap Connect to try again.'. (3) ConnectFailureEvents: a row from such a stop has DetailedCategory 'extension-not-started'; a free account over 512 MB gets the paywall and NO ConnectFailureEvents row with ErrorCode 'CasperVPN.APIError:2' (before: 4 rows for 65fd9bed 30 Oct 02:41-02:42Z). (4) Normal hidden-mode and WireGuard connects still work (no false 'did not start': log has no Recovery line). Also re-point xd-2721 legs to build 84. | [IOS CEO live 2026-10-30 13:4xZ] CEO: 'restart the iphone is not a message we should send it complicates users' -> message is now 'Couldn't start the VPN. Tap Connect to try again.' (418d940, harness 8/8 incl. 'no restart / Settings' check). Also check: recovery 2 (remove + re-save profile) may show iOS's 'Allow VPN configuration' prompt - note on the phone whether it appears. | [CTO 30 Oct 15:2xZ] build 84 now also has xd-2797 (e9275a2): pick hidden mode by hand on a server that fails (e.g. block it with a bad server) -> the app tries the next servers in hidden mode and says where it landed; never switches to plain WireGuard. | [IOS 30 Oct 18:11Z] build 84 (4.3.1 (84), ios/94 e9275a2) is INSTALLED on the CEO iPhone - phone checks can run now.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-10-30T13:28:40Z",
       "createdDate": "2026-10-30",
-      "completedDate": null
+      "completedDate": "2026-10-31",
+      "completedAt": "2026-10-31",
+      "completedBy": "[QA]",
+      "resolution": "SUPERSEDED into the ONE build pass xd-2721 (build 84 installed 18:11Z 30 Oct; legs copied there). Harness leg (1) = iOS own run 7/0 + mutation; compile NOT PROVEN by QA (no swiftc on the Mac VM).",
+      "resultingHandoff": "xd-2721"
     },
     {
       "id": "xd-2792",
@@ -80970,7 +81004,8 @@
       "priority": "P1",
       "createdAt": "2026-10-30T13:37:50Z",
       "createdDate": "2026-10-30",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[QA run 2026-10-31 1051, scheduled, unattended, 2026-10-31T11:1xZ] Not measured: production read refused this run by the session permission check (not retried) - next QA run or a live QA session measures it."
     },
     {
       "id": "xd-2796",
@@ -81062,7 +81097,7 @@
       "createdAt": "2026-10-30T15:34:39Z",
       "createdDate": "2026-10-30",
       "completedDate": null,
-      "notes": "[DEVOPS run 2026-10-31 1051, scheduled, unattended, 2026-10-31T10:57:13Z] Add to the check: LA hidden-mode ok vs fail since 30 Oct 15:33Z (DevOps read 31 Oct: 2 ok / 0 fail). If LA fails again >3 times in 7 days, send back to DevOps for the spare-IP DECISION."
+      "notes": "[QA run 2026-10-31 1051, scheduled, unattended, 2026-10-31T11:1xZ] Not measured: production read refused this run by the session permission check (not retried) - next QA run or a live QA session measures it. || [DEVOPS run 2026-10-31 1051, scheduled, unattended, 2026-10-31T10:57:13Z] Add to the check: LA hidden-mode ok vs fail since 30 Oct 15:33Z (DevOps read 31 Oct: 2 ok / 0 fail). If LA fails again >3 times in 7 days, send back to DevOps for the spare-IP DECISION."
     },
     {
       "id": "xd-2803",
@@ -81099,11 +81134,15 @@
       "to": "[QA]",
       "title": "Handoff from CTO: [P1] Card row 564 shipped: Amsterdam is free - check a free user gets it and read the country tables after 48 h",
       "description": "Amsterdam IsPremium false since 30 Oct 18:14Z. Check: the server list for a free account includes Amsterdam (API cache 2 min); a free user connecting to Amsterdam is not refused (no APIError:12/403). 1 Nov 18:15Z: python3 tools/dpi_truth_table.py --since 2026-10-30T18:14Z --before-after --label row564.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-10-30T18:15:51Z",
       "createdDate": "2026-10-30",
-      "completedDate": null
+      "completedDate": "2026-10-31",
+      "completedAt": "2026-10-31",
+      "completedBy": "[QA]",
+      "resolution": "CONSOLIDATED into QA date watch xd-2730 (1 Nov 18:15Z read + free-account Amsterdam leg)",
+      "resultingHandoff": "xd-2730"
     },
     {
       "id": "xd-2806",
@@ -81176,11 +81215,15 @@
       "to": "[QA]",
       "title": "Handoff from CTO: [P1] Check hidden-mode traffic pattern v2 on a staff phone (build 84) + lab 12-relay night",
       "description": "Prod ce93c70 19:22Z CasperCloak__ShapeProfile=staff. Check: (1) CEO/staff phone build 84, hidden mode connect on 3 servers: connects first try, speed test, Send report shows the v2 shape line; (2) a non-staff account still gets shapeProfile null; (3) 31 Oct 02:00Z /opt/dpi-lab/results/history.txt has 12 relay verdicts; any FAIL -> CTO. Rollback: ShapeProfile=off + deploy_api.sh.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-10-30T20:46:09Z",
       "createdDate": "2026-10-30",
-      "completedDate": null
+      "completedDate": "2026-10-31",
+      "completedAt": "2026-10-31",
+      "completedBy": "[QA]",
+      "resolution": "CONSOLIDATED: leg 1 (staff phone, build 84) -> build pass xd-2721; legs 2-3 (non-staff null, dpi-lab 12 verdicts) -> QA date watch xd-2730",
+      "resultingHandoff": "xd-2721 + xd-2730"
     },
     {
       "id": "xd-2812",
@@ -81219,7 +81262,7 @@
       "createdAt": "2026-10-30T22:45:04Z",
       "createdDate": "2026-10-30",
       "completedDate": null,
-      "notes": "[CTO follow-up 2026-10-31 02:5xZ] Amsterdam + Los Angeles PATCHED at 0 live connections: reason log + monitor tag (AMS 3a4ffa8e -> 106034e7, LA b53904fd -> 74ae364f = same file as the other 16.x relays), backups .bak-reasonlog-*, canary PASS, cc-close mon=1 seen; full hidden-mode probe after: both PASS (key login, WireGuard handshake, ping 4/4). All 11 production relays now carry the reason log + monitor tag. || [CTO follow-up 2026-10-30 22:5xZ] Amsterdam + Los Angeles still NOT patched: each has 1 live hidden-mode user moving data (relay socket 509 MB / 432 MB sent, last packet < 1 s ago, re-read 20 s later still growing) - no restart. Next retry ~02:50Z (quiet hours)."
+      "notes": "[QA run 2026-10-31 1051, scheduled, unattended, 2026-10-31T11:1xZ] Not measured: production read refused this run by the session permission check (not retried) - next QA run or a live QA session measures it. || [CTO follow-up 2026-10-31 02:5xZ] Amsterdam + Los Angeles PATCHED at 0 live connections: reason log + monitor tag (AMS 3a4ffa8e -> 106034e7, LA b53904fd -> 74ae364f = same file as the other 16.x relays), backups .bak-reasonlog-*, canary PASS, cc-close mon=1 seen; full hidden-mode probe after: both PASS (key login, WireGuard handshake, ping 4/4). All 11 production relays now carry the reason log + monitor tag. || [CTO follow-up 2026-10-30 22:5xZ] Amsterdam + Los Angeles still NOT patched: each has 1 live hidden-mode user moving data (relay socket 509 MB / 432 MB sent, last packet < 1 s ago, re-read 20 s later still growing) - no restart. Next retry ~02:50Z (quiet hours)."
     },
     {
       "id": "xd-2815",
@@ -81227,12 +81270,16 @@
       "to": "[QA]",
       "title": "Handoff from BACKEND: [P1] Dev check on api.dev: xd-2804 + xd-2813 + xd-2810 + xd-2756 items 2/4/5 (development 31f247b43)",
       "description": "Backend pushed to development 22:29Z and 22:34Z (69ed4a360, 1813eb315, 31f247b43). Tests 575/575 (were 561 + 14 new); mutation: the 3 new dedupe/admin-only tests FAIL on the old code. Dev redeploy NOT yet visible at 22:45Z (dev swagger SubscriptionDto has no trialDays) - check `docker inspect -f {{.Created}} caspervpn-dev-api` first. Checks: (1) xd-2804: POST /api/diagnostics/connect-failure twice with the same serverId+clientTimestamp+elapsedMsBeforeFailure -> both 200, second has duplicate=true, 1 row; change clientTimestamp -> 2 rows. (2) xd-2813: customer token -> POST /api/vpn/wg-disconnect and POST /api/vpn/l2tp/user = 403 (before: 500 'primary' not configured). (3) xd-2810: GET /api/subscriptions/me and /api/auth/me subscription carry trialDays=7 (dev default); with Trial__Days=14 on dev -> 14 and a trial start gives 14 days. (4) xd-2756 item 4: POST forgot-password on a throwaway account -> Users.PasswordResetToken starts 'sha256:' and the mailed link still resets; item 5: AuditLogs gets password_change / password_reset_email / password_reset_admin rows with IpAddress NULL; item 2: server activation (SSH.NET 2026.0.0) - one dry activation on dev if a test node exists.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-10-30T22:46:00Z",
       "createdDate": "2026-10-30",
-      "completedDate": null,
-      "notes": "[BACKEND 22:46Z] Dev redeploy now visible: api.dev swagger SubscriptionDto has trialDays (was absent at 22:33Z and 22:45Z) - the new image is live on dev, checks can start."
+      "completedDate": "2026-10-31",
+      "notes": "[BACKEND 22:46Z] Dev redeploy now visible: api.dev swagger SubscriptionDto has trialDays (was absent at 22:33Z and 22:45Z) - the new image is live on dev, checks can start.",
+      "completedAt": "2026-10-31",
+      "completedBy": "[QA]",
+      "resolution": "CONSOLIDATED into xd-2653 (dev test account container) - every leg needs a customer token on api.dev; no-token reads on xd-2653",
+      "resultingHandoff": "legs listed on xd-2653"
     },
     {
       "id": "xd-2816",
@@ -81392,6 +81439,18 @@
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-10-31T11:02:05Z",
+      "createdDate": "2026-10-31",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2829",
+      "from": "[QA]",
+      "to": "[WEBSITE]",
+      "title": "Handoff from QA: [P3] /free-vpn and /no-log-policy page titles + descriptions over 60/160",
+      "description": "QA 31 Oct 11:0xZ (live caspervpn.com): /free-vpn title 67 chars ('Free VPN \u2014 CasperVPN Free Plan, No Credit Card Required | CasperVPN'), description 163; /no-log-policy title 76, description 173. Row 551 cut only blog posts (30/30 within limits). Also /free-vpn description says 'the best free VPN' - Marketing to judge the claim. Verify: python title/description length on both pages <= 60/160.",
+      "status": "pending",
+      "priority": "P3",
+      "createdAt": "2026-10-31T11:02:34Z",
       "createdDate": "2026-10-31",
       "completedDate": null
     }
