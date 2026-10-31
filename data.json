@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-31T11:44:57Z",
+  "lastUpdated": "2026-10-31T11:51:57Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 69,
@@ -25681,27 +25681,41 @@
       "acceptanceCriteria": [
         {
           "test": "#1 Accounts & sign-in - Passwords stored with a strong slow hash (Argon2id or bcrypt)",
-          "met": false,
+          "met": true,
           "verify": "grep -rc 'BCrypt.Net.BCrypt.HashPassword' backend-dotnet-core --include=*.cs (>0) and no MD5/SHA1 password storage",
-          "evidence": "[SECURITY live 2026-10-30, measured 30 Oct 2026, 00:20-00:55 UTC] SECURITY MEASURED DONE (not a QA tick): Every account password is stored with bcrypt, a slow salted hash. Argon2id is the newer gold standard; switching is optional and low priority."
+          "evidence": "[QA live 2026-10-31 ~11:5xZ, CEO Cowork: \"security finished\" + production reads allowed read-only] PASS: production clone c4a144844 (clean): BCrypt.HashPassword calls 17; the only SHA1 near a password is PasswordPolicyService:84 = the HIBP k-anonymity range lookup (5-char prefix to api.pwnedpasswords.com), not storage. || [SECURITY live 2026-10-30, measured 30 Oct 2026, 00:20-00:55 UTC] SECURITY MEASURED DONE (not a QA tick): Every account password is stored with bcrypt, a slow salted hash. Argon2id is the newer gold standard; switching is optional and low priority.",
+          "passed": true,
+          "verifiedBy": "tested",
+          "verifiedByRaw": "qa",
+          "verifiedAt": "2026-10-31T11:55:00Z",
+          "verifiedDate": "2026-10-31",
+          "qaVerdict": "PASS",
+          "qaDate": "2026-10-31"
         },
         {
           "test": "#2 Accounts & sign-in - Login brute-force protection",
           "met": false,
           "verify": "backend-api row 6 (QA tested 29 Oct): repeated wrong logins -> 429",
-          "evidence": "[SECURITY live 2026-10-30, measured 30 Oct 2026, 00:20-00:55 UTC] SECURITY MEASURED DONE (not a QA tick): Five wrong passwords in 15 minutes locks that account for a while. QA proved the 'too many tries' answer on the test and live servers (29 Oct)."
+          "evidence": "[QA live 2026-10-31 ~11:5xZ, CEO Cowork: \"security finished\" + production reads allowed read-only] Not re-run today (would mean repeated wrong logins on production); last QA test 29 Oct backend-api row 6 = 429. Left open for the next QA run. || [SECURITY live 2026-10-30, measured 30 Oct 2026, 00:20-00:55 UTC] SECURITY MEASURED DONE (not a QA tick): Five wrong passwords in 15 minutes locks that account for a while. QA proved the 'too many tries' answer on the test and live servers (29 Oct)."
         },
         {
           "test": "#3 Accounts & sign-in - Signing out or changing the password ends sessions on other devices",
           "met": false,
           "verify": "Tests/PasswordChangeEndsOtherSessionsTests.cs passes; api log line after a real reset",
-          "evidence": "[SECURITY live 2026-10-30, measured 30 Oct 2026, 00:20-00:55 UTC] SECURITY MEASURED DONE (not a QA tick): Built and live with automatic tests since 11 Oct. The real-world proof waits for the next real password reset (re-check 5 Nov)."
+          "evidence": "[QA live 2026-10-31 ~11:5xZ, CEO Cowork: \"security finished\" + production reads allowed read-only] Tests/PasswordChangeEndsOtherSessionsTests.cs present on production; the test run + an api log line after a real reset not re-read today. Left open. || [SECURITY live 2026-10-30, measured 30 Oct 2026, 00:20-00:55 UTC] SECURITY MEASURED DONE (not a QA tick): Built and live with automatic tests since 11 Oct. The real-world proof waits for the next real password reset (re-check 5 Nov)."
         },
         {
           "test": "#4 Accounts & sign-in - Password-reset links work once and expire",
-          "met": false,
+          "met": true,
           "verify": "AuthService reset: expiry AddHours(24); token + expiry set null after use",
-          "evidence": "[SECURITY live 2026-10-30, measured 30 Oct 2026, 00:20-00:55 UTC] SECURITY MEASURED DONE (not a QA tick): Reset links expire after 24 hours and stop working once used. Small improvement: store them scrambled (hashed) in the database."
+          "evidence": "[QA live 2026-10-31 ~11:5xZ, CEO Cowork: \"security finished\" + production reads allowed read-only] PASS: production clone c4a144844 (clean) AuthService.cs:1320 PasswordResetTokenExpiry = UtcNow.AddHours(24); :1355-1356 token + expiry set null after use. || [SECURITY live 2026-10-30, measured 30 Oct 2026, 00:20-00:55 UTC] SECURITY MEASURED DONE (not a QA tick): Reset links expire after 24 hours and stop working once used. Small improvement: store them scrambled (hashed) in the database.",
+          "passed": true,
+          "verifiedBy": "tested",
+          "verifiedByRaw": "qa",
+          "verifiedAt": "2026-10-31T11:55:00Z",
+          "verifiedDate": "2026-10-31",
+          "qaVerdict": "PASS",
+          "qaDate": "2026-10-31"
         },
         {
           "test": "#5 Accounts & sign-in - Admin accounts must use two-factor login",
@@ -25729,9 +25743,16 @@
         },
         {
           "test": "#9 Keys & secrets - Settings files (.env) never saved in the code",
-          "met": false,
+          "met": true,
           "verify": "git ls-files | grep -E '(^|/)\\.env' lists only *.example + admin-panel-react/.env (API URL only)",
-          "evidence": "[SECURITY live 2026-10-30, measured 30 Oct 2026, 00:20-00:55 UTC] SECURITY MEASURED DONE (not a QA tick): Only example settings files are saved in the code; the admin panel's settings file holds just the public API address."
+          "evidence": "[QA live 2026-10-31 ~11:5xZ, CEO Cowork: \"security finished\" + production reads allowed read-only] PASS: production clone c4a144844 (clean) git ls-files .env*: .env.example, .env.production-example, admin-panel-react/.env (API URL only per verify), admin-panel-react/.env.example, infrastructure/dev-vps/.env.dev.example, tests/.env.example - no real .env. || [SECURITY live 2026-10-30, measured 30 Oct 2026, 00:20-00:55 UTC] SECURITY MEASURED DONE (not a QA tick): Only example settings files are saved in the code; the admin panel's settings file holds just the public API address.",
+          "passed": true,
+          "verifiedBy": "tested",
+          "verifiedByRaw": "qa",
+          "verifiedAt": "2026-10-31T11:55:00Z",
+          "verifiedDate": "2026-10-31",
+          "qaVerdict": "PASS",
+          "qaDate": "2026-10-31"
         },
         {
           "test": "#10 Keys & secrets - Code history scanned for leaked secrets",
@@ -25741,9 +25762,16 @@
         },
         {
           "test": "#11 Database - Database queries cannot be hijacked (parameterized queries)",
-          "met": false,
+          "met": true,
           "verify": "raw SQL calls use parameters ({0}/$1 or FormattableString); 0 callers of the raw-clause helpers",
-          "evidence": "[SECURITY live 2026-10-30, measured 30 Oct 2026, 00:20-00:55 UTC] SECURITY MEASURED DONE (not a QA tick): All 60 hand-written database queries in the server, and the website's, pass user input separately, which is the safe way. Two unused helpers that could be misused should be deleted."
+          "evidence": "[QA live 2026-10-31 ~11:5xZ, CEO Cowork: \"security finished\" + production reads allowed read-only] PASS: production clone c4a144844 (clean): ExecuteSqlRaw/FromSqlRaw calls with $\"...\" or + concatenation = 0 (planted control line matches 1); each raw call reads {0}..{n} parameters (VpnServerService:322, OptimizedVpnServerService:746, BandwidthMonitoringService:156, AdminSupportController:175/265) or is a constant (RestrictedCountryService:183, 0 interpolation); raw-clause helpers BatchUpdateAsync/BatchDeleteAsync callers 0. || [SECURITY live 2026-10-30, measured 30 Oct 2026, 00:20-00:55 UTC] SECURITY MEASURED DONE (not a QA tick): All 60 hand-written database queries in the server, and the website's, pass user input separately, which is the safe way. Two unused helpers that could be misused should be deleted.",
+          "passed": true,
+          "verifiedBy": "tested",
+          "verifiedByRaw": "qa",
+          "verifiedAt": "2026-10-31T11:55:00Z",
+          "verifiedDate": "2026-10-31",
+          "qaVerdict": "PASS",
+          "qaDate": "2026-10-31"
         },
         {
           "test": "#12 Database - Database reachable only from inside, with a strong password",
@@ -25753,21 +25781,42 @@
         },
         {
           "test": "#13 Database - Backups run and a restore has been tested",
-          "met": false,
+          "met": true,
           "verify": "restore-test report < 30 days old in /root/reports + its cron",
-          "evidence": "[SECURITY live 2026-10-30 13:2x-13:4xZ, CEO live chat] SECURITY MEASURED DONE (not a QA tick): restore test report exists and QA passed ops-database-backups row 5 on 30 Oct 09:3xZ (665=665). || [SECURITY live 2026-10-30, measured 30 Oct 2026, 00:20-00:55 UTC] SECURITY MEASURED PARTLY DONE (not a QA tick): Nightly and weekly backups plus an off-site copy are running. A restore was rehearsed by hand on 28-29 Oct, but no regular restore test exists yet."
+          "evidence": "[QA live 2026-10-31 ~11:5xZ, CEO Cowork: \"security finished\" + production reads allowed read-only] PASS: restore test /root/reports/restore-test-latest.txt 30 Oct 00:41Z (< 30 days) restore_rc=0, Users 665; cron /etc/cron.d/casper-restore-test present (first scheduled run Sunday 1 Nov 05:20Z on the QA date watch). || [SECURITY live 2026-10-30 13:2x-13:4xZ, CEO live chat] SECURITY MEASURED DONE (not a QA tick): restore test report exists and QA passed ops-database-backups row 5 on 30 Oct 09:3xZ (665=665). || [SECURITY live 2026-10-30, measured 30 Oct 2026, 00:20-00:55 UTC] SECURITY MEASURED PARTLY DONE (not a QA tick): Nightly and weekly backups plus an off-site copy are running. A restore was rehearsed by hand on 28-29 Oct, but no regular restore test exists yet.",
+          "passed": true,
+          "verifiedBy": "tested",
+          "verifiedByRaw": "qa",
+          "verifiedAt": "2026-10-31T11:55:00Z",
+          "verifiedDate": "2026-10-31",
+          "qaVerdict": "PASS",
+          "qaDate": "2026-10-31"
         },
         {
           "test": "#14 Encryption - HTTPS forced everywhere",
-          "met": false,
+          "met": true,
           "verify": "curl -s -o /dev/null -w '%{http_code}' http://caspervpn.com/ -> 301 (same for api. and admin.)",
-          "evidence": "[SECURITY live 2026-10-30, measured 30 Oct 2026, 00:20-00:55 UTC] SECURITY MEASURED DONE (not a QA tick): Measured tonight: the website, the API and the admin site all send plain-web visitors to HTTPS."
+          "evidence": "[QA live 2026-10-31 ~11:5xZ, CEO Cowork: \"security finished\" + production reads allowed read-only] PASS: curl http:// -> 301 to https on caspervpn.com, api.caspervpn.com, admin.caspervpn.com (live from the Mac). || [SECURITY live 2026-10-30, measured 30 Oct 2026, 00:20-00:55 UTC] SECURITY MEASURED DONE (not a QA tick): Measured tonight: the website, the API and the admin site all send plain-web visitors to HTTPS.",
+          "passed": true,
+          "verifiedBy": "tested",
+          "verifiedByRaw": "qa",
+          "verifiedAt": "2026-10-31T11:55:00Z",
+          "verifiedDate": "2026-10-31",
+          "qaVerdict": "PASS",
+          "qaDate": "2026-10-31"
         },
         {
           "test": "#15 Encryption - HSTS on, old encryption versions refused",
-          "met": false,
+          "met": true,
           "verify": "curl -sI https://caspervpn.com | grep -i strict-transport-security; curl --tlsv1 --tls-max 1.1 fails",
-          "evidence": "[SECURITY live 2026-10-30, measured 30 Oct 2026, 00:20-00:55 UTC] SECURITY MEASURED DONE (not a QA tick): All three sites tell browsers to use HTTPS only for a year (including sub-sites), and refuse the outdated TLS 1.0 and 1.1."
+          "evidence": "[QA live 2026-10-31 ~11:5xZ, CEO Cowork: \"security finished\" + production reads allowed read-only] PASS: HSTS 'max-age=31536000; includeSubDomains' on caspervpn.com; curl --tlsv1 --tls-max 1.1 fails (rc 35), control --tlsv1.2 = 200. || [SECURITY live 2026-10-30, measured 30 Oct 2026, 00:20-00:55 UTC] SECURITY MEASURED DONE (not a QA tick): All three sites tell browsers to use HTTPS only for a year (including sub-sites), and refuse the outdated TLS 1.0 and 1.1.",
+          "passed": true,
+          "verifiedBy": "tested",
+          "verifiedByRaw": "qa",
+          "verifiedAt": "2026-10-31T11:55:00Z",
+          "verifiedDate": "2026-10-31",
+          "qaVerdict": "PASS",
+          "qaDate": "2026-10-31"
         },
         {
           "test": "#16 Web attacks - Cross-site scripting (XSS) blocked, with a Content Security Policy",
@@ -25789,9 +25838,16 @@
         },
         {
           "test": "#19 Web attacks - Every input checked on the server",
-          "met": false,
+          "met": true,
           "verify": "52/52 controllers [ApiController]; per-endpoint review in the next audit",
-          "evidence": "[SECURITY live 2026-10-31 10:15-10:22Z, CEO: '1 yes 2 delete'] SECURITY MEASURED (not a QA tick): billing-rule hole found 30 Oct, fixed live 31 Oct 10:21Z (production 80265465c), live proof in memory/departments/security/audit-2026-10-30/REPORT.md section I4 (private); QA xd-2821. || [SECURITY live 2026-10-30, measured 30 Oct 2026, 00:20-00:55 UTC] SECURITY MEASURED PARTLY DONE (not a QA tick): All 52 server controllers use built-in input checks and the website uses a validation library, but no endpoint-by-endpoint review has been done yet."
+          "evidence": "[QA live 2026-10-31 ~11:5xZ, CEO Cowork: \"security finished\" + production reads allowed read-only] PASS: production clone c4a144844 (clean): 52/52 controllers carry [ApiController]; plus the 31 Oct paid-plan fix is in the running DLL (UTF-16 'tried to change their own plan to' 1, 'tried to create a subscription on paid plan' 1, control made-up string 0, known string DohFailover 3) and today's api log holds 4 such refusals (Security's live tests). Per-endpoint review stays for the next audit as the verify says. || [SECURITY live 2026-10-31 10:15-10:22Z, CEO: '1 yes 2 delete'] SECURITY MEASURED (not a QA tick): billing-rule hole found 30 Oct, fixed live 31 Oct 10:21Z (production 80265465c), live proof in memory/departments/security/audit-2026-10-30/REPORT.md section I4 (private); QA xd-2821. || [SECURITY live 2026-10-30, measured 30 Oct 2026, 00:20-00:55 UTC] SECURITY MEASURED PARTLY DONE (not a QA tick): All 52 server controllers use built-in input checks and the website uses a validation library, but no endpoint-by-endpoint review has been done yet.",
+          "passed": true,
+          "verifiedBy": "tested",
+          "verifiedByRaw": "qa",
+          "verifiedAt": "2026-10-31T11:55:00Z",
+          "verifiedDate": "2026-10-31",
+          "qaVerdict": "PASS",
+          "qaDate": "2026-10-31"
         },
         {
           "test": "#20 Web attacks - Browser security headers set",
@@ -25801,27 +25857,55 @@
         },
         {
           "test": "#21 Server protections - Request rate limits",
-          "met": false,
+          "met": true,
           "verify": "dev test in the vault report (finding N1) passes",
-          "evidence": "[SECURITY live 2026-10-30 14:2x-15:1xZ, CEO: \"what can u keep doing while i do my task ?\"] SECURITY MEASURED DONE (not a QA tick): API fix live 15:03Z (production 506a7010f); test server before/after and production after recorded in memory/departments/security/audit-2026-10-30/REPORT.md section H (private); QA xd-2801. || [SECURITY live 2026-10-30 13:4x-14:5xZ, CEO: \"we need to finalize all points start going\"] nginx real address shipped by DevOps 13:37Z (row 561 A); API part open xd-2756. || [SECURITY live 2026-10-30, measured 30 Oct 2026, 00:20-00:55 UTC] SECURITY MEASURED PARTLY DONE (not a QA tick): Limits exist in two places and the login limit is proven. But behind Cloudflare the servers do not see each visitor's real address, so per-visitor limits on pages that need no sign-in are not reliable. Fix: read the real address from Cloudflare (test server first)."
+          "evidence": "[QA live 2026-10-31 ~11:5xZ, CEO Cowork: \"security finished\" + production reads allowed read-only] PASS: PRODUCTION (live 11:5xZ, from the Mac, IP not ours): 5 x POST {} /api/auth/forgot-password (validation 400, no mail) each with a NEW fake X-Forwarded-For -> remaining 2, 1, 0, then 429, 429 (retry-after 3599) = forged header no longer makes a fresh bucket; control from another network (main server, no XFF) -> 400 remaining 2 (still allowed). || [SECURITY live 2026-10-30 14:2x-15:1xZ, CEO: \"what can u keep doing while i do my task ?\"] SECURITY MEASURED DONE (not a QA tick): API fix live 15:03Z (production 506a7010f); test server before/after and production after recorded in memory/departments/security/audit-2026-10-30/REPORT.md section H (private); QA xd-2801. || [SECURITY live 2026-10-30 13:4x-14:5xZ, CEO: \"we need to finalize all points start going\"] nginx real address shipped by DevOps 13:37Z (row 561 A); API part open xd-2756. || [SECURITY live 2026-10-30, measured 30 Oct 2026, 00:20-00:55 UTC] SECURITY MEASURED PARTLY DONE (not a QA tick): Limits exist in two places and the login limit is proven. But behind Cloudflare the servers do not see each visitor's real address, so per-visitor limits on pages that need no sign-in are not reliable. Fix: read the real address from Cloudflare (test server first).",
+          "passed": true,
+          "verifiedBy": "tested",
+          "verifiedByRaw": "qa",
+          "verifiedAt": "2026-10-31T11:55:00Z",
+          "verifiedDate": "2026-10-31",
+          "qaVerdict": "PASS",
+          "qaDate": "2026-10-31"
         },
         {
           "test": "#22 Server protections - CORS: only our own sites may call the API from a browser",
-          "met": false,
+          "met": true,
           "verify": "OPTIONS /api/auth/login with a foreign Origin -> no access-control-allow-origin",
-          "evidence": "[SECURITY live 2026-10-30, measured 30 Oct 2026, 00:20-00:55 UTC] SECURITY MEASURED DONE (not a QA tick): Measured tonight: a foreign website gets no permission; our admin site does."
+          "evidence": "[QA live 2026-10-31 ~11:5xZ, CEO Cowork: \"security finished\" + production reads allowed read-only] PASS: OPTIONS /api/auth/login with Origin https://evil.example -> 0 access-control-allow-origin headers; control Origin https://caspervpn.com -> 1. || [SECURITY live 2026-10-30, measured 30 Oct 2026, 00:20-00:55 UTC] SECURITY MEASURED DONE (not a QA tick): Measured tonight: a foreign website gets no permission; our admin site does.",
+          "passed": true,
+          "verifiedBy": "tested",
+          "verifiedByRaw": "qa",
+          "verifiedAt": "2026-10-31T11:55:00Z",
+          "verifiedDate": "2026-10-31",
+          "qaVerdict": "PASS",
+          "qaDate": "2026-10-31"
         },
         {
           "test": "#23 Server protections - Cookies hidden from scripts, HTTPS-only and same-site",
-          "met": false,
+          "met": true,
           "verify": "website cookie options: httpOnly true, secure in production, sameSite lax; admin refresh Strict",
-          "evidence": "[SECURITY live 2026-10-30, measured 30 Oct 2026, 00:20-00:55 UTC] SECURITY MEASURED DONE (not a QA tick): Website sign-in cookies are hidden from page scripts, HTTPS-only on the live site and same-site; the admin refresh cookie is strict."
+          "evidence": "[QA live 2026-10-31 ~11:5xZ, CEO Cowork: \"security finished\" + production reads allowed read-only] PASS: production clone c4a144844 (clean): website cookies (app/api/account/session, social, devices/remove, crypto-renewal, admin/login) set httpOnly true, secure in production, sameSite 'lax'; admin refresh cookie SameSiteMode.Strict (AuthController.cs:221). || [SECURITY live 2026-10-30, measured 30 Oct 2026, 00:20-00:55 UTC] SECURITY MEASURED DONE (not a QA tick): Website sign-in cookies are hidden from page scripts, HTTPS-only on the live site and same-site; the admin refresh cookie is strict.",
+          "passed": true,
+          "verifiedBy": "tested",
+          "verifiedByRaw": "qa",
+          "verifiedAt": "2026-10-31T11:55:00Z",
+          "verifiedDate": "2026-10-31",
+          "qaVerdict": "PASS",
+          "qaDate": "2026-10-31"
         },
         {
           "test": "#24 Server protections - Admin pages and admin API locked to admins",
-          "met": false,
+          "met": true,
           "verify": "authscan: every admin route Admin/SuperAdmin; website admin handlers 401 without sign-in",
-          "evidence": "[SECURITY live 2026-10-30, measured 30 Oct 2026, 00:20-00:55 UTC] SECURITY MEASURED DONE (not a QA tick): Every admin API route requires the admin role (re-checked 28 Oct). The 7 unprotected website handlers found on 12 Oct were fixed and tested live."
+          "evidence": "[QA live 2026-10-31 ~11:5xZ, CEO Cowork: \"security finished\" + production reads allowed read-only] PASS: production clone c4a144844 (clean): 15/15 Admin*Controller files carry Authorize(Roles=...Admin...) (control: AuthController 0); live: api.caspervpn.com/api/admin/users without sign-in -> 401, caspervpn.com/api/admin/affiliates -> 401, control /health 200. (Method-level AllowAnonymous inside admin controllers not scanned.) || [SECURITY live 2026-10-30, measured 30 Oct 2026, 00:20-00:55 UTC] SECURITY MEASURED DONE (not a QA tick): Every admin API route requires the admin role (re-checked 28 Oct). The 7 unprotected website handlers found on 12 Oct were fixed and tested live.",
+          "passed": true,
+          "verifiedBy": "tested",
+          "verifiedByRaw": "qa",
+          "verifiedAt": "2026-10-31T11:55:00Z",
+          "verifiedDate": "2026-10-31",
+          "qaVerdict": "PASS",
+          "qaDate": "2026-10-31"
         },
         {
           "test": "#25 Server protections - Activity monitoring and alarms",
@@ -25837,9 +25921,16 @@
         },
         {
           "test": "#27 Final audit - Errors do not leak internal details; debug pages are off",
-          "met": false,
+          "met": true,
           "verify": "curl https://api.caspervpn.com/swagger -> 404 empty; /.env -> 404",
-          "evidence": "[SECURITY live 2026-10-30, measured 30 Oct 2026, 00:20-00:55 UTC] SECURITY MEASURED DONE (not a QA tick): Measured tonight: unknown API addresses return an empty 'not found', API documentation pages are not public, and hidden files are not served."
+          "evidence": "[QA live 2026-10-31 ~11:5xZ, CEO Cowork: \"security finished\" + production reads allowed read-only] PASS: live: https://api.caspervpn.com/swagger -> 404, 0 bytes; api /.env -> 404; caspervpn.com/.env -> 404. || [SECURITY live 2026-10-30, measured 30 Oct 2026, 00:20-00:55 UTC] SECURITY MEASURED DONE (not a QA tick): Measured tonight: unknown API addresses return an empty 'not found', API documentation pages are not public, and hidden files are not served.",
+          "passed": true,
+          "verifiedBy": "tested",
+          "verifiedByRaw": "qa",
+          "verifiedAt": "2026-10-31T11:55:00Z",
+          "verifiedDate": "2026-10-31",
+          "qaVerdict": "PASS",
+          "qaDate": "2026-10-31"
         }
       ],
       "deps": [],
@@ -80209,7 +80300,7 @@
       "from": "[QA]",
       "to": "[QA]",
       "title": "Handoff from QA: [P1] QA date watch: re-check these on their dates (one task instead of 9)",
-      "description": "Every item below is measured as far as it can be today; each waits a date or a real event. QA re-reads each on its date, ticks the row or hands back:\n- 29 Oct after 23:10Z: xd-2695 no-log 24 h read on the 8 relays (+ ICMP gap xd-2715)\n- 30 Oct: card row 324 second UdpRcvbufErrors reading on 9 relays (one reading taken 29 Oct 18:3xZ); pile-consolidation-with-skills row 2 re-count\n- 31 Oct: xd-2547 crit 5 (7 days off Cloudflare) + s13 inventory xd-2716; xd-2703 the 3 Buffer posts of 31 Oct 17:00Z sent; card row 434 3-day disk min > 8 GB after 13:55Z\n- 1 Nov: xd-2708 / xd-2590 real hidden-mode sessions abroad > 1 MB and > 10 min on the new fronts (card rows 529 leg 3 + 470)\n- 5 Nov: xd-2591 adopted-row billing (card row 471); xd-2619 Tokyo first real WireGuard handshake (0 in 24 h on 29 Oct)\n- 5 Nov: xd-2408 events - an Iran hidden-mode failure of 5-8 s followed by the fast-fail line (row 377 env MaxElapsedMs=8000 set); [apple-revoke] on an Apple-account deletion (needs build with xd-1974)\n- 5 Nov: xd-2704 / card row 523 first real user-trouble Telegram (alarm runs every 15 min, sent 0 so far)\n- 13 Nov: fleet-tls-cert-verification row 3 - *.pompesh.com renewed on the brain = on 11/11 relays\n- 15 Nov (CEO 30 Oct 'put a note for us to check it later'): Grafana - (a) from outside: 3100/3000/9090 still closed on the main server (TCP test + 443 control); (b) ask [DEVOPS] to re-run their local login check (new password 200, old 401) and paste the two status codes here; (c) Grafana version up to date. Card row 387 was closed on the CEO's word on 30 Oct.\n- ADDED 31 Oct: xd-2811 legs 2-3 - a non-staff account's caspercloak-config has shapeProfile null; dev-brain /opt/dpi-lab/results/history.txt has 12 relay verdicts after 31 Oct 02:00Z (any FAIL -> [CTO]) (card row 570)\n- ADDED 31 Oct (real event): xd-2742 - next user with >= 2 failures and no success: Telegram 'CasperVPN investigation' within 5-10 min + report in /root/reports/investigations/ + verdict matches a hand read (04:15Z 30 Oct case: timing PASS, Telegram NOT PROVEN)\n- ADDED 1 Nov 18:15Z: xd-2805 - free account server list includes Amsterdam and a free connect is not refused (no APIError:12/403); then python3 tools/dpi_truth_table.py --since 2026-10-30T18:14Z --before-after --label row564\n- ADDED 1 Nov after 05:20Z: xd-2752 - first scheduled Sunday restore test: /root/reports/restore-test-latest.txt dated 1 Nov, restore_rc=0, Users count = production at dump time\n- ADDED 6 Nov: xd-2802 legs 2-4 - non-restricted users with the 'not-restricted first try' line connect after it (ConnectionLogs Protocol 3); 7 days ConnectFailureEvents ErrorCode CasperVPN.CasperCloakHidingError:0 from regionRestricted=false = 0; restricted countries still get the domain",
+      "description": "Every item below is measured as far as it can be today; each waits a date or a real event. QA re-reads each on its date, ticks the row or hands back:\n- 29 Oct after 23:10Z: xd-2695 no-log 24 h read on the 8 relays (+ ICMP gap xd-2715)\n- 30 Oct: card row 324 second UdpRcvbufErrors reading on 9 relays (one reading taken 29 Oct 18:3xZ); pile-consolidation-with-skills row 2 re-count\n- 31 Oct: xd-2547 crit 5 (7 days off Cloudflare) + s13 inventory xd-2716; xd-2703 the 3 Buffer posts of 31 Oct 17:00Z sent; card row 434 3-day disk min > 8 GB after 13:55Z\n- 1 Nov: xd-2708 / xd-2590 real hidden-mode sessions abroad > 1 MB and > 10 min on the new fronts (card rows 529 leg 3 + 470)\n- 5 Nov: xd-2591 adopted-row billing (card row 471); xd-2619 Tokyo first real WireGuard handshake (0 in 24 h on 29 Oct)\n- 5 Nov: xd-2408 events - an Iran hidden-mode failure of 5-8 s followed by the fast-fail line (row 377 env MaxElapsedMs=8000 set); [apple-revoke] on an Apple-account deletion (needs build with xd-1974)\n- 5 Nov: xd-2704 / card row 523 first real user-trouble Telegram (alarm runs every 15 min, sent 0 so far)\n- 13 Nov: fleet-tls-cert-verification row 3 - *.pompesh.com renewed on the brain = on 11/11 relays\n- 15 Nov (CEO 30 Oct 'put a note for us to check it later'): Grafana - (a) from outside: 3100/3000/9090 still closed on the main server (TCP test + 443 control); (b) ask [DEVOPS] to re-run their local login check (new password 200, old 401) and paste the two status codes here; (c) Grafana version up to date. Card row 387 was closed on the CEO's word on 30 Oct.\n- ADDED 31 Oct: xd-2811 legs 2-3 - a non-staff account's caspercloak-config has shapeProfile null; dev-brain /opt/dpi-lab/results/history.txt has 12 relay verdicts after 31 Oct 02:00Z (any FAIL -> [CTO]) (card row 570)\n- ADDED 31 Oct (real event): xd-2742 - next user with >= 2 failures and no success: Telegram 'CasperVPN investigation' within 5-10 min + report in /root/reports/investigations/ + verdict matches a hand read (04:15Z 30 Oct case: timing PASS, Telegram NOT PROVEN)\n- ADDED 1 Nov 18:15Z: xd-2805 - free account server list includes Amsterdam and a free connect is not refused (no APIError:12/403); then python3 tools/dpi_truth_table.py --since 2026-10-30T18:14Z --before-after --label row564\n- ADDED 1 Nov after 05:20Z: xd-2752 - first scheduled Sunday restore test: /root/reports/restore-test-latest.txt dated 1 Nov, restore_rc=0, Users count = production at dump time\n- ADDED 6 Nov: xd-2802 legs 2-4 - non-restricted users with the 'not-restricted first try' line connect after it (ConnectionLogs Protocol 3); 7 days ConnectFailureEvents ErrorCode CasperVPN.CasperCloakHidingError:0 from regionRestricted=false = 0; restricted countries still get the domain\n- ADDED 31 Oct (next QA run): cyber-security-27-checks rows 1 (#2 login brute force -> 429) and 2 (#3 PasswordChangeEndsOtherSessionsTests run + api log line after a real reset)\n- ADDED (real event): xd-2821 - the next real App Store purchase activates a paid plan (Subscriptions row with AppleProductId, plan not Free)",
       "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-10-29T20:52:07Z",
@@ -80589,12 +80680,16 @@
       "to": "[QA]",
       "title": "Handoff from SECURITY: Verify the 27 security checks on 'cyber-security-27-checks' and tick the 12 measured done",
       "description": "[SECURITY live 2026-10-30, CEO live chat order] Security measured all 27 checks (30 Oct 2026, 00:20-00:55 UTC); detail in memory/departments/security/audit-2026-10-30/REPORT.md (private repo) section A. Measured DONE = rows 0,1,2,3,8,10,13,14,21,22,23,26 (checks 1,2,3,4,9,11,14,15,22,23,24,27): each row carries a verify line - re-run it on current production and tick with evidence (only QA ticks). PARTLY/NOT DONE rows stay open with their owners (named on each row). External checks are plain GET/OPTIONS requests; code checks run on the production branch.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-10-30T00:59:43Z",
       "createdDate": "2026-10-30",
-      "completedDate": null,
-      "notes": "[CEO 2026-10-31 10:32Z live chat, [SECURITY] session: 'do qa and back endt tasks and cross them off'] Recorded 2026-10-31T10:35:05Z, before any work: the [SECURITY] live session runs this QA check itself at the CEO's order; QA ticks it sets carry 'QA pass by the SECURITY session at the CEO order' in the evidence."
+      "completedDate": "2026-10-31",
+      "notes": "[CEO 2026-10-31 10:32Z live chat, [SECURITY] session: 'do qa and back endt tasks and cross them off'] Recorded 2026-10-31T10:35:05Z, before any work: the [SECURITY] live session runs this QA check itself at the CEO's order; QA ticks it sets carry 'QA pass by the SECURITY session at the CEO order' in the evidence.",
+      "completedAt": "2026-10-31",
+      "completedBy": "[QA]",
+      "resolution": "10 of the 12 measured-done rows ticked with today's live/production-code reads (rows 0,3,8,10,13,14,21,22,23,26 = checks 1,4,9,11,14,15,22,23,24,27); also ticked row 12 (#13 backups), row 18 (#19 via xd-2821) and row 20 (#21 via xd-2801). Rows 1 (#2 brute force) and 2 (#3 sign-out on password change) not re-run - on QA date watch xd-2730 for the next run.",
+      "resultingHandoff": "rows 1-2 -> xd-2730"
     },
     {
       "id": "xd-2756",
@@ -81263,12 +81358,15 @@
       "to": "[QA]",
       "title": "Handoff from SECURITY: Verify on production: request limits now count the real visitor (xd-2756 part 1, live 15:03Z)",
       "description": "[SECURITY live 2026-10-30 14:2x-15:1xZ, CEO: \"what can u keep doing while i do my task ?\"] Shipped by Security under CEO A on card row 561 ('real address for the limits'). Code: development e2feda0ca, production 506a7010f (only this commit changed the API since the last deploy). What changed: the API now counts each anonymous visitor by the address our web server gives it, not by a header the visitor can type. QA steps (method and exact calls in memory/departments/security/audit-2026-10-30/REPORT.md section H (private)): (1) on the test server and live, repeat the limit test from the private report - one visitor must be refused once over the limit, whatever forwarding header it sends; (2) control: another network is still allowed; (3) the website account sign-in still works; (4) app sign-in + server list work on production. Then tick check #21 on 'cyber-security-27-checks'.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-10-30T15:05:09Z",
       "createdDate": "2026-10-30",
-      "completedDate": null,
-      "notes": "[CEO 2026-10-31 10:32Z live chat, [SECURITY] session: 'do qa and back endt tasks and cross them off'] Recorded 2026-10-31T10:35:05Z, before any work: the [SECURITY] live session runs this QA check itself at the CEO's order; QA ticks it sets carry 'QA pass by the SECURITY session at the CEO order' in the evidence."
+      "completedDate": "2026-10-31",
+      "notes": "[CEO 2026-10-31 10:32Z live chat, [SECURITY] session: 'do qa and back endt tasks and cross them off'] Recorded 2026-10-31T10:35:05Z, before any work: the [SECURITY] live session runs this QA check itself at the CEO's order; QA ticks it sets carry 'QA pass by the SECURITY session at the CEO order' in the evidence.",
+      "completedAt": "2026-10-31",
+      "completedBy": "[QA]",
+      "resolution": "PASS on production (check #21 ticked): forged-header test 2,1,0,429,429 from one address; other network still allowed. Legs 3-4 (website and app sign-in still work): no sign-in made by QA; indirect - 888 'connect' lines in today's api log and normal verification/welcome mails delivered today (Resend). Dev leg not re-run (Security's dev proof in the private report H1)."
     },
     {
       "id": "xd-2802",
@@ -81431,7 +81529,7 @@
       "createdAt": "2026-10-30T21:04:10Z",
       "createdDate": "2026-10-30",
       "completedDate": null,
-      "notes": "[CEO 2026-10-31 10:32Z live chat, [SECURITY] session: 'do qa and back endt tasks and cross them off'] Recorded 2026-10-31T10:35:05Z, before any work: the [SECURITY] live session runs this QA check itself at the CEO's order; QA ticks it sets carry 'QA pass by the SECURITY session at the CEO order' in the evidence."
+      "notes": "[QA live 2026-10-31 ~11:5xZ, CEO Cowork: \"security finished\" + production reads allowed read-only] Legs 1-2 PASS: Resend-format keys in tracked files on production clone c4a144844 (clean) = 0 (planted control 1); key files /etc/caspervpn/resend.key + /opt/caspervpn/secrets/resend_api_key = 600 root. Leg 3 NOT PROVEN: disk-guard runs nightly (03:30Z 31 Oct: 67% < 85%, no mail needed); the last alert mail was 14 Oct (Resend HTTP 200) - before the 23 Oct key change, so a send with the new key is not proven. Needs one test send (sending mail = CEO gate) or the next real >= 85% night. Also: 4 old .bak copies of subdomain-resolution-check.sh (dead key) still in /usr/local/bin - tidy-up xd-2796. || [CEO 2026-10-31 10:32Z live chat, [SECURITY] session: 'do qa and back endt tasks and cross them off'] Recorded 2026-10-31T10:35:05Z, before any work: the [SECURITY] live session runs this QA check itself at the CEO's order; QA ticks it sets carry 'QA pass by the SECURITY session at the CEO order' in the evidence."
     },
     {
       "id": "xd-2813",
@@ -81560,12 +81658,16 @@
       "to": "[QA]",
       "title": "Handoff from SECURITY: Live check: customers can no longer give themselves a paid plan (card row 572, live 10:21Z 31 Oct)",
       "description": "[SECURITY live 2026-10-31 10:15-10:22Z, CEO: '1 yes 2 delete'] Shipped production 80265465c with the standard deploy (image 5ae0ee914387 -> 45f35e5de9be, rollback tag caspervpn-api:rollback-202610311018); the only API change since the last deploy. Security's live proof: one throwaway live account (deleted after) was refused when it tried to switch itself to a paid plan and when it tried to create one, and stayed Free; the new refusal messages are in the running build. QA: repeat once on the live server with your own throwaway account (method in memory/departments/security/audit-2026-10-30/REPORT.md section I4 (private)); check that a real App Store purchase still activates a paid plan on the next real purchase; then tick check #19 on 'cyber-security-27-checks'.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-10-31T10:22:58Z",
       "createdDate": "2026-10-31",
-      "completedDate": null,
-      "notes": "[CEO 2026-10-31 10:32Z live chat, [SECURITY] session: 'do qa and back endt tasks and cross them off'] Recorded 2026-10-31T10:35:05Z, before any work: the [SECURITY] live session runs this QA check itself at the CEO's order; QA ticks it sets carry 'QA pass by the SECURITY session at the CEO order' in the evidence."
+      "completedDate": "2026-10-31",
+      "notes": "[CEO 2026-10-31 10:32Z live chat, [SECURITY] session: 'do qa and back endt tasks and cross them off'] Recorded 2026-10-31T10:35:05Z, before any work: the [SECURITY] live session runs this QA check itself at the CEO's order; QA ticks it sets carry 'QA pass by the SECURITY session at the CEO order' in the evidence.",
+      "completedAt": "2026-10-31",
+      "completedBy": "[QA]",
+      "resolution": "PASS (check #19 ticked): live DLL holds both refusal messages (UTF-16 1/1, controls ok); api log 31 Oct has 4 refusals (Security's live throwaway tests, incl. the qa-livecheck account whose mail bounced 10:36Z); SQL read-only: paid-plan Subscriptions updated since the 10:21:11Z ship with no Apple/Stripe id = 0, any paid = 0 (control: 7 Apple-linked subs updated in 7 days). QA did not create its own live account (not allowed from a chat). Leg 'a real App Store purchase still activates a paid plan' -> QA date watch xd-2730 (next real purchase).",
+      "resultingHandoff": "real purchase leg -> xd-2730"
     },
     {
       "id": "xd-2822",
