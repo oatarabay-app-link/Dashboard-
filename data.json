@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-11-01T10:57:14Z",
+  "lastUpdated": "2026-11-01T11:49:30Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 69,
@@ -18980,11 +18980,11 @@
           "passed": false,
           "verifiedBy": null,
           "verifiedDate": null,
-          "evidence": "",
+          "evidence": "[DEVOPS live 2026-11-01 11:4x-12:1xZ, CEO Cowork \"what else can u finlaize ?\"] Backups taken first: full /etc, /usr/local, /opt, /root/.ssh, cron, unbound of both servers -> main server /root/backups/os-rebuild-xd2852/ (mode 600; DE-DU 15.6 MB 3,145 files, NL-AM2 18.5 MB 3,050 files). Found: both are OneProvider DEDICATED servers (server/list ids 802574 DUS, 802567 AMS); the API has no reinstall call (server/reinstall 404) -> the reinstall is a click in the OneProvider panel (CEO). Live load 12:0xZ: DUS 4 / AMS 3 WireGuard users active. fleet-onboarding.sh is out of date (no nginx front, old relay PSK, none of the 1 Nov no-log settings) - the rebuild restores from the backup instead. DevOps advice kept: Amsterdam first, Duesseldorf after Amsterdam is proven.",
           "addedAt": "2026-11-01T07:45:00Z",
           "addedBy": "[DEVOPS]",
           "owner": "[DEVOPS]",
-          "test": "DECISION (P2) - Amsterdam and Duesseldorf hidden-mode servers still run Ubuntu 20.04, whose free security updates ended in April 2025 (xd-2852). They work today on a side copy of newer Python. A = upgrade in place twice (20.04 -> 22.04 -> 24.04): keeps everything, but two big jumps on a live server, ~1-2 h each, and a failed jump is hard to undo. B = reinstall each server fresh on 24.04 from our setup script, same address, Amsterdam first (fewer users), then Duesseldorf at its quietest hour; ~1 h down each, users move to other servers meanwhile, rollback = reinstall 20.04 image. C = leave as is until January. Advice: B, in a live session, one server per day. Before the date DevOps checks in the OneProvider panel that a reinstall keeps the same address.",
+          "test": "CEO B 2026-11-01 (Cowork live): \"b do both now\" || DECISION (P2) - Amsterdam and Duesseldorf hidden-mode servers still run Ubuntu 20.04, whose free security updates ended in April 2025 (xd-2852). They work today on a side copy of newer Python. A = upgrade in place twice (20.04 -> 22.04 -> 24.04): keeps everything, but two big jumps on a live server, ~1-2 h each, and a failed jump is hard to undo. B = reinstall each server fresh on 24.04 from our setup script, same address, Amsterdam first (fewer users), then Duesseldorf at its quietest hour; ~1 h down each, users move to other servers meanwhile, rollback = reinstall 20.04 image. C = leave as is until January. Advice: B, in a live session, one server per day. Before the date DevOps checks in the OneProvider panel that a reinstall keeps the same address.",
           "verify": "ssh each node: lsb_release -rs = 24.04; caspercloak-ws active on 443 with the system python3; front_path_check 101 for s-AMS and s-DUS; parity_monitor 13/13"
         }
       ],
@@ -82421,8 +82421,8 @@
       "createdAt": "2026-11-01T00:41:28Z",
       "createdDate": "2026-11-01",
       "completedDate": null,
-      "notes": "[DEVOPS run 2026-11-01 0724, scheduled, unattended] Plan written as a DECISION row on the CEO card (options A in-place upgrade / B fresh 24.04 rebuild keeping the IP / C wait). Advice B, Amsterdam first, in a live session at the lowest-traffic hour; NOT PROVEN yet: that the OneProvider reinstall keeps the same IP (to check in the panel before the date).",
-      "blocker": "Waits CEO answer on the card DECISION row 'Amsterdam + Duesseldorf off Ubuntu 20.04 (xd-2852)'."
+      "notes": "[DEVOPS live 2026-11-01 11:4x-12:1xZ, CEO Cowork \"what else can u finlaize ?\"] CEO B recorded on card row 605. Backups taken (see row 605 evidence). Reinstall cannot be started by API. || [DEVOPS run 2026-11-01 0724, scheduled, unattended] Plan written as a DECISION row on the CEO card (options A in-place upgrade / B fresh 24.04 rebuild keeping the IP / C wait). Advice B, Amsterdam first, in a live session at the lowest-traffic hour; NOT PROVEN yet: that the OneProvider reinstall keeps the same IP (to check in the panel before the date).",
+      "blocker": "CEO hands: OneProvider panel -> server 802567 (Amsterdam) -> Reinstall Ubuntu 24.04 with the casper key; DevOps rebuilds from /root/backups/os-rebuild-xd2852 in the same live session."
     },
     {
       "id": "xd-2853",
@@ -82800,11 +82800,16 @@
       "to": "[DEVOPS]",
       "title": "Handoff from QA: [P2] xd-2858 FAIL: 3 old .bak files on the main server + parity reference still the pre-unification md5 (12/12 DRIFT)",
       "description": "QA 1 Nov 09:1xZ measured xd-2858: FAIL on two legs. (1) MAIN SERVER: find /opt/caspervpn /usr/local/bin /usr/local/sbin /root -maxdepth 2 -type f -name '*.bak*' -ctime +7 -not -path '/root/backups/*' | wc -l = 3 (names: reports_cleanup.sh.bak-434, casper-docker-prune.cron.bak-434, casper-reports-cleanup.cron.bak-434); relays 0 on 14/14 aliases + bkk-01, list file present on all. (2) 02:00Z parity run NOT green: /root/reports/parity-latest.txt 'relay -> DRIFT' 12/12 - the live md5 is 03535c02 on 11 relays (the 1 Nov v16 unification) but the parity 'want' md5 is still the old per-relay value (e.g. mia want 0ec4675d, mex want b53904fd); a nightly false alarm (telegram 200). Fix: update the parity reference md5 to the unified file, then re-run. 06:17Z health: 57 ok, 2 critical, both Bangkok (test): ikev2 (known) + wireguard 'REAL HANDSHAKE FAILED twice' (dev node). Verify: same find = 0 on the main server; next parity run 'relay -> OK' 11/11 production.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-11-01T09:14:59Z",
       "createdDate": "2026-11-01",
-      "completedDate": null
+      "completedDate": "2026-11-01",
+      "notes": "[DEVOPS live 2026-11-01 11:4x-12:1xZ, CEO Cowork \"what else can u finlaize ?\"] CEO YES (AskUserQuestion: 'Main-server cleanup'). (1) The 3 old copies were MOVED (not deleted) to /root/backups (mode 600) - they are row 434's rollback copies; the cron comment in /etc/cron.d/casper-reports-cleanup now points there. Same find = 0 (was 3). (2) parity_monitor.sh RELAY_MD5 moved to the live files: 10 production relays 03535c02 (v16 unified), NL-AM2 130976a9 (v16 + metrics file sha256 10ea2a50, shipped 10:17Z today, xd-2868), bkk-01 afc71e74. development ff8ac64 (+ MANIFEST.md table), production 79bd6695 (parity file only - MANIFEST is development-only). Installed copy md5 4c3de897 = git; old copy in /root/backups/parity_monitor.sh.<time>. Re-check with the script's own RELAY_CHECK + new table at 12:0xZ: relay OK 12, DRIFT 0. Next 02:00Z run should read 'relay -> OK'. Trap: any relay file change must move this table the same step (AMS metrics rollout to others will change it again).",
+      "completedAt": "2026-11-01",
+      "completedBy": "[DEVOPS]",
+      "resolution": "Old copies moved to /root/backups (find = 0); parity table = live relay files (12 OK, 0 DRIFT); dev ff8ac64 / prod 79bd6695.",
+      "resultingHandoff": "xd-2880 to [QA]"
     },
     {
       "id": "xd-2878",
@@ -82828,6 +82833,18 @@
       "status": "pending",
       "priority": "P2",
       "createdAt": "2026-11-01T10:27:38Z",
+      "createdDate": "2026-11-01",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2880",
+      "from": "[DEVOPS]",
+      "to": "[QA]",
+      "title": "Handoff from DEVOPS: [P2] Re-check xd-2858/xd-2877: old copies 0 + parity relay OK after the 2 Nov 02:00Z run",
+      "description": "Verify on the main server: find /opt/caspervpn /usr/local/bin /usr/local/sbin /root -maxdepth 2 -type f -name '*.bak*' -ctime +7 -not -path '/root/backups/*' | wc -l = 0; after 2 Nov 02:00Z: grep -c 'relay \u2192 OK' /root/reports/parity-latest.txt = 12 and 0 DRIFT; md5sum /opt/caspervpn/parity_monitor.sh = 4c3de897... = git production 79bd6695.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-11-01T11:49:30Z",
       "createdDate": "2026-11-01",
       "completedDate": null
     }
