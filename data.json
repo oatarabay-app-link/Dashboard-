@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-11-01T00:41:28Z",
+  "lastUpdated": "2026-11-01T00:47:51Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 69,
@@ -18671,14 +18671,15 @@
           "evidence": "[CEO office 2026-10-31 10:5xZ, scheduled (fired 3 h 49 m late), unattended] list_triggers: 7 enabled routines last_fired_at 2026-10-31T10:51:02-10:51:41Z; /sessions start gaps > 2 h: 30 10:53Z 2.4 h, 30 13:16Z 9.0 h, 30 22:16Z 12.6 h (open until 10:53Z)."
         },
         {
-          "met": false,
+          "met": true,
           "passed": false,
           "verifiedBy": null,
           "addedAt": "2026-10-31T10:57:13Z",
           "addedBy": "[DEVOPS]",
           "owner": "[CEO]",
-          "test": "CEO YES = A 2026-11-01 (Cowork live: 'go with a') | DECISION \u2014 user addresses still sit in some server logs (weekly IP sweep xd-2779, first run 31 Oct, counts only) \u00b7 found: old OpenVPN logs on the main server (27 Sep-14 Oct, 9,291 lines), IKEv2 log lines on the main server (374 in 7 days), and the new nginx front on relays writes the visitor address on every error (Los Angeles 1,298 lines since 28 Oct) \u00b7 A: in the next live DevOps session delete the old OpenVPN logs, and switch IKEv2 + nginx error logging so no address is written (Bangkok first, then the fleet), then install the weekly sweep with a Telegram alarm \u00b7 B: wait for Legal's ruling first (handoff made) \u00b7 advice: A - deleting old logs and not writing addresses is what our no-logs policy already promises",
-          "verify": "re-run memory/departments/devops/drafts/ip_log_sweep.sh: /var/log/openvpn 0, nginx error.log 0 on every relay, charon journal 0"
+          "test": "SHIPPED 2026-11-01 00:33-00:46Z. (1) main server: 13 old OpenVPN log files deleted (/var/log/openvpn now 12K, only empty current files); (2) IKEv2: /etc/strongswan.d/zz-no-client-address.conf + HUP (no restart) on main + 11 relays + bkk-01 - charon log lines since: 0 on all 13 (bkk-01 701 lines in the 5 min before, 0 after); IKEv2 still works: health check 'real EAP login succeeded' on Singapore/Sydney/Sao Paulo after the change; (3) relay nginx error_log notice -> emerg on 11 relays + bkk-01: nginx -t ok, 443 = 200 on all, front check 11/11; (4) weekly sweep installed: /opt/caspervpn/ip_log_sweep_weekly.sh, root cron Sun 04:47Z under cron_guard, Telegram alarm via casper_notify.py; test run reached 13/13 servers. (5) CEO 'Yes, fix now' (relay OpenVPN + firewall logs): OpenVPN verb 0 + restart on 10 relays + bkk-01 (0 clients connected; Mexico had 1 client - restarts by itself when idle, cron xd2779-ovpn-idle), ufw logging off on 8 relays, old ufw/OpenVPN logs removed and '[UFW' lines stripped from syslog/kern.log: Miami check after = 0 UFW lines, 0 address lines in OpenVPN logs. git development c43f304 + e3ebd0e, production f80011d + acd9d4c. Rollback: delete the strongSwan file + HUP; restore /etc/nginx/nginx.conf.bak-202611010033 + reload; /root/backups/xd2779-202611010043 (OpenVPN confs), 'ufw logging low'. | CEO YES = A 2026-11-01 (Cowork live: 'go with a') | DECISION \u2014 user addresses still sit in some server logs (weekly IP sweep xd-2779, first run 31 Oct, counts only) \u00b7 found: old OpenVPN logs on the main server (27 Sep-14 Oct, 9,291 lines), IKEv2 log lines on the main server (374 in 7 days), and the new nginx front on relays writes the visitor address on every error (Los Angeles 1,298 lines since 28 Oct) \u00b7 A: in the next live DevOps session delete the old OpenVPN logs, and switch IKEv2 + nginx error logging so no address is written (Bangkok first, then the fleet), then install the weekly sweep with a Telegram alarm \u00b7 B: wait for Legal's ruling first (handoff made) \u00b7 advice: A - deleting old logs and not writing addresses is what our no-logs policy already promises",
+          "verify": "re-run memory/departments/devops/drafts/ip_log_sweep.sh: /var/log/openvpn 0, nginx error.log 0 on every relay, charon journal 0",
+          "evidence": "SHIPPED 2026-11-01 00:33-00:46Z. (1) main server: 13 old OpenVPN log files deleted (/var/log/openvpn now 12K, only empty current files); (2) IKEv2: /etc/strongswan.d/zz-no-client-address.conf + HUP (no restart) on main + 11 relays + bkk-01 - charon log lines since: 0 on all 13 (bkk-01 701 lines in the 5 min before, 0 after); IKEv2 still works: health check 'real EAP login succeeded' on Singapore/Sydney/Sao Paulo after the change; (3) relay nginx error_log notice -> emerg on 11 relays + bkk-01: nginx -t ok, 443 = 200 on all, front check 11/11; (4) weekly sweep installed: /opt/caspervpn/ip_log_sweep_weekly.sh, root cron Sun 04:47Z under cron_guard, Telegram alarm via casper_notify.py; test run reached 13/13 servers. (5) CEO 'Yes, fix now' (relay OpenVPN + firewall logs): OpenVPN verb 0 + restart on 10 relays + bkk-01 (0 clients connected; Mexico had 1 client - restarts by itself when idle,"
         },
         {
           "test": "SHIPPED 2026-10-31 11:28Z \u00b7 CEO A 2026-10-31 (Cowork live chat with CTO): \"go with\" \u00b7 DECISION (P0) - stop code updates from breaking the website certificate (xd-2794) \u00b7 what happens: twice in 7 days (24 Oct, 30 Oct) a code update on the main server turned the website certificate files into empty stubs; the site stayed up only because the web server was not restarted. One restart or reboot in that state = website, app login and admin all down until someone repairs it by hand (DevOps repaired it 31 Oct 02:06Z; it is fine right now). \u00b7 options: A) point the web server at the certificate store the server renews itself (one setting, one restart of the web server of about 5 seconds at a quiet hour; then code updates can no longer touch the certificate) - B) stop the code storing the certificate files (a code change; risky: the first update after it removes the files and breaks the site unless done by hand in the right order) - C) keep repairing by hand after every update (no change; it will happen again). \u00b7 advice: A, done by DevOps at a quiet hour with the old setting kept for a 1-minute rollback; then B later as a clean-up with Security. \u00b7 reply \"A\", \"B\" or \"C\".",
@@ -18840,6 +18841,16 @@
           "owner": "[CEO]",
           "test": "ACTION (P2, CEO only, 2 minutes) - clear old Cowork sessions in the Claude app: the Mac work disk for runs is 91% full (902 MB free, read 1 Nov). Above ~95% runs start failing.",
           "verify": "df /sessions in a run shows < 85%"
+        },
+        {
+          "met": true,
+          "passed": false,
+          "verifiedBy": null,
+          "addedAt": "2026-11-01T00:47:45Z",
+          "addedBy": "[DEVOPS]",
+          "owner": "[DEVOPS]",
+          "test": "SHIPPED 2026-11-01 00:43-00:46Z \u00b7 CEO YES 2026-11-01 (Cowork live: 'Yes, fix now') | relay OpenVPN logs + firewall 'blocked' logs held visitor addresses (first full sweep: OpenVPN ~265,000 lines, firewall ~1.4M lines on the 8 newer relays) \u00b7 done: OpenVPN logs nothing but fatal errors, firewall logging off, old logs removed - see row 578 for proof",
+          "verify": "on any relay: grep -ac '\\[UFW ' /var/log/syslog /var/log/kern.log = 0; grep -h '^verb' /etc/openvpn/server/*.conf = 'verb 0'; ufw status verbose | grep Logging = off"
         }
       ],
       "progress": 0,
@@ -81119,13 +81130,13 @@
       "to": "[DEVOPS]",
       "title": "Handoff from LEGAL: [P1] Weekly fleet IP sweep + alert (CEO YES 30 Oct live: \"we can do the weekly alert\")",
       "description": "[GROWTH live 2026-10-30, CEO Cowork chat, 2026-10-30T12:04:00Z] Every server, weekly: count (never print) IPv4/IPv6 client addresses in log locations (/var/log incl. freeradius, journal, ufw, relay logs, nginx, openvpn status, /root/backups archives). Any non-zero count outside the allowed list (hashed sign-up IPs in DB, staff IPs in admin audit) -> alarm to the CEO office + a [LEGAL] handoff. Put the first run's counts on the board. 4 IP logs were found by hand this month (relay 12 Oct, ufw-443 14 Oct, UDP ports 23 Oct, FreeRADIUS 29 Oct).",
-      "status": "in_progress",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-10-30T12:04:05Z",
       "createdDate": "2026-10-30",
       "completedDate": null,
-      "notes": "[DEVOPS live 2026-11-01T00:23:32Z] CEO YES = A on card row 578 ('go with a'): delete old logs + stop writing addresses + weekly sweep. Working now. || [DEVOPS run 2026-10-31 1051, scheduled, unattended, 2026-10-31T10:57:13Z] FIRST RUN COUNTS (read-only; counts only, no address printed; script draft memory/departments/devops/drafts/ip_log_sweep.sh: lines holding a public IPv4 that is not one of our servers or 1.1.1.1/8.8.8.8). MAIN SERVER total 62,317: ssh-commands.log 25,479 (SSH source of our own sessions = staff/automation), fail2ban 21,613 + sshd journal (attackers), /var/log/openvpn 9,291 (OLD OpenVPN logs 27 Sep-14 Oct, OpenVPN no longer runs there - likely real user addresses, past any retention), journal 7 d: charon (IKEv2) 374 lines + python3 3,071 lines with an address, freeradius 21, letsencrypt 20, api logs 30. LOS ANGELES relay total 135,469: auth.log 118,232 + fail2ban 13,419 (attackers), nginx error.log 1,298 (nginx writes 'client: <ip>' on every error since the 28 Oct front), journal 2,492, caspervpn-api.log 28. Other 11 servers: not swept yet. NOT PROVEN which lines are users vs scanners - Legal handoff made.",
-      "blocker": "weekly cron install on all 13 servers + alarm = live-server writes: next LIVE DevOps session (script draft ready); first counts on main + LA done 31 Oct"
+      "notes": "[DEVOPS live 2026-11-01T00:47:45Z, CEO Cowork 'go with a' + 'Yes, fix now'] SHIPPED 2026-11-01 00:33-00:46Z. (1) main server: 13 old OpenVPN log files deleted (/var/log/openvpn now 12K, only empty current files); (2) IKEv2: /etc/strongswan.d/zz-no-client-address.conf + HUP (no restart) on main + 11 relays + bkk-01 - charon log lines since: 0 on all 13 (bkk-01 701 lines in the 5 min before, 0 after); IKEv2 still works: health check 'real EAP login succeeded' on Singapore/Sydney/Sao Paulo after the change; (3) relay nginx error_log notice -> emerg on 11 relays + bkk-01: nginx -t ok, 443 = 200 on all, front check 11/11; (4) weekly sweep installed: /opt/caspervpn/ip_log_sweep_weekly.sh, root cron Sun 04:47Z under cron_guard, Telegram alarm via casper_notify.py; test run reached 13/13 servers. (5) CEO 'Yes, fix now' (relay OpenVPN + firewall logs): OpenVPN verb 0 + restart on 10 relays + bkk-01 (0 clients connected; Mexico had 1 client - restarts by itself when idle, cron xd2779-ovpn-idle), ufw logging off on 8 relays, old ufw/OpenVPN logs removed and '[UFW' lines stripped from syslog/kern.log: Miami check after = 0 UFW lines, 0 address lines in OpenVPN logs. git development c43f304 + e3ebd0e, production f80011d + acd9d4c. Rollback: delete the strongSwan file + HUP; restore /etc/nginx/nginx.conf.bak-202611010033 + reload; /root/backups/xd2779-202611010043 (OpenVPN confs), 'ufw logging low'. Side effect (my fault): at 00:29-00:31Z a by-hand 'ipsec up' test on bkk-01 overlapped the 00:17 health run, so Tokyo IKEv2 read 'prober produced no output' in that run (not a real outage; 3 nodes passed after the change). Still holding addresses (age out, not deleted): pre-change journal lines (7-14 days), relay nginx error.log files from before 00:33Z (rotate out), 20 lines in old FreeRADIUS logs + 30 in api logs on the main server, ssh-commands.log (staff), fail2ban/auth.log (attackers). First alarm Sun 8 Nov 04:47Z will likely list the nginx leftovers. || [DEVOPS live 2026-11-01T00:23:32Z] CEO YES = A on card row 578 ('go with a'): delete old logs + stop writing addresses + weekly sweep. Working now. || [DEVOPS run 2026-10-31 1051, scheduled, unattended, 2026-10-31T10:57:13Z] FIRST RUN COUNTS (read-only; counts only, no address printed; script draft memory/departments/devops/drafts/ip_log_sweep.sh: lines holding a public IPv4 that is not one of our servers or 1.1.1.1/8.8.8.8). MAIN SERVER total 62,317: ssh-commands.log 25,479 (SSH source of our own sessions = staff/automation), fail2ban 21,613 + sshd journal (attackers), /var/log/openvpn 9,291 (OLD OpenVPN logs 27 Sep-14 Oct, OpenVPN no longer runs there - likely real user addresses, past any retention), journal 7 d: charon (IKEv2) 374 lines + python3 3,071 lines with an address, freeradius 21, letsencrypt 20, api logs 30. LOS ANGELES relay total 135,469: auth.log 118,232 + fail2ban 13,419 (attackers), nginx error.log 1,298 (nginx writes 'client: <ip>' on every error since the 28 Oct front), journal 2,492, caspervpn-api.log 28. Other 11 servers: not swept yet. NOT PROVEN which lines are users vs scanners - Legal handoff made.",
+      "resolution": "[DEVOPS live 2026-11-01T00:47:45Z, CEO Cowork 'go with a' + 'Yes, fix now'] Weekly sweep + Telegram alarm live; IKEv2/nginx/OpenVPN/firewall logs write no addresses on all 13 servers; old OpenVPN/firewall logs removed. QA check handed over."
     },
     {
       "id": "xd-2780",
@@ -81372,8 +81383,8 @@
       "createdAt": "2026-10-30T13:53:36Z",
       "createdDate": "2026-10-30",
       "completedDate": null,
-      "notes": "[DEVOPS run 2026-10-31 1051, scheduled, unattended, 2026-10-31T10:57:13Z] Re-read: card row 563 (new Cloudflare key) not done yet. Items 3 (remove test account 'casperuser' from the VPN login file) and 5 (move 9 .env.bak files to /root/backups + .gitignore) are main-server writes - unattended runs do none. No work possible this run. || [SECURITY live 2026-10-30 18:0x-21:04Z, CEO: \"what else canu keep on working?\" + \"do we still have any passwords in plain sight anywhere for any keys or servers ?\"] ADD (plain-sight check tonight): (a) one of the live VPN passwords in our code history is the CEO's own account's - it was ALSO still in an old session note; Security removed it from the note tonight, the password itself still needs a new value (with Backend); (b) two old copies of a script on the main server, readable by every local account, hold a DEAD e-mail key - delete them in the tidy-up; (c) the 9 settings backups in the code folder are readable only by the top admin account - keep them out of git, tidy up. Detail memory/departments/security/audit-2026-10-30/REPORT.md section I (private) (I3). || [SECURITY live 2026-10-30 14:2x-15:1xZ, CEO: \"what can u keep doing while i do my task ?\"] CORRECTIONS: (2) probe keys - MEASURED: no program checks either key, so changing them protects nothing (the probe is protected another way). No rotation needed - just delete the unused settings at the next settings edit. (4) the 'trap' was WRONG: the old line in the settings file is unused (the API takes that value from the new key's setting); a recreate is safe - proven at 15:03Z when the API was recreated and calls to the VPN servers kept working (12 calls to VPN servers, all 26 outgoing requests answered 200, 0 errors in the first minute). Delete the unused line at the next edit. Items 1, 3 and 5 unchanged. ADD to item 5: the automatic production deploy is off only because of the submission-freeze file; if anyone lifts it, that workflow would overwrite the live certificate files in the server's code folder and restart the API without its extra settings file - fix the workflow before any lift. Detail: memory/departments/security/audit-2026-10-30/REPORT.md section H (private).",
-      "blocker": "(1) waits the CEO: card row 563 (make one new Cloudflare key); (3)+(5) main-server edits: next LIVE DevOps session"
+      "notes": "[DEVOPS live 2026-11-01T00:47:45Z, CEO Cowork 'go with a' + 'Yes, fix now'] Item 3 DONE: test account 'casperuser' removed from /etc/ipsec.secrets (49 lines left) and /etc/ppp/chap-secrets on the main server, ipsec rereadsecrets ok; 0 uses in 30 days of charon/RADIUS logs before removal. Backups /root/backups/xd2796-202611010036 (mode 600). Item 5 DONE: 8 .env.bak* files (Security said 9; 8 found) moved to /root/backups/env-bak (mode 600), '.env.bak*' in .git/info/exclude on the server + .gitignore (development e3ebd0e / production acd9d4c); git status shows 0. API /health 200. STILL OPEN: (1) waits CEO card row 563 (new Cloudflare key); (3b) the CEO's own VPN password (ipsec.secrets line 8) needs a new value - BACKEND; (5b) 2 old script copies with a DEAD e-mail key = deletion, needs a CEO YES; workflow fix before any freeze lift. security-lockdown-p1 AC9 still NOT met: ~20 test accounts remain in ipsec.secrets (one is the health-check probe login - needs a plan before removal). || [DEVOPS run 2026-10-31 1051, scheduled, unattended, 2026-10-31T10:57:13Z] Re-read: card row 563 (new Cloudflare key) not done yet. Items 3 (remove test account 'casperuser' from the VPN login file) and 5 (move 9 .env.bak files to /root/backups + .gitignore) are main-server writes - unattended runs do none. No work possible this run. || [SECURITY live 2026-10-30 18:0x-21:04Z, CEO: \"what else canu keep on working?\" + \"do we still have any passwords in plain sight anywhere for any keys or servers ?\"] ADD (plain-sight check tonight): (a) one of the live VPN passwords in our code history is the CEO's own account's - it was ALSO still in an old session note; Security removed it from the note tonight, the password itself still needs a new value (with Backend); (b) two old copies of a script on the main server, readable by every local account, hold a DEAD e-mail key - delete them in the tidy-up; (c) the 9 settings backups in the code folder are readable only by the top admin account - keep them out of git, tidy up. Detail memory/departments/security/audit-2026-10-30/REPORT.md section I (private) (I3). || [SECURITY live 2026-10-30 14:2x-15:1xZ, CEO: \"what can u keep doing while i do my task ?\"] CORRECTIONS: (2) probe keys - MEASURED: no program checks either key, so changing them protects nothing (the probe is protected another way). No rotation needed - just delete the unused settings at the next settings edit. (4) the 'trap' was WRONG: the old line in the settings file is unused (the API takes that value from the new key's setting); a recreate is safe - proven at 15:03Z when the API was recreated and calls to the VPN servers kept working (12 calls to VPN servers, all 26 outgoing requests answered 200, 0 errors in the first minute). Delete the unused line at the next edit. Items 1, 3 and 5 unchanged. ADD to item 5: the automatic production deploy is off only because of the submission-freeze file; if anyone lifts it, that workflow would overwrite the live certificate files in the server's code folder and restart the API without its extra settings file - fix the workflow before any lift. Detail: memory/departments/security/audit-2026-10-30/REPORT.md section H (private).",
+      "blocker": "(1) waits CEO card row 563 (new Cloudflare key); (3b) BACKEND regenerates the CEO's VPN password; (5b) deleting 2 dead-key script copies needs CEO YES"
     },
     {
       "id": "xd-2797",
@@ -81792,7 +81803,8 @@
       "completedAt": "2026-10-31",
       "completedBy": "[LEGAL]",
       "resolution": "Ruled 31 Oct: 1, 2a, 3 break the promise (over-collection, not a notifiable breach on these facts); 2b unknown. Review file 2026-10-31-ip-sweep-first-run-xd-2823.md.",
-      "resultingHandoff": "DEVOPS IP sweep ruling"
+      "resultingHandoff": "DEVOPS IP sweep ruling",
+      "notes": "[DEVOPS live 2026-11-01T00:47:45Z, CEO Cowork 'go with a' + 'Yes, fix now'] Fixed live 1 Nov (CEO YES): main-server old OpenVPN logs deleted; IKEv2, relay nginx, relay OpenVPN and firewall logs no longer write addresses on all 13 servers. Still for Legal to rule: staff SSH log (ssh-commands.log), fail2ban/auth logs (attackers), CasperCloak 'peer_net=<a.b.c.0/24>' on handshake errors, OpenVPN live status file (current connections only)."
     },
     {
       "id": "xd-2824",
@@ -82190,6 +82202,42 @@
       "status": "pending",
       "priority": "P2",
       "createdAt": "2026-11-01T00:41:28Z",
+      "createdDate": "2026-11-01",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2853",
+      "from": "[DEVOPS]",
+      "to": "[QA]",
+      "title": "Handoff from DEVOPS: [P1] Check: no visitor addresses in server logs + weekly IP sweep installed (xd-2779, card rows 578-579)",
+      "description": "Check on the main server: crontab -l | grep ip-log-sweep (Sun 04:47Z); after Sun 8 Nov read /root/reports/ip-sweep-latest.txt (WATCHED_NONZERO, UNREACHABLE_NODES 0) and the Telegram alarm. On 2 relays + bkk-01: journalctl -t charon --since '2026-11-01 00:34 UTC' | wc -l = 0; grep '^error_log' /etc/nginx/nginx.conf = emerg; grep -h '^verb' /etc/openvpn/server/*.conf = verb 0; ufw status verbose = Logging: off; grep -ac '\\[UFW ' /var/log/syslog = 0. Mexico: /etc/cron.d/xd2779-ovpn-idle must be gone once OpenVPN restarted idle. Counts only - never print an address.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-11-01T00:47:51Z",
+      "createdDate": "2026-11-01",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2854",
+      "from": "[DEVOPS]",
+      "to": "[QA]",
+      "title": "Handoff from DEVOPS: [P2] Check xd-2796 items 3+5 on the main server",
+      "description": "grep -c '^casperuser' /etc/ipsec.secrets = 0 and in /etc/ppp/chap-secrets = 0; ls -a /root/Casper/Casper-Code | grep -c '.env.bak' = 0; ls -a /root/backups/env-bak | grep -c '.env.bak' = 8 (mode 600); git -C /root/Casper/Casper-Code status --short | grep -c env.bak = 0. Never print a file's lines.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-11-01T00:47:51Z",
+      "createdDate": "2026-11-01",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2855",
+      "from": "[DEVOPS]",
+      "to": "[BACKEND]",
+      "title": "Handoff from DEVOPS: [P2] Give the CEO's VPN (IKEv2/RADIUS) login a new password - old one is in code history (xd-2796 item 3)",
+      "description": "Security audit 30 Oct REPORT.md section G: /etc/ipsec.secrets line 8 on the main server = the CEO's own account; its password sits in code history. Regenerate RadiusPassword through the normal API path (the app fetches it again), then DevOps/QA check the line changed (fingerprint only). Never print the value.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-11-01T00:47:51Z",
       "createdDate": "2026-11-01",
       "completedDate": null
     }
