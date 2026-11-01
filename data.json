@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-11-01T16:41:50Z",
+  "lastUpdated": "2026-11-01T16:42:46Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 63,
@@ -73596,13 +73596,13 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: [P1] Cloudflare exit phases 2-5 (xd-1421 plan): relay resolvers, website/API off the proxy, DNS hosting move, Worker removal - one READY TO SHIP row per phase",
       "description": "Plan and measured inventory are on xd-1421 (21 Oct). Do in order: P2 resolvers (5 relays still list 1.1.1.1 in resolv.conf; overlaps xd-1425), P3 caspervpn.com/www/api/admin/sentry/dev served DNS-only from our servers (pick a DDoS-protected host whose terms allow VPN use - read the terms first), P4 move name servers of caspervpn.com + pompesh.com off Cloudflare keeping every mail record (Migadu MX, SPF, DKIM, DMARC), certificate renewal moved off Cloudflare DNS first, P5 Worker + Cloudflare code removed after hidden mode is 7 days clean. Each phase: test on dev, then a READY TO SHIP row with rollback; nothing on production without CEO YES. Also read the Cloudflare dashboard (R2/Pages/Access/email routing/tokens) - not measured yet. Done -> [QA].",
-      "status": "in_progress",
+      "status": "deferred",
       "priority": "P1",
       "createdAt": "2026-10-21T09:50:57Z",
       "createdDate": "2026-10-21",
       "completedDate": null,
-      "notes": "[DEVOPS/DPI prod-dns-canary, live CEO YES 27 Oct ~23:00Z, 2026-10-27T23:1xZ] s13-edge.pompesh.com A 46.16.129.246 DNS-only ttl 300 added via /opt/caspervpn/relay_name_tool.py add (46.16.129.246 = bkk-dev / Bangkok (test) s13 in access-inventory.json). dig @8.8.8.8, @gwen and @sullivan.ns.cloudflare.com = 46.16.129.246, AAAA none; curl -sI 200 server nginx/1.24.0, no cf-ray; cert *.pompesh.com to 12 Dec 2026. Certificate watch re-run 23:09:18Z: 'relay direct Bangkok (test): s13-edge.pompesh.com' = ok (was crit 04:20Z) -> 1 critical left, 'entry s13 via edge.capablitys.com (HTTP 404)', not in this change. Rollback: /opt/caspervpn/relay_name_tool.py del pompesh.com s13-edge.pompesh.com || [SECURITY+DEVOPS DPI engineer, live CEO order 27 Oct, measured 2026-10-27T21:59-22:40Z, read-only] Phase 1 re-verified (DNS from the main server, HTTP from the Mac): s1,s2,s3,s4,s5,s6,s8,s9,s10,s11,s12-edge.pompesh.com = own relay IP at 8.8.8.8 AND gwen.ns.cloudflare.com 11/11, AAAA 0/0 11/11, HTTP 200 with no cf-ray 11/11 (Server nginx); control caspervpn.com = 104.21.16.192 / 172.67.215.144 with cf-ray (BEY). Cert watch nightly 04:20Z running (infra_inventory_check.py bb88ba50): 27 Oct run origin nginx 5/5 ok, relay direct 11/11 ok, origin cert notAfter Dec 22 2026 = 127.0.0.1:443 read. Daily FALSE critical: 'relay direct Bangkok (test): s13-edge.pompesh.com' - the name has no DNS record (8.8.8.8 empty), Telegram fires every night (alarm fatigue). Phases 2-5 steps + which are safe: 27 Oct DPI engineer report. || [QA live 2026-10-26 b, CEO live chat 11:0x-11:5xZ] CEO live 26 Oct ~11:3xZ: 'do the checks and the cloudflare release on all servers'; asked which next step, he asked back: will masking domains with rotation do the job, is staying on Cloudflare illegal / can we be fined, does it affect speed. Phase 1 (11 relays) + Phase 2 (resolvers 10/11 + de-du by design) re-measured today PASS. P3 blocker 'origin cert expired' is STALE: row 435 shipped + tested 24 Oct (notAfter Dec 22 2026 re-read today). P3 now waits only the CEO's choice of path. || [DEVOPS run 2026-10-23 1426, scheduled, unattended, 2026-10-23T14:4xZ] P2 on Tokyo done 14:28Z (row 405): resolv.conf -> 127.0.0.1. P2 = 10 of 11 relays (de-du by design). P3-P5 not started. || [DEVOPS run 2026-10-23 1325, scheduled, unattended, 2026-10-23T13:3xZ] P2 production SHIPPED under CEO YES row 405 on 9 servers (see row 405 evidence); de-du left (symlink, no Cloudflare/Google), Tokyo when it is back. Next: P3 (site/API off the Cloudflare proxy), not started. || [DEVOPS run 2026-10-23 0523, scheduled, unattended, 2026-10-23T05:4xZ] P2 DONE ON DEV (bkk-01): boot unit casper-resolv-local (development 1fb5c06) writes 'nameserver 127.0.0.1' after unbound answers; proven at runtime 05:29:56Z and after a reboot from inside (05:30:16Z -> unit wrote 05:30:40Z; 0 failed units; github.com + api.caspervpn.com resolve; api /health 200). Unbound on bkk-01 already does full recursion (forward-zone removed, xd-1879). Panel reboot not done: it is the OneProvider path that locked Bangkok out on 19 Oct (code 42 -> ticket), and it only changes the files BEFORE boot, which the unit overwrites after boot anyway - so the inside reboot proves the same thing without risking the only prober. QA: xd-2354. Production (12 nodes): READY TO SHIP row on the CEO card. Next: P3 (website/API off the Cloudflare proxy) - not started. || [DEVOPS run 2026-10-23 0323, scheduled, unattended, 2026-10-23T04:1xZ] P2 re-measured on bkk-01 04:0xZ: /etc/netplan/99-virt-eth0.yaml (8.8.8.8, 1.1.1.1) AND /etc/resolv.conf both have mtime 20:11:29Z = BEFORE the kernel's first log line 20:11:43Z, cloud-init is removed (rc), no in-guest writer found (only qemu-guest-agent) -> the provider rewrites both files from outside the VM at a panel/hypervisor boot. So a netplan edit is NOT durable either. Plan for bkk-01 first: a small boot unit (After=network-online, before VPN services) that writes nameserver 127.0.0.1 to resolv.conf every boot, + the same check in relay_dns_guard; proof = one reboot of bkk-01 from inside (not the panel) + one panel reboot. Not changed this run. || [DEVOPS run 2026-10-22 2225, scheduled, unattended, 2026-10-22T22:4xZ] P2 (resolvers) MEASURED 22:3xZ on 12 nodes: unbound is active on all 12, but the node's own /etc/resolv.conf uses 127.0.0.1 only on de-du (+3 provider resolvers) and nl-am2 (+1.1.1.1). Cloudflare 1.1.1.1 is listed on 6: us-la, nl-am2, mia, sgp, syd, bkk-01; Google 8.8.8.8 on 10. TRAP found: on bkk-01 /etc/resolv.conf is rewritten at every boot (mtime = boot 20:11Z; /etc/netplan/99-virt-eth0.yaml carries the 8.8.8.8/1.1.1.1 list), so editing resolv.conf alone would not survive a reboot - the change must go in netplan (nameservers: 127.0.0.1) and be tested with a reboot on bkk-01 first. unbound on bkk-01 answers on 127.0.0.1 (github.com A x3 OK, caspervpn.com NOERROR 204 ms). Not changed: a netplan change can cut a node's network; it goes on bkk-01 first in a run with time to reboot and re-check. P3-P5 not started. ||  || [DEVOPS run 2026-10-23 1520, scheduled, unattended, 2026-10-23T15:4xZ] P3 started - Cloudflare inventory read 15:3xZ (read-only, DNS token on the main server): 7 zones, all Free plan, 91 records, 29 proxied (orange cloud): caspervpn.com 6 (apex, www, api, admin, dev, sentry), pompesh.com 11 (edge + s1..s12-edge minus s6/s7), capablitys 4, huminteligent 3, intellitiy 3, profitechlb 1 (edge), shortaalmashahir 1 (edge). Workers: ws-edge (hidden mode, live) + ws-edge-do-test (old #63 test, still there - delete needs CEO YES). Next: P3 = take website/API/admin off the proxy needs certs on the main server for those names + a READY TO SHIP row; P5 (Worker removal) waits on cc-quic/Disguise A (hidden mode still rides ws-edge). || [DEVOPS run 2026-10-23 1625, scheduled, unattended, 2026-10-23T16:31:06Z] P3 cert check done (read-only): the main server has a valid caspervpn.com cert (Dec 22 2026, 5 names) in /etc/letsencrypt, but caspervpn-nginx reads /root/Casper/Casper-Code/nginx/letsencrypt whose live/ links point to fullchain1 (expired 24 Jun 2026) since 24 Sep 18:57Z; nginx restarted 18 Oct 17:37Z -> all 6 caspervpn.com names now get the expired cert from the origin (Cloudflare edge cert Dec 13 is what users see). No cert for dev.caspervpn.com in the SAN list. Taking names off the proxy is unsafe until CEO card row 435 ships. Next after that: READY TO SHIP for P3 per name (add dev.caspervpn.com to the cert first). | [QA 2026-10-24 b, scheduled 'Casper qa', unattended, 2026-10-24T01:17:47Z] card row 435 has CEO YES (23 Oct) but is not live yet at 01:13Z (see row evidence) - ship it under the lock, then QA re-measures.\n[DEVOPS CAS-150 26 Oct 18:16Z] CF exit phase table: P2 resolvers (relay DNS off CF proxy) = DONE on 5 relays. P3 (website/API off CF proxy) waits CEO choice: (A) shielded provider move first (adds a layer before exposing the main server IP), (B) straight to main server now (exposes 178.62.101.221 directly), (C) wait to 31 Oct. P5 (Worker removal + DNS hosting) waits xd-1608 + 7 clean days (31 Oct). NOTE: taking names off the CF proxy is unsafe until the main server cert is fixed (nginx reads an expired cert from /root/Casper/Casper-Code/nginx/letsencrypt since 24 Sep 18:57Z). DECISION \u2014 CEO picks P3 path. Advice: (A) is safer but takes longer; (B) is fastest but requires the server cert fix first. CEO action: write 'A', 'B', or 'C' on this row.",
-      "blocker": "waits CEO answer on ceo-action-backlog row 531 (Cloudflare exit phase 3: A/B/C)",
+      "notes": "[DEVOPS live 2026-11-01 16:3x-16:4xZ, CEO: \"keep on cf for now ... take the CEO tap delay first, then the small server fixes (headers, log permissions, firewall log lines)\"] DEFERRED (CEO live 1 Nov: 'keep on cf for now'): Phase 1 done (row 610 A), Phase 2 done (10/11, DUS by design). Phases 3-5 wait: 3 = a VPN-friendly protected host (CEO account + payment), 4 = name servers off Cloudflare (needs 3 + certificate renewal off Cloudflare DNS), 5 = remove Worker + Cloudflare code (BACKEND first). Risk of staying: low for users (no VPN traffic through Cloudflare; site/API behind Cloudflare protection is normal). Real open risk is separate: the 2 old Cloudflare keys that can change DNS - card row 563 (CEO makes 1 new key). Revisit Jan 2027 or when the CEO picks a host. || [DEVOPS/DPI prod-dns-canary, live CEO YES 27 Oct ~23:00Z, 2026-10-27T23:1xZ] s13-edge.pompesh.com A 46.16.129.246 DNS-only ttl 300 added via /opt/caspervpn/relay_name_tool.py add (46.16.129.246 = bkk-dev / Bangkok (test) s13 in access-inventory.json). dig @8.8.8.8, @gwen and @sullivan.ns.cloudflare.com = 46.16.129.246, AAAA none; curl -sI 200 server nginx/1.24.0, no cf-ray; cert *.pompesh.com to 12 Dec 2026. Certificate watch re-run 23:09:18Z: 'relay direct Bangkok (test): s13-edge.pompesh.com' = ok (was crit 04:20Z) -> 1 critical left, 'entry s13 via edge.capablitys.com (HTTP 404)', not in this change. Rollback: /opt/caspervpn/relay_name_tool.py del pompesh.com s13-edge.pompesh.com || [SECURITY+DEVOPS DPI engineer, live CEO order 27 Oct, measured 2026-10-27T21:59-22:40Z, read-only] Phase 1 re-verified (DNS from the main server, HTTP from the Mac): s1,s2,s3,s4,s5,s6,s8,s9,s10,s11,s12-edge.pompesh.com = own relay IP at 8.8.8.8 AND gwen.ns.cloudflare.com 11/11, AAAA 0/0 11/11, HTTP 200 with no cf-ray 11/11 (Server nginx); control caspervpn.com = 104.21.16.192 / 172.67.215.144 with cf-ray (BEY). Cert watch nightly 04:20Z running (infra_inventory_check.py bb88ba50): 27 Oct run origin nginx 5/5 ok, relay direct 11/11 ok, origin cert notAfter Dec 22 2026 = 127.0.0.1:443 read. Daily FALSE critical: 'relay direct Bangkok (test): s13-edge.pompesh.com' - the name has no DNS record (8.8.8.8 empty), Telegram fires every night (alarm fatigue). Phases 2-5 steps + which are safe: 27 Oct DPI engineer report. || [QA live 2026-10-26 b, CEO live chat 11:0x-11:5xZ] CEO live 26 Oct ~11:3xZ: 'do the checks and the cloudflare release on all servers'; asked which next step, he asked back: will masking domains with rotation do the job, is staying on Cloudflare illegal / can we be fined, does it affect speed. Phase 1 (11 relays) + Phase 2 (resolvers 10/11 + de-du by design) re-measured today PASS. P3 blocker 'origin cert expired' is STALE: row 435 shipped + tested 24 Oct (notAfter Dec 22 2026 re-read today). P3 now waits only the CEO's choice of path. || [DEVOPS run 2026-10-23 1426, scheduled, unattended, 2026-10-23T14:4xZ] P2 on Tokyo done 14:28Z (row 405): resolv.conf -> 127.0.0.1. P2 = 10 of 11 relays (de-du by design). P3-P5 not started. || [DEVOPS run 2026-10-23 1325, scheduled, unattended, 2026-10-23T13:3xZ] P2 production SHIPPED under CEO YES row 405 on 9 servers (see row 405 evidence); de-du left (symlink, no Cloudflare/Google), Tokyo when it is back. Next: P3 (site/API off the Cloudflare proxy), not started. || [DEVOPS run 2026-10-23 0523, scheduled, unattended, 2026-10-23T05:4xZ] P2 DONE ON DEV (bkk-01): boot unit casper-resolv-local (development 1fb5c06) writes 'nameserver 127.0.0.1' after unbound answers; proven at runtime 05:29:56Z and after a reboot from inside (05:30:16Z -> unit wrote 05:30:40Z; 0 failed units; github.com + api.caspervpn.com resolve; api /health 200). Unbound on bkk-01 already does full recursion (forward-zone removed, xd-1879). Panel reboot not done: it is the OneProvider path that locked Bangkok out on 19 Oct (code 42 -> ticket), and it only changes the files BEFORE boot, which the unit overwrites after boot anyway - so the inside reboot proves the same thing without risking the only prober. QA: xd-2354. Production (12 nodes): READY TO SHIP row on the CEO card. Next: P3 (website/API off the Cloudflare proxy) - not started. || [DEVOPS run 2026-10-23 0323, scheduled, unattended, 2026-10-23T04:1xZ] P2 re-measured on bkk-01 04:0xZ: /etc/netplan/99-virt-eth0.yaml (8.8.8.8, 1.1.1.1) AND /etc/resolv.conf both have mtime 20:11:29Z = BEFORE the kernel's first log line 20:11:43Z, cloud-init is removed (rc), no in-guest writer found (only qemu-guest-agent) -> the provider rewrites both files from outside the VM at a panel/hypervisor boot. So a netplan edit is NOT durable either. Plan for bkk-01 first: a small boot unit (After=network-online, before VPN services) that writes nameserver 127.0.0.1 to resolv.conf every boot, + the same check in relay_dns_guard; proof = one reboot of bkk-01 from inside (not the panel) + one panel reboot. Not changed this run. || [DEVOPS run 2026-10-22 2225, scheduled, unattended, 2026-10-22T22:4xZ] P2 (resolvers) MEASURED 22:3xZ on 12 nodes: unbound is active on all 12, but the node's own /etc/resolv.conf uses 127.0.0.1 only on de-du (+3 provider resolvers) and nl-am2 (+1.1.1.1). Cloudflare 1.1.1.1 is listed on 6: us-la, nl-am2, mia, sgp, syd, bkk-01; Google 8.8.8.8 on 10. TRAP found: on bkk-01 /etc/resolv.conf is rewritten at every boot (mtime = boot 20:11Z; /etc/netplan/99-virt-eth0.yaml carries the 8.8.8.8/1.1.1.1 list), so editing resolv.conf alone would not survive a reboot - the change must go in netplan (nameservers: 127.0.0.1) and be tested with a reboot on bkk-01 first. unbound on bkk-01 answers on 127.0.0.1 (github.com A x3 OK, caspervpn.com NOERROR 204 ms). Not changed: a netplan change can cut a node's network; it goes on bkk-01 first in a run with time to reboot and re-check. P3-P5 not started. ||  || [DEVOPS run 2026-10-23 1520, scheduled, unattended, 2026-10-23T15:4xZ] P3 started - Cloudflare inventory read 15:3xZ (read-only, DNS token on the main server): 7 zones, all Free plan, 91 records, 29 proxied (orange cloud): caspervpn.com 6 (apex, www, api, admin, dev, sentry), pompesh.com 11 (edge + s1..s12-edge minus s6/s7), capablitys 4, huminteligent 3, intellitiy 3, profitechlb 1 (edge), shortaalmashahir 1 (edge). Workers: ws-edge (hidden mode, live) + ws-edge-do-test (old #63 test, still there - delete needs CEO YES). Next: P3 = take website/API/admin off the proxy needs certs on the main server for those names + a READY TO SHIP row; P5 (Worker removal) waits on cc-quic/Disguise A (hidden mode still rides ws-edge). || [DEVOPS run 2026-10-23 1625, scheduled, unattended, 2026-10-23T16:31:06Z] P3 cert check done (read-only): the main server has a valid caspervpn.com cert (Dec 22 2026, 5 names) in /etc/letsencrypt, but caspervpn-nginx reads /root/Casper/Casper-Code/nginx/letsencrypt whose live/ links point to fullchain1 (expired 24 Jun 2026) since 24 Sep 18:57Z; nginx restarted 18 Oct 17:37Z -> all 6 caspervpn.com names now get the expired cert from the origin (Cloudflare edge cert Dec 13 is what users see). No cert for dev.caspervpn.com in the SAN list. Taking names off the proxy is unsafe until CEO card row 435 ships. Next after that: READY TO SHIP for P3 per name (add dev.caspervpn.com to the cert first). | [QA 2026-10-24 b, scheduled 'Casper qa', unattended, 2026-10-24T01:17:47Z] card row 435 has CEO YES (23 Oct) but is not live yet at 01:13Z (see row evidence) - ship it under the lock, then QA re-measures.\n[DEVOPS CAS-150 26 Oct 18:16Z] CF exit phase table: P2 resolvers (relay DNS off CF proxy) = DONE on 5 relays. P3 (website/API off CF proxy) waits CEO choice: (A) shielded provider move first (adds a layer before exposing the main server IP), (B) straight to main server now (exposes 178.62.101.221 directly), (C) wait to 31 Oct. P5 (Worker removal + DNS hosting) waits xd-1608 + 7 clean days (31 Oct). NOTE: taking names off the CF proxy is unsafe until the main server cert is fixed (nginx reads an expired cert from /root/Casper/Casper-Code/nginx/letsencrypt since 24 Sep 18:57Z). DECISION \u2014 CEO picks P3 path. Advice: (A) is safer but takes longer; (B) is fastest but requires the server cert fix first. CEO action: write 'A', 'B', or 'C' on this row.",
+      "blocker": "DEFERRED to 2027-01 (CEO 1 Nov: keep on Cloudflare for now); revisit earlier if a VPN-friendly host is chosen.",
       "updatedAt": "2026-10-23T16:31:06Z"
     },
     {
@@ -84347,11 +84347,16 @@
       "to": "[DEVOPS]",
       "title": "Handoff from QA: [P1] CEO taps: 5 of 14 took 2.5-4.3 min (one run blocked the 1-min timer 4 min)",
       "description": "QA 1 Nov 14:3xZ measured the CEO's 14 dashboard taps 13:37:38-13:43:47Z against casper-ceo-answers.service (timer every 1 min, active): run 13:39:31Z recorded 7 (604,603,600,598,597,595,594 = taps 13:37:38-13:38:59, all <= 1 m 53 s); next run 13:40:16Z, then NO run until 13:44:38Z (4 min 22 s gap), which recorded 554 (tap 13:40:19, 4 m 19 s), 556 (4 m 15 s), 543 (3 m 23 s), 538 (2 m 42 s), 531 (2 m 29 s), 506 (1 m 01 s), 497 (51 s). Result: 9 of 14 within 2 min. Find why the 13:40:16Z run blocked the timer for ~4 min (likely a board push / lock wait inside one run - OnUnitActiveSec counts from the end) and make a slow push not delay reads. Verify: next batch of >= 5 taps all on the board <= 2 min.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-11-01T14:38:14Z",
       "createdDate": "2026-11-01",
-      "completedDate": null
+      "completedDate": "2026-11-01",
+      "notes": "[DEVOPS live 2026-11-01 16:3x-16:4xZ, CEO: \"keep on cf for now ... take the CEO tap delay first, then the small server fixes (headers, log permissions, firewall log lines)\"] ROOT CAUSE (journal 13:39-13:45Z): the timer DID run every minute (13:41:19, 13:42:20, 13:43:22) but each run stopped at 'lock held by ceo-answers-1339 (124s/185s/247s)'. The 13:39:31 run recorded 7 taps, then its lock-release subprocess crashed ('Brain SSH key not found'), so its board lock stayed until the 300 s stale limit; 13:44:38 took over. So it was not one slow run. Fixes: (1) 14:0xZ HOME drop-in -> release works (0 'Brain SSH key' errors in the journal since); (2) production 1a97096 / development 8b9c069: ceo_answers takes over its OWN stale lock after 60 s (was 300 s), so even a failed release costs <= ~2 min. Proof that taps now land in <= 2 min needs the CEO's next batch of taps -> QA.",
+      "completedAt": "2026-11-01",
+      "completedBy": "[DEVOPS]",
+      "resolution": "Root cause = stale lock after failed release; both fixed; tap re-test with QA.",
+      "resultingHandoff": "xd-2944 to [QA]"
     },
     {
       "id": "xd-2901",
@@ -84548,11 +84553,16 @@
       "to": "[DEVOPS]",
       "title": "Handoff from QA: [P2] Admin site sends no Referrer-Policy / Permissions-Policy headers (security check #20)",
       "description": "QA 1 Nov 15:2xZ: curl -sI https://admin.caspervpn.com -> 0 of referrer-policy / permissions-policy (website has them). Add both to the admin server block in caspervpn-nginx (same values as caspervpn.com), nginx -t, reload. Verify: the curl count = 2.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-11-01T14:59:26Z",
       "createdDate": "2026-11-01",
-      "completedDate": null
+      "completedDate": "2026-11-01",
+      "notes": "[DEVOPS live 2026-11-01 16:3x-16:4xZ, CEO: \"keep on cf for now ... take the CEO tap delay first, then the small server fixes (headers, log permissions, firewall log lines)\"] SHIPPED (CEO live order): nginx/sites/admin.conf production d229ddf (development 1804505) - Referrer-Policy strict-origin-when-cross-origin + Permissions-Policy camera=(), microphone=(), geolocation=() in the 443 admin server block. Main-server checkout fast-forwarded the same way deploy_api.sh does (7025c4c7a -> 883b9a4d0; only admin.conf + logs changed), cert sync hook run, nginx -t ok, nginx -s reload (no restart). curl -sI admin.caspervpn.com -> 2 of 2 headers; site/API/admin all 200.",
+      "completedAt": "2026-11-01",
+      "completedBy": "[DEVOPS]",
+      "resolution": "Both headers live on admin (curl 2/2).",
+      "resultingHandoff": "xd-2945 to [QA]"
     },
     {
       "id": "xd-2915",
@@ -84837,11 +84847,16 @@
       "to": "[DEVOPS]",
       "title": "Handoff from LEGAL: [P2] CEO A 16 Oct (card row 269): chmod 640 /var/log/caspercloak-relay.log on 12 fleet nodes",
       "description": "Card row 269 CEO YES A (16 Oct, 'go with your advice'): record internally + make the old relay log files root-only. Measured 1 Nov 15:4xZ read-only (stat via ssh_exec_node): do-production + brain 640 root:root; 12 fleet nodes still 644 root:root (la-2, de-3, ams-4, nl-am2, de-du, us-la, hk, mx, mia, mtl, sgp, syd, sao, tyo - aliases share IPs). Do: chmod 640 on each, then stat = 640 on all; hand to [QA]. BR-2026-002 sign-off already filled on development a55974f14.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-11-01T15:43:57Z",
       "createdDate": "2026-11-01",
-      "completedDate": null
+      "completedDate": "2026-11-01",
+      "notes": "[DEVOPS live 2026-11-01 16:3x-16:4xZ, CEO: \"keep on cf for now ... take the CEO tap delay first, then the small server fixes (headers, log permissions, firewall log lines)\"] DONE (CEO A row 269 + live order): chmod 640 on /var/log/caspercloak-relay.log* on all 11 relays (stat 640 on every file incl. rotations). Kept on rotation: logrotate.d/caspercloak-relay got 'create 0640 root root' on 10 relays (logrotate -d ok; copytruncate keeps the 640 file). Amsterdam: its logrotate file was missing after the Debian rebuild - restored from the backup + 'su root adm' (Debian has no 'syslog' group); logrotate -d 0 errors.",
+      "completedAt": "2026-11-01",
+      "completedBy": "[DEVOPS]",
+      "resolution": "640 on 11/11 relays + rotation keeps it.",
+      "resultingHandoff": "xd-2946 to [QA]"
     },
     {
       "id": "xd-2934",
@@ -84906,11 +84921,13 @@
       "to": "[DEVOPS]",
       "title": "Handoff from DEVOPS: [P2] Row 326 no-log leg L2 still fails: user-port UFW lines in the kernel journal after the 30 Oct ICMP fix",
       "description": "DEVOPS same-run check 1 Nov 16:0xZ (counts only, L6): `bash /root/ufw_nolog_userports.sh check` on MTL + TYO: rule_live v4=1 v6=1, journald 7day, kern.log user-port lines 0 - but userport_lines_journal MTL 16, TYO 22; TYO has 1-4 per hour on 30 Oct 22Z-31 Oct 21Z, i.e. AFTER the xd-2715 ICMP rule. Find which packet type still logs (count by PROTO only, never read SRC), add the drop rule (fleet change: Bangkok-first impossible - ufw off there; same path as xd-2715 under CEO YES rows 326/397), re-check 8/8, tick row 326.",
-      "status": "pending",
+      "status": "deferred",
       "priority": "P2",
       "createdAt": "2026-11-01T16:10:05Z",
       "createdDate": "2026-11-01",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[DEVOPS live 2026-11-01 16:3x-16:4xZ, CEO: \"keep on cf for now ... take the CEO tap delay first, then the small server fixes (headers, log permissions, firewall log lines)\"] MEASURED (counts only, no addresses read): ufw logging is OFF on the 8 ufw relays since the 1 Nov 00:4xZ row 578 ship (LOGLEVEL=off); new [UFW] kernel lines since 00:45Z = 0 on all 11 relays. The 16/22 user-port lines on MTL/TYO are older lines in the journal (oldest entries 27-29 Oct) that leave by themselves with the 7-day journal cap - all gone by 8 Nov. No new rule needed. Deferred to 8 Nov: re-run 'ufw_nolog_userports.sh check' -> userport_lines_journal 0 on 8/8, then tick row 326.",
+      "blocker": "Date 8 Nov 2026: old journal lines age out (7-day cap); 0 new lines since 1 Nov 00:45Z."
     },
     {
       "id": "xd-2939",
@@ -84977,6 +84994,42 @@
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-11-01T16:37:32Z",
+      "createdDate": "2026-11-01",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2944",
+      "from": "[DEVOPS]",
+      "to": "[QA]",
+      "title": "Handoff from DEVOPS: [P1] Re-test CEO tap delay (xd-2900) on the next batch of >= 5 taps",
+      "description": "Fixes live 1 Nov 16:3xZ (lock release + own stale lock 60 s, production 1a97096). Verify: next >= 5 CEO taps each on the board <= 2 min (CeoDecisions.DecidedAt vs AppliedAt); journalctl -u casper-ceo-answers shows no 'Brain SSH key not found'.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-11-01T16:42:46Z",
+      "createdDate": "2026-11-01",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2945",
+      "from": "[DEVOPS]",
+      "to": "[QA]",
+      "title": "Handoff from DEVOPS: [P3] Check admin security headers (xd-2914)",
+      "description": "curl -sI https://admin.caspervpn.com | grep -icE 'referrer-policy|permissions-policy' = 2; admin login page loads.",
+      "status": "pending",
+      "priority": "P3",
+      "createdAt": "2026-11-01T16:42:46Z",
+      "createdDate": "2026-11-01",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2946",
+      "from": "[DEVOPS]",
+      "to": "[QA]",
+      "title": "Handoff from DEVOPS: [P3] Check relay log files are root-only (xd-2933, row 269)",
+      "description": "On each of the 11 relays: stat -c %a /var/log/caspercloak-relay.log* = 640; after the next daily rotation still 640.",
+      "status": "pending",
+      "priority": "P3",
+      "createdAt": "2026-11-01T16:42:46Z",
       "createdDate": "2026-11-01",
       "completedDate": null
     }
