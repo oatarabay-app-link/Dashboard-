@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-11-01T00:48:59Z",
+  "lastUpdated": "2026-11-01T00:54:53Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 69,
@@ -18851,6 +18851,24 @@
           "owner": "[DEVOPS]",
           "test": "SHIPPED 2026-11-01 00:43-00:46Z \u00b7 CEO YES 2026-11-01 (Cowork live: 'Yes, fix now') | relay OpenVPN logs + firewall 'blocked' logs held visitor addresses (first full sweep: OpenVPN ~265,000 lines, firewall ~1.4M lines on the 8 newer relays) \u00b7 done: OpenVPN logs nothing but fatal errors, firewall logging off, old logs removed - see row 578 for proof",
           "verify": "on any relay: grep -ac '\\[UFW ' /var/log/syslog /var/log/kern.log = 0; grep -h '^verb' /etc/openvpn/server/*.conf = 'verb 0'; ufw status verbose | grep Logging = off"
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "owner": "[WEBSITE]",
+          "addedAt": "2026-11-01T00:55:00Z",
+          "addedBy": "[WEBSITE+SECURITY live 2026-11-01 00:2x-01:0xZ, CEO Cowork: \"what can u finalize ... use skills from the vault\"]",
+          "test": "READY TO SHIP (after QA dev check) - 3 small website changes, each its own commit so you can say yes to all or some \u00b7 (1) xd-2784 Privacy Policy v1.10: the change-log line Legal wrote for the IKEv2 login records (your 'inform the users', row 557): 'Until 29 October 2026, the server that handles IKEv2 logins kept connection records that included the IP address you connected from. We stopped this and deleted the records on 29 October 2026, and we now check every server weekly.' Also the policy's source file said 'our own stealth protocol' - it now says 'our own protocol' like the live page (without this, publishing would bring 'stealth' back) \u00b7 (2) xd-2829 /free-vpn and /no-log-policy: Google titles 67/76 -> 55/49 characters, descriptions 163/173 -> 138/157, and 'the best free VPN' removed (a claim we cannot prove) \u00b7 (3) xd-2758 step 1: a Content Security Policy in REPORT-ONLY mode - browsers only report what it would block, nothing changes for visitors; the click test on dev found 3 outside services (Google 'preferred source' button, Cloudflare page analytics) now allowed \u00b7 tested on dev: titles 55/49, descriptions 138/157 (python on the dev pages); dev /privacy shows Version 1.10 + the change log, 'stealth' 0; 18 of 18 dev pages send the report-only header (production 0); type check: same 11 environment errors before and after (no new error) \u00b7 security review: trailofbits differential-review report memory/departments/security/audits/2026-11-01-diffreview-website-development.md (LOW/LOW/MEDIUM, nothing blocking) \u00b7 rollback: revert d615753 / 87c721e / 5775ee1+f257c97 \u00b7 advice: YES to all 3"
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "owner": "[SECURITY]",
+          "addedAt": "2026-11-01T00:55:00Z",
+          "addedBy": "[WEBSITE+SECURITY live 2026-11-01 00:2x-01:0xZ, CEO Cowork: \"what can u finalize ... use skills from the vault\"]",
+          "test": "DECISION (P2, security) - 2 certificate key files are stored in our private code repo (xd-2826) \u00b7 measured 1 Nov (fingerprints only, no key read): the website certificate key in the repo belongs to the OLD certificate that expired in June 2026 - the live certificate (valid to 13 Dec) uses a different key, so visitors are not at risk; the repo also holds our Let's Encrypt ACCOUNT key - whoever has repo access could revoke our certificates with it (not issue new ones) \u00b7 options: A) stop storing these files in the repo (ignore rule; the files stay in old history) and make a new Let's Encrypt account key on the server - about 15 minutes, no downtime; B) A plus erase them from the whole repo history - every copy of the repo must be re-downloaded, the robots' too; C) leave as is \u00b7 advice: A (the old history only holds an expired key and an account key we replace)"
         }
       ],
       "progress": 0,
@@ -79654,12 +79672,16 @@
       "to": "[SECURITY]",
       "title": "Handoff from QA: [P1] Row 493 FAIL: the 2 retired WireGuard keys (1777, 1941) were registered again 4 h later on another account and one is live on Singapore",
       "description": "[QA 2026-10-28 a, scheduled 'Casper qa', unattended, 09:1x-09:5xZ] Measured read-only 28 Oct 09:3xZ. WireGuardKeys 1777/1941 IsActive=f RevokedAt 27 Oct 10:09:35Z, but rows 8495 (same PublicKey as 1941) and 8496 (same as 1777) were created 27 Oct 14:31:21Z/14:33:21Z, IsActive=t, user hash a55e88cb (an internal-looking e-mail; old account 9d8076f7). node-sgp wg0 carries the 1941 key with a handshake 37 s old, 83.7 MB down. 1777 key on 0 nodes. Two possibilities: (1) the same phone (app keeps its key pair in the keychain) signed in to a second account and re-sent the old key; (2) someone used the leaked private key. Either way the exposed keys are back in service and the API accepts a revoked public key. Asks: (a) find out which device/account 8495/8496 are (read-only, no customer contact); (b) READY TO SHIP row: refuse registering a PublicKey that has a RevokedAt row + make the app create a fresh key pair when the server says so; (c) re-retire 8495/8496 under CEO YES. Re-run: select \"Id\",\"IsActive\" from \"WireGuardKeys\" where left(md5(\"PublicKey\"),8) in ('94350de7','d69aaa24'); on nodes hash 'wg show all dump' peers (md5 first 8).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-10-28T09:18:35Z",
       "createdDate": "2026-10-28",
-      "completedDate": null,
-      "notes": "[SECURITY live 2026-10-31 10:15-10:22Z, CEO: '1 yes 2 delete'] The March database copy in the staff folder is DELETED (CEO B, card row 573). Every remaining database copy is in the locked backup area. || [SECURITY live 2026-10-30 18:0x-21:04Z, CEO: \"what else canu keep on working?\" + \"do we still have any passwords in plain sight anywhere for any keys or servers ?\"] Backups: the nightly database copies sit under the top admin account's folder, which no other account can enter - not readable by others (checked tonight). Found instead: an old March copy in a staff account's folder - CEO decision on card row 573. || [QA live 2026-10-28 b, CEO live chat, 11:0x-11:3xZ] CEO: 'same phone signed in' (his phone, account switch). Wider read: key 1587 (retired 23 Oct) is back too as row 8453 (25 Oct 11:01Z, same user), live peer on Dusseldorf. Other exposure: 702 text/json columns in the production DB = 0 private keys (control: 26 bug reports carry the app's 'private_key=<redacted>' marker = redaction works); vault memory/ + QA/ 0; ONE old backup /root/casper-db-backup-gate2-20260529-133528.sql held 2 private keys (1583 = retired, on 0 nodes; 1587), mode 644 -> DELETED 11:2xZ under CEO YES 2026-10-28 ('Delete it'); 56 dump files scanned, 0 others; nightly dump today 0 keys. Open for SECURITY: daily dumps in /root/backups/postgres are mode 644 (check /root perms + who can read). CEO YES: fix code then retire - see the new [BACKEND] + [IOS] handoffs."
+      "completedDate": "2026-11-01",
+      "notes": "[SECURITY live 2026-10-31 10:15-10:22Z, CEO: '1 yes 2 delete'] The March database copy in the staff folder is DELETED (CEO B, card row 573). Every remaining database copy is in the locked backup area. || [SECURITY live 2026-10-30 18:0x-21:04Z, CEO: \"what else canu keep on working?\" + \"do we still have any passwords in plain sight anywhere for any keys or servers ?\"] Backups: the nightly database copies sit under the top admin account's folder, which no other account can enter - not readable by others (checked tonight). Found instead: an old March copy in a staff account's folder - CEO decision on card row 573. || [QA live 2026-10-28 b, CEO live chat, 11:0x-11:3xZ] CEO: 'same phone signed in' (his phone, account switch). Wider read: key 1587 (retired 23 Oct) is back too as row 8453 (25 Oct 11:01Z, same user), live peer on Dusseldorf. Other exposure: 702 text/json columns in the production DB = 0 private keys (control: 26 bug reports carry the app's 'private_key=<redacted>' marker = redaction works); vault memory/ + QA/ 0; ONE old backup /root/casper-db-backup-gate2-20260529-133528.sql held 2 private keys (1583 = retired, on 0 nodes; 1587), mode 644 -> DELETED 11:2xZ under CEO YES 2026-10-28 ('Delete it'); 56 dump files scanned, 0 others; nightly dump today 0 keys. Open for SECURITY: daily dumps in /root/backups/postgres are mode 644 (check /root perms + who can read). CEO YES: fix code then retire - see the new [BACKEND] + [IOS] handoffs.",
+      "completedAt": "2026-11-01",
+      "completedBy": "[SECURITY]",
+      "resolution": "[WEBSITE+SECURITY live 2026-11-01 00:2x-01:0xZ, CEO Cowork: \"what can u finalize ... use skills from the vault\"] Measured read-only: 8495 + 8496 IsActive=f with RevokedAt and reason 'retired again'; the code fix that refuses a revoked key shipped 29 Oct (row 527, xd-2687). Node check left to QA.",
+      "resultingHandoff": "xd-2856 to [QA]"
     },
     {
       "id": "xd-2687",
@@ -79715,11 +79737,14 @@
       "to": "[WEBSITE]",
       "title": "Handoff from QA: [P2] xd-2626 Create account PASS on dev - add the READY TO SHIP row",
       "description": "[QA live 2026-10-28 c, CEO live chat 'what can u finalize of the pending queue', 12:0x-12:3xZ] dev.caspervpn.com: /account/register 200; /signup 307 -> /account/register; login chunk has 'Create account' 1 + '/account/register' 1; register chunk page-74f99b98241d3345.js has first name 1, Terms 5, Privacy 3 and the refusal 'Please accept the Terms of Service and Privacy Policy.' (submit-without-box leg = code read; QA does not submit forms). Add the READY TO SHIP row for the CEO.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-10-28T12:13:00Z",
       "createdDate": "2026-10-28",
-      "completedDate": null
+      "completedDate": "2026-11-01",
+      "completedAt": "2026-11-01",
+      "completedBy": "[WEBSITE]",
+      "resolution": "[WEBSITE+SECURITY live 2026-11-01 00:2x-01:0xZ, CEO Cowork: \"what can u finalize ... use skills from the vault\"] Row 507 already added 27 Oct, QA PASS + CEO 'tick off' 29 Oct, live now: caspervpn.com/account/register 200, /signup 307 -> /account/register (curl 1 Nov 00:2xZ). Nothing left."
     },
     {
       "id": "xd-2691",
@@ -80626,11 +80651,15 @@
       "to": "[SECURITY]",
       "title": "Handoff from CEO: Row 2 of ops-weekly-security-sweep failed the live re-check (30 Oct)",
       "description": "lynis-report.dat still lists PKGS-7392 twice (report from the 25 Oct weekly run); apt shows 0 upgradable openvpn/zlib1g now, so the next Sunday run (1 Nov) should clear it - re-check then. Fix, then hand to [QA] with the row's verify.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-10-30T00:04:44Z",
       "createdDate": "2026-10-30",
-      "completedDate": null
+      "completedDate": "2026-11-01",
+      "completedAt": "2026-11-01",
+      "completedBy": "[SECURITY]",
+      "resolution": "[WEBSITE+SECURITY live 2026-11-01 00:2x-01:0xZ, CEO Cowork: \"what can u finalize ... use skills from the vault\"] Cleared by the 1 Nov Sunday lynis run: vulnerable_packages_found=0, PKGS-7392 warnings 0 (was 2 on 25 Oct). QA verify on the handoff.",
+      "resultingHandoff": "xd-2856 to [QA]"
     },
     {
       "id": "xd-2747",
@@ -80686,12 +80715,15 @@
       "to": "[WEBSITE]",
       "title": "Handoff from MARKETING: [P1] SEO/GEO audit fixes (report seo-geo-audit-2026-10-30.md): sitemap, blog article schema + date + author, titles <=60, home canonical, robots.txt one source, llms.txt refresh + llms-full.txt",
       "description": "[GROWTH live 2026-10-30, CEO: \"start keyword work and agi seo work\"] CODED by the growth live session on development eb2c9f0 (sitemap, BlogPosting JSON-LD, title<=60/desc<=160, llms.txt + llms-full.txt, 'verified' off /free-vpn); home canonical + visible blog date/author were already present (audit lines wrong). Dev-verified. READY TO SHIP row on the CEO card. Left: robots.txt (Cloudflare setting, CEO), seo-data.ts:822 'verified for DNS leaks' wording, sitemap lastModified uses updated_at. || [GROWTH live 2026-10-30, CEO: \"yes for 2\" + \"start the seo and agi audit\"] Report memory/departments/marketing/reports/seo-geo-audit-2026-10-30.md (GEO 44, SEO 67). Do on development, check on dev, QA, then one READY TO SHIP row: (1) /faq + /no-log-policy into sitemap; (2) blog: Article JSON-LD, visible date, author/reviewer (CEO names who); (3) blog <title> <=60, meta <=160; (4) canonical on /; (5) robots.txt: one source (Cloudflare managed block vs ours - CEO setting), answer bots allowed; (6) llms.txt refreshed + llms-full.txt; (7) more words on /download + compare pages. Copy: claim rules + asc_metadata_scan 0.",
-      "status": "in_progress",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-10-30T00:32:29Z",
       "createdDate": "2026-10-30",
-      "completedDate": null,
-      "blocker": "Waits CEO YES on the READY TO SHIP row (SEO/GEO fixes, 30 Oct)."
+      "completedDate": "2026-11-01",
+      "blocker": null,
+      "completedAt": "2026-11-01",
+      "completedBy": "[WEBSITE]",
+      "resolution": "[WEBSITE+SECURITY live 2026-11-01 00:2x-01:0xZ, CEO Cowork: \"what can u finalize ... use skills from the vault\"] Row 551 SHIPPED 30 Oct + QA PASS 31 Oct (llms-full.txt 200, sitemap /faq + /no-log-policy, BlogPosting on 30 posts). Live 1 Nov: llms-full.txt 200, sitemap hits 2. The leftovers (author/date, sameAs, thicker /download + /compare, breadcrumbs, lastmod, robots) are xd-2781."
     },
     {
       "id": "xd-2751",
@@ -80810,12 +80842,13 @@
       "to": "[WEBSITE]",
       "title": "Handoff from SECURITY: Website: add a Content Security Policy + upgrade Next.js / next-auth / plotly (4 critical advisories)",
       "description": "[SECURITY live 2026-10-30, CEO live chat order] Measured 30 Oct (memory/departments/security/audit-2026-10-30/REPORT.md (private repo) section A rows 16, 20, 26): caspervpn.com sends no Content-Security-Policy; npm audit on the production lock file finds 29 runtime packages with advisories (4 critical: the Next.js framework, next-auth, and a map library pulled in by plotly). (1) Upgrade inside the same major versions first (latest Next.js 14.2.x patch, latest next-auth 4.24.x), build + click test on dev. (2) Content policy in report-only mode first, then enforce. Dev -> QA -> READY TO SHIP row.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-10-30T00:59:43Z",
       "createdDate": "2026-10-30",
       "completedDate": null,
-      "notes": "[SECURITY live 2026-10-30 14:2x-15:1xZ, CEO: \"what can u keep doing while i do my task ?\"] ADD: the website account portal should take the customer address it forwards to the API from our own web server's header (reason and exact change in memory/departments/security/audit-2026-10-30/REPORT.md section H (private), H5)."
+      "notes": "[SECURITY live 2026-10-30 14:2x-15:1xZ, CEO: \"what can u keep doing while i do my task ?\"] ADD: the website account portal should take the customer address it forwards to the API from our own web server's header (reason and exact change in memory/departments/security/audit-2026-10-30/REPORT.md section H (private), H5).",
+      "blocker": "step 1 on development (report-only CSP, dev click test 18/18 pages); waits [QA] xd-2857 + CEO yes on card row 594. Step 2 (package upgrades + enforce) still to do by WEBSITE."
     },
     {
       "id": "xd-2759",
@@ -81200,11 +81233,12 @@
       "to": "[WEBSITE]",
       "title": "Handoff from LEGAL: [P1] Privacy policy change-log line for the IKEv2 log (CEO YES 30 Oct live)",
       "description": "[GROWTH live 2026-10-30, CEO Cowork chat, 2026-10-30T12:18:28Z] Line in legal/reviews/2026-10-30-radius-user-notice-and-provider-requests.md \u00a72 -> docs/legal/PRIVACY_POLICY.md change log on development, generate_legal_pages, READY TO SHIP row.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-10-30T12:18:34Z",
       "createdDate": "2026-10-30",
-      "completedDate": null
+      "completedDate": null,
+      "blocker": "on development (Privacy v1.10 + change log on dev); waits [QA] xd-2857 then the CEO's yes on card row 594"
     },
     {
       "id": "xd-2785",
@@ -81525,11 +81559,14 @@
       "to": "[WEBSITE]",
       "title": "Handoff from MARKETING: [P1] Ship Smart App Banner (CEO YES 30 Oct) - development a1d103c",
       "description": "[GROWTH live 2026-10-30, CEO Cowork 'do all the 4', 2026-10-30T18:28:05Z] Check dev (grep apple-itunes-app on dev home), then cherry-pick to production under lock, verify live, hand to QA.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-10-30T18:28:11Z",
       "createdDate": "2026-10-30",
-      "completedDate": null
+      "completedDate": "2026-11-01",
+      "completedAt": "2026-11-01",
+      "completedBy": "[WEBSITE]",
+      "resolution": "[WEBSITE+SECURITY live 2026-11-01 00:2x-01:0xZ, CEO Cowork: \"what can u finalize ... use skills from the vault\"] Shipped by growth 31 Oct (row 567, production 57c6e0fc3, QA PASS). Live 1 Nov: home has <meta name=\"apple-itunes-app\" content=\"app-id=1187243615\"/>. Nothing left."
     },
     {
       "id": "xd-2807",
@@ -81846,7 +81883,8 @@
       "priority": "P1",
       "createdAt": "2026-10-31T10:59:13Z",
       "createdDate": "2026-10-31",
-      "completedDate": null
+      "completedDate": null,
+      "blocker": "waits the CEO's answer on card row 595 (A untrack + new ACME account key / B also rewrite history / C leave). Measured 1 Nov: repo privkey1.pem = expired June 2026 cert (public-key hash differs from the live cert); ACME account key is the live risk."
     },
     {
       "id": "xd-2827",
@@ -81881,11 +81919,12 @@
       "to": "[WEBSITE]",
       "title": "Handoff from QA: [P3] /free-vpn and /no-log-policy page titles + descriptions over 60/160",
       "description": "QA 31 Oct 11:0xZ (live caspervpn.com): /free-vpn title 67 chars ('Free VPN \u2014 CasperVPN Free Plan, No Credit Card Required | CasperVPN'), description 163; /no-log-policy title 76, description 173. Row 551 cut only blog posts (30/30 within limits). Also /free-vpn description says 'the best free VPN' - Marketing to judge the claim. Verify: python title/description length on both pages <= 60/160.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P3",
       "createdAt": "2026-10-31T11:02:34Z",
       "createdDate": "2026-10-31",
-      "completedDate": null
+      "completedDate": null,
+      "blocker": "on development (titles 55/49, descriptions 138/157 on dev); waits [QA] xd-2857 then the CEO's yes on card row 594"
     },
     {
       "id": "xd-2830",
@@ -82239,6 +82278,30 @@
       "status": "pending",
       "priority": "P2",
       "createdAt": "2026-11-01T00:47:51Z",
+      "createdDate": "2026-11-01",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2856",
+      "from": "[SECURITY]",
+      "to": "[QA]",
+      "title": "Handoff from SECURITY: [P2] Check xd-2746 (lynis PKGS-7392 gone) + xd-2686 (keys 8495/8496 off)",
+      "description": "[WEBSITE+SECURITY live 2026-11-01 00:2x-01:0xZ, CEO Cowork: \"what can u finalize ... use skills from the vault\"] (1) xd-2746 / ops-weekly-security-sweep row 2: main server /var/log/lynis-report.dat from the Sunday run 1 Nov 00:19Z: vulnerable_packages_found=0, 'warning[]=PKGS-7392' count 0, hardening_index 67; apt upgradable openvpn/zlib1g 0. Verify: grep -E '^vulnerable_packages_found|^warning\\[\\]=PKGS-7392' /var/log/lynis-report.dat. (2) xd-2686: select \"Id\",\"IsActive\",\"RevokedAt\" from \"WireGuardKeys\" where left(md5(\"PublicKey\"),8) in ('94350de7','d69aaa24') -> 421 f, 8495 f + revoked, 8496 f + revoked ('leaked private key came back after retirement; retired again'); row 527 SHIPPED 29 Oct refuses re-registering a revoked key. Still to check by QA: node-sgp wg0 no longer carries the 1941 public key.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-11-01T00:54:53Z",
+      "createdDate": "2026-11-01",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2857",
+      "from": "[WEBSITE]",
+      "to": "[QA]",
+      "title": "Handoff from WEBSITE: [P1] Dev check: privacy v1.10 change log, /free-vpn + /no-log-policy titles, report-only CSP",
+      "description": "[WEBSITE+SECURITY live 2026-11-01 00:2x-01:0xZ, CEO Cowork: \"what can u finalize ... use skills from the vault\"] development d615753 + 87c721e + 5775ee1 + f257c97. Checks on dev.caspervpn.com: (1) /privacy shows 'Version:</strong> 1.10' and a 'Change log' heading with the 30 October 2026 line; grep -ci stealth = 0; (2) /free-vpn title 55 chars ('Free VPN for iPhone \u2014 No Credit Card Needed | CasperVPN'), description 138, no 'best free'; /no-log-policy title 49, description 157; (3) curl -sI / has Content-Security-Policy-Report-Only including news.google.com + static.cloudflareinsights.com; a browser visit to /, /pricing, /download shows no 'Report Only' CSP lines in the console. Then tick and the CEO answers card row 594.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-11-01T00:54:53Z",
       "createdDate": "2026-11-01",
       "completedDate": null
     }
