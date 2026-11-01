@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-11-01T14:25:29Z",
+  "lastUpdated": "2026-11-01T14:25:50Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 69,
@@ -25729,6 +25729,17 @@
           "verifiedBy": "tested",
           "lastMeasured": "2026-10-28T12:33:37Z",
           "lastResult": "PASS"
+        },
+        {
+          "test": "11 Load test: 100 people connected at once to ONE small hidden-mode server (1 CPU, 2 GB - same size as most relays) stay connected and fast",
+          "met": false,
+          "passed": false,
+          "verifiedBy": null,
+          "addedAt": "2026-11-01T14:25:44Z",
+          "addedBy": "[CTO]",
+          "owner": "[CTO]",
+          "verify": "load.py 100 sessions from 2+ source IPs against the test relay bkk-01 (s13 front), hold >= 120 s; relay box CPU/memory sampled every 5 s",
+          "evidence": "[CTO live 2026-11-01 14:1x-14:2xZ, CEO: 'yes run the test'] Test relay bkk-01 only (no production relay touched). Run 1 (14:18Z, all 100 from one address): 50 held, 50 refused with 404 = the front's per-address limit (nginx limit_conn dpi_conn 50, same line on production relays, e.g. Hong Kong). Run 2 (14:22-14:24Z, 50 from the dev server + 50 from the main server): 100/100 logged in and held 120 s, login time median 1.2-1.5 s, p95 2.8-3.2 s, max 9.0 s (one); ~22 Mbit/s upload total; box CPU about half used (idle 47-70%), relay memory 36 -> 38 MB, load < 1, free memory 1.5 GB unchanged. NOT tested: return traffic through WireGuard (test packets are dropped by WireGuard), the API under 100 logins, a real phone. FINDING: more than 50 users behind one carrier address (common on mobile networks) would be refused - handed to [SECURITY] on xd-2884 with the DPI burst alarm (same limit). Test files and key copies deleted after."
         }
       ],
       "progress": 0,
@@ -82999,7 +83010,8 @@
       "priority": "P2",
       "createdAt": "2026-11-01T13:04:50Z",
       "createdDate": "2026-11-01",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[CTO live 2026-11-01 14:1x-14:2xZ, CEO: 'yes run the test'] LIKELY CAUSE of the 49/50 burst (NOT PROVEN, strong): every relay front has 'limit_conn dpi_conn 50' per source address and 'limit_req 20 r/s burst 40'; the lab burst of 50 plus the probe's own other connection crosses 50. Load test hit exactly 50 then 404. Decide: raise the per-address limit (e.g. 200) on the lab, re-run the DPI alarm, then all relays - also protects users behind shared mobile-carrier addresses. || "
     },
     {
       "id": "xd-2885",
