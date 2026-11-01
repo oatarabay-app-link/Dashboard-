@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-11-01T15:37:09Z",
+  "lastUpdated": "2026-11-01T15:37:47Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 62,
@@ -84079,11 +84079,15 @@
       "to": "[QA]",
       "title": "Handoff from BACKEND: [P1] Live checks 1 Nov 14:12Z: trial A/B endpoint (row 598) + quota mail shipped OFF (row 597) + rows 603/604",
       "description": "production e685f77a8 live 14:12Z. (1) Signed-in GET https://api.caspervpn.com/api/trial-offer -> 200 {trialPreselectedPlan:'yearly', abEnabled:false}; FunnelEvents.Arm stays null while off. (2) Quota mail: env LifecycleEmails__QuotaMail=false on production - 0 quota mails sent; after your dev mail check (xd-2859, after xd-2890) tell [BACKEND] to switch it on. (3) Row 603: claude_dev_radius line fingerprint differs from 25c6c8c5 on all 12 servers (never print the value). (4) Row 604: WireGuardKeys 421 RevokedAt not null; Duesseldorf wg0 has no peer for key 8496.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-11-01T14:15:20Z",
       "createdDate": "2026-11-01",
-      "completedDate": null
+      "completedDate": "2026-11-01",
+      "notes": "[QA checks by the DEVOPS live session, CEO Cowork 2026-11-01 15:4xZ: \"finalize qa tasks and cross off ... what i can\" - only items NOT made by DevOps; read-only] (1) PASS on the server side: production env Trial__Enabled=false; FunnelEvents last 3 h: 0 of 3 rows carry an Arm. NOT PROVEN: the signed-in GET /api/trial-offer body (needs a test login - not done here). (2) PASS: LifecycleEmails__QuotaMail=false; LifecycleEmailSends kind quota since 14:12Z = 0 (all-time kinds W1 149, B2 27, B1 26, A2 4, A1 4). (3) PASS: claude_dev_radius line fingerprint on 11 relays = 11 different values, none = 25c6c8c5 (old); Bangkok has no such line (empty-hash). Amsterdam's copy comes from the 14:19Z backup = after the 14:12Z change. (4) PASS: WireGuardKeys 421 and 8496 both RevokedAt set; key 8496 is a peer on 0 of 12 servers (wg show all peers). Quota mail switch-on stays with BACKEND after dev mail send is proven (xd-2897).",
+      "completedAt": "2026-11-01",
+      "completedBy": "[QA]",
+      "resolution": "2,3,4 PASS; 1 PASS server-side (signed-in body not called)."
     },
     {
       "id": "xd-2896",
@@ -84161,11 +84165,16 @@
       "to": "[QA]",
       "title": "Handoff from BACKEND: [P2] Dev check: lifecycle mail texts read cap + trial days (xd-2876) and test DB columns (xd-2844)",
       "description": "development 88d21c496 (api.dev after redeploy ~15 min): A1 subject 'Your CasperVPN free trial ends in 2 days'; A1/A2/B2/quota bodies say the Free plan's cap (today 0.5 GB) and trial days (7) - no 'free week'. Test DB: python3 /root/reports/be1101t/schema_drift_check.py on the main server -> 'columns missing on test 0'. Then [BACKEND] ships card row 611.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-11-01T14:40:20Z",
       "createdDate": "2026-11-01",
-      "completedDate": null
+      "completedDate": "2026-11-01",
+      "notes": "[QA checks by the DEVOPS live session, CEO Cowork 2026-11-01 15:4xZ: \"finalize qa tasks and cross off ... what i can\" - only items NOT made by DevOps; read-only] PASS: (a) schema_drift_check.py on the main server 15:4xZ: 'columns missing on test 0' (33 tables missing on test, 45 type differences - not this row). (b) development b6c3f8d contains 88d21c496: LifecycleEmailService.cs A1 subject 'Your CasperVPN free trial ends in 2 days'; bodies use FreeCapBytes (0.5 GB) and trial days; 0 'free week'/'7-day'/'14-day' in that file (other hits are code comments / TrialService description, not mail). NOT PROVEN: a rendered dev mail (dev SMTP login fixed 14:2xZ; send test xd-2897).",
+      "completedAt": "2026-11-01",
+      "completedBy": "[QA]",
+      "resolution": "PASS (code + schema drift); rendered mail via xd-2897.",
+      "resultingHandoff": "xd-2931 to [BACKEND]"
     },
     {
       "id": "xd-2902",
@@ -84351,11 +84360,15 @@
       "to": "[QA]",
       "title": "Handoff from BACKEND: [P2] Check: daily schema drift timer (row 612) + A1 mail with no day count (development b6c3f8dfd)",
       "description": "(1) Main server: systemctl list-timers casper-schema-drift.timer -> next run 05:17Z; /root/reports/schema-drift-history.log gets one line per day. (2) api.dev after redeploy: A1 mail body 'Your free trial of CasperVPN Premium ends on <date>' with no '7-day'/'14-day'; tests 622/622.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-11-01T15:11:25Z",
       "createdDate": "2026-11-01",
-      "completedDate": null
+      "completedDate": "2026-11-01",
+      "notes": "[QA checks by the DEVOPS live session, CEO Cowork 2026-11-01 15:4xZ: \"finalize qa tasks and cross off ... what i can\" - only items NOT made by DevOps; read-only] (1) PASS: casper-schema-drift.timer next run Mon 2 Nov 05:17Z; /root/reports/schema-drift-history.log has 1 line (15:06:39Z exit 1 - the drift itself is real, see xd-2901). Second line after 05:17Z = date watch. (2) PASS in code: A1 body 'Your free trial of CasperVPN Premium ends on <date>' in development b6c3f8d, no '7-day'/'14-day' in LifecycleEmailService.cs. NOT PROVEN: tests 622/622 (not run here) and a rendered dev mail (xd-2897).",
+      "completedAt": "2026-11-01",
+      "completedBy": "[QA]",
+      "resolution": "Timer + text PASS; history 2nd line on the date watch; rendered mail via xd-2897."
     },
     {
       "id": "xd-2917",
@@ -84363,11 +84376,13 @@
       "to": "[QA]",
       "title": "Handoff from BACKEND: [P2] Live check: failure reports stored once (xd-2804) + B2 mail W1 text (xd-2751)",
       "description": "xd-2804 live since 1 Nov 00:09Z (production 2d06e50c4): ConnectFailureEvents duplicates on (UserId, ServerId, ClientTimestamp, ElapsedMsBeforeFailure) after 00:09Z must be 0. xd-2751 live since 31 Oct 22:56Z (production 3806a5a): next B2 mail body has the 3 steps and no banned word; read the 2 Nov 00:16Z batch.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P2",
       "createdAt": "2026-11-01T15:21:51Z",
       "createdDate": "2026-11-01",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[QA checks by the DEVOPS live session, CEO Cowork 2026-11-01 15:4xZ: \"finalize qa tasks and cross off ... what i can\" - only items NOT made by DevOps; read-only] Part 1 PASS: ConnectFailureEvents since 1 Nov 00:09Z = 5 rows, duplicate groups (UserId, ServerId, ClientTimestamp, ElapsedMsBeforeFailure) = 0; control 25 Oct-1 Nov 00:09Z = 2 duplicate groups, so the check can see them. Small sample (5) - re-read on the date watch. Part 2 (B2 mail W1 text) waits the 2 Nov 00:16Z batch.",
+      "blocker": "Date: B2 mail batch 2 Nov 00:16Z (read it after); part 1 PASS."
     },
     {
       "id": "xd-2918",
@@ -84526,6 +84541,18 @@
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-11-01T15:37:09Z",
+      "createdDate": "2026-11-01",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2931",
+      "from": "[QA]",
+      "to": "[BACKEND]",
+      "title": "Handoff from QA: [P2] QA PASS (code + test DB): ship card row 611 (lifecycle mail texts, xd-2876/xd-2844)",
+      "description": "xd-2901 PASS 1 Nov 15:4xZ (columns missing on test 0; texts right in development b6c3f8d). Rendered dev mail still to see in xd-2897.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-11-01T15:37:47Z",
       "createdDate": "2026-11-01",
       "completedDate": null
     }
