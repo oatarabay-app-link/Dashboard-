@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-11-01T07:23:00Z",
+  "lastUpdated": "2026-11-01T07:40:58Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 69,
@@ -18972,6 +18972,18 @@
           "owner": "[BACKEND]",
           "test": "DECISION (P2) - one old copy of the leaked connection key on your account is still switched on (row 421 = same key as 8496, which was retired 29 Oct under your YES; xd-2840). The server already refuses that key, so nothing is open today, but the copy should go too. A = retire row 421 now (backup first). B = leave it. Advice: A.",
           "verify": "select RevokedAt from WireGuardKeys where Id=421 -> not null; reason starts 'leaked'"
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": null,
+          "verifiedDate": null,
+          "evidence": "",
+          "addedAt": "2026-11-01T07:45:00Z",
+          "addedBy": "[DEVOPS]",
+          "owner": "[DEVOPS]",
+          "test": "DECISION (P2) - Amsterdam and Duesseldorf hidden-mode servers still run Ubuntu 20.04, whose free security updates ended in April 2025 (xd-2852). They work today on a side copy of newer Python. A = upgrade in place twice (20.04 -> 22.04 -> 24.04): keeps everything, but two big jumps on a live server, ~1-2 h each, and a failed jump is hard to undo. B = reinstall each server fresh on 24.04 from our setup script, same address, Amsterdam first (fewer users), then Duesseldorf at its quietest hour; ~1 h down each, users move to other servers meanwhile, rollback = reinstall 20.04 image. C = leave as is until January. Advice: B, in a live session, one server per day. Before the date DevOps checks in the OneProvider panel that a reinstall keeps the same address.",
+          "verify": "ssh each node: lsb_release -rs = 24.04; caspercloak-ws active on 443 with the system python3; front_path_check 101 for s-AMS and s-DUS; parity_monitor 13/13"
         }
       ],
       "progress": 0,
@@ -82021,11 +82033,16 @@
       "to": "[DEVOPS]",
       "title": "Handoff from LEGAL: [P1] IP sweep ruling (xd-2823): 1, 2a, 3 break the no-logs promise; answer 2b",
       "description": "[GROWTH run 2026-10-31 1051, scheduled, unattended] Ruling: memory/departments/legal/reviews/2026-10-31-ip-sweep-first-run-xd-2823.md. (1) old OpenVPN logs, (2a) charon peer addresses, (3) relay nginx error_log 'client:' all keep user addresses we promise not to keep -> your advice (delete 1, charon no peer address, nginx error_log crit on every relay, truncate) is right; it needs CEO YES (delete + fleet config) - put ONE READY TO SHIP row on the CEO card with all three. (2b) python3 3,071 journal lines: tell us which script and whose address (counts only) - not proven either way. Also check backups for 1 (counts only). Record under BR-2026-002, no IPs.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-10-31T11:02:05Z",
       "createdDate": "2026-10-31",
-      "completedDate": null
+      "completedDate": "2026-11-01",
+      "notes": "[DEVOPS run 2026-11-01 0724, scheduled, unattended] Items 1, 2a, 3 were shipped in the CEO live session 1 Nov 00:24-00:50Z (card row 578 A + row 580; QA check xd-2853). 2b ANSWERED (counts only, no address printed): main-server journal, 7 days, _COMM=python3 = 6,337 lines in 2 units (caspercloak-ws 3,431, caspervpn-flask 2,907). Lines holding any dotted address: 2,908, ALL caspervpn-flask and ALL 172.16-31.x = the Docker bridge (our own API container calling the node API). Public addresses in python3 lines: 0 (same filter found 1,407 sshd + 1 xl2tpd lines since 00:50Z = the filter works). So 2b is not a user address and needs no fix. Backups (item 1): newest repo backup /backups/20261101_020002.tar.gz = 66 entries, 0 OpenVPN log files; off-site holds database dumps only. Record under BR-2026-002.",
+      "completedAt": "2026-11-01",
+      "completedBy": "[DEVOPS]",
+      "resolution": "1/2a/3 shipped 1 Nov (rows 578/580, QA xd-2853); 2b = 0 user addresses (Docker bridge 172.x only); backups 0 OpenVPN logs.",
+      "resultingHandoff": "xd-2872 to [LEGAL]; QA check already xd-2853"
     },
     {
       "id": "xd-2829",
@@ -82127,11 +82144,16 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: [P2] Runbook: nginx certs now come from the host store (xd-2794)",
       "description": "Since 31 Oct 11:28Z the nginx container mounts /etc/letsencrypt (host, read-only). The sync hook still copies into the repo folder (harmless; can be retired). Update the cert runbook + the 24h cert check to read the host store. Note: nginx config also names live/enterprise.caspervpn.com certs that exist in neither store - check which file includes them.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-10-31T11:29:49Z",
       "createdDate": "2026-10-31",
-      "completedDate": null
+      "completedDate": "2026-11-01",
+      "notes": "[DEVOPS run 2026-11-01 0724, scheduled, unattended] Measured 07:3xZ: caspervpn-nginx mounts /etc/letsencrypt (host) read-only; nginx -t ok. enterprise.caspervpn.com certs are named only in nginx/sites/enterprise.conf.disabled - nginx loads conf.d/*.conf only, so that file is not used and no cert is missing. 24 h cert check (/opt/caspervpn/infra_inventory_check.py 04:20Z) already reads what nginx serves on 127.0.0.1:443 plus /etc/letsencrypt/live/*/cert.pem = the host store - no change needed. Runbook updated in the vault: memory/architecture/02-infrastructure.md 'Cert store' line (replaces the dual-directory trap) + devops SKILL.md trap marked history. Retiring the old sync copy step = server change, left for a CEO YES (harmless as is).",
+      "completedAt": "2026-11-01",
+      "completedBy": "[DEVOPS]",
+      "resolution": "Runbook updated (02-infrastructure 'Cert store'); cert check already reads the host store; enterprise certs only in a disabled file.",
+      "resultingHandoff": "xd-2873 to [QA]"
     },
     {
       "id": "xd-2836",
@@ -82164,11 +82186,13 @@
       "to": "[DEVOPS]",
       "title": "Handoff from QA: [P2] Hong Kong relay still loses UDP packets (row 324): +15,729 in ~34 h",
       "description": "QA 31 Oct ~12:0xZ: /proc/net/snmp Udp RcvbufErrors on node-hk = 527,055 (511,326 at 30 Oct 01:3xZ per xd-2764). The other 10 relays are flat since 29 Oct. Find why HK keeps dropping (buffer size, CPU, a noisy port), fix under the normal gate, hand back to [QA]. Verify: two reads 24 h apart, growth 0.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P2",
       "createdAt": "2026-10-31T11:41:02Z",
       "createdDate": "2026-10-31",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[DEVOPS run 2026-11-01 0724, scheduled, unattended] Measured again 07:25-07:26Z (counts only): node-hk Udp RcvbufErrors 536,230 -> 536,236 in 40 s (+6); per-socket drops: the ONLY socket with drops is 0.0.0.0:68 owned by charon (d90,630 -> d90,636, +6) = all of the growth. Relay (caspercloak-ws) and IKEv2 sockets: 0 drops. Cause: strongSwan's dhcp plugin listens on :68 and drops the provider LAN's DHCP broadcasts. The plugin is NOT used: rightsourceip=10.10.10.0/24 (static pool) on HK, Singapore and Duesseldorf alike; dhcp.conf 'load = yes'. No user impact. Fix = 'load = no' in /etc/strongswan.d/charon/dhcp.conf + charon restart (cuts IKEv2 sessions ~5 s): fleet change -> bkk-01 first, then a READY TO SHIP row. Blocker: needs a LIVE DevOps session (unattended runs do no server writes, incl. bkk-01).",
+      "blocker": "LIVE DevOps session: test dhcp 'load = no' + charon restart on bkk-01, then READY TO SHIP row for HK (or fleet). No user impact meanwhile."
     },
     {
       "id": "xd-2839",
@@ -82176,11 +82200,16 @@
       "to": "[DEVOPS]",
       "title": "Handoff from QA: [P2] Card row 434 FAIL: main server dropped to 7.79 GB free on 30 Oct 20:16Z",
       "description": "QA 31 Oct: Prometheus node_filesystem_avail_bytes{mountpoint='/', job=node-do-production} step 60 s over 3 days: below 8 GB for 1 minute at 30 Oct 20:16:42Z (7.79 GB) after the 28 Oct 13:55Z start (earlier dips 28 Oct 13:19-13:54Z = before the ship time, not counted). Free now 9.0 GB (82%). 31 Oct Worker logs show Build Docker Images x5 today. Find what ran at 20:16Z 30 Oct and keep the floor > 8 GB; hand back to [QA]. Verify: min_over_time(node_filesystem_avail_bytes{mountpoint='/',job='node-do-production'}[3d]) > 8e9.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-10-31T11:41:02Z",
       "createdDate": "2026-10-31",
-      "completedDate": null
+      "completedDate": "2026-11-01",
+      "notes": "[DEVOPS run 2026-11-01 0724, scheduled, unattended] What ran at 30 Oct 20:16Z: the CI job 'Build Docker Images (website)' 19:55:02-20:16:42Z (runner _diag Worker_20261030-195502); 20:16:42 is its last second, then the admin image build started 20:16:44Z. Fix since then: runner_job_prep.sh (CEO YES, shipped 1 Nov 01:35Z) trims old images before every CI job. Prometheus min_over_time(node_filesystem_avail_bytes{mountpoint='/',job='node-do-production'}) since 01:35Z = 9.66 GB (> 8 GB) across 8 'Build Docker Images' jobs today; 3-day min 7.60 GB was before the fix. Free now 13 GB (75%). The 24 h read belongs to QA xd-2861 (after 2 Nov 01:35Z).",
+      "completedAt": "2026-11-01",
+      "completedBy": "[DEVOPS]",
+      "resolution": "Cause = website image build ending 20:16:42Z 30 Oct; runner_job_prep.sh shipped 1 Nov 01:35Z; min since = 9.66 GB.",
+      "resultingHandoff": "QA 24 h read already open: xd-2861"
     },
     {
       "id": "xd-2840",
@@ -82366,11 +82395,13 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: [P2] Upgrade Amsterdam + Duesseldorf from Ubuntu 20.04",
       "description": "They are the only relays on 20.04 (Python 3.8, standard support ended Apr 2025). Since 1 Nov they run the one relay file under a side Python 3.9 + websockets 15.0.1. Plan an OS upgrade (or rebuild on 24.04 with the same IP), then drop the side Python. Duesseldorf carries most real hidden-mode users: idle-only, rollback ready.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P2",
       "createdAt": "2026-11-01T00:41:28Z",
       "createdDate": "2026-11-01",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[DEVOPS run 2026-11-01 0724, scheduled, unattended] Plan written as a DECISION row on the CEO card (options A in-place upgrade / B fresh 24.04 rebuild keeping the IP / C wait). Advice B, Amsterdam first, in a live session at the lowest-traffic hour; NOT PROVEN yet: that the OneProvider reinstall keeps the same IP (to check in the panel before the date).",
+      "blocker": "Waits CEO answer on the card DECISION row 'Amsterdam + Duesseldorf off Ubuntu 20.04 (xd-2852)'."
     },
     {
       "id": "xd-2853",
@@ -82521,11 +82552,16 @@
       "to": "[DEVOPS]",
       "title": "Handoff from QA: [P2] Dev server cannot send e-mail: SMTP send times out (0 sent in 72 h)",
       "description": "QA 1 Nov 01:29Z: caspervpn-dev-api 'System.TimeoutException: SMTP send timed out' at EmailService.SendEmailAsync for verification + reset; 8 timeouts in 72 h, 0 'sent'. Production sends fine (Resend). Blocks every dev mail check (branded mail look, reset link works, password_reset_email audit row). Fix the dev SMTP route/credentials (values stay in credentials.md), hand back to [QA].",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-11-01T01:41:54Z",
       "createdDate": "2026-11-01",
-      "completedDate": null
+      "completedDate": "2026-11-01",
+      "notes": "[DEVOPS run 2026-11-01 0724, scheduled, unattended] ROOT CAUSE: DigitalOcean blocks outbound SMTP 587 on our droplets. Measured from the dev host and the main host: smtp.resend.com 25/465/587 BLOCKED, 2587/2465 OPEN (bash /dev/tcp test, same result on both = control). Production uses port 2587; the dev compose had 587. FIX: development e3c2d49 (infrastructure/dev-vps/docker-compose.dev-vps.yml Email__SmtpPort 587 -> 2587). Dev redeployed itself: caspervpn-dev-api restarted 07:38:49Z, printenv Email__SmtpPort = 2587, api.dev /health 200. Not yet proven: a real dev mail sent (QA does the send). Dev only - no production change.",
+      "completedAt": "2026-11-01",
+      "completedBy": "[DEVOPS]",
+      "resolution": "Fixed on dev: SMTP port 587 (blocked by DigitalOcean) -> 2587, development e3c2d49, live on dev 07:38Z. Send test handed to QA.",
+      "resultingHandoff": "xd-2871 to [QA]"
     },
     {
       "id": "xd-2865",
@@ -82600,6 +82636,42 @@
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-11-01T07:22:26Z",
+      "createdDate": "2026-11-01",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2871",
+      "from": "[DEVOPS]",
+      "to": "[QA]",
+      "title": "Handoff from DEVOPS: [P2] Dev check: dev e-mail sends again (xd-2864, SMTP port 2587)",
+      "description": "DevOps 1 Nov 07:4xZ: dev API now uses SMTP port 2587 (development e3c2d49; container restarted 07:38:49Z). Verify on dev: request a verification or reset mail for a test account -> caspervpn-dev-api log shows the send with no 'SMTP send timed out' and the mail arrives (branded look, reset link works, password_reset_email audit row). Verify cmd: docker logs --since 1h caspervpn-dev-api 2>&1 | grep -ciE 'SMTP send timed out' = 0.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-11-01T07:40:58Z",
+      "createdDate": "2026-11-01",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2872",
+      "from": "[DEVOPS]",
+      "to": "[LEGAL]",
+      "title": "Handoff from DEVOPS: [P2] IP sweep 2b answered: python3 lines are our own Docker bridge, 0 user addresses (xd-2828)",
+      "description": "For BR-2026-002: main-server journal 7 d, python3 = 6,337 lines; 2,908 carry an address, all 172.16-31.x from caspervpn-flask (our API container -> node API); 0 public addresses. Items 1/2a/3 shipped 1 Nov (card rows 578/580; QA xd-2853). Newest backup tar: 0 OpenVPN logs. Please close the ruling or say what is still open.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-11-01T07:40:58Z",
+      "createdDate": "2026-11-01",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2873",
+      "from": "[DEVOPS]",
+      "to": "[QA]",
+      "title": "Handoff from DEVOPS: [P3] Check: cert runbook matches the live nginx mount (xd-2835)",
+      "description": "Verify on the main server: docker inspect caspervpn-nginx shows /etc/letsencrypt -> /etc/letsencrypt ro; docker exec caspervpn-nginx nginx -t ok; vault memory/architecture/02-infrastructure.md 'Cert store' line says the same; enterprise.conf.disabled is not loaded (nginx -T | grep -c enterprise.caspervpn.com = 0).",
+      "status": "pending",
+      "priority": "P3",
+      "createdAt": "2026-11-01T07:40:58Z",
       "createdDate": "2026-11-01",
       "completedDate": null
     }
