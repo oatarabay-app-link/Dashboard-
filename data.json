@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-11-02T01:07:51Z",
+  "lastUpdated": "2026-11-02T01:09:09Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 64,
@@ -19199,9 +19199,23 @@
           "owner": "ceo",
           "blocker": "waits the CEO (Claude app on the Mac)",
           "updatedAt": "2026-11-01T18:04:23Z"
+        },
+        {
+          "test": "SHIPPED 2026-11-02 01:08Z \u00b7 CEO order 2026-11-02 (Cowork live chat with CTO): \"finalize the handoffs u created\" \u00b7 hidden mode: users who sign up through another VPN are now treated by their real country (phone region / registration), and a blocked address triggers the backup route (xd-2958) \u00b7 rollback: redeploy the previous API image tag",
+          "verify": "StealthTier log lines for restricted users show their real country (QA 48 h)",
+          "met": false,
+          "owner": "[CTO]",
+          "evidence": "[CTO live 2026-11-02 00:4x-01:1xZ, CEO: \"finalize the handoffs u created ... cross them off after u qa them all using best skills\"]"
+        },
+        {
+          "test": "OPEN - DECISION (P1) - fresh, private addresses for users in blocked countries (CEO 2 Nov \"how to do point 4\") \u00b7 today: we already pay for 10 spare addresses (Hong Kong 2, Montreal 2, Sao Paulo 2, Tokyo 2, Miami 1, Sydney 1; about $50/month) that sit unused, and NONE on the 4 servers Iranian free users get (Duesseldorf, Amsterdam, Los Angeles, Singapore). Since we left Cloudflare, the hidden servers' real addresses are visible, and their names are in the public certificate list. \u00b7 plan: (1) DevOps puts hidden mode on the 10 spare addresses under names covered only by a wildcard certificate (so no new name appears in the public list); (2) the server hands those addresses ONLY to users in blocked countries, a few users per address; (3) when the new block alarm fires for an address, DevOps swaps it for a spare after your tap (never automatic - a false alarm must not burn a good address); (4) buy 2 spares each for Duesseldorf, Amsterdam, Los Angeles, Singapore - about $40/month more (8 x ~$5). \u00b7 options: A) do 1-3 now with what we pay for + buy the 8 (advice) \u00b7 B) do 1-3 only, no new spend \u00b7 C) wait. \u00b7 reply \"A\", \"B\" or \"C\".",
+          "verify": "MaskingIps rows in use for restricted users; truth table first-try for IR/CN/RU after 14 days",
+          "met": false,
+          "owner": "[DEVOPS]",
+          "evidence": "[CTO live 2026-11-02 00:4x-01:1xZ, CEO: \"finalize the handoffs u created ... cross them off after u qa them all using best skills\"] MaskingIps measured 01:1xZ: 12 active (one per server) + 10 spare, OneProvider, $110/month total."
         }
       ],
-      "progress": 82,
+      "progress": 81,
       "blocked": false,
       "blocker": "",
       "deps": [],
@@ -85313,11 +85327,15 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: [P1] Alarms miss Iranian newcomers who signed up through another VPN (use phone region too)",
       "description": "User 775c4ce5 (1 Nov 10:51Z): account country US, phone region IR. restricted_newcomer_alarm.py stayed silent and connect_investigator.py called it a US network block. Change both (on the main server, scripts in git) to treat a user as restricted when LastLoginCountry OR the newest ConnectFailureEvents.RegionHint is a restricted country, and print both. Test with --dry --user 775c4ce5 (must say IR). Control: a real US user must stay US.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-11-02T00:22:02Z",
       "createdDate": "2026-11-02",
-      "completedDate": null
+      "completedDate": "2026-11-02",
+      "completedAt": "2026-11-02",
+      "completedBy": "[CTO]",
+      "resolution": "CORRECTION first: the restricted-newcomer alarm DID fire for 775c4ce5 at 11:00:05Z 1 Nov (IR/ip:US, sent 1) - my earlier \"stayed silent\" was wrong (my grep missed it). Only the connect investigator used the account country. FIXED: country = phone region when it is a restricted country, first line shows both (production 3760e38b, development b8dd6cc3, server /opt/caspervpn md5 5f6438c6, backup .bak-xd2956-20261102). Checked: dry run on the real case prints \"IR user 775c4ce5 (phone region IR, account country US ...)\"; control over 14 days of failures: CA/LB/RU/CN/IR/AE/SA/IQ unchanged, only US->IR (this user), DE->TM, OM->AE change; live cron runs 01:00 + 01:05Z 0 Tracebacks.",
+      "resultingHandoff": "none - QA re-check optional on the next restricted incident"
     },
     {
       "id": "xd-2957",
@@ -85332,7 +85350,9 @@
       "completedDate": "2026-11-02",
       "completedAt": "2026-11-02",
       "completedBy": "[IOS]",
-      "resolution": "[APPS live 2026-11-02, 2026-11-02T01:02:14Z] [IOS same-run check] xd-2957 DONE in BUILD 94 = ios/95-build85 250a0d9. Three paths to plain WireGuard existed: (1) AUTO door flip, (2) restricted-reconnect last resort - both closed by CTO abdc18a; (3) the protocol fallback list still added WireGuard after the AUTO door flipped ([.casperCloak, .wireGuard]) - closed by apps e3eee4a, plus Phase-3 alternates stay hidden. 'Restricted' now = restricted flag OR phone region in the tier-1/2 list OR any earlier hidden-mode session on the phone (PlainWireGuardPolicy). Test asked for (simulated IR user, first road timeout -> next road is not WireGuard): tools/ios-tests/xd2957 PASS 17 FAIL 0 (IR front timeout -> direct relay; IR fallback = hidden only even with AUTO wanting WG; road switch can only return front/direct in all 8 cases); mutation control (past-hidden-mode rule removed) FAIL 1; xd2798 + server-notice harnesses still PASS 38/18; swiftc -parse 0 errors. Phone check rides on the build-94 pass (xd-2721)."
+      "resolution": "[APPS live 2026-11-02, 2026-11-02T01:02:14Z] [IOS same-run check] xd-2957 DONE in BUILD 94 = ios/95-build85 250a0d9. Three paths to plain WireGuard existed: (1) AUTO door flip, (2) restricted-reconnect last resort - both closed by CTO abdc18a; (3) the protocol fallback list still added WireGuard after the AUTO door flipped ([.casperCloak, .wireGuard]) - closed by apps e3eee4a, plus Phase-3 alternates stay hidden. 'Restricted' now = restricted flag OR phone region in the tier-1/2 list OR any earlier hidden-mode session on the phone (PlainWireGuardPolicy). Test asked for (simulated IR user, first road timeout -> next road is not WireGuard): tools/ios-tests/xd2957 PASS 17 FAIL 0 (IR front timeout -> direct relay; IR fallback = hidden only even with AUTO wanting WG; road switch can only return front/direct in all 8 cases); mutation control (past-hidden-mode rule removed) FAIL 1; xd2798 + server-notice harnesses still PASS 38/18; swiftc -parse 0 errors. Phone check rides on the build-94 pass (xd-2721).",
+      "notes": "[CTO live 2026-11-02 00:4x-01:1xZ, CEO: \"finalize the handoffs u created ... cross them off after u qa them all using best skills\"] CODED on ios/95-build85 abdc18a6 (VPNConnectionManager.swift): the AUTO door no longer switches hidden mode to plain WireGuard in a restricted region (it could bypass the force-hidden rule after 2 failures), and the restricted-region reconnect stops after the hidden roads instead of the old plain-WireGuard last resort. Front <-> direct road switch unchanged. NOT compiled here (no Xcode on this machine) and not on a phone - the next apps run builds it; then [QA] phone test: restricted region, block the hidden road, log must show no WireGuard attempt.",
+      "blocker": "waits the next iPhone build (apps run) + QA phone check - code is on ios/95-build85 abdc18a6"
     },
     {
       "id": "xd-2958",
@@ -85340,11 +85360,15 @@
       "to": "[BACKEND]",
       "title": "Handoff from CTO: [P1] Hidden-mode road choice uses the exit/US country for users who sign up through another VPN",
       "description": "User 775c4ce5 (1 Nov): account country US, phone region IR; the second road (xd-1793 relay failover) did not fire and the config treated him as US. Known gap in the anticensorship skill (\"Tunnel-masks-geo -> backend reads the EXIT country\"). On development: a user counts as restricted if LastLoginCountry, RegistrationCountry, the newest ConnectFailureEvents.RegionHint, or the phone locale region is restricted; once restricted, stay restricted (never downgrade on a later non-restricted login). Log both values in the StealthTier line. Test on dev with an IR region hint + US login. READY TO SHIP row after QA. Pairs with DEVOPS xd-2956 (alarms).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-11-02T00:34:49Z",
       "createdDate": "2026-11-02",
-      "completedDate": null
+      "completedDate": "2026-11-02",
+      "completedAt": "2026-11-02",
+      "completedBy": "[CTO]",
+      "resolution": "SHIPPED 2 Nov 01:08Z (CEO order in live chat: finalize). (1) Road choice treats a user as restricted when the login country OR registration country OR the phone region on a failure report in 30 days is restricted (escalate-only). (2) The second-road failover also counts TCP-timeout failures (a blocked front address = ~19 s timeout; before only failures <= 8 s counted). Tests: 602/602 pass; the 3 new tests FAIL on the old code (control) and the real-US control passes on both. development 9cfedaf7/c6ec7a0b/764246ce/221a44af, production 395e3728..c551b9a4a, deploy_api.sh HEALTHY 01:08Z (image 4f2fe75f5b9e -> 2f7a46f99edf, external /health 200), live dll carries the new failover text. Rollback: redeploy the previous tag.",
+      "resultingHandoff": "to [QA]: read StealthTier lines for restricted users over 48 h"
     },
     {
       "id": "xd-2959",
@@ -85379,6 +85403,18 @@
       "status": "pending",
       "priority": "P2",
       "createdAt": "2026-11-02T01:07:51Z",
+      "createdDate": "2026-11-02",
+      "completedDate": null
+    },
+    {
+      "id": "xd-2962",
+      "from": "[CTO]",
+      "to": "[QA]",
+      "title": "Handoff from CTO: [P1] 48 h check of the country fix (xd-2958) on real users",
+      "description": "From 2 Nov 01:08Z: grep \"StealthTier:\" in /opt/caspervpn/api-logs; for users whose failure reports carry a restricted RegionHint, the country= field must be that country, and \"fast-fail failover\" lines may now follow tcp-timeout failures. Control: real US/CA users stay US/CA. Tick only on real lines.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-11-02T01:09:09Z",
       "createdDate": "2026-11-02",
       "completedDate": null
     }
