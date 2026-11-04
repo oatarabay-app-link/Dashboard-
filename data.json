@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-11-04T22:59:46Z",
+  "lastUpdated": "2026-11-04T23:01:34Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 64,
@@ -28678,7 +28678,20 @@
           "addedAt": "2026-11-04T22:15:00Z",
           "skill": "ios SKILL.md + skills/caspervpn-anticensorship/SKILL.md",
           "blocker": "NOT STARTED - [IOS] next apps run: measure first how single hidden mode's clean restart re-dials (on-demand vs app) and whether Double VPN arms on-demand; also: all 7 re-dials used the SAME name orinda.profitechlb.com (no road / name switch in-session)",
-          "evidence": "[IOS CEO live 2026-11-04 ~22:1xZ, CEO: 'new bug report for double vpn ... showed as connected but with 0 timer ... timer kept on going with the previous time'] From the same report: teardownCasperCloakMultiHopAndCancel (MultiHopCasperCloakConfig.swift:390) calls cancelTunnelWithError and nothing restarts it; previous2 log shows no new START TUNNEL until 21:58:22Z."
+          "evidence": "[IOS CEO live 2026-11-04 ~22:1xZ, CEO: 'new bug report for double vpn ... showed as connected but with 0 timer ... timer kept on going with the previous time'] From the same report: teardownCasperCloakMultiHopAndCancel (MultiHopCasperCloakConfig.swift:390) calls cancelTunnelWithError and nothing restarts it; previous2 log shows no new START TUNNEL until 21:58:22Z. || [IOS CEO live 2026-11-04 ~23:0xZ, CEO: 'profile should also have rate casper vpn on top rows and why did double vpn connection drop ?'] WHY IT DROPPED, measured on ams-4 (51.158.147.210, the server behind orinda.profitechlb.com), journalctl -u caspercloak-ws 14:50-15:15 CET: relay up the whole time (ActiveEnter 1 Nov 16:29, NRestarts 0). Phone dials DID reach it through CloudFront but arrived empty: 15:00:12 'cc-fail stage=auth closed-before-first-message after=4.6s', 15:01:37 + 15:02:13 'opening handshake failed: stream ends after 0 bytes'. 15:02:26 'cc-close ended=phone-side code=1006 dur=7102s', then the server HELD the session 600 s for a resume ('#52 grace ... holding wg0 socket') and evicted it at 15:12:26 'no resume'. So: the road phone -> CloudFront -> relay broke for ~2-3 min (not the server), the app gave up after 141 s while the server waited 10 min, and the app never tried the direct relay or another name. Fix direction for this row: keep retrying up to the server's 600 s grace, switch road (direct relay / other pool name) inside the session, and restart Double VPN instead of only cancelling."
+        },
+        {
+          "test": "Profile shows a 'Rate CasperVPN' card at the top (right under the header) that opens the App Store review page",
+          "verify": "open Profile -> Rate CasperVPN is the first card under your name; tap -> App Store 'Write a Review'",
+          "met": false,
+          "passed": false,
+          "verifiedBy": null,
+          "owner": "[IOS]",
+          "addedBy": "[IOS]",
+          "addedAt": "2026-11-04T23:05:00Z",
+          "skill": "ios SKILL.md (Implement New Feature) + SKILLS.md row ios+qa",
+          "blocker": "Waits the CEO at the Mac: double-click _ios/build97.command (ios/97 ce5437d), then open Profile",
+          "evidence": "[IOS CEO live 2026-11-04 ~23:0xZ, CEO: 'profile should also have rate casper vpn on top rows and why did double vpn connection drop ?'] CODED ios/97 ce5437d (on top of CTO eb25f34; ProfileView.swift blob 23e5a7f = the tested copy): rateAppCard under profileHeader, same itms-apps write-review link as the Settings row (xd-2738 F7). Harness tools/ios-tests/profile-rate/run.sh before 0/3 -> after 3/0; swiftc -parse 6.1.2 OK before+after, control FAIL. NOT PROVEN: Xcode + phone. _ios/build97.command re-pinned 2bf6f87 -> ce5437d (it would have STOPPED on CTO's eb25f34 tip) + PROFILE-RATE check (want 2)."
         }
       ],
       "progress": 0,
@@ -86723,7 +86736,8 @@
       "priority": "P2",
       "createdAt": "2026-11-04T22:07:24Z",
       "createdDate": "2026-11-04",
-      "completedDate": null
+      "completedDate": null,
+      "notes": " || [IOS CEO live 2026-11-04 ~23:0xZ, CEO: 'profile should also have rate casper vpn on top rows and why did double vpn connection drop ?'] [IOS] measured relay side already (ams-4 caspercloak-ws): no restart, phone connections arrived via CloudFront with 0 bytes / closed before first message 14:00-14:02Z, session held 600 s then evicted. Left for DEVOPS: CloudFront side for that window (5xx / origin timeouts on the orinda distribution) - is it CloudFront or the phone's cellular network."
     },
     {
       "id": "xd-2990",
