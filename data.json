@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-11-08T13:45:46Z",
+  "lastUpdated": "2026-11-08T22:01:43Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 65,
@@ -88858,9 +88858,39 @@
       "createdAt": "2026-11-08T10:51:49Z",
       "createdDate": "2026-11-08",
       "completedDate": null
+    },
+    {
+      "id": "xd-3029",
+      "from": "[CTO]",
+      "to": "[ANDROID]",
+      "title": "Handoff from CTO: Android: Play payment must grant Premium + Home/Servers/Plans match the iPhone + protocol visible (CEO 9 Nov)",
+      "description": "CEO live 9 Nov 00:15 (TECNO KL4, build 10 = 2.1.0 installed by cable): 'payment is made but premium features do not work' + Home/Servers/Plans not matching the iPhone + protocol not shown. SKILLS TO USE (CEO order 9 Nov: planning -> code -> delegation per protocol): memory/departments/android/skill/SKILL.md (T9/T20/T21 + iPhone-parity rows), memory/departments/ios/skill/SKILL.md as the design reference, external packs affaan-m-kotlin-patterns + affaan-m-android-clean-architecture + android-jetpack-compose-performance (read SOURCE.md first), QA skill for the device proof, backend skill for the verify endpoint (pair task). Measure BEFORE fix (7.1): console + logcat from the start of the purchase.\nPART A - P0 PAYMENT -> ENTITLEMENT (Android side; backend pair task created in the same push):\nA1 MEASURED in code: SubscriptionRepository.verifyAndSyncPurchase tries POST /api/subscriptions/verify-google-play and on ANY non-success falls back to createSubscriptionFromPlayProduct (plain POST /api/subscriptions by plan match). Backend SubscriptionsController says a subscription is active only through a verified purchase -> the fallback can leave the user NOT premium while Google already charged. HYPOTHESIS to prove with logcat + API log: verify-google-play answers 400/501 on prod. Candidate causes: (i) GooglePlay:PackageName on prod spelled 'com.applinkoffshore.CasperVPN' (capital C as in the service header) vs real 'com.applinkoffshore.caspervpn'; (ii) GooglePlay:ServiceAccountKey missing (-> 501 'not configured'); (iii) the robot play-purchase-verify lacks 'View financial data' in the Console. A2 FIX Android: after a successful Play purchase never silently fall back - if verify fails show a clear 'we are confirming your purchase' state, retry verify with the stored purchaseToken, acknowledge the purchase only after the backend confirms, then refresh /api/subscriptions and the user object so Premium gates (Double VPN, Dedicated IP, server list, kill switch) open without restart. A3 PROOF: real purchase on the TECNO (license tester) -> logcat shows verify 200 -> Profile shows Premium -> Double VPN opens. PENDING until the backend pair task lands.\nPART B - P1 iPHONE PARITY (CEO design order, same standard as xd-2471): B1 Home: Double VPN card and server card at the iPhone width (20 dp side margins, same height), every label on ONE line (no wrap: 'Recommended for restrictive networks', 'Tap to select'); the up/down MB figures on the same line as the server name, same colours as iOS, right-aligned; show the active protocol (WireGuard / CasperCloak / Double VPN) on Home while connected, as the iPhone does. B2 Servers tab: show each server's protocols like the iPhone (protocol chips/row) and the protocol picker. B3 Plans/payment screen: match the iPhone paywall (PAYWALL-IOS) layout, order, badge, prices on one line, same copy. B4 PROOF: side-by-side screenshots iPhone vs TECNO for Home (disconnected + connected), Servers, Plans attached to the handoff; QA ticks per screen. ORDER: A first (money), then B. Report in plain English to the CEO; PROVEN vs PENDING separated.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-11-08T22:01:43Z",
+      "createdDate": "2026-11-09",
+      "completedDate": null
+    },
+    {
+      "id": "xd-3030",
+      "from": "[CTO]",
+      "to": "[BACKEND]",
+      "title": "Handoff from CTO: Backend: verify-google-play on prod - package name case / service key / robot permission (pair of the Android P0)",
+      "description": "Pair of the Android P0 (payment made, premium not granted). MEASURE on prod FIRST (API log 'verify-receipt' / 'Google Play validation FAILED' lines around 8 Nov 23:49 Beirut, the CEO's purchase as riverzenlb@gmail.com from build 10): (1) is GooglePlay:PackageName set and EXACTLY 'com.applinkoffshore.caspervpn' (lowercase; GooglePlayBillingService.cs header shows 'CasperVPN' with a capital C - a case mismatch makes androidpublisher answer 404 -> 400 to the app); (2) is GooglePlay:ServiceAccountKey present on prod (501 'not configured' otherwise); (3) does that service account have Play Console 'View financial data' + app access (Console > Users and permissions). FIX whatever is wrong, then re-run the verify for the CEO's stored purchase token (or have the app retry) so the subscription row becomes ACTIVE Premium; add a log line per outcome. PROOF: API log shows verify 200 + the CEO's account Premium in /api/subscriptions. Skills: backend SKILL.md (billing rows) + qa SKILL.md; never print the key.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-11-08T22:01:43Z",
+      "createdDate": "2026-11-09",
+      "completedDate": null
     }
   ],
   "importantNotes": [
+    {
+      "date": "2026-11-09",
+      "from": "CTO",
+      "note": "CEO 9 Nov 00:15: Android build 10 - payment goes through at Google but Premium does not open; Home/Servers/Plans not matching the iPhone; protocol not shown while connected. Plan + two P0 handoffs (android xd-3029, backend xd-3030). Play listing: checklist 12/12, draft production release 10 (2.1.0) created, all countries; blocked only by the foreground-service demo video (take 3 pending).",
+      "id": "note-legacy-6f49e984fb"
+    },
     {
       "id": "note-marketing-20261108T1345Z",
       "date": "2026-11-08",
