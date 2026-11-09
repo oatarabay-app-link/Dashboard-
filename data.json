@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-11-09T12:39:42Z",
+  "lastUpdated": "2026-11-09T12:44:32Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 65,
@@ -20109,6 +20109,16 @@
           "test": "READY TO SHIP - refresh the weekly security-sweep port list (xd-3027) \u00b7 why: the 8 Nov sweep flagged 2 'new' ports and 2 'gone' ones; DevOps checked all 4: the 2 new ones are our own CEO-answer page helper and the private board (both open only inside the server), the 2 gone ones are OpenVPN, which is switched off on the main server on purpose. Until the list is refreshed, every weekly mail will repeat the same 4 lines and a real new port could hide among them \u00b7 what: remove the old port list file so the next sweep (Sun 03:30Z) writes a fresh one, as the script itself says to do \u00b7 tested: nothing to test on dev (dev has no weekly sweep); proof is the next sweep mail saying 'baseline CREATED', the one after 'no drift' \u00b7 rollback: none needed (the file is rebuilt automatically) \u00b7 advice: YES.",
           "verify": "next Sunday's security sweep mail: S2 'Port baseline CREATED'; the Sunday after: 'no drift'",
           "evidence": "[DEVOPS run 2026-11-09 1222, scheduled, unattended]"
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": null,
+          "addedAt": "2026-11-09T12:58:00Z",
+          "addedBy": "[CTO]",
+          "owner": "[CTO]",
+          "test": "READY TO SHIP - support auto-reply switch made settable on the live server, still OFF (support-replies-2026-11 row 0) \u00b7 why: you said 'Both' on 6 Nov (instant first answer + the runs follow up); the code is live since 6 Nov but the server settings never reached it, so it could not be turned on \u00b7 what: 3 setting lines in the main server's container file; nothing changes for users today - the switch stays OFF and no text is sent until you approve a reply wording (support-replies.md, row 1) \u00b7 tested on dev 9 Nov: OFF = no auto answer; ON = the right answer for a connection ticket and for a general ticket, ticket stays open; back OFF = no answer \u00b7 rollback: remove the 3 lines and redeploy (2 minutes) \u00b7 ship with or after card row 694 (same file, its 3 lines come first) \u00b7 advice: YES",
+          "evidence": "[CTO run 2026-11-09 12:23-13:xxZ, scheduled \"Casper cto\" (fired 5 h 10 m late), unattended] development 88fac32 (compose pass-through, default false/empty = OFF). Ship = cherry-pick ae61e42 (row 694) then 88fac32 to production + /root/deploy_api.sh; check: docker exec caspervpn-api printenv | grep -c '^Support__AutoReply__' = 3 and Enabled=false. [CTO same-run check] dev 9 Nov 12:36-12:55Z, throwaway dev account (test.com, deleted after: DELETE /api/users/me 200, then /api/auth/me 401): switch OFF (default) -> new ticket has 0 'CasperVPN Support' messages; switch ON with dev test texts -> connection ticket gets 1 message = the connection text, billing ticket gets 1 = the general text, both tickets stay 'open'; switched back OFF (dev .env restored, printenv Enabled=false) -> new ticket 0 support messages. Dev cannot page Telegram (no TeamAlerts settings on dev, measured)."
         }
       ],
       "progress": 79,
@@ -28922,8 +28932,8 @@
           "verifiedBy": null,
           "addedAt": "2026-11-02T19:40:00Z",
           "addedBy": "[CTO]",
-          "blocker": "waits [BACKEND] xd-2799 item 2 (per-country server order; dev test + READY TO SHIP due 4 Nov); then CTO verifies with the truth table",
-          "evidence": "[CTO run 2026-11-03 07:1x-07:5xZ, scheduled \"Casper cto\", unattended] waits [BACKEND] xd-2799 item 2 (per-country server order; dev test + READY TO SHIP due 4 Nov); then CTO verifies with the truth table"
+          "blocker": "waits CEO YES on card list index 694 (READY TO SHIP - Gulf users get the best server first, xd-3015); xd-2799 item 2 is completed (shipped OFF 4 Nov); then CTO reads the truth table 48 h after.",
+          "evidence": "[CTO run 2026-11-09 12:23-13:xxZ, scheduled \"Casper cto\" (fired 5 h 10 m late), unattended] blocker re-based: xd-2799 completed 6 Nov; dev test done 8 Nov (xd-3015); left = the CEO's yes on row 694. || [CTO run 2026-11-03 07:1x-07:5xZ, scheduled \"Casper cto\", unattended] waits [BACKEND] xd-2799 item 2 (per-country server order; dev test + READY TO SHIP due 4 Nov); then CTO verifies with the truth table"
         },
         {
           "test": "P0 - 'Please update' switch shipped (card row 628); switched ON only after build 95 (replaces 94, never built) is live",
@@ -29751,8 +29761,8 @@
           "owner": "[CTO]",
           "addedAt": "2026-11-06",
           "addedBy": "[CTO]",
-          "evidence": "[CTO run 2026-11-09 12:23-13:xxZ, scheduled \"Casper cto\" (fired 5 h 10 m late), unattended] (1) compose gap FIXED on development 88fac32: both compose files now pass Support__AutoReply__Enabled/ConnectionText/GeneralText (from SUPPORT_AUTOREPLY_*; default false/empty = OFF). (2) Telegram risk MEASURED: dev API container has no TeamAlerts/Telegram env var and no Telegram key in /app/appsettings*.json -> a dev test ticket cannot page the CEO. On/off test on dev follows after the dev deploy of 88fac32 (~28 min). || [CTO run 2026-11-08 10:43-11:1xZ, scheduled \"Casper cto\" (fired 3 h 30 m late), unattended] Dev test NOT run on purpose: (1) like xd-3015, neither compose file passes Support__AutoReply__* into the API, so the switch cannot be set on dev or production yet - needs the same 3-line pass-through; (2) a test ticket on dev calls AlertTeamAsync (admin bell + Telegram) - check that dev does not page the CEO's Telegram first. Next CTO run: both, then on/off test. || [CTO live 2026-11-06 00:0x-00:3xZ, CEO Cowork] CODED development a0a5827 (Helpers/SupportAutoReply.cs + SupportTicketsController create; tests SupportAutoReplyTests); dotnet build 0 errors, dotnet test 736/736 PASS (cloud container). NOT PROVEN on the dev server yet (dev deploy ~20 min after push) - next: create a ticket on dev with the setting on and off. Ship needs an approved text (row 2) + READY TO SHIP row.",
-          "blocker": "CTO: on/off test on dev after the 88fac32 dev deploy (same run if it lands), then READY TO SHIP row; text stays OFF until an approved wording exists (row 1)."
+          "evidence": "[CTO run 2026-11-09 12:23-13:xxZ, scheduled \"Casper cto\" (fired 5 h 10 m late), unattended] [CTO same-run check] DEV ON/OFF TEST PASS - dev 9 Nov 12:36-12:55Z, throwaway dev account (test.com, deleted after: DELETE /api/users/me 200, then /api/auth/me 401): switch OFF (default) -> new ticket has 0 'CasperVPN Support' messages; switch ON with dev test texts -> connection ticket gets 1 message = the connection text, billing ticket gets 1 = the general text, both tickets stay 'open'; switched back OFF (dev .env restored, printenv Enabled=false) -> new ticket 0 support messages. Dev cannot page Telegram (no TeamAlerts settings on dev, measured). READY TO SHIP = card list index 697. || [CTO run 2026-11-09 12:23-13:xxZ, scheduled \"Casper cto\" (fired 5 h 10 m late), unattended] (1) compose gap FIXED on development 88fac32: both compose files now pass Support__AutoReply__Enabled/ConnectionText/GeneralText (from SUPPORT_AUTOREPLY_*; default false/empty = OFF). (2) Telegram risk MEASURED: dev API container has no TeamAlerts/Telegram env var and no Telegram key in /app/appsettings*.json -> a dev test ticket cannot page the CEO. On/off test on dev follows after the dev deploy of 88fac32 (~28 min). || [CTO run 2026-11-08 10:43-11:1xZ, scheduled \"Casper cto\" (fired 3 h 30 m late), unattended] Dev test NOT run on purpose: (1) like xd-3015, neither compose file passes Support__AutoReply__* into the API, so the switch cannot be set on dev or production yet - needs the same 3-line pass-through; (2) a test ticket on dev calls AlertTeamAsync (admin bell + Telegram) - check that dev does not page the CEO's Telegram first. Next CTO run: both, then on/off test. || [CTO live 2026-11-06 00:0x-00:3xZ, CEO Cowork] CODED development a0a5827 (Helpers/SupportAutoReply.cs + SupportTicketsController create; tests SupportAutoReplyTests); dotnet build 0 errors, dotnet test 736/736 PASS (cloud container). NOT PROVEN on the dev server yet (dev deploy ~20 min after push) - next: create a ticket on dev with the setting on and off. Ship needs an approved text (row 2) + READY TO SHIP row.",
+          "blocker": "waits CEO YES on card list index 697 (READY TO SHIP - support auto-reply switch settable, stays OFF); turning it ON also needs an approved wording (row 1)."
         },
         {
           "test": "An approved reply text per case in memory/context/support-replies.md (connection first)",
