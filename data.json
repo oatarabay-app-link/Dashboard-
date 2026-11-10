@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-11-10T18:51:25Z",
+  "lastUpdated": "2026-11-10T18:55:36Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 66,
@@ -20459,14 +20459,16 @@
           "blocker": "waits CEO (A/B/C)"
         },
         {
-          "met": false,
-          "passed": false,
-          "verifiedBy": null,
+          "met": true,
+          "passed": true,
+          "verifiedBy": "tested",
           "addedAt": "2026-11-10T18:51:00Z",
           "addedBy": "[CTO]",
           "owner": "[CEO]",
-          "test": "READY TO SHIP - the daily 'which countries look blocked' report stops blaming a country for a phone-side problem (xd-3059) \u00b7 why: today one phone in Myanmar that never reached the network (a permission problem on the phone) made the report say 'Myanmar looks blocked'; Canada the same \u00b7 what: the report leaves such phone-side failures out of the country verdict and shows them in their own column \u00b7 tested on development, read-only on today's real data: Myanmar and Canada change from 'blocked?' to 'idle', China stays 'failing' (control) \u00b7 rollback: put the old script file back (1 minute) \u00b7 advice: YES",
-          "evidence": "[CTO live 2026-11-10] development: infrastructure/scripts/connectivity_report.sh (xd-3059 commit). Old vs new output on production data 18:5xZ is on xd-3059."
+          "test": "SHIPPED 2026-11-10 18:55Z \u00b7 CEO YES 2026-11-10 (live chat, button 'Yes, ship it') | READY TO SHIP - the daily 'which countries look blocked' report stops blaming a country for a phone-side problem (xd-3059) \u00b7 why: today one phone in Myanmar that never reached the network (a permission problem on the phone) made the report say 'Myanmar looks blocked'; Canada the same \u00b7 what: the report leaves such phone-side failures out of the country verdict and shows them in their own column \u00b7 tested on development, read-only on today's real data: Myanmar and Canada change from 'blocked?' to 'idle', China stays 'failing' (control) \u00b7 rollback: put the old script file back (1 minute) \u00b7 advice: YES",
+          "evidence": "[CTO same-run check 10 Nov 18:55Z] production git and the installed /opt/caspervpn/connectivity_report.sh are the tested file (md5 288297747fe1 on both; old file kept as .bak-xd3059-20261110, md5 b9bf17464874). bash -n passes. Tested read-only on today's production data before the ship: Myanmar 'BLOCKED?' (9 failures) -> 'idle' (0 failures, 9 app-side); Canada 'BLOCKED?' -> 'idle'; control China unchanged (5 failures, FAILING). NOT YET SEEN: the first scheduled run with the new file is 11 Nov 05:00Z - check /root/reports/connectivity-2026-11-11.txt has the column app_side_before_network. [CTO live 2026-11-10] development: infrastructure/scripts/connectivity_report.sh (xd-3059 commit). Old vs new output on production data 18:5xZ is on xd-3059.",
+          "verifiedAt": "2026-11-10T18:55:27Z",
+          "verify": "md5sum /opt/caspervpn/connectivity_report.sh = 288297747fe1e6c05930f4be05cfa0a4; grep -c app_side_before_network = 2"
         }
       ],
       "progress": 80,
@@ -90180,12 +90182,16 @@
       "to": "[DEVOPS]",
       "title": "Handoff from BACKEND: xd-3056 part 3: connectivity_report.sh must leave phone-side failures out of the country verdict",
       "description": "infrastructure/scripts/connectivity_report.sh (05:00Z) counts every ConnectFailureEvents row. Leave out rows where FailureCategory LIKE 'pre-net-%' OR FailureCategory IN ('user-cancelled','left-app-while-connecting','app-closed-while-connecting') OR ErrorCode IN ('NEVPNErrorDomain:1','NEVPNErrorDomain:2','NEVPNErrorDomain:4','NEVPNErrorDomain:5','NEVPNErrorDomain:6') from the verdict, and show them in their own 'app-side, before the network' line. Same rule as backend FailureCategoryWeights.IsAppSide (development 686286d26). Measured 10 Nov: Myanmar user 0f2d7709 has 9 such rows that would read as failures. Script change on production = CEO YES row.\n\n[CTO live 2026-11-10 18:5xZ] BUILT on development (connectivity_report.sh): phone-side failures are left out of 'failures' and the verdict and shown in a new column app_side_before_network. Tested read-only on production data, old vs new: Myanmar 'BLOCKED?' (9 failures) -> 'idle' (0 failures, 9 app-side); Canada 'BLOCKED?' -> 'idle'; control China unchanged (5 failures, FAILING). Waits: the CEO's yes on the new READY TO SHIP row (then production + install on the main server).",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-11-10T07:24:08Z",
       "createdDate": "2026-11-10",
-      "completedDate": null,
-      "updatedAt": "2026-11-10T18:51:00Z"
+      "completedDate": "2026-11-10",
+      "updatedAt": "2026-11-10T18:51:00Z",
+      "completedAt": "2026-11-10",
+      "completedBy": "[CTO]",
+      "resolution": "CEO YES 10 Nov (live chat, 'Yes, ship it'). SHIPPED 18:55Z. [CTO same-run check 10 Nov 18:55Z] production git and the installed /opt/caspervpn/connectivity_report.sh are the tested file (md5 288297747fe1 on both; old file kept as .bak-xd3059-20261110, md5 b9bf17464874). bash -n passes. Tested read-only on today's production data before the ship: Myanmar 'BLOCKED?' (9 failures) -> 'idle' (0 failures, 9 app-side); Canada 'BLOCKED?' -> 'idle'; control China unchanged (5 failures, FAILING). NOT YET SEEN: the first scheduled run with the new file is 11 Nov 05:00Z - check /root/reports/connectivity-2026-11-11.txt has the column app_side_before_network. Rollback: cp the .bak file back.",
+      "resultingHandoff": "none"
     },
     {
       "id": "xd-3060",
