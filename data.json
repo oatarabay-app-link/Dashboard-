@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-11-11T05:21:17Z",
+  "lastUpdated": "2026-11-11T05:49:43Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 66,
@@ -90487,6 +90487,18 @@
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-11-11T05:21:17Z",
+      "createdDate": "2026-11-11",
+      "completedDate": null
+    },
+    {
+      "id": "xd-3074",
+      "from": "[CTO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CTO: Handoff from CTO: [P1] Fleet health loop stuck on DEGRADED since 30 Jun - missed 3 whole-server outages; and the alarm-delivery watcher watches the retired e-mail path, nothing watches Telegram",
+      "description": "[CTO system-check 2026-11-11, measured read-only on the main server]\nPART 1 - the 15-minute fleet health loop (/opt/caspervpn/fleet_health_loop.sh, in git infrastructure/scripts/fleet_health_loop.sh) can never warn again.\nProof: /var/log/fleet-health-loop.log has 2475 lines 'status=DEGRADED healthy=11/13 prev=DEGRADED' (first 2026-06-30T16:45Z). It warns only on a change healthy<->degraded, so real outages pass silently: 2026-11-06T06:45Z 'mex-01 (147.78.1.27): 0/11', 2026-11-06T11:00Z 'tyo-01 ...: 0/11', 2026-11-10T00:45Z 'DE-DU (91.194.84.79): 0/11' - all logged, no warning.\nTwo permanent false failures cause it: (a) it reads the SERVERS=( ) list of parity_monitor.sh and does not skip comment lines, so '# FR-PA (163.172.62.64) retired 2026-10-01' counts as a server at 0/11; (b) UK-LON is held to 11/11 but OpenVPN is off there by CEO decision xd-2096 (parity log: 'UK-LON ... 10/12 (full=10, OpenVPN off by CEO decision xd-2096)'), live 9/11.\nAlso: it still sends through Resend e-mail, the channel removed for alarms on 17 Oct (xd-2160, row 330 A).\nFix asked: skip lines starting with '#', give UK-LON its real expected count, and send via the Telegram/ntfy path like the other senders (xd-2256 row 356) - or retire the loop if Prometheus DevFleetNodeDown/VpnStandardNodeFailing already cover it (they fired in the last 7 days). Verify: next run reads status=OK healthy=12/12 (or 13/13).\nPART 2 - nothing watches the alarm channel we actually use.\nProof: alertmanager.yml since 17 Oct sends only to Telegram + ntfy (receivers all-channels / push-only, no e-mail). The rules AlertEmailDeliveryFailing / AlertBridgeDown (alerts.yml:600/611) and alert_delivery_textfile_exporter.sh watch the Resend bridge, which now gets no traffic (journal 0 lines; casper_alert_email_last_success_timestamp_seconds 0). Prometheus does not scrape Alertmanager (:9093 metrics absent from Prometheus), so a Telegram failure is invisible. Today's counters (Alertmanager up since 22 Oct): telegram notifications 1404, failed 'other' 10 (last error 2026-11-03T14:35Z Gateway Timeout 504, retried OK); webhook(ntfy) 1523, failed clientError 166.\nFix asked: scrape alertmanager:9093 and add a rule on increase(alertmanager_notifications_failed_total{integration=~\"telegram|webhook\"}[1h]) > 0; retire or repoint the two e-mail-channel rules. Monitoring-only, no app change.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-11-11T05:49:43Z",
       "createdDate": "2026-11-11",
       "completedDate": null
     }
