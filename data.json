@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-11-12T05:24:54Z",
+  "lastUpdated": "2026-11-12T05:48:10Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 66,
@@ -91134,6 +91134,18 @@
       "createdDate": "2026-11-12",
       "completedDate": null,
       "updatedAt": "2026-11-12T01:18:55Z"
+    },
+    {
+      "id": "xd-3105",
+      "from": "[CTO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CTO: [P1] Main server free disk fell to 3 GB on deploy day (floor is 8 GB); DiskSpaceLow fired ~19 h",
+      "description": "[CTO system-check 2026-11-12 05:4xZ, scheduled, unattended] The main server's free disk went below the 8 GB floor the CEO set (row 548 A) on deploy day 11 Nov, and the DiskSpaceLow alarm (>85% used) fired for about 19 hours (Prometheus ALERTS: first 11-11 08:18Z, last 11-12 03:23Z, 859 samples). MEASURED: min_over_time(node_filesystem_avail_bytes{instance=do-production,mountpoint=/}[24h]) = 3.08 GB; 5-minute samples below 6 GB at 11-11 08:37 (5.40), 08:52 (4.25), 12:32 (5.68), 14:02 (5.13), 22:07 (5.33), 02:22 (5.37). The dips line up with image builds on the server: website 11-11 07:35Z, api 13:57Z, admin-react 14:03Z, api 11-12 05:21Z, website 05:25Z (docker images CreatedAt). disk-guard runs once a day (03:30Z, log: '82% -> 81% used') so it never sees the build-time peak. Now: df / 82% used, 9.5 GB free (05:45Z); docker system df: 3.1 GB reclaimable images (incl. two rollback tags 153 MB + 441 MB, casper-agent-reach 956 MB, casper-codegraph 345 MB). No outage: api /health 200 throughout this run. HYPOTHESIS (not proven): build layers + the extra rollback images per deploy push free space under 8 GB until the next prune. ASK: (1) measure what is written during one build (df before/after each step), (2) make the deploy path free space BEFORE building (or run the guard on a trigger, not only 03:30), (3) decide whether casper-agent-reach / casper-codegraph images belong on the production server. No deletion without the normal CEO gate. verify: Prometheus min_over_time(node_filesystem_avail_bytes{instance=\"do-production\",mountpoint=\"/\"}[24h]) > 8e9 on a deploy day.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-11-12T05:48:10Z",
+      "createdDate": "2026-11-12",
+      "completedDate": null
     }
   ],
   "importantNotes": [
