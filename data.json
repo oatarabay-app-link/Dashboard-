@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-11-12T01:15:07Z",
+  "lastUpdated": "2026-11-12T01:17:15Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 66,
@@ -20754,6 +20754,17 @@
           "addedAt": "2026-11-12T00:31:46Z",
           "addedBy": "[MARKETING] growth live",
           "evidence": "[GROWTH live 2026-11-12 00:5xZ, CEO chat on the Mac] CEO YES A 2026-11-12 (Claude Code live on the Mac: 'Yes, standing permission'). Written into memory/prompts/16-blocked-users-routine.md section 6 (bounded rule active). The run uses it from its next firing (08:20 Beirut); each change is logged and put on the country's board row. Server-order knob for IR/RU/CN/MM still needs the [CTO] P2 compose lines; the road value (RestrictedCountry.StealthTier) can be changed now. || [GROWTH live 2026-11-12 02:xxZ, CEO chat on the Mac] Where it lives (measured): road = RestrictedCountry.StealthTier (production DB); server order = .env SERVER_ORDER_<CC> (AE/SA/OM only; [CTO] P2 handoff adds IR/RU/CN/MM). Routine rules written in prompts/16 section 6."
+        },
+        {
+          "test": "READY TO SHIP (after QA on the dev lab) - hidden-mode server update: (1) waits 10 s instead of 2 s for the phone's 'I pad my traffic' signal, and switches over if the signal comes even later; (2) the smaller padding size from this morning \u00b7 why: on slow 3G the signal came late, the server stopped understanding the phone and the tunnel passed nothing for 2.5 minutes (CEO phone 12 Nov; 4 sessions fleet-wide in 7 days) \u00b7 tested: local test with the real server file - before 2 of 6 cases pass, after 6 of 6; old apps unaffected; hiding grade A unchanged \u00b7 rollback: put the old file back and restart (minutes) \u00b7 one server first, then the rest \u00b7 advice YES",
+          "verify": "QA xd-3103 on the lab, then DevOps xd-3104 one node + 30 min watch",
+          "owner": "[SECURITY]",
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "addedAt": "2026-11-12T01:17:10Z",
+          "addedBy": "[SECURITY] side session (Android 3G work)",
+          "evidence": "[SECURITY 2026-11-12T01:17:10Z] development f8a040b94 (late flag) + 8a33dfe1f (padding size). Test file infrastructure/caspercloak/tests/late_obfs_flag_test.py. Production unchanged."
         }
       ],
       "progress": 78,
@@ -91029,11 +91040,15 @@
       "to": "[SECURITY]",
       "title": "Handoff from BACKEND: Handoff from BACKEND: Hidden mode passes nothing on slow lines - relay waits only 2 s for the phone padding byte (CEO TECNO 12 Nov)",
       "description": "PROVEN 12 Nov: the CEO's hidden-mode reconnect to Singapore at 00:36Z landed in the relay's old unpadded mode while the phone kept padding; the app saw 0 bytes back for 166 s and reported 'connected but no traffic'. Same relay file on all nodes. Fleet 7 days: 2 of 130 new phone sessions and 2 resumed ones landed in the old mode. Ask: (1) pick the relay fix (longer wait for the padding byte, or switch to padded mode when the first data frame is padded), test on the dev lab with a 3 s delay, (2) write a DECISION row for the CEO before any production relay change, (3) hand to DEVOPS to roll out and QA to check on the CEO phone in Lebanon. Fixes Android and iPhone alike. Detail: memory/departments/backend/context/cc-3g-connect-split-2026-11-12.md",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-11-12T01:04:13Z",
       "createdDate": "2026-11-12",
-      "completedDate": null
+      "completedDate": "2026-11-12",
+      "completedAt": "2026-11-12",
+      "completedBy": "[SECURITY]",
+      "resolution": "Fixed on development f8a040b94 (not production). Relay now waits 10 s (setting CC_OBFS_CONFIRM_TIMEOUT) and, if the padding flag still comes later, switches the session to padding on the late flag (a 1-byte flag can never be a real WireGuard packet). Older relay templates got the 10 s wait only. Delayed-flag test with the real relay file and a fake WireGuard that answers only valid packets: before 2/6 cases pass (flag 3, 6, 12 s late -> 0 replies, same as the CEO phone); after 6/6, and 6/6 with the wait forced back to 2 s (late switch alone); old clients 5/5 on both. READY TO SHIP row on the CEO card.",
+      "resultingHandoff": "xd-3103 to [QA] (lab check), xd-3104 to [DEVOPS] (rollout after CEO YES), READY TO SHIP row on ceo-action-backlog"
     },
     {
       "id": "xd-3099",
@@ -91080,6 +91095,30 @@
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-11-12T01:10:14Z",
+      "createdDate": "2026-11-12",
+      "completedDate": null
+    },
+    {
+      "id": "xd-3103",
+      "from": "[SECURITY]",
+      "to": "[QA]",
+      "title": "Handoff from SECURITY: Handoff from SECURITY: check the relay late-padding-flag fix on the dev lab relay (xd-3098)",
+      "description": "Development f8a040b94 (relay file the fleet runs). Re-run infrastructure/caspercloak/tests/late_obfs_flag_test.py against the lab relay copy (before: 2 of 6 cases pass, flag 3/6/12 s late gives 0 replies; after: 6 of 6). Then one hidden-mode connect from a slow line (or with the phone's flag delayed) must pass data; old v1 clients must still pass. Note the same file also carries the smaller padding size (xd-3095/xd-3097).",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-11-12T01:17:15Z",
+      "createdDate": "2026-11-12",
+      "completedDate": null
+    },
+    {
+      "id": "xd-3104",
+      "from": "[SECURITY]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from SECURITY: Handoff from SECURITY: roll out the relay update (late padding flag + smaller padding size) ONLY after CEO YES on the card row (xd-3098)",
+      "description": "File: infrastructure/caspercloak/fleet/caspercloak_ws.fleet-v16.py on development f8a040b94. Order: dev lab relay first, then ONE production node (Amsterdam), watch 30 min (cc-obfs-late lines, sessions passing data, no errors), then the rest. Keep a copy of each node's current file for rollback (copy back + restart the relay service). Mind the service drop-in: the file that runs is the one in the LAST start line, not the base unit. Do nothing on production before the CEO YES.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-11-12T01:17:15Z",
       "createdDate": "2026-11-12",
       "completedDate": null
     }
