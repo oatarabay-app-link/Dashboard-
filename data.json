@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-11-14T07:29:47Z",
+  "lastUpdated": "2026-11-14T07:38:16Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 65,
@@ -20956,7 +20956,7 @@
           "addedAt": "2026-11-13T07:33:06Z",
           "addedBy": "[DEVOPS] daily run",
           "owner": "[CEO]",
-          "test": "ACTION - clear old Cowork sessions in the Claude app \u00b7 the Mac work disk is 86% full (df /sessions 13 Nov 07:2xZ: 7.9 of 9.8 GB); at 100% the scheduled runs stop",
+          "test": "ACTION - clear old Cowork sessions in the Claude app \u00b7 the Mac work disk is 86% full (df /sessions 13 Nov 07:2xZ: 7.9 of 9.8 GB); at 100% the scheduled runs stop \u00b7 still 86% on 14 Nov 07:06Z (7.9 of 9.8 GB, 1.4 GB free) [BACKEND]",
           "evidence": "[CTO daily 2026-11-14] same ask as card row 683 (list index 683) - one click clears both. || [CEO office 2026-11-14 07:07-07:4xZ, scheduled, on time, unattended, board met] df /sessions 86% (9.8G size, 7.9G used, 1.4G free) at 07:08Z 14 Nov - still waiting."
         },
         {
@@ -21184,6 +21184,14 @@
           "addedBy": "[DEVOPS] daily run",
           "owner": "[CEO]",
           "test": "DECISION - main server disk dips during website builds (xd-3135) \u00b7 measured 14 Nov: free disk 13.0 GB at 05:44Z fell to 7.6 GB at 05:50Z and was back to 11.7 GB at 05:52Z; the GitHub job 'Build Docker Images (website)' ran 05:21-05:49:42Z on the main server (runner log) - every evening/morning build does this, the 24 h low was 5.1 GB \u00b7 it is short (about 8 minutes) but if a build ever starts with less room the server fills and the API stops (17 Oct: 50 min outage) \u00b7 A) build the website/admin images on GitHub's own machines and only copy the finished image to the server (DevOps + CTO build it on development, then a READY TO SHIP row) \u00b7 B) free about 1-3 GB by removing old unused images and keep building on the server \u00b7 C) do nothing; the 8 GB warning keeps firing on build days \u00b7 advice: A (removes the cause; B only buys a little room)"
+        },
+        {
+          "test": "READY TO SHIP - support helper, step 1 (count only, sends nothing) \u00b7 Every 30 minutes the server looks at each new in-app ticket and bug report, checks what our own data says about that person (did the VPN permission get refused, no network, blocked country, free data used up, connected again since) and files it under one of the 9 known cases from your 12 Nov list. It writes one line per case and a count; it never sends a reply. \u00b7 why: today nobody reads most bug reports; this sorts them so the approved replies can go out in step 2 (that needs a second yes). \u00b7 tested on dev: 2 test reports were sorted correctly (empty one -> 'ask what you see', permission one -> your approved T1 text), no repeats after a restart, all 931 checks pass. \u00b7 rollback: set SupportResponder__Mode off (the default) or redeploy the previous image; the new table is harmless. \u00b7 advice: YES - it can go in the same deploy as the 'month of Premium' row above, ships switched on in count-only mode.",
+          "met": false,
+          "passed": false,
+          "owner": "[BACKEND]",
+          "createdAt": "2026-11-14T07:40:00Z",
+          "evidence": "[BACKEND 2026-11-14] xd-3091 stage 1: ship branch dev/backend-ship-1114b-2026-11-14 = row 775's branch + b03fa8c0d (cherry-pick of development 6601607df); production tree 925/925; ship adds compose line SupportResponder__Mode=dryrun; /root/deploy_api.sh 01:00-06:00 UTC; check: 'Applying migration 20261114080000_SupportCases' + SupportCases rows after 30 min."
         }
       ],
       "progress": 78,
@@ -92060,13 +92068,13 @@
       "to": "[BACKEND]",
       "title": "Handoff from MARKETING: [P1] Scheduled support responder: every 30 min read tickets + bug reports + support mail, diagnose each user from our data, send the APPROVED reply for known cases, follow up, keep a case log",
       "description": "[GROWTH live 2026-11-12 01:xxZ, CEO chat on the Mac] CEO 12 Nov live. Spec: memory/departments/qa/context/support-responder-spec-2026-11-12.md (9 predictable cases from our data, 4 texts already APPROVED: T1 permission, T3 no network, connection reply 12 Nov, quota mail). Skill: anthropics-customer-support ticket-triage + draft-response (adopted 12 Nov). Merges [QA] blocked-users mails + [APPS] step 3f + xd-3062 (bug reports read by nobody) into one server job; the daily runs audit it. Build on development: SupportCases table, classifier, sender (ticket reply or support@ e-mail), follow-up T2 at 3 days, robots/test excluded, dry-run mode first with a count per case -> READY TO SHIP row (sending to users = CEO YES).",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-11-11T23:35:04Z",
       "createdDate": "2026-11-12",
       "completedDate": null,
-      "notes": "[BACKEND run 2026-11-13 1956, backend-daily (Mac task), scheduled, unattended] NOT BUILT this run. Largest of the backend items (SupportCases table, classifier, sender, follow-up). Order after xd-1301 (same alert plumbing).",
-      "updatedAt": "2026-11-13T21:05:00Z"
+      "notes": "[BACKEND run 2026-11-14 0705, backend-daily (Mac task), scheduled, unattended] STAGE 1 BUILT + TESTED ON DEV (nothing is sent by this stage). development 6601607df: SupportCases table (migration 20261114080000, additive), classifier C1-C9 + robot/unknown from our own data (ConnectFailureEvents last 24 h, quota, restricted country, real traffic after the report), 30-min job, SupportResponder:Mode off (default) | dryrun; content-free rows (no user words/e-mail). Tests: development 931/931 (10 new, each rule with a control). Dev proof: deploy 07:19:54Z 'Applying migration 20261114080000_SupportCases' + '[SupportResponder] off (SupportResponder:Mode not set)' (= off switch control); then 21b3ca09f dev compose Mode=dryrun; two throwaway anonymous bug reports -> SupportCases rows C9 (empty, no text approved) and C1 (permission, T1 approved), status dryrun; next pass after a restart made 0 new rows (count stayed 2 = no repeats); throwaway rows deleted (0 left). Ship branch dev/backend-ship-1114b-2026-11-14 (b03fa8c0d on top of row 775's branch) 925/925. READY TO SHIP row on the CEO card. LEFT (stage 2+): send approved texts T1/T3/connection reply (CEO YES), T2 follow-up at 3 days, support@ mail input, C6/C7/C9 texts to draft, daily/weekly counts. || [BACKEND run 2026-11-13 1956, backend-daily (Mac task), scheduled, unattended] NOT BUILT this run. Largest of the backend items (SupportCases table, classifier, sender, follow-up). Order after xd-1301 (same alert plumbing).",
+      "updatedAt": "2026-11-14T07:40:00Z"
     },
     {
       "id": "xd-3092",
