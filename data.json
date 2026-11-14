@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-11-14T07:17:41Z",
+  "lastUpdated": "2026-11-14T07:29:47Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 65,
@@ -20651,7 +20651,7 @@
           "addedBy": "[DEVOPS] daily run",
           "owner": "[CEO]",
           "test": "ACTION (2 min, only you) - the 3-hourly alert check on your Mac still stops after its first step \u00b7 measured: 5 runs since 10 Nov 19:28Z wrote 'alert-triage RUN STARTED' and none wrote its RESULT line (vault session logs 10-11 Nov), so no one has triaged alarms from the Mac task since 9 Nov \u00b7 the same check run by hand in this run worked (0 alerts firing, 0 silences, backups and off-site copy OK) \u00b7 your step: Claude app > Scheduled > casper-alert-triage > open the last run; if a permission prompt waits, click 'Always allow' (or press Run now and allow its prompts once) \u00b7 advice: do it today || [DEVOPS 12 Nov 07:4xZ] still the same: 4 runs on 12 Nov wrote 'RUN STARTED', 0 wrote a RESULT line.",
-          "evidence": "[DEVOPS run 2026-11-11 0723, scheduled, unattended] grep 'alert-triage RESULT' in memory/sessions/2026-11-10/11 = only the warning text inside the STARTED lines; python3 tools/alert_triage_run.py measure from this run 07:29Z: sections failed 0."
+          "evidence": "[DEVOPS run 2026-11-14 0723, scheduled, unattended] re-measured: since 12 Nov 22:57Z the Mac alert check wrote 'RUN STARTED' 11 times and a RESULT only 2 times (13 Nov 16:28Z + 20:00Z); the 13 Nov 22:09Z, 14 Nov 01:13Z and 04:13Z runs left no RESULT (vault memory/sessions 13-14 Nov). Still open. || [DEVOPS run 2026-11-11 0723, scheduled, unattended] grep 'alert-triage RESULT' in memory/sessions/2026-11-10/11 = only the warning text inside the STARTED lines; python3 tools/alert_triage_run.py measure from this run 07:29Z: sections failed 0."
         },
         {
           "met": true,
@@ -21166,9 +21166,27 @@
           "addedBy": "ceo-office",
           "owner": "CEO",
           "evidence": "[CEO office 2026-11-14 07:07-07:4xZ, scheduled, on time, unattended, board met] Apple Ads 3-13 Nov: US WiFi 51 installs / $36.98 (~$0.73); brand 8 / $5.08. ALL 6 CAMPAIGNS NOT_RUNNING since 06:06Z 14 Nov, reason CREDIT_CARD_DECLINED (API campaign list read 07:1xZ). Downloads 12 Nov 16 (11 Nov 30, 10 Nov 40)."
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": null,
+          "addedAt": "2026-11-14T07:29:42Z",
+          "addedBy": "[DEVOPS] daily run",
+          "owner": "[CEO]",
+          "test": "READY TO SHIP - xd-3074 part 2: alarms about failing alarm delivery \u00b7 what: on the main server, Prometheus also reads Alertmanager's own counters (new scrape job 'alertmanager') and raises AlertDeliveryFailing when Telegram or the push webhook fail to deliver, plus AlertmanagerDown; the 2 old e-mail-bridge rules (alarms left e-mail on row 330 A) are removed \u00b7 why: today nothing tells anyone if Telegram delivery breaks - Prometheus does not read Alertmanager at all (measured 14 Nov: no 'alertmanager' job, query alertmanager_notifications_failed_total = empty) \u00b7 tested 14 Nov 07:4xZ on the main server with the real files copied to /root/reports/devops1114-xd3074 (.keep): promtool check config OK, 57 rules; promtool test rules SUCCESS - fires on Telegram failures, stays silent at 3 min, silent for e-mail failures (control), AlertmanagerDown silent while up; Prometheus reaches alertmanager:9093/metrics \u00b7 install: cat the 2 files over /opt/caspervpn/monitoring/prometheus/{alerts,prometheus}.yml (same file, bind mount), docker kill -s HUP prometheus, check /api/v1/targets shows job alertmanager up \u00b7 rollback: alerts.yml.live (md5 dceb2b3f) + prometheus.yml.live (md5 d78683f2) in the same folder, HUP \u00b7 advice: YES (monitoring only, no user effect)"
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": null,
+          "addedAt": "2026-11-14T07:29:42Z",
+          "addedBy": "[DEVOPS] daily run",
+          "owner": "[CEO]",
+          "test": "DECISION - main server disk dips during website builds (xd-3135) \u00b7 measured 14 Nov: free disk 13.0 GB at 05:44Z fell to 7.6 GB at 05:50Z and was back to 11.7 GB at 05:52Z; the GitHub job 'Build Docker Images (website)' ran 05:21-05:49:42Z on the main server (runner log) - every evening/morning build does this, the 24 h low was 5.1 GB \u00b7 it is short (about 8 minutes) but if a build ever starts with less room the server fills and the API stops (17 Oct: 50 min outage) \u00b7 A) build the website/admin images on GitHub's own machines and only copy the finished image to the server (DevOps + CTO build it on development, then a READY TO SHIP row) \u00b7 B) free about 1-3 GB by removing old unused images and keep building on the server \u00b7 C) do nothing; the 8 GB warning keeps firing on build days \u00b7 advice: A (removes the cause; B only buys a little room)"
         }
       ],
-      "progress": 79,
+      "progress": 78,
       "blocked": false,
       "blocker": "",
       "deps": [],
@@ -24196,9 +24214,9 @@
           "met": false,
           "passed": false,
           "verifiedBy": "none",
-          "evidence": "[DEVOPS run 2026-11-11 0723, scheduled, unattended] re-checked 07:4xZ: casper-secrets holds 1 AuthKey file = AuthKey_535N4T45M9.p8 (sales key); the push key ZZPYKN969B is still not there, so the API still cannot send a push. || [CTO finalize 2026-11-09] measured 9 Nov: 33 active device tokens, 103 in-app Notification rows in 30 d, but the API log has 0 APNs send lines in 7 days - no push has ever been delivered. Covered by the open [BACKEND] handoff xd-1738 (no new handoff). || [DEVOPS live 2026-11-01 16:4x-17:0xZ, CEO order: \"close off handoffs u can close now ... dont send to qa use skills to close them off\" (QA skill: evidence per verdict, control where negative)] push + scheduler containers up (3 days / 2 weeks); 0 'sent/delivered' push lines in 7 d - the API has no APNs settings (BACKEND xd-1159). || [QA 2026-10-13 f, scheduled, 2026-10-13T05:12:37Z] OPEN - 05:1xZ: caspervpn-push + caspervpn-scheduler 'Up 4 months'; UserDeviceTokens 2 active (builds 68, 69); delivered push still unproven (0 push lines 72 h) - same leg as notifications-system row 0 / xd-2022. || [DEVOPS run 2026-10-13 0225, scheduled, unattended, 2026-10-13T02:29:54Z] RE-MEASURED 02:2xZ (read-only SQL): UserDeviceTokens = 2 (was 0 on 10 Oct 23:12Z) - both ios, created 2026-10-11 21:50:38Z, active. caspervpn-push + caspervpn-scheduler Up 4 months; caspervpn-push logged 0 lines in the last 7 d = no notification sent. Tokens now exist; sending is the missing half (xd-1159 [BACKEND]: the API has no APNs settings, deferred). || [ENGINEERING run 2026-10-10 2305, scheduled, 2026-10-10T23:3xZ] STILL NOT DONE (23:12Z): caspervpn-push + caspervpn-scheduler Up 4 months; UserDeviceTokens = 0 on production - no app has ever registered a push token. | [FAIL] CEO office 2026-09-30: both containers 'running' (images caspervpn-push / caspervpn-scheduler), but push has never registered a device (0 tokens ever \u2014 QA xd-1158 [IOS] + xd-1159 [BACKEND] open); unproven until a token exists",
+          "evidence": "[DEVOPS run 2026-11-14 0723, scheduled, unattended] CEO moved the push key (casper-secrets AuthKey_ZZPYKN969B.p8, file name only read) and BACKEND installed it on the server 14 Nov 04:2xZ (card row 635 DONE). Row stays unmet until a real push is delivered - waits [BACKEND] xd-1738 test push. || [DEVOPS run 2026-11-11 0723, scheduled, unattended] re-checked 07:4xZ: casper-secrets holds 1 AuthKey file = AuthKey_535N4T45M9.p8 (sales key); the push key ZZPYKN969B is still not there, so the API still cannot send a push. || [CTO finalize 2026-11-09] measured 9 Nov: 33 active device tokens, 103 in-app Notification rows in 30 d, but the API log has 0 APNs send lines in 7 days - no push has ever been delivered. Covered by the open [BACKEND] handoff xd-1738 (no new handoff). || [DEVOPS live 2026-11-01 16:4x-17:0xZ, CEO order: \"close off handoffs u can close now ... dont send to qa use skills to close them off\" (QA skill: evidence per verdict, control where negative)] push + scheduler containers up (3 days / 2 weeks); 0 'sent/delivered' push lines in 7 d - the API has no APNs settings (BACKEND xd-1159). || [QA 2026-10-13 f, scheduled, 2026-10-13T05:12:37Z] OPEN - 05:1xZ: caspervpn-push + caspervpn-scheduler 'Up 4 months'; UserDeviceTokens 2 active (builds 68, 69); delivered push still unproven (0 push lines 72 h) - same leg as notifications-system row 0 / xd-2022. || [DEVOPS run 2026-10-13 0225, scheduled, unattended, 2026-10-13T02:29:54Z] RE-MEASURED 02:2xZ (read-only SQL): UserDeviceTokens = 2 (was 0 on 10 Oct 23:12Z) - both ios, created 2026-10-11 21:50:38Z, active. caspervpn-push + caspervpn-scheduler Up 4 months; caspervpn-push logged 0 lines in the last 7 d = no notification sent. Tokens now exist; sending is the missing half (xd-1159 [BACKEND]: the API has no APNs settings, deferred). || [ENGINEERING run 2026-10-10 2305, scheduled, 2026-10-10T23:3xZ] STILL NOT DONE (23:12Z): caspervpn-push + caspervpn-scheduler Up 4 months; UserDeviceTokens = 0 on production - no app has ever registered a push token. | [FAIL] CEO office 2026-09-30: both containers 'running' (images caspervpn-push / caspervpn-scheduler), but push has never registered a device (0 tokens ever \u2014 QA xd-1158 [IOS] + xd-1159 [BACKEND] open); unproven until a token exists",
           "autoTickReverted": "2026-10-07 xd-1440: auto-ticked by session_exit 6 Oct 23:54Z (board 2c61c1337), restored",
-          "blocker": "waits CEO card list index 635 (ACTION) 'move the push key file into the casper-secrets folder' (AuthKey_ZZPYKN969B.p8) - backend xd-1738 waits the same file",
+          "blocker": "waits [BACKEND] xd-1738: send the first real push (key installed 14 Nov)",
           "qaVerdict": "OPEN",
           "qaDate": "2026-10-13"
         },
@@ -91137,8 +91155,8 @@
       "createdAt": "2026-11-09T12:36:48Z",
       "createdDate": "2026-11-09",
       "completedDate": null,
-      "notes": "[DEVOPS run 2026-11-10 0723, scheduled, unattended] Re-count (read-only, 11 relays, wg show all dump): 333 peers, 219 never handshook (66%), 63 more silent > 7 days. 8 Nov: 210/313. Still no recurring clean-up job. Not built this run (time); next DevOps run: write the reaper script on development, Bangkok first, then READY TO SHIP. || [DEVOPS run 2026-11-13 0724, scheduled, unattended] Not built this run again (time went to the P1 cert fault xd-3113). Next DevOps run takes it first.",
-      "updatedAt": "2026-11-10T07:34:11Z"
+      "notes": "[DEVOPS run 2026-11-14 0723, scheduled, unattended] DRY RUN (read-only, /root/reports/devops1114-reap, .keep): wg0 on 11 relays + bkk-01: 382 peers, 176 never used (0 bytes, no handshake). Against the DB (xd-1115 rule): 47 qualify for removal (inactive key, or active >30 days with no open session), 36 have no WireGuardKeys row (Multi-Hop pool/orphans - never remove), 37 are keys made in the last 7 days, 3 users with an open session. Per relay qualify: DE-DU 16, s(167.150) 10, Bangkok 3... Note: wg0-only + 0-bytes is stricter than the 8 Nov count (all interfaces, rx=0), so 67% then vs 46% now is NOT a fall. Still NOT built: the recurring job with an apply step (needs how removals persist on each relay checked first). Next DevOps run: script on development, apply on bkk-01 first, then READY TO SHIP. || [DEVOPS run 2026-11-10 0723, scheduled, unattended] Re-count (read-only, 11 relays, wg show all dump): 333 peers, 219 never handshook (66%), 63 more silent > 7 days. 8 Nov: 210/313. Still no recurring clean-up job. Not built this run (time); next DevOps run: write the reaper script on development, Bangkok first, then READY TO SHIP. || [DEVOPS run 2026-11-13 0724, scheduled, unattended] Not built this run again (time went to the P1 cert fault xd-3113). Next DevOps run takes it first.",
+      "updatedAt": "2026-11-14T07:29:42Z"
     },
     {
       "id": "xd-3037",
@@ -91739,14 +91757,14 @@
       "to": "[DEVOPS]",
       "title": "Handoff from MARKETING: [P1] support@ did not forward a partner reply to Gmail (El Chancho Chifla, Argentina) - find why and fix",
       "description": "[GROWTH live 2026-11-11 00:5xZ, CEO chat on the Mac] CEO 11 Nov: the reply 'landed in support'. MEASURED from Gmail applinks123: in:anywhere zero-rating/sponsored-data/Movistar/CHANCHO = only their 3 Nov first mail; in:spam 30 d = 0; Resend inbound = 0. So the forward support@ -> applinks123 (credentials.md 'Inbound mail map', Migadu mailbox 1293302) carried their 3 Nov mail but NOT the later reply. Hypotheses, not proven (DNS lookups do not work from the Mac shell): (a) Migadu put it in support@ Junk, and Junk is not forwarded; (b) Gmail refused the forwarded copy because the sender domain elchanchochifla.online fails sender checks (SPF/DMARC) after forwarding. ASK: read Migadu's delivery log for that message, fix the cause (forward Junk too or turn its filter down for support@; make sure the forward keeps DKIM / uses SRS), then send a test from an outside domain with strict DMARC and confirm it lands in applinks123. Same check for every alias on support@ (partners, hello, business, affiliates).",
-      "status": "in_progress",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-11-11T00:33:04Z",
       "createdDate": "2026-11-11",
-      "completedDate": null,
-      "notes": "[DEVOPS run 2026-11-11 0723, scheduled, unattended] MEASURED from the main server (dig, 07:4xZ): sender elchanchochifla.online SPF 'v=spf1 include:comp.hostmar.com -all', DMARC 'p=none' -> Gmail has no DMARC reason to refuse the forwarded copy (hypothesis b unlikely; Gmail spam 30 d = 0 per growth). caspervpn.com MX = Migadu, DMARC p=quarantine. Most likely left: (a) Migadu put the reply in support@ Junk (Junk is not forwarded) or the reply went to another address. NOT PROVEN: no run can read Migadu (no IMAP/API route in access-inventory). Needs the CEO card ACTION 'let the runs read the support@ mailbox itself' (list index 719); with that, DevOps reads Junk + the forward rule and runs the outside-domain test.",
-      "updatedAt": "2026-11-11T07:41:41Z",
-      "blocker": "waits CEO card list index 719 (ACTION) 'let the runs read the support@ mailbox itself' - no route to Migadu until then"
+      "completedDate": "2026-11-14",
+      "notes": "[DEVOPS run 2026-11-14 0723, scheduled, unattended] CLOSED. MEASURED (support@ read directly, tools/growth_read.py inbox --match chancho, 14 Nov 07:3xZ): the partner's reply DID reach support@caspervpn.com INBOX (not Junk) on Mon 9 Nov 11:46 - sent from a DIFFERENT address, a personal gmail.com one ('N\u00e9stor Alvarez'), subject 'Re: Consulta comercial \u2014 EL CHANCHO CHIFLA'; Junk holds 1 unrelated mail. Why the forwarded copy is not in applinks123: NOT PROVEN (Migadu delivery log not readable); the gmail.com sender is the likely factor. Fix in place: since row 719 (DONE 13 Nov) runs read every company mailbox directly, so a lost forward no longer hides mail. Marketing already has the reply text (marketing/partners/replies/2026-11-11-elchanchochifla-*.md) - answer the gmail.com address. No new handoff. || [DEVOPS run 2026-11-11 0723, scheduled, unattended] MEASURED from the main server (dig, 07:4xZ): sender elchanchochifla.online SPF 'v=spf1 include:comp.hostmar.com -all', DMARC 'p=none' -> Gmail has no DMARC reason to refuse the forwarded copy (hypothesis b unlikely; Gmail spam 30 d = 0 per growth). caspervpn.com MX = Migadu, DMARC p=quarantine. Most likely left: (a) Migadu put the reply in support@ Junk (Junk is not forwarded) or the reply went to another address. NOT PROVEN: no run can read Migadu (no IMAP/API route in access-inventory). Needs the CEO card ACTION 'let the runs read the support@ mailbox itself' (list index 719); with that, DevOps reads Junk + the forward rule and runs the outside-domain test.",
+      "updatedAt": "2026-11-14T07:29:42Z",
+      "blocker": ""
     },
     {
       "id": "xd-3073",
@@ -91778,9 +91796,9 @@
       "createdAt": "2026-11-11T05:49:43Z",
       "createdDate": "2026-11-11",
       "completedDate": null,
-      "notes": "[DEVOPS run 2026-11-11 0723, scheduled, unattended] PART 1 BUILT on development d83aacf9 (infrastructure/scripts/fleet_health_loop.sh): skips comment lines, UK-LON expects 9 (OpenVPN off, xd-2096), warns when the SET of failing nodes changes (new down / back up), alarms via casper_notify.py (Telegram first, e-mail fallback). TESTED on the main server with production nodes, dry-run (FHL_DRY_RUN=1, own log/state in /root/reports/devops-1111, real log+state untouched): CONTROL old logic 07:32Z = 'DEGRADED healthy=11/13' (UK-LON 9/11 + the FR-PA comment line 0/11); NEW 07:35Z = 'OK healthy=12/12'; prev DEGRADED:mex-01 -> would send RECOVERED (back up: mex-01); fake node 192.0.2.1 down while already degraded -> would send 'DEGRADED - 1 node(s) down (new: fake-01)' (the case that missed mex/tyo/DE-DU); steady -> silent. Live file md5 669d0fc6 = git before. READY TO SHIP row added on the CEO card (install from git). PART 2 (scrape Alertmanager + rule on telegram/webhook notification failures, retire the 2 e-mail-bridge rules) NOT started - next DevOps run. || [DEVOPS run 2026-11-12 0724, scheduled, unattended] Part 1 ship row = card list index 727, not answered. Part 2 (Alertmanager notification-failure rule) still not started - next DevOps run. || [DEVOPS run 2026-11-13 0724, scheduled, unattended] PART 1 LIVE (CEO YES card list index 727, shipped 13 Nov by the CTO live session): /opt/caspervpn/fleet_health_loop.sh md5 43fd02ec mtime 00:10:58Z; /var/log/fleet-health-loop.log 06:45/07:00/07:15Z 'status=OK healthy=12/12 prev=OK' (was DEGRADED 11/13 since 30 Jun). Part 2 (Alertmanager notification-failure rule, retire the 2 e-mail-bridge rules) still DevOps work, not started this run.",
-      "updatedAt": "2026-11-12T07:45:00Z",
-      "blocker": "Part 2 = DevOps work (no outside wait); Part 1 done"
+      "notes": "[DEVOPS run 2026-11-14 0723, scheduled, unattended] PART 2 BUILT + TESTED (not live): kit /root/reports/devops1114-xd3074 on the main server; promtool check config OK (57 rules), promtool test rules SUCCESS incl. 2 controls (no alert at 3 min, none for e-mail failures). Prometheus today has no alertmanager job (query alertmanager_notifications_failed_total empty). READY TO SHIP row on the CEO card (list index 777). || [DEVOPS run 2026-11-11 0723, scheduled, unattended] PART 1 BUILT on development d83aacf9 (infrastructure/scripts/fleet_health_loop.sh): skips comment lines, UK-LON expects 9 (OpenVPN off, xd-2096), warns when the SET of failing nodes changes (new down / back up), alarms via casper_notify.py (Telegram first, e-mail fallback). TESTED on the main server with production nodes, dry-run (FHL_DRY_RUN=1, own log/state in /root/reports/devops-1111, real log+state untouched): CONTROL old logic 07:32Z = 'DEGRADED healthy=11/13' (UK-LON 9/11 + the FR-PA comment line 0/11); NEW 07:35Z = 'OK healthy=12/12'; prev DEGRADED:mex-01 -> would send RECOVERED (back up: mex-01); fake node 192.0.2.1 down while already degraded -> would send 'DEGRADED - 1 node(s) down (new: fake-01)' (the case that missed mex/tyo/DE-DU); steady -> silent. Live file md5 669d0fc6 = git before. READY TO SHIP row added on the CEO card (install from git). PART 2 (scrape Alertmanager + rule on telegram/webhook notification failures, retire the 2 e-mail-bridge rules) NOT started - next DevOps run. || [DEVOPS run 2026-11-12 0724, scheduled, unattended] Part 1 ship row = card list index 727, not answered. Part 2 (Alertmanager notification-failure rule) still not started - next DevOps run. || [DEVOPS run 2026-11-13 0724, scheduled, unattended] PART 1 LIVE (CEO YES card list index 727, shipped 13 Nov by the CTO live session): /opt/caspervpn/fleet_health_loop.sh md5 43fd02ec mtime 00:10:58Z; /var/log/fleet-health-loop.log 06:45/07:00/07:15Z 'status=OK healthy=12/12 prev=OK' (was DEGRADED 11/13 since 30 Jun). Part 2 (Alertmanager notification-failure rule, retire the 2 e-mail-bridge rules) still DevOps work, not started this run.",
+      "updatedAt": "2026-11-14T07:29:42Z",
+      "blocker": "waits CEO YES on card row 'READY TO SHIP - xd-3074 part 2' (list index 777)"
     },
     {
       "id": "xd-3075",
@@ -92716,11 +92734,14 @@
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: [P2] Main server free disk fell to 5 GB during the 13 Nov evening builds (floor 8 GB) - re-raise of xd-3105",
       "description": "[CTO system-check 14 Nov] The main server's free disk fell below the 8 GB floor again on the 13 Nov evening deploys. PROOF: Prometheus min_over_time(node_filesystem_avail_bytes{instance=do-production,mountpoint=/}[24h]) = 5.13 GB at 05:43Z 14 Nov; the 5-min curve bottoms at 7.3 GB at 22:18Z 13 Nov. DiskSpaceLow FIRED 22:20-22:21Z 13 Nov (pending on and off 08:13Z-02:13Z) and HighCPU fired 22:20Z-01:30Z. The dip matches on-server image builds: caspervpn-api:rollback-202611140124 built 22:19:29Z, caspervpn-website:latest 22:37:11Z, caspervpn-api:latest 01:28:09Z (docker images). Now: df / = 76% used, 12 GB free. xd-3105 was closed 13 Nov with the note 'raise again only if free space falls under 8 GB' - it did, so this is that re-raise. ASK: (1) decide whether to move the remaining heavy images (casper-agent-reach / casper-codegraph) off the main server, or build images off-box, or prune build cache before each build; (2) verify on the next deploy day: min_over_time(...[24h]) >= 8 GB and DiskSpaceLow firing = 0. Short dip (~2 min), no outage seen: P2.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P2",
       "createdAt": "2026-11-14T05:44:40Z",
       "createdDate": "2026-11-14",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[DEVOPS run 2026-11-14 0723, scheduled, unattended] MEASURED: cause = the CI job 'Build Docker Images (website)' on the main server: free 12.67 GB 05:44Z -> 7.65 GB 05:50Z -> 11.74 GB 05:52Z (Prometheus 60 s); runner log job 05:21:35-05:49:42Z. 24 h min 5.125 GB (same as CTO). Now df / 74%, 13 GB free; docker system df: images 4.75 GB, 3.13 GB not used by a container, build cache 0; /root/reports 2.2 GB; board mirror 162 MB (xd-3105 fix holds). DevOps choice = move website/admin image builds off the server; CEO card DECISION list index 778. agent-reach (956 MB) / codegraph (345 MB) are not the dip.",
+      "updatedAt": "2026-11-14T07:29:42Z",
+      "blocker": "waits CEO card DECISION 'main server disk dips during website builds' (list index 778)"
     },
     {
       "id": "xd-3136",
