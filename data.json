@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-11-15T22:57:14Z",
+  "lastUpdated": "2026-11-15T23:00:24Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 66,
@@ -21358,6 +21358,17 @@
           "owner": "[CEO]",
           "test": "ACTION (5 minutes, only you can sign in) - bot check keys for the website sign-up and forgot-password forms (xd-3078; stops the fake sign-ups that were used to e-mail-bomb strangers) \u00b7 1) open dash.cloudflare.com and sign in \u00b7 2) in the left menu click 'Turnstile' \u00b7 3) click 'Add widget' \u00b7 4) Widget name: CasperVPN website \u00b7 5) Hostname: caspervpn.com (add dev.caspervpn.com too) \u00b7 6) Widget mode: Managed \u00b7 7) click Create \u00b7 8) Cloudflare shows a 'Site Key' and a 'Secret Key': on your Mac make a text file named turnstile.txt in the folder casper-secrets (in your home folder) with the Site Key on line 1 and the Secret Key on line 2 - do NOT paste the secret key in a chat \u00b7 9) tell any chat 'turnstile done' \u00b7 then a run puts the two keys on the server and the check switches on (it is free) \u00b7 advice: do it this week; the bots came back every day from 10 to 13 Nov.",
           "evidence": "[WEBSITE-daily (Mac task) 2026-11-15T22:45:28Z] The code ships switched off (READY TO SHIP row list index 792 ('website batch 16 Nov')). Runtime env names: TURNSTILE_SITE_KEY + TURNSTILE_SECRET_KEY on the website container; both needed, either missing = off. Added by a second push: the first push's duplicate check matched the READY TO SHIP row's own words and skipped this row."
+        },
+        {
+          "met": false,
+          "passed": false,
+          "verifiedBy": null,
+          "addedAt": "2026-11-15T23:05:00Z",
+          "addedBy": "[BACKEND] 2FA one key session",
+          "owner": "[CEO]",
+          "test": "READY TO SHIP - two-step login setup keeps ONE key (server fix, CEO 15 Nov live: 'do server fix') \u00b7 what: when a person starts turning on two-step login, the server now gives the SAME key (and the same 10 backup codes) for 15 minutes, however many times the app's setup screen is opened again. A new key is made only when 15 minutes have passed, when two-step was turned off, or when a different sign-in of the same account asks \u00b7 why: on the CEO's phone (15 Nov) the app asked for the key 4 times in 37 seconds and the server made a NEW key each time, so the code from the key already in the authenticator app was refused. On the live server 23 accounts are stuck half-way and 0 accounts have two-step turned on - nobody has ever finished it. The public iPhone build 101 and Android have no app-side fix, so the server must protect them \u00b7 tested on the test server 15 Nov 22:59Z: before the fix 3 asks gave 3 different keys and the code from the first key was refused; after the fix 3 asks gave the same key and the same backup codes, a wrong code was still refused, the code from the FIRST key turned two-step on, a key older than 15 minutes and a key after 'turn off' were replaced by a new one. 21 new automatic tests; the whole server test set passes on the live code (1001 before, 1022 with the fix, 0 failed). Two security reads done, their one finding fixed (the key only goes back to the same sign-in) \u00b7 not proven yet: on a real phone (needs the ship, then one try with build 101) \u00b7 risk: the server restarts once (a connect in those few seconds may fail once); two small empty columns are added to the accounts table. Nobody can lose access: no account has two-step on today. The 23 half-way accounts simply get a fresh key on their next try \u00b7 rollback: the deploy script keeps the old server image and switches back by itself if the health check fails; by hand = start the saved image again (about 1 minute). The two new columns can stay, the old code ignores them \u00b7 advice: YES, ship it - small, well tested, and without it two-step login cannot be turned on from the app in the stores.",
+          "evidence": "[BACKEND same-run check 2026-11-15 22:29-22:59Z, session be-2fa-one-key] MEASURED production (read-only count): half-done 23, two-step on 0, accounts 922. development ab0a3d73d + 625674dfd (TwoFactorService setup, 2 nullable Users columns, migration 20261116090000). Test server before (old image, 22:34Z): setup x3 -> key1==key2 False, verify-setup with the first key's code 400. After (clone 625674dfd, 22:59Z, health 200): key1==key2 True, key1==key3 True, backup codes equal True, wrong code 400, first key's code 200 'enabled', aged 16 min -> new key, after disable -> new key, setup when already on 400; log lines reused=True 4 / False 3, 0 lines with a key; migration row present. Keys compared by hash only, never printed. Unit: TwoFactorOneKeySetupTests 21; control (reuse switched off) 5 fail. Production tree: patch applies clean on origin/production, 1001 -> 1022 passed. Second sign-in session gets a new key: unit-tested only (not run on the test server). Ship = cherry-pick the 2 commits to production under the lock + /root/deploy_api.sh. Detail: memory/departments/backend/session-log.md 16 Nov.",
+          "verify": "on the test server: python3 /root/reports/be1116-onekey/onekey_devchk.py --age-sql  (expects: key 1 == key 2 True; verify-setup code from the FIRST key 200)"
         }
       ],
       "progress": 78,
@@ -93247,6 +93258,18 @@
       "status": "pending",
       "priority": "P2",
       "createdAt": "2026-11-15T22:45:01Z",
+      "createdDate": "2026-11-16",
+      "completedDate": null
+    },
+    {
+      "id": "xd-3155",
+      "from": "[BACKEND]",
+      "to": "[QA]",
+      "title": "Handoff from BACKEND: After the ship: prove two-step login setup on a real phone (public iPhone build 101) + spot-check the test-server proof (2FA one key)",
+      "description": "[BACKEND] 16 Nov. The server now keeps ONE key while a two-step setup is half done (development ab0a3d73d + 625674dfd; READY TO SHIP row at the end of the CEO card, waits CEO YES - NOT on production yet). Please: (1) now, on the test server, re-run `python3 /root/reports/be1116-onekey/onekey_devchk.py --age-sql` and confirm: key 1 == key 2 True, wrong code 400, code from the FIRST key 200, aged key and key after disable are new. (2) Also on the test server: sign in a second time with the same throwaway account (a second sign-in) and confirm setup gives a DIFFERENT key there - this leg is unit-tested only. (3) After the CEO YES and the ship: on a real phone with the public iPhone build 101, open two-step setup, add the key to an authenticator app, leave and re-open the setup screen twice, enter the code - it must turn on; then turn it off again. Then one read-only count on production: accounts with two-step on > 0. Never write a key, a code or a backup code in a ticket or log. Card row: ceo-action-backlog, last row (text starts 'READY TO SHIP - two-step login setup keeps ONE key').",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-11-15T23:00:24Z",
       "createdDate": "2026-11-16",
       "completedDate": null
     }
