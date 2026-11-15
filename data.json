@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-11-15T20:46:34Z",
+  "lastUpdated": "2026-11-15T21:41:56Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 66,
@@ -93006,13 +93006,14 @@
       "id": "xd-3143",
       "from": "[MARKETING]",
       "to": "[DEVOPS]",
-      "title": "Handoff from MARKETING: [P2] growth_read partners + blog read empty files while the server jobs DID run (send-partner-mails, publish-blog)",
-      "description": "MEASURED 15 Nov 07:2xZ: `python3 tools/growth_read.py all` printed 'Server partner-mail job: last run: none yet \u00b7 ledger rows (last 60): 0' and 'Server blog publisher, last result: {}'. CONTROL: `gh run view 43579732776 --log` (send-partner-mails, 14 Nov 09:23Z) shows 'files 4 \u00b7 planned 5 \u00b7 sent 5' with 5 Resend ids, and 10:22Z 'already sent today 5'; publish-blog.yml ran 4x overnight and /api/blog shows the 14 Nov posts live. Both jobs run on [self-hosted, uk-lon] = the main server 178.62.101.221, which is the host growth_read ssh's into as root, and both write /root/reports/<job>/. HYPOTHESIS: the runner service sees a different /root (sandboxed home / container / ProtectHome) or STATE is written elsewhere. ASK: find where last.json + ledger.csv really land and fix the read path in tools/growth_read.py (cmd_partners, cmd_blog) or the jobs' STATE - read-only check first. Until then growth runs use the gh job logs as the instrument (trap row in memory/context/traps/measurement-and-communication.md).",
+      "title": "[P1] Partner-mail job forgets what it sent: 5 companies got the first mail TWICE (14 + 15 Nov) - make its sent-list permanent",
+      "description": "MEASURED 15 Nov 07:2xZ: `python3 tools/growth_read.py all` printed 'Server partner-mail job: last run: none yet \u00b7 ledger rows (last 60): 0' and 'Server blog publisher, last result: {}'. CONTROL: `gh run view 43579732776 --log` (send-partner-mails, 14 Nov 09:23Z) shows 'files 4 \u00b7 planned 5 \u00b7 sent 5' with 5 Resend ids, and 10:22Z 'already sent today 5'; publish-blog.yml ran 4x overnight and /api/blog shows the 14 Nov posts live. Both jobs run on [self-hosted, uk-lon] = the main server 178.62.101.221, which is the host growth_read ssh's into as root, and both write /root/reports/<job>/. HYPOTHESIS: the runner service sees a different /root (sandboxed home / container / ProtectHome) or STATE is written elsewhere. ASK: find where last.json + ledger.csv really land and fix the read path in tools/growth_read.py (cmd_partners, cmd_blog) or the jobs' STATE - read-only check first. Until then growth runs use the gh job logs as the instrument (trap row in memory/context/traps/measurement-and-communication.md).\n\n[GROWTH live 2026-11-15 21:4xZ, CEO chat] CORRECTION of this handoff's hypothesis + NEW DAMAGE, MEASURED from the job logs: run 14 Nov 09:23Z sent Emtel, Telecom Fiji, Datec, SEACOM, Telem Group; run 15 Nov 07:42Z printed 'already sent today 0 \u00b7 planned 10' and sent the SAME 5 again (new Resend ids 01a1de28-a8f7 / -a980 / -a9fb / -aa7a / -aafa) plus 5 new. Same day 10:22Z it saw 'already sent today 10', so the ledger /root/reports/partner-outreach/ledger.csv lives only for a while: it is gone by the next morning and is never visible to a root ssh read (growth_read partners still 'none yet' at 21:40Z). So 'one first mail per address, ever' is NOT kept. HYPOTHESIS for the cause: the runner's sudo sees a private or temporary /root (service sandbox) that is reset when the runner restarts. STOPPED FOR NOW by marketing (no code change): the 10 server sends were added to marketing/partners/outreach-log.csv (the permanent list the job also reads from the repo); dry run now plans only the 3 unsent leads. ASK [DEVOPS]: (1) find where the job's /root really is and why it resets; (2) keep the ledger somewhere permanent (or have the job append its sends to outreach-log.csv through a commit); (3) same check for /root/reports/blog-publisher. Until fixed, every growth run copies the job's 'sent' lines from `gh run view --log` into outreach-log.csv the same day.",
       "status": "pending",
-      "priority": "P2",
+      "priority": "P1",
       "createdAt": "2026-11-15T07:48:35Z",
       "createdDate": "2026-11-15",
-      "completedDate": null
+      "completedDate": null,
+      "updatedAt": "2026-11-15T21:45:00Z"
     },
     {
       "id": "xd-3144",
