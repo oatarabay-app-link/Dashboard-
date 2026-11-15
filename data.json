@@ -93063,25 +93063,29 @@
       "id": "xd-3148",
       "from": "[QA]",
       "to": "[ANDROID]",
-      "title": "Handoff from QA: [P0] Android 11: app says Connected but the server never hears the phone (0 handshakes); dead tunnel then blocks the hidden-mode fallback - 0 of 40 Android 11 accounts ever passed data",
+      "title": "[P1] Android 11: Google's test devices show Connected with no internet (0 of 43) - prove on an Android 11 phone/emulator on a normal network whether it is their lab network or our app",
       "description": "CEO 15 Nov 19:00Z: his Android tester (account 58815690, app 2.2.8 build 28, Android 11, mobile data, Singapore, plain WireGuard) shows 'connected' with no internet. MEASURED: (1) the server never heard the phone - Singapore node `wg show wg0 dump` 19:10Z: peer Q2cmwUNA... allowed 10.66.12.251/32 endpoint (none), latest-handshake 0, rx 0 tx 0; same node had 20 live peers and another user moved 41.7 MB 17-20Z, listen-port 51820 = server healthy. (2) the app said connected after 1,287 ms (telemetry connect-success 18:18:38Z), then at 18:20:01Z 'connected-no-traffic no-traffic:rx=0' tx=592 bytes (= handshake attempts only). (3) the app then tried hidden mode and plain WireGuard again and every attempt died in 81-538 ms with UnknownHostException (cannot look up our server names) - hypothesis: the dead tunnel was still up and held the phone's DNS, so the fallback could never work (same class as xd-3099 'app leaves dead tunnels up'). (4) 30 days: 40 Android 11 accounts connected, 0 ever moved data on any road; Android 12/14/16: 5 of 9 moved data (includes staff phones). Every earlier Android 11 account (QA had wrongly labelled them Google robots) shows the same signature: ws-handshake / resolve / rx=0. ASK: on an Android 11 phone or emulator (API 30), capture logcat from app start through connect (measure first) - does the WireGuard backend send to 167.150.100.166:51820, do the UDP packets leave the device, and is the tunnel torn down before the fallback? Fix the fallback to tear down the dead tunnel first. Proof = the tester's phone shows a handshake on the node and data in BandwidthUsageLogs.",
       "status": "pending",
-      "priority": "P0",
+      "priority": "P1",
       "createdAt": "2026-11-15T19:12:02Z",
       "createdDate": "2026-11-15",
-      "completedDate": null
+      "completedDate": null,
+      "notes": " || [QA 2026-11-15 20:1xZ CORRECTION of my own P0 claim] All 43 Android 11 accounts in 30 d are US okhttp sign-ups arriving in clusters minutes after each Play upload (27/28/29) = Google's automatic test devices (27 match the backend robot e-mail pattern, incl. the account the CEO named). Real phones work the same day (CEO Android 14 LB 6.7 MB; Android 16 wifi hidden mode 6.3 MB). So 'app bug on Android 11' is NOT PROVEN; equally 'only their lab network' is NOT PROVEN. One test decides: build 29 on an Android 11 (API 30) emulator or phone on a normal network - handshake on the node yes/no. The dead-tunnel-blocks-fallback observation stands (same class as xd-3099). Why it still matters: Google's pre-launch report and possibly Google's reviewers see 'no internet'.",
+      "updatedAt": "2026-11-15T20:06:34Z"
     },
     {
       "id": "xd-3149",
       "from": "[QA]",
       "to": "[BACKEND]",
-      "title": "Handoff from QA: [P1] Server recommends plain WireGuard to people in Russia/Iran whose phone region is set to another country (trusts the phone setting over the network country) - Russian newcomer 15 Nov got 0 MB",
+      "title": "CEO YES 15 Nov - ship when tests pass: Handoff from QA: [P1] Server recommends plain WireGuard to people in Russia/Iran whose phone region is set to another country (trusts the phone setting over the network country) - Russian newcomer 15 Nov got 0 MB",
       "description": "MEASURED 15 Nov: a new Russian user (account 7f9dabf2, iPhone public build 4.3.2 (101), iOS 16.7.16, Wi-Fi) signed up 14:02:21Z, login country RU (Users.LastLoginCountry=RU, failure RequestCountry=RU) but phone region US. API log 14:02:26.932Z: 'SmartRecommend: country=US restrictive=false protocol=WireGuard servers=11' -> app connected plain WireGuard to Los Angeles -> 14:02:58Z 'connected-no-traffic NoTraffic:handshake-only-20s'; 0 MB since; no StealthTier line (hidden mode never offered). CODE: backend-dotnet-core/Services/OptimizedVpnServerService.cs GetSmartRecommendationsAsync step 1 'prefer client-sent, then GeoIP' -> request.ClientCountryCode (the phone's region SETTING) wins over the network country. xd-2958 (2 Nov) made the hidden-mode ROAD choice escalate-only on login/registration/failure-region country, but this recommendation path was not changed. The iPhone-side fix (xd-3076: pick hidden mode from the server's RegionRestricted, not the phone region) is only in test builds 104-106 (merged into xd-2721), so every public-101 user with a non-restricted phone region inside a restricted country gets plain WireGuard. ASK (server-only, helps build 101 today): in GetSmartRecommendationsAsync compute isRestrictive escalate-only = restricted(ClientCountryCode) OR restricted(GeoIP of clientIp) OR restricted(user LastLoginCountry/RegistrationCountry) - same rule as xd-2958; never DOWNGRADE a restricted signal to 'US'. Test with a control (real US user stays WireGuard). Ship under the normal CEO-yes rule. Proof = next RU/IR newcomer log line 'SmartRecommend: ... restrictive=true protocol=CasperCloak'.",
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-11-15T19:51:16Z",
       "createdDate": "2026-11-15",
-      "completedDate": null
+      "completedDate": null,
+      "notes": " || CEO YES 2026-11-15 ~20:03Z (live chat, button 'Yes, ship it'): ship this server fix as soon as it passes its checks (control: a real US user stays on plain WireGuard). [BACKEND] may deploy under this yes; proof line = 'SmartRecommend: ... restrictive=true protocol=CasperCloak' for the next RU/IR newcomer.",
+      "updatedAt": "2026-11-15T20:06:34Z"
     },
     {
       "id": "xd-3150",
