@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-11-16T00:11:51Z",
+  "lastUpdated": "2026-11-16T00:19:39Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 66,
@@ -20943,13 +20943,16 @@
           "evidence": "[DEVOPS live 2026-11-13 22:1xZ, CEO YES in chat] SHIPPED. Before: 11/11 prod relays served notAfter Dec 12 2026 serial 06EC..CD7A. Did: nginx -t && systemctl reload nginx on s1 (Sydney canary) then s2-s6, s8-s12 - all RELOAD_OK, nginx active. After (brain openssl s_client by name): s1-s6, s8-s13 serve notAfter Feb 10 16:43:02 2027, serial 06874FAB..8D8B = brain file; local GET / 200 on each; /cc WebSocket 101 on all 12 (curl --http1.1; first HTTP/2 probe gave 404 everywhere incl. control s13 = wrong instrument). Script: /opt/caspervpn/wildcard-cert/distribute-cert.sh (was md5 68f44f95 = git 93231d8^) replaced by 93231d8 copy (md5 0af9558a = origin/development), owner caspervpn 755, bash -n ok; backup /root/backups/distribute-cert.sh.pre-xd3113-20261113 (600). NOT RUN: the script itself (no check-only mode; a run would redistribute) - first real run at the next renewal (~Jan 2027). Fix is on development only, not yet on production branch."
         },
         {
-          "met": false,
-          "passed": false,
-          "verifiedBy": null,
+          "met": true,
+          "passed": true,
+          "verifiedBy": "tested",
           "addedAt": "2026-11-13T07:33:06Z",
           "addedBy": "[DEVOPS] daily run",
           "owner": "[CEO]",
-          "test": "CEO YES 2026-11-16 (Claude Code live with the iOS/CTO session, ~01:3xZ; CEO's words: 'do ... all server side things that need to be shipped') - ship by the department's normal path, one at a time, each row's own condition first (for example 'after QA on the dev lab'), then [QA] | READY TO SHIP - xd-3080 inventory reads the mail key \u00b7 what: install infrastructure/scripts/infra_inventory_check.py from development 10604bd on the main server (/opt/caspervpn/) \u00b7 why: the nightly inventory says 'unknown: Resend API key' every day, so its daily check can never read ok \u00b7 tested: same lookup run read-only on the main server 07:3xZ 13 Nov: key file found, Resend lists caspervpn.com + riverzenlb.com 'verified' \u00b7 rollback: the current file = git before (md5 49cb1eb6) \u00b7 advice: YES (small, read-only check)"
+          "test": "SHIPPED 2026-11-16 00:12Z | CEO YES 2026-11-16 (Claude Code live with the iOS/CTO session, ~01:3xZ; CEO's words: 'do ... all server side things that need to be shipped') - ship by the department's normal path, one at a time, each row's own condition first (for example 'after QA on the dev lab'), then [QA] | READY TO SHIP - xd-3080 inventory reads the mail key \u00b7 what: install infrastructure/scripts/infra_inventory_check.py from development 10604bd on the main server (/opt/caspervpn/) \u00b7 why: the nightly inventory says 'unknown: Resend API key' every day, so its daily check can never read ok \u00b7 tested: same lookup run read-only on the main server 07:3xZ 13 Nov: key file found, Resend lists caspervpn.com + riverzenlb.com 'verified' \u00b7 rollback: the current file = git before (md5 49cb1eb6) \u00b7 advice: YES (small, read-only check)",
+          "evidence": "[DEVOPS same-run check 2026-11-16T00:19:15Z] SHIPPED 00:12:43Z 16 Nov. BEFORE (04:20Z 15 Nov report): 195 items, ok 194, unknown 1 = 'Resend API key: no key available'; installed file md5 49cb1eb6 = production git. SHIP: 10604bd cherry-picked to production (696dc5cfa, under the session lock), file taken on the main server with git show origin/production (md5 41471f0f, py_compile OK), installed to /opt/caspervpn/. AFTER (real run by hand 00:12:43Z, rc=0): 196 items, ok 195, unknown 0; 'Resend sending domain caspervpn.com' ok (verified) + 'riverzenlb.com' ok (verified). CONTROL: every other item unchanged except one that moved ok -> warn by itself ('GlitchTip event partition runway in 4 days' - a date limit, not this change; follow-up for DevOps). ROLLBACK: /root/backups/infra_inventory_check.py.pre-xd3080-1116 (md5 49cb1eb6). No key value read or printed.",
+          "verify": "main server: md5sum /opt/caspervpn/infra_inventory_check.py = 41471f0f...; python3 -c \"import json;d=json.load(open('/root/reports/infra-inventory.json'));print([i['status'] for i in d['items'] if i['category']=='email'])\" -> ['ok','ok'], no 'unknown'",
+          "verifiedAt": "2026-11-16T00:19:15Z"
         },
         {
           "met": false,
@@ -21252,8 +21255,9 @@
           "addedAt": "2026-11-15T07:55:00Z",
           "addedBy": "[DEVOPS] daily run",
           "owner": "[CEO]",
-          "test": "CEO YES 2026-11-16 (Claude Code live with the iOS/CTO session, ~01:3xZ; CEO's words: 'do ... all server side things that need to be shipped') - ship by the department's normal path, one at a time, each row's own condition first (for example 'after QA on the dev lab'), then [QA] | READY TO SHIP - xd-3142: lock the outside security-scan tool in our build pipeline to one exact version \u00b7 what: 7 places in our GitHub build files used 'trivy-action@master' (whatever its owner pushes next runs inside our builds with our build token); now they point at one checked version (sha 38b337f, 5 Nov 2026) \u00b7 why: this tool's version labels were hijacked in a March 2026 supply-chain attack (outside report); a pinned version cannot be swapped under us \u00b7 tested on development: commit 4675bd7, 0 '@master' left, all 22 build files parse; a real CI run of the step is NOT PROVEN yet (no Actions read access this run) \u00b7 rollback: revert the one commit \u00b7 advice: YES - no app or server changes, only which copy of the scan tool runs",
-          "evidence": "[DEVOPS run 2026-11-15 0724, scheduled, unattended] development 4675bd7; git ls-remote trivy-action master = 38b337f; grep @master = 0 after."
+          "test": "SHIPPED 2026-11-16 00:14Z (git only) | CEO YES 2026-11-16 (Claude Code live with the iOS/CTO session, ~01:3xZ; CEO's words: 'do ... all server side things that need to be shipped') - ship by the department's normal path, one at a time, each row's own condition first (for example 'after QA on the dev lab'), then [QA] | READY TO SHIP - xd-3142: lock the outside security-scan tool in our build pipeline to one exact version \u00b7 what: 7 places in our GitHub build files used 'trivy-action@master' (whatever its owner pushes next runs inside our builds with our build token); now they point at one checked version (sha 38b337f, 5 Nov 2026) \u00b7 why: this tool's version labels were hijacked in a March 2026 supply-chain attack (outside report); a pinned version cannot be swapped under us \u00b7 tested on development: commit 4675bd7, 0 '@master' left, all 22 build files parse; a real CI run of the step is NOT PROVEN yet (no Actions read access this run) \u00b7 rollback: revert the one commit \u00b7 advice: YES - no app or server changes, only which copy of the scan tool runs",
+          "evidence": "[DEVOPS same-run check 2026-11-16T00:19:15Z] SHIPPED 00:14:33Z 16 Nov (git only, no server change). BEFORE: origin/production had 7 'trivy-action@master' (ci.yml 1, security-audit.yml 6). SHIP: 4675bd7 cherry-picked to production (f7fbc0266, under the session lock). AFTER: @master 0, pinned sha 7; all 23 workflow files parse; git ls-remote aquasecurity/trivy-action master = 38b337f today (same sha). CONTROL: diff = 2 files, 7 lines, nothing else. NOT PROVEN YET: a real CI run of the scan step with the pinned copy (run for f7fbc0266 was queued at 00:15Z) - not ticked until that is read. ROLLBACK: git revert f7fbc0266. || [DEVOPS run 2026-11-15 0724, scheduled, unattended] development 4675bd7; git ls-remote trivy-action master = 38b337f; grep @master = 0 after.",
+          "verify": "git grep -c 'trivy-action@master' origin/production -- .github = 0; git grep -c 'trivy-action@38b337fff0a2f984d5be173c99e3f633438167ec' = 7 uses; a green 'Security Scan'/trivy step in a production CI run"
         },
         {
           "met": false,
@@ -92163,8 +92167,9 @@
       "createdAt": "2026-11-11T09:17:47Z",
       "createdDate": "2026-11-11",
       "completedDate": null,
-      "notes": "[DEVOPS run 2026-11-13 0724, scheduled, unattended] Cause: resend_key_from_scripts() looks for literal keys in two scripts that no longer hold one; the key files /opt/caspervpn/secrets/resend_api_key + /etc/caspervpn/resend.key exist (root 600). Fix on development 10604bd (read those files first). Tested read-only on the main server: key found, GET /domains -> caspervpn.com verified, riverzenlb.com verified. Note: 13 Nov 04:20Z inventory = warn 24 (was 0) - the relay certs at 29 days, fixed by xd-3113.",
-      "blocker": "waits CEO YES on card row 'READY TO SHIP - xd-3080 inventory reads the mail key' (list index 756)"
+      "notes": "[DEVOPS same-run check 2026-11-16T00:19:15Z] SHIPPED 16 Nov 00:12Z under CEO YES: production 696dc5cfa, installed on the main server (md5 41471f0f), real run: unknown 1 -> 0, both mail domains ok. Left: tonight's 04:20Z scheduled run must write a RoutineRuns row without 'unknown' (QA). QA re-check handoff: xd-3157. || [DEVOPS run 2026-11-13 0724, scheduled, unattended] Cause: resend_key_from_scripts() looks for literal keys in two scripts that no longer hold one; the key files /opt/caspervpn/secrets/resend_api_key + /etc/caspervpn/resend.key exist (root 600). Fix on development 10604bd (read those files first). Tested read-only on the main server: key found, GET /domains -> caspervpn.com verified, riverzenlb.com verified. Note: 13 Nov 04:20Z inventory = warn 24 (was 0) - the relay certs at 29 days, fixed by xd-3113.",
+      "blocker": "",
+      "updatedAt": "2026-11-16T00:19:15Z"
     },
     {
       "id": "xd-3081",
@@ -93136,8 +93141,9 @@
       "createdAt": "2026-11-15T07:20:35Z",
       "createdDate": "2026-11-15",
       "completedDate": null,
-      "notes": "[DEVOPS run 2026-11-15 0724, scheduled, unattended] BUILT on development 4675bd7 (pushed, remote tip checked with git ls-remote): 7 of 7 'aquasecurity/trivy-action@master' -> @38b337fff0a2f984d5be173c99e3f633438167ec (ci.yml 1, security-audit.yml 6). Proof: git ls-remote https://github.com/aquasecurity/trivy-action refs/heads/master = 38b337f (commit 5 Nov 2026 12:57Z 'Update trivy to v0.76.2'); after the change grep 'trivy-action@master' .github/workflows = 0; all 22 workflow files parse (python yaml.safe_load). Latest release tag v0.36.0 = ed142fd (22 Apr 2026, older trivy) - master sha kept as CTO advised. Other actions on a branch name: dtolnay/rust-toolchain@stable x4 (its documented usage; separate concern, not changed). NOT PROVEN: a CI run of the pinned step (no GitHub token in this run to read Actions; security-audit runs Sunday 02:00Z on its branch). READY TO SHIP row on the CEO card (ceo-action-backlog, added this run). skill: security + owner -> pin by sha, one concern per commit. || ",
-      "blocker": "waits CEO YES on card row 'READY TO SHIP - xd-3142' (list index 785)"
+      "notes": "[DEVOPS same-run check 2026-11-16T00:19:15Z] SHIPPED to production git 16 Nov 00:14Z (f7fbc0266) under CEO YES: 0 '@master' left, 7 pinned. Left: read one green CI run of the trivy step. || [DEVOPS run 2026-11-15 0724, scheduled, unattended] BUILT on development 4675bd7 (pushed, remote tip checked with git ls-remote): 7 of 7 'aquasecurity/trivy-action@master' -> @38b337fff0a2f984d5be173c99e3f633438167ec (ci.yml 1, security-audit.yml 6). Proof: git ls-remote https://github.com/aquasecurity/trivy-action refs/heads/master = 38b337f (commit 5 Nov 2026 12:57Z 'Update trivy to v0.76.2'); after the change grep 'trivy-action@master' .github/workflows = 0; all 22 workflow files parse (python yaml.safe_load). Latest release tag v0.36.0 = ed142fd (22 Apr 2026, older trivy) - master sha kept as CTO advised. Other actions on a branch name: dtolnay/rust-toolchain@stable x4 (its documented usage; separate concern, not changed). NOT PROVEN: a CI run of the pinned step (no GitHub token in this run to read Actions; security-audit runs Sunday 02:00Z on its branch). READY TO SHIP row on the CEO card (ceo-action-backlog, added this run). skill: security + owner -> pin by sha, one concern per commit. || ",
+      "blocker": "",
+      "updatedAt": "2026-11-16T00:19:15Z"
     },
     {
       "id": "xd-3143",
@@ -93319,6 +93325,18 @@
       "status": "pending",
       "priority": "P2",
       "createdAt": "2026-11-15T23:30:48Z",
+      "createdDate": "2026-11-16",
+      "completedDate": null
+    },
+    {
+      "id": "xd-3157",
+      "from": "[DEVOPS]",
+      "to": "[QA]",
+      "title": "Handoff from DEVOPS: Re-check after ship: nightly inventory no longer says 'unknown' for the mail key (xd-3080)",
+      "description": "Shipped 16 Nov 00:12Z (production 696dc5cfa, main server /opt/caspervpn/infra_inventory_check.py md5 41471f0f). Please check after the 04:20Z run of 16 Nov: /root/reports/infra-inventory.json has 0 items with status 'unknown' and the two 'Resend sending domain' items read ok; then close xd-3080 and card ops-scheduled-routines row 6 if it now passes. Rollback file: /root/backups/infra_inventory_check.py.pre-xd3080-1116.",
+      "status": "pending",
+      "priority": "P3",
+      "createdAt": "2026-11-16T00:19:38Z",
       "createdDate": "2026-11-16",
       "completedDate": null
     }
