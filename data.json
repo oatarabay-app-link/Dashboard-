@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-11-16T05:18:20Z",
+  "lastUpdated": "2026-11-16T05:46:31Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 67,
@@ -93106,7 +93106,7 @@
       "from": "[CTO]",
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: [P2] Main server free disk fell to 5 GB during the 13 Nov evening builds (floor 8 GB) - re-raise of xd-3105",
-      "description": "[CTO system-check 14 Nov] The main server's free disk fell below the 8 GB floor again on the 13 Nov evening deploys. PROOF: Prometheus min_over_time(node_filesystem_avail_bytes{instance=do-production,mountpoint=/}[24h]) = 5.13 GB at 05:43Z 14 Nov; the 5-min curve bottoms at 7.3 GB at 22:18Z 13 Nov. DiskSpaceLow FIRED 22:20-22:21Z 13 Nov (pending on and off 08:13Z-02:13Z) and HighCPU fired 22:20Z-01:30Z. The dip matches on-server image builds: caspervpn-api:rollback-202611140124 built 22:19:29Z, caspervpn-website:latest 22:37:11Z, caspervpn-api:latest 01:28:09Z (docker images). Now: df / = 76% used, 12 GB free. xd-3105 was closed 13 Nov with the note 'raise again only if free space falls under 8 GB' - it did, so this is that re-raise. ASK: (1) decide whether to move the remaining heavy images (casper-agent-reach / casper-codegraph) off the main server, or build images off-box, or prune build cache before each build; (2) verify on the next deploy day: min_over_time(...[24h]) >= 8 GB and DiskSpaceLow firing = 0. Short dip (~2 min), no outage seen: P2.\n\n[finalize 2026-11-15] waiting on: the CEO's answer on card DECISION list index 778 (move website/admin image builds off the main server). Re-measured 05:1xZ: Prometheus min_over_time(node_filesystem_avail_bytes{instance=do-production,mountpoint=/}[24h]) = 7.65 GB - under the 8 GB floor again; df / now 80% used, 9.6 GB free (was 12-13 GB on 14 Nov).\n\n[finalize 2026-11-16] waiting on: the CEO's answer on card DECISION 'main server disk dips during website builds' (list index 778, unanswered). Re-measured 05:15Z: lowest free disk in the last 24 h = 6.74 GB (floor 8 GB; third day under it: 7.65 on 15 Nov, 5.13 on 14 Nov); now 13 GB free, 75% used, api health 200.",
+      "description": "[CTO system-check 14 Nov] The main server's free disk fell below the 8 GB floor again on the 13 Nov evening deploys. PROOF: Prometheus min_over_time(node_filesystem_avail_bytes{instance=do-production,mountpoint=/}[24h]) = 5.13 GB at 05:43Z 14 Nov; the 5-min curve bottoms at 7.3 GB at 22:18Z 13 Nov. DiskSpaceLow FIRED 22:20-22:21Z 13 Nov (pending on and off 08:13Z-02:13Z) and HighCPU fired 22:20Z-01:30Z. The dip matches on-server image builds: caspervpn-api:rollback-202611140124 built 22:19:29Z, caspervpn-website:latest 22:37:11Z, caspervpn-api:latest 01:28:09Z (docker images). Now: df / = 76% used, 12 GB free. xd-3105 was closed 13 Nov with the note 'raise again only if free space falls under 8 GB' - it did, so this is that re-raise. ASK: (1) decide whether to move the remaining heavy images (casper-agent-reach / casper-codegraph) off the main server, or build images off-box, or prune build cache before each build; (2) verify on the next deploy day: min_over_time(...[24h]) >= 8 GB and DiskSpaceLow firing = 0. Short dip (~2 min), no outage seen: P2.\n\n[finalize 2026-11-15] waiting on: the CEO's answer on card DECISION list index 778 (move website/admin image builds off the main server). Re-measured 05:1xZ: Prometheus min_over_time(node_filesystem_avail_bytes{instance=do-production,mountpoint=/}[24h]) = 7.65 GB - under the 8 GB floor again; df / now 80% used, 9.6 GB free (was 12-13 GB on 14 Nov).\n\n[finalize 2026-11-16] waiting on: the CEO's answer on card DECISION 'main server disk dips during website builds' (list index 778, unanswered). Re-measured 05:15Z: lowest free disk in the last 24 h = 6.74 GB (floor 8 GB; third day under it: 7.65 on 15 Nov, 5.13 on 14 Nov); now 13 GB free, 75% used, api health 200.\n\n[CTO system-check 2026-11-16 05:44Z] Fourth morning. Lowest free disk in the last 24 h = 6.74 GB (floor 8 GB). Seen live: free space went from 13 GB (05:15Z) to 8.0 GB at 05:44Z (df / = 84% used) while a build was running on the server (buildkitd 33% CPU, running 314 s; GitHub runner job started 05:38Z). The same evening builds also set off CriticalCPU + HighCPU for 2 minutes (21:31-21:34Z 15 Nov). DiskSpaceLow did not fire in the last 24 h. Still waits the CEO's answer (card list index 778).",
       "status": "in_progress",
       "priority": "P2",
       "createdAt": "2026-11-14T05:44:40Z",
@@ -93411,7 +93411,7 @@
       "from": "[DEVOPS]",
       "to": "[DEVOPS]",
       "title": "Handoff from DEVOPS: [P2] Sao Paulo hidden mode is slow: the hourly check's 1 MB download timed out 4 times on 15 Nov",
-      "description": "Hourly connection check (/root/reports/vsp/*-hidden.jsonl), node sao via s11.pompesh.com: L4 FAIL with dl_1mb_s = 20.0 (time-out) at 16:26Z, 17:27Z, 21:26Z and 23:27Z on 15 Nov; handshake, DNS, exit IP, HEAD 200 all PASS; passes at 18:1x, 20:1x, 22:1x. First failure is hours BEFORE the 22:10Z peer clean-up, so not caused by it. Control in the same runs: the other 10 relays 2-3 s. Measure first: relay load / nstat TcpRetransSegs / ping loss from the prober vs a control relay (devops SKILL trap 27 Oct), wg vs hidden on the same node, then decide. Also seen once: syd L5 FAIL (tcp64k 0) at 23:26Z - watch the next runs. No client addresses.\n\n[finalize 2026-11-16] waiting on: the [DEVOPS] department run - needs that department's build/phone/CEO step, not finishable from the server in this run (not re-measured).",
+      "description": "Hourly connection check (/root/reports/vsp/*-hidden.jsonl), node sao via s11.pompesh.com: L4 FAIL with dl_1mb_s = 20.0 (time-out) at 16:26Z, 17:27Z, 21:26Z and 23:27Z on 15 Nov; handshake, DNS, exit IP, HEAD 200 all PASS; passes at 18:1x, 20:1x, 22:1x. First failure is hours BEFORE the 22:10Z peer clean-up, so not caused by it. Control in the same runs: the other 10 relays 2-3 s. Measure first: relay load / nstat TcpRetransSegs / ping loss from the prober vs a control relay (devops SKILL trap 27 Oct), wg vs hidden on the same node, then decide. Also seen once: syd L5 FAIL (tcp64k 0) at 23:26Z - watch the next runs. No client addresses.\n\n[finalize 2026-11-16] waiting on: the [DEVOPS] department run - needs that department's build/phone/CEO step, not finishable from the server in this run (not re-measured).\n\n[CTO system-check 2026-11-16 05:45Z] Two more facts from the alarm history (Prometheus ALERTS, last 24 h): the critical alarm VpnStandardNodeFailing fired for sao 17:30-18:29Z and for syd 18:30-19:24Z on 15 Nov, both cleared by themselves. The Sydney one is the NORMAL (WireGuard) mode, not hidden mode: /root/reports/vsp wg runs at 17:21Z and 18:22Z show L5 FAIL with tcp64k 0 and df1392 = 1 (large packets not passing), L2-L4 PASS, 1 MB download 2.1 s; pass again from 19:22Z (tcp64k 65536, df1392 2). So Sydney had about 2 hours where big packets were dropped on the plain mode - please include it in the same measurement (path MTU on syd), it is not only the single 23:26Z line.",
       "status": "pending",
       "priority": "P2",
       "createdAt": "2026-11-15T23:30:48Z",
@@ -93551,6 +93551,30 @@
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-11-16T05:02:00Z",
+      "createdDate": "2026-11-16",
+      "completedDate": null
+    },
+    {
+      "id": "xd-3167",
+      "from": "[CTO]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from CTO: [P2] Main server is waiting for a restart to load a security update (new core 6.8.0-149 installed, old 6.8.0-147 still running)",
+      "description": "[CTO system-check 2026-11-16] The main server (UK-LON brain) has installed a newer system core and system library but still runs the old ones until it is restarted. PROOF (05:46Z): /var/run/reboot-required exists; reboot-required.pkgs = linux-image-6.8.0-149-generic, linux-base, libc6; uname -r = 6.8.0-147-generic; uptime 29 days. The weekly security sweep of 15 Nov scored it too: lynis index 67 -> 65, warning KRNL-5830 'Reboot of system is most likely needed'. Nothing is broken today. RISK: a restart stops the API, website and admin for a few minutes, and on 18 Oct a restart left Prometheus and Alertmanager off (xd-2204) - check they come back. ASK: (1) write one DECISION row for the CEO: restart in a quiet hour, yes/no and when (a restart of production needs his yes); (2) before it: confirm every container has a restart policy and the monitoring pair starts by itself; (3) after it: uname -r = 149, reboot-required gone, api /health 200, 86/86 monitoring targets up, 0 alarms.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-11-16T05:46:31Z",
+      "createdDate": "2026-11-16",
+      "completedDate": null
+    },
+    {
+      "id": "xd-3168",
+      "from": "[CTO]",
+      "to": "[IOS]",
+      "title": "Handoff from CTO: [P3] Test runs on the Mac simulator send their errors to the LIVE error store: 90 of the 97 errors in the last 24 h",
+      "description": "[CTO system-check 2026-11-16] The daily check looks for any app error seen more than 10 times in a day. Today one stood out: 'App Hanging: App hanging for at least 2000 ms' (GlitchTip issue 42, project CasperVPN iOS) with 92 events. It is NOT customers. PROOF (glitchtip-postgres, 05:46Z): 90 of the 97 events in the last 24 h contain 'CoreSimulator' paths (/Users/.../CoreSimulator/Devices/.../CasperVPN.app/CasperVPN.debug.dylib), one single user id, app 4.3.3 build 107, 86 of them between 00:00 and 01:00Z 16 Nov - the hour the store pictures were made on the simulator. Real-customer errors in the same 24 h: 7, no group over 10. WHY IT MATTERS: simulator noise hides real customer errors from this check and uses the error store's space (it ran close to full this week, xd-3163 item 1). ASK: do not start the error reporter in simulator / debug builds (or send them to a separate 'debug' environment tag so the check can leave them out); prove with one simulator run that no new event lands in issue_events_issueevent. No user data involved. Small, no hurry.",
+      "status": "pending",
+      "priority": "P3",
+      "createdAt": "2026-11-16T05:46:31Z",
       "createdDate": "2026-11-16",
       "completedDate": null
     }
