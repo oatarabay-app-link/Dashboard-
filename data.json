@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-11-17T04:57:39Z",
+  "lastUpdated": "2026-11-17T05:14:38Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 67,
@@ -21478,7 +21478,7 @@
           "owner": "[CEO]",
           "test": "ACTION (5 min, only you) - OneProvider could not charge your card \u00b7 mail 'Automatic Payment Failed' 15 Nov 10:20Z and again 16 Nov 05:29Z: invoice #10195427, $25.20, due today 16 Nov \u00b7 same morning 'OneCloud: Low Credit Balance Warning': balance $10.70 - the cloud VPN servers there use about $3.90 a day, so about 2-3 days before they can be suspended (it happened on 9 Sep) \u00b7 what you do: OneProvider panel > Billing > Invoices > #10195427 > pay; then check the card in Billing > Automatic Payments \u00b7 check whether this is the same card Apple Ads declined (row 776) - one new card may fix both \u00b7 if nothing: servers suspended around 18-19 Nov, users lose those locations",
           "verify": "applinks123 inbox shows a OneProvider 'Payment Confirmation'/'Invoice Paid' mail for #10195427; no 'suspended' mail; DevOps: all OneProvider nodes answer",
-          "evidence": "[CEO office 2026-11-16 07:02-07:4xZ, scheduled, on time, unattended, board met] read-only inbox search newer_than:1d: OneProvider Automatic Payment Failed x2 (15 Nov 10:20:21Z, 16 Nov 05:29:09Z), Customer Invoice #10195427 $25.20 (15 Nov 10:20:12Z), OneCloud Low Credit Balance $10.70 (15 Nov 10:20:21Z). Daily cost ~$3.90 from row 344.",
+          "evidence": "[CEO office 2026-11-16 07:02-07:4xZ, scheduled, on time, unattended, board met] read-only inbox search newer_than:1d: OneProvider Automatic Payment Failed x2 (15 Nov 10:20:21Z, 16 Nov 05:29:09Z), Customer Invoice #10195427 $25.20 (15 Nov 10:20:12Z), OneCloud Low Credit Balance $10.70 (15 Nov 10:20:21Z). Daily cost ~$3.90 from row 344. | [DEVOPS infra-expiry 2026-11-17 05:2xZ, scheduled] STILL UNPAID + WORSE THAN THIS ROW SAYS: read-only inbox search newer_than:4d = 'Automatic Payment Failed' x4 (15 Nov 10:20Z; 16 Nov 05:29Z, 10:19Z, 10:25Z), NO 'Payment Confirmation'/'Invoice Paid' mail; 'Low Credit Balance Warning' 15 Nov 10:20Z = $10.70, 16 Nov 10:25Z = $4.88 -> measured burn ~$5.80/day (not $3.90) -> balance reaches $0 around 17 Nov ~06-08Z. Live OneProvider /vm/list 05:13Z: all 9 hourly OneCloud servers still 'Active' (Hong Kong, Sydney, Tokyo, Sao Paulo, Mexico City, Miami, Montreal, Singapore, Bangkok). On 18 Oct they were suspended at -$1.95. Pay #10195427 today.",
           "category": "finance"
         },
         {
@@ -94066,9 +94066,43 @@
       "completedDate": null,
       "notes": "[DEVOPS 2026-11-17T00:45:19Z] AGAIN on the OLD login (setting file absent): run 20261117T001855Z hidden rc=3, Bangkok control L3 FAIL (exit IP / page check), so 0 of 11 live servers got a hidden-mode verdict; plain mode the same hour 11 of 12 pass (Sydney L5, the known flap). The separate hidden-mode full check at 00:17Z passed 11 of 11 live servers, so users were fine - only this instrument went blind. Worth fixing before the review period ends: a blind check raises VpnStandardControlFailed and hides real outages. || [DEVOPS 2026-11-17T00:42:28Z] CORRECTION (17 Nov 00:4xZ): yesterday's rollback reason was WRONG. The limited login did not break the hourly check. MEASURED: (1) the 16:17Z run's hidden-mode result file shows the CONTROL server (Bangkok, the test server) passed L2/L3/L5 but failed L4 (1 MB download in time) - so the check stopped before testing the live servers ('CONTROL FAILED - instrument broken'). (2) That same control failure happened 9 more times in the kept runs 9-16 Nov on the OLD login (10 of 194 runs, almost all L4 on Bangkok). (3) The real probe run today 00:36-00:41Z on two live servers (Miami, Montreal) plus the Bangkok control: old login hidden 3/3 PASS + plain 3/3 PASS; limited login hidden 3/3 PASS + plain 3/3 PASS - identical results, 1 MB in 0.8-1.1 s. So step 2 itself was fine; the rollback was not needed. What is left here: make the control less brittle (e.g. retry the control once, or a second control node) so one slow Bangkok download does not blank the 11 live results and raise VpnStandardControlFailed. Also on Bangkok: a stale test-range peer 10.66.98.253 (never handshaked) left by an old run - harmless (the probe takes the next free address), remove on the next Bangkok visit. Lockdown step 2 no longer waits on this ticket. || ",
       "updatedAt": "2026-11-17T00:45:19Z"
+    },
+    {
+      "id": "xd-3189",
+      "from": "[DEVOPS]",
+      "to": "[CEO]",
+      "title": "Handoff from DEVOPS: [P0] Pay OneProvider invoice #10195427 today - prepaid balance ~$0, 9 VPN servers at risk of suspension",
+      "description": "Evidence (17 Nov 05:2xZ): 4x 'Automatic Payment Failed' mails 15-16 Nov, no paid mail; balance $10.70 (15 Nov 10:20Z) -> $4.88 (16 Nov 10:25Z), burn ~$5.80/day; live /vm/list 05:13Z all 9 OneCloud servers Active. Same item as CEO card row 804 (one item, one handoff). Done when: 'Invoice Paid' mail + balance > $25 + 0 suspended; DevOps re-checks /vm/list.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-11-17T05:14:37Z",
+      "createdDate": "2026-11-17",
+      "completedDate": null
+    },
+    {
+      "id": "xd-3190",
+      "from": "[DEVOPS]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from DEVOPS: [P1] Nightly infra check cannot see the OneProvider prepaid balance - add a balance/low-funds item",
+      "description": "Gap measured 17 Nov: infra_inventory_check.py check_billing reads /server/list + /vm/list only; /vm/list 'instances' rows carry domainstatus/hourlyPrice/charges but no account balance, and 'next due 0000-00-00' for the 9 hourly VMs -> the check said 'ok' at 04:20Z while the balance was ~$0 (18 Oct outage had the same cause). Options: find the OneProvider API account/credit endpoint (read-only), else read the 'Low Credit Balance Warning' mails (applinks123) and feed a balance item; crit when days-of-funds < 3. Do not guess-call write endpoints.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-11-17T05:14:37Z",
+      "createdDate": "2026-11-17",
+      "completedDate": null
     }
   ],
   "importantNotes": [
+    {
+      "id": "note-devops-infra-20261117",
+      "date": "2026-11-17",
+      "createdAt": "2026-11-17T05:25:00Z",
+      "dept": "[DEVOPS]",
+      "priority": "P0",
+      "resolved": false,
+      "title": "[DEVOPS 17 Nov] 9 VPN servers may switch off today: the OneProvider bill is still unpaid",
+      "text": "WHAT: OneProvider's 'cloud' servers are paid from a prepaid balance. The card was refused 4 times (15-16 Nov) for invoice #10195427 ($25.20). The balance was $4.88 yesterday at 10:25 UTC and drops about $5.80 a day, so it runs out this morning (17 Nov). WHO IS HIT: Hong Kong, Sydney, Tokyo, Sao Paulo, Mexico City, Miami, Montreal, Singapore and the Bangkok test server - 9 of our 12 locations. They are still on at 05:13 UTC. WHAT HAPPENS IF IT LAPSES: OneProvider suspends them (it did on 18 Oct, at minus $1.95); users lose those locations; deletion follows ~5 days later. WHERE TO PAY: panel.op-net.com (applinks123 account) > Billing > Invoices > #10195427, pay with a card that works, add funds, and turn Automatic Payments back on. Everything else in the nightly check is fine: 196 items, 0 problems."
+    },
     {
       "date": "2026-11-17T00:34:05Z",
       "note": "[MARKETING 2026-11-17 00:33Z] iPhone 4.3.3 (build 109) is WAITING_FOR_REVIEW at Apple (CEO 'submit now'). FREEZE for every session until Apple answers: no edit of store text/pictures/build, no deploy of sign-in or access-gate code, no change to the review account (claude-dev), lockdown step 2 retry and main-server restart wait; any server change -> re-check a connect right after. Old draft submission ea142714 (10 unknown items) untouched. Report: outputs/store-listing-4.3.3-check-2026-11-16.md section 12.",
