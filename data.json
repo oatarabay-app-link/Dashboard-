@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-11-19T23:22:35Z",
+  "lastUpdated": "2026-11-19T23:28:35Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 67,
@@ -32709,13 +32709,13 @@
       "id": "desktop-ios-parity-2026-11",
       "name": "Desktop = iPhone 4.3.3 (build 109): every protocol, hidden mode, every feature (Windows + Linux)",
       "weight": 0.0,
-      "progress": 19,
+      "progress": 24,
       "phase": 3,
       "priority": "P0",
       "owner": "Desktop",
       "status": "in_progress",
       "blocked": false,
-      "blocker": "2026-11-19T11:25:45Z: next = Windows tunnel run, hidden-mode transport, OpenVPN, IKEv2, heartbeat/telemetry wiring. No CEO action open except the 2 DECISION rows (signing certificate, web checkout).",
+      "blocker": "2026-11-19T23:28:25Z: WireGuard proven on real nodes from Linux and Windows. Next = A2b (19 s connect), hidden-mode transport, OpenVPN, IKEv2, telemetry wiring. CEO: 2 DECISION rows open (signing certificate, web checkout).",
       "deps": [
         "all-platforms-2026-11"
       ],
@@ -32755,15 +32755,25 @@
           "addedBy": "[DESKTOP] desktop-ios-parity 19 Nov"
         },
         {
-          "test": "A2 WireGuard WINDOWS on a real fleet node (>1 KB received, node name, build hash) + full Linux app Connect with kill switch/routes/DNS on a desktop Linux",
-          "met": false,
-          "passed": false,
-          "verifiedBy": null,
-          "verifiedAt": null,
-          "evidence": "CEO 2026-11-19 (live chat): 'new test account finalize it' -> dev account desktop-qa made on api.dev (DEV DB only, e-mail confirmed in the dev DB, password in the vault file). Linux half PROVEN - see row A2a. LEFT: Windows run (GitHub Windows runner as admin with the QA switch, or the CEO Windows VM) and the full-route Linux run. || CEO YES 2026-11-19 (live chat): 'Yes, use it' - to 'use the QA test account on the dev server to connect desktop to a real VPN server'. [DESKTOP 2026-11-19T10:49:31Z] MEASURED after the yes: that account does not exist on dev - POST api.dev /api/auth/login -> 401 'Invalid email or password'; dev DB read-only count: 0 Users with that e-mail of 189 (24 test-like accounts, no passwords on file); the one vault test account is labelled PROD DB. Nothing created, production not contacted. WAITS CEO (asked in chat 19 Nov): A) make a new desktop QA account on dev (advice) or B) use the staff account against production. || [DESKTOP same-run check 2026-11-18T20:35:51Z] NOT PROVEN. Code path done: Connect -> POST /api/servers/{id}/wireguard-config with a key made on the computer -> connect_plan (kill switch -> tunnel -> routes + DNS). Linux steps commit 04d629bca. Windows still behind the QA switch CASPERVPN_WINDOWS_TUNNEL_TEST=1 until a real Windows run. Next: dev QA test account against api.dev (asked the CEO in chat), then Windows on a GitHub runner or the CEO VM.",
+          "test": "A2 WireGuard WINDOWS on a real fleet node through the app's real Connect path (>1 KB received, node name, build)",
+          "met": true,
+          "passed": true,
+          "verifiedBy": "tested",
+          "verifiedAt": "2026-11-19T23:28:25Z",
+          "evidence": "CEO 2026-11-20 (live chat): 'Yes, Windows next'. [DESKTOP same-run check 2026-11-19T23:28:25Z] PROVEN on fleet node Los Angeles (node-us-la, 208.87.243.205) from a GitHub Windows runner (Windows NT 10.0.26100, x64, admin), build d-branch run 44636207581, the app's REAL path ConnectionManager::connect -> local key -> POST wireguard-config -> WFP kill switch -> Wintun + WireGuard -> routes + DNS: exit IP 68.154.126.240 (control) -> 208.87.243.205; download 300000 bytes; tunnel rx_bytes=351139 tx=27610; disconnect ok; IP after = 68.154.126.240; 'APP PROBE PASSED'. Server record (dev ConnectionLogs): DeviceType Windows, 'Windows x86_64', BytesDownloaded 351139. BUG FOUND + FIXED on the way (measured, runs 44631991366 + 44634034576): the app said Connected before Windows routed through the adapter - TCP failed at once (10065), lookups 11004, seconds later all worked; fix = connect_plan::ensure_routable (no-packet UDP connect must pick the tunnel address, 8 s cap, rollback). Core tests after: Windows 278, Linux 272 + app 19 passed. LIMITS: runner is Windows Server-class 26100 x64, not a Windows 10/11 PC and not ARM64; the Windows path is still behind the QA switch. See row A2b for what is left. || CEO 2026-11-19 (live chat): 'new test account finalize it' -> dev account desktop-qa made on api.dev (DEV DB only, e-mail confirmed in the dev DB, password in the vault file). Linux half PROVEN - see row A2a. LEFT: Windows run (GitHub Windows runner as admin with the QA switch, or the CEO Windows VM) and the full-route Linux run. || CEO YES 2026-11-19 (live chat): 'Yes, use it' - to 'use the QA test account on the dev server to connect desktop to a real VPN server'. [DESKTOP 2026-11-19T10:49:31Z] MEASURED after the yes: that account does not exist on dev - POST api.dev /api/auth/login -> 401 'Invalid email or password'; dev DB read-only count: 0 Users with that e-mail of 189 (24 test-like accounts, no passwords on file); the one vault test account is labelled PROD DB. Nothing created, production not contacted. WAITS CEO (asked in chat 19 Nov): A) make a new desktop QA account on dev (advice) or B) use the staff account against production. || [DESKTOP same-run check 2026-11-18T20:35:51Z] NOT PROVEN. Code path done: Connect -> POST /api/servers/{id}/wireguard-config with a key made on the computer -> connect_plan (kill switch -> tunnel -> routes + DNS). Linux steps commit 04d629bca. Windows still behind the QA switch CASPERVPN_WINDOWS_TUNNEL_TEST=1 until a real Windows run. Next: dev QA test account against api.dev (asked the CEO in chat), then Windows on a GitHub runner or the CEO VM.",
           "owner": "[DESKTOP]",
           "addedAt": "2026-11-18T20:35:51Z",
           "addedBy": "[DESKTOP] desktop-ios-parity orchestrator 18 Nov"
+        },
+        {
+          "test": "A2b WireGuard polish before beta: Connect under 5 s on Windows, a Windows 10/11 PC run, ARM64 run, full-route Linux run on a desktop Linux, remove the Windows QA switch",
+          "met": false,
+          "passed": false,
+          "verifiedBy": null,
+          "owner": "[DESKTOP]",
+          "addedAt": "2026-11-19T23:28:25Z",
+          "addedBy": "[DESKTOP] desktop-ios-parity 20 Nov",
+          "evidence": "[DESKTOP same-run check 2026-11-19T23:28:25Z] OPEN, measured: Connect took 19101 ms in the passing run (2776-2822 ms in the two runs before the routing wait) - which step takes the extra ~16 s is NOT measured yet (the probe did not print the core's timing lines). Also unexplained: the server row for the passing run shows DisconnectedAt 11.5 min after ConnectedAt although the client disconnected within about a minute, and the diagnostic run of 23:07Z has no row of its own - hypothesis only: the disconnect report or session-row matching; needs a look with [BACKEND] if it repeats."
         },
         {
           "test": "A3 OpenVPN UDP + TCP (Windows: bundled OpenVPN 2.6 + ovpn-dco-win, GPL notice; Linux: openvpn)",
