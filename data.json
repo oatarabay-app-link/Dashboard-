@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-11-19T05:09:25Z",
+  "lastUpdated": "2026-11-19T05:18:58Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 67,
@@ -22141,6 +22141,26 @@
           "addedAt": "2026-11-19T05:01:45Z",
           "addedBy": "[BACKEND] backend-daily (Mac task) 19 Nov",
           "evidence": "xd-3201 (closed 19 Nov); asked once here."
+        },
+        {
+          "test": "READY TO SHIP - website search-engine fixes from the Ahrefs check (19 Nov, xd-3209) \u00b7 what: (1) the 20 translated guide pages now tell search engines their real language (they all said English); (2) the page /support leaves the sitemap (it is a copy of /help); (3) the 'Best VPN 2026' page gets a link from the comparisons page (no page linked to it); (4) unknown addresses still answer 'not found' with the normal menu \u00b7 why: Ahrefs marks these as errors; wrong language tags make Google show the wrong page to Arabic, Spanish, German... readers \u00b7 tested on dev: development 3756be9b8 + ae2ae18e1 live on dev.caspervpn.com 05:3xZ - 22/22 language pages lang matches hreflang (live site: 20 of 22 wrong), /support not in sitemap, /compare links /best-vpn, /xyz /es /de/guides/nope = 404 with header+footer (browser), Arabic page header unchanged (screenshot); tsc 0 (planted error caught), next build 'Compiled successfully' 145/145 on dev tree AND on production+cherry-picks (cherry-pick clean, no conflict) \u00b7 note: page folders move into website/app/(site)/ - ship together with or after the home redesign row; a cherry-pick of either order is rename-safe \u00b7 rollback: git revert the two commits on production (website redeploys by itself) \u00b7 advice: YES, low risk, no text or design change",
+          "verify": "curl -s https://caspervpn.com/de/guides/vpn-public-wifi | grep -o '<html[^>]*>'  (want lang=\"de\"); curl -s https://caspervpn.com/sitemap.xml | grep -c '/support<' (want 0)",
+          "met": false,
+          "passed": false,
+          "verifiedBy": null,
+          "owner": "[CEO]",
+          "addedAt": "2026-11-19T05:18:52Z",
+          "addedBy": "[WEBSITE] website-daily (Mac task)"
+        },
+        {
+          "test": "ACTION - Cloudflare: turn OFF 'Email Address Obfuscation' for caspervpn.com (xd-3209). It turns every e-mail address on our site into a link to /cdn-cgi/l/email-protection, which search engines see as a broken page (15 live pages: contact, privacy, terms, about, help, business, blog...). Steps: 1. dash.cloudflare.com -> caspervpn.com 2. Scrape Shield (or Security -> Settings) 3. Email Address Obfuscation -> Off. Visitors lose nothing: the addresses stay readable and clickable. Our Cloudflare key on the server can only change addresses, not this switch (checked 19 Nov: 'Authentication error'). Advice: do it - one tap, removes the last broken link Ahrefs reports.",
+          "verify": "curl -s https://caspervpn.com/contact | grep -c cdn-cgi  (want 0)",
+          "met": false,
+          "passed": false,
+          "verifiedBy": null,
+          "owner": "[CEO]",
+          "addedAt": "2026-11-19T05:18:52Z",
+          "addedBy": "[WEBSITE] website-daily (Mac task)"
         }
       ],
       "progress": 80,
@@ -95277,11 +95297,13 @@
       "to": "[WEBSITE]",
       "title": "Handoff from MARKETING: [WEBSITE] Fix Ahrefs Site Audit errors (health 85): broken email-protection links, hreflang/lang, 404s, orphans",
       "description": "Ahrefs Site Audit (project Caspervpn, 18 Nov 2026): Health 85/100, AI score 85 with machine readability 34. Fix list: (1) Cloudflare Email Obfuscation makes /cdn-cgi/l/email-protection links that answer 404 on 4 blog pages (e.g. /blog/check-vpn-working-3-minutes) - turn it off for caspervpn.com or print support@ as plain text; (2) hreflang vs <html lang> mismatch on 20 pages (not the 156 sitemap pages - the language versions); (3) 2 x 404/4XX pages + 13 pages linking to broken pages; (4) 10 orphan pages + 2 canonical URLs with no internal links; (5) 1 non-canonical page in the sitemap; (6) machine readability 34 -> structured data on guides. Read exact URLs per issue in Ahrefs (app.ahrefs.com/site-audit/10723872 -> Issues). Full read: marketing/engine/2026-11-18/ahrefs-audit.md. Dev first, same-run check, READY TO SHIP row for prod.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P2",
       "createdAt": "2026-11-18T13:21:33Z",
       "createdDate": "2026-11-18",
-      "completedDate": null
+      "completedDate": null,
+      "blocker": "waits CEO card list index 864 ('READY TO SHIP - website search-engine fixes') and list index 865 ('ACTION - Cloudflare: turn OFF Email Address Obfuscation')",
+      "progressNote": "[WEBSITE same-run check 2026-11-19T05:18:52Z] Live crawl (167 pages): (1) 15 pages carry Cloudflare e-mail links -> /cdn-cgi/l/email-protection 404 = the only broken target found; needs the Cloudflare switch (CEO tap, our key is DNS-only). (2) 20 translated guides had lang=en -> fixed on dev (two root layouts), dev 22/22 match. (3) the only 404 found is (1). (4) only sitemap page with no internal link = /best-vpn -> linked from /compare on dev. (5) non-canonical in sitemap = /support -> removed on dev. (6) guides already carry FAQPage + Organization + SoftwareApplication JSON-LD (measured /guides/vpn-for-business); Ahrefs 'machine readability' sub-checks not readable without its issue lists - no change. Ahrefs' own lists (10 orphans, 2x4XX) could not be opened from here; our crawl is the control. Production ship = CEO YES on the READY TO SHIP row; verify commands on both rows."
     },
     {
       "id": "xd-3210",
