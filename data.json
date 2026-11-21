@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-11-21T07:19:08Z",
+  "lastUpdated": "2026-11-21T07:33:56Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 67,
@@ -22356,9 +22356,31 @@
           "addedBy": "[CTO] finalize-open-tasks 2026-11-21",
           "verify": "next routines-watchdog row on the main server reads '18 healthy, 0 stale'",
           "evidence": ""
+        },
+        {
+          "test": "READY TO SHIP - [DEVOPS] P0 nginx security patch (xd-3244): a published hole in nginx's HTTP/2 code (CVE-2026-123633 + CVE-2026-123007, remote code execution, fixed in nginx 1.30.7) is open on the main server (nginx 1.25.5) and on all 11 relays (1.24.0 x8, 1.22.1 Debian x2, 1.30.6 LA) - every one has http2 on port 443 \u00b7 what: (A) main server: nginx image 1.25-alpine -> 1.30.7-alpine (development 432aa19), recreate only the nginx container (~5 s gap for api/website); (B) relays: package update to 1.30.7 one canary relay (Miami) first, check /cc 101 + '/' 200 + h2 + 'server: nginx', then the other 7 Ubuntu relays + LA; the 2 Debian relays (NL-AM2, DE-DU, Debian's own 1.22.1, no fix in their package list yet) move to the nginx.org repo or get 'http2 off' until Debian ships it \u00b7 why: remote takeover of the server that holds the users' database \u00b7 tested on dev: Bangkok dev relay upgraded 1.24.0 -> 1.30.7 at 07:27Z (backup /root/nginx-etc-bak-20261121-xd3244.tgz), nginx -t ok, /cc 101, '/' 200, ALPN h2, server: nginx (no version leak); dev main-server config passes nginx -t on nginx:1.30.7-alpine (throwaway container, dev-brain) \u00b7 rollback: main server - set the image back to nginx:1.25-alpine and recreate nginx; relay - restore the /etc/nginx backup and 'apt-get install nginx=<old version>' \u00b7 stop-gap if you prefer to wait: 'http2 off' on the main server (one line x3, reload) \u00b7 advice: YES today, the fix has been public since 18 Nov",
+          "met": false,
+          "passed": false,
+          "verifiedBy": null,
+          "owner": "[DEVOPS]",
+          "addedAt": "2026-11-21T07:33:48Z",
+          "addedBy": "[DEVOPS] daily run",
+          "verify": "main server: docker exec caspervpn-nginx nginx -v = 1.30.7 and api/www/AASA 200; each relay nginx -v = 1.30.7 (or http2 off on Debian), /cc 101, front_path_check green 11/11",
+          "evidence": ""
+        },
+        {
+          "test": "READY TO SHIP - [DEVOPS] blocked-users report counts real iPhone users again (xd-3243; no customer, no app touched - one number in a report script on the main server) \u00b7 what: the 05:00 report treats iPhone build 109 (4.3.3, on sale since 18 Nov) as a test phone, so real App Store users are dropped from the country counts; set its store build to 109 (development 2537925) \u00b7 tested: same counting query on production, read-only, 21 Nov 07:3xZ: guest accounts wrongly hidden as test phones 38 at build 101 -> 5 at build 109 \u00b7 rollback: put 101 back (one line) \u00b7 advice: YES",
+          "met": false,
+          "passed": false,
+          "verifiedBy": null,
+          "owner": "[DEVOPS]",
+          "addedAt": "2026-11-21T07:33:48Z",
+          "addedBy": "[DEVOPS] daily run",
+          "verify": "next connectivity report header: ios_store_build 109, test_phone_builds about 5",
+          "evidence": ""
         }
       ],
-      "progress": 81,
+      "progress": 80,
       "blocked": false,
       "blocker": "",
       "deps": [],
@@ -95219,7 +95241,7 @@
       "from": "[QA]",
       "to": "[DEVOPS]",
       "title": "Handoff from QA: Nightly speed report measures how much users download, not how fast the tunnel is: add a peak sample and the road",
-      "description": "MEASURED 16 Nov (QA speed run): since the 26 Sep rewrite the nightly report (/root/Casper/scripts/throughput-report.sh) prints bytes-in-the-hour / seconds-connected per user-hour. Typical values are 0.01-0.5 Mbps on lines that can do far more (e.g. Lebanon WireGuard p50 0.07, Saudi CasperCloak p50 0.56), so a real speed regression cannot be seen and the routine's 40% drop rule fires on quieter users (Saudi WireGuard p50 -60% on 16 Nov while its p90/max doubled). ASK (dev first, CEO gate before production): (1) when the usage sync books a poll, keep per user+server+hour the largest single poll delta (bytes and seconds) next to the hourly sum, and print it in the report as peak Mbps; (2) record the CasperCloak road (direct / native front) on the connection row and print it, so Gulf sessions can prove or disprove the native front (first Gulf CasperCloak traffic is on record: Saudi 7.64 Mbps hour-average 8 Nov, road unknown). ACCEPTANCE: one nightly report with a peak column and a road column, and a control: a timed test download on a test account shows a peak within 30% of the measured speed. Numbers and method: memory/departments/ceo/context/throughput-history.md entry 2026-11-16; skill reference caspercloak-throughput.md section 2026-11-16.\n\n[finalize 2026-11-19] waiting on: xd-3208 first ([BACKEND] adds the peak columns); then [DEVOPS] adds the peak + road columns to the report.\n\n[finalize 2026-11-20] waiting on: unchanged since the line above (not re-measured this run).\n\n[finalize 2026-11-21] waiting on: unchanged since the line above (not re-measured this run).",
+      "description": "MEASURED 16 Nov (QA speed run): since the 26 Sep rewrite the nightly report (/root/Casper/scripts/throughput-report.sh) prints bytes-in-the-hour / seconds-connected per user-hour. Typical values are 0.01-0.5 Mbps on lines that can do far more (e.g. Lebanon WireGuard p50 0.07, Saudi CasperCloak p50 0.56), so a real speed regression cannot be seen and the routine's 40% drop rule fires on quieter users (Saudi WireGuard p50 -60% on 16 Nov while its p90/max doubled). ASK (dev first, CEO gate before production): (1) when the usage sync books a poll, keep per user+server+hour the largest single poll delta (bytes and seconds) next to the hourly sum, and print it in the report as peak Mbps; (2) record the CasperCloak road (direct / native front) on the connection row and print it, so Gulf sessions can prove or disprove the native front (first Gulf CasperCloak traffic is on record: Saudi 7.64 Mbps hour-average 8 Nov, road unknown). ACCEPTANCE: one nightly report with a peak column and a road column, and a control: a timed test download on a test account shows a peak within 30% of the measured speed. Numbers and method: memory/departments/ceo/context/throughput-history.md entry 2026-11-16; skill reference caspercloak-throughput.md section 2026-11-16.\n\n[finalize 2026-11-19] waiting on: xd-3208 first ([BACKEND] adds the peak columns); then [DEVOPS] adds the peak + road columns to the report.\n\n[finalize 2026-11-20] waiting on: unchanged since the line above (not re-measured this run).\n\n[finalize 2026-11-21] waiting on: unchanged since the line above (not re-measured this run).\n\n[DEVOPS run 2026-11-21 0724, scheduled, unattended] Not started this run (P0 nginx first). Next DEVOPS run: peak column from BandwidthUsageLogs PeakBytes/PeakSeconds (5-120 s rows only) on development.",
       "status": "pending",
       "priority": "P2",
       "createdAt": "2026-11-16T06:52:11Z",
@@ -95227,7 +95249,7 @@
       "completedDate": null,
       "notes": "[DEVOPS run 2026-11-18 0724, scheduled] MEASURED: throughput-report.sh reads BandwidthUsageLogs (columns Id, UserId, ServerId, BytesUsed, RecordedAt only) - the hourly compaction keeps no per-poll delta, so a peak column needs the usage sync to store it first (backend code + migration). Handed to [BACKEND] xd-3208. DevOps adds the report columns + excludes the check account once the data exists. || [QA 2026-11-17 speed run] Two more reasons the nightly report needs per-account context: (1) the Lebanon WireGuard line fell from 32-75 user-hours a day to 5 because ONE always-on account went quiet on 16 Nov (it made 27-50 hour-rows a day on 8-14 Nov) - one person, not a trend; (2) every IKEv2 connection row (1129 in 30 days, 2 accounts) is an automated check that visits all 11 servers every ~6 h with 0-4 s sessions and 0 bytes - not a user. Suggest: print users-behind-the-line and exclude the check account. Detail: memory/departments/ceo/context/throughput-history.md, entry 2026-11-17.\n\n[BACKEND live 2026-11-19 22:5xZ, CEO answers on the Mac] Backend side LIVE: BandwidthUsageLogs.PeakBytes + PeakSeconds fill on every hour row (fastest single poll). Peak Mbps = PeakBytes*8/PeakSeconds/1e6. Your report column + the timed-download control can start.\n\n[BACKEND run 2026-11-20 0411, backend-daily (Mac task), scheduled, unattended] xd-3208 CLOSED: the data is there since 19 Nov 22:56Z, every hour row carries PeakBytes + PeakSeconds (checked 20 Nov 04:2xZ, 39 of 39 rows after the ship, 0 of 125 before). For the report: peak Mbps = \"PeakBytes\"*8/\"PeakSeconds\"/1e6, and keep only rows where \"PeakSeconds\" between 5 and 120 (two rows had a 54-minute poll - that is an average, not a peak). First numbers: hourly max 4.9-65.5 Mbps, median peak 0.1-1.8 Mbps. The road column is not built (optional part); say on this item if you still need it.",
       "blocker": "none - BACKEND xd-3208 is done and live (20 Nov proof on it); this is now DEVOPS work: add the peak column to throughput-report.sh",
-      "updatedAt": "2026-11-21T05:21:16Z"
+      "updatedAt": "2026-11-21T07:33:48Z"
     },
     {
       "id": "xd-3173",
@@ -96211,26 +96233,34 @@
       "from": "[WEBSITE]",
       "to": "[DEVOPS]",
       "title": "Handoff from WEBSITE: [P2] Dev website deploy leaves dev.caspervpn.com on 502 until the dev nginx is reloaded",
-      "description": "MEASURED 20 Nov 05:14-05:30Z: after the dev website container was recreated (05:14:33Z, new IP 172.18.0.2), dev.caspervpn.com answered 502 for 15+ min. caspervpn-dev-nginx website.dev.conf has `upstream dev_website_backend { server website:3001; }` - nginx resolves 'website' once at start and kept the OLD container IP. `nginx -s reload` inside the container fails ('invalid PID number \"\" in /run/nginx.pid'); `docker kill -s HUP caspervpn-dev-nginx` fixed it at once (200). FIX: the dev deploy step should HUP the dev nginx after recreating the website (or use `resolver 127.0.0.11 valid=10s` + a variable proxy_pass). Check production nginx does not have the same pattern. Done by [WEBSITE] website-daily: the one HUP on dev only.\n\n[finalize 2026-11-21] measured for the 'check production' ask, 05:16Z, read-only: production nginx does NOT have the pattern for the WEBSITE (website.conf uses 'resolver 127.0.0.11' + 'proxy_pass http://$website_upstream', so a new website container is found again). It DOES have fixed names for the API and the admin (nginx.conf 'server caspervpn-api:8080', 'server admin-react:3000') and /root/deploy_api.sh has no nginx reload step; no failure seen from it (api /health 200 after each recent deploy) - whether a recreate that changes the container address would give 502 on production is a HYPOTHESIS, not tested. waiting on: [DEVOPS] - the dev deploy step (HUP the dev nginx), and a decision on the two production upstreams.",
-      "status": "pending",
+      "description": "MEASURED 20 Nov 05:14-05:30Z: after the dev website container was recreated (05:14:33Z, new IP 172.18.0.2), dev.caspervpn.com answered 502 for 15+ min. caspervpn-dev-nginx website.dev.conf has `upstream dev_website_backend { server website:3001; }` - nginx resolves 'website' once at start and kept the OLD container IP. `nginx -s reload` inside the container fails ('invalid PID number \"\" in /run/nginx.pid'); `docker kill -s HUP caspervpn-dev-nginx` fixed it at once (200). FIX: the dev deploy step should HUP the dev nginx after recreating the website (or use `resolver 127.0.0.11 valid=10s` + a variable proxy_pass). Check production nginx does not have the same pattern. Done by [WEBSITE] website-daily: the one HUP on dev only.\n\n[finalize 2026-11-21] measured for the 'check production' ask, 05:16Z, read-only: production nginx does NOT have the pattern for the WEBSITE (website.conf uses 'resolver 127.0.0.11' + 'proxy_pass http://$website_upstream', so a new website container is found again). It DOES have fixed names for the API and the admin (nginx.conf 'server caspervpn-api:8080', 'server admin-react:3000') and /root/deploy_api.sh has no nginx reload step; no failure seen from it (api /health 200 after each recent deploy) - whether a recreate that changes the container address would give 502 on production is a HYPOTHESIS, not tested. waiting on: [DEVOPS] - the dev deploy step (HUP the dev nginx), and a decision on the two production upstreams.\n\n[DEVOPS run 2026-11-21 0724, scheduled, unattended] MEASURED: dev nginx /run/nginx.pid is 0 bytes (since 20 Nov 05:14) = why 'nginx -s reload' fails. FIX development 7db8cbe: dev-deploy.sh now reloads with 'docker kill -s HUP caspervpn-dev-nginx'. [DEVOPS same-run check] 07:33Z HUP on dev: master PID 1 kept, workers new (3 s), dev.caspervpn.com 200, api.dev /health 200. Production API/admin fixed upstream names: no failure seen (deploy_api.sh health-checks after each deploy); the 502-on-recreate is a hypothesis - watched, reopen on the first 502 after a deploy.",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-11-20T05:33:14Z",
       "createdDate": "2026-11-20",
-      "completedDate": null,
-      "updatedAt": "2026-11-21T05:21:16Z"
+      "completedDate": "2026-11-21",
+      "updatedAt": "2026-11-21T07:33:48Z",
+      "completedAt": "2026-11-21",
+      "completedBy": "[DEVOPS]",
+      "resolution": "[DEVOPS same-run check 2026-11-21] dev deploy reloads nginx by HUP (development 7db8cbe); HUP tested on dev 07:33Z: 200/200.",
+      "resultingHandoff": "none"
     },
     {
       "id": "xd-3236",
       "from": "[CTO]",
       "to": "[DEVOPS]",
       "title": "Handoff from CTO: [P2] Mexico City unreachable from the main server 35 min on 19 Nov 21:59-22:33Z (box stayed up) - no ticket was saved",
-      "description": "[system-check L4 20 Nov 05:4xZ] MEASURED: Mexico City (147.78.1.27) was unreachable from the main server for 35 min, 19 Nov 21:59Z -> 22:33Z. Prometheus ALERTS (step 60 s): NodeExporterDown mex-01, ServiceDown 147.78.1.27 / :22 / :5002, ServiceDown https://s8.pompesh.com/, CCRelayUnreachable mx - all 21:59Z -> 22:33Z. The server list dropped it (VpnServers 'Mexico City' IsActive back true, UpdatedAt 22:36:54Z). The box itself did NOT go down: 'uptime -s' = 2026-06-26, its journal keeps writing 7-16 lines every minute through the gap, and the main server's SSH logins stop 21:59Z and return 22:35Z. So the path between the main server and Mexico broke, not the box (cause = hypothesis: provider network / route). Now: :5002/health 200, :22 open, fleet loop 12/12. No ticket existed: the 01:16Z alert-triage run says its board save was refused twice. ASK: read OneProvider's status/notices for the Mexico location for 19 Nov 21:59-22:33Z and the node's interface counters; note: these 9 cloud servers run on a prepaid balance ($24.88 on 17 Nov, ~$5.80/day) - check the balance is not the cause and is topped up before it hits 0.\n\n[finalize 2026-11-21] waiting on: [DEVOPS] - OneProvider notices for the Mexico location and the prepaid balance (needs the provider panel). Seen this run only: Mexico City relay active, 1 real phone session, in the 11-of-11 relay check at 05:16Z.",
-      "status": "pending",
+      "description": "[system-check L4 20 Nov 05:4xZ] MEASURED: Mexico City (147.78.1.27) was unreachable from the main server for 35 min, 19 Nov 21:59Z -> 22:33Z. Prometheus ALERTS (step 60 s): NodeExporterDown mex-01, ServiceDown 147.78.1.27 / :22 / :5002, ServiceDown https://s8.pompesh.com/, CCRelayUnreachable mx - all 21:59Z -> 22:33Z. The server list dropped it (VpnServers 'Mexico City' IsActive back true, UpdatedAt 22:36:54Z). The box itself did NOT go down: 'uptime -s' = 2026-06-26, its journal keeps writing 7-16 lines every minute through the gap, and the main server's SSH logins stop 21:59Z and return 22:35Z. So the path between the main server and Mexico broke, not the box (cause = hypothesis: provider network / route). Now: :5002/health 200, :22 open, fleet loop 12/12. No ticket existed: the 01:16Z alert-triage run says its board save was refused twice. ASK: read OneProvider's status/notices for the Mexico location for 19 Nov 21:59-22:33Z and the node's interface counters; note: these 9 cloud servers run on a prepaid balance ($24.88 on 17 Nov, ~$5.80/day) - check the balance is not the cause and is topped up before it hits 0.\n\n[finalize 2026-11-21] waiting on: [DEVOPS] - OneProvider notices for the Mexico location and the prepaid balance (needs the provider panel). Seen this run only: Mexico City relay active, 1 real phone session, in the 11-of-11 relay check at 05:16Z.\n\n[DEVOPS run 2026-11-21 0724, scheduled, unattended] MEASURED: (1) prepaid balance is NOT the cause - OneProvider 'Invoice Payment Confirmation' #10205908 $25.20 on 19 Nov 21:10Z, 49 min BEFORE the gap, and only Mexico dropped (a suspension takes all 9). (2) no OneProvider maintenance/notice mail for 19-21 Nov in Gmail. (3) box stayed up (CTO). Cause = path/route between London and Mexico, not proven further. Close+watch: reopen if Mexico drops again (the alarms NodeExporterDown/CCRelayUnreachable mx will show it).",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-11-20T05:47:28Z",
       "createdDate": "2026-11-20",
-      "completedDate": null,
-      "updatedAt": "2026-11-21T05:21:16Z"
+      "completedDate": "2026-11-21",
+      "updatedAt": "2026-11-21T07:33:48Z",
+      "completedAt": "2026-11-21",
+      "completedBy": "[DEVOPS]",
+      "resolution": "[DEVOPS 2026-11-21] close+watch: payment ok 19 Nov 21:10Z, no provider notice, box up; cause = network path, one-off so far.",
+      "resultingHandoff": "none"
     },
     {
       "id": "xd-3237",
@@ -96251,13 +96281,14 @@
       "from": "[DEVOPS]",
       "to": "[DEVOPS]",
       "title": "Handoff from DEVOPS: [P2] Watchdog pages 'stale' every 2 h for the weekly OpenVPN count (limit missing, 36 h default)",
-      "description": "[DEVOPS routines-health 2026-11-20, scheduled, unattended] MEASURED: RoutineRuns 'routines-watchdog' = fail every 2 h since 19 Nov 12:47Z (9 rows in 26 h), summary '17 healthy, 1 stale, 0 never ran, 0 failing'; Details: openvpn-weekly 'has not run for 53 h (expected within 36 h)'; /var/log/routines-watchdog.log 02:47Z 'mail: telegram 200' (CEO pinged). CAUSE (read, not guessed): /etc/cron.d/openvpn-weekly-count runs Mondays 06:10Z only (card row 647 control, added 17 Nov); routines_watchdog.py line 162 uses EXPECTED_MAX_AGE_H.get(name, DEFAULT_MAX_AGE_H=36) and openvpn-weekly is not in the dict (grep openvpn = 0 hits). Nothing is broken - the weekly count ran ok 17 Nov 23:44Z and next runs Mon 23 Nov 06:10Z; it will go stale again every Wednesday. FIX: add \"openvpn-weekly\": 192 to EXPECTED_MAX_AGE_H in routines_watchdog.py (development first, then production under the CEO gate - it is a production script); verify = next watchdog row reads 18 healthy, 0 stale. Same class as xd-1173. Rollback: remove the one dict line.\n\n[finalize 2026-11-21] in progress: FIX BUILT on development a4974ef6 (infrastructure/scripts/routines_watchdog.py: 'openvpn-weekly': 8*24 h, same as the other weekly job), not live. Before: live script md5 29c9b33e = production = development (clean base). Re-measured 05:16Z: 21 'fail' rows vs 3 'ok' in 48 h, newest 04:47Z '17 healthy, 1 stale ... openvpn-weekly has not run for 77 h (expected within 36 h)', 'mail: not needed'. Test (module loaded both ways): OLD 77 h -> stale (control), NEW 77 h -> healthy, NEW 200 h -> stale (still catches a missed week), 'backups' 77 h -> stale in both. LEFT: CEO YES on the new READY TO SHIP row (first words 'READY TO SHIP - [DEVOPS] watchdog false alarm'), then [DEVOPS] installs the file; verify = next watchdog row reads 18 healthy, 0 stale.",
+      "description": "[DEVOPS routines-health 2026-11-20, scheduled, unattended] MEASURED: RoutineRuns 'routines-watchdog' = fail every 2 h since 19 Nov 12:47Z (9 rows in 26 h), summary '17 healthy, 1 stale, 0 never ran, 0 failing'; Details: openvpn-weekly 'has not run for 53 h (expected within 36 h)'; /var/log/routines-watchdog.log 02:47Z 'mail: telegram 200' (CEO pinged). CAUSE (read, not guessed): /etc/cron.d/openvpn-weekly-count runs Mondays 06:10Z only (card row 647 control, added 17 Nov); routines_watchdog.py line 162 uses EXPECTED_MAX_AGE_H.get(name, DEFAULT_MAX_AGE_H=36) and openvpn-weekly is not in the dict (grep openvpn = 0 hits). Nothing is broken - the weekly count ran ok 17 Nov 23:44Z and next runs Mon 23 Nov 06:10Z; it will go stale again every Wednesday. FIX: add \"openvpn-weekly\": 192 to EXPECTED_MAX_AGE_H in routines_watchdog.py (development first, then production under the CEO gate - it is a production script); verify = next watchdog row reads 18 healthy, 0 stale. Same class as xd-1173. Rollback: remove the one dict line.\n\n[finalize 2026-11-21] in progress: FIX BUILT on development a4974ef6 (infrastructure/scripts/routines_watchdog.py: 'openvpn-weekly': 8*24 h, same as the other weekly job), not live. Before: live script md5 29c9b33e = production = development (clean base). Re-measured 05:16Z: 21 'fail' rows vs 3 'ok' in 48 h, newest 04:47Z '17 healthy, 1 stale ... openvpn-weekly has not run for 77 h (expected within 36 h)', 'mail: not needed'. Test (module loaded both ways): OLD 77 h -> stale (control), NEW 77 h -> healthy, NEW 200 h -> stale (still catches a missed week), 'backups' 77 h -> stale in both. LEFT: CEO YES on the new READY TO SHIP row (first words 'READY TO SHIP - [DEVOPS] watchdog false alarm'), then [DEVOPS] installs the file; verify = next watchdog row reads 18 healthy, 0 stale.\n\n[DEVOPS run 2026-11-21 0724, scheduled, unattended] Fix built (development a4974ef6/47cd96e). Waits only the CEO YES on the existing card row 881 ('READY TO SHIP - [DEVOPS] watchdog false alarm').",
       "status": "pending",
       "priority": "P2",
       "createdAt": "2026-11-20T05:55:23Z",
       "createdDate": "2026-11-20",
       "completedDate": null,
-      "updatedAt": "2026-11-21T05:21:16Z"
+      "updatedAt": "2026-11-21T07:33:48Z",
+      "blocker": "waits CEO card list index 881 (READY TO SHIP)"
     },
     {
       "id": "xd-3239",
@@ -96317,24 +96348,28 @@
       "from": "[QA]",
       "to": "[DEVOPS]",
       "title": "Handoff from QA: [P2] Blocked-users report hides real iPhone 4.3.3 users: IOS_STORE_BUILD still 101, build 109 on sale since 18 Nov",
-      "description": "Measured 21 Nov 06:3xZ by [QA] blocked-users run (read-only). /opt/caspervpn/connectivity_report.sh on the UK-LON brain still has IOS_STORE_BUILD=101 (its own header line 56: 'BUMP IOS_STORE_BUILD when a new iOS version goes on sale (4.3.3 = 109)'). 4.3.3 is on sale since 18 Nov (App Store state READY_FOR_SALE, 18 Nov sessions note). So the xd-3136 test-phone rule drops every guest whose only iPhone build is 109 = real App Store users. Production DB count 21 Nov: 19 such guest accounts; 10 had sessions in the last 24 h (US 6, IR 2, RU 1, LB 1), 9 of them moved over 1 MB. Effect today: Iran read '1 user, 0 with traffic = BLOCKED?' while 2 more Iran build-109 users moved real data (e.g. one 135 MB on 21 Nov 05:57Z); fleet 'users with real traffic' reads 12, real is about 21. ASK: set IOS_STORE_BUILD=109 (or better: read the on-sale build instead of a hand-set number, so the next release does not repeat this). Same-run check: re-run the report; header ios_store_build = 109, test_phone_builds drops from 38 to about 19, IR users >= 3. Config edit on the brain = DEVOPS work; QA changed nothing.",
+      "description": "Measured 21 Nov 06:3xZ by [QA] blocked-users run (read-only). /opt/caspervpn/connectivity_report.sh on the UK-LON brain still has IOS_STORE_BUILD=101 (its own header line 56: 'BUMP IOS_STORE_BUILD when a new iOS version goes on sale (4.3.3 = 109)'). 4.3.3 is on sale since 18 Nov (App Store state READY_FOR_SALE, 18 Nov sessions note). So the xd-3136 test-phone rule drops every guest whose only iPhone build is 109 = real App Store users. Production DB count 21 Nov: 19 such guest accounts; 10 had sessions in the last 24 h (US 6, IR 2, RU 1, LB 1), 9 of them moved over 1 MB. Effect today: Iran read '1 user, 0 with traffic = BLOCKED?' while 2 more Iran build-109 users moved real data (e.g. one 135 MB on 21 Nov 05:57Z); fleet 'users with real traffic' reads 12, real is about 21. ASK: set IOS_STORE_BUILD=109 (or better: read the on-sale build instead of a hand-set number, so the next release does not repeat this). Same-run check: re-run the report; header ios_store_build = 109, test_phone_builds drops from 38 to about 19, IR users >= 3. Config edit on the brain = DEVOPS work; QA changed nothing.\n\n[DEVOPS run 2026-11-21 0724, scheduled, unattended] FIX on development 2537925 (default IOS_STORE_BUILD 101 -> 109). Same-run check on production, read-only temp tables: test_phone_builds 38 (101) -> 5 (109), play_robots 57 both. Production script install = CEO card row 883.",
       "status": "pending",
       "priority": "P2",
       "createdAt": "2026-11-21T06:38:29Z",
       "createdDate": "2026-11-21",
-      "completedDate": null
+      "completedDate": null,
+      "updatedAt": "2026-11-21T07:33:48Z",
+      "blocker": "waits CEO card list index 883 (READY TO SHIP)"
     },
     {
       "id": "xd-3244",
       "from": "[CEO]",
       "to": "[DEVOPS]",
       "title": "Handoff from CEO: [P0] Critical NGINX HTTP/2 flaw (CVE-2026-123633 + CVE-2026-123007, CVSS 9.2): patch main server + 11 relays",
-      "description": "MEASURED 21 Nov 07:0xZ (read-only): brain container caspervpn-nginx = nginx/1.25.5 (image nginx:1.25-alpine); /etc/nginx/conf.d api.conf:104, website.conf:30, sentry.conf:23 = 'listen 443 ssl http2'. Board notes: relays run nginx 1.24 and US-LA 1.30.6 with an h2 decoy. Fixed versions: 1.30.7 stable / 1.31.9 mainline (oss-security 18 Nov https://www.openwall.com/lists/oss-security/2026/11/18/16; DigitalOcean mail 20 Nov 17:53Z to applinks123). Ask: (1) build the patched image on dev (nginx:1.30.7-alpine or newer), nginx -t, probes api/www/AASA/dashboard 200; (2) relay plan: canary 1 node, keep decoy headers/ALPN, /cc canary 11/11; (3) one READY TO SHIP row on the CEO card today with rollback; stop-gap if the patch slips: http2 off on the main server (relay h2 decoy stays until patched). Board 21 Nov decision 1. Live change = CEO YES (law 4).",
+      "description": "MEASURED 21 Nov 07:0xZ (read-only): brain container caspervpn-nginx = nginx/1.25.5 (image nginx:1.25-alpine); /etc/nginx/conf.d api.conf:104, website.conf:30, sentry.conf:23 = 'listen 443 ssl http2'. Board notes: relays run nginx 1.24 and US-LA 1.30.6 with an h2 decoy. Fixed versions: 1.30.7 stable / 1.31.9 mainline (oss-security 18 Nov https://www.openwall.com/lists/oss-security/2026/11/18/16; DigitalOcean mail 20 Nov 17:53Z to applinks123). Ask: (1) build the patched image on dev (nginx:1.30.7-alpine or newer), nginx -t, probes api/www/AASA/dashboard 200; (2) relay plan: canary 1 node, keep decoy headers/ALPN, /cc canary 11/11; (3) one READY TO SHIP row on the CEO card today with rollback; stop-gap if the patch slips: http2 off on the main server (relay h2 decoy stays until patched). Board 21 Nov decision 1. Live change = CEO YES (law 4).\n\n[DEVOPS run 2026-11-21 0724, scheduled, unattended] MEASURED read-only 07:2xZ: CVE real (oss-security 18 Nov 2026/11/18/16, fixed 1.30.7/1.31.9; the page gives no CVSS - '9.2' is not on it; mitigation in the post = http2 off). Main server nginx/1.25.5 (nginx:1.25-alpine), http2 on api/website/sentry. Relays: 1.24.0-1~jammy on hkg/mex/mia/mtl/sgp/syd/sao/tyo (nginx.org repo, candidate 1.30.7 available), 1.30.6 LA (candidate 1.30.7), 1.22.1-9+deb12u10 Debian on NL-AM2 + DE-DU (no newer candidate in lists of 1-2 Nov), all with 'listen 443 ssl http2'. DEV DONE: Bangkok dev relay -> 1.30.7 07:27Z (note: inside the :15-:35 probe window, restart ~1 s), /cc 101, / 200, h2, server: nginx; dev config ok on nginx:1.30.7-alpine. development 432aa19 (both compose files). READY TO SHIP = CEO card row 882.",
       "status": "pending",
       "priority": "P0",
       "createdAt": "2026-11-21T07:08:55Z",
       "createdDate": "2026-11-21",
-      "completedDate": null
+      "completedDate": null,
+      "updatedAt": "2026-11-21T07:33:48Z",
+      "blocker": "waits CEO card list index 882 (READY TO SHIP)"
     },
     {
       "id": "xd-3245",
