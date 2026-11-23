@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-11-23T22:25:39Z",
+  "lastUpdated": "2026-11-23T22:38:49Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 67,
@@ -22700,6 +22700,17 @@
           "verify": "Play robot read: internal track shows [40].",
           "evidence": "[ANDROID 23 Nov ~18:2xZ] CEO verbatim (relayed by the iPhone session): 'send android 40 live'. DONE: 40 (casper-40-88783229e.aab, sha256 f6204e3c...e9a5d7) uploaded by the Play robot to INTERNAL, committed edit 14614647993650180506; read back internal [40] completed, production [31]. NOT DONE: the PRODUCTION release - this session's permission layer refused it again (same as 38); not worked around. CEO action: Play Console > CasperVPN > Test and release > Internal testing > release 40 > Promote release > Production > Start rollout. Note: 40 has not been tried on a phone yet. || [ANDROID 23 Nov ~18:00Z] CEO decision (relayed by the iPhone session), verbatim: 'both on 3rd succesfull connectin then after 3 days then on every 1oth succcesfull connection both apps'. BUILT for Android in version 40 (2.4.0) = 39 + this: commit 88783229e on dev/android-la-trial-fix-2026-11-23 (pushed); signed bundle _android/play-assets-1123-b40/casper-40-88783229e.aab sha256 f6204e3c...e9a5d7, versionCode 40 read back by the build script. Rule: first ask from the 3rd successful user connect once the app is >= 3 days old, then every 10 successes; once-per-version limit gone; upgraded phones count their 10 from now. Android now sends review_prompt_requested + rating_prompt_shown (both on the server whitelist). Unit tests 659 pass, 0 fail (asks #3, #13, #23; none before 3 days; upgrade). NOT uploaded; NOT proven on a phone (Google shows the box only to Play installs and rations it).",
           "blocker": "internal done; production = CEO Console click"
+        },
+        {
+          "test": "READY TO SHIP - Admin dashboard: a 'New users' tile next to Total Users and a 'New free trials' tile next to Free trials now, and a small Day / Week / Month / Custom filter on the tiles (new users, active users, iPhone, Android, Web, new free trials) - your words 24 Nov \u00b7 every number = the people its click opens \u00b7 Servers and Monthly Revenue move to the third row so four tiles fit per row \u00b7 admin pages + one small server list filter, no database change \u00b7 tested on the development server and in a preview \u00b7 rollback: previous server and admin images kept \u00b7 A = ship now \u00b7 B = wait \u00b7 advice A",
+          "verify": "admin.caspervpn.com/dashboard: tiles 'New users' and 'New free trials' with Day / Week / Month / Custom; the number on a tile = the Users list its click opens",
+          "owner": "[ADMIN-PANEL]",
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "addedAt": "2026-11-23T22:38:43Z",
+          "addedBy": "[ADMIN-PANEL] live 24 Nov",
+          "evidence": "development a3dd26d91; xd-3275."
         }
       ],
       "progress": 80,
@@ -97249,13 +97260,14 @@
       "id": "xd-3275",
       "from": "[CEO]",
       "to": "[ADMIN-PANEL]",
-      "title": "Handoff from CEO: Admin dashboard: 'New users' + 'New free trials' tiles and a Day / Week / Month / Custom filter on the tiles (CEO 24 Nov live) - BUILT on development, LEFT: dev check + CEO YES to ship",
+      "title": "Handoff from CEO: Admin dashboard: 'New users' + 'New free trials' tiles and a Day / Week / Month / Custom filter on the tiles (CEO 24 Nov live) - BUILT + dev-checked, LEFT: CEO YES to ship (card row)",
       "description": "CEO 24 Nov 2026 live (Claude Code on the Mac): 'i want a new tab next to users new users today and same next to trials. in addition tabs should have small filters on each tab to filter in 1 day 1 week 1 month or custom date. and what happened in tracing web users and connecting them to actual downloads or accounts and if they downloaded the app or not yet'. BUILT development a3dd26d91 (admin + a thin backend read filter, no schema change): row 1 = Total Users / New users (new, default Day) / Active Users (Day-Week-Month) / Online; row 2 = iPhone / Android / Web (All by default; with a period = new real people on that app who joined in it); row 3 = Free trials now / New free trials (new, default Day) / Monthly Revenue / Servers. Every period number is read from the SAME Users list its click opens (pageSize 1 -> totalCount), so tile = rows. Days = UTC calendar days, both ends included (Day = today UTC, Week = last 7, Month = last 30). Backend: GET /api/admin/users takes trialStartedAfter / trialStartedBefore (Users.TrialStartedAt; Services/AdminDayRange.cs). Users page: chip 'Free trial started: ...'; the App tabs hide their counts when another filter narrows the list. Proof: backend tests 1447/1447 (8 new), tsc 5.4.5 src 0 + planted control 1, build OK, local preview vs a stand-in API (every tile = its list total; a click on a filter never opens the list). OPEN QUESTION for the CEO in the answer: days are UTC, so 'today' changes at 2 am Beirut - switch to Beirut time or keep UTC like the rest of the admin. WEB TRACING (answered in chat, verified in production code): the 'web' label = an account that has never opened an app (Services/UserPlatforms.cs rule 5; worked out fresh each time, so it moves to iPhone / Android when the app is first used); the website's store buttons carry no tracking (website/components/app-store-button.tsx plain store URLs) and web sign-up sends nothing about the visit, so a website VISITOR cannot be linked to a store install today; the Funnels tab (xd-3130, CAS-451/452) is on development only, not on production.",
       "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-11-23T22:18:01Z",
       "createdDate": "2026-11-24",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[ADMIN-PANEL same-run check, dev, 2026-11-23T22:38:43Z] Dev deploy run 45278192158 success 22:35Z, dev at a3dd26d91; admin.dev bundle main.ad3c22bd.js 2,325,665 B ('New free trials' 1, 'period-new-users' 1, 'Free trial started' 1, old 'Trial starts today' 0). Dev API with a 10-min admin token minted on the box vs dev SQL (UTC today 23 Nov): users all 230 = 230; trialStartedAfter/Before all kinds = SQL TrialStartedAt count: day 0 = 0, week 66 = 66, month 125 = 125, 1-10 Nov 23 = 23, only-from 165 = only-to 165 = SQL 165 ever; a garbage date = no filter (230); joinedAfter/Before all kinds = SQL: week 73 = 73, month 151 = 151, 1-10 Nov 27 = 27; real (the tile number): trials week 40 / month 84, joined week 47 / month 106 with ios + android + web = 1+0+46 and 4+1+101 (= the real total); activeWithinDays 1 / 7 / 30 = SQL 0 / 73 / 150. Production cherry-pick prepared in the same worktree (branch ship/period-tiles-1124, clean, 10 files): tsc 5.4.5 src 0 + planted control 1, backend tests 1270/1270 - NOT pushed. Local preview vs stand-in: every tile = the list total its click opens; filter clicks never open the list. NOT PROVEN: a signed-in click on admin.dev (no login). || "
     },
     {
       "id": "xd-3276",
