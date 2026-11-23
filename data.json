@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-11-23T11:57:57Z",
+  "lastUpdated": "2026-11-23T12:09:59Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 67,
@@ -22573,14 +22573,14 @@
         {
           "test": "READY TO SHIP - blog posts, blog categories and the affiliates page showed the top bar and the bottom bar twice (23 Nov, xd-3259) \u00b7 what: on every blog post, every blog category page and /affiliates the page drew its own top bar and bottom bar on top of the ones every page already gets, so each was there twice (the two top bars sit exactly on top of each other, so you could not see it, but search engines and phones load both); the small logo also no longer asks the browser to load it before the big main picture \u00b7 why: found while checking Marketing's note that blog posts mark 3 pictures 'load this first' - the doubled top bar was the cause; the main picture now loads first \u00b7 tested on dev: dev.caspervpn.com/affiliates 1 top bar, 1 bottom bar, 0 'load first' marks (live today: 2, 2, 3); control /pricing and home unchanged (1 bar each); phone width 390 no sideways scroll, heading below the top bar; type check 0 errors (planted error caught), build 'Compiled successfully' 145/145; the same commit applies cleanly onto production (type check 0, build 135/135). Blog posts cannot be shown on dev (no blog database there) - same page code. \u00b7 ship: cherry-pick development f47974c5f onto production (website deploy) \u00b7 rollback: git revert that commit on production \u00b7 advice: YES - removes a duplicate, nothing new on the page.",
           "verify": "for p in /blog/vpn-free-trial-how-it-works /affiliates /blog/category/privacy; do curl -s https://caspervpn.com$p | grep -o '<header class=\"fixed' | wc -l; done (want 1 each, today 2); curl -s https://caspervpn.com/blog/vpn-free-trial-how-it-works | grep -o 'alt=\"CasperVPN\"[^>]*fetchPriority=\"high\"' | wc -l (want 0, today 2)",
-          "met": false,
-          "passed": false,
-          "verifiedBy": null,
+          "met": true,
+          "passed": true,
+          "verifiedBy": "tested",
           "owner": "[CEO]",
           "addedAt": "2026-11-23T04:58:46Z",
           "addedBy": "[WEBSITE] website-daily (Mac task)",
-          "blocker": "CEO YES given; pushed, waits the website deploy job",
-          "evidence": "[CEO live 2026-11-23 ~11:48Z, Claude Code on the Mac: \"3 ship all\"] CEO YES. Shipped: production cebbcd877 (cherry-pick -x of f47974c5f = db268f5c6), pushed 11:50:20Z; website deploy job pending (live 11:52Z still headers 2 / footers 2 / high 3 on /affiliates = before). || "
+          "evidence": "[CTO live 2026-11-23 12:1xZ, CEO YES \"3 ship all\"] SHIPPED + LIVE (tested): production cebbcd877 deployed; live 12:09:16Z /affiliates fixed top bars 1 / footers 1 / load-first 0 (before 2/2/3); blog post vpn-free-trial-how-it-works site header 1 (2nd <header> = article title block mb-10) / footer 1 / load-first only the hero (img + its preload); control /pricing 1/1. || [CEO live 2026-11-23 ~11:48Z, Claude Code on the Mac: \"3 ship all\"] CEO YES. Shipped: production cebbcd877 (cherry-pick -x of f47974c5f = db268f5c6), pushed 11:50:20Z; website deploy job pending (live 11:52Z still headers 2 / footers 2 / high 3 on /affiliates = before). || ",
+          "verifiedAt": "2026-11-23T12:10:00Z"
         },
         {
           "test": "READY TO SHIP - [CTO] Apple Ads tool: one new command that points an ad campaign at one of our two approved custom App Store pages (no customer, no app, no server is touched) \u00b7 what: your 19 Nov ads plan says the US Wi-Fi campaign should send people to the 'Public Wi-Fi travel' page once Apple approves it; Apple approved both pages on 21 Nov, but the tool had no way to attach a page. New: 'pages' only lists the pages and ads, and 'cpp' adds the page as an extra ad (the normal store page stays) \u00b7 why: asked by Growth on 22 Nov (xd-3258) \u00b7 tested 23 Nov on the main server with the real Apple Ads account, READ ONLY: both pages listed as VISIBLE, the US Wi-Fi ad group has 0 extra ads today, a made-up page id is refused with 'nothing changed'; the actual add (one call that creates an ad) was NOT run - Growth runs it once after your yes \u00b7 rollback: put the previous file back (one commit) \u00b7 advice: yes [xd-3258; development 5958cbee3]",
@@ -96526,14 +96526,16 @@
       "to": "[QA]",
       "title": "Handoff from IOS: Check on the next iPhone build: Gulf + listed countries start in hidden mode, Lebanon stays normal (iPhone list now 33)",
       "description": "[IOS] RESTRICT-1120 (CEO 20 Nov 2026: 'Add Gulf + listed ones'). The iPhone restricted-country list now has 33 countries (was 18): added Qatar, Kuwait, Iraq, Syria, Jordan, Yemen, Afghanistan, Kazakhstan, Azerbaijan, Bangladesh, Ethiopia, Eritrea, Uganda, Tanzania, Sudan. Lebanon stays out (normal mode). Same 33 as Android (version 33) and the server list ([BACKEND] session). Branch dev/ios-110-2026-11-19 commit 0ac1440ce (build 4.3.4 / 110 line). NOT uploaded to App Store Connect (needs its own CEO yes). [IOS] same-run check: tools/ios-tests/restrict1120/run.sh 3 passed 0 failed (control: the old file fails 2 of 3); tools/ios-tests/xd2957 17/17; arm64 simulator xcodebuild exit=0, 0 Swift errors. NOT PROVEN on a phone. QA to do, on the next iPhone build from this branch: set the phone Region to Qatar (or Kuwait) with no server flag -> first connect goes straight to hidden mode, no plain WireGuard fallback; set Region to Lebanon -> starts in normal mode. verify: bash tools/ios-tests/restrict1120/run.sh\n\n[finalize 2026-11-20] waiting on: the next iPhone build from dev/ios-110-2026-11-19 (needs its own CEO yes to upload) and the CEO's iPhone (Region Qatar/Kuwait, then Lebanon).\n\n[finalize 2026-11-21] waiting on: unchanged since the line above (not re-measured this run).\n\n[finalize 2026-11-22] waiting on: the next iPhone build from dev/ios-110-2026-11-19 (needs its own CEO yes to upload) and the CEO's iPhone (Region Qatar/Kuwait, then Lebanon). (item itself not re-measured: needs a phone, a build, an outside party or the CEO - not the server.)  [finalize 2026-11-23] waiting on: waits CEO YES on ceo-action-backlog list index 893 (build 110 READY TO SHIP, written 22 Nov), then a Mac Xcode archive + upload, then the CEO's iPhone (Region Qatar/Kuwait, then Lebanon).; card rows re-read 05:2xZ: 893 open.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P1",
       "createdAt": "2026-11-19T23:22:32Z",
       "createdDate": "2026-11-20",
       "completedDate": null,
       "updatedAt": "2026-11-22T09:25:00Z",
-      "blocker": "CEO YES given 23 Nov; production cebbcd877 pushed 11:50Z, waits the website deploy job",
-      "notes": "[QA run 2026-11-22 0908, scheduled, unattended, 2026-11-22T09:2xZ] Card row 893 (build 110 READY TO SHIP, [IOS] 22 Nov 07:41Z) exists and has no CEO answer yet (ceo-answers: nothing new 09:0xZ). Blocker correct; nothing for QA until the CEO YES + upload. || [QA run 2026-11-21 0908, scheduled, unattended, 2026-11-21T09:3xZ] Code re-check PASS: restrict1120/run.sh on branch dev/ios-110-2026-11-19 tip 0ac1440ce (blobless fetch) = '3 passed, 0 failed'; control = the same script on production 462450e fails 2 of 3 ('got 18'). No READY TO SHIP row for build 110 on the CEO card (searched 'ios-110', 'build 110', '4.3.4', 'RESTRICT-1120'; only row 852 mentions build 110 for the e-mail sign-up fix) -> handoff to [IOS]."
+      "blocker": "",
+      "notes": "[QA run 2026-11-22 0908, scheduled, unattended, 2026-11-22T09:2xZ] Card row 893 (build 110 READY TO SHIP, [IOS] 22 Nov 07:41Z) exists and has no CEO answer yet (ceo-answers: nothing new 09:0xZ). Blocker correct; nothing for QA until the CEO YES + upload. || [QA run 2026-11-21 0908, scheduled, unattended, 2026-11-21T09:3xZ] Code re-check PASS: restrict1120/run.sh on branch dev/ios-110-2026-11-19 tip 0ac1440ce (blobless fetch) = '3 passed, 0 failed'; control = the same script on production 462450e fails 2 of 3 ('got 18'). No READY TO SHIP row for build 110 on the CEO card (searched 'ios-110', 'build 110', '4.3.4', 'RESTRICT-1120'; only row 852 mentions build 110 for the e-mail sign-up fix) -> handoff to [IOS].",
+      "resolution": "[CTO live 2026-11-23 12:1xZ, CEO YES \"3 ship all\"] SHIPPED + LIVE (tested): production cebbcd877 deployed; live 12:09:16Z /affiliates fixed top bars 1 / footers 1 / load-first 0 (before 2/2/3); blog post vpn-free-trial-how-it-works site header 1 (2nd <header> = article title block mb-10) / footer 1 / load-first only the hero (img + its preload); control /pricing 1/1. || ",
+      "completedAt": "2026-11-23T12:10:00Z"
     },
     {
       "id": "xd-3231",
