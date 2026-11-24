@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-11-24T13:07:22Z",
+  "lastUpdated": "2026-11-24T13:08:07Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 67,
@@ -97669,11 +97669,13 @@
       "to": "[BACKEND]",
       "title": "Handoff from QA: IKEv2 sessions are not cut when a free user passes the data cap (one user went 281 MB over on 23 Nov)",
       "description": "MEASURED read-only 24 Nov 12:4xZ: security_command.py scale row 01 '>50 MB over' = 1, but it is a NEW account (525484c1, iPhone 4.3.3(109), NG, created 23 Nov 19:55Z, free cap 512 MB), not the 24 Oct double-count user (that one reset). It used 793 MB in its first cycle: one IKEv2 session on Singapore 20:18:21-21:34:23Z moved 769 MB. The api log shows every RADIUS Interim-Update counted (total=511096803 at 21:03:20Z, 799686964 at 21:33:20Z) but nothing cut the session after the cap was passed - it ran 30 more minutes, +281 MB, until the phone stopped it (RADIUS Stop). CONTROL: ConnectionLogs 30 d with a cap DisconnectReason: WireGuard (Protocol 0) 26, CasperCloak (3) 25, IKEv2 (2) 0 of 1,288 IKEv2 sessions (4 users). So the free cap is checked only at IKEv2 login (RadiusAuthController), never mid-session. Ask: when an Interim-Update takes a free user over the cap, end the IKEv2 session (RADIUS Disconnect/CoA, or the node's own kill) the way the WireGuard cap sweep does; test on dev with a small-cap test account; READY TO SHIP row for the CEO. Small today (4 IKEv2 users) - P2. verify: after the fix, a dev free account over cap on IKEv2 gets DisconnectReason with 'cap' within 5 min; production: security_command.py scale row 01 '>50 MB over' 0.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P2",
       "createdAt": "2026-11-24T12:44:52Z",
       "createdDate": "2026-11-24",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[BACKEND run 2026-11-24 1232, scheduled, unattended] MEASURED (code): the API has no way to end an IKEv2 session - node Flask API has no terminate route (only add/remove-user, ca-cert, mobileconfig), no RADIUS Disconnect (dae) on the nodes. The server-side check alone cannot stop the session. Node part handed to [DEVOPS] (new handoff, same run); backend adds the cap check in the Interim-Update path once that road exists. Not coded yet.",
+      "blocker": "waits [DEVOPS]: a node-side way to end one user's IKEv2 session (Flask terminate route or RADIUS Disconnect)."
     },
     {
       "id": "xd-3294",
@@ -97696,6 +97698,18 @@
       "status": "pending",
       "priority": "P0",
       "createdAt": "2026-11-24T13:05:44Z",
+      "createdDate": "2026-11-24",
+      "completedDate": null
+    },
+    {
+      "id": "xd-3296",
+      "from": "[BACKEND]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from BACKEND: [P2] IKEv2: a way for the API to end one user's IKEv2 session (free cap, xd-3293)",
+      "description": "xd-3293: a free user's IKEv2 session ran 281 MB past the cap because nothing can end an IKEv2 session mid-way. MEASURED 24 Nov (code, production branch): the node Flask API (infrastructure/flask/server.py) has only /ikev2/add-user, /ikev2/remove-user, /ikev2/ca-cert, /ikev2/mobileconfig - no session kill; VpnServerControlService has no IKEv2 terminate call; no strongSwan eap-radius 'dae' (RADIUS Disconnect) config in infrastructure/. ASK: pick and build ONE node-side road, on the test node first: (a) Flask POST /ikev2/terminate {username} that ends that user's IKE SA (ipsec/swanctl, same auth as add-user), or (b) eap-radius dae enabled so the API can send a RADIUS Disconnect-Request. Tell [BACKEND] the endpoint/port; backend then calls it from the RADIUS Interim-Update path when a free user passes the cap, with tests, and puts a READY TO SHIP row on the CEO card. Fleet change = CEO gate.",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-11-24T13:08:06Z",
       "createdDate": "2026-11-24",
       "completedDate": null
     }
