@@ -97794,7 +97794,8 @@
       "createdAt": "2026-11-24T00:08:10Z",
       "createdDate": "2026-11-24",
       "completedDate": null,
-      "blocker": "needs Xcode on the Mac (build + ReviewPromptManagerTests) for branch dev/ios-rate-rule-2026-11-24 96a94d880; then the version after 4.3.4. [APPS run 2026-11-24 0733, scheduled, fired 12:32Z, unattended]"
+      "blocker": "needs Xcode on the Mac (build + ReviewPromptManagerTests) for branch dev/ios-rate-rule-2026-11-24 96a94d880; then the version after 4.3.4. [APPS run 2026-11-24 0733, scheduled, fired 12:32Z, unattended]",
+      "notes": " || [IOS 24 Nov ~21:3xZ] 96a94d880 cherry-picked (-x) into dev/ios-trial-instant-2026-11-23 as d6f64ef30, so iPhone build 4.3.5 (114) carries RATE-RULE-3280 with SIGNOUT-HOME-1124 and the 113 pop-ups. TestFlight: 4.3.5 (114) uploaded 24 Nov ~23:3xZ ('Uploaded CasperVPN / EXPORT SUCCEEDED'); 4.3.4 train closed - 4.3.4 (112) is READY_FOR_SALE"
     },
     {
       "id": "xd-3281",
@@ -98180,6 +98181,18 @@
       "status": "pending",
       "priority": "P2",
       "createdAt": "2026-11-24T20:01:44Z",
+      "createdDate": "2026-11-24",
+      "completedDate": null
+    },
+    {
+      "id": "xd-3311",
+      "from": "[IOS]",
+      "to": "[BACKEND]",
+      "title": "Handoff from IOS: [P0] Put live 73619f8ce + f90350b4d: deleting an account frees its Apple/Google sign-in (CEO YES 24 Nov 'Yes, fix both') - NOT LIVE YET",
+      "description": "CEO bug 24 Nov 20:53Z: deleted his Apple account, then POST /api/auth/apple 401 x2 ('Apple token cryptographically validated' then 'Account is deactivated'): UserService.DeleteUserAsync kept AppleId on the soft-deleted row; AuthService Apple lookup (u.AppleId == sub) found it forever. On production: 73619f8ce (null ids on delete) + f90350b4d (security review of 73619f8ce): an ACTIVE account's ids become 'deleted:'+SHA-256(sub) (SsoTombstone), a banned (IsActive=false) account keeps raw ids so deleting cannot evade the ban, and a new Apple/Google account whose tombstone had TrialStartedAt gets the trial marked used + no auto-grant (AuthService.CarryTrialFromDeletedSsoAsync). Tests 6 incl controls; mutations fail them; full suite 1320/1320. PRODUCTION DB ALREADY CHANGED by the iOS session (CEO yes): UPDATE Users SET AppleId=NULL, GoogleId=NULL on soft-deleted rows holding an id -> UPDATE 1 (the CEO's own deleted row), 0 left. NOT DEPLOYED: the iOS session's /root/deploy_api.sh run was refused by its permission check (2nd time). Next: run /root/deploy_api.sh, then prove: delete a test Apple account, sign in again with the same Apple ID -> 200 + new account; its TrialStartedAt copied if the old one had a trial.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-11-24T21:22:52Z",
       "createdDate": "2026-11-24",
       "completedDate": null
     }
