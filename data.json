@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-11-24T13:28:17Z",
+  "lastUpdated": "2026-11-24T13:28:36Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 67,
@@ -97709,7 +97709,8 @@
       "priority": "P0",
       "createdAt": "2026-11-24T12:37:06Z",
       "createdDate": "2026-11-24",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[2026-11-24 15:28 CTO live] CTO note (xd-3294): the daily real-user data check now exists in `python3 tools/alert_triage_run.py measure` (sections 6 + 7). 24 Nov 13:23Z, real users only, attempts that carried more than 1 KiB: Duesseldorf 22 of 43 (51%, 11 of 11 users got data - one user's hidden-mode retries make 17 of the 21 failures), Los Angeles 7 of 9, Singapore 15 of 15, Amsterdam 2 of 2 (7 d: 10 of 22), Montreal 0 of 1, the other six 0 attempts. By the CEO's 4-in-5 rule Duesseldorf + Los Angeles print BROKEN; the hourly real-traffic check passes on all 11 nodes, so no node fix was run. For devops review: the node fix actions and the runbook section 'Fix on the spot' in runbooks/alerts.md."
     },
     {
       "id": "xd-3289",
@@ -97779,11 +97780,15 @@
       "to": "[CTO]",
       "title": "Handoff from MARKETING: Handoff from [MARKETING]: [P0] Build the CEO's 'fix servers on the spot' rule into the alert routine (node fix actions, repaired handoff command, real-user data check, CEO-TELL after 6 h)",
       "description": "CEO STANDING PERMISSION 24 Nov 2026 (live chat): 'server problems should be fixed on the spot with the right skills without getting back to me' + 'add what you would change'. Rule + limits: memory/context/alerting-and-decisions-policy.md sections 6-7 (reversible runbook repairs on VPN nodes/relays without a CEO row first; tell the CEO after; money, keys, deletes, main API/DB, no-runbook cases still go to him; unfixed > 6 h = Telegram). BUILD: (1) tools/alert_triage_run.py: repair the handoff command (22 Nov 04:16Z run: 'evidence noted on xd-2665 because the triage handoff command is broken'); (2) add fixed node actions for the section-6 repairs (restart VPN/relay/front service, restore documented NAT/forwarding, peer re-sync, monitoring agent restart, hide/un-hide a node in the app list), each with before/after real-traffic proof; (3) add `measure` output: per-server real-user data share from ConnectionLogs (finding = 5+ connections/day and <20% with data); (4) a `tell-ceo` action (CEO bot, token read on the brain only) used for 'fixed on the spot' notices and for anything unfixed > 6 h. The task texts casper-alert-triage (step 8) and casper-blocked-users-daily (extra step) were extended today and point here. Evidence of the gap: Miami hidden-mode relay dark 22 Nov 01:32Z -> 27.7 h with notes only; real users on Miami 0-1 MB/day 21-24 Nov; paying subscriber left (xd-3285); fleet numbers xd-3288.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P0",
       "createdAt": "2026-11-24T12:58:19Z",
       "createdDate": "2026-11-24",
-      "completedDate": null
+      "completedDate": "2026-11-24",
+      "notes": "\n[2026-11-24 15:28 CTO live] [CTO same-run check] BUILT + SHIPPED (development c41ddb94f, production 141c92bfd..8b6913040, tool files identical on both). PROVEN: (1) handoff command repaired - cause read from the 17 Nov run log: 'REFUSING TO PUSH - tasks drops from 208 to 0' (the command emptied its own board copy); after the fix a marked test handoff was created by the command itself and pushed (board tip 804ed16b5), closed in this push. (2) measure sections 6 + 7 run for real 24 Nov 13:23Z, 0 unread sections: real users only; attempt = ConnectionLogs or ConnectFailureEvents row; with data = more than 1 KiB (the app's own no-traffic line), more than 1 MB shown next to it; sessions under 20 s and user-cancelled attempts are not judged. Result 24 h (judged / with data): Duesseldorf 43 / 22 = 51% BROKEN by the 4-in-5 rule, but 11 of 11 users got data and 17 of 21 failures are one user's hidden-mode retries; Los Angeles 9 / 7 = 78% BROKEN by one attempt (6 of 7 users got data); Singapore 15 / 15 ok; all others under 5 attempts (no verdict); Amsterdam 7 d 10 of 22 = WATCH. Hourly real-traffic check 13:19Z: all 11 nodes PASS in standard mode. Paying customers with a failed attempt in the last 3 h: 0; last-3-failed: 0 (control: the same query over 2 days finds 4 rows). (3) node actions live: fix node-wg-restart | node-relay-restart | node-monitor-restart | node-nat-restore | node-hide | node-unhide <node> [--dry-run], probe <node>, read vsp. Dry run of all six on healthy Amsterdam (control Duesseldorf): all six REFUSED, exit 3, nothing changed. probe ams = PASS. (4) tell-ceo: one real test message sent, Telegram message id 194; repeat refused. (5) task text steps 2-4 + 8, devops runbook section 'Fix on the spot', index row, cto + devops skill lines, 2 trap rows. Tests: 22 pass, each rule with mutation controls. NOT PROVEN: no action has repaired a real fault (no node is broken; none was run for real); the hide / un-hide flip was only parse-checked on production, never executed. NOT BUILT (no runbook exists): peer re-sync, nginx front restart, wg-radius-accounting (off on Miami). SIDE EFFECT, repaired: my by-hand probe at 13:17Z made the 13:18Z hourly check skip; I started it again at 13:19Z (ran, all PASS) and the tool now refuses to probe near the hourly run. OPEN: the Mac clone must sync before the routine sees the new commands. verify: python3 tools/test_alert_triage_run.py ; python3 tools/alert_triage_run.py fix node-wg-restart ams --dry-run (must print REFUSED).",
+      "completedAt": "2026-11-24",
+      "completedBy": "[CTO]",
+      "resolution": "Built and shipped 24 Nov 2026 - proof, NOT PROVEN items and what was left out are in the notes of this handoff."
     },
     {
       "id": "xd-3295",
@@ -97887,11 +97892,14 @@
       "to": "[CTO]",
       "title": "Handoff from DEVOPS: TEST xd-3294 - proof that the alert-triage handoff command works again (CTO closes this in the same run)",
       "description": "Test handoff created by tools/alert_triage_run.py handoff after the 24 Nov fix (the command emptied its board copy on 17 + 22 Nov and the push was refused). No work needed.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "createdAt": "2026-11-24T13:27:18Z",
       "createdDate": "2026-11-24",
-      "completedDate": null
+      "completedDate": "2026-11-24",
+      "completedAt": "2026-11-24",
+      "completedBy": "[CTO]",
+      "resolution": "Test handoff: the repaired `alert_triage_run.py handoff` created and pushed it (board tip 804ed16b5). Nothing to do. Closed by the run that made it."
     }
   ],
   "importantNotes": [
