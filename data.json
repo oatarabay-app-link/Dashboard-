@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-11-25T14:56:14Z",
+  "lastUpdated": "2026-11-25T15:01:41Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 67,
@@ -23211,14 +23211,15 @@
         },
         {
           "test": "SHIPPED 2026-11-25 12:22Z | CEO ORDER 2026-11-25 (live Cowork CTO chat: 'its p0 ... fix now and ship') | [CTO] free data cap: the user is now told when the cap cuts the VPN - one phone message at the first cut of the month: 'Your free data is used up - You used this month's free 512 MB, so CasperVPN is paused. If your internet stops, open CasperVPN and tap Disconnect. Upgrade for unlimited data, or your free data comes back on <date>.' iPhone gets it now; Android needs one more server part (FCM) \u00b7 the app fixes that turn the VPN fully off are P0 for iPhone and Android \u00b7 rollback: DataCapPush__Enabled=false + /root/deploy_api.sh, or image caspervpn-api:rollback-202611251216",
-          "met": false,
-          "passed": false,
-          "verifiedBy": null,
+          "met": true,
+          "passed": true,
+          "verifiedBy": "tested",
           "owner": "[CTO]",
           "addedAt": "2026-11-25T12:25:00Z",
           "addedBy": "[CTO] live 2026-11-25",
           "verify": "brain: docker logs caspervpn-api --since 2h | grep -E 'data-cap push queued|APNs push sent successfully' (one queued line per first cut, then 'APNs push sent' for iPhone users with a token)",
-          "evidence": "[CTO live 2026-11-25 12:2xZ] production 088c5a046 (cherry-pick -x of development edd50a475 / 4bcaeb790); tests: development tree 1477/1477, production tree 1329/1329, the 2 new tests pass; /root/deploy_api.sh 12:16:52-12:22:08Z DEPLOY DONE OK (rollback tag caspervpn-api:rollback-202611251216, external /health 200); live dll: 'data-cap push queued' 1, text 1, control 'removing WG peer' 2. NOT PROVEN yet: a real cut sending the push - waits the next real cut (they come every 1-3 h)."
+          "evidence": "[CTO same-run check 2026-11-25 15:0xZ] PROVEN LIVE: API log 12:22-15:00Z: 5 data-cap cuts -> 5 'data-cap push queued (first cut this cycle)' for 5 different users (no repeats), 4 'APNs push sent successfully ... via production' (the 5th user has no iPhone push token), 0 'push skipped', 0 'APNs push failed'. Android still gets none until FCM (xd-3336). || [CTO live 2026-11-25 12:2xZ] production 088c5a046 (cherry-pick -x of development edd50a475 / 4bcaeb790); tests: development tree 1477/1477, production tree 1329/1329, the 2 new tests pass; /root/deploy_api.sh 12:16:52-12:22:08Z DEPLOY DONE OK (rollback tag caspervpn-api:rollback-202611251216, external /health 200); live dll: 'data-cap push queued' 1, text 1, control 'removing WG peer' 2. NOT PROVEN yet: a real cut sending the push - waits the next real cut (they come every 1-3 h).",
+          "verifiedAt": "2026-11-25T15:02:00Z"
         },
         {
           "test": "READY TO SHIP - [BACKEND] the promised free week for the paying iPhone subscriber (xd-3298; your order 24 Nov: 'add one more week at the end of his billing cycle as a compensation') \u00b7 what: a 'kept until' date on a customer's plan that Apple's end-of-plan notice and our hourly expiry check both respect (development b0ffe4272, 6 files, 2 new empty columns), then ONE update on his plan: kept until 18 Dec 2026 14:32 UTC \u00b7 why: without it both steps end his plan on 11 Dec and the week we promised him by mail never happens; Apple's own 'extend' tool is not safe here (cannot be undone, Apple mails him, their page does not say it works with renewal off, and our server ignores its notice) \u00b7 tested on dev 25 Nov 11:45Z: two throwaway accounts with an ended paid month - the one with a kept-until date stayed on Monthly, the control fell to Free; when its date ran out it fell to Free too; both deleted; 5 new tests, full suite 1463/1463 (production line 1332/1332, control 1327), mutation control 3 red \u00b7 rollback: revert + /root/deploy_api.sh; the two columns stay empty and harmless; his row from the backup \u00b7 a refund or his own cancel still end the plan; nothing an app sends can set the date; his dedicated IP is not tied to billing and stays \u00b7 NOT PROVEN: Apple's real end-of-plan notice against a live row (cannot be forged; unit-tested) - backend reads his row on 11 Dec after 14:33 UTC \u00b7 advice: YES",
