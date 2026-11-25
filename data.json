@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-11-25T14:29:02Z",
+  "lastUpdated": "2026-11-25T14:56:14Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 67,
@@ -23230,6 +23230,17 @@
           "addedBy": "[BACKEND] backend-daily 1125 (Mac)",
           "verify": "after the ship, main server read-only: select \"Status\",\"CompUntil\",\"CurrentPeriodEnd\" from \"Subscriptions\" where \"Id\"::text like '96e0c8a2%'  (expect 0, 2026-12-18 14:32:58+00); on 11 Dec after 14:33Z: Status still 0, plan Monthly; on 18 Dec after 15:33Z: ended, plan Free",
           "evidence": ""
+        },
+        {
+          "test": "SHIPPED to Play review 2026-11-25 13:28Z | CEO ORDER 2026-11-25 (live Cowork CTO chat: 'do the fixes now and ship new version to the store asap') | Android 42 (2.4.2): when the free data runs out the app turns the VPN fully off so the phone's internet works, and shows one notification with the upgrade \u00b7 in internal + production, waiting for Google's review \u00b7 stop it any time: Play Console > Production > halt rollout \u00b7 iPhone fix = xd-3335 (needs the Mac)",
+          "met": false,
+          "passed": false,
+          "verifiedBy": null,
+          "owner": "[CTO]",
+          "addedAt": "2026-11-25T14:55:00Z",
+          "addedBy": "[CTO] live 2026-11-25",
+          "verify": "Play edits API tracks.list: production releases 42 status completed; then a phone check (TECNO, dev free account, tiny cap): normal internet within ~4 min of the cut + the notification",
+          "evidence": "[CTO live 2026-11-25] see xd-3334 notes. NOT PROVEN on a phone; review state not visible in the API."
         }
       ],
       "progress": 87,
@@ -98685,11 +98696,13 @@
       "to": "[ANDROID]",
       "title": "Handoff from CTO: [P0] Free data cap: when the cut comes, the app must switch the VPN fully OFF so normal internet comes back, then show 'free data used up' (CEO 25 Nov: users blame us, one deleted the app)",
       "description": "MEASURED 25 Nov (production, read-only): the server DOES cut free users at the cap - 89 'data cap reached' cuts in 30 days (WireGuard 53, hidden mode 36), 48 since 22 Nov; apps notice within 14 s - 4 min and ask for a new config (API log 'Connect refused DATA_CAP_REACHED', iOS and Android). Almost nobody comes back after a cut (of 47 cut since 22 Nov, 4 connected again). Lebanon user 3d0d66f4: Android 2.3.1 (31), WireGuard, cut 20 Nov 14:40Z at 514/512 MB, two 402s on 22 Nov, gone. What fails is the PHONE side: the cut is silent, and the phone can keep a dead VPN up (or bring it back by itself) = no internet = 'phone froze'. Android 40 already has DEAD-FAST (3 dead checks -> disconnect + autoReconnect) and treats 402 as terminal, but NOT PROVEN on a phone what is left after a cap 402 in the background (VpnService still established? always-on / 'block connections without VPN' on? notification?). DO, on the 40 line: (1) on ANY 402 DATA_CAP_REACHED - user tap, autoReconnect, DEAD-FAST, AutoConnectWorker, boot, quick tile, hidden-mode recovery - call the full stop: VpnService.stopSelf + close the tun fd, forget the reconnect target, stop auto-connect for this cycle; (2) a system notification even with the app closed: 'Your free data is used up - CasperVPN is off, your internet works normally. Upgrade or wait until <reset date>' (tap -> paywall); (3) if Android always-on VPN is set for us, tell the user in that notification how to turn it off (we cannot turn it off from code); (4) a test on the TECNO with a dev free account at a tiny cap: connect, pass the cap, phone must have normal internet within 2 min and show the notification; (5) Play internal upload under the CEO card row, then production. Server side is LIVE since 25 Nov 12:22Z: a push at the first cut (iPhone only until FCM exists in the sender - FCM is a [BACKEND] item).",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P0",
       "createdAt": "2026-11-25T12:23:14Z",
       "createdDate": "2026-11-25",
-      "completedDate": null
+      "completedDate": null,
+      "blocker": "waits Google Play review of 42 (2.4.2), then a phone check on the CEO's TECNO (dev free account at a tiny cap) - outside",
+      "notes": "[CTO live 2026-11-25, CEO: 'do the fixes now and ship new version to the store asap'] BUILT + UPLOADED: branch dev/android-cap-stop-42-2026-11-25 87bed2498 (on 41 e8a42dfdf): [CAP-STOP] any 402 data cap (tap, auto-reconnect, dead-pipe, boot, tile) -> tunnel down + VPN service stopped + auto-reconnect off + one notification a day ('Your free data is used up - CasperVPN is off, your internet works normally again...', en + 11 languages); dead-pipe also fires when the newest WireGuard handshake is > 200 s old while the phone sends (catches idle phones the 4 KB rule missed). Built in the cloud box (JDK 21, SDK 36, Maven via Google mirror after Central 429): testProductionDebugUnitTest 666 tests / 0 failed / 3 skipped, CapStopRulesTest 6/6; bundleProductionRelease signed with our upload key, versionCode 42 read back (aapt2), package com.applinkoffshore.caspervpn; aab sha256 2f512eb548d14a100108cfcf5a0eb2d53fdf8d4d9e517674b0549cc49cc98da2. Play edits API 13:28Z: upload 200, internal + production releases '42 (2.4.2)' committed (edit 04274660527609521038), read back. Git tree of the pushed branch = the built tree (app tree id c8629ea1 both). NOT PROVEN on a phone. || "
     },
     {
       "id": "xd-3335",
