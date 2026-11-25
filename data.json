@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-11-25T10:55:58Z",
+  "lastUpdated": "2026-11-25T11:01:11Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 67,
@@ -98070,11 +98070,12 @@
       "to": "[BACKEND]",
       "title": "Handoff from MARKETING: Handoff from [MARKETING]: [P1] CEO YES - add ONE free week to the end of the paying iPhone subscriber's current period (compensation, xd-3285)",
       "description": "CEO YES 24 Nov 2026 (live chat): 'add one more week at the end of his billing cycle as a compensation'. User = the subscriber of xd-3285 (Apple One_Month_Subscription, Production, period 11 Nov -> 11 Dec 2026, auto-renew OFF since 20 Nov 13:11Z, dedicated-IP add-on). Wanted: Premium + his dedicated IP stay usable until 18 Dec 2026. Pick the safe way and prove it: Apple's 'extend subscription renewal date' (App Store Server API) if it applies to a non-renewing subscription, else a server-side entitlement extension that the Apple receipt sync and the 1 h reaper do NOT overwrite (traps: last receipt wins / negative Apple notification degrades the plan / dedicated IP entitlement). Backup first, one transaction, read back; same-run check; write the result on xd-3285. The customer mail promises this week.  [finalize 2026-11-25] waiting on: the [BACKEND] run - no blocker is written on it; not finishable from the server by this run.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-11-24T13:18:03Z",
       "createdDate": "2026-11-24",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[BACKEND run 2026-11-25 1040, backend-daily (Mac task), scheduled, unattended] IN WORK by this run since 11:05Z - do not rebuild. MEASURED: (1) Apple's own \"extend renewal date\" is not a safe road here: its page does not say whether it works with renewal switched off, it cannot be undone, Apple mails the customer, and our server ignores Apple's RENEWAL_EXTENDED notice (AppleReceiptService default branch only copies the renewal switch), so our expiry job would still end his row on 11 Dec (renewal-off rows get no grace). (2) Two places end his plan on 11 Dec: Apple's EXPIRED notice (AppleReceiptService) and the hourly SubscriptionExpiryService; the app-opened receipt check never downgrades on an old transaction; no access gate reads the end date itself. BUILT (Mac worktree, commit 171e77f19, push to development follows when the lock is free): Subscriptions.CompUntil + CompNote (migration 20261125110000, nullable, idempotent); while CompUntil is in the future both places keep the row Active on its plan and mark it to end at CompUntil; a refund or his own cancel still end it; nothing a client sends can set it. Tests 5 new, mutation control (rule off) 3 red, suite 1466/1466. Dedicated IP: its entitlement is not tied to billing (backend skill), it stays. After the ship: ONE update on his row (CompUntil = 18 Dec 14:32:58Z) with a backup and a read-back."
     },
     {
       "id": "xd-3299",
@@ -98156,7 +98157,8 @@
       "priority": "P1",
       "createdAt": "2026-11-24T13:41:38Z",
       "createdDate": "2026-11-24",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[BACKEND run 2026-11-25 1040, backend-daily (Mac task), scheduled, unattended] TWO backend runs worked this item at the same time: the other run pushed development e208bbe5a at 10:57:54Z (same rule, 4 tests); this run had the same fix ready (suite 1461/1461, mutation control 2 red) and DROPPED its copy - nothing of it was pushed. Added here: the answer to ask (2), MEASURED 10:55Z production read-only. YES, the hourly check's traffic was booked to both accounts. Sydney account 77960c90 (free, last own connection 13 Sep, last sign-in 10 Aug): 199.7 MB booked on Sydney 15-24 Nov (14-23 hours a day, 13-28 MB a day) = 199.7 of the 209.4 MB its counter shows this cycle (cap 512; cycle resets 10 Dec) - none of it is the customer's. Los Angeles account 568f0eb7: own use 20 Nov 20:27Z - 21 Nov 01:13Z (532 MB, cut \"data cap reached\"), then about 41 MB of check traffic 22-25 Nov (9.7-11.8 MB a day, 12-14 hours a day) plus 5 session rows the sync opened for the check (24-25 Nov, no app name); this account bought a weekly plan on 24 Nov 16:47Z and is unlimited now, so the wrong megabytes no longer limit it. Row state now: LA row last handshake 25 Nov 10:24:35Z, counters 58,340 / 1,222,716 = one check run. Repair (production data, needs the yes on the ship row): lower the Sydney account's cycle counter by 199.7 MB; LA needs none. verify: select date(\"RecordedAt\"), round(sum(\"BytesUsed\")/1048576.0,1) from \"BandwidthUsageLogs\" where \"UserId\"::text like '77960c90%' and \"RecordedAt\">'2026-11-09' group by 1 (after the ship: no new rows)."
     },
     {
       "id": "xd-3305",
@@ -98178,11 +98180,16 @@
       "to": "[BACKEND]",
       "title": "Handoff from MARKETING: Handoff from [MARKETING]: [P0] Paying iPhone subscriber was shown plan=free and signed out on 16 + 17 Nov, 3-4 days before he turned off renewal - find why",
       "description": "PROVEN by [QA] 24 Nov (marketing/engine/2026-11-24/low-data-users-cases.md lines ~129-130, FunnelEvents): the subscriber of xd-3285 (Apple Monthly paid 11 Nov + dedicated-IP add-on) - 16 Nov 08:34Z the app reported plan=free, not connected; 09:51Z he was on the login screen and signed in again; 17 Nov 08:00Z plan=free again, 'monthly' again at 15:30Z. His usage fell from 1-7 GB/day to under 240 MB on 17 Nov and 29 MB on 18 Nov; renewal off 20 Nov 13:11Z. NOT KNOWN: the cause. Candidates to TEST, not assume (known traps in the backend skill): refresh-token single slot evicting his session when a second device/app version signed in (4.3.2 update 12-16 Nov), /subscription answer during an Apple notification or receipt re-sync (last receipt wins / negative notification degrades the plan), the 16 Nov app_opened spike (968 events), a deploy/restart window. ASK: read his auth + subscription rows and API logs/audit for 16-17 Nov (what is still kept), say PROVEN cause or what is missing; count how many OTHER paying or trialing users were reported plan=free by the app in the last 14 days (FunnelEvents Plan column vs Subscriptions) - that number goes to the CEO; fix on dev, same-run check. BACKEND owns, IOS helps on the client side.  [finalize 2026-11-25] waiting on: the [BACKEND] run - no blocker is written on it; not finishable from the server by this run.",
-      "status": "pending",
+      "status": "completed",
       "priority": "P0",
       "createdAt": "2026-11-24T13:52:14Z",
       "createdDate": "2026-11-24",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[BACKEND run 2026-11-25 1040, backend-daily (Mac task), scheduled, unattended] [BACKEND same-run check] MEASURED 10:50-11:00Z, production read-only. (1) NOT signed out by the server: the account has ONE sign-in session row (RefreshSessions), made 4 Nov 14:26Z, last used 20 Nov 11:25Z - every sign-in (password, Apple, Google) makes a NEW row (AuthService IssueRefreshSessionAsync), so he did not sign in again on 16 Nov and kept the 4 Nov session to his last day. The two \"login\" screen events 09:51:52Z + 09:51:54Z (12 s + 2 s) carry plan=monthly = the app still held his account while it showed that screen. (2) Server plan row: Monthly, Active the whole time (row 96e0c8a2, trial 4 Nov, paid 11 Nov, only change on record = 20 Nov 13:11Z renewal off; store history table starts 19 Nov, API log for 16-17 Nov is gone, so \"no Apple notice touched it on 16-17 Nov\" is NOT PROVEN). (3) \"plan=free\" is sent BY THE PHONE (FunnelEventsController stores request.Plan; the app sends SubscriptionManager.currentTier() when it goes to the background - CasperVPNApp.swift on dev/ios-110-all-2026-11-23). currentTier() answers free for a signed-in account until the app has loaded its plan. Both his free events are the first event of the morning on \"home\" after 3 s and 6 s. (4) COUNT for the CEO, last 14 days, iPhone, users with an Active paid or trial plan and an unlimited account, events after their paid start: 21 users with screen events, 4 had plan=free (5 events of 186): 50f8736d x2, 51996fbc, f005a09e, a6ea3888 - ALL 5 are \"home\" after 0-6 s; 87 other short home events said the right plan. Builds 101 and 109 (store build still does it). (5) CONTROL with the server log (still kept): f005a09e on 24 Nov 11:16:35Z sent free on home after 0 s, 3 s after the app restarted (push token registered 11:16:35Z, 8 s earlier the same phone was on the Double VPN screen); the server treated him as paying all day: 0 \"for free user\" lines for him vs 46 such lines for others on 25 Nov. So the server answer was right and the phone said free on its own in the first seconds. (6) First count was WRONG and is corrected here: a first query read 8 of 24 because Subscriptions.StartDate is the account start, not the paid start - 3 users were truly free at their event (bought minutes later); use Users.TrialStartedAt. NOT KNOWN from the server: what the customer SAW in those seconds (free badge, locked servers, dedicated IP hidden) and why the login screen showed for 14 s on 16 Nov - handed to [IOS]. Side finding: one staff Android test account (0878a3db, our own mail domain) has a Monthly row with no store id and still the 512 MB cap, so server and app both say free - the only such row (1 of 1 in the table); not a customer. verify: on the main server, read-only: select \"Plan\",\"Screen\",\"SecondsOnScreen\",count(*) from \"FunnelEvents\" where \"Event\"='screen_exit' and \"Plan\"='free' and \"CreatedAt\">now()-interval '14 days' and \"UserId\" in (select s.\"UserId\" from \"Subscriptions\" s join \"Users\" u on u.\"Id\"=s.\"UserId\" where s.\"Status\"=0 and u.\"CurrentCycleDataLimitBytes\"=0 and \"FunnelEvents\".\"CreatedAt\">coalesce(u.\"TrialStartedAt\",s.\"StartDate\")+interval '15 min') group by 1,2,3. skill: backend SKILL (FunnelEvents columns, 3-day log, real-user rules) + qa SKILL (control with the kept log).",
+      "completedAt": "2026-11-25T11:01:11Z",
+      "completedBy": "[BACKEND]",
+      "resolution": "Cause found: not the server. He was never signed out (one sign-in session 4-20 Nov) and his plan row stayed Monthly/Active; the phone itself says 'free' in the first seconds after opening, before it has loaded the plan. 4 of 21 paying iPhone users hit this in 14 days (5 events, all on Home within 6 s). App-side fix handed to [IOS].",
+      "resultingHandoff": "one new handoff to [IOS] (start-up plan + login screen flash); none for the server"
     },
     {
       "id": "xd-3307",
@@ -98431,6 +98438,18 @@
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-11-25T10:55:58Z",
+      "createdDate": "2026-11-25",
+      "completedDate": null
+    },
+    {
+      "id": "xd-3326",
+      "from": "[BACKEND]",
+      "to": "[IOS]",
+      "title": "Handoff from BACKEND: [P1] iPhone reports plan 'free' for a paying user in the first seconds after the app opens (4 of 21 paying users in 14 days) - keep the saved plan until the server answers",
+      "description": "From xd-3306 (measured 25 Nov, production read-only; full proof in that ticket's notes). The app sends SubscriptionManager.currentTier() with every screen event; for a signed-in account it answers FREE until the plan is loaded (the xd-942 rule). In 14 days 4 of 21 paying/trial iPhone users (builds 101 and 109) sent plan=free: 5 events, all on Home 0-6 s after opening; the server treated them as paying the whole time (log control 24 Nov). The subscriber of xd-3285 hit it on 16 + 17 Nov and saw the login screen for 14 s on 16 Nov while still signed in (same server session 4-20 Nov, no new sign-in). ASK: (1) say what the user SEES in that window on the store build - free badge, locked premium servers, dedicated IP hidden, upgrade prompt, auto-connect refused; (2) make a relaunch show the SAVED plan until the server answers (restoreCachedState before the first screen; never drop to free on a failed or slow first call); (3) why can the login screen show for a signed-in account at start (token refresh still running?) - hold the splash instead; (4) send the screen event only after the plan is known, or mark it 'unknown', so the counts stay clean. Same-run check on a phone or simulator; build line named. No server change needed.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-11-25T11:01:11Z",
       "createdDate": "2026-11-25",
       "completedDate": null
     }
