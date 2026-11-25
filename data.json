@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-11-25T22:16:36Z",
+  "lastUpdated": "2026-11-25T23:16:45Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 67,
@@ -98808,6 +98808,30 @@
       "priority": "P0",
       "createdAt": "2026-11-25T21:45:49Z",
       "createdDate": "2026-11-25",
+      "completedDate": null
+    },
+    {
+      "id": "xd-3342",
+      "from": "[CEO]",
+      "to": "[ADMIN-PANEL]",
+      "title": "Handoff from CEO: Admin: Free trials list like Users (connections, failed connections, data used), Back lands on the same row on every list, Marketing 'Results' block (CEO 26 Nov live) - BUILT on development, LEFT: dev check + CEO YES to ship",
+      "description": "CEO 26 Nov 2026 live (Claude Code on the Mac), four messages: (1) 'the free trails vie in subscription should have a view similar to users view ... the number of connection failed connection data used all visible from browsing view ... then user profile can be taped seperatly as is. and when clicking back from profile view to trails users view it should land on the same place in page on same user profile not on top of the page'; (2) 'as well to all pages where profile is clicked and then when back is selected it should land on same page'; (3) 'admin should show marketing data like emails send replies recived, articles published ads results payment funnel success rate and other things u can think of make them fit in an attractive way blending in'; (4) 'are promo campains active from admin pannel ?'. BUILT on development 1b74f6562 + 7170e8b3c + a8fa58c73. A) GET /api/admin/subscriptions: + userCreatedAt, userCycleDataUsedBytes/LimitBytes per row and maps userPlatforms / paidSources / connectFailures for the page's users; failed connections use ONE rule with the profile (Services/ConnectFailureCounts.cs = 30 days, network apart from phone-side stops). Free trials tab columns: User (+ person icon), Country + App, Joined, Trial, After the trial, Connections, Failed connections, Data used (cycle bar + all time); fits 1280 px with no sideways scroll. B) components/ScrollMemory.tsx (mounted in Layout): Back / Forward / reload put the scroll back once the rows have loaded and flash the row that was opened (data-user-row on Subscriptions, Users, Payments, Live monitoring, dashboard data card, renewals calendar); new pages start at the top; hooks/useEntryState + usePagination(memorySlot): Users and Payments keep page number, page size, search, sort, tab and filters per history entry (sessionStorage, this tab only; a fresh visit starts clean). C) GET /api/admin/marketing-results?days= (Services/MarketingResults.cs, read-only, real customers only) + MarketingResultsPanel at the top of /marketing: emails sent by kind, replies, articles, payments that went through (rate by store), free-trial screen -> started -> paid, Apple-confirmed ad installs + payers from ads, where payers came from, promo campaigns on now. Replies, partner mails and ad spend are NOT in any database: tools/marketing_snapshot.py got three read-only blocks (ads / outreach / inbox, --results-blocks-dry) - written, checked on the Mac only (outreach 214 sent = independent count of the repo log), NOT run on the brain, /opt cron copy unchanged; until the collector carries them the page says 'not collected yet'. D) PROMO (answered in chat; code + live read-only look 26 Nov): the Promo Campaigns page calls /api/admin/campaigns, which lists the OLD email_campaigns rows (production shows 3 'ACTIVE' rows that are e-mail titles from Mar/Apr 2026, 0 redemptions); its create / pause / edit calls answer 501 and promo codes + A/B tests are stubs. The working engine is /api/admin/promo-campaigns (PromoCampaigns table; sign-up applies 'trial_extension' = extra trial days; 'discount' only counts a redemption, no price changes) and NO admin page calls it. Rewiring the page is NOT built - CEO decision. Proof so far: backend tests 1485/1485 (2 + 6 new, each with controls), tsc 5.4.5 src 0 + planted control 1, local preview vs a stand-in: trials table scrollWidth 972 = clientWidth 972 at 1280; Back: trials y 2987 -> 2987 same row, Users page 3 y 797 -> 797 same row, Payments page 2 y 1078 -> 1078 same row, fresh visit -> page 1 top (control).",
+      "status": "in_progress",
+      "priority": "P1",
+      "createdAt": "2026-11-25T23:16:45Z",
+      "createdDate": "2026-11-26",
+      "completedDate": null
+    },
+    {
+      "id": "xd-3343",
+      "from": "[ADMIN-PANEL]",
+      "to": "[MARKETING]",
+      "title": "Handoff from ADMIN-PANEL: [P1] Marketing collector: switch on the 3 new snapshot blocks (partner mails, replies, Apple Ads spend) so the admin 'Results' block shows them - needs CEO YES",
+      "description": "CEO 26 Nov 2026 live asked for 'emails sent, replies received, ads results' in the admin. Those three live outside every database, so [ADMIN-PANEL] added three READ-ONLY blocks to YOUR hourly collector on development a8fa58c73 (tools/marketing_snapshot.py): outreach (repo log + server ledger: sent 7/30/all, by kind, failed, bounced), inbox (company mailboxes opened read-only, BODY.PEEK headers only: mails in, replies, replies from partners we wrote to - counts only, never a subject / body / address) and ads (Apple Ads campaign report 7 + 30 days: spend, shown, taps, installs - the same call as apple_ads_read.py). --results-blocks-dry prints the three blocks and writes nothing. NOT DONE: nothing ran on the brain; /opt/caspervpn/marketing_snapshot.py is unchanged. Development and production copies of this file already differ (xd-2760 board read), so port the new functions, do not copy the file over. LEFT (after the CEO's yes, row on the CEO card): 1) dry run on the brain, compare outreach with growth_read partners and inbox with growth_read inbox; 2) check the reply rule (In-Reply-To or a Re: subject; partner = an address we wrote to, or its company domain, never a free-mail domain) against your inbox-tracker; 3) replace the /opt copy; 4) the next hourly snapshot then fills the admin tiles. Owner of the admin side: xd-3342.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-11-25T23:16:45Z",
+      "createdDate": "2026-11-26",
       "completedDate": null
     }
   ],
