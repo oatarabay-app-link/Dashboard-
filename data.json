@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-11-25T11:08:06Z",
+  "lastUpdated": "2026-11-25T11:19:02Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 67,
@@ -23176,6 +23176,26 @@
           "addedAt": "2026-11-25T11:04:53Z",
           "addedBy": "[BACKEND] backend-daily 1125",
           "verify": "production: dll UTF-16 'address-unknown-key' 0 -> 1; api log '[wg-sync][premium-tier] ... removing' / '[over-limit]' lines for the hourly check key 0 in 24 h; devops hourly real-traffic check on LA + Sydney back to ~100% WireGuard pass"
+        },
+        {
+          "test": "READY TO SHIP - [BACKEND] keep the apps' new 'protection mode switched' event (door_switched) \u00b7 what: one event name the server accepts, and the reason text stored whole (development 61f2b16cf, 3 files) \u00b7 why: iPhone + Android will report when Auto moves between normal and hidden mode; without this the server drops it \u00b7 tested on dev: 11 test cases incl. controls, full suite 1475/1475 \u00b7 rollback: revert + /root/deploy_api.sh \u00b7 touches no customer, money, mail or legal text \u00b7 advice: YES (safe one)",
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "owner": "[BACKEND]",
+          "addedAt": "2026-11-25T11:18:56Z",
+          "addedBy": "[BACKEND] backend-daily 1125",
+          "verify": "production dll UTF-16 'door_switched' 0 -> 1; after the apps send it: FunnelEvents Event='door_switched' rows with ErrorCode like '%->%'"
+        },
+        {
+          "test": "READY TO SHIP - [BACKEND] every new Apple purchase is tied to its account in our records (xd-3328) \u00b7 what: when the app sends the receipt, the earlier Apple purchase notice gets the account (development a705a7f5b) + a one-off fill of the 24 notices since 19 Nov that have no account \u00b7 why: 24 of 24 new-purchase notices since 19 Nov have no account (Apple tells us ~14 s before the app does), so trial results cannot be split by country or ad while we pay for ads in 7 countries \u00b7 tested on dev: 2 tests with 3 controls, full suite 1475/1475; read-only check: all 24 have their Payment, 24 accounts \u00b7 rollback: revert + /root/deploy_api.sh; the fill is undone from its backup table \u00b7 touches no customer, money, mail or legal text (our own records only) \u00b7 advice: YES",
+          "met": false,
+          "passed": false,
+          "verifiedBy": "none",
+          "owner": "[BACKEND]",
+          "addedAt": "2026-11-25T11:18:56Z",
+          "addedBy": "[BACKEND] backend-daily 1125",
+          "verify": "production: SubscriptionEvents Type='SUBSCRIBED' since the ship with UserId NULL = 0 (allow ~1 min after purchase); after the fill: 24 -> 0; python3 tools/growth_read.py renewals --days 31 last column 0"
         }
       ],
       "progress": 87,
@@ -98125,7 +98145,7 @@
       "createdAt": "2026-11-24T13:18:03Z",
       "createdDate": "2026-11-24",
       "completedDate": null,
-      "notes": "[BACKEND run 2026-11-25 1039, scheduled, unattended] MEASURED (code + DB, no change): subscriber 50f8736d row = Active Monthly, CurrentPeriodEnd 11 Dec 14:32:58Z, auto-renew off; dedicated IP 23.95.79.248 Allocated to him. A database-only extension would NOT hold: AppleReceiptService handles EXPIRED/GRACE_PERIOD_EXPIRED (line ~1591, origin/production) and Apple will send EXPIRED at 11 Dec 14:32Z, which ends access. The code has no Apple 'extend renewal date' call (only history/transactions GETs) and RENEWAL_EXTENDED falls in the default branch (auto-renew mirror only, CurrentPeriodEnd not moved). Safe way = (a) one admin-only call to Apple PUT /inApps/v1/subscriptions/extend/<originalTransactionId> extendByDays=7 reason 'customer satisfaction' for the plan (and for the dedicated-IP add-on if it is its own Apple product - to check), (b) handle RENEWAL_EXTENDED: set CurrentPeriodEnd from the signed expiresDate. Code on development + test next backend run; must be live before 11 Dec 14:32Z. NOT PROVEN: that Apple accepts an extension while auto-renew is off (Apple's rule list to read before coding). || [BACKEND run 2026-11-25 1040, backend-daily (Mac task), scheduled, unattended] IN WORK by this run since 11:05Z - do not rebuild. MEASURED: (1) Apple's own \"extend renewal date\" is not a safe road here: its page does not say whether it works with renewal switched off, it cannot be undone, Apple mails the customer, and our server ignores Apple's RENEWAL_EXTENDED notice (AppleReceiptService default branch only copies the renewal switch), so our expiry job would still end his row on 11 Dec (renewal-off rows get no grace). (2) Two places end his plan on 11 Dec: Apple's EXPIRED notice (AppleReceiptService) and the hourly SubscriptionExpiryService; the app-opened receipt check never downgrades on an old transaction; no access gate reads the end date itself. BUILT (Mac worktree, commit 171e77f19, push to development follows when the lock is free): Subscriptions.CompUntil + CompNote (migration 20261125110000, nullable, idempotent); while CompUntil is in the future both places keep the row Active on its plan and mark it to end at CompUntil; a refund or his own cancel still end it; nothing a client sends can set it. Tests 5 new, mutation control (rule off) 3 red, suite 1466/1466. Dedicated IP: its entitlement is not tied to billing (backend skill), it stays. After the ship: ONE update on his row (CompUntil = 18 Dec 14:32:58Z) with a backup and a read-back."
+      "notes": "[BACKEND run 2026-11-25 1039, scheduled, unattended] CORRECTION/UPDATE 2026-11-25T11:18Z: a Paperclip helper session is on this item - development b0ffe4272 (pushed 10:55Z) adds Subscriptions.CompUntil (migration 20261125110000) + SubscriptionComp + an expiry/receipt guard, i.e. a server-side extension that the 11 Dec EXPIRED notice does not undo. That replaces the Apple-extend route in my note below; this run did not touch it (no double work). My dev pushes at 10:58Z and 11:18Z sit on top of it; dev suite with it 1475/1475. || [BACKEND run 2026-11-25 1039, scheduled, unattended] MEASURED (code + DB, no change): subscriber 50f8736d row = Active Monthly, CurrentPeriodEnd 11 Dec 14:32:58Z, auto-renew off; dedicated IP 23.95.79.248 Allocated to him. A database-only extension would NOT hold: AppleReceiptService handles EXPIRED/GRACE_PERIOD_EXPIRED (line ~1591, origin/production) and Apple will send EXPIRED at 11 Dec 14:32Z, which ends access. The code has no Apple 'extend renewal date' call (only history/transactions GETs) and RENEWAL_EXTENDED falls in the default branch (auto-renew mirror only, CurrentPeriodEnd not moved). Safe way = (a) one admin-only call to Apple PUT /inApps/v1/subscriptions/extend/<originalTransactionId> extendByDays=7 reason 'customer satisfaction' for the plan (and for the dedicated-IP add-on if it is its own Apple product - to check), (b) handle RENEWAL_EXTENDED: set CurrentPeriodEnd from the signed expiresDate. Code on development + test next backend run; must be live before 11 Dec 14:32Z. NOT PROVEN: that Apple accepts an extension while auto-renew is off (Apple's rule list to read before coding). || [BACKEND run 2026-11-25 1040, backend-daily (Mac task), scheduled, unattended] IN WORK by this run since 11:05Z - do not rebuild. MEASURED: (1) Apple's own \"extend renewal date\" is not a safe road here: its page does not say whether it works with renewal switched off, it cannot be undone, Apple mails the customer, and our server ignores Apple's RENEWAL_EXTENDED notice (AppleReceiptService default branch only copies the renewal switch), so our expiry job would still end his row on 11 Dec (renewal-off rows get no grace). (2) Two places end his plan on 11 Dec: Apple's EXPIRED notice (AppleReceiptService) and the hourly SubscriptionExpiryService; the app-opened receipt check never downgrades on an old transaction; no access gate reads the end date itself. BUILT (Mac worktree, commit 171e77f19, push to development follows when the lock is free): Subscriptions.CompUntil + CompNote (migration 20261125110000, nullable, idempotent); while CompUntil is in the future both places keep the row Active on its plan and mark it to end at CompUntil; a refund or his own cancel still end it; nothing a client sends can set it. Tests 5 new, mutation control (rule off) 3 red, suite 1466/1466. Dedicated IP: its entitlement is not tied to billing (backend skill), it stays. After the ship: ONE update on his row (CompUntil = 18 Dec 14:32:58Z) with a backup and a read-back."
     },
     {
       "id": "xd-3299",
@@ -98523,11 +98543,13 @@
       "to": "[BACKEND]",
       "title": "Handoff from IOS: [P2] Accept a new funnel event 'door_switched' (iPhone + Android tell us when Auto moves WireGuard <-> hidden mode)",
       "description": "From xd-3297 (MARKETING). MEASURED 25 Nov: backend-dotnet-core/Models/FunnelEvent.cs keeps an allowed-names list and drops unknown names (its own comment: 'Without this line the server drops it as Unknown event'). The apps will send name='door_switched', Method='<from>-><to>:<reason>' (e.g. 'wireguard->caspercloak:handshake-only-20s'). ASK: add 'door_switched' to the allowed list, one unit test, development first, CEO yes to ship. iPhone/Android send it only after this is live, otherwise it is dropped.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P2",
       "createdAt": "2026-11-25T11:01:53Z",
       "createdDate": "2026-11-25",
-      "completedDate": null
+      "completedDate": null,
+      "blocker": "production needs the CEO's YES on the READY TO SHIP row 'funnel event door_switched' (card).",
+      "notes": "[BACKEND run 2026-11-25 1039, scheduled, unattended] [BACKEND same-run check] CODED: development 61f2b16cf - 'door_switched' is a known event. MEASURED first: Method is varchar(16) and CleanToken allows only a-z 0-9 _, so 'wireguard->caspercloak:handshake-only-20s' would be stored EMPTY - the server keeps the apps' '<from>-><to>:<reason>' in ErrorCode (48) via FunnelEventNames.CleanDoorSwitch (lower case, must contain '->', a-z 0-9 _ - > :, max 48, else dropped whole). APPS: keep that format and <= 48 characters; Method stays empty for this event. Tests: 4 new (11 cases incl. controls), dev suite 1473/1473 then 1475/1475 with xd-3328. NOT PROVEN on the dev server yet (dev redeploy after the 11:18Z push still building at the end of this run)."
     },
     {
       "id": "xd-3328",
@@ -98535,11 +98557,13 @@
       "to": "[BACKEND]",
       "title": "Handoff from MARKETING: [P2] Store purchase notices are not linked to an account (24 of 24 since 19 Nov) - trial results cannot be split by country or ad",
       "description": "MEASURED 25 Nov 2026 (growth_read.py renewals --days 31, table SubscriptionEvents, Environment not Sandbox): 24 new-purchase notices from Apple since 19 Nov (12 on 24 Nov, 6 on 25 Nov) and every one has UserId NULL (\"not linked to an account\"). The accounts themselves do get their trial (19 account trials in 7 days), so customers are not hurt. WHY IT MATTERS: we now pay for ads in 7 countries; without the link we cannot say which country or ad a trial, a card failure or an auto-renew-off belongs to (9 of 11 auto-renew-offs came on trial day 1) and \"payers by source\" stays empty. ASK: (1) say whether NULL is expected at purchase time and filled later, or a bug (appAccountToken / originalTransactionId match); (2) link new notices to the user and back-fill the 24; (3) tell [MARKETING] so the daily chart can show trial outcomes by country and source. Read-only measurement; nothing was changed. Verify: python3 tools/growth_read.py renewals --days 31 -> last column 0 for new days.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P2",
       "createdAt": "2026-11-25T11:02:18Z",
       "createdDate": "2026-11-25",
-      "completedDate": null
+      "completedDate": null,
+      "blocker": "production needs the CEO's YES on the READY TO SHIP row 'link first-purchase notices to the account' (card).",
+      "notes": "[BACKEND run 2026-11-25 1039, scheduled, unattended] [BACKEND same-run check] (1) ANSWER: a BUG (a race), not filled later. The notice handler finds the account through Payments.Metadata (originalTransactionId); Apple's INITIAL_BUY notice arrives before the app posts the receipt that creates that Payment. MEASURED read-only: 24 of 24 SUBSCRIBED/INITIAL_BUY rows since 19 Nov have UserId NULL, all other notice types 0 NULL (16 of 16); all 24 now have a matching Payment, created on average 14 s AFTER the notice; 24 different accounts. Nothing ever re-links them. (2) CODED: development a705a7f5b - when the receipt books the Payment, earlier unlinked Apple notices of the same originalTransactionId get the account (SubscriptionEventLog.LinkAppleNoticesAsync; never overwrites a linked row, never throws). 2 tests with 3 controls, dev suite 1475/1475. The 24 old rows need a one-off back-fill (production data write: UPDATE SubscriptionEvents SET UserId = the Payment's UserId WHERE Store='apple' AND UserId IS NULL AND a Payment carries that originalTransactionId; backup first) - on the same card row. (3) [MARKETING] told here: new purchases link after the ship; old ones after the back-fill."
     },
     {
       "id": "xd-3329",
