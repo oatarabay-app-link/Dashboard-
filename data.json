@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-11-25T12:08:22Z",
+  "lastUpdated": "2026-11-25T12:23:14Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 67,
@@ -23208,6 +23208,17 @@
           "addedAt": "2026-11-25T11:29:25Z",
           "addedBy": "[WEBSITE] website-daily (Mac task)",
           "evidence": "development 994452382; details on xd-3301"
+        },
+        {
+          "test": "SHIPPED 2026-11-25 12:22Z | CEO ORDER 2026-11-25 (live Cowork CTO chat: 'its p0 ... fix now and ship') | [CTO] free data cap: the user is now told when the cap cuts the VPN - one phone message at the first cut of the month: 'Your free data is used up - You used this month's free 512 MB, so CasperVPN is paused. If your internet stops, open CasperVPN and tap Disconnect. Upgrade for unlimited data, or your free data comes back on <date>.' iPhone gets it now; Android needs one more server part (FCM) \u00b7 the app fixes that turn the VPN fully off are P0 for iPhone and Android \u00b7 rollback: DataCapPush__Enabled=false + /root/deploy_api.sh, or image caspervpn-api:rollback-202611251216",
+          "met": false,
+          "passed": false,
+          "verifiedBy": null,
+          "owner": "[CTO]",
+          "addedAt": "2026-11-25T12:25:00Z",
+          "addedBy": "[CTO] live 2026-11-25",
+          "verify": "brain: docker logs caspervpn-api --since 2h | grep -E 'data-cap push queued|APNs push sent successfully' (one queued line per first cut, then 'APNs push sent' for iPhone users with a token)",
+          "evidence": "[CTO live 2026-11-25 12:2xZ] production 088c5a046 (cherry-pick -x of development edd50a475 / 4bcaeb790); tests: development tree 1477/1477, production tree 1329/1329, the 2 new tests pass; /root/deploy_api.sh 12:16:52-12:22:08Z DEPLOY DONE OK (rollback tag caspervpn-api:rollback-202611251216, external /health 200); live dll: 'data-cap push queued' 1, text 1, control 'removing WG peer' 2. NOT PROVEN yet: a real cut sending the push - waits the next real cut (they come every 1-3 h)."
         }
       ],
       "progress": 87,
@@ -98097,11 +98108,11 @@
       "title": "Handoff from QA: IKEv2 sessions are not cut when a free user passes the data cap (one user went 281 MB over on 23 Nov)",
       "description": "MEASURED read-only 24 Nov 12:4xZ: security_command.py scale row 01 '>50 MB over' = 1, but it is a NEW account (525484c1, iPhone 4.3.3(109), NG, created 23 Nov 19:55Z, free cap 512 MB), not the 24 Oct double-count user (that one reset). It used 793 MB in its first cycle: one IKEv2 session on Singapore 20:18:21-21:34:23Z moved 769 MB. The api log shows every RADIUS Interim-Update counted (total=511096803 at 21:03:20Z, 799686964 at 21:33:20Z) but nothing cut the session after the cap was passed - it ran 30 more minutes, +281 MB, until the phone stopped it (RADIUS Stop). CONTROL: ConnectionLogs 30 d with a cap DisconnectReason: WireGuard (Protocol 0) 26, CasperCloak (3) 25, IKEv2 (2) 0 of 1,288 IKEv2 sessions (4 users). So the free cap is checked only at IKEv2 login (RadiusAuthController), never mid-session. Ask: when an Interim-Update takes a free user over the cap, end the IKEv2 session (RADIUS Disconnect/CoA, or the node's own kill) the way the WireGuard cap sweep does; test on dev with a small-cap test account; READY TO SHIP row for the CEO. Small today (4 IKEv2 users) - P2. verify: after the fix, a dev free account over cap on IKEv2 gets DisconnectReason with 'cap' within 5 min; production: security_command.py scale row 01 '>50 MB over' 0.  [finalize 2026-11-25] waiting on: waits [DEVOPS]: a node-side way to end one user's IKEv2 session (Flask terminate route or RADIUS Disconnect). (blocker read today; the handoffs and card rows it cites were re-read against the board: none newly answered; item itself not re-measured).",
       "status": "in_progress",
-      "priority": "P2",
+      "priority": "P1",
       "createdAt": "2026-11-24T12:44:52Z",
       "createdDate": "2026-11-24",
       "completedDate": null,
-      "notes": "[BACKEND run 2026-11-24 1232, scheduled, unattended] MEASURED (code): the API has no way to end an IKEv2 session - node Flask API has no terminate route (only add/remove-user, ca-cert, mobileconfig), no RADIUS Disconnect (dae) on the nodes. The server-side check alone cannot stop the session. Node part handed to [DEVOPS] (new handoff, same run); backend adds the cap check in the Interim-Update path once that road exists. Not coded yet.",
+      "notes": "[CTO live 2026-11-25] CEO: free cap is P0. IKEv2 is the one road the server never cuts mid-session (0 cap cuts of 1,288 IKEv2 sessions). Raised to P1; node road = [DEVOPS] xd-3296. || [BACKEND run 2026-11-24 1232, scheduled, unattended] MEASURED (code): the API has no way to end an IKEv2 session - node Flask API has no terminate route (only add/remove-user, ca-cert, mobileconfig), no RADIUS Disconnect (dae) on the nodes. The server-side check alone cannot stop the session. Node part handed to [DEVOPS] (new handoff, same run); backend adds the cap check in the Interim-Update path once that road exists. Not coded yet.",
       "blocker": "waits [DEVOPS]: a node-side way to end one user's IKEv2 session (Flask terminate route or RADIUS Disconnect)."
     },
     {
@@ -98649,6 +98660,42 @@
       "status": "pending",
       "priority": "P2",
       "createdAt": "2026-11-25T12:00:29Z",
+      "createdDate": "2026-11-25",
+      "completedDate": null
+    },
+    {
+      "id": "xd-3334",
+      "from": "[CTO]",
+      "to": "[ANDROID]",
+      "title": "Handoff from CTO: [P0] Free data cap: when the cut comes, the app must switch the VPN fully OFF so normal internet comes back, then show 'free data used up' (CEO 25 Nov: users blame us, one deleted the app)",
+      "description": "MEASURED 25 Nov (production, read-only): the server DOES cut free users at the cap - 89 'data cap reached' cuts in 30 days (WireGuard 53, hidden mode 36), 48 since 22 Nov; apps notice within 14 s - 4 min and ask for a new config (API log 'Connect refused DATA_CAP_REACHED', iOS and Android). Almost nobody comes back after a cut (of 47 cut since 22 Nov, 4 connected again). Lebanon user 3d0d66f4: Android 2.3.1 (31), WireGuard, cut 20 Nov 14:40Z at 514/512 MB, two 402s on 22 Nov, gone. What fails is the PHONE side: the cut is silent, and the phone can keep a dead VPN up (or bring it back by itself) = no internet = 'phone froze'. Android 40 already has DEAD-FAST (3 dead checks -> disconnect + autoReconnect) and treats 402 as terminal, but NOT PROVEN on a phone what is left after a cap 402 in the background (VpnService still established? always-on / 'block connections without VPN' on? notification?). DO, on the 40 line: (1) on ANY 402 DATA_CAP_REACHED - user tap, autoReconnect, DEAD-FAST, AutoConnectWorker, boot, quick tile, hidden-mode recovery - call the full stop: VpnService.stopSelf + close the tun fd, forget the reconnect target, stop auto-connect for this cycle; (2) a system notification even with the app closed: 'Your free data is used up - CasperVPN is off, your internet works normally. Upgrade or wait until <reset date>' (tap -> paywall); (3) if Android always-on VPN is set for us, tell the user in that notification how to turn it off (we cannot turn it off from code); (4) a test on the TECNO with a dev free account at a tiny cap: connect, pass the cap, phone must have normal internet within 2 min and show the notification; (5) Play internal upload under the CEO card row, then production. Server side is LIVE since 25 Nov 12:22Z: a push at the first cut (iPhone only until FCM exists in the sender - FCM is a [BACKEND] item).",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-11-25T12:23:14Z",
+      "createdDate": "2026-11-25",
+      "completedDate": null
+    },
+    {
+      "id": "xd-3335",
+      "from": "[CTO]",
+      "to": "[IOS]",
+      "title": "Handoff from CTO: [P0] Free data cap: on 'limit reached' the iPhone must turn the VPN fully off (incl. on-demand / kill switch), so normal internet comes back, then show the paywall (CEO 25 Nov)",
+      "description": "MEASURED 25 Nov (production, read-only): the server DOES cut free users at the cap - 89 'data cap reached' cuts in 30 days (WireGuard 53, hidden mode 36), 48 since 22 Nov; apps notice within 14 s - 4 min and ask for a new config (API log 'Connect refused DATA_CAP_REACHED', iOS and Android). Almost nobody comes back after a cut (of 47 cut since 22 Nov, 4 connected again). Lebanon user 3d0d66f4: Android 2.3.1 (31), WireGuard, cut 20 Nov 14:40Z at 514/512 MB, two 402s on 22 Nov, gone. What fails is the PHONE side: the cut is silent, and the phone can keep a dead VPN up (or bring it back by itself) = no internet = 'phone froze'. iPhone: the tunnel watchdog cancels a dead tunnel after ~3 min and the app gets 402 -> paywall, BUT with Kill Switch or any on-demand rule iOS restarts the old profile by itself -> dead tunnel again -> no internet in a loop (the xd-661 'brick' shape). DO: (1) on any 402 (app or extension path) set isOnDemandEnabled=false + includeAllNetworks=false on our saved profiles and stop the tunnel, for the rest of the cycle; (2) local notification if the app is in the background; (3) test on the CEO's iPhone with a dev free account at a tiny cap, Kill Switch ON and OFF: normal internet within 3 min both times; (4) the server push 'Your free data is used up' (LIVE 25 Nov 12:22Z, type data_cap_reached) - open the paywall on tap.",
+      "status": "pending",
+      "priority": "P0",
+      "createdAt": "2026-11-25T12:23:14Z",
+      "createdDate": "2026-11-25",
+      "completedDate": null
+    },
+    {
+      "id": "xd-3336",
+      "from": "[CTO]",
+      "to": "[BACKEND]",
+      "title": "Handoff from CTO: [P1] Android push: add FCM to the push sender (today ApnsPushNotificationService logs 'FCM push not implemented' and skips every Android phone)",
+      "description": "Needed for the free-cap push shipped 25 Nov (CTO, production 088c5a046) and every other push. Service account key: name only in credentials.md; never print it. Test on dev with one Android test phone; READY TO SHIP row.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-11-25T12:23:14Z",
       "createdDate": "2026-11-25",
       "completedDate": null
     }
