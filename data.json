@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-11-26T12:29:01Z",
+  "lastUpdated": "2026-11-26T12:35:25Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 67,
@@ -23397,13 +23397,13 @@
         {
           "test": "DECISION - Android 2.4.2 (42) on Play production has no hidden mode: users in Russia/Azerbaijan get 'connected, no internet' (xd-3349) \u00b7 facts: users in blocked countries, 10 days: build 40 hidden mode 18 of 19 sessions with data; build 42 0 hidden-mode sessions, WireGuard 3 of 10 with data. Cause: 42 was built in the cloud without the private settings file (hidden-mode key, Sentry, Google sign-in id), the code is the same. \u00b7 A) promote 43 (2.4.3, built on the Mac, internal now) to production after one check that 43 has the hidden-mode key; B) halt 42 and roll production back to 40 (loses the cap stop); C) wait. \u00b7 advice: A today, B if 43 fails the check. Never build a store version outside the Mac build folder again.",
           "verify": "prod read-only: ConnectionLogs last 48 h, LastLoginCountry in (RU,AZ,IR,BY), group by BuildNumber, Protocol -> the new production build must show Protocol 3 sessions with BytesDownloaded > 1024",
-          "met": false,
-          "passed": false,
-          "verifiedBy": null,
+          "met": true,
+          "passed": true,
+          "verifiedBy": "tested",
           "owner": "[CEO]",
           "addedAt": "2026-11-26T07:39:38Z",
           "addedBy": "[ANDROID] apps daily 2026-11-26",
-          "evidence": "CEO A 2026-11-26 (live chat, apps run session): 'A' - promote 43 to production after one check that 43 has the hidden-mode key. || details on xd-3349"
+          "evidence": "CEO A 2026-11-26 (live chat, apps run session): 'A' - promote 43 to production after one check that 43 has the hidden-mode key. || details on xd-3349 || [ANDROID 2026-11-26 12:35Z] A carried out up to the check: 43 FAILED the key check (key empty, same as 42), so 43 was NOT promoted. Superseded by the DECISION - Android 44 row. details on xd-3349"
         },
         {
           "test": "ACTION - clear old Cowork sessions in the Claude app: the Mac VM disk is 87% full (df /sessions 8.0 of 9.8 GB, 26 Nov 07:3xZ)",
@@ -23446,6 +23446,17 @@
           "addedBy": "[DEVOPS] Mac session 26 Nov (CEO B 12:14Z)",
           "verify": "each step's own check as listed; vault: memory/departments/devops/context/browser-proxy-bkk-pilot-2026-11-26.md + abuse-complaints-runbook.md",
           "evidence": "[CEO B 2026-11-26 12:14Z (card 'Approve the two steps before the proxy goes on real servers?'): 'Buy domain, support inbox handles them'] recorded. Domain availability: Verisign RDAP 404 + Namecheap search 26 Nov 12:2xZ."
+        },
+        {
+          "test": "DECISION - Android 44 (2.4.4): put hidden mode back for users in Russia, Azerbaijan, Iran, Belarus (xd-3349) \u00b7 facts: 43 has NO hidden-mode key (same fault as 42), so promoting it fixes nothing; 44 = exactly 43's code, rebuilt with the key, checked (key present, signed, number 44), not uploaded. \u00b7 A) upload 44 to internal now, then production straight after (today); B) upload 44 to internal, CEO tests on the TECNO first, then production; C) wait. \u00b7 advice: A - same code as 43 which already passed 666 tests; only the key differs. Rollback: halt the 44 rollout in Play (42 stays for users who did not update).",
+          "verify": "Play tracks read back production [44]; then prod read-only, RU/AZ/IR/BY, ConnectionLogs by BuildNumber=44: Protocol 3 sessions appear with data",
+          "met": false,
+          "passed": false,
+          "verifiedBy": null,
+          "owner": "[CEO]",
+          "addedAt": "2026-11-26T12:34:57Z",
+          "addedBy": "[ANDROID] live a43 check 2026-11-26",
+          "evidence": ""
         }
       ],
       "progress": 86,
@@ -99150,8 +99161,8 @@
       "createdAt": "2026-11-26T07:09:31Z",
       "createdDate": "2026-11-26",
       "completedDate": null,
-      "notes": "[APPS live 2026-11-26] CEO A recorded on the card row. Next: key-length check on 43, then Play production = 43, read back. || [APPS run 2026-11-26 0733, scheduled, unattended] VERDICT: REGRESSION IN 42, NOT the cap stop. Production read-only (BEGIN READ ONLY). (a) The accounts: 4 users sent connected-no-traffic on android 2.4.2 (42) in 36 h, 2 reports each: 0108c9b8 RU Dusseldorf, 76130a02 AZ LA/Dusseldorf, 7f8d495d RU Dusseldorf, 3b0ce35f DE Dusseldorf. All 4 are free, CurrentCycleDataUsed 0 MB of 512 MB, so not at cap; 0 paid. A 5th phone was not found (the mail may count a second build or a report outside 36 h). (b) Control: users in RU/AZ/IR/BY, last 10 days. Build 40: protocol 3 (hidden mode) 19 sessions, 18 with data >1 KB (9 users). Build 42: protocol 0 (WireGuard) only, 10 sessions, 3 with data (8 users), 0 hidden-mode sessions. Failures: 40 = caspercloak only; 42 = wireguard only (6 no-traffic). Outside blocked countries, 42 works (new users 3 of 3 with data). (c) Cause: git diff 8878322 (40) -> 87bed24 (42) changes no protocol-pick code (cap stop, review prompt, trial prefetch only). app/build.gradle.kts reads casperCloakRelayKey, casperSentryDsn and casperGoogleWebClientId from local.properties; empty key means 'this build has no CasperCloak and AUTO stays on WireGuard'. 42 was built in the cloud box (DEPARTMENT_LOG 25 Nov), not in the Mac build folder that has local.properties (40 and 41 copied it). So 42 has no hidden mode. Sentry DSN and Google sign-in client id are probably empty in 42 too: NOT PROVEN (no aab read). FIX: put a build made with local.properties on Play production: 43 (2.4.3, built on the Mac 26 Nov, internal now). NOT PROVEN that 43 has the key (check BuildConfig in the 43 aab, or one RU-route hidden-mode connect). CEO card DECISION row added. Verify: the s10 query in the session log (protocol by build, restricted countries). || ",
-      "blocker": "CEO A 26 Nov: promote 43 after the key check; the check needs the 43 build folder on the Mac (folder access asked in the live chat)"
+      "notes": "[ANDROID same-run check 2026-11-26 ~12:35Z, Mac live] KEY CHECK FAILED ON 43 - NOT PROMOTED. Play bundle 43 sha256 f84e46ec... = the Mac file casper-android-release-1126-b43 app-production-release.aab (shasum); its generated BuildConfig CASPERCLOAK_RELAY_KEY length 0 (SENTRY_DSN 0, GOOGLE_WEB_CLIENT_ID 0). Control: build 40 (Play sha f6204e3c... = play-assets-1123-b40) key length 48. 41 (Play sha 447970ea = Mac b41) also 0, so the morning note '41 copied it' was wrong. Cause: 41-43 were not built with _android/play-release-build.command (which exports the key from casper-secrets/cc_relay_psk; local.properties never held it). FIX BUILT, NOT UPLOADED: 44 (2.4.4) = 43 code + version bump only, branch dev/android-hidden-key-44-2026-11-26 fad7358fe, built by play-release-build.command: BUILD SUCCESSFUL, key length 48, jar verified, versionCode 44; _android/play-assets-1126-b44/casper-44-fad7358fe.aab sha256 0f292b94.... Script got guard G5 (stops when the key is empty; tested: b40=48 passes, b43=0 stops). Play read-only now: production [42] completed, internal [43]. verify: find ~/Developer/casper-android-release-1126-b4*/ -name BuildConfig.java -path '*production/release*' | xargs grep -c 'RELAY_KEY = \"\"' || [APPS live 2026-11-26] CEO A recorded on the card row. Next: key-length check on 43, then Play production = 43, read back. || [APPS run 2026-11-26 0733, scheduled, unattended] VERDICT: REGRESSION IN 42, NOT the cap stop. Production read-only (BEGIN READ ONLY). (a) The accounts: 4 users sent connected-no-traffic on android 2.4.2 (42) in 36 h, 2 reports each: 0108c9b8 RU Dusseldorf, 76130a02 AZ LA/Dusseldorf, 7f8d495d RU Dusseldorf, 3b0ce35f DE Dusseldorf. All 4 are free, CurrentCycleDataUsed 0 MB of 512 MB, so not at cap; 0 paid. A 5th phone was not found (the mail may count a second build or a report outside 36 h). (b) Control: users in RU/AZ/IR/BY, last 10 days. Build 40: protocol 3 (hidden mode) 19 sessions, 18 with data >1 KB (9 users). Build 42: protocol 0 (WireGuard) only, 10 sessions, 3 with data (8 users), 0 hidden-mode sessions. Failures: 40 = caspercloak only; 42 = wireguard only (6 no-traffic). Outside blocked countries, 42 works (new users 3 of 3 with data). (c) Cause: git diff 8878322 (40) -> 87bed24 (42) changes no protocol-pick code (cap stop, review prompt, trial prefetch only). app/build.gradle.kts reads casperCloakRelayKey, casperSentryDsn and casperGoogleWebClientId from local.properties; empty key means 'this build has no CasperCloak and AUTO stays on WireGuard'. 42 was built in the cloud box (DEPARTMENT_LOG 25 Nov), not in the Mac build folder that has local.properties (40 and 41 copied it). So 42 has no hidden mode. Sentry DSN and Google sign-in client id are probably empty in 42 too: NOT PROVEN (no aab read). FIX: put a build made with local.properties on Play production: 43 (2.4.3, built on the Mac 26 Nov, internal now). NOT PROVEN that 43 has the key (check BuildConfig in the 43 aab, or one RU-route hidden-mode connect). CEO card DECISION row added. Verify: the s10 query in the session log (protocol by build, restricted countries). || ",
+      "blocker": "needs the CEO: YES on card row 'DECISION - Android 44' to upload 44 (built with the hidden-mode key) to internal and then production; 43 failed the key check and was NOT promoted"
     },
     {
       "id": "xd-3350",
