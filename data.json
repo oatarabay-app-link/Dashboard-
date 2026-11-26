@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-11-26T16:55:20Z",
+  "lastUpdated": "2026-11-26T17:46:04Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 67,
@@ -23535,6 +23535,16 @@
           "addedBy": "[ADMIN-PANEL] live 26 Nov",
           "evidence": "[ADMIN-PANEL same-run check, PRODUCTION, 2026-11-26T16:32:17Z] CEO YES 2026-11-26 (live chat, Claude Code on the Mac): 'Yes, ship it'. SHIPPED: production b1de02b27 = cherry-pick -x of development 05dd303fb (tests on the production-based branch 1385/1385, tsc 5.4.5 src 0 + planted control; rebased trees = tested: admin-panel-react 9db7de94f5, backend-dotnet-core 068772eeb9). PRODUCTION CHANGED: api container recreated by /root/deploy_api.sh (DEPLOY DONE OK 16:21:41Z, rollback caspervpn-api:rollback-202611261617 = f24143527222, /health 200, 0 fail/crit lines in the first 12 min); admin container recreated by the repo admin_deploy.sh in /root/reports/admin-1126c (source check 'tile-connected', rollback caspervpn-admin-react:rollback-202611261621 = 1c0ae16a71e0, runner stopped 16:21:53Z -> active 16:29:50Z, disk 83% -> 84% -> 78%, 11G free); bundle main.a315ccf8.js (2,326,628 B) -> main.2c1bd4c5.js (2,329,683 B): tile-connected 0 -> 1, tile-returning 1, period-connected 1, period-returning 1, chip-connected 1, control trials-table 1, absent marker 0. LIVE in the CEO's signed-in Chrome 16:31-16:35Z, read-only (only view filters clicked): Connected users today 77, last 7 days 303, last 90 days 633 (634 one minute later); Returning users today 21 (27% of 78), last 7 days 52 (17% of 303), last 90 days 199 (31% of 634). Tile = list: Returning quarter 199 -> Users list '1-20 of 199' with the chip 'Came back - connected: 2026-08-29 to 2026-11-26 and on another day too'; Connected quart || development 05dd303fb; dev check on ticket xd-3369: API = SQL for day / week / month / quarter / year, 0 mismatches",
           "ceoAnswer": "YES - 'Yes, ship it' (live chat 26 Nov)"
+        },
+        {
+          "test": "READY TO SHIP - Fix for the usage reports the main server refuses (xd-3370, urgent). Today each server asks the main server 'whose connection is this?' and the answer takes almost 3 minutes, so the servers give up after 10 seconds and the usage is not credited (7,843 refused reports on 26 Nov). The fix makes the answer take well under one second. Tested: all automatic tests pass, and on the test server the answer came in 0.03 to 0.06 seconds. Shipping restarts the main program once (about 8 seconds of errors, as on 16 Nov); for about 2 to 5 minutes after the restart some lookups answer 'try again'. No database change. Undo: one command puts the previous version back (the deploy script keeps it). Advice: YES, ship now - it is also the likely cause of the main server's high load. Say YES to ship.",
+          "verify": "On the main server after the ship: API log lines 'wireguard/lookup completed' are under 1,000 ms (were 164,000 ms average); '[wg-lookup-index] pass done ... index is ready' appears once; 'User not found - wg-peer' lines per hour fall for NEW sessions; servers thread re-runs its Singapore check",
+          "owner": "backend",
+          "met": false,
+          "passed": false,
+          "addedAt": "2026-11-26T17:45:53Z",
+          "addedBy": "[BACKEND] live 26 Nov",
+          "evidence": "[BACKEND same-run check 26 Nov] development fecd63f87. Unit tests 1521/1521 (development tree) and 1394/1394 (production tree + this commit, scratch copy 29caae6ef, not pushed). At production size (1,332 users x 12 servers x 2 secrets) on the Mac: unknown-key lookup 29,211 ms before -> 13.9 ms after; index first pass 36.8 s once per API start. Test server api.dev image eef71d27d75a 17:44Z: index ready in 7.9 s (241 users x 5 servers), stored key 0.057 s, unknown key 0.034 s, control without key 401, health 200 (/root/be1126-xd3370-devchk.out). NOT PROVEN live: a server-made key with no stored row (none exists on the test database; covered by the old-vs-new equality unit test). Production baseline 26 Nov: 164 s average, max 532 s, 186 of 186 over 10 s; 12 of 20 keys asked in the last hour have a stored row."
         }
       ],
       "progress": 85,
@@ -99669,7 +99679,8 @@
       "priority": "P0",
       "createdAt": "2026-11-26T16:51:50Z",
       "createdDate": "2026-11-26",
-      "completedDate": null
+      "completedDate": null,
+      "notes": " | [BACKEND 2026-11-26T17:45:53Z] Fix built and tested, waits CEO YES (READY TO SHIP row on the CEO card). [BACKEND same-run check 26 Nov] development fecd63f87. Unit tests 1521/1521 (development tree) and 1394/1394 (production tree + this commit, scratch copy 29caae6ef, not pushed). At production size (1,332 users x 12 servers x 2 secrets) on the Mac: unknown-key lookup 29,211 ms before -> 13.9 ms after; index first pass 36.8 s once per API start. Test server api.dev image eef71d27d75a 17:44Z: index ready in 7.9 s (241 users x 5 servers), stored key 0.057 s, unknown key 0.034 s, control without key 401, health 200 (/root/be1126-xd3370-devchk.out). NOT PROVEN live: a server-made key with no stored row (none exists on the test database; covered by the old-vs-new equality unit test). Production baseline 26 Nov: 164 s average, max 532 s, 186 of 186 over 10 s; 12 of 20 keys asked in the last hour have a stored row. Ship path: cherry-pick fecd63f87 onto production, /root/deploy_api.sh, same-run check. Rollback: the image deploy_api.sh tags before the swap. Counter contract unchanged ({success, username}); no server id needed from the counter."
     }
   ],
   "importantNotes": [
