@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-11-27T04:16:04Z",
+  "lastUpdated": "2026-11-27T04:16:28Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 67,
@@ -23555,6 +23555,16 @@
           "addedAt": "2026-11-26T22:37:46Z",
           "addedBy": "[DEVOPS] servers project live 2026-11-26",
           "evidence": " [DEVOPS servers project 26 Nov 22:5xZ] Scope is Sao Paulo ONLY. The same addresses on Dusseldorf, Singapore, Amsterdam and Los Angeles belong to real customers (11 keys known to the database) and must not be touched. Correction: the 4 leftovers are also written in the server's saved WireGuard file (auto-save is on), so the removal is re-checked after the next save."
+        },
+        {
+          "test": "READY TO SHIP - admin revenue counts crypto stablecoin payments (xd-3363). What: a payment paid in USDT or USDC (our 2 crypto payments so far, 12.98 USD) is added to the revenue numbers in the admin pages; today they are left out because only the tag 'USD' counted. Bitcoin and other coins stay out. Why: the revenue total is 12.98 USD too low. Tested: all 1532 automatic tests pass (14 new). Shipping restarts the main program once (about 8 seconds of errors); no database change. Undo: one command puts the previous version back. NOT tried on the test server with a real crypto payment (none there). Advice: YES, ship it together with row 971 in one restart.",
+          "verify": "After ship: admin Revenue total for all time rises by 12.98 USD (select sum(Amount) from Payments where Status=1 and Currency like 'USDT%' -> 12.98 must show in the admin total); API health 200.",
+          "owner": "backend",
+          "met": false,
+          "passed": false,
+          "addedAt": "2026-11-27T05:00:00Z",
+          "addedBy": "[BACKEND] backend-daily 27 Nov",
+          "evidence": "[BACKEND same-run check 27 Nov] development 18a813e8d; tests 1532/1532; production read-only: 2 USDTBSC payments = 12.98 USD, 0 other non-USD succeeded payments except IDR 0.00 trials."
         }
       ],
       "progress": 85,
@@ -99522,7 +99532,8 @@
       "priority": "P1",
       "createdAt": "2026-11-26T09:15:46Z",
       "createdDate": "2026-11-26",
-      "completedDate": null
+      "completedDate": null,
+      "notes": " | [BACKEND 27 Nov 04:4xZ, production read-only] EXPLAINED, not a bug in the 25 Nov link fix. The orphan notice (SubscriptionEvents 801ad30f, store ref 420003481683xxx, 26 Nov 05:27:52Z) belongs to a purchase whose receipt NEVER reached the API: Payments has 0 rows containing that id. The only payment in 05:20-07:00 is 700002920465033 (05:30:25Z, trial) and ITS two notices (SUBSCRIBED + DID_CHANGE_RENEWAL_STATUS) ARE linked (UserId set). Control: of 26 SUBSCRIBED events since 25 Nov 15:39Z, 25 have a user; 12 since 05:28Z on 26 Nov, all tied except none new. Why unlinkable: the iPhone app does not set appAccountToken (AppleReceiptService.cs:990), so a notice carries no user; the only link is the receipt the app sends (LinkAppleNoticesAsync, AppleReceiptService.cs:351). So this buyer paid/started a trial and the app never sent the receipt (app killed, offline, or sign-in not finished). Ask for [IOS]/[CTO]: set appAccountToken = user id at purchase so such buyers can still be tied; until then 1 in ~26 notices stays unattributed. Row 939 re-tick left to QA with this query: select count(*) from SubscriptionEvents where Type='SUBSCRIBED' and UserId is null and EventAt>'2026-11-26 07:00' -> must be 0 for any purchase whose receipt arrived."
     },
     {
       "id": "xd-3358",
@@ -99595,7 +99606,8 @@
       "priority": "P2",
       "createdAt": "2026-11-26T12:46:42Z",
       "createdDate": "2026-11-26",
-      "completedDate": null
+      "completedDate": null,
+      "notes": " | [BACKEND 27 Nov] BUILT + TESTED, waits CEO YES (READY TO SHIP row on the CEO card). development 18a813e8d: new PaymentCurrencies.UsdValued (USD, USDT*, USDC*) replaces the 5 USD-only filters (AdminService x4, AdminSecurityFeaturesController x1); BTC/ETH/local currencies stay out. Tests 1532/1532 (46 of the revenue/payment ones incl. 14 new). Production: only 2 crypto payments exist, both USDTBSC, 12.98 USD in total (read-only query 27 Nov) - so admin revenue is 12.98 USD too low today. NOT PROVEN on the live test server (no crypto payment on the dev database); covered by the in-memory-vs-SQL expression test. Rollback: previous API image (deploy_api.sh tags it)."
     },
     {
       "id": "xd-3364",
@@ -99690,7 +99702,7 @@
       "createdAt": "2026-11-26T16:51:50Z",
       "createdDate": "2026-11-26",
       "completedDate": null,
-      "notes": " | [BACKEND 2026-11-26T17:45:53Z] Fix built and tested, waits CEO YES (READY TO SHIP row on the CEO card). [BACKEND same-run check 26 Nov] development fecd63f87. Unit tests 1521/1521 (development tree) and 1394/1394 (production tree + this commit, scratch copy 29caae6ef, not pushed). At production size (1,332 users x 12 servers x 2 secrets) on the Mac: unknown-key lookup 29,211 ms before -> 13.9 ms after; index first pass 36.8 s once per API start. Test server api.dev image eef71d27d75a 17:44Z: index ready in 7.9 s (241 users x 5 servers), stored key 0.057 s, unknown key 0.034 s, control without key 401, health 200 (/root/be1126-xd3370-devchk.out). NOT PROVEN live: a server-made key with no stored row (none exists on the test database; covered by the old-vs-new equality unit test). Production baseline 26 Nov: 164 s average, max 532 s, 186 of 186 over 10 s; 12 of 20 keys asked in the last hour have a stored row. Ship path: cherry-pick fecd63f87 onto production, /root/deploy_api.sh, same-run check. Rollback: the image deploy_api.sh tags before the swap. Counter contract unchanged ({success, username}); no server id needed from the counter."
+      "notes": " | [BACKEND 2026-11-26T17:45:53Z] Fix built and tested, waits CEO YES (READY TO SHIP row on the CEO card). [BACKEND same-run check 26 Nov] development fecd63f87. Unit tests 1521/1521 (development tree) and 1394/1394 (production tree + this commit, scratch copy 29caae6ef, not pushed). At production size (1,332 users x 12 servers x 2 secrets) on the Mac: unknown-key lookup 29,211 ms before -> 13.9 ms after; index first pass 36.8 s once per API start. Test server api.dev image eef71d27d75a 17:44Z: index ready in 7.9 s (241 users x 5 servers), stored key 0.057 s, unknown key 0.034 s, control without key 401, health 200 (/root/be1126-xd3370-devchk.out). NOT PROVEN live: a server-made key with no stored row (none exists on the test database; covered by the old-vs-new equality unit test). Production baseline 26 Nov: 164 s average, max 532 s, 186 of 186 over 10 s; 12 of 20 keys asked in the last hour have a stored row. Ship path: cherry-pick fecd63f87 onto production, /root/deploy_api.sh, same-run check. Rollback: the image deploy_api.sh tags before the swap. Counter contract unchanged ({success, username}); no server id needed from the counter. | [BACKEND 27 Nov 04:3xZ] Re-checked: card row 971 (READY TO SHIP) still has NO CEO YES. Not safe-ship (restarts the live API, production code). Nothing shipped. Waits the CEO's YES on row 971."
     },
     {
       "id": "xd-3371",
@@ -99702,7 +99714,8 @@
       "priority": "P1",
       "createdAt": "2026-11-26T17:49:02Z",
       "createdDate": "2026-11-26",
-      "completedDate": null
+      "completedDate": null,
+      "notes": " | [BACKEND 27 Nov] MEASURED BY CODE READING, no change shipped. (1) The hidden-mode front road ALREADY hands the cover name: CloudfrontFrontingService.BuildHopAsync uses NativeFront:FrontHostByServerName (production appsettings.json: 11 names on profitechlb.com; dev appsettings.Development.json: 'Bangkok Dev' -> jumira.profitechlb.com; dev env has NativeFront__Enabled=true, Path /cc). jumira already points at the spare .248, so the front road to the hidden-only address needs no code. (2) What still hands the plain names: ServersController.GetCasperCloakConfig returns server.CasperCloakDomain + CasperCloakDomainPool (sN.pompesh.com / cc-*.caspervpn.com) for the direct road and the bare-IP road (VpnServer.IpAddress). To hand the cover name there, the cheap data-only step is to set Bangkok Dev's CasperCloakDomain/pool to jumira.profitechlb.com first (dev database, staff-only server), then the tier code needs a per-server hidden address only if the direct road must use .248 (no field for it today; adding one = a migration). NOT PROVEN: what a staff phone is handed on dev now - I have no dev staff login recipe in the vault (needs one: add to probes.md). Next step for the next run: dev DB update + a staff login probe + curl --http1.1 upgrade=101 on the exact URL."
     },
     {
       "id": "xd-3372",
