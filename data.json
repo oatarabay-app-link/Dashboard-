@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-11-27T11:35:25Z",
+  "lastUpdated": "2026-11-27T11:45:26Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 67,
@@ -23605,6 +23605,16 @@
           "addedAt": "2026-11-27T11:40:00Z",
           "addedBy": "[BACKEND] backend-daily 27 Nov 11Z",
           "evidence": "[BACKEND same-run check 27 Nov] development 17ae6bad4; tests 1533/1533; control fails; test server image cb195e5e18d4 healthy, DLL contains UserFromAppAccountTokenAsync."
+        },
+        {
+          "test": "READY TO SHIP - stop a false 'unknown failure' log line from iPhones in hidden mode (xd-3381). What: the server now knows the iPhone's 'extension-not-started' report (the tunnel part of the app did not start) instead of logging it as unknown; it never counts as a block. Why: log noise only - the report was already stored. Tested: all 1534 automatic tests pass (1 new with 3 controls). Shipping restarts the main program once; no database change; no customer sees a change. Undo: one command puts the previous version back. Advice: YES, only together with rows 971, 973 and 977 in the same restart (not worth a restart on its own).",
+          "verify": "After ship: docker logs caspervpn-api --since 24h | grep -c \"unknown failureCategory.*extension-not-started\" -> 0 while ConnectFailureEvents gets new 'extension-not-started' rows.",
+          "owner": "backend",
+          "met": false,
+          "passed": false,
+          "addedAt": "2026-11-27T11:50:00Z",
+          "addedBy": "[BACKEND] backend-daily 27 Nov 11Z",
+          "evidence": "[BACKEND same-run check 27 Nov] development f05c97545; tests 1534/1534 (/root/reports/be1127b/test4.log). Not re-proven on the test server (no hidden-mode iPhone report there)."
         }
       ],
       "progress": 85,
@@ -99905,11 +99915,13 @@
       "to": "[BACKEND]",
       "title": "Handoff from CTO: [P1] Myanmar users put on Singapore never get data; the same country on Los Angeles / Amsterdam works - steer MM off Singapore",
       "description": "[CTO daily 2026-11-27 11:12-12:2xZ, scheduled, unattended] MYANMAR (truth table 27 Nov, 7 d, real users, production read-only): hidden-front 64 attempts / 8 users, success 20% (26 Nov: 45 / 13%), cc-handshake-timeout 18, tcp-timeout 11. Per user (9 MM users with attempts, all free plan): the 4 users who never got data were ALL on Singapore (01677cd0 hidden 5 sessions 0 B + 8 failures; 17d4deba WireGuard 2 sessions 0 B; 164e5fc4 5 failures, no session; 49434e03 27 Singapore failures, then data on Amsterdam); the 5 users on Los Angeles / Amsterdam got 100-400 MB each (Los Angeles hidden 8/8 sessions with data). Control: Singapore carries data for 107 of 127 real-user attempts in 24 h overall (alert_triage table), so Singapore works - but not from Myanmar. NOT PROVEN: the cause (censor block of the Singapore names/address from Myanmar networks vs a route problem); only 9 users. ASK: (1) read how the app/API picks the first server for a Myanmar user (nearest = Singapore?); (2) on development, make MM's recommended / auto-pick server Los Angeles or Amsterdam (a stealth-tier or country rule), test on the dev server, READY TO SHIP row (customer-facing: needs CEO YES); (3) [DEVOPS] may add OONI data for the Singapore front/relay names in MM. Re-measure: python3 tools/dpi_truth_table.py (MM rows) + the per-user query in the [CTO] session log 27 Nov. Owner of the whole topic stays [CTO] xd-3332.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-11-27T11:19:52Z",
       "createdDate": "2026-11-27",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[BACKEND 27 Nov 11:4xZ, code read only, step (1)] How the first server is picked: GET/POST /api/servers/recommended -> OptimizedVpnServerService.GetRecommendedServerAsync (Program.cs:403): active+online, not staff-only, free users free servers only, then score = 100 - distance_km*0.01 - ping*0.1 (- load*0.5 if asked); NO country rule. From Yangon (GeoIpService MM 16.87,96.20) Singapore is ~1,950 km vs Los Angeles ~13,000 km, so Singapore wins for every MM user who sends a location. The list order in the app may also pick 'nearest' on the phone (iOS side, not read). Next run: (2) on development, a per-country avoid list (config, e.g. RecommendAvoid:MM=Singapore) applied before the score, with a test; READY TO SHIP needs the CEO YES (customer-facing). NOT PROVEN: what the phone actually calls for the first pick.",
+      "updatedAt": "2026-11-27T11:50:00Z"
     },
     {
       "id": "xd-3381",
@@ -99917,11 +99929,14 @@
       "to": "[BACKEND]",
       "title": "Handoff from IOS: [P3] Add 'extension-not-started' to KnownFailureCategories (log noise only)",
       "description": "[APPS run 2026-11-27 0733, scheduled, fired 11:12Z, unattended] From xd-3373 point 4. The iPhone sends FailureCategory 'extension-not-started' (hidden mode, tunnel extension did not start). Production stores it fine (ConnectFailureEvents: 1 row in 7 days, b791deb3 26 Nov 14:02Z), but DiagnosticsController.cs:249 KnownFailureCategories lacks it, so the API logs 'ConnectFailure: unknown failureCategory'. Ask: add the name (weight 0, like the other app-side starts), one test. Log-only; no data change.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P3",
       "createdAt": "2026-11-27T11:24:27Z",
       "createdDate": "2026-11-27",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[BACKEND 27 Nov 11:4xZ] BUILT on development f05c97545: 'extension-not-started' added to KnownFailureCategories (DiagnosticsController) and FailureCategoryWeights (0.0). Test KnownFailureCategoryTests (known + weight 0; controls tcp-timeout known, 'extension-not-startedx' and null unknown); suite 1534/1534. NOT PROVEN: a control run of the new test on the old code (not run). Ship = card row 978, bundle with 971/973/977.",
+      "updatedAt": "2026-11-27T11:50:00Z",
+      "blocker": "waits the CEO's YES on card row 978 (bundle with 971)"
     },
     {
       "id": "xd-3382",
