@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-11-27T11:25:23Z",
+  "lastUpdated": "2026-11-27T11:35:25Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 67,
@@ -23414,7 +23414,7 @@
           "evidence": "CEO A 2026-11-26 (live chat, apps run session): 'A' - promote 43 to production after one check that 43 has the hidden-mode key. || details on xd-3349 || [ANDROID 2026-11-26 12:35Z] A carried out up to the check: 43 FAILED the key check (key empty, same as 42), so 43 was NOT promoted. Superseded by the DECISION - Android 44 row. details on xd-3349"
         },
         {
-          "test": "ACTION - clear old Cowork sessions in the Claude app: the Mac VM disk is 87% full (df /sessions 8.0 of 9.8 GB, 26 Nov 07:3xZ)",
+          "test": "ACTION - clear old Cowork sessions in the Claude app: the Mac VM disk is 87% full (df /sessions 8.0 of 9.8 GB, 26 Nov 07:3xZ) \u00b7 still 87% on 27 Nov 11:13Z (8.1 of 9.8 GB, 1.3 GB free)",
           "met": false,
           "owner": "[CEO]",
           "addedAt": "2026-11-26T07:39:38Z",
@@ -23595,6 +23595,16 @@
           "addedAt": "2026-11-27T11:25:00Z",
           "addedBy": "[DEVOPS] daily run",
           "evidence": "[DEVOPS daily 2026-11-27 11:1x-11:3xZ, scheduled, unattended] /var/run/reboot-required dated 2026-11-25 06:16:32Z (linux-image-6.8.0-151-generic, linux-base); uname -r 6.8.0-149-generic; up 9 days 18 h."
+        },
+        {
+          "test": "READY TO SHIP - every new iPhone purchase can be tied to its account even when the app never sends the receipt (xd-3357). What: the server reads the account id Apple repeats on each purchase notice (appAccountToken) and puts it on our purchase history row; it is used only when it names a real account. Why: 1 of 26 new purchases since 25 Nov has no account in our records because the phone never sent the receipt (card row 939), so trial results by country/ad miss it. It starts helping once the iPhone app sets that id (handed to [IOS]); until then it changes nothing. Tested: all 1533 automatic tests pass (1 new, 4 controls; a broken copy fails it); live on the test server since 11:32Z, healthy. Shipping restarts the main program once (about 8-22 seconds of errors); no database change; touches only our own records (no plan, money or mail). Undo: one command puts the previous version back (deploy_api.sh). Advice: YES, ship it together with rows 971 and 973 in one restart.",
+          "verify": "After ship + an iPhone build that sets the token: select count(*) from \"SubscriptionEvents\" where \"Type\"='SUBSCRIBED' and \"UserId\" is null and \"EventAt\">'<ship time>' -> 0; before the app build the number may stay 1 in ~26 (expected).",
+          "owner": "backend",
+          "met": false,
+          "passed": false,
+          "addedAt": "2026-11-27T11:40:00Z",
+          "addedBy": "[BACKEND] backend-daily 27 Nov 11Z",
+          "evidence": "[BACKEND same-run check 27 Nov] development 17ae6bad4; tests 1533/1533; control fails; test server image cb195e5e18d4 healthy, DLL contains UserFromAppAccountTokenAsync."
         }
       ],
       "progress": 85,
@@ -99585,12 +99595,14 @@
       "to": "[BACKEND]",
       "title": "Handoff from QA: [P1] Apple purchase notice still lands without its account after the 25 Nov ship (card row 939 re-opened)",
       "description": "QA spot-check 26 Nov 09:1xZ, production read-only: SubscriptionEvents Type=SUBSCRIBED since 25 Nov 15:39Z = 16, 1 with UserId NULL: id 801ad30f, apple Production com.caspervpn.premium.weekly, InTrial=true, EventAt 26 Nov 05:27:52Z (3.5 h old at the read). Control before ship: 1 of 27. Row 939 expects 0. Find why this purchase was not tied (did the app send the receipt? which account?) and fix or explain; then re-tick with the same query.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-11-26T09:15:46Z",
       "createdDate": "2026-11-26",
       "completedDate": null,
-      "notes": " | [BACKEND 27 Nov 04:4xZ, production read-only] EXPLAINED, not a bug in the 25 Nov link fix. The orphan notice (SubscriptionEvents 801ad30f, store ref 420003481683xxx, 26 Nov 05:27:52Z) belongs to a purchase whose receipt NEVER reached the API: Payments has 0 rows containing that id. The only payment in 05:20-07:00 is 700002920465033 (05:30:25Z, trial) and ITS two notices (SUBSCRIBED + DID_CHANGE_RENEWAL_STATUS) ARE linked (UserId set). Control: of 26 SUBSCRIBED events since 25 Nov 15:39Z, 25 have a user; 12 since 05:28Z on 26 Nov, all tied except none new. Why unlinkable: the iPhone app does not set appAccountToken (AppleReceiptService.cs:990), so a notice carries no user; the only link is the receipt the app sends (LinkAppleNoticesAsync, AppleReceiptService.cs:351). So this buyer paid/started a trial and the app never sent the receipt (app killed, offline, or sign-in not finished). Ask for [IOS]/[CTO]: set appAccountToken = user id at purchase so such buyers can still be tied; until then 1 in ~26 notices stays unattributed. Row 939 re-tick left to QA with this query: select count(*) from SubscriptionEvents where Type='SUBSCRIBED' and UserId is null and EventAt>'2026-11-26 07:00' -> must be 0 for any purchase whose receipt arrived."
+      "notes": "[BACKEND 27 Nov 04:4xZ, production read-only] EXPLAINED, not a bug in the 25 Nov link fix. The orphan notice (SubscriptionEvents 801ad30f, store ref 420003481683xxx, 26 Nov 05:27:52Z) belongs to a purchase whose receipt NEVER reached the API: Payments has 0 rows containing that id. The only payment in 05:20-07:00 is 700002920465033 (05:30:25Z, trial) and ITS two notices (SUBSCRIBED + DID_CHANGE_RENEWAL_STATUS) ARE linked (UserId set). Control: of 26 SUBSCRIBED events since 25 Nov 15:39Z, 25 have a user; 12 since 05:28Z on 26 Nov, all tied except none new. Why unlinkable: the iPhone app does not set appAccountToken (AppleReceiptService.cs:990), so a notice carries no user; the only link is the receipt the app sends (LinkAppleNoticesAsync, AppleReceiptService.cs:351). So this buyer paid/started a trial and the app never sent the receipt (app killed, offline, or sign-in not finished). Ask for [IOS]/[CTO]: set appAccountToken = user id at purchase so such buyers can still be tied; until then 1 in ~26 notices stays unattributed. Row 939 re-tick left to QA with this query: select count(*) from SubscriptionEvents where Type='SUBSCRIBED' and UserId is null and EventAt>'2026-11-26 07:00' -> must be 0 for any purchase whose receipt arrived. | [BACKEND 27 Nov 11:2xZ] SERVER PART BUILT on development 17ae6bad4 (AppleReceiptService: reads appAccountToken from each signed transaction; SubscriptionEventLog.UserFromAppAccountTokenAsync: uses it for the history row only when no Payment names the account and the user exists). Tests 1533/1533 on the main server tree (/root/reports/be1127b/test.log); new test with 4 controls (unknown id, not a UUID, empty, all-zero); control build that skips the user check FAILS it (ctl.log: Failed 1, Passed 2). Test server: auto-deploy 11:32:43Z, healthy, DLL has the new method (grep count 3). NOT PROVEN on the test server with a real Apple notice (needs a sandbox purchase from an app that sets the token). App part handed to [IOS] (xd-3382). Ship = new READY TO SHIP row on the CEO card.",
+      "updatedAt": "2026-11-27T11:40:00Z",
+      "blocker": "waits the CEO's YES on the READY TO SHIP row (server part, xd-3357) and [IOS] xd-3382 (the app must set appAccountToken)"
     },
     {
       "id": "xd-3358",
@@ -99667,7 +99679,8 @@
       "createdAt": "2026-11-26T12:46:42Z",
       "createdDate": "2026-11-26",
       "completedDate": null,
-      "notes": " | [BACKEND 27 Nov] BUILT + TESTED, waits CEO YES (READY TO SHIP row on the CEO card). development 18a813e8d: new PaymentCurrencies.UsdValued (USD, USDT*, USDC*) replaces the 5 USD-only filters (AdminService x4, AdminSecurityFeaturesController x1); BTC/ETH/local currencies stay out. Tests 1532/1532 (46 of the revenue/payment ones incl. 14 new). Production: only 2 crypto payments exist, both USDTBSC, 12.98 USD in total (read-only query 27 Nov) - so admin revenue is 12.98 USD too low today. NOT PROVEN on the live test server (no crypto payment on the dev database); covered by the in-memory-vs-SQL expression test. Rollback: previous API image (deploy_api.sh tags it)."
+      "notes": "[BACKEND 27 Nov] BUILT + TESTED, waits CEO YES (READY TO SHIP row on the CEO card). development 18a813e8d: new PaymentCurrencies.UsdValued (USD, USDT*, USDC*) replaces the 5 USD-only filters (AdminService x4, AdminSecurityFeaturesController x1); BTC/ETH/local currencies stay out. Tests 1532/1532 (46 of the revenue/payment ones incl. 14 new). Production: only 2 crypto payments exist, both USDTBSC, 12.98 USD in total (read-only query 27 Nov) - so admin revenue is 12.98 USD too low today. NOT PROVEN on the live test server (no crypto payment on the dev database); covered by the in-memory-vs-SQL expression test. Rollback: previous API image (deploy_api.sh tags it). | [BACKEND 27 Nov 11:2xZ] Re-checked: card row 973 still has no CEO YES; development 18a813e8d is on the test server (image cb195e5e18d4 includes it).",
+      "updatedAt": "2026-11-27T11:40:00Z"
     },
     {
       "id": "xd-3364",
@@ -99762,7 +99775,8 @@
       "createdAt": "2026-11-26T16:51:50Z",
       "createdDate": "2026-11-26",
       "completedDate": null,
-      "notes": " | [BACKEND 2026-11-26T17:45:53Z] Fix built and tested, waits CEO YES (READY TO SHIP row on the CEO card). [BACKEND same-run check 26 Nov] development fecd63f87. Unit tests 1521/1521 (development tree) and 1394/1394 (production tree + this commit, scratch copy 29caae6ef, not pushed). At production size (1,332 users x 12 servers x 2 secrets) on the Mac: unknown-key lookup 29,211 ms before -> 13.9 ms after; index first pass 36.8 s once per API start. Test server api.dev image eef71d27d75a 17:44Z: index ready in 7.9 s (241 users x 5 servers), stored key 0.057 s, unknown key 0.034 s, control without key 401, health 200 (/root/be1126-xd3370-devchk.out). NOT PROVEN live: a server-made key with no stored row (none exists on the test database; covered by the old-vs-new equality unit test). Production baseline 26 Nov: 164 s average, max 532 s, 186 of 186 over 10 s; 12 of 20 keys asked in the last hour have a stored row. Ship path: cherry-pick fecd63f87 onto production, /root/deploy_api.sh, same-run check. Rollback: the image deploy_api.sh tags before the swap. Counter contract unchanged ({success, username}); no server id needed from the counter. | [BACKEND 27 Nov 04:3xZ] Re-checked: card row 971 (READY TO SHIP) still has NO CEO YES. Not safe-ship (restarts the live API, production code). Nothing shipped. Waits the CEO's YES on row 971."
+      "notes": "[BACKEND 2026-11-26T17:45:53Z] Fix built and tested, waits CEO YES (READY TO SHIP row on the CEO card). [BACKEND same-run check 26 Nov] development fecd63f87. Unit tests 1521/1521 (development tree) and 1394/1394 (production tree + this commit, scratch copy 29caae6ef, not pushed). At production size (1,332 users x 12 servers x 2 secrets) on the Mac: unknown-key lookup 29,211 ms before -> 13.9 ms after; index first pass 36.8 s once per API start. Test server api.dev image eef71d27d75a 17:44Z: index ready in 7.9 s (241 users x 5 servers), stored key 0.057 s, unknown key 0.034 s, control without key 401, health 200 (/root/be1126-xd3370-devchk.out). NOT PROVEN live: a server-made key with no stored row (none exists on the test database; covered by the old-vs-new equality unit test). Production baseline 26 Nov: 164 s average, max 532 s, 186 of 186 over 10 s; 12 of 20 keys asked in the last hour have a stored row. Ship path: cherry-pick fecd63f87 onto production, /root/deploy_api.sh, same-run check. Rollback: the image deploy_api.sh tags before the swap. Counter contract unchanged ({success, username}); no server id needed from the counter. | [BACKEND 27 Nov 04:3xZ] Re-checked: card row 971 (READY TO SHIP) still has NO CEO YES. Not safe-ship (restarts the live API, production code). Nothing shipped. Waits the CEO's YES on row 971. | [BACKEND 27 Nov 11:2xZ] Re-checked: card row 971 still has no CEO YES; nothing shipped (restarts the live API = not safe-ship).",
+      "updatedAt": "2026-11-27T11:40:00Z"
     },
     {
       "id": "xd-3371",
@@ -99770,12 +99784,14 @@
       "to": "[BACKEND]",
       "title": "Handoff from DEVOPS: Hidden mode: hand phones the cover name + the website-only address (CEO A 26 Nov, infra-audit H1/H2)",
       "description": "Built + graded on Bangkok 26 Nov (vault memory/departments/devops/server-daily/2026-11-26.md, section 'do steps 1-4'): spare address answers only 443; cover name jumira.profitechlb.com points at it; lab PASS + canary through it. Today the API hands sN.pompesh.com / sN-edge.pompesh.com on the plain address (ServersController, StealthTier). Ask: on development, let the API hand the server's cover name (per-server, profitechlb/shortaalmashahir) and use the hidden-only address, staff-only first on Bangkok; keep sN as fallback. Before/after: test the exact URL handed to a fronted country with curl --http1.1 upgrade = 101 (anticensorship trap 29 Oct). Customer servers get their hidden-only address one at a time from the servers project. Production only on a CEO YES row.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P1",
       "createdAt": "2026-11-26T17:49:02Z",
       "createdDate": "2026-11-26",
       "completedDate": null,
-      "notes": " | [BACKEND 27 Nov] MEASURED BY CODE READING, no change shipped. (1) The hidden-mode front road ALREADY hands the cover name: CloudfrontFrontingService.BuildHopAsync uses NativeFront:FrontHostByServerName (production appsettings.json: 11 names on profitechlb.com; dev appsettings.Development.json: 'Bangkok Dev' -> jumira.profitechlb.com; dev env has NativeFront__Enabled=true, Path /cc). jumira already points at the spare .248, so the front road to the hidden-only address needs no code. (2) What still hands the plain names: ServersController.GetCasperCloakConfig returns server.CasperCloakDomain + CasperCloakDomainPool (sN.pompesh.com / cc-*.caspervpn.com) for the direct road and the bare-IP road (VpnServer.IpAddress). To hand the cover name there, the cheap data-only step is to set Bangkok Dev's CasperCloakDomain/pool to jumira.profitechlb.com first (dev database, staff-only server), then the tier code needs a per-server hidden address only if the direct road must use .248 (no field for it today; adding one = a migration). NOT PROVEN: what a staff phone is handed on dev now - I have no dev staff login recipe in the vault (needs one: add to probes.md). Next step for the next run: dev DB update + a staff login probe + curl --http1.1 upgrade=101 on the exact URL."
+      "notes": "[BACKEND 27 Nov] MEASURED BY CODE READING, no change shipped. (1) The hidden-mode front road ALREADY hands the cover name: CloudfrontFrontingService.BuildHopAsync uses NativeFront:FrontHostByServerName (production appsettings.json: 11 names on profitechlb.com; dev appsettings.Development.json: 'Bangkok Dev' -> jumira.profitechlb.com; dev env has NativeFront__Enabled=true, Path /cc). jumira already points at the spare .248, so the front road to the hidden-only address needs no code. (2) What still hands the plain names: ServersController.GetCasperCloakConfig returns server.CasperCloakDomain + CasperCloakDomainPool (sN.pompesh.com / cc-*.caspervpn.com) for the direct road and the bare-IP road (VpnServer.IpAddress). To hand the cover name there, the cheap data-only step is to set Bangkok Dev's CasperCloakDomain/pool to jumira.profitechlb.com first (dev database, staff-only server), then the tier code needs a per-server hidden address only if the direct road must use .248 (no field for it today; adding one = a migration). NOT PROVEN: what a staff phone is handed on dev now - I have no dev staff login recipe in the vault (needs one: add to probes.md). Next step for the next run: dev DB update + a staff login probe + curl --http1.1 upgrade=101 on the exact URL. | [BACKEND 27 Nov 11:31-11:35Z, test server] MEASURED BEFORE (staff token, /api/servers/<Bangkok Dev>/caspercloak-config): direct road already handed a COVER name, velmora.shortaalmashahir.com (-> 46.16.129.246, the plain address), pool [velmora, s13.pompesh.com]; fronted countries (IR/CN) got cloudfrontUrl wss://jumira.profitechlb.com/cc (-> .248, hidden-only). CHANGED (test database only, Bangkok Dev row only, backup table _bk_be1127b_bkkdev): CasperCloakDomain velmora -> jumira.profitechlb.com, pool [jumira, velmora, s13.pompesh.com] (sN kept as last fallback). AFTER: every country is handed casperCloakDomain jumira.profitechlb.com + the same pool; upgrade test --http1.1 on the exact URLs: jumira/cc 101 at 46.16.129.248, velmora/cc 101, s13/cc 101; control wrong path 404; control no token 401. Still the plain address: ipAddress/hostname 46.16.129.246 (bare-IP road) - pointing that road at .248 needs a per-server hidden-address field = a migration; not done (ask CTO/DEVOPS if wanted). Side finding: stealthTierCountry stays 'IR' for the staff user after one IR call (cached per user) - not changed. Undo: update VpnServers set CasperCloakDomain/pool from _bk_be1127b_bkkdev. NOT PROVEN: a phone tunnel through jumira on the direct road -> handed to [DEVOPS] for the Bangkok canary.",
+      "updatedAt": "2026-11-27T11:40:00Z",
+      "blocker": "waits [DEVOPS] xd-3383: canary through jumira on the direct road (phone-side proof)"
     },
     {
       "id": "xd-3372",
@@ -99904,6 +99920,30 @@
       "status": "pending",
       "priority": "P3",
       "createdAt": "2026-11-27T11:24:27Z",
+      "createdDate": "2026-11-27",
+      "completedDate": null
+    },
+    {
+      "id": "xd-3382",
+      "from": "[BACKEND]",
+      "to": "[IOS]",
+      "title": "Handoff from BACKEND: [P1] Set appAccountToken = the signed-in user's id on every App Store purchase (xd-3357)",
+      "description": "Why: Apple's first-purchase notice arrives ~14 s before the app's receipt and, when the receipt never arrives (app killed, offline, sign-in not finished), the purchase stays without its account forever (1 of 26 notices since 25 Nov, card row 939). The server (development 17ae6bad4) now reads appAccountToken from every Apple notice and uses it when it names an existing user. Ask: in SubscriptionManager.purchase(_:) and purchaseDedicatedIP (production tree ios-app-v2 lines ~387 and ~409 call product.purchase() with no options) pass options [.appAccountToken(UUID(uuidString: currentUserId))] when the user id is a UUID (the promo-offer worktree already has PromoOfferRules.appAccountToken(userId:) - reuse it). Lower-case UUID = our Users.Id. Check: a sandbox purchase on the test server -> select \"UserId\" from \"SubscriptionEvents\" where \"StoreRef\"='<originalTransactionId>' is set on the INITIAL_BUY row even before the receipt call.",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-11-27T11:35:25Z",
+      "createdDate": "2026-11-27",
+      "completedDate": null
+    },
+    {
+      "id": "xd-3383",
+      "from": "[BACKEND]",
+      "to": "[DEVOPS]",
+      "title": "Handoff from BACKEND: Bangkok Dev direct road now hands jumira.profitechlb.com (hidden-only .248) - run the canary through it (xd-3371)",
+      "description": "Test database only: Bangkok Dev CasperCloakDomain = jumira.profitechlb.com, pool [jumira, velmora.shortaalmashahir.com, s13.pompesh.com] since 27 Nov 11:32Z (backup _bk_be1127b_bkkdev on the dev database). Upgrade 101 proven at 46.16.129.248. Ask: run the Bangkok canary / lab grade with the direct road on jumira and write pass/fail on xd-3371; say if the bare-IP road (still 46.16.129.246) must also move to .248 (needs a new per-server field + migration).",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-11-27T11:35:25Z",
       "createdDate": "2026-11-27",
       "completedDate": null
     }
