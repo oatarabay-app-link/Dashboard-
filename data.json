@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-11-28T01:59:57Z",
+  "lastUpdated": "2026-11-28T02:15:56Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 67,
@@ -100270,11 +100270,13 @@
       "to": "[BACKEND]",
       "title": "Handoff from IOS: [P2] Port forwarding: iPhone Dedicated IP screen lets an owner save port rules, but no server code applies them",
       "description": "CEO asked 27 Nov 23:42Z 'do we have port forwarding in our apps?'. Code read 28 Nov (no live test): production backend DedicatedIpController has POST/DELETE /dedicated-ip/port-forwarding and DedicatedIpService stores the rules, but git grep finds no iptables/DNAT/ssh/node call in DedicatedIpService - rules are saved, NOT PROVEN applied on any server. iPhone (build 117 line) DedicatedIPView shows a port forwarding section and DedicatedIPManager lists 'Forward ports for gaming/hosting' as a feature; Android removed port forwarding from its Dedicated IP screen on 3 Oct (xd-1287, website dropped it); desktop and extensions have none. ASK: (1) confirm with one rule on the test server whether anything reaches the node; (2) if not, product decision: build it on the nodes or hide the iPhone section + feature line (customer-facing wording = CEO YES).",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "P2",
       "createdAt": "2026-11-27T23:43:24Z",
       "createdDate": "2026-11-28",
-      "completedDate": null
+      "completedDate": null,
+      "notes": "[Mac thread 28 Nov 01:5x-03:3xZ] CEO YES 28 Nov 01:47Z (thread): 'build it properly every where'. BUILT: node portforward.py + /portforward/sync, backend PortForwardSyncer + 10-min repair + PortForwarding:Mode off|sync|on, review fixes (whitelist = source allow-list, DNAT-only forward, re-enable checks, expiry closes ports, current owner's whitelist only) - PR #48 dev/portforward-2026-11-28 674c39029; node 19/19, backend 1548/1548. TEST SERVER bkk-dev live: rule applied + DNAT counter hit by a real TCP try; port 80 + foreign IP rejected; 401 without token; whitelist 1 vs 0 packets; empty sync cleared; other firewall rules unchanged. iPhone screen never worked (wrong paths/protocol/field names) - fixed a9406e0a4 on dev/ios-connect-fixes-2026-11-28 (9/9, app builds). Android screen added b96aa2de3 on dev/android-connect-fixes-2026-11-28 (717/0). BLOCKED: live rollout to the 6 dedicated-IP servers (HK, Miami, Montreal, Sydney, Sao Paulo, Tokyo) was refused by the Mac's safety check - needs the CEO's typed YES for that exact step. Advertising (Mode=on) waits for the next app builds (old iPhone builds call wrong paths). Data oddity: Montreal's dedicated IP 23.95.76.208 looks like a Miami-range address. || ",
+      "blocker": "CEO typed YES to roll the node part out to the 6 dedicated-IP servers + deploy the backend; then Mode=on with the next app builds"
     },
     {
       "id": "xd-3392",
@@ -100335,6 +100337,18 @@
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-11-28T01:21:31Z",
+      "createdDate": "2026-11-28",
+      "completedDate": null
+    },
+    {
+      "id": "xd-3397",
+      "from": "[BACKEND]",
+      "to": "[DESKTOP]",
+      "title": "Handoff from BACKEND: [P2] Desktop: add the Port Forwarding section to the Dedicated IP screen (iPhone/Android parity, CEO 28 Nov 'build it properly every where')",
+      "description": "Backend + servers part: PR #48 (dev/portforward-2026-11-28). Contract: GET /api/dedicated-ip/port-forwarding (bare list of {id, externalPort, internalPort, protocol tcp|udp|both, label, isActive}), POST same path {externalPort 1024-65535, internalPort 1-65535, protocol, label?}, DELETE /api/dedicated-ip/port-forwarding/{ruleId}, PATCH /api/dedicated-ip/port-forwarding/{ipId}/{ruleId} {isEnabled}. Show it only when GET /api/dedicated-ip lists 'Port Forwarding' in features. Android reference: ui/dedicatedip/PortForwardRules.kt + DedicatedIpScreen PortForwardSection on dev/android-connect-fixes-2026-11-28 b96aa2de3. Build on CI (the Mac cannot iterate Rust, desktop skill A12).",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-11-28T02:15:56Z",
       "createdDate": "2026-11-28",
       "completedDate": null
     }
