@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-11-28T13:42:42Z",
+  "lastUpdated": "2026-11-28T13:46:58Z",
   "updatedBy": "[MARKETING] casper-growth-1013-0804",
   "overall": {
     "completion": 67,
@@ -100710,6 +100710,54 @@
       "status": "pending",
       "priority": "P1",
       "createdAt": "2026-11-28T11:26:56Z",
+      "createdDate": "2026-11-28",
+      "completedDate": null
+    },
+    {
+      "id": "xd-3408",
+      "from": "[DEVOPS]",
+      "to": "[ADMIN-PANEL]",
+      "title": "Handoff from DEVOPS: Trial rows mislead: show store country + 'plan, free period, first charge date, store price' (CEO YES 28 Nov)",
+      "description": "CEO YES 28 Nov 2026 13:44Z, his words as relayed by the project coordinator to the servers project: 'yes for 3 fixes' (admin trial labels, cut-off purchase fix, marketing ad findings). WHAT: the admin Subscriptions / Free trials rows mislead. Measured on today's trial (28 Nov 13:18Z): the CEO read 'UAE, one month'; the truth is address country AE (Users.LastLoginCountry else RegistrationCountry, AdminController line 490), Apple storefront PHL (SubscriptionEvents.Storefront, not shown), plan Monthly (Plans.Name = plan length, not the free period), free period 7 days (Payments 'free trial P7D', Users.TrialEndsAt 5 Dec 13:18Z), first charge 5 Dec by Apple at the Philippine store price PHP 599 while the page shows the USD plan price 9.99. DO: (1) show the Apple/Google store country next to the address country on the subscription and trial rows and on the user profile; (2) label a trial row as plan + free period + first charge date + store price when known, e.g. 'Monthly, free 7 days, first charge on 5 Dec at the store price'; (3) never show the plan length where the free period is meant. DONE WHEN: on admin.dev the row for a trial account shows both countries and that label; checked against the database for 3 real trial accounts (one where store and address country differ); display-only (safe-ship rule may apply). Proof and queries: memory/departments/devops/server-daily/2026-11-28-trial-drop-investigation.md (four passes) + new-users-24h-2026-11-28.csv/.md in the same folder. All measured read-only on production 28 Nov. ",
+      "status": "pending",
+      "priority": "P2",
+      "createdAt": "2026-11-28T13:46:57Z",
+      "createdDate": "2026-11-28",
+      "completedDate": null
+    },
+    {
+      "id": "xd-3409",
+      "from": "[DEVOPS]",
+      "to": "[IOS]",
+      "title": "Handoff from DEVOPS: Cut-off users finish Apple's purchase half as often (42% vs 76%): test on a phone, then fix (CEO YES 28 Nov)",
+      "description": "CEO YES 28 Nov 2026 13:44Z, his words as relayed by the project coordinator to the servers project: 'yes for 3 fixes' (admin trial labels, cut-off purchase fix, marketing ad findings). WHAT: people whose free data was cut off finish Apple's purchase sheet about half as often. Measured (iPhone, per person, first sheet open, 24 Nov - 28 Nov): connected 32 of 42 finished (76%); cut off for free data 13 of 31 (42%); after the 27 Nov 17:05Z stop cut off 0 of 3 (one person opened the sheet 4 times in 2 min, each closed within seconds; 'connected-no-traffic' recorded 1 min before). Connection state is rebuilt from ConnectionLogs/ConnectFailureEvents = approximate. HYPOTHESIS to prove or kill: after the server cuts a free account at 512 MB the phone stays inside a dead tunnel (or reconnects into one) while the data-used-up offer is on screen, so Apple's sheet cannot reach Apple and the person closes it. DO: (1) TEST FIRST on a real iPhone, store build 4.3.4 (112) and 4.3.5 (117): fresh free account, use 512 MB until cut, on the 'Free data's up' screen tap start with a sandbox tester that never had a trial; record tunnel state, whether the sheet loads prices and completes, on Wi-Fi and on mobile data; control: same tester flow at first connect (connected) and with VPN off. (2) If the sheet fails while cut off: make the purchase path work there (for example take the tunnel down, or let Apple/StoreKit traffic through, before opening the sheet) - design is yours. (3) Same check on Android. DONE WHEN: the cut-off test completes a trial 3 of 3 times on the fixed build with the screenshots and the stored rows; no change to how the cap itself is enforced without the servers/backend owners. Related: xd-3407 (sandbox trial test, still pending 28 Nov 13:31Z). Proof and queries: memory/departments/devops/server-daily/2026-11-28-trial-drop-investigation.md (four passes) + new-users-24h-2026-11-28.csv/.md in the same folder. All measured read-only on production 28 Nov. ",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-11-28T13:46:57Z",
+      "createdDate": "2026-11-28",
+      "completedDate": null
+    },
+    {
+      "id": "xd-3410",
+      "from": "[DEVOPS]",
+      "to": "[MARKETING]",
+      "title": "Handoff from DEVOPS: Apple Ads: US campaign shows 0 ads, US installs from RU/IR/NL addresses, Indonesia installs halved at same spend (CEO YES 28 Nov)",
+      "description": "CEO YES 28 Nov 2026 13:44Z, his words as relayed by the project coordinator to the servers project: 'yes for 3 fixes' (admin trial labels, cut-off purchase fix, marketing ad findings). WHAT (Apple Ads API report, UTC, read-only): (1) spend flat while installs fell - 24 Nov 43.02 USD / 84 installs, 25 Nov 52.14 / 96, 26 Nov 46.16 / 77, 27 Nov 43.74 / 59, 28 Nov to 13Z 11.45 / 19; Indonesia installs 45, 40, 33, 17, 9 at 15 USD/day (impressions 4819 -> 2766 on 27 Nov). (2) US campaign CVPN-US-WiFi shows 0 impressions on 28 Nov since the 01:30Z budget cut 15 -> 5 USD and the pause of the generic ad group, although displayStatus RUNNING. (3) Installs paid by the US campaign come from accounts whose address country is Russia, Iran, Netherlands (24 h table: labels U015, U032, U033, U034, U043 = ad-US with IR/RU/NL/IR/RU). (4) After the stop 22 of 24 ad users saw the offer, 3 opened Apple's sheet, 0 started; 35 of 49 trial starters 24-27 Nov were Indonesian. (5) Ads stop about 18:00-22:00Z every day (daily budget used; budget day starts 22:00Z). DO: find why Indonesia installs halved at the same spend (bids, search terms, impression share, tap-to-install), fix or explain the US campaign showing no ads, decide what to do about US ad installs from RU/IR/NL addresses (people abroad or on a VPN = low chance to pay), and check whether running out of budget at 18:00Z loses the best hours. DONE WHEN: one page with the measured cause for each of the three, the change made in Apple Ads (CEO yes for any spend change), and the installs + trial starts per day for the 3 days after. Proof and queries: memory/departments/devops/server-daily/2026-11-28-trial-drop-investigation.md (four passes) + new-users-24h-2026-11-28.csv/.md in the same folder. All measured read-only on production 28 Nov. ",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-11-28T13:46:57Z",
+      "createdDate": "2026-11-28",
+      "completedDate": null
+    },
+    {
+      "id": "xd-3411",
+      "from": "[DEVOPS]",
+      "to": "[IOS]",
+      "title": "Handoff from DEVOPS: AWAITING CEO CONFIRMATION - full purchase-funnel logging on iPhone + Android + server timeline and zero-trials alarm",
+      "description": "AWAITING CEO CONFIRMATION - the CEO approved three handoffs by name at 13:44Z; this fourth one was created by the servers project on the coordinator's brief because he asked why the logs did not record the purchase step. Do not ship app or server code for it before his yes is written here. WHAT IS MISSING TODAY (read from build 4.3.4 (112) commit 8998eef82b and still the same on origin/dev/ios-connect-fixes-2026-11-28 = build 117): the app records offer shown / skipped / plan changed and ONE outcome per tap - started, apple_sheet_cancelled (userCancelled AND pending together), failed (no error code). It does not record the tap, the time from tap to result, the StoreKit error, pending vs cancelled, the tunnel state, network type or storefront. Because of that the 20-hour stop of trial starts (27 Nov 17:05Z - 28 Nov 13:18Z) could not be explained from the logs. DO - iPhone, Android to match: events offer_shown (plan list, Apple/Play says eligible for the trial yes/no, displayed price and offer period), start_tapped (plan), store_sheet_opened, store_sheet_result (success / user cancelled / pending approval / failed) with the store's exact error domain + code + message (no personal data), milliseconds for each step, connection state at that moment (connected / cut off for free data / connecting / off + last handshake age), network type, storefront country, app version and build; also products-load failures. DO - server ([BACKEND] + [ADMIN-PANEL], split as needed): store the new fields on FunnelEvents; a per-user purchase timeline in the admin user profile; a daily funnel (saw offer -> tapped -> sheet opened -> started, by platform, country, ad/organic); an alarm when trial starts are 0 for more than N hours while offer views continue (N to be set from data: longest normal gap 24-27 Nov was 4.9 h). DONE WHEN: a sandbox purchase, a cancel, a pending (Ask to Buy) and a forced failure each show the right result and code in the timeline on dev; the alarm fires in a dev test with offer views and no starts; a line in the iOS, Android, backend skills says what is logged. Proof and queries: memory/departments/devops/server-daily/2026-11-28-trial-drop-investigation.md (four passes) + new-users-24h-2026-11-28.csv/.md in the same folder. All measured read-only on production 28 Nov. ",
+      "status": "pending",
+      "priority": "P1",
+      "createdAt": "2026-11-28T13:46:57Z",
       "createdDate": "2026-11-28",
       "completedDate": null
     }
